@@ -7,7 +7,9 @@
     @T("Input")
 </MudText>
 
-<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" Disabled="@this.isProcessingBatch"/>
+@* This page carries a second drop zone for the instructions, so neither of them catches all
+   documents: with two targets, only the one under the mouse may take the drop. *@
+<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" Disabled="@this.isProcessingBatch" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS"/>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
     <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
@@ -44,7 +46,7 @@
 
 @if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT)
 {
-    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" Disabled="@this.isProcessingBatch"/>
 
     <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
@@ -52,7 +54,7 @@
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" Disabled="@this.isProcessingBatch"/>
 
     @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
     {

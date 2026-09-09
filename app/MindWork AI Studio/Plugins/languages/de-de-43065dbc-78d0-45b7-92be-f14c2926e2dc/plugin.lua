@@ -4293,11 +4293,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T1273315904"] = "Inhalt
 -- Show content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SECRETINPUTFIELD::T2891011873"] = "Inhalt anzeigen"
 
+-- The dropped folder could not be accessed. Please choose it with the folder chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T1153417816"] = "Auf den abgelegten Ordner konnte nicht zugegriffen werden. Bitte wählen Sie ihn stattdessen über die Ordnerauswahl aus."
+
+-- Please drop a folder, not a file.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T3289690493"] = "Bitte legen Sie einen Ordner ab, keine Datei."
+
+-- You can also drag & drop the folder here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T350096725"] = "Sie können den Ordner auch hierher ziehen und ablegen."
+
 -- Choose Directory
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Verzeichnis auswählen"
 
+-- Please drop a file, not a folder.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1472251601"] = "Bitte legen Sie eine Datei ab, keinen Ordner."
+
+-- You can also drag & drop the file here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T1984243691"] = "Sie können die Datei auch hierher ziehen und ablegen."
+
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
+
+-- Please drop a file with a supported file type.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T930441004"] = "Bitte legen Sie eine Datei mit einem unterstützten Dateityp ab."
+
+-- The dropped file could not be accessed. Please choose it with the file chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T984660028"] = "Auf die abgelegte Datei konnte nicht zugegriffen werden. Bitte wählen Sie sie stattdessen über die Dateiauswahl aus."
 
 -- External Assistants rated below this audit level are treated as insufficiently reviewed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unter diesem Audit Level bewertet werden, gelten als nicht ausreichend sicher."

@@ -51,7 +51,7 @@
             }
             @if (this.CanChangeSourceAndEmbedding)
             {
-                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
+                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" />
             }
             else
             {
