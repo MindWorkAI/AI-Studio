@@ -6,11 +6,12 @@
     <MudPaper Class="pa-4 border-dashed border rounded-lg" Elevation="0">
         <MudText Typo="Typo.h5">@T("Background embeddings")</MudText>
         <MudText Typo="Typo.body1" Class="mt-2">
-            @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run.")
+            @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.")
         </MudText>
         <MudStack Row="true" Class="mt-3" Wrap="Wrap.Wrap" Spacing="2">
             <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">@string.Format(T("Indexed files: {0}"), this.TotalIndexedFiles)</MudChip>
             <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">@string.Format(T("Pending files: {0}"), this.TotalPendingFiles)</MudChip>
+            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled">@string.Format(T("Skipped files: {0}"), this.TotalPermanentlySkippedFiles)</MudChip>
             <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed files: {0}"), this.TotalFailedFiles)</MudChip>
         </MudStack>
     </MudPaper>
@@ -46,6 +47,13 @@
                         @string.Format(T("{0} of {1} files are indexed."), status.IndexedFiles, status.TotalFiles)
                     </MudText>
 
+                    @if (status.PermanentlySkippedFiles > 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)
+                        </MudText>
+                    }
+
                     @if (status.FailedFiles > 0)
                     {
                         <MudText Typo="Typo.body2">
@@ -63,7 +71,7 @@
                     @if (status.Failures.Count > 0)
                     {
                         <MudExpansionPanels MultiExpansion="@false" Class="mt-2">
-                            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.ReportProblem" HeaderText="@string.Format(T("Failure details ({0})"), status.Failures.Count)" MaxHeight="360">
+                            <ExpansionPanel HeaderIcon="@GetFailureListIcon(status)" HeaderText="@this.GetFailureListHeader(status)" MaxHeight="360">
                                 <MudStack Spacing="2">
                                     @foreach (var failure in status.Failures)
                                     {
@@ -71,10 +79,14 @@
                                             <MudText Typo="Typo.body2" Style="word-break: break-word;">
                                                 @failure.FilePath
                                             </MudText>
-                                            <MudText Typo="Typo.caption" Color="Color.Warning" Style="word-break: break-word;">
+                                            <MudText Typo="Typo.caption" Color="@(failure.IsPermanent ? Color.Default : Color.Warning)" Style="word-break: break-word;">
                                                 @failure.Reason
                                             </MudText>
                                             <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="1" AlignItems="AlignItems.Center">
+                                                @if (failure.IsPermanent)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@T("Skipped until the file changes")</MudChip>
+                                                }
                                                 @if (failure.FailureReason is not ProviderRequestFailureReason.NONE)
                                                 {
                                                     <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@failure.FailureReason.GetName()</MudChip>

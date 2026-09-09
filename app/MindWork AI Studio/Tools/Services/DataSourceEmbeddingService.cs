@@ -640,7 +640,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 permanentlySkippedFiles++;
 
                 // The stored reason keeps its place in the list, so the user still sees why:
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, permanentFailure.Message, permanentFailure.OccurredAtUtc));
+                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, permanentFailure.Message, permanentFailure.OccurredAtUtc, ExtractionCode: permanentFailure.Code, IsPermanent: true));
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails, permanentlySkippedFiles: permanentlySkippedFiles));
                 continue;
             }
@@ -735,7 +735,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 permanentlySkippedFiles++;
                 var occurredAtUtc = DateTimeOffset.UtcNow;
                 var indexingMessage = exception.Code.ToIndexingUserMessage(file.Name);
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, indexingMessage, occurredAtUtc));
+                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, indexingMessage, occurredAtUtc, ExtractionCode: exception.Code, IsPermanent: true));
                 manifest.Files.Remove(file.FullName);
                 await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
 
@@ -766,7 +766,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 //
                 failedFiles++;
                 lastError = exception.Message;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message, DateTimeOffset.UtcNow, EmbeddingProviderName: embeddingProvider.Name));
+                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message, DateTimeOffset.UtcNow, EmbeddingProviderName: embeddingProvider.Name, ExtractionCode: exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE));
                 manifest.Files.Remove(file.FullName);
                 await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, file.FullName, token);
                 await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
@@ -1376,7 +1376,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private static List<DataSourceEmbeddingFailure> CreatePermanentFailureDetails(DataSourceEmbeddingManifest manifest) => manifest.PermanentFailures
-        .Select(failure => new DataSourceEmbeddingFailure(failure.Key, failure.Value.Message, failure.Value.OccurredAtUtc))
+        .Select(failure => new DataSourceEmbeddingFailure(failure.Key, failure.Value.Message, failure.Value.OccurredAtUtc, ExtractionCode: failure.Value.Code, IsPermanent: true))
         .ToList();
 
     private static string GetFileEmbeddingReason(FileInfo file, string currentHash, EmbeddedFileRecord? existingRecord)

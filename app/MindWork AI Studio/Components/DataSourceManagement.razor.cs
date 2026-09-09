@@ -68,6 +68,10 @@ public partial class DataSourceManagement : MSGComponentBase
             this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 
+    /// <remarks>
+    /// Files which were skipped for good are none of the failed ones, so a data source made of
+    /// scanned documents stays green: there is nothing here for the user to fix.
+    /// </remarks>
     private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
     {
         if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
@@ -76,6 +80,25 @@ public partial class DataSourceManagement : MSGComponentBase
         return status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0
             ? Color.Error
             : Color.Success;
+    }
+
+    /// <summary>
+    /// Explains the indexing dot, including the files which stay out of the index.
+    /// </summary>
+    /// <remarks>
+    /// The column shows the indexed files against the total, which reads as unfinished for a data
+    /// source whose remaining files were skipped for good. The tooltip is where that gap gets its
+    /// explanation.
+    /// </remarks>
+    private string GetIndexingStatusTooltip(DataSourceEmbeddingStatus? status)
+    {
+        if (status is null)
+            return T("Waiting for indexing status");
+
+        if (status.PermanentlySkippedFiles == 0)
+            return status.StateLabel;
+
+        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)}";
     }
 
     private string GetEmbeddingName(IDataSource dataSource)

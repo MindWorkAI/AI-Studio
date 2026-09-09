@@ -18,9 +18,11 @@ public partial class Embeddings : MSGComponentBase
 
     private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedFiles);
 
-    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalFiles - status.IndexedFiles - status.FailedFiles));
+    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalFiles - status.IndexedFiles - status.FailedFiles - status.PermanentlySkippedFiles));
 
     private int TotalFailedFiles => this.Statuses.Sum(status => status.FailedFiles);
+
+    private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedFiles);
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,6 +71,21 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingState.COMPLETED => Color.Success,
         _ => Color.Default,
     };
+
+    /// <summary>
+    /// Names the list of failures for what it holds.
+    /// </summary>
+    /// <remarks>
+    /// A data source whose files were all skipped for good has nothing wrong with it, so calling
+    /// the list failures would contradict the green state right above it.
+    /// </remarks>
+    private string GetFailureListHeader(DataSourceEmbeddingStatus status) => status.FailedFiles > 0
+        ? string.Format(T("Failure details ({0})"), status.Failures.Count)
+        : string.Format(T("Skipped files ({0})"), status.Failures.Count);
+
+    private static string GetFailureListIcon(DataSourceEmbeddingStatus status) => status.FailedFiles > 0
+        ? Icons.Material.Filled.ReportProblem
+        : Icons.Material.Filled.SkipNext;
 
     private bool CanRefresh(DataSourceEmbeddingStatus status)
     {

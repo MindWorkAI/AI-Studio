@@ -18,5 +18,7 @@ namespace AIStudio.Tools.Services;
 /// <param name="FailureReason">What kind of failure it was. Everything that did not come from a provider stays at NONE.</param>
 /// <param name="StatusCode">What the provider answered, where it answered at all.</param>
 /// <param name="EmbeddingProviderName">The embedding provider that was asked.</param>
+/// <param name="ExtractionCode">Why reading the file failed, where the failure was about reading it at all.</param>
+/// <param name="IsPermanent">Whether the file stays out of the index until it changes.</param>
 public sealed record DataSourceEmbeddingFailure(string FilePath, string Reason, DateTimeOffset OccurredAtUtc, ProviderRequestFailureReason FailureReason = ProviderRequestFailureReason.NONE,
-    HttpStatusCode? StatusCode = null, string EmbeddingProviderName = "");
+    HttpStatusCode? StatusCode = null, string EmbeddingProviderName = "", FileExtractionErrorCode ExtractionCode = FileExtractionErrorCode.NONE, bool IsPermanent = false);

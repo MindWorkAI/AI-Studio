@@ -40,7 +40,7 @@
         <MudTd>
             @if (context is IInternalDataSource)
             {
-                <MudTooltip Text="@(embeddingStatus?.StateLabel ?? T("Waiting for indexing status"))">
+                <MudTooltip Text="@this.GetIndexingStatusTooltip(embeddingStatus)">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="width: 0.75rem; height: 0.75rem; flex-shrink: 0;"/>
                         <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedFiles, embeddingStatus.TotalFiles))</MudText>
