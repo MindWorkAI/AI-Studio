@@ -22,6 +22,7 @@ public sealed class ProviderValidation
 
     public Func<bool> IsModelProvidedManually { get; init; } = () => false;
 
+    public Func<string> GetCustomTokenizerValidationIssue { get; init; } = () => string.Empty;
     public Func<bool> IsModelSelectionHidden { get; init; } = () => false;
 
     public string? ValidatingHostname(string hostname)
@@ -130,6 +131,15 @@ public sealed class ProviderValidation
             return TB("Please select an Hugging Face inference provider.");
 
         return null;
+    }
+
+    public string? ValidatingCustomTokenizer(string _)
+    {
+        var issue = this.GetCustomTokenizerValidationIssue();
+        if (string.IsNullOrWhiteSpace(issue))
+            return null;
+
+        return issue;
     }
 
     /// <summary>

@@ -56,6 +56,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private MudTheme ColorTheme { get; init; } = null!;
 
     [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
+    [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
@@ -77,7 +80,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
 
+    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     private IReadOnlyCollection<NavBarItem> navItems = [];
+    private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
+    private bool showEmbeddingStatusIcon;
     
     #region Overrides of ComponentBase
 
@@ -111,6 +117,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesIfAutomaticRefreshAsync();
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this, this.CircuitState);
@@ -119,7 +126,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
-            Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
+            Event.CHAT_GENERATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED,Event.ASSISTANT_SESSION_CHANGED, 
+            Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
@@ -139,6 +147,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.themeProvider.WatchSystemDarkModeAsync(this.SystemeThemeChanged);
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
+        this.LoadEmbeddingItem();
 
         await base.OnInitializedAsync();
     }
@@ -235,6 +244,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     await this.UpdateThemeConfiguration();
                     this.LoadNavItems();
+                    this.LoadEmbeddingItem();
                     this.StateHasChanged();
                     if (this.startupCompleted)
                         this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after a configuration change");
@@ -347,6 +357,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     I18N.Init(this.Lang);
                     this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
+                    this.LoadEmbeddingItem();
 
                     await this.InvokeAsync(this.StateHasChanged);
                     if (this.startupCompleted)
@@ -356,6 +367,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
                     this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after the startup");
+                    break;
+
+                case Event.RAG_EMBEDDING_STATUS_CHANGED:
+                    this.LoadNavItems();
+                    this.LoadEmbeddingItem();
+                    this.StateHasChanged();
                     break;
             }
         });
@@ -438,6 +455,52 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         yield return new(T("Information"), Icons.Material.Filled.Info, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
         yield return new(T("Settings"), Icons.Material.Filled.Settings, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
+
+    private void LoadEmbeddingItem()
+    {
+        this.embeddingOverview = this.DataSourceEmbeddingService.GetOverview();
+
+        //
+        // The entry is shown whenever local RAG is available, in every state. Hiding it while
+        // nothing was running looked tidier, but a data source which was just added has no status
+        // yet: the service creates one when the run begins. The icon was therefore missing during
+        // the very moment the user was waiting for it. What the entry does communicate is its
+        // state, through the icon below.
+        //
+        // The preview feature is what gates it now. The route itself is not gated, so without this
+        // check, users who have no RAG at all would get a navigation entry for it.
+        //
+        this.showEmbeddingStatusIcon = PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
+
+        var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
+        {
+            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
+            DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
+            DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+
+            // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
+            // icon does not draw attention while there is nothing to attend to:
+            _ => (Icons.Material.Filled.CloudDone, palette.DarkLighten, palette.GrayLight),
+        };
+        this.embeddingItem = new NavBarItem(T("Embeddings"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
+    }
+    
+    private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
+    {
+        DataSourceEmbeddingState.QUEUED => T("Embeddings are waiting to be processed."),
+        DataSourceEmbeddingState.RUNNING => string.Format(
+            T("Embeddings are running: {0} of {1} files are indexed."),
+            this.embeddingOverview.IndexedFiles,
+            this.embeddingOverview.TotalFiles),
+        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
+            ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
+            : T("Some embeddings failed and need attention."),
+
+        // The entry is always visible, so its resting state needs words as well. An empty tooltip
+        // would leave the user guessing what the icon is there for:
+        _ => T("All data sources are up to date.")
+    };
 
     private async Task ShowUpdateDialog()
     {

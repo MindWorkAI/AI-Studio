@@ -33,6 +33,7 @@ use crate::global_shortcuts::{RegisterShortcutRequest, ShortcutResponse};
 
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
+use crate::tokenizer::set_default_tokenizer_path;
 
 #[cfg(target_os = "linux")]
 use webkit2gtk::glib::Cast;
@@ -172,6 +173,8 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             }
 
             start_qdrant_edge_database(app.handle().clone());
+
+            set_default_tokenizer_path(app.handle().clone());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();

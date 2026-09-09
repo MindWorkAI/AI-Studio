@@ -17,7 +17,7 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
 
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
@@ -25,7 +25,7 @@ public static class ContentStreamSseHandler
                                 # Page {pageNumber}
                                 {sseEvent.Content}
 
-                                """);
+                                """, sseEvent.TokenCount);
 
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
@@ -38,31 +38,43 @@ public static class ContentStreamSseHandler
                         }
 
                         spreadSheetResult.Append(sseEvent.Content);
-                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString());
+                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString(), sseEvent.TokenCount);
 
                     //
                     // Documents which the runtime reads page by page are buffered, so the images of
                     // a page can follow its Markdown. Documents converted as a whole, e.g. by Pandoc,
                     // carry no page number and are passed on unchanged.
                     //
+                    // The buffering is why the count comes back from the reader rather than from
+                    // this event: the page which is released here arrived one event ago, and this
+                    // event's count belongs to the page which is now being buffered.
+                    //
                     case ContentStreamDocumentMetadata documentMetadata:
                         if (documentMetadata.Document?.PageNumber is not > 0)
-                            return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+                            return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
 
                         var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
-                        var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, extractImages);
-                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent);
+                        var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, sseEvent.TokenCount, extractImages);
+                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent.Value.Content, documentContent.Value.TokenCount);
 
                     case ContentStreamImageMetadata:
-                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
 
                     case ContentStreamPresentationMetadata presentationMetadata:
+                        if (!extractImages)
+                        {
+                            var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
+                            return ContentStreamProcessedEvent.FromContent(slideNumber > 0
+                                ? $"# Slide {slideNumber}\n{sseEvent.Content}"
+                                : sseEvent.Content, sseEvent.TokenCount);
+                        }
+
                         var slideManager = SLIDE_MANAGERS.GetOrAdd(
                             sseEvent.StreamId!,
                             _ => new()
                         );
 
-                        slideManager.AddSlide(presentationMetadata, sseEvent.Content, extractImages);
+                        slideManager.AddSlide(presentationMetadata, sseEvent.Content, sseEvent.TokenCount, extractImages);
                         return ContentStreamProcessedEvent.NOTHING;
 
                     //
@@ -82,11 +94,11 @@ public static class ContentStreamSseHandler
                         return ContentStreamProcessedEvent.FromPromptInjection(promptInjectionMetadata.PromptInjection);
 
                     default:
-                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
                 }
 
             case { Content: not null, Metadata: null }:
-                return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+                return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
 
             default:
                 return ContentStreamProcessedEvent.NOTHING;
@@ -166,32 +178,45 @@ public static class ContentStreamSseHandler
         return $"![Image](data:{imageMediaType};base64,{base64Image})";
     }
 
-    public static string? Clear(string streamId)
+    /// <summary>
+    /// Releases what the readers of a stream still hold back and forgets the stream.
+    /// </summary>
+    /// <remarks>
+    /// The readers which assemble pages or slides always keep the last one of them: nothing tells
+    /// them that no further image is coming. It is released here, and it carries its own token
+    /// count, because a chunk without one cannot be sized by the caller.
+    /// </remarks>
+    /// <param name="streamId">The stream to release and forget.</param>
+    /// <returns>The content which was held back, or null when there was none.</returns>
+    public static ContentStreamPendingContent? Clear(string streamId)
     {
         if (string.IsNullOrWhiteSpace(streamId))
             return null;
- 
+
         var finalContentChunk = new StringBuilder();
-        if(SLIDE_MANAGERS.TryGetValue(streamId, out var slideManager))
+        int? tokenCount = 0;
+        if(SLIDE_MANAGERS.TryGetValue(streamId, out var slideManager)
+           && slideManager.GetAllSlidesInOrder() is { } slides
+           && !string.IsNullOrWhiteSpace(slides.Content))
         {
-            var result = slideManager.GetAllSlidesInOrder();
-            if (!string.IsNullOrWhiteSpace(result))
-                finalContentChunk.Append(result);
+            finalContentChunk.Append(slides.Content);
+            tokenCount = ContentStreamPendingContent.AddTokenCounts(tokenCount, slides.TokenCount);
         }
 
-        if (DOCUMENT_MANAGERS.TryGetValue(streamId, out var documentManager))
+        if (DOCUMENT_MANAGERS.TryGetValue(streamId, out var documentManager)
+            && documentManager.Flush() is { } page
+            && !string.IsNullOrWhiteSpace(page.Content))
         {
-            var result = documentManager.Flush();
-            if (!string.IsNullOrWhiteSpace(result))
-                finalContentChunk.Append(result);
+            finalContentChunk.Append(page.Content);
+            tokenCount = ContentStreamPendingContent.AddTokenCounts(tokenCount, page.TokenCount);
         }
-        
+
         SLIDE_MANAGERS.TryRemove(streamId, out _);
         DOCUMENT_MANAGERS.TryRemove(streamId, out _);
         var imageIdPrefix = $"{streamId}-";
         foreach (var key in CHUNKED_IMAGES.Keys.Where(k => k.StartsWith(imageIdPrefix, StringComparison.InvariantCultureIgnoreCase)))
             CHUNKED_IMAGES.TryRemove(key, out _);
-        
-        return finalContentChunk.Length > 0 ? finalContentChunk.ToString() : null;
+
+        return finalContentChunk.Length > 0 ? new ContentStreamPendingContent(finalContentChunk.ToString(), tokenCount) : null;
     }
 }

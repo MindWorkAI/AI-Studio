@@ -1,0 +1,106 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
+
+<MudJustifiedText Typo="Typo.body1" Class="mb-3">
+    @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
+</MudJustifiedText>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
+    <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@T("Local data sources refresh when files change.")" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
+    <MudTooltip Text="@T("Refresh all")">
+        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources"/>
+    </MudTooltip>
+</MudStack>
+
+@{ var embeddingStatuses = this.DataSourceEmbeddingService.GetStatuses().ToDictionary(status => status.DataSourceId, StringComparer.OrdinalIgnoreCase); }
+<MudTable Items="@this.SettingsManager.ConfigurationData.DataSources" Hover="@true" Class="border-dashed border rounded-lg">
+    <ColGroup>
+        <col style="width: 3em;"/>
+        <col/>
+        <col style="width: 9em;"/>
+        <col style="width: 10em;"/>
+        <col style="width: 8em;"/>
+        <col style="width: 16em;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>#</MudTh>
+        <MudTh>@T("Name")</MudTh>
+        <MudTh>@T("Type")</MudTh>
+        <MudTh>@T("Embedding")</MudTh>
+        <MudTh>@T("Indexed files")</MudTh>
+        <MudTh>@T("Actions")</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        @{ var embeddingStatus = embeddingStatuses.GetValueOrDefault(context.Id); }
+        <MudTd>@context.Num</MudTd>
+        <MudTd Style="white-space: normal; overflow-wrap: anywhere;">@context.Name</MudTd>
+        <MudTd Style="white-space: nowrap;">@context.Type.GetDisplayName()</MudTd>
+        <MudTd Style="white-space: nowrap;">@this.GetEmbeddingName(context)</MudTd>
+        <MudTd>
+            @if (context is IInternalDataSource)
+            {
+                <MudTooltip Text="@this.GetIndexingStatusTooltip(embeddingStatus)">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="width: 0.75rem; height: 0.75rem; flex-shrink: 0;"/>
+                        <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedFiles, embeddingStatus.TotalFiles))</MudText>
+                    </MudStack>
+                </MudTooltip>
+            }
+            else
+            {
+                @* Deliberately muted instead of colored: there is nothing to index and nothing to fix here. *@
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@T("Not applicable")</MudText>
+            }
+        </MudTd>
+
+        <MudTd>
+            <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.NoWrap">
+                <MudTooltip Text="@T("Information")">
+                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Outlined.Info" OnClick="@(() => this.ShowInformation(context))"/>
+                </MudTooltip>
+                @if (context.IsEnterpriseConfiguration)
+                {
+                    <MudTooltip Text="@T("This data source is managed by your organization.")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                    </MudTooltip>
+                }
+                else
+                {
+                    <MudTooltip Text="@T("Edit")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditDataSource(context))"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Refresh")">
+                        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="@(() => this.RefreshDataSource(context))"/>
+                    </MudTooltip>
+                    @if (context is DataSourceERI_V1)
+                    {
+                        <AdminExportButton OnClick="@(() => this.ExportDataSource(context))" />
+                    }
+                    <MudTooltip Text="@T("Delete")">
+                        <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteDataSource(context))"/>
+                    </MudTooltip>
+                }
+            </MudStack>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (this.SettingsManager.ConfigurationData.DataSources.Count == 0)
+{
+    <MudText Typo="Typo.h6" Class="mt-3">
+        @T("No data sources configured yet.")
+    </MudText>
+}
+
+<MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Class="mt-3 mb-6">
+    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
+        @T("External Data (ERI-Server v1)")
+    </MudMenuItem>
+    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))">
+        @T("Local Directory")
+    </MudMenuItem>
+    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))">
+        @T("Local File")
+    </MudMenuItem>
+</MudMenu>

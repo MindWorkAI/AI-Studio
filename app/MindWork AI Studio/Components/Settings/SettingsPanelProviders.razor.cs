@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -84,6 +85,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.DataHost, provider.Host },
             { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
             { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
+            { x => x.DataTokenizerPath, provider.TokenizerPath },
             { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
             { x => x.IsEnterpriseConfiguration, provider.IsEnterpriseConfiguration },
         };
@@ -131,6 +133,13 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             return;
         
         var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.LLM_PROVIDER);
+
+        //
+        // Removing the tokenizer is best effort: it leaves an unused file behind when it fails,
+        // which is not worth bothering the user about while they are deleting the provider. The
+        // API key is different, though, because a leftover secret is a secret we promised to remove.
+        //
+        _ = await this.RustService.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.Providers.Remove(provider);

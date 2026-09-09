@@ -2,6 +2,7 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -11,6 +12,9 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     /// <summary>
     /// Groups the table by the used LLM provider. The embedding provider list is already sorted by
     /// that provider, so all instances of one LLM provider form a single, coherent group.
@@ -68,6 +72,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -88,6 +93,9 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
+            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
+            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
+            { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
             { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
             { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
         };
@@ -118,6 +126,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -134,13 +143,36 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
         
         var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER);
+
+        //
+        // Removing the tokenizer is best effort: it leaves an unused file behind when it fails,
+        // which is not worth bothering the user about while they are deleting the provider. The
+        // API key is different, though, because a leftover secret is a secret we promised to remove.
+        //
+        _ = await this.RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(provider));
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
+        else
+        {
+            var issueDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
+            };
+
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogResult = await issueDialogReference.Result;
+            if (issueDialogResult is null || issueDialogResult.Canceled)
+                return;
+
+            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
 
         await this.UpdateEmbeddingProviders();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -183,7 +215,21 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
 
         var embeddingProvider = provider.CreateProvider();
-        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, default, new List<string> { inputText });
+        IReadOnlyList<IReadOnlyList<float>> embeddings;
+        try
+        {
+            embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, CancellationToken.None, inputText);
+        }
+        catch (ProviderRequestException exception)
+        {
+            //
+            // The provider named what went wrong and what to do about it. Showing that beats the
+            // sentence below, which used to be the same one for a missing API key, an unreachable
+            // provider and a provider which cannot embed anything at all:
+            //
+            await this.DialogService.ShowMessageBox(T("Embedding Result"), exception.UserMessage, T("Close"));
+            return;
+        }
 
         if (embeddings.Count == 0)
         {

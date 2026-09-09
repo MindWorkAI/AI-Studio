@@ -92,7 +92,10 @@ public sealed record ChatThread
     public DataSourceSecurity DataSecurity { get; set; } = DataSourceSecurity.NOT_SPECIFIED;
 
     /// <summary>
-    /// The minimum confidence required for providers that continue this chat after a tool returned sensitive data.
+    /// The minimum confidence required for providers that continue this chat. It is raised whenever
+    /// a tool returned sensitive data, and whenever a data source was used which demands a higher
+    /// level. Both cases share one rule: once such data is in the thread, every provider which
+    /// continues it must meet the level.
     /// </summary>
     [JsonInclude]
     public ConfidenceLevel RequiredProviderConfidence { get; private set; } = ConfidenceLevel.NONE;

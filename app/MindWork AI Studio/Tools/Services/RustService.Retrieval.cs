@@ -1,5 +1,8 @@
 using System.Text;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
+
+using AIStudio.Settings;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services;
@@ -38,7 +41,7 @@ public sealed partial class RustService
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
 
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count=false";
 
         //
         // Both reasons to stop end the same read, so we combine them: our own timeout bounds the
@@ -169,7 +172,11 @@ public sealed partial class RustService
                 }
                 catch (JsonException e)
                 {
-                    this.logger?.LogError(e, "Failed to deserialize SSE event while reading '{Path}': {JsonContent}", path, jsonContent);
+                    // The runtime may report a failure as a bare JSON string instead of a chunk.
+                    // That form still carries a readable reason, so we log it as such -- but it
+                    // remains a failure and must reach the caller like any other:
+                    if (!this.TryLogSseErrorMessage(jsonContent, path))
+                        this.logger?.LogError(e, "Failed to deserialize SSE event while reading '{Path}': {JsonContent}", path, jsonContent);
 
                     if (failureCode is FileExtractionErrorCode.NONE)
                     {
@@ -201,9 +208,9 @@ public sealed partial class RustService
         }
         finally
         {
-            var finalContentChunk = ContentStreamSseHandler.Clear(streamId);
-            if (!string.IsNullOrWhiteSpace(finalContentChunk))
-                resultBuilder.AppendLine(finalContentChunk);
+            // Reading the whole file at once needs no token counts, so only the content is used here:
+            if (ContentStreamSseHandler.Clear(streamId) is { } finalContentChunk && !string.IsNullOrWhiteSpace(finalContentChunk.Content))
+                resultBuilder.AppendLine(finalContentChunk.Content);
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
@@ -245,5 +252,208 @@ public sealed partial class RustService
             PromptInjectionFindings = promptInjectionFindings,
             PromptInjectionRedactedCount = promptInjectionRedactedCount,
         };
+    }
+
+    public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
+    {
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, token))
+            yield return segment.Content;
+    }
+
+    public async IAsyncEnumerable<ArbitraryFileDataSegment> StreamArbitraryFileDataWithTokenCounts(
+        string path,
+        EmbeddingProvider embeddingProvider,
+        [EnumeratorCancellation] CancellationToken token = default)
+    {
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, token))
+        {
+            if (segment.TokenCount is { } tokenCount)
+            {
+                yield return new(segment.Content, tokenCount);
+                continue;
+            }
+
+            //
+            // A segment the runtime did not count, e.g. a page which carries an embedded image on
+            // top of its text. The runtime leaves such a count out on purpose instead of failing
+            // the extraction, because we can count the segment ourselves. Without this, a document
+            // would be dropped over a number we are able to produce.
+            //
+            var countedSegment = await this.GetTokenCount(embeddingProvider, segment.Content, token);
+            if (countedSegment is { Success: true } counted)
+            {
+                yield return new(segment.Content, counted.TokenCount);
+                continue;
+            }
+
+            //
+            // Carries a code so callers can classify it: the file itself is fine, the answer of
+            // the runtime was not, which makes this worth another attempt.
+            //
+            throw new FileExtractionException(FileExtractionErrorCode.INVALID_RESPONSE, $"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}', and counting it afterwards failed as well: {countedSegment?.Message}");
+        }
+    }
+
+    private async IAsyncEnumerable<(string Content, int? TokenCount)> StreamArbitraryFileDataCore(
+        string path,
+        bool extractImages,
+        bool includeTokenCount,
+        string tokenizerPath,
+        [EnumeratorCancellation] CancellationToken token)
+    {
+        var streamId = Guid.NewGuid().ToString();
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count={includeTokenCount}&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
+        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        using var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            this.logger?.LogError(
+                "Failed to stream arbitrary file data from Rust runtime. Status: {StatusCode}, reason: '{ReasonPhrase}', path: '{Path}', body: '{Body}'",
+                response.StatusCode,
+                response.ReasonPhrase,
+                path,
+                responseBody);
+
+            if (includeTokenCount)
+                throw new InvalidOperationException($"Rust could not extract and count '{path}'. HTTP {(int)response.StatusCode} ({response.ReasonPhrase}): {responseBody}");
+
+            yield break;
+        }
+
+        var promptInjectionFindings = new List<PromptInjectionFinding>();
+        var promptInjectionRedactedCount = 0;
+
+        ContentStreamPendingContent? finalContentChunk;
+        try
+        {
+            await using var stream = await response.Content.ReadAsStreamAsync(token);
+            using var reader = new StreamReader(stream);
+
+            while (!reader.EndOfStream && !token.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync(token);
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+
+                if (!line.StartsWith("data:", StringComparison.InvariantCulture))
+                    continue;
+
+                var jsonContent = line[5..];
+                ContentStreamSseEvent? sseEvent = null;
+                try
+                {
+                    sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
+                }
+                catch (JsonException)
+                {
+                    if (this.TryLogSseErrorMessage(jsonContent, path))
+                    {
+                        if (includeTokenCount)
+                            throw new InvalidOperationException($"Rust could not extract and count a segment from '{path}'. See the runtime log for details.");
+
+                        continue;
+                    }
+
+                    this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent);
+                }
+
+                if (sseEvent is null)
+                    continue;
+
+                var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
+                if (processedEvent.Error is { } error)
+                {
+                    // A notice says something about the file without failing the read, so the
+                    // remaining content still belongs into the index:
+                    if (error.IsNotice)
+                    {
+                        this.logger?.LogInformation(
+                            "The runtime reported a notice while reading '{Path}' for embedding: code={ErrorCode}, detectedFormat='{DetectedFormat}', message='{Message}'",
+                            path,
+                            error.ParsedCode,
+                            error.DetectedFormat,
+                            error.Message);
+
+                        continue;
+                    }
+
+                    //
+                    // Everything else stops the read. Embedding a document which was only read in
+                    // part would put a silently incomplete text into the index, and nothing after
+                    // this point would reveal the gap:
+                    //
+                    this.logger?.LogError(
+                        "The runtime reported a failure while reading '{Path}' for embedding: code={ErrorCode}, page={PageNumber}, detectedFormat='{DetectedFormat}', message='{Message}'",
+                        path,
+                        error.ParsedCode,
+                        error.PageNumber,
+                        error.DetectedFormat,
+                        error.Message);
+
+                    throw new FileExtractionException(error.ParsedCode, $"Rust could not extract '{path}': {error.Message}", error.PageNumber, error.DetectedFormat);
+                }
+
+                if (processedEvent.PromptInjection is { } promptInjection)
+                {
+                    //
+                    // Not a failure: the passages were removed and the document around them is
+                    // intact, so what remains still belongs into the index. It only has to reach
+                    // the user, because from here on the indexed document is no longer the one
+                    // sitting on their disk.
+                    //
+                    promptInjectionRedactedCount += promptInjection.RedactedCount;
+                    if (promptInjection.Findings is { } findings)
+                        promptInjectionFindings.AddRange(findings);
+
+                    continue;
+                }
+
+                //
+                // The count comes from the processed event, not from the event which was just read:
+                // a reader may hold content back across several events, and the count of the content
+                // it releases is the count of that content, not of the event that released it.
+                //
+                if (!string.IsNullOrWhiteSpace(processedEvent.Content))
+                    yield return (processedEvent.Content, processedEvent.TokenCount);
+            }
+        }
+        finally
+        {
+            finalContentChunk = ContentStreamSseHandler.Clear(streamId);
+        }
+
+        if (finalContentChunk is { } pendingContent && !string.IsNullOrWhiteSpace(pendingContent.Content))
+            yield return (pendingContent.Content, pendingContent.TokenCount);
+
+        if (promptInjectionRedactedCount is 0)
+            yield break;
+
+        //
+        // Reported from here for the same reason as in ReadArbitraryFileData above: these two
+        // methods together are every way of reading a file, so they are the only two places
+        // where no caller can forget the report. Here it was missing, which is why a whole
+        // indexing run could filter documents without ever saying so.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+    }
+
+    private bool TryLogSseErrorMessage(string jsonContent, string path)
+    {
+        try
+        {
+            var errorMessage = JsonSerializer.Deserialize<string>(jsonContent);
+            if (string.IsNullOrWhiteSpace(errorMessage))
+                return false;
+
+            this.logger?.LogError("Rust retrieval stream error for '{Path}': {ErrorMessage}", path, errorMessage);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 }

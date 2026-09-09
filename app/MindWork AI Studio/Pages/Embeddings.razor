@@ -1,0 +1,176 @@
+@attribute [Route(Routes.EMBEDDINGS)]
+@inherits MSGComponentBase
+
+<MudStack Spacing="3" Class="pr-2 pb-4" Style="height: 100%; min-height: 0; overflow-y: auto;">
+    <MudPaper Class="pa-4 border-dashed border rounded-lg" Elevation="0">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h5">@T("Background embeddings")</MudText>
+            <MudSpacer/>
+            <MudTooltip Text="@T("Manage your data sources")" Placement="Placement.Top">
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings"/>
+            </MudTooltip>
+        </MudStack>
+        <MudText Typo="Typo.body1" Class="mt-2">
+            @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.")
+        </MudText>
+        <MudStack Row="true" Class="mt-3" Wrap="Wrap.Wrap" Spacing="2">
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">@string.Format(T("Indexed files: {0}"), this.TotalIndexedFiles)</MudChip>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">@string.Format(T("Pending files: {0}"), this.TotalPendingFiles)</MudChip>
+            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled">@string.Format(T("Skipped files: {0}"), this.TotalPermanentlySkippedFiles)</MudChip>
+            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed files: {0}"), this.TotalFailedFiles)</MudChip>
+        </MudStack>
+    </MudPaper>
+
+    @if (this.Statuses.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            @T("No local data source has been queued for embedding yet.")
+        </MudAlert>
+    }
+    else
+    {
+        @*
+            One panel per data source, and only one of them open: a folder with thousands of files
+            fills the page by itself. What a closed panel still has to say stays in its header, so
+            nobody has to open every one of them to see how their data sources are doing.
+        *@
+        <MudExpansionPanels>
+            @foreach (var status in this.Statuses)
+            {
+                <MudExpansionPanel Class="border-solid border rounded-lg" Expanded="@(this.expandedDataSourceId == status.DataSourceId)" ExpandedChanged="@(isExpanded => this.DataSourcePanelExpandedChanged(status, isExpanded))">
+                    <TitleContent>
+                        <div class="d-flex align-center">
+                            <MudText Typo="Typo.h6">@string.Format(T("Data source: {0}"), status.DataSourceName)</MudText>
+                            <MudSpacer/>
+                            <MudChip T="string" Color="@GetStatusColor(status)" Variant="Variant.Filled">@status.StateLabel</MudChip>
+                            @if (CanRefresh(status))
+                            {
+                                @*
+                                    This opens or closes the panel along the way. The header is what
+                                    toggles it, and neither stopping the event nor swallowing the
+                                    click works in this project — see the end button of our own
+                                    ExpansionPanel component, which behaves the same way.
+                                *@
+                                <MudTooltip Text="@T("Refresh this data source")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.RefreshDataSource(status))" />
+                                </MudTooltip>
+                            }
+                        </div>
+                    </TitleContent>
+                    <ChildContent>
+                        <MudStack Spacing="2">
+                            <MudProgressLinear Value="@status.ProgressPercent" Rounded="@true" Color="@GetStatusColor(status)" />
+
+                            <MudText Typo="Typo.body2">
+                                @string.Format(T("{0} of {1} files are indexed."), status.IndexedFiles, status.TotalFiles)
+                            </MudText>
+
+                            @if (status.PermanentlySkippedFiles > 0)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)
+                                </MudText>
+                            }
+
+                            @if (status.FailedFiles > 0)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @string.Format(T("Failed files: {0}"), status.FailedFiles)
+                                </MudText>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(status.CurrentFile))
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @string.Format(T("Current file: {0}"), status.CurrentFile)
+                                </MudText>
+                            }
+
+                            @*
+                                One panel per cause, the most pressing one first. A folder in which nine
+                                hundred scanned documents were skipped otherwise buries the handful of
+                                files somebody has to look at.
+                            *@
+                            @if (status.Failures.Count > 0)
+                            {
+                                <MudExpansionPanels MultiExpansion="@true" Class="mt-2">
+                                    @foreach (var group in this.GetFailureGroups(status))
+                                    {
+                                        <ExpansionPanel HeaderIcon="@group.Cause.Icon" IconColor="@group.Cause.Color" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@GetGroupHeader(group)">
+                                            <MudStack Spacing="3">
+                                                <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
+                                                    <MudChip T="string" Size="Size.Small" Color="@group.Cause.Color" Variant="Variant.Outlined">
+                                                        @(group.Cause.IsPermanent ? T("Skipped until the file changes") : T("Tried again during the next run"))
+                                                    </MudChip>
+                                                    @if (!string.IsNullOrWhiteSpace(group.EmbeddingProviderName))
+                                                    {
+                                                        <MudText Typo="Typo.caption">@string.Format(T("Embedding provider: {0}"), group.EmbeddingProviderName)</MudText>
+                                                    }
+                                                    @if (group.Cause.NeedsProviderSettings)
+                                                    {
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenEmbeddingProviderSettings">
+                                                            @T("Open the settings")
+                                                        </MudButton>
+                                                    }
+                                                </MudStack>
+                                                <MudTable Items="@group.Failures" Dense="@true" Hover="@true" Elevation="0" Breakpoint="Breakpoint.None" RowsPerPage="10" Class="border-dashed border rounded-lg">
+                                                    <ColGroup>
+                                                        <col/>
+                                                        <col style="width: 11em;"/>
+                                                        <col style="width: 7em;"/>
+                                                    </ColGroup>
+                                                    <HeaderContent>
+                                                        <MudTh>@T("File")</MudTh>
+                                                        <MudTh>@T("Noticed")</MudTh>
+                                                        <MudTh>@T("Actions")</MudTh>
+                                                    </HeaderContent>
+                                                    <RowTemplate>
+                                                        <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
+                                                            @* Captions render as spans, so each of them needs to be told to take its own line. *@
+                                                            <MudText Typo="Typo.body2">@GetFileName(context.FilePath)</MudText>
+                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.FilePath</MudText>
+                                                            @if (group.Cause.ShowsMessagePerFile)
+                                                            {
+                                                                <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block">@context.Reason</MudText>
+                                                            }
+                                                        </MudTd>
+                                                        <MudTd Style="white-space: nowrap;">
+                                                            <MudText Typo="Typo.caption">@GetOccurrenceText(context)</MudText>
+                                                        </MudTd>
+                                                        <MudTd>
+                                                            @if (CanShowInFileManager(context))
+                                                            {
+                                                                <MudTooltip Text="@T("Show this file in the file browser of your system")">
+                                                                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>
+                                                                </MudTooltip>
+                                                            }
+                                                        </MudTd>
+                                                    </RowTemplate>
+                                                    <PagerContent>
+                                                        <MudTablePager PageSizeOptions="@PAGE_SIZE_OPTIONS"/>
+                                                    </PagerContent>
+                                                </MudTable>
+                                            </MudStack>
+                                        </ExpansionPanel>
+                                    }
+                                </MudExpansionPanels>
+                            }
+
+                            @*
+                                Shown next to the list, not instead of it: the list says which files failed,
+                                while this is the one sentence about the data source as a whole. Hiding it
+                                as soon as a single file failed is what made it invisible in practice.
+                            *@
+                            @if (!string.IsNullOrWhiteSpace(status.LastError))
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Text">
+                                    @status.LastError
+                                </MudAlert>
+                            }
+                        </MudStack>
+                    </ChildContent>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    }
+</MudStack>

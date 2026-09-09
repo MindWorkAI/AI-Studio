@@ -49,5 +49,22 @@ public sealed partial class RustService
             throw new InvalidOperationException(operation?.Issue ?? $"The {databaseName} operation failed.");
     }
 
+    public async Task<TResult?> ExecuteDatabaseQuery<TRequest, TResult>(string databaseName, string path, TRequest request, CancellationToken cancellationToken = default)
+    {
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(TimeSpan.FromMinutes(5));
+
+        using var response = await this.http.PostAsJsonAsync(path, request, this.jsonRustSerializerOptions, cts.Token);
+        response.EnsureSuccessStatusCode();
+
+        var operation = await response.Content.ReadFromJsonAsync<DatabaseQueryResponse<TResult>>(this.jsonRustSerializerOptions, cts.Token);
+        if (operation is not { Success: true })
+            throw new InvalidOperationException(operation?.Issue ?? $"The {databaseName} query failed.");
+
+        return operation.Data;
+    }
+
     private sealed record DatabaseOperationResponse(bool Success, string Issue);
+
+    private sealed record DatabaseQueryResponse<TResult>(bool Success, string Issue, TResult? Data);
 }

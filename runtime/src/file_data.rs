@@ -12,12 +12,12 @@ use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Error as CalamineError, Reader};
 use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
-use docx_to_md::{DocumentContainer, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
+use docx_to_md::{DocumentContainer, Error as DocumentError, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
 use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
-use pptx_to_md::{DiagnosticSeverity, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
+use pptx_to_md::{DiagnosticSeverity, Error as PresentationError, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
@@ -27,17 +27,20 @@ use log::{debug, error, warn};
 use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tokenizers::tokenizer::Tokenizer;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
     pub content: String,
     pub stream_id: String,
     pub metadata: Metadata,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_count: Option<usize>,
 }
 
 impl Chunk {
     pub fn new(content: String, metadata: Metadata) -> Self {
-        Chunk { content, stream_id: String::new(), metadata }
+        Chunk { content, stream_id: String::new(), metadata, token_count: None }
     }
 
     /// Creates a chunk which reports a failed extraction. Errors travel through the same
@@ -53,10 +56,16 @@ impl Chunk {
                 page_number: error.page_number,
                 detected_format: error.detected_format.clone(),
             },
+            token_count: None,
         }
     }
 
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
+
+    pub fn set_token_count(&mut self, tokenizer: &Tokenizer) -> std::result::Result<(), String> {
+        self.token_count = Some(crate::tokenizer::get_segment_token_count(tokenizer, &self.content)?);
+        Ok(())
+    }
 
     /// Whether this chunk's content is prose a prompt injection could hide in.
     ///
@@ -73,9 +82,34 @@ impl Chunk {
                 | Metadata::Presentation { image: Some(_), .. }
         )
     }
+
+    /// Splits an oversized chunk into segments the embedding side can still handle.
+    ///
+    /// Only prose is split. Everything the filter leaves untouched -- image data, error notices --
+    /// is passed on whole: cutting base64 in half would corrupt it, which is exactly the set
+    /// `carries_filterable_text` describes.
+    fn into_bounded_text_segments(self) -> Vec<Self> {
+        if !self.carries_filterable_text() {
+            return vec![self];
+        }
+
+        let ranges = bounded_text_segment_ranges(&self.content);
+        if ranges.len() == 1 {
+            return vec![self];
+        }
+
+        ranges
+            .into_iter()
+            .map(|(start, end)| {
+                let mut segment = Chunk::new(self.content[start..end].to_string(), self.metadata.clone());
+                segment.stream_id = self.stream_id.clone();
+                segment
+            })
+            .collect()
+    }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Metadata {
     Text {
         line_number: usize
@@ -141,6 +175,11 @@ pub enum ExtractionErrorCode {
     FormatDetectionFailed,
     NotAValidPdf,
     NotAValidSpreadsheet,
+
+    /// The package of a document or presentation is broken, e.g. a damaged ZIP or a missing part.
+    /// The counterpart of `NotAValidPdf` and `NotAValidSpreadsheet` for the OOXML and ODF formats.
+    NotAValidDocument,
+
     PdfiumUnavailable,
     PdfEncrypted,
     PageExtractionFailed,
@@ -246,7 +285,7 @@ fn classify_io_error(error: &std::io::Error) -> ExtractionErrorCode {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Base64Image {
     pub id: String,
     pub content: String,
@@ -271,13 +310,27 @@ const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
-/// Every PDF file starts with this signature.
+/// The signature which identifies a PDF file.
+///
+/// It does not have to sit at the very beginning, which is why we search for it instead of
+/// comparing against it.
 const PDF_MAGIC: &[u8] = b"%PDF-";
 
-/// How many bytes we probe to verify the PDF signature. The few extra bytes beyond the
-/// signature itself make the diagnostics useful when the signature does not match.
-const PDF_HEADER_PROBE_SIZE: u64 = 8;
+/// How far into the file we look for the PDF signature.
+///
+/// ISO 32000-1 (7.5.2) allows the header anywhere within the first 1024 bytes, and PDFium
+/// searches exactly that far. Files carrying something in front of their header do occur:
+/// a raw HTTP response saved with a `.pdf` extension has its response headers there. PDFium
+/// treats the offset it finds as the origin of the file and shifts every cross-reference
+/// offset by it, so such a file reads just fine. The signature itself is added on top of the
+/// window, so a header at its very end is still found completely.
+const PDF_HEADER_SEARCH_SIZE: u64 = 1024 + PDF_MAGIC.len() as u64;
+
+/// How many of the leading bytes we name when we refuse a file. Enough to recognize what was
+/// really saved there, short enough to keep the log line readable.
+const PDF_HEADER_DIAGNOSTIC_SIZE: usize = 8;
 
 /// Last-resort payload used when even an error event cannot be serialized. It keeps the
 /// chunk schema intact, so the .NET app never has to parse a bare string.
@@ -292,6 +345,10 @@ pub struct ExtractDataQuery {
     stream_id: String,
     #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
+    #[serde(default, deserialize_with = "deserialize_bool_case_insensitive")]
+    include_token_count: bool,
+    #[serde(default)]
+    tokenizer_path: String,
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -354,7 +411,11 @@ fn content_event(chunk: &Chunk, stream_id: &str, path: &str) -> Event {
 /// The sanitizer holds chunks back until it has seen enough text to scan across their
 /// boundaries, and releases them in order. Their metadata waited here in the meantime,
 /// which is what keeps a page's text under its own page number.
-fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>) -> Vec<Chunk> {
+///
+/// Splitting oversized chunks and counting their tokens happens here as well, and for the same
+/// reason the filter sits where it does: this is where the text the app actually receives comes
+/// into being. Counting earlier would report numbers for text the filter had not finished with.
+fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>, tokenizer: Option<&Tokenizer>) -> Vec<Chunk> {
     let mut chunks = Vec::with_capacity(released.len());
 
     for (id, text) in released {
@@ -365,7 +426,21 @@ fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>
 
         debug_assert_eq!(held_id, id, "chunks must be released in the order they arrived");
         chunk.content = text;
-        chunks.push(chunk);
+
+        for mut segment in chunk.into_bounded_text_segments() {
+            //
+            // A count we cannot produce is left out instead of failing the extraction: the app
+            // treats a missing count as "not counted yet" and counts that segment itself, so the
+            // document still arrives complete.
+            //
+            if let Some(tokenizer) = tokenizer
+                && let Err(e) = segment.set_token_count(tokenizer)
+            {
+                warn!("Failed to count the tokens of a released chunk: {e}");
+            }
+
+            chunks.push(segment);
+        }
     }
 
     chunks
@@ -443,7 +518,25 @@ pub async fn extract_data(
 
     let stream = stream! {
         match query {
-            Ok(query) => {
+            Ok(query) => 'request: {
+                //
+                // The tokenizer is loaded once, before any chunk is read: it is the same for the
+                // whole file, and a failure here means we cannot answer the request at all.
+                //
+                let tokenizer = if query.include_token_count {
+                    match crate::tokenizer::get_tokenizer(&query.tokenizer_path) {
+                        Ok(tokenizer) => Some(tokenizer),
+                        Err(e) => {
+                            let error = ExtractionError::new(ExtractionErrorCode::InvalidRequest, format!("The tokenizer could not be loaded: {e}"));
+                            warn!("{}", error.message);
+                            yield Ok(error_event(&error, Some(&query.stream_id)));
+                            break 'request;
+                        },
+                    }
+                } else {
+                    None
+                };
+
                 let stream_result = stream_data(&query.path, query.extract_images, &query.stream_id).await;
                 let id_ref = &query.stream_id;
                 let path_ref = &query.path;
@@ -475,7 +568,7 @@ pub async fn extract_data(
                                             break;
                                         };
 
-                                        for released in take_released(&mut held, released_chunks) {
+                                        for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
 
@@ -494,7 +587,7 @@ pub async fn extract_data(
                                         break;
                                     };
 
-                                    for released in take_released(&mut held, released_chunks) {
+                                    for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                         yield Ok(content_event(&released, id_ref, path_ref));
                                     }
                                 },
@@ -508,7 +601,7 @@ pub async fn extract_data(
                                     // that failed on top of that releases nothing; the extraction
                                     // error below is reported either way.
                                     if let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await {
-                                        for released in take_released(&mut held, released_chunks) {
+                                        for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
                                     }
@@ -529,7 +622,7 @@ pub async fn extract_data(
                                 return;
                             };
 
-                            for released in take_released(&mut held, released_chunks) {
+                            for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                 yield Ok(content_event(&released, id_ref, path_ref));
                             }
                         }
@@ -576,6 +669,79 @@ pub async fn extract_data(
     };
 
     Sse::new(stream)
+}
+
+/// Counts the characters of a text which carry meaning for an embedding.
+///
+/// Whitespace says nothing, so the readers ask for this count instead of the length of their
+/// output: a page which is left with nothing but blank lines is a page without text. Counting
+/// the raw length would report a document of scanned images as readable, hand the whitespace to
+/// the embedding provider, and leave the user without any hint that the file was never read.
+fn readable_character_count(text: &str) -> usize {
+    text.chars().filter(|character| !character.is_whitespace()).count()
+}
+
+/// Counts the readable characters of content whose reader marks the structure it found with HTML
+/// comments.
+///
+/// The presentation reader notes every slide number that way, which means a deck of scanned
+/// slides consists of nothing but those markers. They are ours, not the author's, so they must
+/// not make such a file look readable.
+///
+/// Only the readers which add markers of their own use this. In a file the user wrote, a comment
+/// is their own text and counts like every other character.
+fn readable_character_count_outside_comments(text: &str) -> usize {
+    const COMMENT_START: &str = "<!--";
+    const COMMENT_END: &str = "-->";
+
+    let mut count = 0;
+    let mut remaining = text;
+
+    loop {
+        let (before_comment, rest) = match remaining.find(COMMENT_START) {
+            Some(index) => (&remaining[..index], &remaining[index + COMMENT_START.len()..]),
+            None => return count + readable_character_count(remaining),
+        };
+
+        count += readable_character_count(before_comment);
+
+        //
+        // An unterminated comment swallows the rest of the text, exactly as a Markdown reader
+        // would render it: everything behind it is comment and therefore says nothing.
+        //
+        remaining = match rest.find(COMMENT_END) {
+            Some(index) => &rest[index + COMMENT_END.len()..],
+            None => return count,
+        };
+    }
+}
+
+/// Splits content into ranges no longer than the segment limit, cutting on character boundaries.
+fn bounded_text_segment_ranges(content: &str) -> Vec<(usize, usize)> {
+    let mut ranges = Vec::new();
+    let mut start = 0;
+
+    while start < content.len() {
+        let remaining = &content[start..];
+        let Some(maximum_end_offset) = remaining
+            .char_indices()
+            .nth(MAX_TEXT_SEGMENT_LENGTH_IN_CHARS)
+            .map(|(index, _)| index)
+        else {
+            ranges.push((start, content.len()));
+            break;
+        };
+
+        let end = start + maximum_end_offset;
+        ranges.push((start, end));
+        start = end;
+    }
+
+    if ranges.is_empty() {
+        ranges.push((0, 0));
+    }
+
+    ranges
 }
 
 /// How a file is read.
@@ -835,6 +1001,22 @@ async fn read_text_file(file_path: &str) -> Result<String> {
 
 async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
     let text = read_text_file(file_path).await?;
+
+    //
+    // An empty file, or one holding nothing but blank lines, decodes without a complaint. Reported
+    // as content, it would arrive as a document the AI is asked to work with, and the Markdown
+    // fences below would even make it look like one. The whole file is in hand here and nothing was
+    // sent yet, so this refuses the extraction instead of marking it afterwards.
+    //
+    if readable_character_count(&text) == 0 {
+        warn!("No readable text could be extracted from '{file_path}': the file holds {length} character(s), none of which carry text.", length = text.chars().count());
+
+        return Err(ExtractionError::new(
+            ExtractionErrorCode::NoTextExtracted,
+            "The file holds no readable text.",
+        ).into());
+    }
+
     let mut line_number = 0;
 
     let stream = stream! {
@@ -874,6 +1056,10 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
 /// Verifies the file really is a PDF before handing it to PDFium. Without this check, a file
 /// which only carries the `.pdf` extension, or whose bytes are not available, would end up in
 /// the text branch and silently produce empty content.
+///
+/// The signature is searched for rather than expected at the beginning, because the format
+/// allows it anywhere within the first bytes of the file. Insisting on offset zero would turn
+/// documents which every PDF viewer opens into unreadable ones.
 async fn ensure_pdf_header(file_path: &str) -> Result<()> {
     let file = tokio::fs::File::open(file_path).await.map_err(|error| ExtractionError::new(
         classify_io_error(&error),
@@ -885,23 +1071,35 @@ async fn ensure_pdf_header(file_path: &str) -> Result<()> {
         format!("The file size could not be read: {error}"),
     ))?.len();
 
-    let mut header = Vec::with_capacity(PDF_HEADER_PROBE_SIZE as usize);
-    file.take(PDF_HEADER_PROBE_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
+    let mut header = Vec::with_capacity(PDF_HEADER_SEARCH_SIZE as usize);
+    file.take(PDF_HEADER_SEARCH_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
         classify_io_error(&error),
         format!("The first bytes of the file could not be read: {error}"),
     ))?;
 
-    if header.starts_with(PDF_MAGIC) {
-        return Ok(());
+    match header.windows(PDF_MAGIC.len()).position(|window| window == PDF_MAGIC) {
+        Some(0) => Ok(()),
+
+        //
+        // Something sits in front of the header, e.g. the response headers of a raw HTTP
+        // response which was saved with a `.pdf` extension. PDFium finds the very same offset
+        // and reads the document from there, so this is worth a note instead of a refusal.
+        //
+        Some(offset) => {
+            warn!("The PDF signature of '{file_path}' begins at offset {offset} instead of at the start of the file; size: {file_size} bytes. PDFium reads the document from that offset.");
+            Ok(())
+        },
+
+        None => {
+            let header_hex = header.iter().take(PDF_HEADER_DIAGNOSTIC_SIZE).map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join(" ");
+            error!("The file '{file_path}' carries no PDF signature within its first {PDF_HEADER_SEARCH_SIZE} bytes; size: {file_size} bytes, first bytes: [{header_hex}].");
+
+            Err(ExtractionError::new(
+                ExtractionErrorCode::NotAValidPdf,
+                format!("The file carries no PDF signature within its first {PDF_HEADER_SEARCH_SIZE} bytes. Size: {file_size} bytes, first bytes: [{header_hex}]."),
+            ).into())
+        },
     }
-
-    let header_hex = header.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join(" ");
-    error!("The file '{file_path}' does not start with the PDF signature; size: {file_size} bytes, first bytes: [{header_hex}].");
-
-    Err(ExtractionError::new(
-        ExtractionErrorCode::NotAValidPdf,
-        format!("The file does not start with the PDF signature. Size: {file_size} bytes, first bytes: [{header_hex}]."),
-    ).into())
 }
 
 /// Classifies why PDFium refused to open a document, so the cause reaches the user instead of
@@ -982,7 +1180,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
-            number_of_characters += content.chars().count();
+            number_of_characters += readable_character_count(&content);
 
             if tx.blocking_send(Ok(Chunk::new(
                 content,
@@ -998,7 +1196,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
             return;
         }
 
-        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
 
         //
         // Without this marker, a PDF without a text layer and a broken extraction both arrive as
@@ -1026,6 +1224,48 @@ fn classify_spreadsheet_error_code(error: &CalamineError) -> ExtractionErrorCode
     }
 }
 
+/// Classifies a failure of the document reader, so a broken package is told apart from a file
+/// which is merely out of reach right now.
+///
+/// The distinction decides how long a file stays out of the index: a damaged ZIP or a missing
+/// `content.xml` is a property of the file and will fail the same way on every run, while a
+/// network share which went away is worth another attempt. Without this, both arrived as an
+/// unclassified failure and every run read the broken file again.
+///
+/// What remains uncoded are the failures of our own image handling. They say nothing about the
+/// document, so they keep the generic code.
+fn classify_document_error(error: &DocumentError) -> ExtractionErrorCode {
+    match error {
+        DocumentError::Io(io_error) => classify_io_error(io_error),
+
+        DocumentError::Zip(_)
+        | DocumentError::Xml { .. }
+        | DocumentError::Utf8 { .. }
+        | DocumentError::UnknownFormat
+        | DocumentError::FormatMismatch { .. }
+        | DocumentError::MissingPart(_)
+        | DocumentError::InvalidRelationship { .. } => ExtractionErrorCode::NotAValidDocument,
+
+        _ => ExtractionErrorCode::Internal,
+    }
+}
+
+/// Classifies a failure of the presentation reader. Same reasoning as for documents above.
+fn classify_presentation_error(error: &PresentationError) -> ExtractionErrorCode {
+    match error {
+        PresentationError::Io(io_error) => classify_io_error(io_error),
+
+        PresentationError::Zip(_)
+        | PresentationError::Xml { .. }
+        | PresentationError::Utf8(_)
+        | PresentationError::ParseError(_)
+        | PresentationError::SlideNotFound
+        | PresentationError::RelationshipNotFound => ExtractionErrorCode::NotAValidDocument,
+
+        _ => ExtractionErrorCode::Internal,
+    }
+}
+
 async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
@@ -1041,6 +1281,9 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 return;
             }
         };
+
+        let mut number_of_sheets = 0;
+        let mut number_of_characters = 0;
 
         for sheet_name in workbook.sheet_names() {
             let range = match workbook.worksheet_range(&sheet_name) {
@@ -1064,6 +1307,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
+            number_of_sheets += 1;
             let mut row_idx = 0;
             tx.blocking_send(Ok(Chunk::new(
                 "```csv".to_string(),
@@ -1075,10 +1319,15 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
             
             for row in range.rows() {
                 row_idx += 1;
-                let content = row.iter()
-                    .map(|cell| cell.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",");
+                let cells = row.iter().map(|cell| cell.to_string()).collect::<Vec<_>>();
+
+                //
+                // The cells are counted one by one, before they are joined: a row of empty cells
+                // joins into a line of commas, and those would pass for content although the row
+                // holds nothing. The fences around each sheet are left out for the same reason.
+                //
+                number_of_characters += cells.iter().map(|cell| readable_character_count(cell)).sum::<usize>();
+                let content = cells.join(",");
 
                 if tx.blocking_send(Ok(Chunk::new(
                     content,
@@ -1098,6 +1347,21 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     row_number: row_idx,
                 }
             ))).ok();
+        }
+
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_sheets} sheet(s) of '{path}'.");
+
+        //
+        // Without this marker, an empty workbook arrives as a handful of Markdown fences with
+        // nothing between them, and the AI would answer as if that were the content of the file.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{path}': {number_of_sheets} sheet(s), all of them without any cell content.");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_sheets} sheet(s) of the spreadsheet."),
+            ))));
         }
     });
 
@@ -1248,7 +1512,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             Ok(document) => document,
             Err(e) => {
                 let _ = tx.blocking_send(Err(ExtractionError::new(
-                    ExtractionErrorCode::FileNotReadable,
+                    classify_document_error(&e),
                     format!("The document could not be read: {e}"),
                 ).into()));
                 return;
@@ -1259,7 +1523,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             Ok(pages) => pages,
             Err(e) => {
                 let _ = tx.blocking_send(Err(ExtractionError::new(
-                    ExtractionErrorCode::FileNotReadable,
+                    classify_document_error(&e),
                     format!("The pages of the document could not be read: {e}"),
                 ).into()));
                 return;
@@ -1281,7 +1545,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                 Ok(page) => page,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(ExtractionError::new(
-                        ExtractionErrorCode::Internal,
+                        classify_document_error(&e),
                         format!("A page of the document could not be read: {e}"),
                     ).into()));
                     return;
@@ -1291,7 +1555,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                 Ok(content) => content,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(ExtractionError::new(
-                        ExtractionErrorCode::Internal,
+                        classify_document_error(&e),
                         format!("Page {page_number} of the document could not be converted: {e}", page_number = page.page_number),
                     ).into()));
                     return;
@@ -1299,7 +1563,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             };
 
             number_of_pages = page.page_number;
-            number_of_characters += content.chars().count();
+            number_of_characters += readable_character_count(&content);
 
             if let Some(metadata) = metadata_md.take() {
                 content = format!("{metadata}\n\n{content}");
@@ -1331,7 +1595,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             }
         }
 
-        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
 
         //
         // Without this marker, a document without any text and a broken extraction both arrive as
@@ -1363,6 +1627,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     let path = Path::new(file_path).to_owned();
     let stream_id = stream_id.to_owned();
 
+    // The path itself is moved into the task which opens the presentation, so the diagnostics of
+    // the worker below keep their own copy:
+    let log_path = file_path.to_owned();
+
     let parser_config = ParserConfig::builder()
         .extract_images(extract_images)
         .compress_images(true)
@@ -1380,7 +1648,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     };
 
     let mut streamer = tokio::task::spawn_blocking(move || {
-        PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(ExtractionError::new(
+            classify_presentation_error(&e),
+            format!("The presentation could not be read: {e}"),
+        )) as Box<dyn std::error::Error + Send + Sync>)
     }).await??;
 
     let (tx, rx) = mpsc::channel(32);
@@ -1390,12 +1661,17 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     // so the complete producer must stay outside Tokio's asynchronous workers.
     let worker = tokio::task::spawn_blocking(move || {
         let mut metadata_md = presentation_metadata_to_markdown(streamer.metadata());
+        let mut number_of_slides = 0;
+        let mut number_of_characters = 0;
 
         for slide_result in streamer.iter_slides() {
             let slide = match slide_result {
                 Ok(slide) => slide,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        classify_presentation_error(&e),
+                        format!("A slide of the presentation could not be read: {e}"),
+                    ).into()));
                     return;
                 },
             };
@@ -1421,10 +1697,21 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
             let mut content = match slide.to_markdown(&markdown_options) {
                 Ok(content) => content,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        classify_presentation_error(&e),
+                        format!("Slide {slide_number} of the presentation could not be converted: {e}", slide_number = slide.slide_number),
+                    ).into()));
                     return;
                 },
             };
+
+            //
+            // Counted here, before the metadata of the presentation is put in front of the first
+            // slide: its title and author belong to the file, not to the slides, and a deck of
+            // scanned images would look readable through them alone.
+            //
+            number_of_slides += 1;
+            number_of_characters += readable_character_count_outside_comments(&content);
 
             if let Some(metadata) = metadata_md.take() {
                 content = format!("{metadata}\n\n{content}");
@@ -1485,6 +1772,21 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                     }
                 }
             }
+        }
+
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_slides} slide(s) of '{log_path}'.");
+
+        //
+        // Without this marker, a presentation of nothing but pictures arrives as a row of slide
+        // number comments, and the AI would answer as if that were the content of the file.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{log_path}': {number_of_slides} slide(s). The presentation may consist of images only.");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_slides} slide(s). The presentation may consist of images only."),
+            ))));
         }
     });
 

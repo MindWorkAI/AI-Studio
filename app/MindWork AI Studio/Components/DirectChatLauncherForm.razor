@@ -36,7 +36,7 @@
         <MudSelectItem T="string" Value="@chatTemplate.Id">@chatTemplate.GetSafeName()</MudSelectItem>
     }
 </MudSelect>
-<MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" SelectedValues="@this.DataSourceIds" SelectedValuesChanged="@this.SetDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Source">
+<MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" SelectedValues="@this.DataSourceIds" SelectedValuesChanged="@this.SetDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@AppIcons.DATABASE">
     @foreach (var dataSource in this.SettingsManager.ConfigurationData.DataSources)
     {
         <MudSelectItem T="string" Value="@dataSource.Id">@dataSource.Name</MudSelectItem>

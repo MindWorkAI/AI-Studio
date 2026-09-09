@@ -79,16 +79,16 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             if (string.IsNullOrWhiteSpace(modelName))
             {
                 LOGGER.LogError("No model name provided for embedding request.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.MODEL_NOT_FOUND, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.MODEL_NOT_FOUND));
             }
 
             if (modelName.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
-                modelName = modelName.Substring("models/".Length);
+                modelName = modelName["models/".Length..];
 
             if (!requestedSecret.Success)
             {
                 LOGGER.LogError("No valid API key available for embedding request.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
             }
             
             // Prepare the Google Gemini embedding request:
@@ -116,7 +116,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             if (!response.IsSuccessStatusCode)
             {
                 LOGGER.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return [];
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<GoogleEmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -130,17 +130,33 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             else
             {
                 LOGGER.LogError("Was not able to deserialize the embedding response.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_RESPONSE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_RESPONSE));
             }
-            
+
+        }
+        catch (ProviderRequestException)
+        {
+            // Already classified and carrying its user message. Wrapping it again would only
+            // replace what we know with the fact that something went wrong:
+            throw;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            //
+            // The caller stopped the work, e.g. because the user removed the data source while it
+            // was being indexed. That is not a failure of the provider and must not be recorded
+            // as one:
+            //
+            throw;
         }
         catch (Exception e)
         {
-            if (this.IsTimeoutException(e, token))
+            var isTimeout = this.IsTimeoutException(e, token);
+            if (isTimeout)
                 await this.SendTimeoutError("creating embeddings");
 
             LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
-            return [];
+            throw this.CreateEmbeddingRequestException(e, isTimeout);
         }
     }
 

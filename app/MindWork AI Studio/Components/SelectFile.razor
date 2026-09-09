@@ -1,19 +1,37 @@
 @inherits MSGComponentBase
 
-<MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
-    <MudTextField
-        T="string"
-        Text="@this.File"
-        Label="@this.Label"
-        ReadOnly="@true"
-        Validation="@this.Validation"
-        Adornment="Adornment.Start"
-        AdornmentIcon="@Icons.Material.Filled.AttachFile"
-        UserAttributes="@SPELLCHECK_ATTRIBUTES"
-        Variant="Variant.Outlined"
-    />
-    
-    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.Disabled || this.isFileDialogOpen)" OnClick="@this.OpenFileDialog">
-        @T("Choose File")
-    </MudButton>
-</MudStack>
+@if (this.EnableDragDrop)
+{
+    <PathDropZone Layer="@this.Layer" CatchAllDocuments="@this.CatchAllDocuments" Disabled="@this.Disabled" OnPathsDropped="@this.PathsDropped">
+        @this.Picker
+        <MudText Typo="Typo.body2">
+            @T("You can also drag & drop the file here.")
+        </MudText>
+    </PathDropZone>
+}
+else
+{
+    @this.Picker
+}
+
+@code {
+
+    private RenderFragment Picker =>
+        @<MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+            <MudTextField
+                T="string"
+                Text="@this.File"
+                Label="@this.Label"
+                ReadOnly="@true"
+                Validation="@this.Validation"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+            />
+
+            <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.Disabled || this.isFileDialogOpen)" OnClick="@this.OpenFileDialog">
+                @T("Choose File")
+            </MudButton>
+        </MudStack>;
+}

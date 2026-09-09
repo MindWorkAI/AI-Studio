@@ -1,0 +1,7 @@
+@inherits MSGComponentBase
+
+<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+    <MudPaper Outlined="@true" Class="@this.dragClass">
+        @this.ChildContent
+    </MudPaper>
+</div>

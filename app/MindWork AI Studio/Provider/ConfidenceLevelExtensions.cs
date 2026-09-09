@@ -12,6 +12,7 @@ public static class ConfidenceLevelExtensions
         ConfidenceLevel.NONE => TB("No provider selected"),
         
         ConfidenceLevel.UNTRUSTED => TB("Untrusted"),
+        ConfidenceLevel.UNKNOWN => TB("Unknown"),
         ConfidenceLevel.VERY_LOW => TB("Very Low"),
         ConfidenceLevel.LOW => TB("Low"),
         ConfidenceLevel.MODERATE => TB("Moderate"),
@@ -24,6 +25,9 @@ public static class ConfidenceLevelExtensions
     public static string GetColor(this ConfidenceLevel level, SettingsManager settingsManager) => (level, settingsManager.IsDarkMode) switch
     {
         (ConfidenceLevel.NONE, _) => "#cccccc",
+
+        (ConfidenceLevel.UNKNOWN, false) => "#777777",
+        (ConfidenceLevel.UNKNOWN, true) => "#aaaaaa",
         
         (ConfidenceLevel.UNTRUSTED, false) => "#ff0000",
         (ConfidenceLevel.UNTRUSTED, true) => "#800000",

@@ -22,11 +22,6 @@ public interface IDataSource : IConfigurationObject
     public DataSourceType Type { get; init; }
 
     /// <summary>
-    /// Which data security policy is applied to this data source?
-    /// </summary>
-    public DataSourceSecurity SecurityPolicy { get; init; }
-    
-    /// <summary>
     /// The maximum number of matches to return when retrieving data from the ERI server.
     /// </summary>
     public ushort MaxMatches { get; init; }

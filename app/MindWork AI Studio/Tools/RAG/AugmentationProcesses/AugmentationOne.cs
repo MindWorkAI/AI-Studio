@@ -43,22 +43,40 @@ public sealed class AugmentationOne : IAugmentationProcess
         {
             // Let's get the validation agent & set up its provider:
             var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            validationAgent.SetLLMProvider(provider);
-            
-            // Let's validate all retrieval contexts:
-            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
-         
-            //
-            // Now, filter the retrieval contexts to the most relevant ones:
-            //
-            var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
-            var threshold = validationResults.GetConfidenceThreshold(targetWindow);
-            
-            // Filter the retrieval contexts:
-            retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.RequiredProviderConfidence))
+            {
+                try
+                {
+                    // Let's validate all retrieval contexts:
+                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
+                    if (validationResults.Count == 0)
+                        LOGGER.LogWarning("Retrieval context validation returned no results. Continuing augmentation with all retrieved contexts.");
+                    else
+                    {
+                        //
+                        // Now, filter the retrieval contexts to the most relevant ones:
+                        //
+                        var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
+                        var threshold = validationResults.GetConfidenceThreshold(targetWindow);
+
+                        // Filter the retrieval contexts:
+                        retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+                    }
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    LOGGER.LogError(exception, "Retrieval context validation failed. Continuing augmentation with all retrieved contexts.");
+                }
+            }
+            else
+                LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available. Continuing augmentation with all retrieved contexts.");
         }
         
-        LOGGER.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");
+        LOGGER.LogInformation($"Starting the augmentation process over {retrievalContexts.Count:###,###,###,###} of {numTotalRetrievalContexts:###,###,###,###} retrieved contexts.");
         
         //
         // We build a huge prompt from all retrieval contexts:

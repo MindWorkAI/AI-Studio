@@ -2,6 +2,9 @@ using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
+// This component has a parameter called Directory, which would shadow the file system's Directory class:
+using IODirectory = System.IO.Directory;
+
 namespace AIStudio.Components;
 
 public partial class SelectDirectory : MSGComponentBase
@@ -23,6 +26,24 @@ public partial class SelectDirectory : MSGComponentBase
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
+
+    /// <summary>
+    /// When true, the folder can also be chosen by dropping it onto this component.
+    /// </summary>
+    [Parameter]
+    public bool EnableDragDrop { get; set; }
+
+    /// <summary>
+    /// On which layer to register the drop area. Higher layers have priority over lower layers.
+    /// </summary>
+    [Parameter]
+    public int Layer { get; set; } = DropLayers.ROOT;
+
+    /// <summary>
+    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// </summary>
+    [Parameter]
+    public bool CatchAllDocuments { get; set; }
 
     [Inject]
     public RustService RustService { get; set; } = null!;
@@ -68,5 +89,40 @@ public partial class SelectDirectory : MSGComponentBase
         {
             this.isDirectoryDialogOpen = false;
         }
+    }
+
+    /// <summary>
+    /// Takes the first dropped path which leads to a folder.
+    /// </summary>
+    /// <remarks>
+    /// A dropped file is rejected instead of being taken as its parent folder. Everything a folder
+    /// contains is processed, so guessing the parent of a mistakenly dropped file could pull in far
+    /// more data than the user meant to hand over.
+    /// </remarks>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task PathsDropped(List<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (!IODirectory.Exists(path))
+                continue;
+
+            this.Logger.LogInformation("The user dropped the directory '{DroppedDirectory}'.", path);
+            this.InternalDirectoryChanged(path);
+            return;
+        }
+
+        this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a directory.", paths.Count);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.GetDropWarning(paths)));
+    }
+
+    private string GetDropWarning(List<string> paths)
+    {
+        // Naming the actual mistake beats a generic "that did not work". Dropping a file onto a
+        // folder picker is the likeliest of them:
+        if (paths.Any(File.Exists))
+            return T("Please drop a folder, not a file.");
+
+        return T("The dropped folder could not be accessed. Please choose it with the folder chooser instead.");
     }
 }

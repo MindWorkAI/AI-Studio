@@ -22,23 +22,21 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
+    string TokenizerPath = "",
+    int EmbeddingBatchSize = 0,
+    int TokenLimit = 0,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
+    public const int DEFAULT_TOKEN_LIMIT = 8192;
+    public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
+
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
     public static readonly EmbeddingProvider NONE = new();
 
-    public EmbeddingProvider() : this(
-        0,
-        Guid.Empty.ToString(),
-        string.Empty,
-        LLMProviders.NONE,
-        default,
-        false,
-        false,
-        Guid.Empty)
+    public EmbeddingProvider() : this(0, Guid.Empty.ToString(), string.Empty, LLMProviders.NONE, default, false, false, Guid.Empty)
     {
     }
 
@@ -53,6 +51,12 @@ public sealed record EmbeddingProvider(
     /// <inheritdoc />
     [JsonIgnore]
     public string SecretName => this.Name;
+
+    [JsonIgnore]
+    public int EffectiveTokenLimit => this.TokenLimit > 0 ? this.TokenLimit : DEFAULT_TOKEN_LIMIT;
+
+    [JsonIgnore]
+    public int EffectiveEmbeddingBatchSize => this.EmbeddingBatchSize > 0 ? this.EmbeddingBatchSize : DEFAULT_EMBEDDING_BATCH_SIZE;
 
     #endregion
 
@@ -101,6 +105,27 @@ public sealed record EmbeddingProvider(
             return false;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
+
+        var tokenLimit = DEFAULT_TOKEN_LIMIT;
+        if (table.TryGetValue("TokenLimit", out var tokenLimitValue) && (!tokenLimitValue.TryRead<int>(out tokenLimit) || tokenLimit < 1))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid token limit. Falling back to {DEFAULT_TOKEN_LIMIT}. (Plugin ID: {configPluginId})");
+            tokenLimit = DEFAULT_TOKEN_LIMIT;
+        }
+
+        var embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
+        if (table.TryGetValue("EmbeddingBatchSize", out var embeddingBatchSizeValue) && (!embeddingBatchSizeValue.TryRead<int>(out embeddingBatchSize) || embeddingBatchSize < 1))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid embedding batch size. Falling back to {DEFAULT_EMBEDDING_BATCH_SIZE}. (Plugin ID: {configPluginId})");
+            embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
+        }
+
         var allowUserProvidedApiKey = false;
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
@@ -136,6 +161,9 @@ public sealed record EmbeddingProvider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
+            TokenizerPath = tokenizerPath,
+            EmbeddingBatchSize = embeddingBatchSize,
+            TokenLimit = tokenLimit,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
@@ -226,6 +254,10 @@ public sealed record EmbeddingProvider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+
+                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    ["TokenLimit"] = {{this.EffectiveTokenLimit}},
+                    ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

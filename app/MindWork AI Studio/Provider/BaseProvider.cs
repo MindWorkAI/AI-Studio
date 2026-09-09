@@ -92,6 +92,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
 
     /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
+    /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
 
     /// <inheritdoc />
@@ -235,8 +238,105 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
     {
         ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
+        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
+        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
+        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
+        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
+        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
+        ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.InstanceName),
         _ => string.Empty,
     };
+
+    /// <summary>
+    /// Builds the failure a provider reports when it offers no embeddings at all.
+    /// </summary>
+    /// <remarks>
+    /// Such a provider used to answer with an empty list, which the caller was not able to tell
+    /// apart from a provider which simply produced nothing this time. Saying it outright is what
+    /// lets the user go and pick a provider which can do the job.
+    /// </remarks>
+    protected ProviderRequestException CreateEmbeddingsNotSupportedException() => new(ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED,
+        this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED));
+
+    /// <summary>
+    /// Builds the failure of an embedding request the provider answered with an error.
+    /// </summary>
+    /// <remarks>
+    /// Shared with the providers which talk to an embedding endpoint of their own: what the user
+    /// needs to know does not depend on which route the request took.
+    /// </remarks>
+    protected ProviderRequestException CreateEmbeddingRequestException(HttpStatusCode statusCode, string reasonPhrase, string responseBody)
+    {
+        var failureReason = this.ClassifyEmbeddingRequestFailure(statusCode, responseBody);
+        var userMessage = this.GetProviderRequestFailureUserMessage(failureReason);
+
+        // We know nothing about this failure, so we pass on what the provider said about it:
+        if (string.IsNullOrWhiteSpace(userMessage))
+        {
+            var providerMessage = ReadProviderErrorMessage(responseBody);
+            userMessage = string.IsNullOrWhiteSpace(providerMessage)
+                ? string.Format(TB("The provider '{0}' rejected the embedding request with the status code {1}."), this.InstanceName, (int)statusCode)
+                : string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+        }
+
+        return new(failureReason, userMessage, statusCode, reasonPhrase, responseBody);
+    }
+
+    /// <summary>
+    /// Builds the failure of an embedding request which did not get an answer at all.
+    /// </summary>
+    /// <param name="exception">What went wrong while the request was on its way.</param>
+    /// <param name="isTimeout">Whether the provider took longer than we were willing to wait.</param>
+    protected ProviderRequestException CreateEmbeddingRequestException(Exception exception, bool isTimeout)
+    {
+        if (isTimeout)
+            return new(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE), responseBody: exception.Message);
+
+        return new(ProviderRequestFailureReason.UNKNOWN, string.Format(TB("The embedding request to the provider '{0}' failed: {1}"), this.InstanceName, exception.Message), responseBody: exception.Message);
+    }
+
+    /// <summary>
+    /// Classifies why an embedding request failed.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from the chat classification on purpose. The chat path turns most failures into
+    /// a message and carries on, so classifying more cases there would change what every user
+    /// sees. The embedding path has no such fallback: it either produces vectors or it fails, and
+    /// then the caller has to be able to say why.
+    /// </remarks>
+    private ProviderRequestFailureReason ClassifyEmbeddingRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        //
+        // Whatever the shared classification recognizes wins: it knows what a provider says about
+        // quota and rate limits, and several providers refine it for their own error format.
+        //
+        var sharedFailureReason = this.ClassifyProviderRequestFailure(statusCode, responseBody);
+        if (sharedFailureReason is not ProviderRequestFailureReason.NONE)
+            return sharedFailureReason;
+
+        return statusCode switch
+        {
+            HttpStatusCode.Unauthorized => ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY,
+            HttpStatusCode.Forbidden => ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
+            HttpStatusCode.NotFound => ProviderRequestFailureReason.MODEL_NOT_FOUND,
+            HttpStatusCode.RequestEntityTooLarge => ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED,
+            HttpStatusCode.BadRequest when IsContextLengthFailure(responseBody) => ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED,
+            HttpStatusCode.RequestTimeout or HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout => ProviderRequestFailureReason.PROVIDER_UNAVAILABLE,
+            _ => ProviderRequestFailureReason.UNKNOWN,
+        };
+    }
+
+    /// <summary>
+    /// Recognizes the answer a provider gives when the text was longer than the model accepts.
+    /// </summary>
+    /// <remarks>
+    /// There is no common error code for this. What the answers have in common is that they talk
+    /// about the context and about tokens, which is the same hint the chat path goes by.
+    /// </remarks>
+    private static bool IsContextLengthFailure(string responseBody) =>
+        responseBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
+        responseBody.Contains("token", StringComparison.InvariantCultureIgnoreCase);
 
     protected virtual ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
     {
@@ -398,7 +498,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </remarks>
     /// <param name="responseBody">The body of the failed response.</param>
     /// <returns>The message, or an empty string when the body carries none.</returns>
-    private static string ReadProviderErrorMessage(string responseBody)
+    /// <summary>
+    /// Reads what the provider itself said about a failure out of its error response.
+    /// </summary>
+    /// <remarks>
+    /// Available to the providers because some of them talk to an endpoint of their own rather
+    /// than through the shared request methods, and their users deserve the same explanation.
+    /// </remarks>
+    protected static string ReadProviderErrorMessage(string responseBody)
     {
         if (string.IsNullOrWhiteSpace(responseBody))
             return string.Empty;
@@ -1336,9 +1443,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                     if(!requestedSecret.Success)
                     {
                         this.logger.LogError("No valid API key available for embedding request.");
-                        return [];
+                        throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
                     }
-                    
+
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
@@ -1351,21 +1458,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
-                var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
 
-                // We know nothing about this failure, so we pass on what the provider said about it:
-                if (string.IsNullOrWhiteSpace(userMessage))
-                {
-                    var providerMessage = ReadProviderErrorMessage(responseBody);
-                    if (!string.IsNullOrWhiteSpace(providerMessage))
-                        userMessage = string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
-                }
-
-                if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
-
-                return [];
+                //
+                // Thrown instead of shown: the caller knows whether this is one file out of
+                // thousands being indexed in the background or the one thing the user just asked
+                // for, and only it can decide how often the user should hear about it.
+                //
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<EmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -1379,16 +1478,32 @@ public abstract class BaseProvider : IProvider, ISecretId
             else
             {
                 this.logger.LogError("Was not able to deserialize the embedding response.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_RESPONSE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_RESPONSE));
             }
+        }
+        catch (ProviderRequestException)
+        {
+            // Already classified and carrying its user message. Wrapping it again would only
+            // replace what we know with the fact that something went wrong:
+            throw;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            //
+            // The caller stopped the work, e.g. because the user removed the data source while it
+            // was being indexed. That is not a failure of the provider and must not be recorded
+            // as one:
+            //
+            throw;
         }
         catch (Exception e)
         {
-            if (this.IsTimeoutException(e, token))
+            var isTimeout = this.IsTimeoutException(e, token);
+            if (isTimeout)
                 await this.SendTimeoutError("creating embeddings");
 
             this.logger.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
-            return [];
+            throw this.CreateEmbeddingRequestException(e, isTimeout);
         }
     }
     
