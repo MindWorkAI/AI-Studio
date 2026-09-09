@@ -208,9 +208,9 @@ public sealed partial class RustService
         }
         finally
         {
-            var finalContentChunk = ContentStreamSseHandler.Clear(streamId);
-            if (!string.IsNullOrWhiteSpace(finalContentChunk))
-                resultBuilder.AppendLine(finalContentChunk);
+            // Reading the whole file at once needs no token counts, so only the content is used here:
+            if (ContentStreamSseHandler.Clear(streamId) is { } finalContentChunk && !string.IsNullOrWhiteSpace(finalContentChunk.Content))
+                resultBuilder.AppendLine(finalContentChunk.Content);
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
@@ -267,14 +267,30 @@ public sealed partial class RustService
     {
         await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, token))
         {
+            if (segment.TokenCount is { } tokenCount)
+            {
+                yield return new(segment.Content, tokenCount);
+                continue;
+            }
+
+            //
+            // A segment the runtime did not count, e.g. a page which carries an embedded image on
+            // top of its text. The runtime leaves such a count out on purpose instead of failing
+            // the extraction, because we can count the segment ourselves. Without this, a document
+            // would be dropped over a number we are able to produce.
+            //
+            var countedSegment = await this.GetTokenCount(embeddingProvider, segment.Content, token);
+            if (countedSegment is { Success: true } counted)
+            {
+                yield return new(segment.Content, counted.TokenCount);
+                continue;
+            }
+
             //
             // Carries a code so callers can classify it: the file itself is fine, the answer of
             // the runtime was not, which makes this worth another attempt.
             //
-            if (segment.TokenCount is null)
-                throw new FileExtractionException(FileExtractionErrorCode.INVALID_RESPONSE, $"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}'.");
-
-            yield return new(segment.Content, segment.TokenCount.Value);
+            throw new FileExtractionException(FileExtractionErrorCode.INVALID_RESPONSE, $"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}', and counting it afterwards failed as well: {countedSegment?.Message}");
         }
     }
 
@@ -309,7 +325,7 @@ public sealed partial class RustService
         var promptInjectionFindings = new List<PromptInjectionFinding>();
         var promptInjectionRedactedCount = 0;
 
-        string? finalContentChunk;
+        ContentStreamPendingContent? finalContentChunk;
         try
         {
             await using var stream = await response.Content.ReadAsStreamAsync(token);
@@ -394,8 +410,13 @@ public sealed partial class RustService
                     continue;
                 }
 
+                //
+                // The count comes from the processed event, not from the event which was just read:
+                // a reader may hold content back across several events, and the count of the content
+                // it releases is the count of that content, not of the event that released it.
+                //
                 if (!string.IsNullOrWhiteSpace(processedEvent.Content))
-                    yield return (processedEvent.Content, sseEvent.TokenCount);
+                    yield return (processedEvent.Content, processedEvent.TokenCount);
             }
         }
         finally
@@ -403,8 +424,8 @@ public sealed partial class RustService
             finalContentChunk = ContentStreamSseHandler.Clear(streamId);
         }
 
-        if (!string.IsNullOrWhiteSpace(finalContentChunk))
-            yield return (finalContentChunk, null);
+        if (finalContentChunk is { } pendingContent && !string.IsNullOrWhiteSpace(pendingContent.Content))
+            yield return (pendingContent.Content, pendingContent.TokenCount);
 
         if (promptInjectionRedactedCount is 0)
             yield break;
