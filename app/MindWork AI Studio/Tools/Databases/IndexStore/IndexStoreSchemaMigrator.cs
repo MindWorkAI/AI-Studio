@@ -7,6 +7,7 @@ namespace AIStudio.Tools.Databases.IndexStore;
 internal static class IndexStoreSchemaMigrator
 {
     [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.InitialRagIndex))]
+    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Migrations.PermanentIndexingFailures))]
     public static async Task MigrateAsync(IndexStoreDbContext context, CancellationToken token)
     {
         await context.Database.MigrateAsync(token);

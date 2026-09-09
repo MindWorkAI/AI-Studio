@@ -44,6 +44,10 @@ public sealed class NoIndexStoreClient(string name, string? unavailableReason, D
 
     public override Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token) => Task.CompletedTask;
 
+    public override Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token) => Task.CompletedTask;
+
+    public override Task DeletePermanentFailureAsync(string dataSourceId, string filePath, CancellationToken token) => Task.CompletedTask;
+
     public override Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token) => Task.CompletedTask;
 
     public override Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>

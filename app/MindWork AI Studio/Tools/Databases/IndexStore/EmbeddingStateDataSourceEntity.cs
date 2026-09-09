@@ -19,4 +19,6 @@ internal sealed class EmbeddingStateDataSourceEntity
     public DateTimeOffset UpdatedAtUtc { get; set; }
 
     public List<EmbeddingStateFileEntity> Files { get; set; } = [];
+
+    public List<IndexingFailureEntity> PermanentIndexingFailures { get; set; } = [];
 }

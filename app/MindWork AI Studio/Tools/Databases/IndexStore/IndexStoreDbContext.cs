@@ -15,6 +15,8 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
 
     public DbSet<EmbeddingStateChunkEntity> EmbeddingChunks => this.Set<EmbeddingStateChunkEntity>();
 
+    public DbSet<IndexingFailureEntity> PermanentIndexingFailures => this.Set<IndexingFailureEntity>();
+
     public DbSet<IndexStoreSearchResultEntity> SearchResults => this.Set<IndexStoreSearchResultEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -39,6 +41,12 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
                 .HasMany(dataSource => dataSource.Files)
                 .WithOne(file => file.DataSource)
                 .HasForeignKey(file => file.DataSourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity
+                .HasMany(dataSource => dataSource.PermanentIndexingFailures)
+                .WithOne(failure => failure.DataSource)
+                .HasForeignKey(failure => failure.DataSourceId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -92,6 +100,23 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.HasIndex(chunk => chunk.ParentFileId).HasDatabaseName("idx_embedding_chunks_parent_file");
             entity.HasIndex(chunk => chunk.PageNumber).HasDatabaseName("idx_embedding_chunks_page");
             entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index").IsUnique();
+        });
+
+        modelBuilder.Entity<IndexingFailureEntity>(entity =>
+        {
+            entity.ToTable("permanent_indexing_failures");
+            entity.HasKey(failure => failure.ParentFileId);
+
+            entity.Property(failure => failure.ParentFileId).HasColumnName("parent_file_id");
+            entity.Property(failure => failure.DataSourceId).HasColumnName("data_source_id").IsRequired();
+            entity.Property(failure => failure.AbsolutePath).HasColumnName("absolute_path").UseCollation("NOCASE").IsRequired();
+            entity.Property(failure => failure.Fingerprint).HasColumnName("fingerprint").IsRequired();
+            entity.Property(failure => failure.FailureCode).HasColumnName("failure_code").IsRequired();
+            entity.Property(failure => failure.FailureMessage).HasColumnName("failure_message").IsRequired();
+            entity.Property(failure => failure.OccurredAtUtc).HasColumnName("occurred_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+
+            entity.HasIndex(failure => failure.DataSourceId).HasDatabaseName("idx_permanent_indexing_failures_data_source");
+            entity.HasIndex(failure => new { failure.DataSourceId, failure.AbsolutePath }).HasDatabaseName("idx_permanent_indexing_failures_data_source_absolute_path").IsUnique();
         });
 
         modelBuilder.Entity<IndexStoreSearchResultEntity>(entity =>

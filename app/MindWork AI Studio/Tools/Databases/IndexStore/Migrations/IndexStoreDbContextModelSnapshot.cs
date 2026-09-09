@@ -209,6 +209,55 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("embedding_chunks");
         });
 
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.IndexingFailureEntity", entity =>
+        {
+            entity.Property<string>("ParentFileId")
+                .HasColumnType("TEXT")
+                .HasColumnName("parent_file_id");
+
+            entity.Property<string>("AbsolutePath")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("absolute_path")
+                .UseCollation("NOCASE");
+
+            entity.Property<string>("DataSourceId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("data_source_id");
+
+            entity.Property<string>("FailureCode")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("failure_code");
+
+            entity.Property<string>("FailureMessage")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("failure_message");
+
+            entity.Property<string>("Fingerprint")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("fingerprint");
+
+            entity.Property<DateTimeOffset>("OccurredAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("occurred_at_utc");
+
+            entity.HasKey("ParentFileId");
+
+            entity.HasIndex("DataSourceId")
+                .HasDatabaseName("idx_permanent_indexing_failures_data_source");
+
+            entity.HasIndex("DataSourceId", "AbsolutePath")
+                .IsUnique()
+                .HasDatabaseName("idx_permanent_indexing_failures_data_source_absolute_path");
+
+            entity.ToTable("permanent_indexing_failures");
+        });
+
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.IndexStoreSearchResultEntity", entity =>
         {
             entity.Property<string>("AbsolutePath")
@@ -316,9 +365,22 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.Navigation("File");
         });
 
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.IndexingFailureEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", "DataSource")
+                .WithMany("PermanentIndexingFailures")
+                .HasForeignKey("DataSourceId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.Navigation("DataSource");
+        });
+
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", entity =>
         {
             entity.Navigation("Files");
+
+            entity.Navigation("PermanentIndexingFailures");
         });
 
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>

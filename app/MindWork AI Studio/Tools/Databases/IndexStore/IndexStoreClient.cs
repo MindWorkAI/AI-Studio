@@ -24,6 +24,10 @@ public abstract class IndexStoreClient(string name, string path) : DatabaseClien
 
     public abstract Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token);
 
+    public abstract Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token);
+
+    public abstract Task DeletePermanentFailureAsync(string dataSourceId, string filePath, CancellationToken token);
+
     public abstract Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token);
 
     public abstract Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);

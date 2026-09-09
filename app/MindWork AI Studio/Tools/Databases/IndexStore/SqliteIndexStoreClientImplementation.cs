@@ -66,6 +66,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         yield return (TB("Indexed data sources"), (await context.DataSources.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
         yield return (TB("Indexed files"), (await context.EmbeddedFiles.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
         yield return (TB("Search chunks"), (await context.EmbeddingChunks.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        yield return (TB("Permanently skipped files"), (await context.PermanentIndexingFailures.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
     }
 
     public override async Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token)
@@ -97,6 +98,19 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
                 file.LastWriteUtc,
                 file.EmbeddedAtUtc,
                 file.ChunkCount);
+        }
+
+        var permanentFailures = await context.PermanentIndexingFailures
+            .AsNoTracking()
+            .Where(failure => failure.DataSourceId == dataSourceId)
+            .ToListAsync(token);
+        foreach (var failure in permanentFailures)
+        {
+            manifest.PermanentFailures[failure.AbsolutePath] = new PermanentIndexingFailureRecord(
+                failure.Fingerprint,
+                ParseFailureCode(failure.FailureCode),
+                failure.FailureMessage,
+                failure.OccurredAtUtc);
         }
 
         return manifest;
@@ -188,6 +202,31 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             .ExecuteDeleteAsync(token);
 
         await transaction.CommitAsync(token);
+    }
+
+    public override async Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var failureEntity = await context.PermanentIndexingFailures.FirstOrDefaultAsync(entity => entity.ParentFileId == failure.ParentFileId, token);
+        if (failureEntity is null)
+        {
+            failureEntity = new IndexingFailureEntity
+            {
+                ParentFileId = failure.ParentFileId,
+            };
+            context.PermanentIndexingFailures.Add(failureEntity);
+        }
+
+        ApplyPermanentFailure(failureEntity, dataSourceId, failure);
+        await context.SaveChangesAsync(token);
+    }
+
+    public override async Task DeletePermanentFailureAsync(string dataSourceId, string filePath, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        await context.PermanentIndexingFailures
+            .Where(failure => failure.DataSourceId == dataSourceId && failure.AbsolutePath == filePath)
+            .ExecuteDeleteAsync(token);
     }
 
     public override async Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token)
@@ -358,6 +397,24 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         fileEntity.ConfidenceLevel = file.ConfidenceLevel;
         fileEntity.ConfidenceLevelRank = file.ConfidenceLevelRank;
     }
+
+    private static void ApplyPermanentFailure(IndexingFailureEntity failureEntity, string dataSourceId, PermanentIndexingFailure failure)
+    {
+        failureEntity.DataSourceId = dataSourceId;
+        failureEntity.AbsolutePath = failure.AbsolutePath;
+        failureEntity.Fingerprint = failure.Fingerprint;
+        failureEntity.FailureCode = failure.Code.ToString();
+        failureEntity.FailureMessage = failure.Message;
+        failureEntity.OccurredAtUtc = failure.OccurredAtUtc;
+    }
+
+    /// <remarks>
+    /// A row written by a newer version may name a code this one does not know. Such a row still
+    /// says that the file failed permanently, so it keeps its place in the manifest and only loses
+    /// the reason it names.
+    /// </remarks>
+    private static FileExtractionErrorCode ParseFailureCode(string failureCode) =>
+        Enum.TryParse<FileExtractionErrorCode>(failureCode, ignoreCase: true, out var parsedCode) ? parsedCode : FileExtractionErrorCode.UNKNOWN;
 
     private static void ApplyChunk(EmbeddingStateChunkEntity chunkEntity, EmbeddingStateChunk chunk)
     {
