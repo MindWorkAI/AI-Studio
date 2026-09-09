@@ -12,12 +12,12 @@ use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Error as CalamineError, Reader};
 use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
-use docx_to_md::{DocumentContainer, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
+use docx_to_md::{DocumentContainer, Error as DocumentError, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
 use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
-use pptx_to_md::{DiagnosticSeverity, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
+use pptx_to_md::{DiagnosticSeverity, Error as PresentationError, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
@@ -175,6 +175,11 @@ pub enum ExtractionErrorCode {
     FormatDetectionFailed,
     NotAValidPdf,
     NotAValidSpreadsheet,
+
+    /// The package of a document or presentation is broken, e.g. a damaged ZIP or a missing part.
+    /// The counterpart of `NotAValidPdf` and `NotAValidSpreadsheet` for the OOXML and ODF formats.
+    NotAValidDocument,
+
     PdfiumUnavailable,
     PdfEncrypted,
     PageExtractionFailed,
@@ -1219,6 +1224,48 @@ fn classify_spreadsheet_error_code(error: &CalamineError) -> ExtractionErrorCode
     }
 }
 
+/// Classifies a failure of the document reader, so a broken package is told apart from a file
+/// which is merely out of reach right now.
+///
+/// The distinction decides how long a file stays out of the index: a damaged ZIP or a missing
+/// `content.xml` is a property of the file and will fail the same way on every run, while a
+/// network share which went away is worth another attempt. Without this, both arrived as an
+/// unclassified failure and every run read the broken file again.
+///
+/// What remains uncoded are the failures of our own image handling. They say nothing about the
+/// document, so they keep the generic code.
+fn classify_document_error(error: &DocumentError) -> ExtractionErrorCode {
+    match error {
+        DocumentError::Io(io_error) => classify_io_error(io_error),
+
+        DocumentError::Zip(_)
+        | DocumentError::Xml { .. }
+        | DocumentError::Utf8 { .. }
+        | DocumentError::UnknownFormat
+        | DocumentError::FormatMismatch { .. }
+        | DocumentError::MissingPart(_)
+        | DocumentError::InvalidRelationship { .. } => ExtractionErrorCode::NotAValidDocument,
+
+        _ => ExtractionErrorCode::Internal,
+    }
+}
+
+/// Classifies a failure of the presentation reader. Same reasoning as for documents above.
+fn classify_presentation_error(error: &PresentationError) -> ExtractionErrorCode {
+    match error {
+        PresentationError::Io(io_error) => classify_io_error(io_error),
+
+        PresentationError::Zip(_)
+        | PresentationError::Xml { .. }
+        | PresentationError::Utf8(_)
+        | PresentationError::ParseError(_)
+        | PresentationError::SlideNotFound
+        | PresentationError::RelationshipNotFound => ExtractionErrorCode::NotAValidDocument,
+
+        _ => ExtractionErrorCode::Internal,
+    }
+}
+
 async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
@@ -1465,7 +1512,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             Ok(document) => document,
             Err(e) => {
                 let _ = tx.blocking_send(Err(ExtractionError::new(
-                    ExtractionErrorCode::FileNotReadable,
+                    classify_document_error(&e),
                     format!("The document could not be read: {e}"),
                 ).into()));
                 return;
@@ -1476,7 +1523,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             Ok(pages) => pages,
             Err(e) => {
                 let _ = tx.blocking_send(Err(ExtractionError::new(
-                    ExtractionErrorCode::FileNotReadable,
+                    classify_document_error(&e),
                     format!("The pages of the document could not be read: {e}"),
                 ).into()));
                 return;
@@ -1498,7 +1545,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                 Ok(page) => page,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(ExtractionError::new(
-                        ExtractionErrorCode::Internal,
+                        classify_document_error(&e),
                         format!("A page of the document could not be read: {e}"),
                     ).into()));
                     return;
@@ -1508,7 +1555,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                 Ok(content) => content,
                 Err(e) => {
                     let _ = tx.blocking_send(Err(ExtractionError::new(
-                        ExtractionErrorCode::Internal,
+                        classify_document_error(&e),
                         format!("Page {page_number} of the document could not be converted: {e}", page_number = page.page_number),
                     ).into()));
                     return;
@@ -1601,7 +1648,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     };
 
     let mut streamer = tokio::task::spawn_blocking(move || {
-        PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(ExtractionError::new(
+            classify_presentation_error(&e),
+            format!("The presentation could not be read: {e}"),
+        )) as Box<dyn std::error::Error + Send + Sync>)
     }).await??;
 
     let (tx, rx) = mpsc::channel(32);
@@ -1618,7 +1668,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
             let slide = match slide_result {
                 Ok(slide) => slide,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        classify_presentation_error(&e),
+                        format!("A slide of the presentation could not be read: {e}"),
+                    ).into()));
                     return;
                 },
             };
@@ -1644,7 +1697,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
             let mut content = match slide.to_markdown(&markdown_options) {
                 Ok(content) => content,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        classify_presentation_error(&e),
+                        format!("Slide {slide_number} of the presentation could not be converted: {e}", slide_number = slide.slide_number),
+                    ).into()));
                     return;
                 },
             };
