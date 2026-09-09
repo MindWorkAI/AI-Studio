@@ -50,6 +50,40 @@ internal static class FileExtractionErrorCodeExtensions
     };
 
     /// <summary>
+    /// Names the cause in a few words.
+    /// </summary>
+    /// <remarks>
+    /// Used to group the files of an indexing run by what happened to them: nine hundred entries
+    /// which all say the same sentence are one cause, not nine hundred.
+    /// </remarks>
+    /// <param name="code">The stable failure code.</param>
+    /// <returns>The localized name of the cause, or an empty text when the code has none.</returns>
+    internal static string GetIndexingCauseName(this FileExtractionErrorCode code) => code switch
+    {
+        FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No readable text"),
+        FileExtractionErrorCode.NO_CONTENT => TB("No content"),
+        FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("Not a text file"),
+        FileExtractionErrorCode.NOT_A_VALID_PDF => TB("Not a readable PDF"),
+        FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("Not a readable spreadsheet"),
+        FileExtractionErrorCode.PDF_ENCRYPTED => TB("Protected PDF"),
+        FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("Unknown file type"),
+        FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("Executable program"),
+        FileExtractionErrorCode.UNSUPPORTED => TB("Unsupported file type"),
+        FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => TB("Pages without readable text"),
+
+        FileExtractionErrorCode.FILE_NOT_FOUND => TB("File does not exist anymore"),
+        FileExtractionErrorCode.FILE_NOT_READABLE => TB("File could not be read"),
+        FileExtractionErrorCode.FILE_LOCKED => TB("File is open elsewhere"),
+        FileExtractionErrorCode.TIMEOUT => TB("Reading took too long"),
+        FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("PDF system unavailable"),
+        FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Pandoc unavailable"),
+
+        // Codes which say nothing beyond the message of the single file. The caller names those
+        // files itself and shows their messages instead:
+        _ => string.Empty,
+    };
+
+    /// <summary>
     /// Gets the localized message which explains why a file was not indexed.
     /// </summary>
     /// <remarks>

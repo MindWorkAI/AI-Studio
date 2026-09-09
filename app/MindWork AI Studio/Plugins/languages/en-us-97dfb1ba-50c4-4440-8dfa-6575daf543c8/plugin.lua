@@ -8916,14 +8916,29 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat in Workspace"
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Show your workspaces"
 
+-- Could not open the file location.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1118835751"] = "Could not open the file location."
+
+-- Other cause
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1143368054"] = "Other cause"
+
 -- Current file: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1166856644"] = "Current file: {0}"
+
+-- Could not open the file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Could not open the file location: {0}"
 
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Open the settings"
 
+-- Tried again during the next run
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1946414905"] = "Tried again during the next run"
+
 -- Skipped files: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T196379388"] = "Skipped files: {0}"
+
+-- Noticed
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2367007983"] = "Noticed"
 
 -- Skipped files: {0}. AI Studio reads them again once they change.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2382275084"] = "Skipped files: {0}. AI Studio reads them again once they change."
@@ -8949,20 +8964,26 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T300213237"] = "Embedding provider
 -- Failed files: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T309404893"] = "Failed files: {0}"
 
+-- Show this file in the file browser of your system
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3273105305"] = "Show this file in the file browser of your system"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3461425987"] = "Unknown error"
+
 -- Indexed files: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3473125711"] = "Indexed files: {0}"
 
 -- No local data source has been queued for embedding yet.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3774205531"] = "No local data source has been queued for embedding yet."
 
--- Skipped files ({0})
-UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3841666833"] = "Skipped files ({0})"
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3865031940"] = "Actions"
 
 -- Skipped until the file changes
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T542386347"] = "Skipped until the file changes"
 
--- Failure details ({0})
-UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T843144866"] = "Failure details ({0})"
+-- File
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T723007075"] = "File"
 
 -- Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1009708591"] = "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."
@@ -10695,6 +10716,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T530872684"] = "Ta
 -- Unknown format
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T677355172"] = "Unknown format"
 
+-- Not a readable spreadsheet
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1175970425"] = "Not a readable spreadsheet"
+
+-- Not a text file
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1465212038"] = "Not a text file"
+
 -- The file '{0}' does not exist anymore and was not indexed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1553912802"] = "The file '{0}' does not exist anymore and was not indexed."
 
@@ -10707,8 +10734,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T173921008"
 -- The file '{0}' could not be read and was not indexed. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1888709599"] = "The file '{0}' could not be read and was not indexed. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file. AI Studio tries again during the next run."
 
+-- File could not be read
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1931822272"] = "File could not be read"
+
 -- The file '{0}' did not provide any content, so it was not indexed. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1947951545"] = "The file '{0}' did not provide any content, so it was not indexed. AI Studio reads it again as soon as the file changes."
+
+-- No readable text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2009776477"] = "No readable text"
 
 -- The file '{0}' is not a readable PDF, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T212983471"] = "The file '{0}' is not a readable PDF, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes."
@@ -10716,14 +10749,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T212983471"
 -- The file '{0}' is not a readable spreadsheet, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2156961139"] = "The file '{0}' is not a readable spreadsheet, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes."
 
+-- Executable program
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2435353785"] = "Executable program"
+
+-- File does not exist anymore
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2646530381"] = "File does not exist anymore"
+
 -- The file '{0}' is protected and could not be opened, so it was not indexed. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2669995838"] = "The file '{0}' is protected and could not be opened, so it was not indexed. AI Studio reads it again as soon as the file changes."
 
 -- AI Studio was not able to start its PDF engine, so the file '{0}' was not indexed. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2752839071"] = "AI Studio was not able to start its PDF engine, so the file '{0}' was not indexed. AI Studio tries again during the next run."
 
+-- Not a readable PDF
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2794370901"] = "Not a readable PDF"
+
 -- Pages of the file '{0}' could not be read, so it was not indexed. They might contain images only. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2796839868"] = "Pages of the file '{0}' could not be read, so it was not indexed. They might contain images only. AI Studio reads it again as soon as the file changes."
+
+-- Unknown file type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T295447127"] = "Unknown file type"
 
 -- Reading the file '{0}' needs Pandoc, which is not available, so the file was not indexed. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3025154938"] = "Reading the file '{0}' needs Pandoc, which is not available, so the file was not indexed. AI Studio tries again during the next run."
@@ -10734,17 +10779,41 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3087621660
 -- The file '{0}' could not be read and was not indexed. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3236411826"] = "The file '{0}' could not be read and was not indexed. AI Studio tries again during the next run."
 
+-- Pandoc unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3311894040"] = "Pandoc unavailable"
+
 -- The file '{0}' is not a text file, so it was not indexed. Its content could not be read as text, which means it might have a wrong file extension. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3512647923"] = "The file '{0}' is not a text file, so it was not indexed. Its content could not be read as text, which means it might have a wrong file extension. AI Studio reads it again as soon as the file changes."
+
+-- No content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3513709999"] = "No content"
 
 -- The file type of '{0}' is not supported, so the file was not indexed. AI Studio reads it again as soon as the file changes.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3515425889"] = "The file type of '{0}' is not supported, so the file was not indexed. AI Studio reads it again as soon as the file changes."
 
+-- Pages without readable text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T353017028"] = "Pages without readable text"
+
 -- The file '{0}' is currently open in another program, which is why it was not indexed. When the file is stored on a shared network drive, a colleague might have it open. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3821277097"] = "The file '{0}' is currently open in another program, which is why it was not indexed. When the file is stored on a shared network drive, a colleague might have it open. AI Studio tries again during the next run."
 
+-- Unsupported file type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T4041351522"] = "Unsupported file type"
+
+-- File is open elsewhere
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T4201096587"] = "File is open elsewhere"
+
+-- PDF system unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T800475300"] = "PDF system unavailable"
+
 -- The file '{0}' is an executable program and was not indexed, regardless of its file extension.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T872993901"] = "The file '{0}' is an executable program and was not indexed, regardless of its file extension."
+
+-- Reading took too long
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T937477186"] = "Reading took too long"
+
+-- Protected PDF
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T989891711"] = "Protected PDF"
 
 -- The file type of '{0}' could not be determined, so the file was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1459702734"] = "The file type of '{0}' could not be determined, so the file was not sent."

@@ -1,6 +1,5 @@
 @attribute [Route(Routes.EMBEDDINGS)]
 @inherits MSGComponentBase
-@using AIStudio.Provider
 
 <MudStack Spacing="3" Class="pr-2 pb-4" Style="height: 100%; min-height: 0; overflow-y: auto;">
     <MudPaper Class="pa-4 border-dashed border rounded-lg" Elevation="0">
@@ -68,48 +67,72 @@
                         </MudText>
                     }
 
+                    @*
+                        One panel per cause, the most pressing one first. A folder in which nine
+                        hundred scanned documents were skipped otherwise buries the handful of
+                        files somebody has to look at.
+                    *@
                     @if (status.Failures.Count > 0)
                     {
-                        <MudExpansionPanels MultiExpansion="@false" Class="mt-2">
-                            <ExpansionPanel HeaderIcon="@GetFailureListIcon(status)" HeaderText="@this.GetFailureListHeader(status)" MaxHeight="360">
-                                <MudStack Spacing="2">
-                                    @foreach (var failure in status.Failures)
-                                    {
-                                        <MudStack Spacing="1" Class="py-1">
-                                            <MudText Typo="Typo.body2" Style="word-break: break-word;">
-                                                @failure.FilePath
-                                            </MudText>
-                                            <MudText Typo="Typo.caption" Color="@(failure.IsPermanent ? Color.Default : Color.Warning)" Style="word-break: break-word;">
-                                                @failure.Reason
-                                            </MudText>
-                                            <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="1" AlignItems="AlignItems.Center">
-                                                @if (failure.IsPermanent)
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@T("Skipped until the file changes")</MudChip>
-                                                }
-                                                @if (failure.FailureReason is not ProviderRequestFailureReason.NONE)
-                                                {
-                                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@failure.FailureReason.GetName()</MudChip>
-                                                }
-                                                @if (!string.IsNullOrWhiteSpace(failure.EmbeddingProviderName))
-                                                {
-                                                    <MudText Typo="Typo.caption">@string.Format(T("Embedding provider: {0}"), failure.EmbeddingProviderName)</MudText>
-                                                }
-                                                @if (failure.OccurredAtUtc > DateTimeOffset.MinValue)
-                                                {
-                                                    <MudText Typo="Typo.caption">@failure.OccurredAtUtc.ToLocalTime().ToString("g")</MudText>
-                                                }
-                                                @if (failure.FailureReason.IsFixedInProviderSettings())
-                                                {
-                                                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenEmbeddingProviderSettings">
-                                                        @T("Open the settings")
-                                                    </MudButton>
-                                                }
-                                            </MudStack>
+                        <MudExpansionPanels MultiExpansion="@true" Class="mt-2">
+                            @foreach (var group in this.GetFailureGroups(status))
+                            {
+                                <ExpansionPanel HeaderIcon="@group.Cause.Icon" IconColor="@group.Cause.Color" IconSize="Size.Small" HeaderText="@GetGroupHeader(group)">
+                                    <MudStack Spacing="3">
+                                        <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
+                                            <MudChip T="string" Size="Size.Small" Color="@group.Cause.Color" Variant="Variant.Outlined">
+                                                @(group.Cause.IsPermanent ? T("Skipped until the file changes") : T("Tried again during the next run"))
+                                            </MudChip>
+                                            @if (!string.IsNullOrWhiteSpace(group.EmbeddingProviderName))
+                                            {
+                                                <MudText Typo="Typo.caption">@string.Format(T("Embedding provider: {0}"), group.EmbeddingProviderName)</MudText>
+                                            }
+                                            @if (group.Cause.NeedsProviderSettings)
+                                            {
+                                                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenEmbeddingProviderSettings">
+                                                    @T("Open the settings")
+                                                </MudButton>
+                                            }
                                         </MudStack>
-                                    }
-                                </MudStack>
-                            </ExpansionPanel>
+                                        <MudTable Items="@group.Failures" Dense="@true" Hover="@true" Elevation="0" Breakpoint="Breakpoint.None" RowsPerPage="10" Class="border-dashed border rounded-lg">
+                                            <ColGroup>
+                                                <col/>
+                                                <col style="width: 11em;"/>
+                                                <col style="width: 7em;"/>
+                                            </ColGroup>
+                                            <HeaderContent>
+                                                <MudTh>@T("File")</MudTh>
+                                                <MudTh>@T("Noticed")</MudTh>
+                                                <MudTh>@T("Actions")</MudTh>
+                                            </HeaderContent>
+                                            <RowTemplate>
+                                                <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
+                                                    <MudText Typo="Typo.body2">@GetFileName(context.FilePath)</MudText>
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.FilePath</MudText>
+                                                    @if (group.Cause.ShowsMessagePerFile)
+                                                    {
+                                                        <MudText Typo="Typo.caption" Color="Color.Warning">@context.Reason</MudText>
+                                                    }
+                                                </MudTd>
+                                                <MudTd Style="white-space: nowrap;">
+                                                    <MudText Typo="Typo.caption">@GetOccurrenceText(context)</MudText>
+                                                </MudTd>
+                                                <MudTd>
+                                                    @if (CanShowInFileManager(context))
+                                                    {
+                                                        <MudTooltip Text="@T("Show this file in the file browser of your system")">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>
+                                                        </MudTooltip>
+                                                    }
+                                                </MudTd>
+                                            </RowTemplate>
+                                            <PagerContent>
+                                                <MudTablePager PageSizeOptions="@PAGE_SIZE_OPTIONS"/>
+                                            </PagerContent>
+                                        </MudTable>
+                                    </MudStack>
+                                </ExpansionPanel>
+                            }
                         </MudExpansionPanels>
                     }
 
