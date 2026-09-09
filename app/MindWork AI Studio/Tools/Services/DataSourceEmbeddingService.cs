@@ -769,8 +769,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (batch.Count > 0)
             await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
 
+        //
+        // The extraction itself did not report a failure, but nothing usable came out of it. For
+        // the index this is the same case as a scanned page without a text layer, which is why it
+        // carries a code of its own instead of an unclassified exception:
+        //
         if (totalChunkCount == 0)
-            throw new InvalidOperationException(string.Format(TB("No text could be read from the file '{0}'."), file.Name));
+            throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from the file '{0}'."), file.Name));
 
         logger.LogDebug(
             "Generated {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",

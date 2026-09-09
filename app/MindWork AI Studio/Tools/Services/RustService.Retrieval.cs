@@ -372,7 +372,7 @@ public sealed partial class RustService
                         error.DetectedFormat,
                         error.Message);
 
-                    throw new InvalidOperationException($"Rust could not extract '{path}': {error.Message}");
+                    throw new FileExtractionException(error.ParsedCode, $"Rust could not extract '{path}': {error.Message}", error.PageNumber, error.DetectedFormat);
                 }
 
                 if (processedEvent.PromptInjection is { } promptInjection)
