@@ -36,6 +36,15 @@ public partial class PathDropZone : MSGComponentBase
     /// <summary>
     /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
     /// </summary>
+    /// <remarks>
+    /// Practically every zone needs this today. Hovering is detected through mouse events, and no
+    /// webview delivers those while a native drag is in progress, so a zone without this flag
+    /// hardly ever catches anything. The consequence is that two zones of the same layer cannot be
+    /// told apart: the one carrying this flag takes every drop, including the ones meant for the
+    /// other. A page may therefore hold only one zone per layer. Lifting that limit needs the
+    /// cursor position, which the runtime receives from Tauri and currently discards in
+    /// app_window.rs.
+    /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
 
@@ -149,8 +158,9 @@ public partial class PathDropZone : MSGComponentBase
         if(this.Disabled || this.numDropAreasAboveThis > 0)
             return;
 
-        // The webview gets no DOM drag events while a native drag is in progress, so the mouse is
-        // what tells us whether the user is aiming at this zone:
+        // A native drag delivers no DOM events at all, mouse events included. This fires before a
+        // drag begins, while the pointer still moves freely, which makes it a hint about where the
+        // user is aiming rather than a reliable signal. See the remarks on CatchAllDocuments:
         this.isComponentHovered = true;
         this.SetDragClass();
         this.StateHasChanged();
