@@ -307,12 +307,25 @@ const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
-/// Every PDF file starts with this signature.
+/// The signature which identifies a PDF file.
+///
+/// It does not have to sit at the very beginning, which is why we search for it instead of
+/// comparing against it.
 const PDF_MAGIC: &[u8] = b"%PDF-";
 
-/// How many bytes we probe to verify the PDF signature. The few extra bytes beyond the
-/// signature itself make the diagnostics useful when the signature does not match.
-const PDF_HEADER_PROBE_SIZE: u64 = 8;
+/// How far into the file we look for the PDF signature.
+///
+/// ISO 32000-1 (7.5.2) allows the header anywhere within the first 1024 bytes, and PDFium
+/// searches exactly that far. Files carrying something in front of their header do occur:
+/// a raw HTTP response saved with a `.pdf` extension has its response headers there. PDFium
+/// treats the offset it finds as the origin of the file and shifts every cross-reference
+/// offset by it, so such a file reads just fine. The signature itself is added on top of the
+/// window, so a header at its very end is still found completely.
+const PDF_HEADER_SEARCH_SIZE: u64 = 1024 + PDF_MAGIC.len() as u64;
+
+/// How many of the leading bytes we name when we refuse a file. Enough to recognize what was
+/// really saved there, short enough to keep the log line readable.
+const PDF_HEADER_DIAGNOSTIC_SIZE: usize = 8;
 
 /// Last-resort payload used when even an error event cannot be serialized. It keeps the
 /// chunk schema intact, so the .NET app never has to parse a bare string.
@@ -977,6 +990,10 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
 /// Verifies the file really is a PDF before handing it to PDFium. Without this check, a file
 /// which only carries the `.pdf` extension, or whose bytes are not available, would end up in
 /// the text branch and silently produce empty content.
+///
+/// The signature is searched for rather than expected at the beginning, because the format
+/// allows it anywhere within the first bytes of the file. Insisting on offset zero would turn
+/// documents which every PDF viewer opens into unreadable ones.
 async fn ensure_pdf_header(file_path: &str) -> Result<()> {
     let file = tokio::fs::File::open(file_path).await.map_err(|error| ExtractionError::new(
         classify_io_error(&error),
@@ -988,23 +1005,35 @@ async fn ensure_pdf_header(file_path: &str) -> Result<()> {
         format!("The file size could not be read: {error}"),
     ))?.len();
 
-    let mut header = Vec::with_capacity(PDF_HEADER_PROBE_SIZE as usize);
-    file.take(PDF_HEADER_PROBE_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
+    let mut header = Vec::with_capacity(PDF_HEADER_SEARCH_SIZE as usize);
+    file.take(PDF_HEADER_SEARCH_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
         classify_io_error(&error),
         format!("The first bytes of the file could not be read: {error}"),
     ))?;
 
-    if header.starts_with(PDF_MAGIC) {
-        return Ok(());
+    match header.windows(PDF_MAGIC.len()).position(|window| window == PDF_MAGIC) {
+        Some(0) => Ok(()),
+
+        //
+        // Something sits in front of the header, e.g. the response headers of a raw HTTP
+        // response which was saved with a `.pdf` extension. PDFium finds the very same offset
+        // and reads the document from there, so this is worth a note instead of a refusal.
+        //
+        Some(offset) => {
+            warn!("The PDF signature of '{file_path}' begins at offset {offset} instead of at the start of the file; size: {file_size} bytes. PDFium reads the document from that offset.");
+            Ok(())
+        },
+
+        None => {
+            let header_hex = header.iter().take(PDF_HEADER_DIAGNOSTIC_SIZE).map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join(" ");
+            error!("The file '{file_path}' carries no PDF signature within its first {PDF_HEADER_SEARCH_SIZE} bytes; size: {file_size} bytes, first bytes: [{header_hex}].");
+
+            Err(ExtractionError::new(
+                ExtractionErrorCode::NotAValidPdf,
+                format!("The file carries no PDF signature within its first {PDF_HEADER_SEARCH_SIZE} bytes. Size: {file_size} bytes, first bytes: [{header_hex}]."),
+            ).into())
+        },
     }
-
-    let header_hex = header.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join(" ");
-    error!("The file '{file_path}' does not start with the PDF signature; size: {file_size} bytes, first bytes: [{header_hex}].");
-
-    Err(ExtractionError::new(
-        ExtractionErrorCode::NotAValidPdf,
-        format!("The file does not start with the PDF signature. Size: {file_size} bytes, first bytes: [{header_hex}]."),
-    ).into())
 }
 
 /// Classifies why PDFium refused to open a document, so the cause reaches the user instead of
