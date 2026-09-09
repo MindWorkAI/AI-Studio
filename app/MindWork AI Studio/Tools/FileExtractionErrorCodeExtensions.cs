@@ -78,6 +78,14 @@ internal static class FileExtractionErrorCodeExtensions
         FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("PDF system unavailable"),
         FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Pandoc unavailable"),
 
+        // Nothing about these lies in the file: AI Studio asked its runtime for the content and
+        // got back something it cannot work with. One name for all of them, because that is the
+        // one thing the user can tell from them:
+        FileExtractionErrorCode.INVALID_RESPONSE => TB("Internal error"),
+        FileExtractionErrorCode.INVALID_REQUEST => TB("Internal error"),
+        FileExtractionErrorCode.REQUEST_FAILED => TB("Internal error"),
+        FileExtractionErrorCode.INTERNAL => TB("Internal error"),
+
         // Codes which say nothing beyond the message of the single file. The caller names those
         // files itself and shows their messages instead:
         _ => string.Empty,

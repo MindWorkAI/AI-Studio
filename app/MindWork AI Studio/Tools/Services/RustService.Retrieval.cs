@@ -267,8 +267,12 @@ public sealed partial class RustService
     {
         await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, token))
         {
+            //
+            // Carries a code so callers can classify it: the file itself is fine, the answer of
+            // the runtime was not, which makes this worth another attempt.
+            //
             if (segment.TokenCount is null)
-                throw new InvalidOperationException($"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}'.");
+                throw new FileExtractionException(FileExtractionErrorCode.INVALID_RESPONSE, $"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}'.");
 
             yield return new(segment.Content, segment.TokenCount.Value);
         }

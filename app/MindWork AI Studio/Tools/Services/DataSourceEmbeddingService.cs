@@ -329,7 +329,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 else
                 {
                     logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                    this.UpsertStatus(this.GetFallbackStatus(dataSource, exception.Message));
+                    this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
                 }
             }
             finally
@@ -425,7 +425,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id,
                 vectorStore.Name);
             token.ThrowIfCancellationRequested();
-            this.UpsertStatus(this.GetFallbackStatus(dataSource, "The vector database is not available."));
+            this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The vector database is not available.")));
             return;
         }
 
@@ -437,7 +437,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id,
                 indexStore.Name);
             token.ThrowIfCancellationRequested();
-            this.UpsertStatus(this.GetFallbackStatus(dataSource, "The local RAG index database is not available."));
+            this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The local RAG index database is not available.")));
             return;
         }
 
@@ -765,14 +765,21 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 // would interrupt whatever the user is doing right now.
                 //
                 failedFiles++;
-                lastError = exception.Message;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message, DateTimeOffset.UtcNow, EmbeddingProviderName: embeddingProvider.Name, ExtractionCode: exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE));
+                var extractionCode = exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE;
+
+                //
+                // Deliberately not the message of the exception: that one is written for the log
+                // file, in English, and repeats the path which the list shows anyway.
+                //
+                var failureMessage = extractionCode.ToIndexingUserMessage(file.Name);
+                lastError = failureMessage;
+                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: embeddingProvider.Name, ExtractionCode: extractionCode));
                 manifest.Files.Remove(file.FullName);
                 await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, file.FullName, token);
                 await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.Message, failureDetails, permanentlySkippedFiles));
+                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, failureMessage, failureDetails, permanentlySkippedFiles));
             }
         }
 
@@ -1175,7 +1182,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             catch (Exception exception)
             {
                 logger.LogError(exception, "Initial embedding hash check failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                this.UpsertStatus(this.GetFallbackStatus(dataSource, exception.Message));
+                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
             }
         }
 

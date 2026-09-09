@@ -107,11 +107,12 @@
                                             </HeaderContent>
                                             <RowTemplate>
                                                 <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
+                                                    @* Captions render as spans, so each of them needs to be told to take its own line. *@
                                                     <MudText Typo="Typo.body2">@GetFileName(context.FilePath)</MudText>
-                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.FilePath</MudText>
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.FilePath</MudText>
                                                     @if (group.Cause.ShowsMessagePerFile)
                                                     {
-                                                        <MudText Typo="Typo.caption" Color="Color.Warning">@context.Reason</MudText>
+                                                        <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block">@context.Reason</MudText>
                                                     }
                                                 </MudTd>
                                                 <MudTd Style="white-space: nowrap;">

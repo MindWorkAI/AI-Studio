@@ -10734,6 +10734,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T173921008"
 -- The file '{0}' could not be read and was not indexed. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file. AI Studio tries again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1888709599"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht indexiert werden. Wenn die Datei auf einem Netzlaufwerk gespeichert ist, ist das Laufwerk möglicherweise nicht verfügbar oder ein anderes Programm blockiert die Datei. AI Studio versucht es beim nächsten Durchlauf erneut."
 
+-- Internal error
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1891925702"] = "Interner Fehler"
+
 -- File could not be read
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1931822272"] = "Datei konnte nicht gelesen werden"
 
@@ -11679,6 +11682,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1542963
 -- The embedding provider answered with a vector containing an invalid number. Please select another embedding model or provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1663635773"] = "Der Einbettungsanbieter hat einen Vektor mit einer ungültigen Zahl zurückgegeben. Bitte wählen Sie ein anderes Einbettungsmodell oder einen anderen Anbieter aus."
 
+-- The local RAG index database is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1738200026"] = "Die lokale RAG-Indexdatenbank ist nicht verfügbar."
+
 -- The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1935191670"] = "Die Datei „{0}“ wurde während der Indexierung geändert. Die bereits indexierten Inhalte werden verworfen, und die Datei wird beim nächsten Durchlauf erneut verarbeitet."
 
@@ -11697,8 +11703,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2424608
 -- The embedding provider was not able to embed {0} part(s) of the file '{1}'. The provider reported: {2}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2456390987"] = "Der Einbettungsanbieter konnte {0} Teil(e) der Datei „{1}“ nicht einbetten. Der Anbieter meldete: {2}"
 
+-- The vector database is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2489270584"] = "Die Vektordatenbank ist nicht verfügbar."
+
 -- The selected embedding provider is not available. Please check it in the settings.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2494993815"] = "Der ausgewählte Einbettungsanbieter ist nicht verfügbar. Bitte überprüfen Sie ihn in den Einstellungen."
+
+-- The data source '{0}' could not be processed. The log file holds the details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T268763982"] = "Die Datenquelle „{0}“ konnte nicht verarbeitet werden. Details finden Sie in der Protokolldatei."
 
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T3230000698"] = "Der Ordner „{0}“ konnte nicht geöffnet werden. Bitte prüfen Sie, ob Sie ihn lesen dürfen."
