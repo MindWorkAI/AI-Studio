@@ -666,6 +666,51 @@ pub async fn extract_data(
     Sse::new(stream)
 }
 
+/// Counts the characters of a text which carry meaning for an embedding.
+///
+/// Whitespace says nothing, so the readers ask for this count instead of the length of their
+/// output: a page which is left with nothing but blank lines is a page without text. Counting
+/// the raw length would report a document of scanned images as readable, hand the whitespace to
+/// the embedding provider, and leave the user without any hint that the file was never read.
+fn readable_character_count(text: &str) -> usize {
+    text.chars().filter(|character| !character.is_whitespace()).count()
+}
+
+/// Counts the readable characters of content whose reader marks the structure it found with HTML
+/// comments.
+///
+/// The presentation reader notes every slide number that way, which means a deck of scanned
+/// slides consists of nothing but those markers. They are ours, not the author's, so they must
+/// not make such a file look readable.
+///
+/// Only the readers which add markers of their own use this. In a file the user wrote, a comment
+/// is their own text and counts like every other character.
+fn readable_character_count_outside_comments(text: &str) -> usize {
+    const COMMENT_START: &str = "<!--";
+    const COMMENT_END: &str = "-->";
+
+    let mut count = 0;
+    let mut remaining = text;
+
+    loop {
+        let (before_comment, rest) = match remaining.find(COMMENT_START) {
+            Some(index) => (&remaining[..index], &remaining[index + COMMENT_START.len()..]),
+            None => return count + readable_character_count(remaining),
+        };
+
+        count += readable_character_count(before_comment);
+
+        //
+        // An unterminated comment swallows the rest of the text, exactly as a Markdown reader
+        // would render it: everything behind it is comment and therefore says nothing.
+        //
+        remaining = match rest.find(COMMENT_END) {
+            Some(index) => &rest[index + COMMENT_END.len()..],
+            None => return count,
+        };
+    }
+}
+
 /// Splits content into ranges no longer than the segment limit, cutting on character boundaries.
 fn bounded_text_segment_ranges(content: &str) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
@@ -951,6 +996,22 @@ async fn read_text_file(file_path: &str) -> Result<String> {
 
 async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
     let text = read_text_file(file_path).await?;
+
+    //
+    // An empty file, or one holding nothing but blank lines, decodes without a complaint. Reported
+    // as content, it would arrive as a document the AI is asked to work with, and the Markdown
+    // fences below would even make it look like one. The whole file is in hand here and nothing was
+    // sent yet, so this refuses the extraction instead of marking it afterwards.
+    //
+    if readable_character_count(&text) == 0 {
+        warn!("No readable text could be extracted from '{file_path}': the file holds {length} character(s), none of which carry text.", length = text.chars().count());
+
+        return Err(ExtractionError::new(
+            ExtractionErrorCode::NoTextExtracted,
+            "The file holds no readable text.",
+        ).into());
+    }
+
     let mut line_number = 0;
 
     let stream = stream! {
@@ -1114,7 +1175,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
-            number_of_characters += content.chars().count();
+            number_of_characters += readable_character_count(&content);
 
             if tx.blocking_send(Ok(Chunk::new(
                 content,
@@ -1130,7 +1191,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
             return;
         }
 
-        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
 
         //
         // Without this marker, a PDF without a text layer and a broken extraction both arrive as
@@ -1174,6 +1235,9 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
             }
         };
 
+        let mut number_of_sheets = 0;
+        let mut number_of_characters = 0;
+
         for sheet_name in workbook.sheet_names() {
             let range = match workbook.worksheet_range(&sheet_name) {
                 Ok(r) => r,
@@ -1196,6 +1260,7 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                 }
             };
 
+            number_of_sheets += 1;
             let mut row_idx = 0;
             tx.blocking_send(Ok(Chunk::new(
                 "```csv".to_string(),
@@ -1207,10 +1272,15 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
             
             for row in range.rows() {
                 row_idx += 1;
-                let content = row.iter()
-                    .map(|cell| cell.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",");
+                let cells = row.iter().map(|cell| cell.to_string()).collect::<Vec<_>>();
+
+                //
+                // The cells are counted one by one, before they are joined: a row of empty cells
+                // joins into a line of commas, and those would pass for content although the row
+                // holds nothing. The fences around each sheet are left out for the same reason.
+                //
+                number_of_characters += cells.iter().map(|cell| readable_character_count(cell)).sum::<usize>();
+                let content = cells.join(",");
 
                 if tx.blocking_send(Ok(Chunk::new(
                     content,
@@ -1230,6 +1300,21 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
                     row_number: row_idx,
                 }
             ))).ok();
+        }
+
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_sheets} sheet(s) of '{path}'.");
+
+        //
+        // Without this marker, an empty workbook arrives as a handful of Markdown fences with
+        // nothing between them, and the AI would answer as if that were the content of the file.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{path}': {number_of_sheets} sheet(s), all of them without any cell content.");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_sheets} sheet(s) of the spreadsheet."),
+            ))));
         }
     });
 
@@ -1431,7 +1516,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             };
 
             number_of_pages = page.page_number;
-            number_of_characters += content.chars().count();
+            number_of_characters += readable_character_count(&content);
 
             if let Some(metadata) = metadata_md.take() {
                 content = format!("{metadata}\n\n{content}");
@@ -1463,7 +1548,7 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             }
         }
 
-        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
 
         //
         // Without this marker, a document without any text and a broken extraction both arrive as
@@ -1495,6 +1580,10 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     let path = Path::new(file_path).to_owned();
     let stream_id = stream_id.to_owned();
 
+    // The path itself is moved into the task which opens the presentation, so the diagnostics of
+    // the worker below keep their own copy:
+    let log_path = file_path.to_owned();
+
     let parser_config = ParserConfig::builder()
         .extract_images(extract_images)
         .compress_images(true)
@@ -1522,6 +1611,8 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
     // so the complete producer must stay outside Tokio's asynchronous workers.
     let worker = tokio::task::spawn_blocking(move || {
         let mut metadata_md = presentation_metadata_to_markdown(streamer.metadata());
+        let mut number_of_slides = 0;
+        let mut number_of_characters = 0;
 
         for slide_result in streamer.iter_slides() {
             let slide = match slide_result {
@@ -1557,6 +1648,14 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                     return;
                 },
             };
+
+            //
+            // Counted here, before the metadata of the presentation is put in front of the first
+            // slide: its title and author belong to the file, not to the slides, and a deck of
+            // scanned images would look readable through them alone.
+            //
+            number_of_slides += 1;
+            number_of_characters += readable_character_count_outside_comments(&content);
 
             if let Some(metadata) = metadata_md.take() {
                 content = format!("{metadata}\n\n{content}");
@@ -1617,6 +1716,21 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                     }
                 }
             }
+        }
+
+        debug!("Extracted {number_of_characters} readable character(s) from {number_of_slides} slide(s) of '{log_path}'.");
+
+        //
+        // Without this marker, a presentation of nothing but pictures arrives as a row of slide
+        // number comments, and the AI would answer as if that were the content of the file.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{log_path}': {number_of_slides} slide(s). The presentation may consist of images only.");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_slides} slide(s). The presentation may consist of images only."),
+            ))));
         }
     });
 
