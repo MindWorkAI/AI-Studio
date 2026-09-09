@@ -80,7 +80,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
 
-    private DataSourceEmbeddingOverview embeddingOverview = new(false, DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
+    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     private IReadOnlyCollection<NavBarItem> navItems = [];
     private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
     private bool showEmbeddingStatusIcon;
@@ -459,13 +459,29 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private void LoadEmbeddingItem()
     {
         this.embeddingOverview = this.DataSourceEmbeddingService.GetOverview();
-        this.showEmbeddingStatusIcon = this.embeddingOverview.IsVisible;
+
+        //
+        // The entry is shown whenever local RAG is available, in every state. Hiding it while
+        // nothing was running looked tidier, but a data source which was just added has no status
+        // yet: the service creates one when the run begins. The icon was therefore missing during
+        // the very moment the user was waiting for it. What the entry does communicate is its
+        // state, through the icon below.
+        //
+        // The preview feature is what gates it now. The route itself is not gated, so without this
+        // check, users who have no RAG at all would get a navigation entry for it.
+        //
+        this.showEmbeddingStatusIcon = PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
+
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
-            (DataSourceEmbeddingState.FAILED) => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
-            (DataSourceEmbeddingState.QUEUED) => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
-            _ => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
+            DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
+            DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+
+            // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
+            // icon does not draw attention while there is nothing to attend to:
+            _ => (Icons.Material.Filled.CloudDone, palette.DarkLighten, palette.GrayLight),
         };
         this.embeddingItem = new NavBarItem(T("Embeddings"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }
@@ -480,7 +496,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
             ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
             : T("Some embeddings failed and need attention."),
-        _ => string.Empty
+
+        // The entry is always visible, so its resting state needs words as well. An empty tooltip
+        // would leave the user guessing what the icon is there for:
+        _ => T("All data sources are up to date.")
     };
 
     private async Task ShowUpdateDialog()

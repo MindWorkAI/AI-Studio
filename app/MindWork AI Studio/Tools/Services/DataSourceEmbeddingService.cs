@@ -95,7 +95,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         {
             var total = Math.Max(activeStatus.TotalFiles, 1);
             return new(
-                true,
                 activeStatus.State,
                 activeStatus.IndexedFiles,
                 total,
@@ -106,9 +105,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             .FirstOrDefault(status => status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
 
         if (failedStatus is not null)
-            return new(true, DataSourceEmbeddingState.FAILED, failedStatus.IndexedFiles, failedStatus.TotalFiles, failedStatus.FailedFiles);
+            return new(DataSourceEmbeddingState.FAILED, failedStatus.IndexedFiles, failedStatus.TotalFiles, failedStatus.FailedFiles);
 
-        return new(false,  DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
+        return new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     }
 
     public Task QueueAllInternalDataSourcesAsync()
