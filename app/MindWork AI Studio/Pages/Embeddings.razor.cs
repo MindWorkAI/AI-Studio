@@ -1,10 +1,13 @@
 using AIStudio.Components;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Pages;
 
@@ -22,9 +25,15 @@ public partial class Embeddings : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
     private ILogger<Embeddings> Logger { get; init; } = null!;
 
     private IReadOnlyList<DataSourceEmbeddingStatus> Statuses { get; set; } = [];
+
+    private string? expandedDataSourceId;
+    private bool userChoseExpansion;
 
     private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedFiles);
 
@@ -70,6 +79,67 @@ public partial class Embeddings : MSGComponentBase
             .OrderBy(status => status.SortOrder)
             .ThenBy(status => status.DataSourceName, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        this.UpdateAutoExpansion();
+    }
+
+    /// <summary>
+    /// Opens the data source which is worth reading, as long as the user has not chosen one.
+    /// </summary>
+    /// <remarks>
+    /// It never closes what is open. A data source which finishes its run while somebody is reading
+    /// it would otherwise fold up at the very moment its result becomes interesting. From the first
+    /// click on, the page stops rearranging itself at all.
+    /// </remarks>
+    private void UpdateAutoExpansion()
+    {
+        if (this.userChoseExpansion)
+            return;
+
+        // The list is sorted by state, so the first match is the most pressing one: a running data
+        // source before a queued one, and a failed one before a completed one:
+        var worthOpening = this.Statuses.FirstOrDefault(IsWorthOpening);
+        if (worthOpening is null)
+            return;
+
+        this.expandedDataSourceId = worthOpening.DataSourceId;
+    }
+
+    /// <remarks>
+    /// Whoever opens this page does so because a run is under way or because something went wrong.
+    /// Meeting nothing but closed panels would be a step back from the version which showed every
+    /// data source at once.
+    /// </remarks>
+    private static bool IsWorthOpening(DataSourceEmbeddingStatus status) =>
+        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedFiles > 0;
+
+    /// <remarks>
+    /// MudBlazor keeps track of which panel is open on its own, so this only records the decision.
+    /// Both events of a switch arrive, in either order — the one closing the old panel and the one
+    /// opening the new one — which is why the closing event only clears what it actually named.
+    /// </remarks>
+    private void DataSourcePanelExpandedChanged(DataSourceEmbeddingStatus status, bool isExpanded)
+    {
+        this.userChoseExpansion = true;
+
+        if (isExpanded)
+            this.expandedDataSourceId = status.DataSourceId;
+        else if (this.expandedDataSourceId == status.DataSourceId)
+            this.expandedDataSourceId = null;
+    }
+
+    /// <summary>
+    /// Opens the data source settings, the same dialog the chat offers next to its data source selection.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is left to do once it closes: the dialog writes the settings itself and publishes
+    /// CONFIGURATION_CHANGED, which this page already listens to.
+    /// </remarks>
+    private async Task OpenDataSourceSettings()
+    {
+        var dialogParameters = new DialogParameters();
+        var dialogReference = await this.DialogService.ShowAsync<SettingsDialogDataSources>(null, dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
     }
 
     private static Color GetStatusColor(DataSourceEmbeddingStatus status) => status.State switch

@@ -444,3 +444,16 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .provider-group-header {
     font-weight: 600;
 }
+
+/*
+ * Headers of an expansion panel which sits inside another one, such as the failure groups of a
+ * data source on the embeddings page. Two headers of the same size give no clue about which one
+ * contains the other. MudBlazor's own Dense is no help here: it takes the padding off the content,
+ * not off the header, whose height is fixed in the framework. Hence this rule — and it has to name
+ * the MudBlazor classes to outweigh their specificity.
+ */
+.mud-expand-panel .mud-expand-panel-header.expansion-panel-header-compact {
+    min-height: 2rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
