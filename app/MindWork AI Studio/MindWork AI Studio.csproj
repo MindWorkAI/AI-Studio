@@ -137,4 +137,30 @@
         
     </Target>
 
+    <!--
+        Scoped CSS (`.razor.css`) is bundled into `$(AssemblyName).styles.css`, which App.razor links.
+        That bundle is generated at build time, so it never lives in the source tree's wwwroot. The
+        release build, though, serves static files solely from the ManifestEmbeddedFileProvider (see
+        Program.cs), fed by the `wwwroot\**` EmbeddedResource above. Without this target the bundle is
+        therefore missing at runtime and every scoped rule is dropped without a word, while the debug
+        build keeps working through the static web assets. Hence: build the bundle, then embed it
+        before the manifest is written.
+    -->
+    <Target Name="EmbedScopedCssBundle" DependsOnTargets="GenerateScopedCssFiles" BeforeTargets="_CalculateEmbeddedFilesManifestInputs">
+        <PropertyGroup>
+            <ScopedCssBundleToEmbed>$(IntermediateOutputPath)scopedcss\bundle\$(AssemblyName).styles.css</ScopedCssBundleToEmbed>
+        </PropertyGroup>
+
+        <!--
+            Fail loudly instead of shipping a release without the bundle: a missing file here means the
+            SDK changed where it writes the bundle, and every scoped rule would silently vanish again.
+        -->
+        <Error Condition="!Exists('$(ScopedCssBundleToEmbed)')"
+               Text="The scoped CSS bundle was not found at '$(ScopedCssBundleToEmbed)'. Without it, the release build serves no scoped CSS at all. Check where the SDK writes the bundle and adjust the EmbedScopedCssBundle target." />
+
+        <ItemGroup>
+            <EmbeddedResource Include="$(ScopedCssBundleToEmbed)" Link="wwwroot\$(AssemblyName).styles.css" />
+        </ItemGroup>
+    </Target>
+
 </Project>
