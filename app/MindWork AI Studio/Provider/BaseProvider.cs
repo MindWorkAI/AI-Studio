@@ -1054,6 +1054,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                                     """, StringComparison.InvariantCulture) ||
                 jsonData.StartsWith("""
                                     {"type":"response.reasoning_text.delta"
+                                    """, StringComparison.InvariantCulture) ||
+
+                //
+                // Not a delta of its own: it announces the next part of a reasoning summary.
+                // The stream carries no separator between those parts, so the stream line
+                // turns this event into the paragraph break between them.
+                //
+                jsonData.StartsWith("""
+                                    {"type":"response.reasoning_summary_part.added"
                                     """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;

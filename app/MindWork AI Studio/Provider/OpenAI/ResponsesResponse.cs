@@ -42,10 +42,22 @@ public sealed record ResponsesResponse
             }));
     }
 
-    public string GetThinkingOutput() => string.Concat(this.Output
+    /// <summary>
+    /// The human-readable thinking the model returned.
+    /// </summary>
+    /// <remarks>
+    /// A reasoning item carries its summary and its raw text as arrays of parts, and each part
+    /// reads as its own paragraph. The API states no separator between them, so we join them
+    /// as paragraphs instead of running them into one another.
+    /// </remarks>
+    public string GetThinkingOutput() => JoinParagraphs(this.Output
         .Where(x => ReadString(x, "type").Equals("reasoning", StringComparison.Ordinal))
         .SelectMany(x => ReadArrayItems(x, "summary").Concat(ReadArrayItems(x, "content")))
         .Select(x => ReadString(x, "text")));
+
+    private static string JoinParagraphs(IEnumerable<string> parts) => string.Join(
+        $"{Environment.NewLine}{Environment.NewLine}",
+        parts.Where(part => !string.IsNullOrWhiteSpace(part)));
 
     public IReadOnlyList<Source> GetSources() => this.Output
         .Where(x => ReadString(x, "type").Equals("message", StringComparison.Ordinal))

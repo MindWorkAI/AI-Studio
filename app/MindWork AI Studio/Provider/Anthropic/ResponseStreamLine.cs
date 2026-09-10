@@ -16,8 +16,8 @@ public readonly record struct ResponseStreamLine(string Type, int Index, Delta D
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => this.Delta.Type switch
     {
-        "thinking_delta" => new(string.Empty, this.Delta.Thinking, []),
-        _ => new(this.Delta.Text, string.Empty, []),
+        "thinking_delta" => new(string.Empty, [], this.Delta.Thinking),
+        _ => new(this.Delta.Text, []),
     };
 
     #region Implementation of IAnnotationStreamLine

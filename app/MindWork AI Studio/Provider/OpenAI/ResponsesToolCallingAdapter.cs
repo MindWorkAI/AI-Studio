@@ -11,7 +11,7 @@ namespace AIStudio.Provider.OpenAI;
 /// correlated by call ID. Unlike Chat Completions, the whole output of a round has to be sent
 /// back for the next one, reasoning items included, or the API refuses to continue.
 /// </remarks>
-public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
+public sealed class ResponsesToolCallingAdapter(Model chatModel, bool isReasoningModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
     Func<ResponsesAPIRequest, CancellationToken, Task<ResponsesResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
 {
@@ -50,7 +50,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
             Stream = false,
             Store = false,
             Tools = includeTools ? this.effectiveProviderTools : [],
-            AdditionalApiParameters = IncludeEncryptedReasoning(apiParameters),
+            AdditionalApiParameters = isReasoningModel ? IncludeEncryptedReasoning(apiParameters) : apiParameters,
         }, token);
 
         if (response is null)
@@ -99,7 +99,8 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     /// </summary>
     /// <remarks>
     /// Tool rounds use stateless Responses requests. OpenAI requires encrypted reasoning items in that mode
-    /// so that the complete output can be passed back with the tool result on the next round.
+    /// so that the complete output can be passed back with the tool result on the next round.<br/><br/>
+    /// Only a reasoning model gets this, because the include is meaningless for every other one.
     /// </remarks>
     private static IDictionary<string, object> IncludeEncryptedReasoning(IDictionary<string, object> apiParameters)
     {
@@ -111,11 +112,15 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
             return result;
         }
 
+        //
+        // Whatever the user put there stays. A value we cannot read as a list is kept as the
+        // single entry it appears to be: the API rejecting the user's own value is the honest
+        // outcome, while dropping it here would hide the mistake behind a request that works.
+        //
         var includedOutput = result[includeKey] switch
         {
             IEnumerable<object> values => values.ToList(),
-            string value => new List<object> { value },
-            _ => [],
+            var value => [value],
         };
 
         if (!includedOutput.Any(value => string.Equals(value as string, ENCRYPTED_REASONING_INCLUDE, StringComparison.Ordinal)))

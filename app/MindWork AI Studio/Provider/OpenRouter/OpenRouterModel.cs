@@ -8,6 +8,9 @@ namespace AIStudio.Provider.OpenRouter;
 /// <param name="Reasoning">The model's provider-reported reasoning behavior.</param>
 public readonly record struct OpenRouterModel(string Id, string? Name, OpenRouterReasoning? Reasoning)
 {
+    /// <summary>
+    /// Converts the catalog entry into the model the rest of the app works with.
+    /// </summary>
     public Model ToModel() => new(this.Id, this.Name)
     {
         ReasoningBehavior = this.Reasoning switch
@@ -19,10 +22,3 @@ public readonly record struct OpenRouterModel(string Id, string? Name, OpenRoute
         },
     };
 }
-
-/// <summary>
-/// The reasoning defaults returned for a model by OpenRouter's model catalog.
-/// </summary>
-/// <param name="DefaultEnabled">Whether reasoning is enabled when the request does not configure it.</param>
-/// <param name="Mandatory">Whether reasoning cannot be disabled for the model.</param>
-public readonly record struct OpenRouterReasoning(bool DefaultEnabled, bool Mandatory);

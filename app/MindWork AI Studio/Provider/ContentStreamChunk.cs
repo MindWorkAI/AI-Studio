@@ -4,14 +4,10 @@ namespace AIStudio.Provider;
 /// A chunk of content from a content stream, along with its associated sources.
 /// </summary>
 /// <param name="Content">The text content of the chunk.</param>
-/// <param name="Thinking">The provider-exposed thinking content of the chunk.</param>
 /// <param name="Sources">The list of sources associated with the chunk.</param>
-public sealed record ContentStreamChunk(string Content, string Thinking, IList<ISource> Sources)
+/// <param name="Thinking">The provider-exposed thinking content of the chunk.</param>
+public sealed record ContentStreamChunk(string Content, IList<ISource> Sources, string Thinking = "")
 {
-    public ContentStreamChunk(string content, IList<ISource> sources) : this(content, string.Empty, sources)
-    {
-    }
-
     /// <summary>
     /// Implicit conversion to string.
     /// </summary>

@@ -396,9 +396,11 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 return false;
 
             var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
             aiText.IsStreaming = true;
             aiText.ApplyStreamChunk(contentStreamChunk);
+
+            // The waiting animation stays until the answer itself starts, cf. ContentText:
+            aiText.InitialRemoteWait = aiText.Text.Length is 0;
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {

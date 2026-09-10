@@ -73,9 +73,7 @@ public static partial class ProviderExtensions
 
         return provider.UsedLLMProvider switch
         {
-            LLMProviders.OPEN_AI => MergeReasoningStates(
-                GetOpenAICompatibleReasoningState(parameters),
-                GetReasoningEffortState(parameters)),
+            LLMProviders.OPEN_AI => GetOpenAICompatibleReasoningState(parameters),
 
             LLMProviders.ANTHROPIC => GetAnthropicReasoningState(parameters),
 
@@ -101,7 +99,6 @@ public static partial class ProviderExtensions
                 LLMProviders.HELMHOLTZ or
                 LLMProviders.GWDG => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
 
@@ -119,14 +116,12 @@ public static partial class ProviderExtensions
 
                 Host.VLLM => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetVllmReasoningState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
 
                 _ => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
             },
@@ -142,7 +137,8 @@ public static partial class ProviderExtensions
     /// <returns>The detected reasoning configuration state.</returns>
     /// <remarks>
     /// OpenAI-compatible providers commonly use a nested <c>reasoning</c> object and/or
-    /// a top-level <c>reasoning_effort</c> parameter.
+    /// a top-level <c>reasoning_effort</c> parameter. Both are covered here, so a caller
+    /// does not merge <see cref="GetReasoningEffortState"/> on top of this one again.
     /// </remarks>
     private static ReasoningConfigurationState GetOpenAICompatibleReasoningState(IDictionary<string, object> parameters)
     {

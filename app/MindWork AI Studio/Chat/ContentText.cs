@@ -127,12 +127,18 @@ public sealed class ContentText : IContent
                         if (token.IsCancellationRequested)
                             break;
 
-                        // Stop the waiting animation:
-                        this.InitialRemoteWait = false;
                         this.IsStreaming = true;
 
                         // Add the response to the content:
                         this.ApplyStreamChunk(contentStreamChunk);
+
+                        //
+                        // Stop the waiting animation once the answer itself starts. A model which
+                        // is still reasoning has not written anything to read yet, and an empty
+                        // bubble would look like a finished, empty answer. The thinking section
+                        // is available next to the animation the whole time.
+                        //
+                        this.InitialRemoteWait = this.Text.Length is 0;
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:

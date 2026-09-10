@@ -51,7 +51,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (!string.IsNullOrWhiteSpace(round.ThinkingOutput))
             {
                 var separator = hasThinkingOutput ? $"{Environment.NewLine}{Environment.NewLine}" : string.Empty;
-                yield return new ContentStreamChunk(string.Empty, $"{separator}{round.ThinkingOutput}", []);
+                yield return new ContentStreamChunk(string.Empty, [], $"{separator}{round.ThinkingOutput}");
                 hasThinkingOutput = true;
             }
 

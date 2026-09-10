@@ -226,8 +226,9 @@
                         }
                         else if (this.Content.IsStreaming)
                         {
+                            @* The think tags never reach the text: ContentText splits them off while streaming. *@
                             <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">
-                                @textContent.Text.RemoveThinkTags()
+                                @textContent.Text
                             </MudText>
                         }
                         else

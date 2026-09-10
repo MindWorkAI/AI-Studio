@@ -39,9 +39,16 @@ public sealed record AnthropicResponse
     /// <summary>
     /// The human-readable thinking the model returned, with redacted blocks omitted.
     /// </summary>
-    public string GetThinkingOutput() => string.Concat(this.Content
-        .Where(x => ReadString(x, "type").Equals("thinking", StringComparison.Ordinal))
-        .Select(x => ReadString(x, "thinking")));
+    /// <remarks>
+    /// Each thinking block reads as its own paragraph, so they are joined as paragraphs
+    /// rather than run into one another.
+    /// </remarks>
+    public string GetThinkingOutput() => string.Join(
+        $"{Environment.NewLine}{Environment.NewLine}",
+        this.Content
+            .Where(x => ReadString(x, "type").Equals("thinking", StringComparison.Ordinal))
+            .Select(x => ReadString(x, "thinking"))
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
 
     private static string ReadString(JsonElement item, string propertyName)
     {
