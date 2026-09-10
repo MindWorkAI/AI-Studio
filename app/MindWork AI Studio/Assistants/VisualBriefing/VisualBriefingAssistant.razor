@@ -121,10 +121,11 @@
                                 <MudPaper Outlined="true" Class="pa-4 h-100">
                                     <MudText Typo="Typo.h5">@T("Source material")</MudText>
                                     <MudText Typo="Typo.body2" Class="mb-2">@T("Documents, spreadsheets, images, audio, and video are considered as source context.")</MudText>
+                                    @* No default target on purpose: with two zones side by side, the
+                                       user has to aim at the one they mean. *@
                                     <AttachDocuments Name="Visual briefing source material"
                                                      @bind-DocumentPaths="@this.editor.SourceMaterial"
                                                      OnChange="@this.EnforceSourceExclusivityAsync"
-                                                     CatchAllDocuments="true"
                                                      UseSmallForm="false"
                                                      Provider="@this.editor.Provider"
                                                      Disabled="@this.IsCurrentBusy"/>
