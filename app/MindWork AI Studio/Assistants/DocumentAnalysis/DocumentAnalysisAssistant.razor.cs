@@ -244,6 +244,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
@@ -285,6 +286,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private bool policyIsProtected;
     private bool policyHidePolicyDefinition;
     private bool policyDefinitionExpanded;
+
+    /// <summary>
+    /// Whether the document selection panel is the open one.
+    /// </summary>
+    /// <remarks>
+    /// Only one of the two panels is ever open, so this is normally the opposite of the field above
+    /// -- but not always: the user can collapse both. It is tracked rather than derived because it
+    /// decides whether the document zone is the default target of the whole assistant, and a
+    /// collapsed zone must not hold that role.
+    /// </remarks>
+    private bool documentSelectionExpanded;
     private string policyName = string.Empty;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
@@ -333,7 +345,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Restore(SELECTED_POLICY_STATE_KEY, value => this.selectedPolicy = value);
         state.Restore(POLICY_IS_PROTECTED_STATE_KEY, value => this.policyIsProtected = value);
         state.Restore(POLICY_HIDE_POLICY_DEFINITION_STATE_KEY, value => this.policyHidePolicyDefinition = value);
-        state.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value => this.policyDefinitionExpanded = value);
+        state.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value =>
+        {
+            this.policyDefinitionExpanded = value;
+            this.documentSelectionExpanded = !value;
+        });
         state.Restore(POLICY_NAME_STATE_KEY, value => this.policyName = value);
         state.Restore(POLICY_DESCRIPTION_STATE_KEY, value => this.policyDescription = value);
         state.Restore(POLICY_ANALYSIS_RULES_STATE_KEY, value => this.policyAnalysisRules = value);
@@ -359,6 +375,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
         
         this.Form?.ResetValidation();
@@ -368,6 +385,22 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private Task PolicyDefinitionExpandedChanged(bool isExpanded)
     {
         this.policyDefinitionExpanded = isExpanded;
+
+        // The panels do not allow multi expansion, so opening this one closes the other:
+        if (isExpanded)
+            this.documentSelectionExpanded = false;
+
+        return Task.CompletedTask;
+    }
+
+    private Task DocumentSelectionExpandedChanged(bool isExpanded)
+    {
+        this.documentSelectionExpanded = isExpanded;
+
+        // The panels do not allow multi expansion, so opening this one closes the other:
+        if (isExpanded)
+            this.policyDefinitionExpanded = false;
+
         return Task.CompletedTask;
     }
     
@@ -457,6 +490,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.policyIsProtected = state;
         this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
+        this.documentSelectionExpanded = state;
         await this.AutoSave(true);
     }
 
@@ -634,6 +668,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         // Update the expansion state based on the policy protection:
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
 
         // Update available providers:
         this.UpdateProviders();

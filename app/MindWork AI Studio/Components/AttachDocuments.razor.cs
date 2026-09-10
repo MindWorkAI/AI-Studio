@@ -108,6 +108,7 @@ public partial class AttachDocuments : MSGComponentBase
     private readonly string dropZoneId = $"attach-documents-{Guid.NewGuid():N}";
 
     private bool isDefaultZone;
+    private bool hasReportedDefaultZoneProblem;
     private bool isDraggingOver;
     private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
@@ -124,7 +125,6 @@ public partial class AttachDocuments : MSGComponentBase
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         this.ApplyFilters([], [ Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
-        this.ClaimDefaultZoneRole();
 
         await base.OnInitializedAsync();
     }
@@ -132,6 +132,7 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>Rehydrates results after the component is assigned another chat or target.</summary>
     protected override async Task OnParametersSetAsync()
     {
+        this.UpdateDefaultZoneRole();
         await base.OnParametersSetAsync();
         await this.SyncCompletedMediaAttachmentsAsync();
     }
@@ -262,11 +263,35 @@ public partial class AttachDocuments : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// Asks the area for the role of its default target, if this component wants it.
+    /// Keeps the role of the default target in step with the CatchAllDocuments parameter.
+    /// </summary>
+    /// <remarks>
+    /// The flag is a parameter, so it can change while this component lives. A zone inside a
+    /// collapsed panel is the case this exists for: MudBlazor leaves the content of a collapsed
+    /// panel in the DOM with a height of zero, so the zone stays alive and cannot be aimed at --
+    /// yet it would keep the role and swallow every drop meant for the visible part of the page.
+    /// </remarks>
+    private void UpdateDefaultZoneRole()
+    {
+        if (this.CatchAllDocuments)
+        {
+            this.ClaimDefaultZoneRole();
+            return;
+        }
+
+        if (!this.isDefaultZone)
+            return;
+
+        this.Scope?.ReleaseDefaultZone(this);
+        this.isDefaultZone = false;
+    }
+
+    /// <summary>
+    /// Asks the area for the role of its default target.
     /// </summary>
     private void ClaimDefaultZoneRole()
     {
-        if (!this.CatchAllDocuments)
+        if (this.isDefaultZone)
             return;
 
         if (this.Scope is null)
@@ -275,15 +300,27 @@ public partial class AttachDocuments : MSGComponentBase
             // There is nothing to claim: the surrounding page, assistant, or dialog is not a drop
             // area at all. The flag would then do nothing, and silently -- which is how a zone ends
             // up promising a behaviour it cannot deliver. So say it out loud: either the area needs
-            // a DropZoneScope, or the flag does not belong here.
+            // a DropZoneScope, or the flag does not belong here. Reported once only, because the
+            // claim is retried on every parameter change.
             //
-            this.Logger.LogWarning("The attachment zone '{Name}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.Name);
+            if (!this.hasReportedDefaultZoneProblem)
+            {
+                this.hasReportedDefaultZoneProblem = true;
+                this.Logger.LogWarning("The attachment zone '{Name}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.Name);
+            }
+
             return;
         }
 
         this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
-        if (!this.isDefaultZone)
-            this.Logger.LogDebug("The attachment zone '{Name}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.Name);
+
+        // Losing the role to a neighbour is a decision, not a defect -- and it can be undone later,
+        // when that neighbour goes away. So this one only goes to the debug log, and only once:
+        if (this.isDefaultZone || this.hasReportedDefaultZoneProblem)
+            return;
+
+        this.hasReportedDefaultZoneProblem = true;
+        this.Logger.LogDebug("The attachment zone '{Name}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.Name);
     }
 
     /// <summary>

@@ -64,15 +64,20 @@ public partial class PathDropZone : MSGComponentBase
     private string dragClass = DEFAULT_DRAG_CLASS;
     private bool isDefaultZone;
     private bool isHighlighted;
+    private bool hasReportedDefaultZoneProblem;
 
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.ApplyFilters([], [ Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
-        this.ClaimDefaultZoneRole();
-
         await base.OnInitializedAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        this.UpdateDefaultZoneRole();
+        base.OnParametersSet();
     }
 
     /// <summary>
@@ -116,11 +121,35 @@ public partial class PathDropZone : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// Asks the area for the role of its default target, if this zone wants it.
+    /// Keeps the role of the default target in step with the CatchAllDocuments parameter.
+    /// </summary>
+    /// <remarks>
+    /// The flag is a parameter, so it can change while this zone lives. A zone inside a collapsed
+    /// panel is the case this exists for: MudBlazor leaves the content of a collapsed panel in the
+    /// DOM with a height of zero, so the zone stays alive and cannot be aimed at -- yet it would
+    /// keep the role and swallow every drop meant for the part of the page one can actually see.
+    /// </remarks>
+    private void UpdateDefaultZoneRole()
+    {
+        if (this.CatchAllDocuments)
+        {
+            this.ClaimDefaultZoneRole();
+            return;
+        }
+
+        if (!this.isDefaultZone)
+            return;
+
+        this.Scope?.ReleaseDefaultZone(this);
+        this.isDefaultZone = false;
+    }
+
+    /// <summary>
+    /// Asks the area for the role of its default target.
     /// </summary>
     private void ClaimDefaultZoneRole()
     {
-        if (!this.CatchAllDocuments)
+        if (this.isDefaultZone)
             return;
 
         if (this.Scope is null)
@@ -131,13 +160,28 @@ public partial class PathDropZone : MSGComponentBase
             // up promising a behaviour it cannot deliver. So say it out loud: either the area needs
             // a DropZoneScope, or the flag does not belong here.
             //
-            this.Logger.LogWarning("The path drop zone '{ZoneId}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.dropZoneId);
+            //
+            // Reported once only: the claim is retried on every parameter change, and repeating
+            // the message on every render would bury the log.
+            //
+            if (!this.hasReportedDefaultZoneProblem)
+            {
+                this.hasReportedDefaultZoneProblem = true;
+                this.Logger.LogWarning("The path drop zone '{ZoneId}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.dropZoneId);
+            }
+
             return;
         }
 
         this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
-        if (!this.isDefaultZone)
-            this.Logger.LogDebug("The path drop zone '{ZoneId}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.dropZoneId);
+
+        // Losing the role to a neighbour is a decision, not a defect -- and it can be undone later,
+        // when that neighbour goes away. So this one only goes to the debug log, and only once:
+        if (this.isDefaultZone || this.hasReportedDefaultZoneProblem)
+            return;
+
+        this.hasReportedDefaultZoneProblem = true;
+        this.Logger.LogDebug("The path drop zone '{ZoneId}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.dropZoneId);
     }
 
     /// <summary>
