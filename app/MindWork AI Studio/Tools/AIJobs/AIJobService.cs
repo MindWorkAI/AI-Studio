@@ -273,7 +273,6 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         catch (ProviderRequestException e)
         {
             logger.LogError(e, "The provider request failed for chat generation job '{JobId}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", state.Snapshot.JobId, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
-            RemoveEmptyAIResponse(state);
             await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.UserMessage);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
         }
@@ -302,7 +301,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         var aiText = request.AIText;
         aiText.InitialRemoteWait = false;
         aiText.IsStreaming = false;
-        aiText.Text = aiText.Text.RemoveThinkTags().Trim();
+        aiText.FinalizeStreamContent();
 
         RemoveEmptyAIResponse(state);
 
@@ -367,7 +366,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             return;
 
         var aiText = request.AIText;
-        if (!string.IsNullOrWhiteSpace(aiText.Text))
+        if (!string.IsNullOrWhiteSpace(aiText.Text) || !string.IsNullOrWhiteSpace(aiText.Thinking))
             return;
 
         var aiBlock = request.ChatThread.Blocks
@@ -397,10 +396,11 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 return false;
 
             var aiText = state.ChatGenerationRequest.AIText;
-            aiText.InitialRemoteWait = false;
             aiText.IsStreaming = true;
-            aiText.Text += contentStreamChunk;
-            aiText.Sources.MergeSources(contentStreamChunk.Sources);
+            aiText.ApplyStreamChunk(contentStreamChunk);
+
+            // The waiting animation stays until the answer itself starts, cf. ContentText:
+            aiText.InitialRemoteWait = aiText.Text.Length is 0;
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {

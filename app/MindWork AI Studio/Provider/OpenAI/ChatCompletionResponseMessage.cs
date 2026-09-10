@@ -15,5 +15,11 @@ public sealed record ChatCompletionResponseMessage
 
     public string? ReasoningContent { get; init; }
 
+    public string? Reasoning { get; init; }
+
+    public IList<JsonElement>? ReasoningDetails { get; init; }
+
     public IList<ChatCompletionToolCall?>? ToolCalls { get; init; }
+
+    public string GetThinkingOutput() => ThinkingContent.Get(this.ReasoningContent, this.Reasoning, this.ReasoningDetails);
 }

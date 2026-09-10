@@ -96,6 +96,11 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
+
+        // Whether the model reasons at all, no matter whether it may be switched off:
+        var isReasoningModel = modelCapabilities.Contains(Capability.ALWAYS_REASONING) ||
+                               modelCapabilities.Contains(Capability.REASONING_BY_DEFAULT) ||
+                               modelCapabilities.Contains(Capability.OPTIONAL_REASONING);
         
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
@@ -225,6 +230,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         {
             var adapter = new ResponsesToolCallingAdapter(
                 chatModel,
+                isReasoningModel,
                 baseInput,
                 additionalApiParameters,
                 providerTools,

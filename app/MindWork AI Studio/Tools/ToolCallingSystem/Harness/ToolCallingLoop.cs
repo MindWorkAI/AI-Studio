@@ -28,6 +28,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         var toolCallCount = 0;
         var toolResultCharacterCount = 0L;
         var toolSources = new List<Source>();
+        var hasThinkingOutput = false;
 
         while (true)
         {
@@ -46,6 +47,13 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             }
 
             toolSources.MergeSources(round.Sources);
+
+            if (!string.IsNullOrWhiteSpace(round.ThinkingOutput))
+            {
+                var separator = hasThinkingOutput ? $"{Environment.NewLine}{Environment.NewLine}" : string.Empty;
+                yield return new ContentStreamChunk(string.Empty, [], $"{separator}{round.ThinkingOutput}");
+                hasThinkingOutput = true;
+            }
 
             //
             // A call without an ID cannot be answered: the provider correlates the result by that

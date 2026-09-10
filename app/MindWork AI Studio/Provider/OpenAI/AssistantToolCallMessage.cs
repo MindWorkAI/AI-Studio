@@ -12,5 +12,11 @@ public sealed record AssistantToolCallMessage : IMessageBase
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ReasoningContent { get; init; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Reasoning { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<JsonElement>? ReasoningDetails { get; init; }
+
     public IList<ChatCompletionToolCall> ToolCalls { get; init; } = [];
 }

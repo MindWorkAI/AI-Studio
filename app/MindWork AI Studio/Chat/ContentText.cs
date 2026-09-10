@@ -16,6 +16,9 @@ namespace AIStudio.Chat;
 /// </summary>
 public sealed class ContentText : IContent
 {
+    private const string OPEN_THINK_TAG = "<think>";
+    private const string CLOSE_THINK_TAG = "</think>";
+
     private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
@@ -25,6 +28,12 @@ public sealed class ContentText : IContent
     /// enables the energy saving mode.
     /// </summary>
     private static readonly TimeSpan MIN_TIME = TimeSpan.FromSeconds(3);
+
+    [JsonIgnore]
+    private ThinkTagStreamState thinkTagStreamState;
+
+    [JsonIgnore]
+    private readonly StringBuilder thinkTagBuffer = new();
 
     #region Implementation of IContent
 
@@ -118,15 +127,18 @@ public sealed class ContentText : IContent
                         if (token.IsCancellationRequested)
                             break;
 
-                        // Stop the waiting animation:
-                        this.InitialRemoteWait = false;
                         this.IsStreaming = true;
 
-                        // Add the response to the text:
-                        this.Text += contentStreamChunk;
+                        // Add the response to the content:
+                        this.ApplyStreamChunk(contentStreamChunk);
 
-                        // Merge the sources:
-                        this.Sources.MergeSources(contentStreamChunk.Sources);
+                        //
+                        // Stop the waiting animation once the answer itself starts. A model which
+                        // is still reasoning has not written anything to read yet, and an empty
+                        // bubble would look like a finished, empty answer. The thinking section
+                        // is available next to the animation the whole time.
+                        //
+                        this.InitialRemoteWait = this.Text.Length is 0;
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
@@ -160,7 +172,7 @@ public sealed class ContentText : IContent
         }
         finally
         {
-            this.Text = this.Text.RemoveThinkTags().Trim();
+            this.FinalizeStreamContent();
         
             // Inform the UI that the streaming is done:
             await this.StreamingDone();
@@ -253,6 +265,7 @@ public sealed class ContentText : IContent
     public IContent DeepClone() => new ContentText
     {
         Text = this.Text,
+        Thinking = this.Thinking,
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
@@ -407,4 +420,123 @@ public sealed class ContentText : IContent
     /// The text content.
     /// </summary>
     public string Text { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Human-readable thinking content exposed by the provider.
+    /// </summary>
+    public string Thinking { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Applies one provider stream chunk to this content.
+    /// </summary>
+    public void ApplyStreamChunk(ContentStreamChunk chunk)
+    {
+        if (!string.IsNullOrEmpty(chunk.Thinking))
+            this.Thinking += chunk.Thinking;
+
+        if (!string.IsNullOrEmpty(chunk.Content))
+            this.ApplyAnswerChunk(chunk.Content);
+
+        this.Sources.MergeSources(chunk.Sources);
+    }
+
+    /// <summary>
+    /// Completes parsing of provider content and normalizes the displayed values.
+    /// </summary>
+    public void FinalizeStreamContent()
+    {
+        switch (this.thinkTagStreamState)
+        {
+            case ThinkTagStreamState.UNDECIDED:
+                this.Text += this.thinkTagBuffer;
+                break;
+
+            case ThinkTagStreamState.THINKING:
+                this.Thinking += this.thinkTagBuffer;
+                break;
+        }
+
+        this.thinkTagBuffer.Clear();
+        this.thinkTagStreamState = ThinkTagStreamState.ANSWER;
+        this.Text = this.Text.Trim();
+        this.Thinking = this.Thinking.Trim();
+    }
+
+    private void ApplyAnswerChunk(string content)
+    {
+        if (this.thinkTagStreamState is ThinkTagStreamState.UNDECIDED && this.Text.Length > 0)
+            this.thinkTagStreamState = ThinkTagStreamState.ANSWER;
+
+        switch (this.thinkTagStreamState)
+        {
+            case ThinkTagStreamState.UNDECIDED:
+                this.thinkTagBuffer.Append(content);
+                var undecidedContent = this.thinkTagBuffer.ToString();
+                if (undecidedContent.Length < OPEN_THINK_TAG.Length &&
+                    OPEN_THINK_TAG.StartsWith(undecidedContent, StringComparison.Ordinal))
+                    return;
+
+                if (!undecidedContent.StartsWith(OPEN_THINK_TAG, StringComparison.Ordinal))
+                {
+                    this.Text += undecidedContent;
+                    this.thinkTagBuffer.Clear();
+                    this.thinkTagStreamState = ThinkTagStreamState.ANSWER;
+                    return;
+                }
+
+                this.thinkTagBuffer.Clear();
+                this.thinkTagStreamState = ThinkTagStreamState.THINKING;
+                this.ApplyThinkingTagContent(undecidedContent[OPEN_THINK_TAG.Length..]);
+                return;
+
+            case ThinkTagStreamState.THINKING:
+                this.ApplyThinkingTagContent(content);
+                return;
+
+            case ThinkTagStreamState.ANSWER:
+                this.Text += content;
+                return;
+        }
+    }
+
+    private void ApplyThinkingTagContent(string content)
+    {
+        this.thinkTagBuffer.Append(content);
+        var thinkingContent = this.thinkTagBuffer.ToString();
+        var closeTagIndex = thinkingContent.IndexOf(CLOSE_THINK_TAG, StringComparison.Ordinal);
+        if (closeTagIndex >= 0)
+        {
+            this.Thinking += thinkingContent[..closeTagIndex];
+            this.Text += thinkingContent[(closeTagIndex + CLOSE_THINK_TAG.Length)..];
+            this.thinkTagBuffer.Clear();
+            this.thinkTagStreamState = ThinkTagStreamState.ANSWER;
+            return;
+        }
+
+        var pendingLength = GetMarkerPrefixSuffixLength(thinkingContent, CLOSE_THINK_TAG);
+        var completedLength = thinkingContent.Length - pendingLength;
+        if (completedLength <= 0)
+            return;
+
+        this.Thinking += thinkingContent[..completedLength];
+        this.thinkTagBuffer.Clear();
+        this.thinkTagBuffer.Append(thinkingContent.AsSpan(completedLength));
+    }
+
+    private static int GetMarkerPrefixSuffixLength(string content, string marker)
+    {
+        var maximumLength = Math.Min(content.Length, marker.Length - 1);
+        for (var length = maximumLength; length > 0; length--)
+            if (content.AsSpan(content.Length - length).SequenceEqual(marker.AsSpan(0, length)))
+                return length;
+
+        return 0;
+    }
+
+    private enum ThinkTagStreamState
+    {
+        UNDECIDED,
+        THINKING,
+        ANSWER,
+    }
 }

@@ -57,7 +57,29 @@ public static partial class ProviderExtensions
             _ => GetModelCapabilitiesOpenSource(bareModel),
         };
 
-        return NormalizeForGateway(capabilities);
+        return ApplyGatewayReasoningBehavior(NormalizeForGateway(capabilities), model.ReasoningBehavior);
+    }
+
+    /// <summary>
+    /// Applies provider-reported reasoning behavior in preference to model-name heuristics.
+    /// </summary>
+    private static List<Capability> ApplyGatewayReasoningBehavior(List<Capability> capabilities, ModelReasoningBehavior reasoningBehavior)
+    {
+        if (reasoningBehavior is ModelReasoningBehavior.UNKNOWN)
+            return capabilities;
+
+        capabilities.Remove(Capability.OPTIONAL_REASONING);
+        capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+        capabilities.Remove(Capability.ALWAYS_REASONING);
+        capabilities.Add(reasoningBehavior switch
+        {
+            ModelReasoningBehavior.OPTIONAL => Capability.OPTIONAL_REASONING,
+            ModelReasoningBehavior.DEFAULT_ON => Capability.REASONING_BY_DEFAULT,
+            ModelReasoningBehavior.ALWAYS_ON => Capability.ALWAYS_REASONING,
+            _ => throw new ArgumentOutOfRangeException(nameof(reasoningBehavior), reasoningBehavior, null),
+        });
+
+        return capabilities;
     }
 
     /// <summary>

@@ -13,4 +13,13 @@ public sealed record ChatCompletionDelta
 
     [JsonIgnore]
     public string Content => ChatCompletionContent.GetText(this.RawContent) ?? string.Empty;
+
+    public string? ReasoningContent { get; init; }
+
+    public string? Reasoning { get; init; }
+
+    public IList<JsonElement>? ReasoningDetails { get; init; }
+
+    [JsonIgnore]
+    public string Thinking => ThinkingContent.Get(this.ReasoningContent, this.Reasoning, this.ReasoningDetails);
 }

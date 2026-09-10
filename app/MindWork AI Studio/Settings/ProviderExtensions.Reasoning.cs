@@ -73,9 +73,7 @@ public static partial class ProviderExtensions
 
         return provider.UsedLLMProvider switch
         {
-            LLMProviders.OPEN_AI => MergeReasoningStates(
-                GetOpenAICompatibleReasoningState(parameters),
-                GetReasoningEffortState(parameters)),
+            LLMProviders.OPEN_AI => GetOpenAICompatibleReasoningState(parameters),
 
             LLMProviders.ANTHROPIC => GetAnthropicReasoningState(parameters),
 
@@ -101,7 +99,6 @@ public static partial class ProviderExtensions
                 LLMProviders.HELMHOLTZ or
                 LLMProviders.GWDG => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
 
@@ -119,14 +116,12 @@ public static partial class ProviderExtensions
 
                 Host.VLLM => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetVllmReasoningState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
 
                 _ => MergeReasoningStates(
                     GetOpenAICompatibleReasoningState(parameters),
-                    GetReasoningEffortState(parameters),
                     GetQwenReasoningState(parameters),
                     GetGoogleReasoningState(parameters)),
             },
@@ -142,24 +137,59 @@ public static partial class ProviderExtensions
     /// <returns>The detected reasoning configuration state.</returns>
     /// <remarks>
     /// OpenAI-compatible providers commonly use a nested <c>reasoning</c> object and/or
-    /// a top-level <c>reasoning_effort</c> parameter.
+    /// a top-level <c>reasoning_effort</c> parameter. Both are covered here, so a caller
+    /// does not merge <see cref="GetReasoningEffortState"/> on top of this one again.
     /// </remarks>
     private static ReasoningConfigurationState GetOpenAICompatibleReasoningState(IDictionary<string, object> parameters)
     {
-        var reasoningState = ReasoningConfigurationState.NOT_CONFIGURED;
+        var states = new List<ReasoningConfigurationState>();
         if (TryGetParameter(parameters, "reasoning", out var reasoning))
         {
-            reasoningState = reasoning switch
+            if (reasoning is IDictionary<string, object> reasoningObject)
             {
-                IDictionary<string, object> reasoningObject when TryGetParameter(reasoningObject, "effort", out var effort) => GetLevelState(effort),
-                IDictionary<string, object> reasoningObject when TryGetParameter(reasoningObject, "summary", out var summary) => GetLevelState(summary),
-                IDictionary<string, object> => ReasoningConfigurationState.NOT_CONFIGURED,
-                _ => GetLevelState(reasoning),
-            };
+                if (TryGetParameter(reasoningObject, "effort", out var effort))
+                    states.Add(GetLevelState(effort));
+
+                if (TryGetParameter(reasoningObject, "enabled", out var enabled))
+                    states.Add(GetLevelState(enabled));
+
+                if (TryGetParameter(reasoningObject, "max_tokens", out var maxTokens))
+                    states.Add(GetBudgetState(maxTokens));
+
+                if (TryGetParameter(reasoningObject, "summary", out var summary))
+                    states.Add(GetReasoningSummaryState(summary));
+
+                if (TryGetParameter(reasoningObject, "generate_summary", out var generateSummary))
+                    states.Add(GetReasoningSummaryState(generateSummary));
+            }
+            else
+                states.Add(GetLevelState(reasoning));
         }
 
-        return MergeReasoningStates(reasoningState, GetReasoningEffortState(parameters));
+        if (TryGetParameter(parameters, "include_reasoning", out var includeReasoning) &&
+            GetLevelState(includeReasoning) is ReasoningConfigurationState.EXPLICITLY_ENABLED)
+            states.Add(ReasoningConfigurationState.EXPLICITLY_ENABLED);
+
+        states.Add(GetReasoningEffortState(parameters));
+        return MergeReasoningStates(states);
     }
+
+    /// <summary>
+    /// Detect summary settings that imply reasoning is enabled.
+    /// </summary>
+    /// <remarks>
+    /// Turning a summary off controls visibility only and does not disable the model's reasoning.
+    /// </remarks>
+    private static ReasoningConfigurationState GetReasoningSummaryState(object? value) => value switch
+    {
+        string text when text.Equals("auto", StringComparison.OrdinalIgnoreCase) ||
+                         text.Equals("concise", StringComparison.OrdinalIgnoreCase) ||
+                         text.Equals("detailed", StringComparison.OrdinalIgnoreCase)
+            => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+
+        true => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+        _ => ReasoningConfigurationState.NOT_CONFIGURED,
+    };
 
     /// <summary>
     /// Detect a top-level <c>reasoning_effort</c> parameter.
@@ -444,6 +474,7 @@ public static partial class ProviderExtensions
                text.Equals("minimal", StringComparison.OrdinalIgnoreCase) ||
                text.Equals("medium", StringComparison.OrdinalIgnoreCase) ||
                text.Equals("high", StringComparison.OrdinalIgnoreCase) ||
+               text.Equals("xhigh", StringComparison.OrdinalIgnoreCase) ||
                text.Equals("max", StringComparison.OrdinalIgnoreCase);
     }
 

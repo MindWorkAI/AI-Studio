@@ -72,6 +72,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
 
         return new ToolCallingRound(
             responseChoice.Message.Content ?? string.Empty,
+            responseChoice.Message.GetThinkingOutput(),
             preparedCalls
                 .Select(x => new ToolCallingRequestedCall(x.ToolCall.Id!, x.ToolCall.Function!.Name!, x.ToolCall.Function!.Arguments!, x.IsValid))
                 .ToList(),
@@ -83,6 +84,8 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     {
         Content = this.lastResponseMessage?.RawContent,
         ReasoningContent = this.lastResponseMessage?.ReasoningContent,
+        Reasoning = this.lastResponseMessage?.Reasoning,
+        ReasoningDetails = this.lastResponseMessage?.ReasoningDetails,
         ToolCalls = this.lastToolCalls,
     });
 

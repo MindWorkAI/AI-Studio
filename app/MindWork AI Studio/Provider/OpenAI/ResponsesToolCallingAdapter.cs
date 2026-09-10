@@ -11,10 +11,12 @@ namespace AIStudio.Provider.OpenAI;
 /// correlated by call ID. Unlike Chat Completions, the whole output of a round has to be sent
 /// back for the next one, reasoning items included, or the API refuses to continue.
 /// </remarks>
-public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
+public sealed class ResponsesToolCallingAdapter(Model chatModel, bool isReasoningModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
     Func<ResponsesAPIRequest, CancellationToken, Task<ResponsesResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
 {
+    private const string ENCRYPTED_REASONING_INCLUDE = "reasoning.encrypted_content";
+
     private readonly List<object> internalItems = [];
     private ResponsesResponse? lastResponse;
 
@@ -48,7 +50,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
             Stream = false,
             Store = false,
             Tools = includeTools ? this.effectiveProviderTools : [],
-            AdditionalApiParameters = apiParameters,
+            AdditionalApiParameters = isReasoningModel ? IncludeEncryptedReasoning(apiParameters) : apiParameters,
         }, token);
 
         if (response is null)
@@ -57,6 +59,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         this.lastResponse = response;
         return new ToolCallingRound(
             response.GetTextOutput(),
+            response.GetThinkingOutput(),
             response.GetFunctionCalls()
                 .Select(call => new ToolCallingRequestedCall(
                     call.CallId ?? string.Empty,
@@ -90,6 +93,42 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         CallId = callId,
         Output = content,
     });
+
+    /// <summary>
+    /// Request encrypted reasoning content without replacing any additional output data selected by the user.
+    /// </summary>
+    /// <remarks>
+    /// Tool rounds use stateless Responses requests. OpenAI requires encrypted reasoning items in that mode
+    /// so that the complete output can be passed back with the tool result on the next round.<br/><br/>
+    /// Only a reasoning model gets this, because the include is meaningless for every other one.
+    /// </remarks>
+    private static IDictionary<string, object> IncludeEncryptedReasoning(IDictionary<string, object> apiParameters)
+    {
+        var result = new Dictionary<string, object>(apiParameters);
+        var includeKey = result.Keys.FirstOrDefault(key => key.Equals("include", StringComparison.OrdinalIgnoreCase));
+        if (includeKey is null)
+        {
+            result["include"] = new List<object> { ENCRYPTED_REASONING_INCLUDE };
+            return result;
+        }
+
+        //
+        // Whatever the user put there stays. A value we cannot read as a list is kept as the
+        // single entry it appears to be: the API rejecting the user's own value is the honest
+        // outcome, while dropping it here would hide the mistake behind a request that works.
+        //
+        var includedOutput = result[includeKey] switch
+        {
+            IEnumerable<object> values => values.ToList(),
+            var value => [value],
+        };
+
+        if (!includedOutput.Any(value => string.Equals(value as string, ENCRYPTED_REASONING_INCLUDE, StringComparison.Ordinal)))
+            includedOutput.Add(ENCRYPTED_REASONING_INCLUDE);
+
+        result[includeKey] = includedOutput;
+        return result;
+    }
 
     private static IList<object> BuildEffectiveProviderTools(IList<object> providerTools, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools)
     {

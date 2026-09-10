@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider;
@@ -19,6 +21,19 @@ public readonly record struct Model(string Id, string? DisplayName)
     /// Creates a system-configured model placeholder.
     /// </summary>
     public static readonly Model SYSTEM_MODEL = new(SYSTEM_MODEL_ID, null);
+
+    /// <summary>
+    /// The provider-reported default reasoning behavior, when the model catalog supplies it.
+    /// </summary>
+    /// <remarks>
+    /// This travels with the selected model into the user's settings, so it is a copy of what the
+    /// catalog said when the user picked the model, not a live value. It is refreshed when the user
+    /// picks a model again. That is deliberate: the capability lookup works from the stored model
+    /// and must not depend on the provider being reachable. <see cref="ModelReasoningBehavior.UNKNOWN"/>
+    /// falls back to the model-name heuristics, which is also what every older settings file yields.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public ModelReasoningBehavior ReasoningBehavior { get; init; }
 
     /// <summary>
     /// Checks if this model is the system-configured placeholder.
