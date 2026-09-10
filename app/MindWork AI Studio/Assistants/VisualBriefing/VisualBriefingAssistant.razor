@@ -122,7 +122,6 @@
                                     <MudText Typo="Typo.h5">@T("Source material")</MudText>
                                     <MudText Typo="Typo.body2" Class="mb-2">@T("Documents, spreadsheets, images, audio, and video are considered as source context.")</MudText>
                                     <AttachDocuments Name="Visual briefing source material"
-                                                     Layer="@DropLayers.ASSISTANTS"
                                                      @bind-DocumentPaths="@this.editor.SourceMaterial"
                                                      OnChange="@this.EnforceSourceExclusivityAsync"
                                                      CatchAllDocuments="true"
@@ -136,7 +135,6 @@
                                     <MudText Typo="Typo.h5">@T("Visual assets")</MudText>
                                     <MudText Typo="Typo.body2" Class="mb-2">@T("PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.")</MudText>
                                     <AttachDocuments Name="Visual briefing visual assets"
-                                                     Layer="@DropLayers.ASSISTANTS"
                                                      @bind-DocumentPaths="@this.editor.VisualAssets"
                                                      OnChange="@this.EnforceSourceExclusivityAsync"
                                                      CatchAllDocuments="false"

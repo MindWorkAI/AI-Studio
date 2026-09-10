@@ -2,7 +2,7 @@
 
 @if (this.EnableDragDrop)
 {
-    <PathDropZone Layer="@this.Layer" CatchAllDocuments="@this.CatchAllDocuments" Disabled="@this.Disabled" OnPathsDropped="@this.PathsDropped">
+    <PathDropZone CatchAllDocuments="@this.CatchAllDocuments" Disabled="@this.Disabled" OnPathsDropped="@this.PathsDropped">
         @this.Picker
         <MudText Typo="Typo.body2">
             @T("You can also drag & drop the file here.")

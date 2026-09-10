@@ -4,7 +4,9 @@
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
-<div class="inner-scrolling-context">
+@* The page is its own drop target: a plugin archive may be dropped anywhere on it, and there is no
+   inner zone to hand that role to. Hence the page owns the scope state instead of reading it. *@
+<DropZoneScope State="@this.dropZoneScope" Class="inner-scrolling-context">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
         <MudText Typo="Typo.h3">
             @T("Plugins")
@@ -153,4 +155,4 @@
             </RowTemplate>
         </MudTable>
     </InnerScrolling>
-</div>
+</DropZoneScope>

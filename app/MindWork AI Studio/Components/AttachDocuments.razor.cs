@@ -24,18 +24,6 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
-    /// </summary>
-    [Parameter]
-    public int Layer { get; set; }
-
-    /// <summary>
-    /// When true, pause catching dropped files. Default is false.
-    /// </summary>
-    [Parameter]
-    public bool PauseCatchingDrops { get; set; }
-
     [Parameter]
     public HashSet<FileAttachment> DocumentPaths { get; set; } = [];
 
@@ -46,10 +34,22 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// Makes this component the default target of its area, meaning of its page, assistant, or
+    /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
+    /// of their own.
     /// </summary>
+    /// <remarks>
+    /// Only one zone per area can hold that role, and if several ask for it, the first one in the
+    /// markup gets it.
+    /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
+
+    /// <summary>
+    /// The area this component lives in, if it lives in one at all.
+    /// </summary>
+    [CascadingParameter]
+    private DropZoneScopeState? Scope { get; set; }
 
     [Parameter]
     public bool UseSmallForm { get; set; }
@@ -105,8 +105,9 @@ public partial class AttachDocuments : MSGComponentBase
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
-    private uint numDropAreasAboveThis;
-    private bool isComponentHovered;
+    private readonly string dropZoneId = $"attach-documents-{Guid.NewGuid():N}";
+
+    private bool isDefaultZone;
     private bool isDraggingOver;
     private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
@@ -122,10 +123,9 @@ public partial class AttachDocuments : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
+        this.ApplyFilters([], [ Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
+        this.ClaimDefaultZoneRole();
 
-        // Register this drop area:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
     }
 
@@ -223,99 +223,85 @@ public partial class AttachDocuments : MSGComponentBase
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
 
-        // Release the drop area. Without this, drop areas below this one would count this component
-        // forever and would stop catching dropped files:
-        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(AttachDocuments)}: releasing the drop area");
+        // Hand the role of the default target back to the area:
+        if (this.isDefaultZone)
+            this.Scope?.ReleaseDefaultZone(this);
 
         base.DisposeResources();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
-            return;
-
         switch (triggeredEvent)
         {
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    this.numDropAreasAboveThis++;
-                    this.PauseCatchingDrops = true;
-                }
-
+            case Event.HIGHLIGHT_DROP_ZONE when data is DropZoneHighlight highlight:
+                this.ApplyHighlight(this.IsThisZone(highlight.ZoneId));
                 break;
-            }
 
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    if(this.numDropAreasAboveThis > 0)
-                        this.numDropAreasAboveThis--;
+            case Event.PATHS_DROPPED when data is DroppedPaths dropped:
+                // Whoever the drop was meant for, the drag is over and no zone stays highlighted:
+                this.ApplyHighlight(false);
 
-                    if(this.numDropAreasAboveThis is 0)
-                        this.PauseCatchingDrops = false;
-                }
-
-                break;
-            }
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(this.PauseCatchingDrops)
+                if (!this.IsThisZone(dropped.ZoneId))
                     return;
 
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
+                if (this.IsUnavailable)
                 {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop hovered event.", this.Name);
+                    this.Logger.LogDebug("The attachment zone '{Name}' is unavailable and swallowed {Count} dropped path(s).", this.Name, dropped.Paths.Count);
                     return;
                 }
 
-                this.isDraggingOver = true;
-                this.SetDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.isComponentHovered = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
-                {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
-                    return;
-                }
-
-                await this.AddFileBatchAsync(paths);
+                await this.AddFileBatchAsync(dropped.Paths);
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
-                this.isDraggingOver = false;
-                this.ClearDragClass();
                 this.StateHasChanged();
                 break;
         }
     }
 
     #endregion
+
+    /// <summary>
+    /// Asks the area for the role of its default target, if this component wants it.
+    /// </summary>
+    private void ClaimDefaultZoneRole()
+    {
+        if (!this.CatchAllDocuments || this.Scope is null)
+            return;
+
+        this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
+        if (!this.isDefaultZone)
+            this.Logger.LogDebug("The attachment zone '{Name}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.Name);
+    }
+
+    /// <summary>
+    /// Decides whether the named zone is this one.
+    /// </summary>
+    /// <remarks>
+    /// The area counts as this zone as long as this zone is its default target. That is the whole
+    /// mechanism behind dropping anywhere in the chat and still landing on the composer.
+    /// </remarks>
+    /// <param name="zoneId">The ID the hit test reported, or null when it hit nothing.</param>
+    private bool IsThisZone(string? zoneId) => zoneId is not null && (zoneId == this.dropZoneId || (this.isDefaultZone && zoneId == this.Scope?.ScopeId));
+
+    /// <summary>
+    /// Highlights the zone, or takes the highlight away.
+    /// </summary>
+    /// <remarks>
+    /// The comparison is not for tidiness: a throttled drag-over event arrives about ten times per
+    /// second, and without it every one of them would render every zone on the page anew. In the
+    /// small form the highlight also swaps the markup, so this keeps the composer from flickering.
+    /// </remarks>
+    private void ApplyHighlight(bool shouldBeHighlighted)
+    {
+        var highlighted = shouldBeHighlighted && !this.IsUnavailable;
+        if (highlighted == this.isDraggingOver)
+            return;
+
+        this.isDraggingOver = highlighted;
+        this.dragClass = highlighted ? $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4" : DEFAULT_DRAG_CLASS;
+        this.StateHasChanged();
+    }
 
     private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
 
@@ -368,32 +354,6 @@ public partial class AttachDocuments : MSGComponentBase
         this.ReconcileOwnerPendingTranscripts();
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
-    }
-
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
-
-    private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
-
-    private void OnMouseEnter(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
-        this.isComponentHovered = true;
-        this.SetDragClass();
-        this.StateHasChanged();
-    }
-
-    private void OnMouseLeave(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
-        this.isComponentHovered = false;
-        this.ClearDragClass();
-        this.StateHasChanged();
     }
 
     private async Task RemoveDocument(FileAttachment fileAttachment)

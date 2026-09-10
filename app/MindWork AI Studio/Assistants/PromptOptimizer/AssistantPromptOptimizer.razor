@@ -95,7 +95,6 @@
     @if (this.useCustomPromptGuide)
     {
         <AttachDocuments Name="Custom Prompt Guide"
-                         Layer="@DropLayers.ASSISTANTS"
                          @bind-DocumentPaths="@this.customPromptGuideFiles"
                          OnChange="@this.OnCustomPromptGuideFilesChanged"
                          CatchAllDocuments="false"

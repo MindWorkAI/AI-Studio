@@ -345,4 +345,4 @@ else
 </MudJustifiedText>
 
 <MudTextSwitch Label="@T("Should we write the generated code to the file system?")" Disabled="@this.IsERIInputDisabled" @bind-Value="@this.writeToFilesystem" LabelOn="@T("Yes, please write or update all generated code to the file system")" LabelOff="@T("No, just show me the code")" />
-<SelectDirectory Label="@T("Base directory where to write the code")" @bind-Directory="@this.baseDirectory" Disabled="@this.IsBaseDirectorySelectionDisabled" DirectoryDialogTitle="@T("Select the target directory for the ERI server")" Validation="@this.ValidateDirectory" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" />
+<SelectDirectory Label="@T("Base directory where to write the code")" @bind-Directory="@this.baseDirectory" Disabled="@this.IsBaseDirectorySelectionDisabled" DirectoryDialogTitle="@T("Select the target directory for the ERI server")" Validation="@this.ValidateDirectory" EnableDragDrop="true" CatchAllDocuments="true" />

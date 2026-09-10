@@ -43,10 +43,10 @@ public partial class Plugins : MSGComponentBase
     private bool isSharingPlugin;
 
     /// <summary>
-    /// Number of active drop areas above this page. While there is any, another component owns the
-    /// dropped files and this page must not catch them.
+    /// The drop area of this page. The page owns it rather than reading it from a cascading value,
+    /// because a component cannot read what it cascades itself.
     /// </summary>
-    private uint numDropAreasAboveThis;
+    private readonly DropZoneScopeState dropZoneScope = new($"plugins-page-{Guid.NewGuid():N}");
 
     private bool isDraggingOverPage;
 
@@ -61,10 +61,10 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
 
-        // Register the whole page as a drop area, so users can drop a plugin archive anywhere on it:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        // The whole page is the drop target, so users can drop a plugin archive anywhere on it:
+        this.dropZoneScope.TryBecomeDefaultZone(this);
 
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -92,8 +92,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override void DisposeResources()
     {
-        // Release the drop area again, so lower layers can catch dropped files:
-        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES).Observe($"{nameof(Plugins)}: releasing the drop area");
+        this.dropZoneScope.ReleaseDefaultZone(this);
         base.DisposeResources();
     }
 
@@ -572,39 +571,24 @@ public partial class Plugins : MSGComponentBase
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
 
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int registeredLayer && registeredLayer > DropLayers.PAGES)
-                    this.numDropAreasAboveThis++;
-
+            case Event.HIGHLIGHT_DROP_ZONE when data is DropZoneHighlight highlight:
+                this.ApplyHighlight(this.IsThisZone(highlight.ZoneId));
                 break;
 
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int unregisteredLayer && unregisteredLayer > DropLayers.PAGES && this.numDropAreasAboveThis > 0)
-                    this.numDropAreasAboveThis--;
+            case Event.PATHS_DROPPED when data is DroppedPaths dropped:
+                // Whoever the drop was meant for, the drag is over and nothing stays highlighted:
+                this.ApplyHighlight(false);
 
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if (!this.CanCatchDroppedFile())
+                if (!this.IsThisZone(dropped.ZoneId))
                     return;
 
-                this.isDraggingOverPage = true;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var droppedPaths }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
                 if (!this.CanCatchDroppedFile())
+                {
+                    LOG.LogDebug("The plugins page cannot import right now and swallowed {Count} dropped path(s).", dropped.Paths.Count);
                     return;
+                }
 
-                await this.ImportDroppedPluginArchiveAsync(droppedPaths);
+                await this.ImportDroppedPluginArchiveAsync(dropped.Paths);
                 break;
         }
     }
@@ -612,10 +596,33 @@ public partial class Plugins : MSGComponentBase
     #endregion
 
     /// <summary>
-    /// Decides whether this page may process dropped files: only when no drop area above it is
-    /// active and when the organization allows importing plugins at all.
+    /// Decides whether the named zone is this page.
     /// </summary>
-    private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && this.AllowPluginImport && !this.isImportingAssistantPlugin;
+    /// <param name="zoneId">The ID the hit test reported, or null when it hit nothing.</param>
+    private bool IsThisZone(string? zoneId) => zoneId is not null && zoneId == this.dropZoneScope.ScopeId;
+
+    /// <summary>
+    /// Marks the page as the drop target, or takes that mark away.
+    /// </summary>
+    /// <remarks>
+    /// The comparison is not for tidiness: a throttled drag-over event arrives about ten times per
+    /// second, and without it every one of them would render the whole plugin table anew.
+    /// </remarks>
+    private void ApplyHighlight(bool shouldBeHighlighted)
+    {
+        var highlighted = shouldBeHighlighted && this.CanCatchDroppedFile();
+        if (highlighted == this.isDraggingOverPage)
+            return;
+
+        this.isDraggingOverPage = highlighted;
+        this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Decides whether this page may process dropped files: only when the organization allows
+    /// importing plugins at all and no import is running.
+    /// </summary>
+    private bool CanCatchDroppedFile() => this.AllowPluginImport && !this.isImportingAssistantPlugin;
 
     /// <summary>
     /// Imports a plugin archive the user dropped onto the page. Anything that is not exactly one

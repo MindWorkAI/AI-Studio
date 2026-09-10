@@ -2,13 +2,15 @@
 
 <MudDialog>
     <DialogContent>
+        @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
+        <DropZoneScope>
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("See how we load your file. Review the content before we process it further.")
         </MudJustifiedText>
         
         @if (this.Document is null)
         {
-            <ReadFileContent Text="@T("Load file")" FileContent="@this.FileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true"/>
+            <ReadFileContent Text="@T("Load file")" FileContent="@this.FileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
         }
         else
         {
@@ -100,6 +102,7 @@
                 }
             </MudTabs>
         }
+        </DropZoneScope>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

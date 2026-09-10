@@ -74,7 +74,7 @@ else
             @T("Documents for the analysis")
         </MudText>
 
-        <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+        <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
     </div>
 }
 else
@@ -166,7 +166,7 @@ else
                 @T("Documents for the analysis")
             </MudText>
 
-            <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+            <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
         </ExpansionPanel>
     </MudExpansionPanels>

@@ -1,5 +1,3 @@
-using AIStudio.Tools.Rust;
-
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -28,22 +26,13 @@ public partial class PathDropZone : MSGComponentBase
     public EventCallback<List<string>> OnPathsDropped { get; set; }
 
     /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
-    /// </summary>
-    [Parameter]
-    public int Layer { get; set; } = DropLayers.ROOT;
-
-    /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// Makes this zone the default target of its area, meaning of its page, assistant, or dialog.
     /// </summary>
     /// <remarks>
-    /// Practically every zone needs this today. Hovering is detected through mouse events, and no
-    /// webview delivers those while a native drag is in progress, so a zone without this flag
-    /// hardly ever catches anything. The consequence is that two zones of the same layer cannot be
-    /// told apart: the one carrying this flag takes every drop, including the ones meant for the
-    /// other. A page may therefore hold only one zone per layer. Lifting that limit needs the
-    /// cursor position, which the runtime receives from Tauri and currently discards in
-    /// app_window.rs.
+    /// A drop aimed at this zone arrives here in any case. What this flag decides is the fate of the
+    /// drops aimed anywhere else in the surrounding area which hit no zone of their own: with the
+    /// flag, they arrive here as well. Only one zone per area can hold that role, and if several ask
+    /// for it, the first one in the markup gets it.
     /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
@@ -52,127 +41,118 @@ public partial class PathDropZone : MSGComponentBase
     /// When true, the zone ignores drops and is not highlighted.
     /// </summary>
     /// <remarks>
-    /// The drop area stays registered nevertheless. Releasing it during the lifetime of the
-    /// component would lower the count of every zone below this one, and those zones would then
-    /// catch files while this one is still on screen.
+    /// It keeps its ID in the DOM nevertheless and therefore swallows the drops aimed at it. That is
+    /// what the pointer says: it rests on a switched-off field, so nothing happens. Letting the drop
+    /// fall through to the area behind it would deliver the files somewhere else entirely.
     /// </remarks>
     [Parameter]
     public bool Disabled { get; set; }
+
+    /// <summary>
+    /// The area this zone lives in, if it lives in one at all.
+    /// </summary>
+    [CascadingParameter]
+    private DropZoneScopeState? Scope { get; set; }
 
     [Inject]
     private ILogger<PathDropZone> Logger { get; init; } = null!;
 
     private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-3 mb-3 mud-width-full";
 
+    private readonly string dropZoneId = $"path-drop-zone-{Guid.NewGuid():N}";
+
     private string dragClass = DEFAULT_DRAG_CLASS;
-    private uint numDropAreasAboveThis;
-    private bool isComponentHovered;
+    private bool isDefaultZone;
+    private bool isHighlighted;
 
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
+        this.ApplyFilters([], [ Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
+        this.ClaimDefaultZoneRole();
 
         await base.OnInitializedAsync();
     }
 
     /// <summary>
-    /// Releases the drop area.
+    /// Hands the role of the default target back to the area.
     /// </summary>
     protected override void DisposeResources()
     {
-        // Without this, drop areas below this one would count this component forever and would
-        // stop catching dropped files:
-        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(PathDropZone)}: releasing the drop area");
+        if (this.isDefaultZone)
+            this.Scope?.ReleaseDefaultZone(this);
 
         base.DisposeResources();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        // A disabled zone takes no files. It keeps track of the zones above it, though, because
-        // those come and go while this one is disabled:
-        if (this.Disabled && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
-            return;
-
         switch (triggeredEvent)
         {
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
+            case Event.HIGHLIGHT_DROP_ZONE when data is DropZoneHighlight highlight:
+                this.ApplyHighlight(this.IsThisZone(highlight.ZoneId));
+                break;
+
+            case Event.PATHS_DROPPED when data is DroppedPaths dropped:
+                // Whoever the drop was meant for, the drag is over and no zone stays highlighted:
+                this.ApplyHighlight(false);
+
+                if (!this.IsThisZone(dropped.ZoneId))
+                    return;
+
+                if (this.Disabled)
                 {
-                    this.numDropAreasAboveThis++;
-                    this.ClearDragClass();
+                    this.Logger.LogDebug("The path drop zone '{ZoneId}' is disabled and swallowed {Count} dropped path(s).", this.dropZoneId, dropped.Paths.Count);
+                    return;
                 }
 
-                break;
-            }
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer && this.numDropAreasAboveThis > 0)
-                    this.numDropAreasAboveThis--;
-
-                break;
-            }
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(!this.CanCatchDroppedPath())
-                    return;
-
-                this.SetDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                this.isComponentHovered = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(!this.CanCatchDroppedPath())
-                    return;
-
-                this.Logger.LogDebug("The path drop zone on layer {Layer} caught {Count} path(s).", this.Layer, paths.Count);
-                await this.OnPathsDropped.InvokeAsync(paths);
-                this.ClearDragClass();
-                this.StateHasChanged();
+                this.Logger.LogDebug("The path drop zone '{ZoneId}' caught {Count} path(s).", this.dropZoneId, dropped.Paths.Count);
+                await this.OnPathsDropped.InvokeAsync(dropped.Paths);
                 break;
         }
     }
 
     #endregion
 
-    private bool CanCatchDroppedPath() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);
-
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-2";
-
-    private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
-
-    private void OnMouseEnter(EventArgs _)
+    /// <summary>
+    /// Asks the area for the role of its default target, if this zone wants it.
+    /// </summary>
+    private void ClaimDefaultZoneRole()
     {
-        if(this.Disabled || this.numDropAreasAboveThis > 0)
+        if (!this.CatchAllDocuments || this.Scope is null)
             return;
 
-        // A native drag delivers no DOM events at all, mouse events included. This fires before a
-        // drag begins, while the pointer still moves freely, which makes it a hint about where the
-        // user is aiming rather than a reliable signal. See the remarks on CatchAllDocuments:
-        this.isComponentHovered = true;
-        this.SetDragClass();
-        this.StateHasChanged();
+        this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
+        if (!this.isDefaultZone)
+            this.Logger.LogDebug("The path drop zone '{ZoneId}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.dropZoneId);
     }
 
-    private void OnMouseLeave(EventArgs _)
+    /// <summary>
+    /// Decides whether the named zone is this one.
+    /// </summary>
+    /// <remarks>
+    /// The area counts as this zone as long as this zone is its default target. That is the whole
+    /// mechanism behind dropping anywhere in a page and still landing here.
+    /// </remarks>
+    /// <param name="zoneId">The ID the hit test reported, or null when it hit nothing.</param>
+    private bool IsThisZone(string? zoneId) => zoneId is not null && (zoneId == this.dropZoneId || (this.isDefaultZone && zoneId == this.Scope?.ScopeId));
+
+    /// <summary>
+    /// Highlights the zone, or takes the highlight away.
+    /// </summary>
+    /// <remarks>
+    /// The comparison is not for tidiness: a throttled drag-over event arrives about ten times per
+    /// second, and without it every one of them would render every zone on the page anew.
+    /// </remarks>
+    private void ApplyHighlight(bool shouldBeHighlighted)
     {
-        if(this.Disabled)
+        var highlighted = shouldBeHighlighted && !this.Disabled;
+        if (highlighted == this.isHighlighted)
             return;
 
-        this.isComponentHovered = false;
-        this.ClearDragClass();
+        this.isHighlighted = highlighted;
+        this.dragClass = highlighted ? $"{DEFAULT_DRAG_CLASS} mud-border-primary border-2" : DEFAULT_DRAG_CLASS;
         this.StateHasChanged();
     }
 }

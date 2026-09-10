@@ -1,6 +1,6 @@
 @inherits MSGComponentBase
 
-<div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+<div data-drop-zone-id="@this.dropZoneId">
     <MudPaper Outlined="@true" Class="@this.dragClass">
         @this.ChildContent
     </MudPaper>

@@ -3,7 +3,7 @@
 @if (this.UseSmallForm)
 {
     <MudStack Spacing="0">
-        <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+        <div data-drop-zone-id="@this.dropZoneId">
             @if (this.isDraggingOver)
             {
                 <MudBadge
@@ -82,7 +82,7 @@ else
     {
         <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId"/>
     }
-    <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+    <div data-drop-zone-id="@this.dropZoneId">
         <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
             @foreach (var fileAttachment in this.DocumentPaths)
             {
