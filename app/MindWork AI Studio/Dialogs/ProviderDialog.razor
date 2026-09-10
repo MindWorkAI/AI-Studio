@@ -257,6 +257,7 @@
                                 Text="@this.dataFilePath"
                                 TextChanged="@this.OnDataFilePathChanged"
                                 Label="@T("Selected file path for the custom tokenizer")"
+                                Disabled="@this.IsEnterpriseConfiguration"
                                 Validation="@this.providerValidation.ValidatingCustomTokenizer"
                                 Adornment="Adornment.Start"
                                 AdornmentIcon="@Icons.Material.Filled.AttachFile"
@@ -267,7 +268,7 @@
                                 ErrorText="@this.dataCustomTokenizerValidationIssue"
                                 OnClearButtonClick="@this.ClearPathTokenizer"
                             />
-                            <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@this.isTokenizerFileDialogOpen" OnClick="@this.OpenTokenizerFileDialog">
+                            <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
                                 @T("Choose File")
                             </MudButton>
                         </MudStack>
