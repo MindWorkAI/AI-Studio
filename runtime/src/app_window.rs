@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use async_stream::stream;
 use axum::body::Body;
 use axum::http::header::CONTENT_TYPE;
@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
 use tauri::WebviewWindow;
+use tauri::PhysicalPosition;
 use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
@@ -49,6 +50,16 @@ static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<Update>>> = Lazy::new(|| Mutex::
 
 /// The event broadcast sender for Tauri events.
 static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
+
+/// The shortest interval between two drag-over events.
+///
+/// A native drag emits one such event per mouse move. Every one of them travels into the app, where
+/// it decides which drop zone lights up, so an unthrottled drag would render the whole page dozens
+/// of times per second. A tenth of a second still follows the cursor closely enough.
+const DRAG_OVER_EVENT_INTERVAL: Duration = Duration::from_millis(100);
+
+/// When we sent the last drag-over event, used to protect Blazor from render storms.
+static LAST_DRAG_OVER_SENT: Lazy<Mutex<Option<Instant>>> = Lazy::new(|| Mutex::new(None));
 
 /// Stores the localhost origin of the Blazor app after the .NET server is ready.
 static APPROVED_APP_URL: Lazy<Mutex<Option<tauri::Url>>> = Lazy::new(|| Mutex::new(None));
@@ -141,9 +152,31 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
             // are only available in the window event handler (is a bug, cf. https://github.com/tauri-apps/tauri/issues/14338):
+            //
+            // Turning a drag and drop position into CSS pixels needs the scale factor of the
+            // window. We read it from this clone rather than from MAIN_WINDOW: window events are
+            // delivered synchronously on the main thread on macOS, so locking MAIN_WINDOW in here
+            // would deadlock as soon as anybody else holds that lock.
+            //
+            let event_window = window.clone();
             window.on_window_event(move |event| {
+
+                //
+                // Only a drag and drop event carries a position, and only that position needs the
+                // scale factor. Asking the window on every window event would be needless work.
+                // Asking it anew for every drag is what keeps a display change covered: we hold no
+                // factor of our own which a moved window could leave behind.
+                //
+                let scale_factor = match event {
+                    WindowEvent::DragDrop(_) => event_window.scale_factor().unwrap_or(1.0),
+                    _ => 1.0,
+                };
+
+                let Some(event_to_send) = Event::from_window_event(event, scale_factor) else {
+                    return;
+                };
+
                 debug!(Source = "Tauri"; "Tauri event received: location=window event handler, event={event:?}");
-                let event_to_send = Event::from_window_event(event);
                 let sender = event_sender.clone();
                 tauri::async_runtime::spawn(async move {
                     match sender.send(event_to_send) {
@@ -406,11 +439,69 @@ pub async fn get_event_stream(_token: APIToken) -> Response {
     ([(CONTENT_TYPE, "application/jsonl")], Body::from_stream(stream)).into_response()
 }
 
+/// The cursor position of a drag and drop event, in CSS pixels relative to the viewport.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct CursorPosition {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// Converts the cursor position of a drag and drop event into CSS pixels.
+///
+/// Tauri names the type PhysicalPosition, but only Windows fills it with device pixels: there, wry
+/// converts the screen coordinate with ScreenToClient. macOS hands over the NSView point of the
+/// drag and GTK the logical widget coordinate, and both of those already are what CSS calls a
+/// pixel. tauri-runtime-wry relabels all three without touching them, which is why the scale factor
+/// belongs to the Windows branch alone: applying it everywhere would halve every coordinate on a
+/// display with a scale factor of two.
+/// Changing the display or its scaling at runtime needs no attention here. On Windows the caller
+/// reads the factor anew for every drag and drop event, and Tauri keeps its own value current
+/// through WM_DPICHANGED, so nothing of ours can go stale. On macOS and Linux no factor takes part
+/// in the first place: a point stays a point when the window moves to a display with a different
+/// pixel density, and only the number of device pixels behind it changes.
+///
+/// What the equality of a logical point and a CSS pixel does depend on is that nobody zooms the
+/// webview: neither through WebviewWindow::set_zoom nor through zoomHotkeysEnabled, which our
+/// tauri.conf.json leaves off. Should AI Studio ever offer a zoom, say for accessibility, the
+/// position has to be divided by it as well -- on every platform, this time.
+///
+/// The decision is written with cfg! rather than #[cfg], so that both branches are compiled and
+/// type-checked on every platform instead of only on the one they apply to.
+fn cursor_position_in_css_pixels(position: PhysicalPosition<f64>, scale_factor: f64) -> CursorPosition {
+    scale_cursor_position(position, if cfg!(target_os = "windows") { scale_factor } else { 1.0 })
+}
+
+/// Divides a cursor position by a scale factor.
+fn scale_cursor_position(position: PhysicalPosition<f64>, scale_factor: f64) -> CursorPosition {
+    // Zero or less cannot be a scale. Treating such a value as 1.0 keeps it from turning the
+    // position into infinity:
+    let scale_factor = if scale_factor > 0.0 { scale_factor } else { 1.0 };
+    CursorPosition { x: position.x / scale_factor, y: position.y / scale_factor }
+}
+
+/// Decides whether a drag-over event is due, given when we sent the last one.
+fn drag_over_is_due(last_sent: Option<Instant>, now: Instant) -> bool {
+    !last_sent.is_some_and(|last_at| now.duration_since(last_at) < DRAG_OVER_EVENT_INTERVAL)
+}
+
+/// Forgets when we sent the last drag-over event, so the next drag starts with a fresh interval.
+///
+/// Every drag which begins, ends, or is abandoned calls this. Without it, a drag starting within
+/// the interval of the previous one would have its first drag-over event swallowed, and the
+/// highlight would stay behind until the pointer moves again.
+fn reset_drag_over_throttle() {
+    *LAST_DRAG_OVER_SENT.lock().unwrap() = None;
+}
+
 /// Data structure representing a Tauri event for our event API.
 #[derive(Debug, Clone, Serialize)]
 pub struct Event {
     pub event_type: TauriEventType,
     pub payload: Vec<String>,
+
+    /// Where the cursor was, for the drag and drop events which know it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub position: Option<CursorPosition>,
 }
 
 /// Implementation of the Event struct.
@@ -421,43 +512,86 @@ impl Event {
         Event {
             payload,
             event_type,
+            position: None,
         }
     }
 
-    /// Creates an Event instance from a Tauri WindowEvent.
-    pub fn from_window_event(window_event: &WindowEvent) -> Self {
+    /// Creates a new Event instance which carries the cursor position as well.
+    pub fn with_position(event_type: TauriEventType, payload: Vec<String>, position: CursorPosition) -> Self {
+        Event {
+            payload,
+            event_type,
+            position: Some(position),
+        }
+    }
+
+    /// Creates an Event instance from a Tauri WindowEvent, unless the event is none of our business.
+    pub fn from_window_event(window_event: &WindowEvent, scale_factor: f64) -> Option<Self> {
         match window_event {
             WindowEvent::DragDrop(drop_event) => {
                 match drop_event {
-                    DragDropEvent::Enter { paths, .. } => Event::new(
-                        TauriEventType::FileDropHovered,
-                        paths.iter().map(|p| p.display().to_string()).collect(),
-                    ),
+                    DragDropEvent::Enter { paths, position } => {
+                        reset_drag_over_throttle();
+                        Some(Event::with_position(
+                            TauriEventType::FileDropHovered,
+                            paths.iter().map(|p| p.display().to_string()).collect(),
+                            cursor_position_in_css_pixels(*position, scale_factor),
+                        ))
+                    },
 
-                    DragDropEvent::Drop { paths, .. } => Event::new(
-                        TauriEventType::FileDropDropped,
-                        paths.iter().map(|p| p.display().to_string()).collect(),
-                    ),
+                    DragDropEvent::Over { position } => {
+                        let now = Instant::now();
+                        let mut last_sent = LAST_DRAG_OVER_SENT.lock().unwrap();
+                        if !drag_over_is_due(*last_sent, now) {
+                            return None;
+                        }
 
-                    DragDropEvent::Leave => Event::new(TauriEventType::FileDropCanceled, Vec::new()),
+                        *last_sent = Some(now);
+                        drop(last_sent);
 
-                    _ => Event::new(TauriEventType::Unknown, Vec::new()),
+                        Some(Event::with_position(
+                            TauriEventType::FileDropOver,
+                            Vec::new(),
+                            cursor_position_in_css_pixels(*position, scale_factor),
+                        ))
+                    },
+
+                    DragDropEvent::Drop { paths, position } => {
+                        reset_drag_over_throttle();
+                        Some(Event::with_position(
+                            TauriEventType::FileDropDropped,
+                            paths.iter().map(|p| p.display().to_string()).collect(),
+                            cursor_position_in_css_pixels(*position, scale_factor),
+                        ))
+                    },
+
+                    DragDropEvent::Leave => {
+                        reset_drag_over_throttle();
+                        Some(Event::new(TauriEventType::FileDropCanceled, Vec::new()))
+                    },
+
+                    // The event is marked as non-exhaustive, so a variant added later lands here:
+                    _ => None,
                 }
             },
 
             WindowEvent::Focused(state) => if *state {
-                Event::new(TauriEventType::WindowFocused,
-                           Vec::new(),
-                )
+                Some(Event::new(TauriEventType::WindowFocused,
+                                Vec::new(),
+                ))
             } else {
-                Event::new(TauriEventType::WindowNotFocused,
-                           Vec::new(),
-                )
+                Some(Event::new(TauriEventType::WindowNotFocused,
+                                Vec::new(),
+                ))
             },
 
-            _ => Event::new(TauriEventType::Unknown,
-                            Vec::new(),
-            ),
+            //
+            // Everything else is none of our business. Saying so keeps it out of the broadcast
+            // channel, which matters during a drag: the app discarded these events at the far end
+            // of the stream, but a single drag pushed hundreds of them through a channel of 100
+            // beforehand, which is what made its receiver lag.
+            //
+            _ => None,
         }
     }
 }
@@ -473,6 +607,7 @@ pub enum TauriEventType {
     WindowNotFocused,
 
     FileDropHovered,
+    FileDropOver,
     FileDropDropped,
     FileDropCanceled,
 
@@ -946,6 +1081,56 @@ mod tests {
     #[test]
     fn self_update_is_enabled_for_normal_production_installations() {
         assert!(self_update_blocked_reason(false, InstallationKind::User).is_none());
+    }
+
+    #[test]
+    fn the_first_drag_over_event_of_a_drag_is_due() {
+        assert!(drag_over_is_due(None, Instant::now()));
+    }
+
+    #[test]
+    fn a_drag_over_event_within_the_interval_is_not_due() {
+        let now = Instant::now();
+        assert!(!drag_over_is_due(Some(now - DRAG_OVER_EVENT_INTERVAL / 2), now));
+    }
+
+    #[test]
+    fn a_drag_over_event_after_the_interval_is_due() {
+        let now = Instant::now();
+        assert!(drag_over_is_due(Some(now - DRAG_OVER_EVENT_INTERVAL), now));
+    }
+
+    #[test]
+    fn a_scale_factor_of_two_halves_the_cursor_position() {
+        let position = scale_cursor_position(PhysicalPosition::new(200.0, 100.0), 2.0);
+        assert_eq!((position.x, position.y), (100.0, 50.0));
+    }
+
+    #[test]
+    fn an_impossible_scale_factor_leaves_the_cursor_position_alone() {
+        let position = scale_cursor_position(PhysicalPosition::new(200.0, 100.0), 0.0);
+        assert_eq!((position.x, position.y), (200.0, 100.0));
+    }
+
+    #[test]
+    fn the_cursor_position_is_scaled_on_windows_only() {
+        let position = cursor_position_in_css_pixels(PhysicalPosition::new(200.0, 100.0), 2.0);
+        let expected = if cfg!(target_os = "windows") { (100.0, 50.0) } else { (200.0, 100.0) };
+
+        assert_eq!((position.x, position.y), expected);
+    }
+
+    #[test]
+    fn a_window_event_we_do_not_care_about_is_not_channeled() {
+        assert!(Event::from_window_event(&WindowEvent::Destroyed, 1.0).is_none());
+    }
+
+    #[test]
+    fn losing_the_window_focus_is_channeled_without_a_position() {
+        let event = Event::from_window_event(&WindowEvent::Focused(false), 1.0).unwrap();
+
+        assert!(matches!(event.event_type, TauriEventType::WindowNotFocused));
+        assert!(event.position.is_none());
     }
 
     #[test]
