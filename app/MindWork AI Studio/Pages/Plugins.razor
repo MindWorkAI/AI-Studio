@@ -4,7 +4,14 @@
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
-<div class="inner-scrolling-context">
+@* The page is its own drop target: a plugin archive may be dropped anywhere on it, and there is no
+   inner zone to hand that role to. An area which takes drops itself is that target by definition. *@
+<PathDropZone IsArea="@true"
+              IdPrefix="plugins-page"
+              Class="inner-scrolling-context"
+              Disabled="@(() => !this.CanCatchDroppedFile())"
+              OnPathsDropped="@this.ImportDroppedPluginArchiveAsync"
+              Context="isDropTarget">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
         <MudText Typo="Typo.h3">
             @T("Plugins")
@@ -24,7 +31,7 @@
     
     <InnerScrolling>
         
-        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@this.PluginTableClass">
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@PluginTableClass(isDropTarget)">
             <ColGroup>
                 <col style="width: 2em;" />
                 <col style="width: 2.1em; "/>
@@ -153,4 +160,4 @@
             </RowTemplate>
         </MudTable>
     </InnerScrolling>
-</div>
+</PathDropZone>

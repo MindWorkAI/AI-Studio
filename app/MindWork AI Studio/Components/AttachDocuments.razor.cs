@@ -24,18 +24,6 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
-    /// </summary>
-    [Parameter]
-    public int Layer { get; set; }
-
-    /// <summary>
-    /// When true, pause catching dropped files. Default is false.
-    /// </summary>
-    [Parameter]
-    public bool PauseCatchingDrops { get; set; }
-
     [Parameter]
     public HashSet<FileAttachment> DocumentPaths { get; set; } = [];
 
@@ -46,8 +34,14 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// Makes this component the default target of its area, meaning of its page, assistant, or
+    /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
+    /// of their own.
     /// </summary>
+    /// <remarks>
+    /// Only one zone per area can hold that role, and if several ask for it, the first one in the
+    /// markup gets it.
+    /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
 
@@ -105,9 +99,6 @@ public partial class AttachDocuments : MSGComponentBase
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
-    private uint numDropAreasAboveThis;
-    private bool isComponentHovered;
-    private bool isDraggingOver;
     private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
         ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
@@ -122,10 +113,8 @@ public partial class AttachDocuments : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
+        this.ApplyFilters([], []);
 
-        // Register this drop area:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
     }
 
@@ -222,104 +211,21 @@ public partial class AttachDocuments : MSGComponentBase
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
-
-        // Release the drop area. Without this, drop areas below this one would count this component
-        // forever and would stop catching dropped files:
-        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(AttachDocuments)}: releasing the drop area");
-
         base.DisposeResources();
-    }
-
-    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
-            return;
-
-        switch (triggeredEvent)
-        {
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    this.numDropAreasAboveThis++;
-                    this.PauseCatchingDrops = true;
-                }
-
-                break;
-            }
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    if(this.numDropAreasAboveThis > 0)
-                        this.numDropAreasAboveThis--;
-
-                    if(this.numDropAreasAboveThis is 0)
-                        this.PauseCatchingDrops = false;
-                }
-
-                break;
-            }
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
-                {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop hovered event.", this.Name);
-                    return;
-                }
-
-                this.isDraggingOver = true;
-                this.SetDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.isComponentHovered = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
-                {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
-                    return;
-                }
-
-                await this.AddFileBatchAsync(paths);
-                await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-                await this.OnChange(this.DocumentPaths);
-                this.isDraggingOver = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-        }
     }
 
     #endregion
 
-    private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
-
-    private string dragClass = DEFAULT_DRAG_CLASS;
+    /// <summary>
+    /// Attaches what the user dropped on the zone of this component.
+    /// </summary>
+    /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
+    private async Task PathsDropped(List<string> paths)
+    {
+        await this.AddFileBatchAsync(paths);
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
+    }
 
     private async Task AddFilesManually()
     {
@@ -368,32 +274,6 @@ public partial class AttachDocuments : MSGComponentBase
         this.ReconcileOwnerPendingTranscripts();
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
-    }
-
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
-
-    private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
-
-    private void OnMouseEnter(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
-        this.isComponentHovered = true;
-        this.SetDragClass();
-        this.StateHasChanged();
-    }
-
-    private void OnMouseLeave(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
-        this.isComponentHovered = false;
-        this.ClearDragClass();
-        this.StateHasChanged();
     }
 
     private async Task RemoveDocument(FileAttachment fileAttachment)

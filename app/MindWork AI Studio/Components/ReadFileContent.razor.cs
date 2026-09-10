@@ -46,14 +46,14 @@ public partial class ReadFileContent : MSGComponentBase
     public bool EnableDragDrop { get; set; }
 
     /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
+    /// Makes this component the default target of its area, meaning of its page, assistant, or
+    /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
+    /// of their own.
     /// </summary>
-    [Parameter]
-    public int Layer { get; set; }
-
-    /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
-    /// </summary>
+    /// <remarks>
+    /// Only one zone per area can hold that role, and if several ask for it, the first one in the
+    /// markup gets it. The flag has no effect without drag and drop being enabled.
+    /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
 
@@ -79,12 +79,7 @@ public partial class ReadFileContent : MSGComponentBase
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
-    private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-3 mb-3 mud-width-full";
-
     private string ButtonText => string.IsNullOrWhiteSpace(this.Text) ? T("Use file content as input") : this.Text;
-    private string dragClass = DEFAULT_DRAG_CLASS;
-    private uint numDropAreasAboveThis;
-    private bool isComponentHovered;
     private bool isFileDialogOpen;
     private bool hasLoadedFileContent;
     private string loadedFileName = string.Empty;
@@ -118,11 +113,7 @@ public partial class ReadFileContent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        if (this.EnableDragDrop)
-        {
-            this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
-            await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
-        }
+        this.ApplyFilters([], []);
 
         await base.OnInitializedAsync();
         await this.SyncCompletedMediaTextAsync();
@@ -187,76 +178,15 @@ public partial class ReadFileContent : MSGComponentBase
         this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
-    /// <summary>Unsubscribes from the singleton media service and releases the drop area.</summary>
+    /// <summary>Unsubscribes from the singleton media service.</summary>
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
-
-        // Release the drop area. Without this, drop areas below this one would count this component
-        // forever and would stop catching dropped files:
-        if (this.EnableDragDrop)
-            this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(ReadFileContent)}: releasing the drop area");
-
         base.DisposeResources();
     }
 
-    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        if (!this.EnableDragDrop)
-            return;
-
-        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
-            return;
-
-        switch (triggeredEvent)
-        {
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    this.numDropAreasAboveThis++;
-                    this.ClearDragClass();
-                }
-
-                break;
-            }
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer && this.numDropAreasAboveThis > 0)
-                    this.numDropAreasAboveThis--;
-
-                break;
-            }
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(!this.CanCatchDroppedFile())
-                    return;
-
-                this.SetDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                this.isComponentHovered = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(!this.CanCatchDroppedFile())
-                    return;
-
-                await this.LoadFirstValidFile(paths);
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-        }
-    }
-
     #endregion
-    
+
     private async Task SelectFile()
     {
         if (this.IsUnavailable)
@@ -417,31 +347,4 @@ public partial class ReadFileContent : MSGComponentBase
         return string.Format(this.T("Attached file '{0}'."), this.loadedFileName);
     }
 
-    private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);
-
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-2";
-
-    private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
-
-    private void OnMouseEnter(EventArgs _)
-    {
-        if(this.IsUnavailable || this.numDropAreasAboveThis > 0)
-            return;
-
-        this.Logger.LogDebug("Read file content component is hovered.");
-        this.isComponentHovered = true;
-        this.SetDragClass();
-        this.StateHasChanged();
-    }
-
-    private void OnMouseLeave(EventArgs _)
-    {
-        if(this.IsUnavailable)
-            return;
-
-        this.Logger.LogDebug("Read file content component is no longer hovered.");
-        this.isComponentHovered = false;
-        this.ClearDragClass();
-        this.StateHasChanged();
-    }
 }

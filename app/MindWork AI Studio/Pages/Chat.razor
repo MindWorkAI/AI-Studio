@@ -2,7 +2,9 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-<div class="inner-scrolling-context">
+@* The chat is a drop area: a file dropped anywhere in it hangs itself on the composer, which is
+   what users are used to. *@
+<PathDropZone IsArea="@true" Class="inner-scrolling-context">
     
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" StretchItems="StretchItems.Start">
         <MudText Typo="Typo.h3">
@@ -166,4 +168,4 @@
             </MudDrawerContainer>
         </MudDrawer>
     }
-</div>
+</PathDropZone>

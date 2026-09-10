@@ -441,6 +441,41 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         return rootComponent is null ? prompt : this.CollectUserPromptFallback(rootComponent.Children);
     }
 
+    /// <summary>
+    /// Whether this assistant has exactly one drop zone, which is what allows that zone to be the
+    /// default target of the whole assistant.
+    /// </summary>
+    /// <remarks>
+    /// With a single zone, a drop anywhere in the assistant can only mean that one, so the habitual
+    /// "just drop it somewhere" keeps working. With several, it would be a guess: the first zone in
+    /// the markup would take the files meant for its neighbour, which is the very defect that hit
+    /// testing exists to remove. So no zone gets the role and every drop has to be aimed. A plugin
+    /// cannot opt out of this, and it does not have to know about it either.
+    /// The count is walked per render rather than cached: an assistant holds a few dozen components
+    /// at most, and a stale count would be a defect nobody would look for.
+    /// </remarks>
+    private bool HasSingleDropZone => this.RootComponent is not null && CountDropZones(this.RootComponent.Children) is 1;
+
+    /// <summary>
+    /// Counts the components which accept a drop, including those nested inside layout components.
+    /// </summary>
+    /// <param name="components">The components to look through.</param>
+    /// <returns>The number of drop zones.</returns>
+    private static int CountDropZones(IEnumerable<IAssistantComponent> components)
+    {
+        var count = 0;
+        foreach (var component in components)
+        {
+            if (component.Type is AssistantComponentType.FILE_CONTENT_READER or AssistantComponentType.FILE_ATTACHMENTS)
+                count++;
+
+            if (component.Children.Count > 0)
+                count += CountDropZones(component.Children);
+        }
+
+        return count;
+    }
+
     private void InitializeComponentState(IEnumerable<IAssistantComponent> components)
     {
         foreach (var component in components)

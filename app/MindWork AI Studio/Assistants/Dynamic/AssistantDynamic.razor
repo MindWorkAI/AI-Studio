@@ -153,7 +153,7 @@ else
                 {
                     var fileState = this.assistantState.FileContent[fileContent.Name];
                     <div class="@fileContent.Class" style="@GetOptionalStyle(fileContent.Style)">
-                        <ReadFileContent @bind-FileContent="@fileState.Content" MediaImportTargetId="@fileContent.Name" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" ShowAttachedDocumentState="@fileContent.ShowAttachedDocumentState" />
+                        <ReadFileContent @bind-FileContent="@fileState.Content" MediaImportTargetId="@fileContent.Name" EnableDragDrop="true" CatchAllDocuments="@this.HasSingleDropZone" ShowAttachedDocumentState="@fileContent.ShowAttachedDocumentState" />
                     </div>
                 }
                 break;
@@ -169,9 +169,8 @@ else
                         }
                         <div class="px-4">
                             <AttachDocuments Name="@fileAttachment.Name"
-                                             Layer="@DropLayers.ASSISTANTS"
                                              @bind-DocumentPaths="@fileState.DocumentPaths"
-                                             CatchAllDocuments="@fileAttachment.CatchAllDocuments"
+                                             CatchAllDocuments="@(this.HasSingleDropZone && fileAttachment.CatchAllDocuments)"
                                              UseSmallForm="@fileAttachment.UseSmallForm"
                                              Provider="@this.ProviderSettings"/>
                             </div>
