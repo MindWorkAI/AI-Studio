@@ -6507,8 +6507,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Mo
 -- Embedding batch size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2209963239"] = "Batch-Größe für Einbettungen"
 
+-- You can also drag & drop the tokenizer file here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2282234384"] = "Sie können die Tokenizer-Datei auch per Drag-and-Drop hierher ziehen."
+
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
+
+-- Please drop a tokenizer file in the JSON format.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331986401"] = "Bitte legen Sie hier eine Tokenizer-Datei im JSON-Format ab."
 
 -- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2439094236"] = "Der API-Schlüssel konnte nicht aus dem Betriebssystem entfernt werden. Die Meldung lautete: {0}. Bitte versuchen Sie es erneut."
@@ -6957,8 +6963,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2141072961"] = "Erkanntes M
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Modell"
 
+-- You can also drag & drop the tokenizer file here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2282234384"] = "Sie können die Tokenizer-Datei auch per Drag-and-Drop hierher ziehen."
+
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
+
+-- Please drop a tokenizer file in the JSON format.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331986401"] = "Bitte legen Sie eine Tokenizer-Datei im JSON-Format ab."
 
 -- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2439094236"] = "Fehler beim Löschen des API-Schlüssels vom Betriebssystem. Die Nachricht war: {0}. Bitte versuchen Sie es erneut."
