@@ -936,7 +936,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.IsProcessing = snapshot.IsActive;
 
         if (!snapshot.IsActive)
+        {
             this.CancellationTokenSource = null;
+            this.CurrentProfileIds = this.SettingsManager.GetPreselectedProfiles(this.Component).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
 
         if (restoreClientOnlyContent)
             await this.OnAssistantSessionAttachedAsync(snapshot);
@@ -975,7 +978,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var state = new AssistantSessionStateWriter();
         state.Set(PROVIDER_SETTINGS_STATE_KEY, this.ProviderSettings);
         state.Set(INPUT_IS_VALID_STATE_KEY, this.InputIsValid);
-        state.Set(CURRENT_PROFILE_IDS_STATE_KEY, this.CurrentProfileIds);
+        state.SetHashSet(CURRENT_PROFILE_IDS_STATE_KEY, this.CurrentProfileIds);
         state.Set(CURRENT_CHAT_TEMPLATE_STATE_KEY, this.CurrentChatTemplate);
         state.Set(CHAT_THREAD_STATE_KEY, this.ChatThread);
         state.Set(LAST_USER_PROMPT_STATE_KEY, this.LastUserPrompt);
@@ -1003,7 +1006,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var reader = new AssistantSessionStateReader(state, this.Title);
         reader.Restore(PROVIDER_SETTINGS_STATE_KEY, value => this.ProviderSettings = value);
         reader.Restore(INPUT_IS_VALID_STATE_KEY, value => this.InputIsValid = value);
-        reader.Restore(CURRENT_PROFILE_IDS_STATE_KEY, value => this.CurrentProfileIds = value);
+        reader.Restore(CURRENT_PROFILE_IDS_STATE_KEY, value => this.CurrentProfileIds = value.ToHashSet(StringComparer.OrdinalIgnoreCase));
         reader.Restore(CURRENT_CHAT_TEMPLATE_STATE_KEY, value => this.CurrentChatTemplate = value);
         reader.Restore(CHAT_THREAD_STATE_KEY, value => this.ChatThread = value);
         reader.Restore(LAST_USER_PROMPT_STATE_KEY, value => this.LastUserPrompt = value);

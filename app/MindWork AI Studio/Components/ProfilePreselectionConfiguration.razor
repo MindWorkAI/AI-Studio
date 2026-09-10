@@ -5,7 +5,7 @@
 
 @if (this.SelectedMode is ProfilePreselectionMode.USE_SPECIFIC_PROFILES)
 {
-    <ConfigurationMultiSelect TData="string" OptionDescription="@T("Profiles")" Disabled="@this.Disabled" IsLocked="@this.IsLocked" SelectedValues="@(() => this.SpecificProfileIds)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@this.ProfilesChanged" MultiSelectionTextFunc="@this.GetSelectionText">
+    <ConfigurationMultiSelect TData="string" OptionDescription="@T("Custom preselected profiles")" Disabled="@this.Disabled" IsLocked="@this.IsLocked" SelectedValues="@(() => this.SpecificProfileIds)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@this.ProfilesChanged" MultiSelectionTextFunc="@this.GetSelectionText">
         <ItemTemplate Context="profileData">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                 <MudIcon Icon="@this.ProfileIcon(profileData.Value)" Size="Size.Small" Style="color: var(--mud-palette-action-default);" />

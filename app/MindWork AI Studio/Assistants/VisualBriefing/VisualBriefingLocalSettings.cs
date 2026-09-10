@@ -25,6 +25,8 @@ public sealed class VisualBriefingLocalSettings
     /// </summary>
     public HashSet<string> ProfileIds { get; set; } = [];
 
+    // Temporary compatibility shim until 2027-03-10:
+    // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
     [JsonPropertyName("ProfileId")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? LegacyProfileId

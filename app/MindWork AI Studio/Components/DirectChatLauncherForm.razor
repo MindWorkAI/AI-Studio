@@ -28,7 +28,7 @@
 </MudSelect>
 @if (this.SelectedProfileMode is ProfilePreselectionMode.USE_SPECIFIC_PROFILES)
 {
-    <MudSelect T="string" MultiSelection="true" SelectedValues="@(this.ProfileIds ?? [])" SelectedValuesChanged="@this.SetProfileIds" MultiSelectionTextFunc="@this.GetSelectedProfileText" Label="@T("Profiles")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
+    <MudSelect T="string" MultiSelection="true" SelectedValues="@(this.ProfileIds ?? [])" SelectedValuesChanged="@this.SetProfileIds" MultiSelectionTextFunc="@this.GetSelectedProfileText" Validation="@this.ValidateProfileIds" Label="@T("Profiles")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
         @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
         {
             <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>

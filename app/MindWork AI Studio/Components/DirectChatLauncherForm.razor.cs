@@ -133,9 +133,9 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         this.profileModeOverride = mode;
         HashSet<string>? profileIds = mode switch
         {
-            ProfilePreselectionMode.USE_APP_DEFAULT => null,
-            ProfilePreselectionMode.USE_NO_PROFILES => [],
-            ProfilePreselectionMode.USE_SPECIFIC_PROFILES => this.ProfileIds is { Count: > 0 } ? [..this.ProfileIds] : [],
+            ProfilePreselectionMode.USE_APP_DEFAULT => ProfilePreselection.AppDefault,
+            ProfilePreselectionMode.USE_NO_PROFILES => ProfilePreselection.NoProfiles,
+            ProfilePreselectionMode.USE_SPECIFIC_PROFILES => this.ProfileIds is { Count: > 0 } ? ProfilePreselection.Specific(this.ProfileIds) : ProfilePreselection.NoProfiles,
             _ => null,
         };
 
@@ -151,6 +151,15 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         this.ProfileIds = selection;
         await this.ProfileIdsChanged.InvokeAsync(selection);
     }
+
+    //
+    // "Use a custom profile selection" with nothing picked yet is indistinguishable from "use no
+    // profiles" once persisted, so it must not be a savable end state:
+    //
+    private string? ValidateProfileIds(IEnumerable<string?>? profileIds) =>
+        this.SelectedProfileMode == ProfilePreselectionMode.USE_SPECIFIC_PROFILES && !(profileIds?.Any(profileId => !string.IsNullOrWhiteSpace(profileId)) ?? false)
+            ? T("Select at least one profile, or choose a different option above.")
+            : null;
 
     private async Task SetChatTemplateId(string chatTemplateId)
     {

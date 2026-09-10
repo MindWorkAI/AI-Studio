@@ -135,6 +135,8 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         if (table.TryGetValue("PreselectedProvider", out var providerValue) && providerValue.TryRead<string>(out var providerId))
             preselectedProvider = providerId;
 
+        // Temporary compatibility shim until 2027-03-10:
+        // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
         var hasLegacyProfile = table.TryGetValue("PreselectedProfile", out var profileValue);
         var hasProfileIds = table.TryGetValue("PreselectedProfileIds", out var profileIdsValue);
         if (hasLegacyProfile && hasProfileIds)
@@ -203,6 +205,8 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         return true;
     }
 
+    // Temporary compatibility shim until 2027-03-10:
+    // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
     private static bool TryNormalizeLegacyProfileId(string profileId, out HashSet<string>? profileIds)
     {
         profileIds = null;

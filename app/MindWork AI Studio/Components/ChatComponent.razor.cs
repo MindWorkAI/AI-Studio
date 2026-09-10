@@ -267,7 +267,7 @@ public partial class ChatComponent : MSGComponentBase
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
         
         // Select the correct provider:
-        await this.SelectProviderWhenLoadingChat();
+        await this.SelectProviderWhenLoadingChat(useChatProfileSelection: deferredRequest is not null);
         await this.SyncForegroundChatAsync();
         await this.ConsumeMediaOutcomeAsync();
         await base.OnInitializedAsync();
@@ -637,7 +637,9 @@ public partial class ChatComponent : MSGComponentBase
         }
         else
         {
-            this.currentProfileIds = this.SettingsManager.ResolveProfiles(this.ChatThread.SelectedProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            this.currentProfileIds = this.IsCurrentChatStreaming
+                ? this.SettingsManager.ResolveProfiles(this.ChatThread.SelectedProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : this.SettingsManager.ResolveProfiles(this.currentProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
                 ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
@@ -1024,6 +1026,7 @@ public partial class ChatComponent : MSGComponentBase
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+        this.currentProfileIds = this.SettingsManager.GetPreselectedProfiles(Tools.Components.CHAT).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         this.RefreshCurrentProfileAndChatTemplate();
         
         //
@@ -1188,6 +1191,7 @@ public partial class ChatComponent : MSGComponentBase
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
+        this.currentProfileIds = this.SettingsManager.GetPreselectedProfiles(Tools.Components.CHAT).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         
         this.ChatThread = null;
         this.MarkCurrentChatAsLoadedParameter();
@@ -1196,7 +1200,7 @@ public partial class ChatComponent : MSGComponentBase
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
-    private async Task SelectProviderWhenLoadingChat()
+    private async Task SelectProviderWhenLoadingChat(bool useChatProfileSelection = false)
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
         var chatProfileIds = this.ChatThread?.SelectedProfileIds;
@@ -1206,9 +1210,12 @@ public partial class ChatComponent : MSGComponentBase
         
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
-        // Try to select the profile:
-        if (chatProfileIds is not null)
+        // A running chat or an explicitly configured chat launcher keeps its selection. Opening an
+        // inactive chat starts a new UI session and therefore reapplies the configured defaults.
+        if ((useChatProfileSelection || this.IsCurrentChatStreaming) && chatProfileIds is not null)
             this.currentProfileIds = this.SettingsManager.ResolveProfiles(chatProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        else
+            this.currentProfileIds = this.SettingsManager.GetPreselectedProfiles(Tools.Components.CHAT).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))

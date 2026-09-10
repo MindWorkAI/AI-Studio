@@ -789,7 +789,8 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var requestedProfileIds = requested.ProfileIds?.Select(Guid.Parse).ToArray();
         if (!(requestedProfileIds is null && actual.ProfileIds is null ||
-              requestedProfileIds is not null && actual.ProfileIds is not null && requestedProfileIds.SequenceEqual(actual.ProfileIds)))
+              requestedProfileIds is not null && actual.ProfileIds is not null &&
+              requestedProfileIds.ToHashSet().SetEquals(actual.ProfileIds)))
             return false;
 
         var requestedDataSourceIds = requested.DataSourceIds?.Select(Guid.Parse).ToArray();

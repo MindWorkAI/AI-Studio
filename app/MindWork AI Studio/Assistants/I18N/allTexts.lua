@@ -3751,6 +3751,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1286170698"] = "
 -- Chat provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1648955896"] = "Chat provider"
 
+-- Select at least one profile, or choose a different option above.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1928897724"] = "Select at least one profile, or choose a different option above."
+
 -- Use no profiles
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2059344659"] = "Use no profiles"
 
@@ -4012,11 +4015,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T110831
 -- Use no profiles
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T2059344659"] = "Use no profiles"
 
--- Profiles
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T3632612423"] = "Profiles"
-
 -- Use app default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T3672477670"] = "Use app default"
+
+-- Custom preselected profiles
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T4111250936"] = "Custom preselected profiles"
 
 -- No profiles selected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEPRESELECTIONCONFIGURATION::T541000009"] = "No profiles selected"
@@ -7240,9 +7243,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T74
 -- Leave empty when an input folder should be selected for every batch run.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T762890100"] = "Leave empty when an input folder should be selected for every batch run."
 
--- Preselect profiles
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1126291596"] = "Preselect profiles"
-
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
 
@@ -7275,6 +7275,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] 
 
 -- Do you want to use any shortcut to send your input?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
+
+-- Preselect profile schemes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3131129587"] = "Preselect profile schemes"
 
 -- Would you like to set one of your chat templates as the default for chats?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"

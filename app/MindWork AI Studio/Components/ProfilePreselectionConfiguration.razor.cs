@@ -36,11 +36,24 @@ public partial class ProfilePreselectionConfiguration : MSGComponentBase
     private async Task ModeChanged(ProfilePreselectionMode mode)
     {
         this.selectedModeOverride = mode;
+
+        //
+        // Switching to "custom profile selection" with nothing picked yet has no value that could
+        // be persisted: it would serialize identically to "no profiles" and silently discard
+        // whatever was configured before. Only persist once the user actually picks a profile,
+        // through ProfilesChanged below; until then, only the visible mode changes.
+        //
+        if (mode == ProfilePreselectionMode.USE_SPECIFIC_PROFILES && this.SpecificProfileIds.Count == 0)
+        {
+            await this.InvokeAsync(this.StateHasChanged);
+            return;
+        }
+
         HashSet<string>? selection = mode switch
         {
-            ProfilePreselectionMode.USE_APP_DEFAULT => null,
-            ProfilePreselectionMode.USE_NO_PROFILES => [],
-            ProfilePreselectionMode.USE_SPECIFIC_PROFILES => this.SpecificProfileIds.Count > 0 ? [..this.SpecificProfileIds] : [],
+            ProfilePreselectionMode.USE_APP_DEFAULT => ProfilePreselection.AppDefault,
+            ProfilePreselectionMode.USE_NO_PROFILES => ProfilePreselection.NoProfiles,
+            ProfilePreselectionMode.USE_SPECIFIC_PROFILES => ProfilePreselection.Specific(this.SpecificProfileIds),
             _ => null,
         };
 

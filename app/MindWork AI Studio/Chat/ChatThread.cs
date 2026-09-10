@@ -52,6 +52,8 @@ public sealed record ChatThread
     /// Permanently supports reading the singular profile field written by older app versions.
     /// New chats write only <see cref="SelectedProfileIds"/>.
     /// </summary>
+    // Compatibility shim, kept as long as pre-v27 chat JSON files are supported:
+    // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
     [JsonPropertyName("SelectedProfile")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? LegacySelectedProfile

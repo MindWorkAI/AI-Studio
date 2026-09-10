@@ -433,8 +433,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             }
 
             var legacyOverrideName = $"{singularName}.AllowUserOverride";
+            var pluralOverrideName = $"{pluralName}.AllowUserOverride";
             if (settings.TryGetValue(legacyOverrideName, out var legacyOverride))
-                settings[$"{pluralName}.AllowUserOverride"] = legacyOverride;
+            {
+                if (settings.TryGetValue(pluralOverrideName, out var pluralOverride))
+                {
+                    if (!Equals(legacyOverride, pluralOverride))
+                    {
+                        message = string.Format(TB("The SETTINGS table contains both '{0}' and '{1}'. Use only one of them."), legacyOverrideName, pluralOverrideName);
+                        return false;
+                    }
+                }
+                else
+                    settings[pluralOverrideName] = legacyOverride;
+            }
         }
 
         message = string.Empty;

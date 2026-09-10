@@ -38,6 +38,8 @@ public static partial class ManagedConfiguration
             SettingsManager.ToSettingName(propertyExpression));
     }
 
+    // Temporary compatibility shim until 2027-03-10:
+    // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
     public static bool TryProcessLegacyProfileIds<TClass>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, ISet<string>>> propertyExpression,
@@ -143,6 +145,8 @@ public static partial class ManagedConfiguration
             SettingsManager.ToSettingName(propertyExpression));
     }
 
+    // Temporary compatibility shim until 2027-03-10:
+    // documentation/compatibility-shims/2026-09-legacy-profile-fields.md
     public static bool TryProcessLegacyProfilePreselection<TClass>(
         Expression<Func<Data, TClass>> configSelection,
         Expression<Func<TClass, HashSet<string>?>> propertyExpression,
