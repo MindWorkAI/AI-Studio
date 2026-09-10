@@ -222,6 +222,16 @@ public enum Event
     /// Unregisters a file drop area from file attachment handling.
     /// </summary>
     UNREGISTER_FILE_DROP_AREA,
+
+    /// <summary>
+    /// Names the drop zone under the cursor of a running drag so that exactly this one is highlighted.
+    /// </summary>
+    HIGHLIGHT_DROP_ZONE,
+
+    /// <summary>
+    /// Delivers dropped paths to the drop zone which was under the cursor.
+    /// </summary>
+    PATHS_DROPPED,
     
     
     
