@@ -42,14 +42,6 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
-    /// <summary>
-    /// The drop area of this page. The page owns it rather than reading it from a cascading value,
-    /// because a component cannot read what it cascades itself.
-    /// </summary>
-    private readonly DropZoneScopeState dropZoneScope = new($"plugins-page-{Guid.NewGuid():N}");
-
-    private bool isDraggingOverPage;
-
     private const string IMPORT_ICON =
         @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
     <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
@@ -61,10 +53,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
-
-        // The whole page is the drop target, so users can drop a plugin archive anywhere on it:
-        this.dropZoneScope.TryBecomeDefaultZone(this);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED ]);
 
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -88,12 +77,6 @@ public partial class Plugins : MSGComponentBase
     {
         if (firstRender)
             await this.TryAutoAuditAssistantsAsync();
-    }
-
-    protected override void DisposeResources()
-    {
-        this.dropZoneScope.ReleaseDefaultZone(this);
-        base.DisposeResources();
     }
 
     #endregion
@@ -275,7 +258,8 @@ public partial class Plugins : MSGComponentBase
     /// Highlights the plugin table while the user drags a file over the page, so it is visible
     /// where the file would land.
     /// </summary>
-    private string PluginTableClass => this.isDraggingOverPage
+    /// <param name="isDropTarget">Whether the page is the target of the drop being aimed right now.</param>
+    private static string PluginTableClass(bool isDropTarget) => isDropTarget
         ? "border-dashed border rounded-lg mud-border-primary border-4"
         : "border-dashed border rounded-lg";
 
@@ -570,53 +554,10 @@ public partial class Plugins : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
-
-            case Event.HIGHLIGHT_DROP_ZONE when data is DropZoneHighlight highlight:
-                this.ApplyHighlight(this.IsThisZone(highlight.ZoneId));
-                break;
-
-            case Event.PATHS_DROPPED when data is DroppedPaths dropped:
-                // Whoever the drop was meant for, the drag is over and nothing stays highlighted:
-                this.ApplyHighlight(false);
-
-                if (!this.IsThisZone(dropped.ZoneId))
-                    return;
-
-                if (!this.CanCatchDroppedFile())
-                {
-                    LOG.LogDebug("The plugins page cannot import right now and swallowed {Count} dropped path(s).", dropped.Paths.Count);
-                    return;
-                }
-
-                await this.ImportDroppedPluginArchiveAsync(dropped.Paths);
-                break;
         }
     }
 
     #endregion
-
-    /// <summary>
-    /// Decides whether the named zone is this page.
-    /// </summary>
-    /// <param name="zoneId">The ID the hit test reported, or null when it hit nothing.</param>
-    private bool IsThisZone(string? zoneId) => zoneId is not null && zoneId == this.dropZoneScope.ScopeId;
-
-    /// <summary>
-    /// Marks the page as the drop target, or takes that mark away.
-    /// </summary>
-    /// <remarks>
-    /// The comparison is not for tidiness: a throttled drag-over event arrives about ten times per
-    /// second, and without it every one of them would render the whole plugin table anew.
-    /// </remarks>
-    private void ApplyHighlight(bool shouldBeHighlighted)
-    {
-        var highlighted = shouldBeHighlighted && this.CanCatchDroppedFile();
-        if (highlighted == this.isDraggingOverPage)
-            return;
-
-        this.isDraggingOverPage = highlighted;
-        this.StateHasChanged();
-    }
 
     /// <summary>
     /// Decides whether this page may process dropped files: only when the organization allows

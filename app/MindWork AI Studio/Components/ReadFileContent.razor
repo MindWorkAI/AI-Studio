@@ -2,39 +2,40 @@
 
 @if (this.EnableDragDrop)
 {
-    <div data-drop-zone-id="@this.dropZoneId">
-        <MudPaper Outlined="true" Class="@this.dragClass">
-            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
-                @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
-                {
-                    <MudTooltip Text="@this.FileLoadedTooltip()">
-                        <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
-                            <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
-                                @this.ButtonText
-                            </MudButton>
-                        </MudBadge>
-                    </MudTooltip>
-                }
-                else
-                {
-                    <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
-                        @this.ButtonText
-                    </MudButton>
-                }
-                
-                @if (this.IsCurrentTargetBusy)
-                {
-                    <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body2">
-                        @T("Drop one file here to load its content.")
-                    </MudText>
-                }
-            </MudStack>
-        </MudPaper>
-    </div>
+    <PathDropZone IdPrefix="read-file-content"
+                  CatchAllDocuments="@this.CatchAllDocuments"
+                  Disabled="@(() => this.IsUnavailable)"
+                  OnPathsDropped="@this.LoadFirstValidFile">
+        <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
+            @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
+            {
+                <MudTooltip Text="@this.FileLoadedTooltip()">
+                    <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true">
+                        <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+                            @this.ButtonText
+                        </MudButton>
+                    </MudBadge>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+                    @this.ButtonText
+                </MudButton>
+            }
+
+            @if (this.IsCurrentTargetBusy)
+            {
+                <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">
+                    @T("Drop one file here to load its content.")
+                </MudText>
+            }
+        </MudStack>
+    </PathDropZone>
 }
 else
 {

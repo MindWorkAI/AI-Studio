@@ -1,7 +1,28 @@
 @inherits MSGComponentBase
 
-<div data-drop-zone-id="@this.dropZoneId">
-    <MudPaper Outlined="@true" Class="@this.dragClass">
-        @this.ChildContent
-    </MudPaper>
-</div>
+@if (this.IsFramed)
+{
+    <div data-drop-zone-id="@this.zoneId">
+        <MudPaper Outlined="@true" Class="@this.FrameClass" Style="@this.Style">
+            @this.ChildContent?.Invoke(this.isHighlighted)
+        </MudPaper>
+    </div>
+}
+else
+{
+    @* An area renders one element, with the content immediately inside it. Layouts hang child
+       selectors on that element, for instance app.css does on .inner-scrolling-context, so an extra
+       level here would break them. The cascading value renders no element of its own. *@
+    <div class="@this.Class" style="@this.Style" data-drop-zone-id="@this.zoneId">
+        @if (this.areaState is null)
+        {
+            @this.ChildContent?.Invoke(this.isHighlighted)
+        }
+        else
+        {
+            <CascadingValue Value="@this.areaState" IsFixed="@true">
+                @this.ChildContent?.Invoke(this.isHighlighted)
+            </CascadingValue>
+        }
+    </div>
+}

@@ -45,12 +45,6 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool CatchAllDocuments { get; set; }
 
-    /// <summary>
-    /// The area this component lives in, if it lives in one at all.
-    /// </summary>
-    [CascadingParameter]
-    private DropZoneScopeState? Scope { get; set; }
-
     [Parameter]
     public bool UseSmallForm { get; set; }
 
@@ -105,11 +99,6 @@ public partial class AttachDocuments : MSGComponentBase
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
-    private readonly string dropZoneId = $"attach-documents-{Guid.NewGuid():N}";
-
-    private bool isDefaultZone;
-    private bool hasReportedDefaultZoneProblem;
-    private bool isDraggingOver;
     private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
         ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
@@ -124,7 +113,7 @@ public partial class AttachDocuments : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.ApplyFilters([], [ Event.HIGHLIGHT_DROP_ZONE, Event.PATHS_DROPPED ]);
+        this.ApplyFilters([], []);
 
         await base.OnInitializedAsync();
     }
@@ -132,7 +121,6 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>Rehydrates results after the component is assigned another chat or target.</summary>
     protected override async Task OnParametersSetAsync()
     {
-        this.UpdateDefaultZoneRole();
         await base.OnParametersSetAsync();
         await this.SyncCompletedMediaAttachmentsAsync();
     }
@@ -223,138 +211,21 @@ public partial class AttachDocuments : MSGComponentBase
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
-
-        // Hand the role of the default target back to the area:
-        if (this.isDefaultZone)
-            this.Scope?.ReleaseDefaultZone(this);
-
         base.DisposeResources();
-    }
-
-    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        switch (triggeredEvent)
-        {
-            case Event.HIGHLIGHT_DROP_ZONE when data is DropZoneHighlight highlight:
-                this.ApplyHighlight(this.IsThisZone(highlight.ZoneId));
-                break;
-
-            case Event.PATHS_DROPPED when data is DroppedPaths dropped:
-                // Whoever the drop was meant for, the drag is over and no zone stays highlighted:
-                this.ApplyHighlight(false);
-
-                if (!this.IsThisZone(dropped.ZoneId))
-                    return;
-
-                if (this.IsUnavailable)
-                {
-                    this.Logger.LogDebug("The attachment zone '{Name}' is unavailable and swallowed {Count} dropped path(s).", this.Name, dropped.Paths.Count);
-                    return;
-                }
-
-                await this.AddFileBatchAsync(dropped.Paths);
-                await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-                await this.OnChange(this.DocumentPaths);
-                this.StateHasChanged();
-                break;
-        }
     }
 
     #endregion
 
     /// <summary>
-    /// Keeps the role of the default target in step with the CatchAllDocuments parameter.
+    /// Attaches what the user dropped on the zone of this component.
     /// </summary>
-    /// <remarks>
-    /// The flag is a parameter, so it can change while this component lives. A zone inside a
-    /// collapsed panel is the case this exists for: MudBlazor leaves the content of a collapsed
-    /// panel in the DOM with a height of zero, so the zone stays alive and cannot be aimed at --
-    /// yet it would keep the role and swallow every drop meant for the visible part of the page.
-    /// </remarks>
-    private void UpdateDefaultZoneRole()
+    /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
+    private async Task PathsDropped(List<string> paths)
     {
-        if (this.CatchAllDocuments)
-        {
-            this.ClaimDefaultZoneRole();
-            return;
-        }
-
-        if (!this.isDefaultZone)
-            return;
-
-        this.Scope?.ReleaseDefaultZone(this);
-        this.isDefaultZone = false;
+        await this.AddFileBatchAsync(paths);
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
     }
-
-    /// <summary>
-    /// Asks the area for the role of its default target.
-    /// </summary>
-    private void ClaimDefaultZoneRole()
-    {
-        if (this.isDefaultZone)
-            return;
-
-        if (this.Scope is null)
-        {
-            //
-            // There is nothing to claim: the surrounding page, assistant, or dialog is not a drop
-            // area at all. The flag would then do nothing, and silently -- which is how a zone ends
-            // up promising a behaviour it cannot deliver. So say it out loud: either the area needs
-            // a DropZoneScope, or the flag does not belong here. Reported once only, because the
-            // claim is retried on every parameter change.
-            //
-            if (!this.hasReportedDefaultZoneProblem)
-            {
-                this.hasReportedDefaultZoneProblem = true;
-                this.Logger.LogWarning("The attachment zone '{Name}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.Name);
-            }
-
-            return;
-        }
-
-        this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
-
-        // Losing the role to a neighbour is a decision, not a defect -- and it can be undone later,
-        // when that neighbour goes away. So this one only goes to the debug log, and only once:
-        if (this.isDefaultZone || this.hasReportedDefaultZoneProblem)
-            return;
-
-        this.hasReportedDefaultZoneProblem = true;
-        this.Logger.LogDebug("The attachment zone '{Name}' asked to be the default target of its area, which another zone already is. It now takes only the drops aimed at itself.", this.Name);
-    }
-
-    /// <summary>
-    /// Decides whether the named zone is this one.
-    /// </summary>
-    /// <remarks>
-    /// The area counts as this zone as long as this zone is its default target. That is the whole
-    /// mechanism behind dropping anywhere in the chat and still landing on the composer.
-    /// </remarks>
-    /// <param name="zoneId">The ID the hit test reported, or null when it hit nothing.</param>
-    private bool IsThisZone(string? zoneId) => zoneId is not null && (zoneId == this.dropZoneId || (this.isDefaultZone && zoneId == this.Scope?.ScopeId));
-
-    /// <summary>
-    /// Highlights the zone, or takes the highlight away.
-    /// </summary>
-    /// <remarks>
-    /// The comparison is not for tidiness: a throttled drag-over event arrives about ten times per
-    /// second, and without it every one of them would render every zone on the page anew. In the
-    /// small form the highlight also swaps the markup, so this keeps the composer from flickering.
-    /// </remarks>
-    private void ApplyHighlight(bool shouldBeHighlighted)
-    {
-        var highlighted = shouldBeHighlighted && !this.IsUnavailable;
-        if (highlighted == this.isDraggingOver)
-            return;
-
-        this.isDraggingOver = highlighted;
-        this.dragClass = highlighted ? $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4" : DEFAULT_DRAG_CLASS;
-        this.StateHasChanged();
-    }
-
-    private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
-
-    private string dragClass = DEFAULT_DRAG_CLASS;
 
     private async Task AddFilesManually()
     {

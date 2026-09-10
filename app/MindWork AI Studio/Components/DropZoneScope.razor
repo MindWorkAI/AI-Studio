@@ -1,8 +1,0 @@
-@* One element, and the content immediately inside it. Layouts hang child selectors on this
-   element, for instance app.css does on .inner-scrolling-context, so an extra level here would
-   break them. The cascading value renders no element of its own. *@
-<div class="@this.Class" style="@this.Style" data-drop-zone-id="@this.EffectiveState.ScopeId">
-    <CascadingValue Value="@this.EffectiveState" IsFixed="@true">
-        @this.ChildContent
-    </CascadingValue>
-</div>

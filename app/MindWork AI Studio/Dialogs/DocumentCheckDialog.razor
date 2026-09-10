@@ -3,7 +3,7 @@
 <MudDialog>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
-        <DropZoneScope>
+        <PathDropZone IsArea="@true">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("See how we load your file. Review the content before we process it further.")
         </MudJustifiedText>
@@ -102,7 +102,7 @@
                 }
             </MudTabs>
         }
-        </DropZoneScope>
+        </PathDropZone>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

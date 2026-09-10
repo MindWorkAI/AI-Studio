@@ -3,8 +3,13 @@
 @if (this.UseSmallForm)
 {
     <MudStack Spacing="0">
-        <div data-drop-zone-id="@this.dropZoneId">
-            @if (this.isDraggingOver)
+        <PathDropZone IdPrefix="attach-documents"
+                      Frameless="@true"
+                      CatchAllDocuments="@this.CatchAllDocuments"
+                      Disabled="@(() => this.IsUnavailable)"
+                      OnPathsDropped="@this.PathsDropped"
+                      Context="isDropTarget">
+            @if (isDropTarget)
             {
                 <MudBadge
                     Content="@this.DocumentPaths.Count"
@@ -52,7 +57,7 @@
                         OnClick="@this.AddFilesManually"/>
                 </MudTooltip>
             }
-        </div>
+        </PathDropZone>
         @if (this.ShowMediaStatus)
         {
             <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
@@ -82,21 +87,25 @@ else
     {
         <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId"/>
     }
-    <div data-drop-zone-id="@this.dropZoneId">
-        <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
-            @foreach (var fileAttachment in this.DocumentPaths)
+    <PathDropZone IdPrefix="attach-documents"
+                  Class="pa-4 mt-4 mud-height-full"
+                  HighlightClass="mud-border-primary border-4"
+                  Style="height: 20em; overflow-y: auto;"
+                  CatchAllDocuments="@this.CatchAllDocuments"
+                  Disabled="@(() => this.IsUnavailable)"
+                  OnPathsDropped="@this.PathsDropped">
+        @foreach (var fileAttachment in this.DocumentPaths)
+        {
+            @if (this.IsUnavailable)
             {
-                @if (this.IsUnavailable)
-                {
-                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
-                }
-                else
-                {
-                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
-                }
+                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
             }
-        </MudPaper>
-    </div>
+            else
+            {
+                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+            }
+        }
+    </PathDropZone>
     @if (!this.IsUnavailable)
     {
         <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
