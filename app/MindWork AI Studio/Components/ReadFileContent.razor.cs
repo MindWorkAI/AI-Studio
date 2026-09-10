@@ -244,8 +244,20 @@ public partial class ReadFileContent : MSGComponentBase
     /// </summary>
     private void ClaimDefaultZoneRole()
     {
-        if (!this.CatchAllDocuments || this.Scope is null)
+        if (!this.CatchAllDocuments)
             return;
+
+        if (this.Scope is null)
+        {
+            //
+            // There is nothing to claim: the surrounding page, assistant, or dialog is not a drop
+            // area at all. The flag would then do nothing, and silently -- which is how a zone ends
+            // up promising a behaviour it cannot deliver. So say it out loud: either the area needs
+            // a DropZoneScope, or the flag does not belong here.
+            //
+            this.Logger.LogWarning("The file zone '{ZoneId}' wants to be the default target of its area, but it does not live in a drop zone scope. Dropping next to this zone will do nothing.", this.dropZoneId);
+            return;
+        }
 
         this.isDefaultZone = this.Scope.TryBecomeDefaultZone(this);
         if (!this.isDefaultZone)
