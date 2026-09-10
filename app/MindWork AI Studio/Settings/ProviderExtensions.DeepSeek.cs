@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesDeepSeek(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
         
         // The reasoner alias points to the thinking mode of the current flash model:
         if(modelName.IndexOf("reasoner") is not -1)

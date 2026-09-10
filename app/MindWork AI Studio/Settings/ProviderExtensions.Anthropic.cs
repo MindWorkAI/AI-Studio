@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesAnthropic(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
 
         // Claude Fable 5 and Mythos 5 always use adaptive thinking:
         if(modelName.StartsWith("claude-fable-5") || modelName.StartsWith("claude-mythos-5"))

@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesOpenAI(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
         
         if (modelName is "gpt-4o-search-preview")
             return

@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesAlibaba(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
         
         // Qwen models:
         if (modelName.StartsWith("qwen"))

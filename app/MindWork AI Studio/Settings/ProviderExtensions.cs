@@ -6,6 +6,70 @@ namespace AIStudio.Settings;
 public static partial class ProviderExtensions
 {
     /// <summary>
+    /// The longest model ID we normalize without going to the heap.
+    /// </summary>
+    private const int MAX_STACK_ALLOCATED_MODEL_ID_LENGTH = 256;
+
+    /// <summary>
+    /// Brings a model ID into the form the capability rules are written in.
+    /// </summary>
+    /// <remarks>
+    /// Every provider names the same model differently, and the difference is rarely in the words:
+    /// it is in what sits between them. Ollama separates the variant with a colon
+    /// ("qwen3.8:27b-mlx"), Blablador answers with a whole sentence ("10 - Muse Glimmer 30b - the
+    /// newest META model"), Fireworks puts a path in front
+    /// ("accounts/fireworks/models/llama-v3p1-405b-instruct"), and the hubs use hyphens. Without
+    /// this, every rule would have to spell out each of those writings, which is what the Llama
+    /// block used to do with four variants of one check.
+    ///
+    /// The dots stay. They carry the version boundary: llama3 and llama3.1 are different models,
+    /// and only the latter calls functions. Dropping them would merge the two.
+    ///
+    /// The patterns in the rules are written in this normalized form already, which is why they
+    /// use lowercase and hyphens throughout.
+    /// </remarks>
+    /// <param name="modelId">The model ID as the provider reports it.</param>
+    /// <returns>The model ID in lowercase, with every separator written as a single hyphen.</returns>
+    private static string NormalizeModelId(string modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId))
+            return string.Empty;
+
+        //
+        // Normalizing never makes a name longer, so the original length is always enough room.
+        // Model IDs are short, which is why the buffer lives on the stack: the longest ones we
+        // know of are the descriptive names Blablador answers with, at around 75 characters. A
+        // provider reporting something longer still gets a correct answer, just from the heap.
+        //
+        Span<char> normalized = modelId.Length <= MAX_STACK_ALLOCATED_MODEL_ID_LENGTH
+            ? stackalloc char[modelId.Length]
+            : new char[modelId.Length];
+
+        var length = 0;
+        foreach (var character in modelId)
+        {
+            if (char.IsAsciiLetterOrDigit(character) || character is '.')
+            {
+                normalized[length++] = char.ToLowerInvariant(character);
+                continue;
+            }
+
+            // Anything else separates two parts of the name. A leading separator, and a repeated
+            // one, say nothing and would only get in the way of the patterns:
+            if (length is 0 || normalized[length - 1] is '-')
+                continue;
+
+            normalized[length++] = '-';
+        }
+
+        // A trailing separator carries no meaning either:
+        if (length > 0 && normalized[length - 1] is '-')
+            length--;
+
+        return new string(normalized[..length]);
+    }
+
+    /// <summary>
     /// Get the capabilities of the model used by the configured provider.
     /// </summary>
     /// <param name="provider">The configured provider.</param>

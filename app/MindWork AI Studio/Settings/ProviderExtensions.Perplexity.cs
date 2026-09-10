@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesPerplexity(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
         
         if(modelName.IndexOf("reasoning") is not -1 ||
            modelName.IndexOf("deep-research") is not -1)

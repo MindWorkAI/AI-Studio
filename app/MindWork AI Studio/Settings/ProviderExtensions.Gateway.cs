@@ -32,7 +32,7 @@ public static partial class ProviderExtensions
         var separatorIndex = model.Id.IndexOf('/');
         var vendor = separatorIndex is -1 ? string.Empty : model.Id[..separatorIndex].ToLowerInvariant();
         var bareModel = separatorIndex is -1 ? model : model with { Id = model.Id[(separatorIndex + 1)..] };
-        var bareModelName = bareModel.Id.ToLowerInvariant().AsSpan();
+        var bareModelName = NormalizeModelId(bareModel.Id).AsSpan();
 
         var capabilities = vendor switch
         {

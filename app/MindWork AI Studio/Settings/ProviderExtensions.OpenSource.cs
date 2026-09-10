@@ -6,7 +6,7 @@ public static partial class ProviderExtensions
 {
     private static List<Capability> GetModelCapabilitiesOpenSource(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
         
         //
         // Checking for names in the case of open source models is a hard task.
@@ -19,6 +19,13 @@ public static partial class ProviderExtensions
         // - LM Studio: llama-3.1-405b-instruct
         // - Helmholtz Blablador: 1 - Llama3 405 the best general model
         // - GWDG: Llama 3.1 405B Instruct
+        // - Ollama: llama3.1:405b
+        //
+        // The name arrives here already normalized by NormalizeModelId: lowercase, with every
+        // separator written as a single hyphen. That is why the checks below no longer carry a
+        // variant with a space or a colon. What normalization cannot do is insert a separator
+        // where a provider left it out, or remove one where it added it, so a family which is
+        // written both as "llama3" and as "llama-3" still needs both spellings.
         //
         
         //
@@ -27,7 +34,6 @@ public static partial class ProviderExtensions
         if (modelName.IndexOf("llama") is not -1)
         {
             if (modelName.IndexOf("llama4") is not -1 ||
-                modelName.IndexOf("llama 4") is not -1 ||
                 modelName.IndexOf("llama-4") is not -1 ||
                 modelName.IndexOf("llama-v4") is not -1)
                 return
@@ -52,7 +58,6 @@ public static partial class ProviderExtensions
             // All models >= 3.1 are able to do function calling:
             //
             if (modelName.IndexOf("llama3.") is not -1 ||
-                modelName.IndexOf("llama 3.") is not -1 ||
                 modelName.IndexOf("llama-3.") is not -1 ||
                 modelName.IndexOf("llama-v3p") is not -1)
                 return
@@ -101,8 +106,7 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
 
-            if(modelName.IndexOf("deepseek-r1") is not -1 ||
-               modelName.IndexOf("deepseek r1") is not -1)
+            if(modelName.IndexOf("deepseek-r1") is not -1)
                 return [
                     Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
                     Capability.ALWAYS_REASONING,
@@ -150,8 +154,15 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
 
-            // Check for the multimodal Qwen 3.8 27B checkpoint:
-            if(modelName.IndexOf("qwen3.8-27b") is not -1)
+            //
+            // Check for the multimodal Qwen 3.8 27B checkpoint. Blablador writes this one in two
+            // further ways, which no normalization can turn into the canonical name: it separates
+            // the family from the version ("Qwen 3.8-27B with DFlash on haicluster"), and its short
+            // alias drops the dot ("alias-qwen38-27b").
+            //
+            if(modelName.IndexOf("qwen3.8-27b") is not -1 ||
+               modelName.IndexOf("qwen-3.8-27b") is not -1 ||
+               modelName.IndexOf("qwen38-27b") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
@@ -475,8 +486,7 @@ public static partial class ProviderExtensions
             // template keeps the thinking channel closed by default.
             //
             if (modelName.IndexOf("gemma-4") is not -1 ||
-                modelName.IndexOf("gemma4") is not -1 ||
-                modelName.IndexOf("gemma 4") is not -1)
+                modelName.IndexOf("gemma4") is not -1)
             {
                 if (modelName.IndexOf("e2b") is not -1 ||
                     modelName.IndexOf("e4b") is not -1 ||
@@ -508,8 +518,7 @@ public static partial class ProviderExtensions
             // than "1b", so that a name such as gemma-3-31b does not match it.
             //
             if (modelName.IndexOf("gemma-3") is not -1 ||
-                modelName.IndexOf("gemma3") is not -1 ||
-                modelName.IndexOf("gemma 3") is not -1)
+                modelName.IndexOf("gemma3") is not -1)
             {
                 if (modelName.IndexOf("-1b") is not -1)
                     return
