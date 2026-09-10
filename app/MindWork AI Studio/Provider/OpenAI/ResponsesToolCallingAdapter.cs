@@ -57,6 +57,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         this.lastResponse = response;
         return new ToolCallingRound(
             response.GetTextOutput(),
+            response.GetThinkingOutput(),
             response.GetFunctionCalls()
                 .Select(call => new ToolCallingRequestedCall(
                     call.CallId ?? string.Empty,

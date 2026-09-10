@@ -5,6 +5,7 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 /// longer depends on the provider API it came from.
 /// </summary>
 /// <param name="TextOutput">The text the model produced, empty when it only requested tool calls.</param>
+/// <param name="ThinkingOutput">The human-readable thinking the provider exposed.</param>
 /// <param name="Calls">The tool calls the model requested, empty when it answered instead.</param>
 /// <param name="Sources">Sources the provider itself attached, such as those of a provider-native web search.</param>
-public sealed record ToolCallingRound(string TextOutput, IReadOnlyList<ToolCallingRequestedCall> Calls, IReadOnlyList<ISource> Sources);
+public sealed record ToolCallingRound(string TextOutput, string ThinkingOutput, IReadOnlyList<ToolCallingRequestedCall> Calls, IReadOnlyList<ISource> Sources);

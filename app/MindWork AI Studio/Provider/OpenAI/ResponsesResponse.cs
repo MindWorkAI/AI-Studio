@@ -42,6 +42,11 @@ public sealed record ResponsesResponse
             }));
     }
 
+    public string GetThinkingOutput() => string.Concat(this.Output
+        .Where(x => ReadString(x, "type").Equals("reasoning", StringComparison.Ordinal))
+        .SelectMany(x => ReadArrayItems(x, "summary").Concat(ReadArrayItems(x, "content")))
+        .Select(x => ReadString(x, "text")));
+
     public IReadOnlyList<Source> GetSources() => this.Output
         .Where(x => ReadString(x, "type").Equals("message", StringComparison.Ordinal))
         .SelectMany(ReadContentItems)

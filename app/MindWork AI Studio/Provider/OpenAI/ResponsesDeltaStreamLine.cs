@@ -15,7 +15,11 @@ public record ResponsesDeltaStreamLine(
     public bool ContainsContent() => this.Delta is not null;
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Delta ?? string.Empty, this.GetSources());
+    public ContentStreamChunk GetContent() => this.Type switch
+    {
+        "response.reasoning_summary_text.delta" or "response.reasoning_text.delta" => new(string.Empty, this.Delta ?? string.Empty, this.GetSources()),
+        _ => new(this.Delta ?? string.Empty, string.Empty, this.GetSources()),
+    };
 
     //
     // Please note that there are multiple options where LLM providers might stream sources:

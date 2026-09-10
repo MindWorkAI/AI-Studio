@@ -127,6 +127,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool hasActiveMathContainer;
     private bool isDisposed;
     private bool showToolTrace;
+    private bool showThinking;
     private readonly HashSet<int> expandedToolInvocations = [];
 
     /// <summary>
@@ -138,6 +139,10 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// can be completely exported; an image, for example, has no representation our formats could write.
     /// </remarks>
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
+
+    private bool HasThinking => this.Role is ChatRole.AI &&
+                                this.Content is ContentText { Thinking: var thinking } &&
+                                !string.IsNullOrWhiteSpace(thinking);
 
     /// <summary>
     /// The tables this block holds so that the export menu can offer each of them.
@@ -305,11 +310,14 @@ public partial class ContentBlockComponent : MSGComponentBase
                 var textValue = text.Text;
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
+                hash.Add(text.Thinking.Length);
+                hash.Add(text.Thinking.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);
                 hash.Add(this.showToolTrace);
+                hash.Add(this.showThinking);
                 hash.Add(this.expandedToolInvocations.Count);
                 foreach (var expandedInvocation in this.expandedToolInvocations.Order())
                     hash.Add(expandedInvocation);
@@ -379,6 +387,10 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     private void ToggleToolTrace() => this.showToolTrace = !this.showToolTrace;
+
+    private void ToggleThinking() => this.showThinking = !this.showThinking;
+
+    private string GetThinkingTooltip() => this.showThinking ? this.T("Hide thinking") : this.T("Show thinking");
 
     private bool IsToolInvocationExpanded(int order) => this.expandedToolInvocations.Contains(order);
 

@@ -1048,6 +1048,12 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             if (jsonData.StartsWith("""
                                     {"type":"response.output_text.delta"
+                                    """, StringComparison.InvariantCulture) ||
+                jsonData.StartsWith("""
+                                    {"type":"response.reasoning_summary_text.delta"
+                                    """, StringComparison.InvariantCulture) ||
+                jsonData.StartsWith("""
+                                    {"type":"response.reasoning_text.delta"
                                     """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;

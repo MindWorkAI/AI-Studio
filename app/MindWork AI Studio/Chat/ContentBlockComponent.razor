@@ -31,6 +31,23 @@
                         </MudButton>
                     </MudTooltip>
                 }
+                @if (this.HasThinking)
+                {
+                    <MudTooltip Text="@this.GetThinkingTooltip()" Placement="Placement.Bottom">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   Size="Size.Small"
+                                   Class="px-2 py-1 rounded-pill"
+                                   Style="min-width:auto; border-width:1px; text-transform:none;"
+                                   OnClick="@this.ToggleThinking">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Psychology" Color="Color.Default" Size="Size.Small" />
+                                <MudText Typo="Typo.body2">@T("Thinking")</MudText>
+                                <MudIcon Icon="@(this.showThinking ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+                            </MudStack>
+                        </MudButton>
+                    </MudTooltip>
+                }
             </MudStack>
         </CardHeaderContent>
         <CardHeaderActions>
@@ -190,6 +207,14 @@
                                         }
                                     </MudPaper>
                                 }
+                            </MudPaper>
+                        }
+
+                        @if (this.HasThinking && this.showThinking)
+                        {
+                            <MudPaper Class="pa-3 mb-3 border rounded-lg" Style="border-width:1px;">
+                                <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Thinking")</MudText>
+                                <MudText Typo="Typo.body2" Style="white-space: pre-wrap; overflow-wrap: anywhere;">@textContent.Thinking</MudText>
                             </MudPaper>
                         }
 

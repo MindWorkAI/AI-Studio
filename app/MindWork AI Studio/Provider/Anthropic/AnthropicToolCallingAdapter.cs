@@ -55,6 +55,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
         this.lastResponse = response;
         return new ToolCallingRound(
             response.GetTextOutput(),
+            response.GetThinkingOutput(),
             response.GetToolUses()
                 .Select(toolUse => new ToolCallingRequestedCall(
                     toolUse.Id,

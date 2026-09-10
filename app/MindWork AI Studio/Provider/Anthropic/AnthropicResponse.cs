@@ -36,6 +36,13 @@ public sealed record AnthropicResponse
         .Where(x => ReadString(x, "type").Equals("text", StringComparison.Ordinal))
         .Select(x => ReadString(x, "text")));
 
+    /// <summary>
+    /// The human-readable thinking the model returned, with redacted blocks omitted.
+    /// </summary>
+    public string GetThinkingOutput() => string.Concat(this.Content
+        .Where(x => ReadString(x, "type").Equals("thinking", StringComparison.Ordinal))
+        .Select(x => ReadString(x, "thinking")));
+
     private static string ReadString(JsonElement item, string propertyName)
     {
         if (item.ValueKind is not JsonValueKind.Object ||

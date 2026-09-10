@@ -10,10 +10,15 @@ namespace AIStudio.Provider.Anthropic;
 public readonly record struct ResponseStreamLine(string Type, int Index, Delta Delta) : IResponseStreamLine
 {
     /// <inheritdoc />
-    public bool ContainsContent() => this != default && !string.IsNullOrWhiteSpace(this.Delta.Text);
+    public bool ContainsContent() => this != default &&
+                                     (!string.IsNullOrEmpty(this.Delta.Text) || !string.IsNullOrEmpty(this.Delta.Thinking));
 
     /// <inheritdoc />
-    public ContentStreamChunk GetContent() => new(this.Delta.Text, []);
+    public ContentStreamChunk GetContent() => this.Delta.Type switch
+    {
+        "thinking_delta" => new(string.Empty, this.Delta.Thinking, []),
+        _ => new(this.Delta.Text, string.Empty, []),
+    };
 
     #region Implementation of IAnnotationStreamLine
 
