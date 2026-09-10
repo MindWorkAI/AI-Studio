@@ -9,10 +9,10 @@ internal static class ThinkingContent
 {
     public static string Get(string? reasoningContent, string? reasoning, IEnumerable<JsonElement>? reasoningDetails)
     {
-        if (!string.IsNullOrWhiteSpace(reasoningContent))
+        if (!string.IsNullOrEmpty(reasoningContent))
             return reasoningContent;
 
-        if (!string.IsNullOrWhiteSpace(reasoning))
+        if (!string.IsNullOrEmpty(reasoning))
             return reasoning;
 
         if (reasoningDetails is null)

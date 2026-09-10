@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider;
@@ -19,6 +21,12 @@ public readonly record struct Model(string Id, string? DisplayName)
     /// Creates a system-configured model placeholder.
     /// </summary>
     public static readonly Model SYSTEM_MODEL = new(SYSTEM_MODEL_ID, null);
+
+    /// <summary>
+    /// The provider-reported default reasoning behavior, when the model catalog supplies it.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public ModelReasoningBehavior ReasoningBehavior { get; init; }
 
     /// <summary>
     /// Checks if this model is the system-configured placeholder.
@@ -71,4 +79,15 @@ public readonly record struct Model(string Id, string? DisplayName)
     public override int GetHashCode() => this.Id?.GetHashCode(StringComparison.Ordinal) ?? 0;
 
     #endregion
+}
+
+/// <summary>
+/// Describes the default reasoning behavior reported by a provider's model catalog.
+/// </summary>
+public enum ModelReasoningBehavior
+{
+    UNKNOWN,
+    OPTIONAL,
+    DEFAULT_ON,
+    ALWAYS_ON,
 }

@@ -116,7 +116,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             storeType,
             "models",
             modelResponse => modelResponse.Data
-                .Select(n => new Model(n.Id, n.Name))
+                .Select(n => n.ToModel())
                 .Where(model => model.IsChatModel()),
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
@@ -133,7 +133,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
             SecretStoreType.EMBEDDING_PROVIDER,
             "embeddings/models",
-            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, n.Name)),
+            modelResponse => modelResponse.Data.Select(n => n.ToModel()),
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {
