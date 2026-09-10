@@ -171,6 +171,7 @@
                             Adornment="Adornment.Start"
                             AdornmentIcon="@Icons.Material.Filled.Numbers"
                             AdornmentColor="Color.Info"
+                            Disabled="@this.IsEnterpriseConfiguration"
                             Validation="@this.ValidateTokenLimit"
                             HelperText="@T("Maximum number of tokens sent to the embedding model per chunk. The default is 8,192.")"/>
                         <MudNumericField
@@ -183,28 +184,35 @@
                             Adornment="Adornment.Start"
                             AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
                             AdornmentColor="Color.Info"
+                            Disabled="@this.IsEnterpriseConfiguration"
                             Validation="@this.ValidateEmbeddingBatchSize"
                             HelperText="@T("How many chunks are sent to the embedding provider at once. The default is 1.")"/>
-                        <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
-                            <MudTextField
-                                T="string"
-                                Text="@this.dataFilePath"
-                                TextChanged="@this.OnDataFilePathChanged"
-                                Label="@T("Selected file path for the custom tokenizer")"
-                                Validation="@this.providerValidation.ValidatingCustomTokenizer"
-                                Adornment="Adornment.Start"
-                                AdornmentIcon="@Icons.Material.Filled.AttachFile"
-                                UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                                Variant="Variant.Outlined"
-                                Clearable="@true"
-                                Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
-                                ErrorText="@this.dataCustomTokenizerValidationIssue"
-                                OnClearButtonClick="@this.ClearPathTokenizer"
-                            />
-                            <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@this.isTokenizerFileDialogOpen" OnClick="@this.OpenTokenizerFileDialog">
-                                @T("Choose File")
-                            </MudButton>
-                        </MudStack>
+                        <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
+                            <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+                                <MudTextField
+                                    T="string"
+                                    Text="@this.dataFilePath"
+                                    TextChanged="@this.OnDataFilePathChanged"
+                                    Label="@T("Selected file path for the custom tokenizer")"
+                                    Disabled="@this.IsEnterpriseConfiguration"
+                                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                    Variant="Variant.Outlined"
+                                    Clearable="@true"
+                                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                                    ErrorText="@this.dataCustomTokenizerValidationIssue"
+                                    OnClearButtonClick="@this.ClearPathTokenizer"
+                                />
+                                <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
+                                    @T("Choose File")
+                                </MudButton>
+                            </MudStack>
+                            <MudText Typo="Typo.body2">
+                                @T("You can also drag & drop the tokenizer file here.")
+                            </MudText>
+                        </PathDropZone>
                     </MudCollapse>
                 </MudStack>
             }
