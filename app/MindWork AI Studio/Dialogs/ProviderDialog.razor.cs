@@ -6,6 +6,7 @@ using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.Rust;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -233,7 +234,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.GetAllProviders().Select(x => x.InstanceName.ToLowerInvariant()).ToList();
 
         this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
-        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters)
+                                  || this.capabilityOverrides.HasOverrides
+                                  || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -582,6 +585,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// The catalog of the provider, where the user can read up on the models before choosing one.
     /// </summary>
     private string ModelsOverviewURL => this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId);
+
+    /// <summary>
+    /// Whether the custom tokenizer is offered at all. It is an expert setting which only makes
+    /// sense while the RAG preview is enabled.
+    /// </summary>
+    private bool ShowTokenizerSettings => this.DataLLMProvider != LLMProviders.NONE && PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
 
     private void UpdateModelSelectionAfterLoading()
     {
