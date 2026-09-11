@@ -106,15 +106,22 @@ public static partial class ProviderExtensions
                 ];
         }
         
-        // QwQ models:
+        //
+        // QwQ models. What Model Studio serves under this name is qwq-plus, a commercial
+        // thinking-only model built on Qwen2.5. It is not the same model as the open-weight
+        // QwQ-32B, which the rules for open source models cover; the two only share a family
+        // name. Neither of them appears in Alibaba's list of models which call functions, and
+        // the model card of the open weights does not mention tools at all, which is why this
+        // states no such ability. Anybody who knows better can turn it on in the expert settings.
+        //
         if (modelName.StartsWith("qwq"))
         {
             return
             [
-                Capability.TEXT_INPUT, 
+                Capability.TEXT_INPUT,
                 Capability.TEXT_OUTPUT,
-                
-                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+
+                Capability.ALWAYS_REASONING,
                 Capability.CHAT_COMPLETION_API,
             ];
         }

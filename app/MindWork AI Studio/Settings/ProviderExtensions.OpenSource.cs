@@ -53,6 +53,93 @@ public static partial class ProviderExtensions
             return NormalizeForGateway(GetModelCapabilitiesOpenAI(model));
 
         //
+        // DeepSeek models. This block has to come before the Llama one: the R1 distills are Llama
+        // and Qwen checkpoints, and a name such as deepseek-r1-distill-llama-70b would otherwise
+        // be read as a plain Llama and lose its reasoning.
+        //
+        if (modelName.IndexOf("deepseek") is not -1)
+        {
+            //
+            // The distills are Llama and Qwen checkpoints fine-tuned on R1 answers. They reason,
+            // but they kept the chat template of the model they were built from, so none of the
+            // tool calling R1 itself was trained for survived. They are checked first because
+            // they carry "r1" in their name and would match the rule for it below:
+            //
+            if (modelName.IndexOf("distill") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // A base checkpoint was never instruction-tuned. It continues a text instead of
+            // answering, and it knows neither a chat template nor tools:
+            if (modelName.IndexOf("-base") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // The V4 generation, which also covers the point releases such as V4.1, and the
+            // experimental checkpoint which takes images:
+            if (modelName.IndexOf("deepseek-v4") is not -1)
+            {
+                if (modelName.IndexOf("vision") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.TEXT_OUTPUT,
+                        Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
+            if(modelName.IndexOf("deepseek-r1") is not -1)
+                return [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            //
+            // From V3.1 on, the model has a thinking mode which the request turns on; V3.2 added
+            // tool calling inside that mode. The gateways write these two either as "deepseek-v3.1"
+            // or as "deepseek-chat-v3.1", so the version alone is what we look for:
+            //
+            if (modelName.IndexOf("v3.1") is not -1 ||
+                modelName.IndexOf("v3.2") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // The rest of the V3 line answers directly and calls functions:
+            if (modelName.IndexOf("v3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
         // Meta llama models:
         //
         if (modelName.IndexOf("llama") is not -1)
@@ -116,38 +203,17 @@ public static partial class ProviderExtensions
             ];
 
         //
-        // DeepSeek models:
-        //
-        if (modelName.IndexOf("deepseek") is not -1)
-        {
-            if ((modelName.IndexOf("deepseek-v4-flash") is not -1 ||
-                 modelName.IndexOf("deepseek-v4-pro") is not -1) &&
-                modelName.IndexOf("-base") is -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
-                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-
-            if(modelName.IndexOf("deepseek-r1") is not -1)
-                return [
-                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
-                    Capability.ALWAYS_REASONING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            return [
-                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
-                Capability.CHAT_COMPLETION_API,
-            ]; 
-        }
-        
-        //
         // Qwen models:
         //
         if (modelName.IndexOf("qwen") is not -1 || modelName.IndexOf("qwq") is not -1)
         {
+            //
+            // QwQ has no tool calling. That is worth stating, because Alibaba serves a model of
+            // the same family name: qwq-plus is a commercial thinking-only model of theirs, while
+            // QwQ-32B here is the open-weight one built on Qwen2.5. They are two different models,
+            // and neither the model card of the open weights nor Alibaba's list of models which
+            // call functions mentions either of them.
+            //
             if (modelName.IndexOf("qwq") is not -1)
                 return [
                     Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
@@ -239,13 +305,20 @@ public static partial class ProviderExtensions
                 return [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
-                    
+
                     Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
-            
+
+            //
+            // Every other Qwen. The whole line calls functions, from Qwen 2.5 on, and the Coder
+            // checkpoints are built for exactly that. Reasoning is not promised here: the older
+            // generations have none, and which of the newer ones think by default differs per
+            // checkpoint, so the rules above name them one by one.
+            //
             return [
                 Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,
             ];
         }
@@ -272,6 +345,46 @@ public static partial class ProviderExtensions
                 Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,
             ];
+
+        //
+        // The vision checkpoint reasons, but it is the one Kimi model no vendor lists among those
+        // which call functions, so it does not get that ability here:
+        //
+        if (modelName.IndexOf("kimi-vl") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
+        // The rest of the Kimi line. Moonshot builds these for agentic work, and the K2 model card
+        // says so plainly: pass the tools with the request and the model decides on its own when
+        // to call them. The thinking variants say what they are in their name; the others answer
+        // directly. All of them take text only.
+        //
+        if (modelName.IndexOf("kimi") is not -1 || modelName.IndexOf("moonshot") is not -1)
+        {
+            if (modelName.IndexOf("thinking") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
         
         //
         // Tencent Hunyuan models. Hy3 answers directly by default: its reasoning_effort
@@ -489,11 +602,24 @@ public static partial class ProviderExtensions
         
         //
         // NVIDIA Nemotron models. They are built for agentic workloads and are text
-        // only. Reasoning has to be requested through enable_thinking, so it is
-        // optional. The check also covers the quantized checkpoints such as
+        // only. The check also covers the quantized checkpoints such as
         // NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.
         //
         if (modelName.IndexOf("nemotron") is not -1)
+        {
+            // The third generation thinks unless the request says otherwise, through
+            // enable_thinking=False:
+            if (modelName.IndexOf("nemotron-3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // The earlier ones have to be asked to think:
             return
             [
                 Capability.TEXT_INPUT,
@@ -502,6 +628,7 @@ public static partial class ProviderExtensions
                 Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,
             ];
+        }
 
         //
         // Google Gemma models. Gemma is the open-weights family, while Gemini is not, which is why
@@ -510,10 +637,15 @@ public static partial class ProviderExtensions
         if (modelName.IndexOf("gemma") is not -1)
         {
             //
-            // Every checkpoint of the Gemma 4 generation is multimodal and understands video as
-            // well; there is no text-only variant. Audio input is limited to the E2B, E4B, and 12B
-            // checkpoints. The models can think, but only when the request asks them to: their chat
-            // template keeps the thinking channel closed by default.
+            // Every checkpoint of the Gemma 4 generation is multimodal; there is no text-only
+            // variant. Audio input is limited to the E2B, E4B, and 12B checkpoints. Video is not
+            // a modality of any of them: the model card lists text, image, and audio, and mentions
+            // video only as a sequence of frames somebody else has to cut it into. The models can
+            // think, but only when the request asks them to, by putting a think token at the start
+            // of the system prompt.
+            //
+            // Gemma 4 is also the first generation with tool calling of its own, with tool tokens
+            // in its chat template. The generations below have none.
             //
             if (modelName.IndexOf("gemma-4") is not -1 ||
                 modelName.IndexOf("gemma4") is not -1)
@@ -524,7 +656,7 @@ public static partial class ProviderExtensions
                     return
                     [
                         Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                        Capability.AUDIO_INPUT, Capability.VIDEO_INPUT,
+                        Capability.AUDIO_INPUT,
                         Capability.TEXT_OUTPUT,
 
                         Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
@@ -534,7 +666,6 @@ public static partial class ProviderExtensions
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
-                    Capability.VIDEO_INPUT,
                     Capability.TEXT_OUTPUT,
 
                     Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
@@ -543,9 +674,17 @@ public static partial class ProviderExtensions
             }
 
             //
-            // Gemma 3 accepts images from the 4B checkpoint upwards; the 1B one is text-only. This
-            // generation does not reason. The check for the small checkpoint looks for "-1b" rather
-            // than "1b", so that a name such as gemma-3-31b does not match it.
+            // Gemma 3 accepts images from the 4B checkpoint upwards; the 1B one is text-only, and
+            // the 3n checkpoints take audio on top. This generation does not reason.
+            //
+            // It does not call functions either. What Google documents for Gemma 3 is writing the
+            // tool descriptions into the prompt by hand, which is a different thing from what an
+            // OpenAI-compatible tools field does: the chat template has neither a tool role nor
+            // tool tokens, and Ollama refuses a request carrying tools for these models. Native
+            // tool calling starts with Gemma 4 above.
+            //
+            // The check for the small checkpoint looks for "-1b" rather than "1b", so that a name
+            // such as gemma-3-31b does not match it.
             //
             if (modelName.IndexOf("gemma-3") is not -1 ||
                 modelName.IndexOf("gemma3") is not -1)
@@ -554,8 +693,16 @@ public static partial class ProviderExtensions
                     return
                     [
                         Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
 
-                        Capability.FUNCTION_CALLING,
+                if (modelName.IndexOf("gemma-3n") is not -1 ||
+                    modelName.IndexOf("gemma3n") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.AUDIO_INPUT,
+                        Capability.TEXT_OUTPUT,
                         Capability.CHAT_COMPLETION_API,
                     ];
 
@@ -563,8 +710,6 @@ public static partial class ProviderExtensions
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
-
-                    Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
             }
@@ -616,12 +761,12 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
 
-            if(modelName.IndexOf("v") is not -1)
-                return 
+            if(IsGlmVisionModelName(modelName))
+                return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
-                    
+
                     Capability.OPTIONAL_REASONING,
                     Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
@@ -653,6 +798,26 @@ public static partial class ProviderExtensions
             Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
             Capability.CHAT_COMPLETION_API,
         ];
+    }
+
+    /// <summary>
+    /// Checks whether a GLM model is one of the vision models.
+    /// </summary>
+    /// <remarks>
+    /// Z AI marks these by appending a "v" to the version number: glm-4v, glm-4.1v, glm-4.5v.
+    /// Looking for a bare "v" anywhere in the name, which is what this used to do, calls every
+    /// quantized build a vision model, because "nvfp4" carries one too, and so does the name of
+    /// more than one inference provider.
+    /// </remarks>
+    /// <param name="modelName">The normalized model name.</param>
+    /// <returns>True, when the version number is followed by a "v".</returns>
+    private static bool IsGlmVisionModelName(ReadOnlySpan<char> modelName)
+    {
+        for (var index = 1; index < modelName.Length; index++)
+            if (modelName[index] is 'v' && char.IsAsciiDigit(modelName[index - 1]))
+                return true;
+
+        return false;
     }
 
     /// <summary>
