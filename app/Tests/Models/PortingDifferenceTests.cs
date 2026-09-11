@@ -32,6 +32,7 @@ public sealed class PortingDifferenceTests
         LLMProviders.OPEN_AI,
         LLMProviders.ANTHROPIC,
         LLMProviders.GOOGLE,
+        LLMProviders.MISTRAL,
     ];
 
     [Test]
