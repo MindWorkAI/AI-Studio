@@ -165,13 +165,30 @@ public static partial class ProviderExtensions
                modelName.IndexOf("qwen38-27b") is not -1)
                 return
                 [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
 
                     Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
-            
+
+            //
+            // Any other Qwen 3.8 checkpoint. The three checks above all need a size or a variant
+            // in the name, which the rolling tags do not carry: Ollama serves the 27B checkpoint
+            // as "qwen3.8:latest". Without this, such a name would fall through to the generic
+            // Qwen rule and lose everything the family can do. The 27B checkpoint is what the
+            // rolling tag points to, so it decides what this tier promises.
+            //
+            if(modelName.IndexOf("qwen3.8") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             // Check for Qwen 3.5:
             if(modelName.IndexOf("qwen3.5") is not -1)
                 return
