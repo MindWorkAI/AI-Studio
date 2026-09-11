@@ -11,6 +11,12 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="10.0.1" />
+        <!--
+            Held at the version the two analyzer projects build against, so that a test compiling a
+            snippet uses the same Roslyn the analyzers themselves were written for. Raise all three
+            together.
+        -->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
         <!--
             Pinned below 4.6.0 on purpose, verified by bisecting 4.4.0, 4.5.0, 4.5.1, 4.6.0 and 4.6.1
@@ -31,6 +37,15 @@
 
     <ItemGroup>
         <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />
+
+        <!--
+            Referenced as plain libraries, not as analyzers: the tests run the generator and the
+            analyzer themselves, against a snippet they compile in memory. Building them into this
+            project as analyzers would have them judge the test code instead, which is not what is
+            being checked here.
+        -->
+        <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" />
+        <ProjectReference Include="..\SourceGeneratedMappings\SourceGeneratedMappings.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -14,4 +14,5 @@ public static class Identifier
     public const string CANONICAL_JSON_CONFIGURATION_ANALYZER = $"{Tools.ID_PREFIX}0010";
     public const string CANONICAL_JSON_SHAPE_ANALYZER = $"{Tools.ID_PREFIX}0011";
     public const string DIRECT_I18N_GET_TEXT_ANALYZER = $"{Tools.ID_PREFIX}0012";
+    public const string MODEL_PATTERN_LITERAL_ANALYZER = $"{Tools.ID_PREFIX}0013";
 }
