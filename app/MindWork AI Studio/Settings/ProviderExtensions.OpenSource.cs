@@ -27,7 +27,31 @@ public static partial class ProviderExtensions
         // where a provider left it out, or remove one where it added it, so a family which is
         // written both as "llama3" and as "llama-3" still needs both spellings.
         //
-        
+
+        //
+        // Some providers serve the models of the big vendors under their plain names, without the
+        // "vendor/model" prefix a gateway would put in front. GWDG is the case which brought this
+        // up: next to the open weights it hosts, it resells Claude and GPT models and names them
+        // the way their vendor does. A freely chosen LiteLLM alias and a self-hosted proxy can do
+        // the same. Without this, all of them would be judged by the rules for open weights, which
+        // know none of them, and would lose tool calling, vision, and reasoning alike.
+        //
+        // Only vendors whose rules do not lead back here may be asked. Mistral and DeepSeek fall
+        // back to this function themselves, so delegating to them would loop.
+        //
+        // Whatever comes back is normalized the way a gateway's answer is: a provider reselling a
+        // model serves it through its own OpenAI-compatible chat completion API, never through the
+        // Responses API of the vendor it bought the model from.
+        //
+        if (modelName.StartsWith("claude-") || modelName.IndexOf("-claude-") is not -1)
+            return NormalizeForGateway(GetModelCapabilitiesAnthropic(model));
+
+        if (modelName.StartsWith("gemini-") || modelName.IndexOf("-gemini-") is not -1)
+            return NormalizeForGateway(GetModelCapabilitiesGoogle(model));
+
+        if (IsOpenAICloudModelName(modelName))
+            return NormalizeForGateway(GetModelCapabilitiesOpenAI(model));
+
         //
         // Meta llama models:
         //
@@ -448,31 +472,20 @@ public static partial class ProviderExtensions
         }
         
         //
-        // OpenAI models:
+        // The open-weight models of OpenAI. Everything else named after an OpenAI model, the
+        // gpt-3.5 aliases included, was handed to their rules at the top of this function, which
+        // is why only gpt-oss is left here.
         //
-        if (modelName.IndexOf("gpt-oss") is not -1 ||
-            modelName.IndexOf("gpt-3.5") is not -1)
-        {
-            if(modelName.IndexOf("gpt-oss") is not -1)
-                return 
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.FUNCTION_CALLING,
-                    Capability.WEB_SEARCH,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            if(modelName.IndexOf("gpt-3.5") is not -1)
-                return 
-                [
-                    Capability.TEXT_INPUT,
-                    Capability.TEXT_OUTPUT,
-                    
-                    Capability.CHAT_COMPLETION_API,
-                ];
-        }
+        if (modelName.IndexOf("gpt-oss") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.WEB_SEARCH,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         //
         // NVIDIA Nemotron models. They are built for agentic workloads and are text
@@ -641,4 +654,42 @@ public static partial class ProviderExtensions
             Capability.CHAT_COMPLETION_API,
         ];
     }
+
+    /// <summary>
+    /// Checks whether a model is named after one of the models OpenAI serves through its API.
+    /// </summary>
+    /// <param name="modelName">The normalized model name.</param>
+    /// <returns>True, when the name belongs to an OpenAI cloud model.</returns>
+    private static bool IsOpenAICloudModelName(ReadOnlySpan<char> modelName)
+    {
+        //
+        // The o-series carries no vendor word at all, which is why it counts only at the very
+        // front of the name. Looking for it anywhere would claim open weights which end on the
+        // same two characters, such as Marco-o1.
+        //
+        if (modelName.StartsWith("o1") || modelName.StartsWith("o3") || modelName.StartsWith("o4"))
+            return true;
+
+        if (IsVersionedGptName(modelName))
+            return true;
+
+        //
+        // Providers which answer with a descriptive name carry the model in the middle of it, as
+        // in "01 - GPT-5.5 - great overall performance":
+        //
+        var separatorIndex = modelName.IndexOf("-gpt-");
+        return separatorIndex is not -1 && IsVersionedGptName(modelName[(separatorIndex + 1)..]);
+    }
+
+    /// <summary>
+    /// Checks whether a name starts with "gpt-" followed by a version.
+    /// </summary>
+    /// <remarks>
+    /// The digit is what separates the models OpenAI serves from the open weights which borrow
+    /// the name: gpt-oss, gpt-neox, and gpt-j are none of theirs.
+    /// </remarks>
+    /// <param name="modelName">The normalized model name, or a part of it.</param>
+    /// <returns>True, when the name starts with a versioned GPT name.</returns>
+    private static bool IsVersionedGptName(ReadOnlySpan<char> modelName) =>
+        modelName.StartsWith("gpt-") && modelName.Length > 4 && char.IsAsciiDigit(modelName[4]);
 }

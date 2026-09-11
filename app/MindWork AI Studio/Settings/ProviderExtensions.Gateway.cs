@@ -69,6 +69,10 @@ public static partial class ProviderExtensions
     /// A gateway serves every model through its OpenAI-compatible chat completion API.
     /// The Responses API is not available there, no matter which API the original
     /// provider offers.
+    ///
+    /// The same holds for a provider which resells a model under its plain name instead of
+    /// prefixing it with the vendor, such as GWDG. Those go through the open source rules, which
+    /// call this for the very same reason.
     /// </remarks>
     private static List<Capability> NormalizeForGateway(List<Capability> capabilities)
     {
