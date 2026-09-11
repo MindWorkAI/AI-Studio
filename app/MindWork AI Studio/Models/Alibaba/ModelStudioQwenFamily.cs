@@ -8,11 +8,12 @@ namespace AIStudio.Models.Alibaba;
 /// The Qwen models Alibaba Cloud Model Studio serves.
 /// </summary>
 /// <remarks>
-/// Everything in this folder is bound to Alibaba Cloud, and that is the point of it. Model Studio
-/// sells commercial models -- qwen-max, qwen3.7-max, qwq-plus -- which carry the family names of
-/// the open weights without being them, and it answers differently for several names the open
-/// weights share with it. The old rules kept the two apart by having two functions; here they are
-/// kept apart by saying which provider a rule speaks for.
+/// Everything called Model Studio here is bound to Alibaba Cloud, and that is the point of it.
+/// Model Studio sells commercial models -- qwen-max, qwen3.7-max, qwq-plus -- which carry the
+/// family names of the open weights without being them, and it answers differently for several
+/// names the open weights share with it. The old rules kept the two apart by having two functions;
+/// here they are kept apart by saying which provider a rule speaks for. The unbound families next
+/// to these are the open weights, which answer everywhere else.
 ///
 /// The first rule is the catalog's own fallback, and it is written as a plain substring on purpose:
 /// a substring is the weakest thing a rule can be, so every other rule here beats it without anyone

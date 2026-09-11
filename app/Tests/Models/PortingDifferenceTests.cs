@@ -1,3 +1,4 @@
+using AIStudio.Models;
 using AIStudio.Models.Registry;
 using AIStudio.Provider;
 using AIStudio.Tests.Models.Corpus;
@@ -13,8 +14,9 @@ namespace AIStudio.Tests.Models;
 /// old answer wrong, and there they have to answer what was written down instead. Anything else is
 /// either a porting mistake or a decision somebody has to make on purpose and record.
 ///
-/// The list below is what grows. A provider not on it is simply not compared yet: its models reach
-/// rules which have not been written, and holding them to anything would only say that.
+/// The two lists below are what grow. A provider not on either is simply not compared yet: its
+/// models reach rules which have not been written, and holding them to anything would only say
+/// that.
 /// </remarks>
 [TestFixture]
 public sealed class PortingDifferenceTests
@@ -39,15 +41,51 @@ public sealed class PortingDifferenceTests
         LLMProviders.X,
     ];
 
+    /// <summary>
+    /// The vendors whose models the rebuilt rules already answer for, whoever serves them.
+    /// </summary>
+    /// <remarks>
+    /// Open weights are the reason this list exists next to the one above. They arrive through the
+    /// gateways and the local engines, and none of those can be called ported until every vendor
+    /// they carry is. The vendor is the unit the porting actually proceeds in: as soon as the Llama
+    /// rules exist, every Llama of the corpus is compared, whichever gateway it came from.
+    ///
+    /// It is also what finally holds the cloud vendors to their models on somebody else's gateway,
+    /// which the provider list alone never reached: a Claude at GWDG and a DeepSeek distill at
+    /// OpenRouter are compared here, not at Anthropic and not at DeepSeek.
+    ///
+    /// Only vendors, never UNKNOWN: that is what a model nobody wrote a rule for answers with, and
+    /// putting it here would compare everything against everything.
+    ///
+    /// Mistral is the one ported vendor still missing. Its cloud writes a release date into every
+    /// name and its rules are built on that, while the open weights are called
+    /// "mistral-small-3.1-24b-instruct" and carry none -- so those names are still to be ported.
+    /// </remarks>
+    private static readonly IReadOnlyList<ModelVendor> VENDORS_ALREADY_PORTED =
+    [
+        ModelVendor.OPEN_AI,
+        ModelVendor.ANTHROPIC,
+        ModelVendor.GOOGLE,
+        ModelVendor.ALIBABA,
+        ModelVendor.DEEP_SEEK,
+        ModelVendor.PERPLEXITY,
+        ModelVendor.XAI,
+        ModelVendor.META,
+    ];
+
+    /// <summary>
+    /// Who built the models of each family, by the name its rules name as their origin.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, ModelVendor> VENDOR_OF_FAMILY = ModelRegistry.Shared.Families.ToDictionary(family => family.Name, family => family.Vendor, StringComparer.Ordinal);
+
     [Test]
     public void EveryPortedModelGetsExactlyTheAnswerItGetsToday()
     {
-        var compared = PortedEntries().Where(entry => !IsKnownToBeWrong(entry)).ToList();
+        var compared = ComparableEntries().Where(entry => !IsKnownToBeWrong(entry)).ToList();
 
         Assert.Multiple(() =>
         {
             Assert.That(compared, Is.Not.Empty, "Nothing was compared at all, which would make this test green for the wrong reason.");
-
             foreach (var entry in compared)
             {
                 var today = CapabilitySnapshot.Describe(CapabilitySnapshot.AskTheCurrentRules(entry));
@@ -61,7 +99,7 @@ public sealed class PortingDifferenceTests
     [Test]
     public void EveryPortedModelTheAuditFoundWrongIsNowAnsweredTheWayItShouldBe()
     {
-        var ported = ExpectedChanges.ENTRIES.Where(change => PROVIDERS_ALREADY_PORTED.Contains(change.Provider)).ToList();
+        var ported = ExpectedChanges.ENTRIES.Where(change => IsCompared(change.Provider, change.ModelId)).ToList();
 
         Assert.Multiple(() =>
         {
@@ -85,17 +123,35 @@ public sealed class PortingDifferenceTests
         // profile, and where the old answer was empty too, the comparison is happy -- while the
         // model has in fact disappeared from the rules. This is the test which notices.
         //
-        var named = PortedEntries().Where(entry => !string.IsNullOrWhiteSpace(entry.ModelId)).ToList();
+        // Only the ported providers, and on purpose: a model is on the vendor list exactly because
+        // a rule answered for it, so asking those the same question would answer itself.
+        //
+        var named = EntriesOfPortedProviders().Where(entry => !string.IsNullOrWhiteSpace(entry.ModelId)).ToList();
 
         Assert.Multiple(() =>
         {
             Assert.That(named, Is.Not.Empty, "Nothing was asked about at all, which would make this test green for the wrong reason.");
 
             foreach (var entry in named)
+                Assert.That(ModelRegistry.Shared.Explain(entry.Provider, entry.ModelId).IsKnown, Is.True, $"No rule answers for {entry.Provider} \"{entry.ModelId}\".");
+        });
+    }
+
+    [Test]
+    public void NoModelOfTheCorpusIsClaimedByTwoRulesWithTheSameRight()
+    {
+        //
+        // The whole corpus, ported or not: a tie needs two rules that both exist, so every name is
+        // worth asking about as soon as anything answers for it. This is where a family which
+        // repeats what another one already said shows up -- reading the rules alone cannot find
+        // that, because the two patterns are written differently and only meet on a real name.
+        //
+        Assert.Multiple(() =>
+        {
+            foreach (var entry in ModelCorpus.ENTRIES)
             {
                 var resolution = ModelRegistry.Shared.Explain(entry.Provider, entry.ModelId);
 
-                Assert.That(resolution.IsKnown, Is.True, $"No rule answers for {entry.Provider} \"{entry.ModelId}\".");
                 Assert.That(resolution.IsAmbiguous, Is.False, $"{entry.Provider} \"{entry.ModelId}\" is claimed by {resolution.Selector} and, just as strongly, by {string.Join(", ", resolution.TiedSelectors)}.");
             }
         });
@@ -105,7 +161,33 @@ public sealed class PortingDifferenceTests
     /// Every corpus entry of a provider which has been ported, known-wrong ones included.
     /// </summary>
     /// <returns>The entries.</returns>
-    private static IEnumerable<CorpusEntry> PortedEntries() => ModelCorpus.ENTRIES.Where(entry => PROVIDERS_ALREADY_PORTED.Contains(entry.Provider));
+    private static IEnumerable<CorpusEntry> EntriesOfPortedProviders() => ModelCorpus.ENTRIES.Where(entry => PROVIDERS_ALREADY_PORTED.Contains(entry.Provider));
+
+    /// <summary>
+    /// Every corpus entry the rebuilt rules are already meant to answer for.
+    /// </summary>
+    /// <returns>The entries.</returns>
+    private static IEnumerable<CorpusEntry> ComparableEntries() => ModelCorpus.ENTRIES.Where(entry => IsCompared(entry.Provider, entry.ModelId));
+
+    /// <summary>
+    /// Whether the rebuilt rules are held to what the old ones answer for this model.
+    /// </summary>
+    /// <param name="provider">Who serves the model.</param>
+    /// <param name="modelId">The model ID as that provider reports it.</param>
+    /// <returns>True, when the two answers have to agree.</returns>
+    private static bool IsCompared(LLMProviders provider, string modelId) => PROVIDERS_ALREADY_PORTED.Contains(provider) || VENDORS_ALREADY_PORTED.Contains(VendorAnswering(provider, modelId));
+
+    /// <summary>
+    /// Whose rules answered for a model, as far as any did.
+    /// </summary>
+    /// <param name="provider">Who serves the model.</param>
+    /// <param name="modelId">The model ID as that provider reports it.</param>
+    /// <returns>The vendor of the family whose rule chose, or UNKNOWN when none did.</returns>
+    private static ModelVendor VendorAnswering(LLMProviders provider, string modelId)
+    {
+        var selector = ModelRegistry.Shared.Explain(provider, modelId).Selector;
+        return selector is null ? ModelVendor.UNKNOWN : VENDOR_OF_FAMILY.GetValueOrDefault(selector.Origin, ModelVendor.UNKNOWN);
+    }
 
     /// <summary>
     /// Whether the audit found the current answer for this entry wrong.
