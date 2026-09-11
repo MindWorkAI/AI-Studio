@@ -64,7 +64,7 @@ public static partial class ProviderExtensions
 
     private static List<Capability> GetModelCapabilitiesMistral(Model model)
     {
-        var modelName = model.Id.ToLowerInvariant().AsSpan();
+        var modelName = NormalizeModelId(model.Id).AsSpan();
 
         // Pixtral models are able to do process images:
         if (modelName.IndexOf("pixtral") is not -1)

@@ -49,6 +49,16 @@ public enum ProviderRequestFailureReason
     CONTEXT_LENGTH_EXCEEDED,
 
     /// <summary>
+    /// The request offered the model some tools, and the model cannot use them.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio assumes that a model it has never heard of is able to call tools. Most of them
+    /// are, and new ones keep appearing faster than any list can follow. The few which are not
+    /// say so when they are asked, and this is that answer.
+    /// </remarks>
+    TOOLS_NOT_SUPPORTED,
+
+    /// <summary>
     /// The provider cannot create embeddings at all.
     /// </summary>
     EMBEDDINGS_NOT_SUPPORTED,
