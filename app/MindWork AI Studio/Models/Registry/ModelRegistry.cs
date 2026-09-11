@@ -12,10 +12,10 @@ namespace AIStudio.Models.Registry;
 /// </summary>
 /// <remarks>
 /// Four things happen to a name here, and the order they happen in is the whole design. The host
-/// takes off; however, the provider wrapped it so that a rule can be written once instead of once
-/// per provider. The rules answer the bare name, and the most specific of them wins, computed
-/// rather than written down. The family which won may then work something out of the name that no
-/// rule can express. And the host says what the way there took away.
+/// takes off whatever wrapping the provider put around the name, so that a rule can be written once
+/// instead of once per provider. The rules answer the bare name, and the most specific of them
+/// wins, computed rather than written down. The family which won may then work something out of the
+/// name that no rule can express. And the host says what the way there took away.
 ///
 /// Nothing in here reaches for application state, so a test can build a registry and ask it
 /// questions without the app ever having started.
