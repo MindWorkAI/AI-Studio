@@ -33,6 +33,7 @@ public sealed class PortingDifferenceTests
         LLMProviders.ANTHROPIC,
         LLMProviders.GOOGLE,
         LLMProviders.MISTRAL,
+        LLMProviders.ALIBABA_CLOUD,
     ];
 
     [Test]

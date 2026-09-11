@@ -38,14 +38,23 @@ public sealed class ModelFamilyBuilder(string origin)
     {
         var built = new List<ModelRule>(this.stated.Count);
         var byPatternText = new Dictionary<string, ModelProfileChange>(StringComparer.Ordinal);
+        var statedMoreThanOnce = new HashSet<string>(StringComparer.Ordinal);
         ModelProfileChange? previous = null;
 
         foreach (var statement in this.stated)
         {
-            var rule = statement.Build(statement.InheritanceBasis(byPatternText, previous));
+            var rule = statement.Build(statement.InheritanceBasis(byPatternText, statedMoreThanOnce, previous));
 
             built.Add(rule);
-            byPatternText[rule.Pattern.Text] = rule.Change;
+
+            //
+            // The same text may well be stated twice, with different conditions on top -- that is
+            // how a variant of a generation is written. What cannot be done afterwards is naming
+            // that text to inherit from, because it no longer names one rule.
+            //
+            if (!byPatternText.TryAdd(rule.Pattern.Text, rule.Change))
+                statedMoreThanOnce.Add(rule.Pattern.Text);
+
             previous = rule.Change;
         }
 

@@ -249,14 +249,25 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     /// What this rule goes on from, if it goes on from anything.
     /// </summary>
     /// <param name="byPatternText">What the rules stated so far, by their pattern text.</param>
+    /// <param name="statedMoreThanOnce">The texts which name more than one rule of this family.</param>
     /// <param name="previous">What the rule stated right before this one, if there was one.</param>
     /// <returns>The statement to start from, or null when the rule states everything itself.</returns>
-    internal ModelProfileChange? InheritanceBasis(IReadOnlyDictionary<string, ModelProfileChange> byPatternText, ModelProfileChange? previous)
+    internal ModelProfileChange? InheritanceBasis(IReadOnlyDictionary<string, ModelProfileChange> byPatternText, IReadOnlySet<string> statedMoreThanOnce, ModelProfileChange? previous)
     {
         if (this.inheritsFromText is not null)
+        {
+            //
+            // A text stated twice names two rules, and taking whichever happened to come last
+            // would be a coin toss nobody sees. The way out is the plain form, which says "the one
+            // before" and means exactly one rule.
+            //
+            if (statedMoreThanOnce.Contains(this.inheritsFromText))
+                throw new InvalidOperationException($"The rule \"{patternText}\" of {origin} inherits from \"{this.inheritsFromText}\", which this family states more than once. Use Inherits() right after the rule to go on from, or give the rule a text of its own.");
+
             return byPatternText.TryGetValue(this.inheritsFromText, out var named)
                 ? named
                 : throw new InvalidOperationException($"The rule \"{patternText}\" of {origin} inherits from \"{this.inheritsFromText}\", which this family does not state before it.");
+        }
 
         if (!this.inheritsFromPrevious)
             return null;

@@ -111,6 +111,21 @@ public sealed class ModelFamilyTests
     }
 
     [Test]
+    public void InheritingFromARuleTextWhichNamesTwoRulesSaysSo()
+    {
+        //
+        // Stating one text twice is ordinary: a variant of a generation is written as the same
+        // pattern with a condition on top. What cannot be done afterwards is naming that text to
+        // inherit from, because it no longer names one rule -- and taking whichever came last
+        // would be a coin toss nobody sees.
+        //
+        var family = new FamilyStatingOneTextTwice();
+        var refused = Assert.Throws<InvalidOperationException>(() => _ = family.Rules);
+
+        Assert.That(refused?.Message, Does.Contain("more than once"));
+    }
+
+    [Test]
     public void AFamilyWhichAdjustsRatherThanChoosesStatesAModifier()
     {
         var family = new FamilyWithAModifier();
@@ -218,6 +233,20 @@ public sealed class ModelFamilyTests
         {
             builder.Rule("thing").Capabilities(Capability.TEXT_INPUT);
             builder.Rule("thing-mini").InheritsFrom("something-else");
+        }
+    }
+
+    private sealed class FamilyStatingOneTextTwice : ModelFamily
+    {
+        public override ModelVendor Vendor => ModelVendor.UNKNOWN;
+
+        public override ModelSource Source => new("https://example.invalid/twice", new DateOnly(2026, 9, 11), "A family stating one pattern text twice and then naming it to inherit from.");
+
+        protected override void Declare(ModelFamilyBuilder builder)
+        {
+            builder.Rule("thing").Capabilities(Capability.TEXT_INPUT);
+            builder.Rule("thing").AlsoContains("special").Capabilities(Capability.FUNCTION_CALLING);
+            builder.Rule("thing-mini").InheritsFrom("thing");
         }
     }
 
