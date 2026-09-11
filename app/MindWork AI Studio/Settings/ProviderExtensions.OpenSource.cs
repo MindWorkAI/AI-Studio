@@ -53,6 +53,22 @@ public static partial class ProviderExtensions
             return NormalizeForGateway(GetModelCapabilitiesOpenAI(model));
 
         //
+        // Base checkpoints, whatever family they come from. They were never instruction-tuned:
+        // they continue a text instead of answering, and they know neither a chat template nor
+        // tools. This is checked before any family, because otherwise each of them would have to
+        // repeat it, and because the default at the end of this function assumes tool calling.
+        //
+        // The name part has to be exactly "base", so that a model whose name merely contains the
+        // word, as in "based", is left alone.
+        //
+        if (modelName.EndsWith("-base") || modelName.IndexOf("-base-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
         // DeepSeek models. This block has to come before the Llama one: the R1 distills are Llama
         // and Qwen checkpoints, and a name such as deepseek-r1-distill-llama-70b would otherwise
         // be read as a plain Llama and lose its reasoning.
@@ -70,15 +86,6 @@ public static partial class ProviderExtensions
                 [
                     Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
                     Capability.ALWAYS_REASONING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-
-            // A base checkpoint was never instruction-tuned. It continues a text instead of
-            // answering, and it knows neither a chat template nor tools:
-            if (modelName.IndexOf("-base") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
                     Capability.CHAT_COMPLETION_API,
                 ];
 
@@ -793,9 +800,459 @@ public static partial class ProviderExtensions
                 ];
         }
         
-        // Default:
+        //
+        // MiniMax models. The M line is built for agentic work and thinks between its tool calls,
+        // which MiniMax calls interleaved thinking: the reasoning is part of the answer rather
+        // than something the request switches on. The older Text-01 answers directly.
+        //
+        if (modelName.IndexOf("minimax") is not -1)
+        {
+            if (modelName.IndexOf("minimax-m") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // IBM Granite models. The instruct line calls functions using the OpenAI function
+        // definition schema. From 4.2 on they think unless the request says otherwise; 3.2 and 3.3
+        // have a thinking toggle which starts off, and the generations between them do not reason
+        // at all. For the vision checkpoints, tool calling is not documented.
+        //
+        if (modelName.IndexOf("granite") is not -1)
+        {
+            if (modelName.IndexOf("vision") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("granite-4.2") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("granite-3.2") is not -1 ||
+                modelName.IndexOf("granite-3.3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // Cohere Command models. Most of the line calls functions, in one step and in several.
+        // Command A Vision is the exception Cohere states outright: tool use is not supported
+        // with it.
+        //
+        if (modelName.IndexOf("command-a") is not -1 ||
+            modelName.IndexOf("command-r") is not -1)
+        {
+            if (modelName.IndexOf("command-a-vision") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // Command A+ sees and thinks unless the request disables thinking:
+            if (modelName.IndexOf("command-a-plus") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("command-a-reasoning") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // The Aya models come from Cohere as well, but they were not trained with tool use in
+        // mind, which their documentation says in as many words:
+        //
+        if (modelName.IndexOf("aya-expanse") is not -1 ||
+            modelName.IndexOf("aya-vision") is not -1)
+        {
+            if (modelName.IndexOf("aya-vision") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // AI2 OLMo models. The instruct checkpoints of the third generation carry a functions
+        // section in their chat template, and their default system prompt calls the model a
+        // function-calling assistant. The Think variants reason on top of that. OLMo 2 has no
+        // tool template.
+        //
+        if (modelName.IndexOf("olmo") is not -1)
+        {
+            if (modelName.IndexOf("olmo-3") is not -1 || modelName.IndexOf("olmo3") is not -1)
+            {
+                if (modelName.IndexOf("think") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                        Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // ByteDance Seed-OSS. Trained for agentic work, and it thinks with a budget the request
+        // can cap; the thinking itself cannot be turned off.
+        //
+        if (modelName.IndexOf("seed-oss") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
+        // TII Falcon. The third generation was post-trained on function calls and reports its
+        // tool-calling benchmark in its own model card. Falcon-H1 documents no tool template,
+        // except for the small checkpoint built for nothing else.
+        //
+        if (modelName.IndexOf("falcon") is not -1)
+        {
+            if (modelName.IndexOf("falcon-h1") is not -1 &&
+                modelName.IndexOf("tool-calling") is -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // InclusionAI Ling and Ring. Both call functions natively; Ring is the thinking line of
+        // the two, Ling the one which answers directly. Their names are only accepted where a
+        // name part begins, because "ling" also sits inside unrelated models such as Starling.
+        //
+        if (modelName.IndexOf("inclusionai") is not -1 ||
+            modelName.StartsWith("ling-") || modelName.IndexOf("-ling-") is not -1 ||
+            modelName.StartsWith("ring-") || modelName.IndexOf("-ring-") is not -1)
+        {
+            if (modelName.StartsWith("ring-") || modelName.IndexOf("-ring-") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // Baidu ERNIE. The thinking checkpoints call functions. The vision ones run in a thinking
+        // and a non-thinking mode, and tool calling is not documented for them.
+        //
+        if (modelName.IndexOf("ernie") is not -1)
+        {
+            if (modelName.IndexOf("-vl") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            if (modelName.IndexOf("thinking") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // Hugging Face SmolLM. The third generation ships a chat template with tool support and a
+        // thinking mode the request switches on. The earlier ones have neither.
+        //
+        if (modelName.IndexOf("smollm") is not -1)
+        {
+            if (modelName.IndexOf("smollm3") is not -1 || modelName.IndexOf("smollm-3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // ServiceNow Apriel. The Thinker models see and always reason, because their default chat
+        // template opens the thinking channel. Tool tokens arrived with 1.6; 1.5 has none.
+        //
+        if (modelName.IndexOf("apriel") is not -1)
+        {
+            if (modelName.IndexOf("apriel-1.5") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // InternLM, and the InternVL family next to it. InternLM has a role of its own for tool
+        // answers in its chat template and a deep-thinking mode the request asks for. What is
+        // documented for InternVL is that it takes images.
+        //
+        if (modelName.IndexOf("internvl") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        if (modelName.IndexOf("internlm") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
+        // Swiss AI Apertus 1.5. It calls functions in the OpenAI format, takes images and audio,
+        // and thinks when asked to. Note that its tool calling does not work while it thinks --
+        // a combination these capabilities cannot express, so both are stated side by side.
+        //
+        if (modelName.IndexOf("apertus-v1.5") is not -1 ||
+            modelName.IndexOf("apertus-1.5") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.AUDIO_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
+        // Microsoft Phi. The mini and multimodal checkpoints of the fourth generation call
+        // functions with tool tokens of their own. The 14B model has no tool role in its chat
+        // template at all, and neither do the reasoning checkpoints, which always think.
+        //
+        if (modelName.IndexOf("phi-4") is not -1 || modelName.IndexOf("phi4") is not -1)
+        {
+            if (modelName.IndexOf("multimodal") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.AUDIO_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            //
+            // The reasoning checkpoints have to be checked before the mini one, because
+            // Phi-4-mini-reasoning is both and would otherwise be read as a mini model which
+            // does not think:
+            //
+            if (modelName.IndexOf("reasoning") is not -1)
+            {
+                if (modelName.IndexOf("vision") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.TEXT_OUTPUT,
+
+                        Capability.ALWAYS_REASONING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
+            if (modelName.IndexOf("mini") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
+        // The models we know do not call functions. They have to be named one by one, because the
+        // default below assumes that an unknown model does. None of these documents a tool
+        // template: the European and Spanish public models, the discontinued Occiglot, and the Yi
+        // line, whose open weights speak plain ChatML while only the closed Yi-Large-FC calls
+        // functions. Salamandra is the one with a variant built for it, which keeps its ability.
+        //
+        // The family names are only accepted where a name part begins, so that "yi" does not
+        // match every model which happens to contain those two letters.
+        //
+        if (modelName.IndexOf("teuken") is not -1 ||
+            modelName.IndexOf("eurollm") is not -1 ||
+            modelName.IndexOf("occiglot") is not -1 ||
+            (modelName.IndexOf("salamandra") is not -1 && modelName.IndexOf("-tools") is -1) ||
+            modelName.StartsWith("yi-") || modelName.IndexOf("-yi-") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
+        // Default. A model we do not recognize is assumed to call functions, because by now that
+        // is what an instruction-tuned model does: every family added here in the last while
+        // could do it, and the ones which cannot are the exception listed above. Guessing the
+        // other way around was the safer choice while the ability was only shown as an icon, but
+        // it stopped being safe once it decides whether tools are offered at all -- a model which
+        // can use them would silently never be asked to.
+        //
+        // Anybody hitting the rare case where this guess is wrong turns tool calling off for that
+        // provider in the expert settings, and an organization can do the same for everybody.
+        //
         return [
             Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+            Capability.FUNCTION_CALLING,
             Capability.CHAT_COMPLETION_API,
         ];
     }
