@@ -30,6 +30,8 @@ public sealed class PortingDifferenceTests
     private static readonly IReadOnlyList<LLMProviders> PROVIDERS_ALREADY_PORTED =
     [
         LLMProviders.OPEN_AI,
+        LLMProviders.ANTHROPIC,
+        LLMProviders.GOOGLE,
     ];
 
     [Test]

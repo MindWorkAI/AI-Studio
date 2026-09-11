@@ -104,6 +104,16 @@ public static class ExpectedChanges
             Source: "Same model family as the Whisper entries the app lists for Fireworks and GWDG."),
 
         //
+        // An image generation model. It draws a picture from a description; there is no
+        // conversation in it and nothing to call a function with.
+        //
+        new(GOOGLE, "imagen-4.0-generate-001",
+            AnswerToday: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, IMAGE_OUTPUT],
+            Reason: "An image generation model is answered with the Google default for everything which is not a Gemini: it is told it reads images, writes text, and calls functions, and the one thing it does is not said at all.",
+            Source: "Provider/Google/ProviderGoogle.cs keeps only names beginning with \"gemini-\" in its chat model list, so this model is never a chat model to begin with; Provider/ModelKindExtensions.cs classifies image generation separately."),
+
+        //
         // One model, two spellings, two answers.
         //
         new(LITE_LLM, "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0",
