@@ -49,7 +49,9 @@ public static class MistralReleases
     /// <remarks>
     /// Mistral serves some models under their marketing version as well, and writes the version
     /// separator both ways: mistral-medium-3.5 and mistral-medium-3-5 are the same model. Those
-    /// names carry no release date, so they are mapped onto the release they stand for.
+    /// names carry no release date, so they are mapped onto the release they stand for. Ollama
+    /// leaves the separator out altogether for the Small checkpoints, which is a third spelling of
+    /// the same statement.
     ///
     /// The order matters, and it is the one place in this rebuild where it still does: these are
     /// read as plain text rather than as patterns, so "mistral-medium-3" would answer for
@@ -71,6 +73,11 @@ public static class MistralReleases
         ("mistral-small-3.1", 2503),
         ("mistral-small-3-1", 2503),
         ("mistral-small-3", 2501),
+
+        ("mistral-small4", 2603),
+        ("mistral-small3.2", 2506),
+        ("mistral-small3.1", 2503),
+        ("mistral-small3", 2501),
     ];
 
     /// <summary>

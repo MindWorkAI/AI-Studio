@@ -56,21 +56,20 @@ public sealed class PortingDifferenceTests
     ///
     /// Only vendors, never UNKNOWN: that is what a model nobody wrote a rule for answers with, and
     /// putting it here would compare everything against everything.
-    ///
-    /// Mistral is the one ported vendor still missing. Its cloud writes a release date into every
-    /// name and its rules are built on that, while the open weights are called
-    /// "mistral-small-3.1-24b-instruct" and carry none -- so those names are still to be ported.
     /// </remarks>
     private static readonly IReadOnlyList<ModelVendor> VENDORS_ALREADY_PORTED =
     [
         ModelVendor.OPEN_AI,
         ModelVendor.ANTHROPIC,
         ModelVendor.GOOGLE,
+        ModelVendor.MISTRAL_AI,
         ModelVendor.ALIBABA,
         ModelVendor.DEEP_SEEK,
         ModelVendor.PERPLEXITY,
         ModelVendor.XAI,
         ModelVendor.META,
+        ModelVendor.Z_AI,
+        ModelVendor.MICROSOFT,
     ];
 
     /// <summary>

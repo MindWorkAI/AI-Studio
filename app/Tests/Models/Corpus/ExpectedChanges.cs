@@ -122,6 +122,12 @@ public static class ExpectedChanges
             Reason: "Claude 3.5 Sonnet loses its image input when it arrives under the Bedrock spelling: the vendor sits behind a dot rather than a slash, so neither the gateway detection nor the reseller check finds it.",
             Source: "The same model as \"anthropic/claude-sonnet-4-0\" and the other Claude entries of this corpus, which all report image input."),
 
+        new(SELF_HOSTED, "mistral-small-3.1-24b-instruct",
+            AnswerToday: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, OPTIONAL_REASONING, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            Reason: "Mistral Small 3.1 is told that it thinks, and the very same model is told the opposite when it arrives through Mistral's own API. The rules for the open weights answer for the whole 3 and 4 range in one line, and reasoning arrived with 4.",
+            Source: "The corpus entry \"mistral-small-2503\" is this model at Mistral and reports no reasoning; Mistral names Magistral as the thinking model of that generation."),
+
         new(HELMHOLTZ, "01 - GPT-5.5 - great overall performance",
             AnswerToday: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, WEB_SEARCH, CHAT_COMPLETION_API],
             AnswerWanted: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, REASONING_BY_DEFAULT, WEB_SEARCH, CHAT_COMPLETION_API],
