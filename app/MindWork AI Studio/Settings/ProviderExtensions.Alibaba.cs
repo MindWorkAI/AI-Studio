@@ -11,8 +11,24 @@ public static partial class ProviderExtensions
         // Qwen models:
         if (modelName.StartsWith("qwen"))
         {
-            // Check for omni models:
+            // Check for omni models. Alibaba lists the Qwen3 and Qwen3.5 Omni series among the
+            // models which call functions; the older qwen-omni ones are not on that list, which
+            // is what the version check separates here:
             if (modelName.IndexOf("omni") is not -1)
+            {
+                if (modelName.StartsWith("qwen3"))
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.AUDIO_INPUT, Capability.SPEECH_INPUT,
+                        Capability.VIDEO_INPUT,
+
+                        Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
+
+                        Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
@@ -20,10 +36,11 @@ public static partial class ProviderExtensions
                     Capability.VIDEO_INPUT,
 
                     Capability.TEXT_OUTPUT, Capability.SPEECH_OUTPUT,
-                    
+
                     Capability.CHAT_COMPLETION_API,
                 ];
-            
+            }
+
             // Check for Qwen 3.5:
             if(modelName.StartsWith("qwen3.5"))
                 return
@@ -47,6 +64,44 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
+            // Check for the Qwen 3.7 family. Thinking is optional here and switched on by
+            // default, except for the two preview snapshots, which do nothing else:
+            if(modelName.StartsWith("qwen3.7"))
+            {
+                if(modelName.IndexOf("-preview") is not -1 ||
+                   modelName.IndexOf("-2026-05-17") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT,
+                        Capability.TEXT_OUTPUT,
+
+                        Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                // Vision arrived in the middle of the series. The rolling qwen3.7-max alias
+                // still answers as the text-only May snapshot, so only the June one may be
+                // told that it reads images and video:
+                if(modelName.IndexOf("-2026-06-08") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                        Capability.TEXT_OUTPUT,
+
+                        Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
             // Check for the Qwen 3.8 family:
             if(modelName.StartsWith("qwen3.8"))
             {
@@ -84,15 +139,28 @@ public static partial class ProviderExtensions
                 ];
             }
 
-            // Check for the 3.0 VL models:
+            // Check for the VL models. Alibaba names the Qwen3-VL Plus and Flash series as
+            // function callers; the older qwen-vl models are absent from that list:
             if(modelName.IndexOf("-vl-") is not -1)
+            {
+                if(modelName.StartsWith("qwen3"))
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.TEXT_OUTPUT,
+
+                        Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
-                    
+
                     Capability.CHAT_COMPLETION_API,
                 ];
+            }
             
             // Check for Qwen 3:
             if(modelName.StartsWith("qwen3"))

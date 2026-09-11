@@ -547,12 +547,27 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
         
-            // Grok 4 models take text, images, and video natively. Reasoning is always
-            // on, only the reasoning effort can be configured:
+            // One member of the 4.20 line answers without thinking, and it says so in its
+            // name. It has to be asked about before the general Grok 4 rule, which would
+            // otherwise claim the opposite of what the name states:
+            if(modelName.IndexOf("-non-reasoning") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+            // Grok 4 models take text and images. Reasoning is always on, only the
+            // reasoning effort can be configured. Video is not among their modalities:
+            // xAI serves audio, image, and video through models and APIs of their own,
+            // and the model pages of the 4.x line say "text, image" and nothing else:
             if(modelName.IndexOf("grok-4") is not -1)
                 return
                 [
-                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
 
                     Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
