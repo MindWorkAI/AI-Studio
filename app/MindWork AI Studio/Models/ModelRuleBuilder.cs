@@ -35,6 +35,15 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     private ImageLimits? images;
 
     /// <summary>
+    /// The text this rule answers for, before anything was stated about it.
+    /// </summary>
+    /// <remarks>
+    /// Read by the family builder before it builds anything, to find the texts which name more
+    /// than one rule.
+    /// </remarks>
+    internal string PatternText => patternText;
+
+    /// <summary>
     /// The text is the whole model name.
     /// </summary>
     /// <returns>The rule, to go on stating.</returns>

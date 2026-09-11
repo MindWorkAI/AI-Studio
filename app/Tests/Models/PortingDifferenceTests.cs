@@ -34,6 +34,9 @@ public sealed class PortingDifferenceTests
         LLMProviders.GOOGLE,
         LLMProviders.MISTRAL,
         LLMProviders.ALIBABA_CLOUD,
+        LLMProviders.DEEP_SEEK,
+        LLMProviders.PERPLEXITY,
+        LLMProviders.X,
     ];
 
     [Test]

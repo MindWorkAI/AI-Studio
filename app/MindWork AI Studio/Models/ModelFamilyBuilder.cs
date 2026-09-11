@@ -36,9 +36,20 @@ public sealed class ModelFamilyBuilder(string origin)
     /// <returns>The rules, in the order they were stated.</returns>
     internal IReadOnlyList<ModelRule> Build()
     {
+        //
+        // The same text may well be stated twice, with different conditions on top -- that is how
+        // a variant of a generation is written. What cannot be done is naming that text to inherit
+        // from, because it names two rules and taking either of them would be a coin toss. Found
+        // before anything is built, so that where the two stand in the file makes no difference.
+        //
+        var statedMoreThanOnce = this.stated
+            .GroupBy(statement => statement.PatternText, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToHashSet(StringComparer.Ordinal);
+
         var built = new List<ModelRule>(this.stated.Count);
         var byPatternText = new Dictionary<string, ModelProfileChange>(StringComparer.Ordinal);
-        var statedMoreThanOnce = new HashSet<string>(StringComparer.Ordinal);
         ModelProfileChange? previous = null;
 
         foreach (var statement in this.stated)
@@ -46,15 +57,7 @@ public sealed class ModelFamilyBuilder(string origin)
             var rule = statement.Build(statement.InheritanceBasis(byPatternText, statedMoreThanOnce, previous));
 
             built.Add(rule);
-
-            //
-            // The same text may well be stated twice, with different conditions on top -- that is
-            // how a variant of a generation is written. What cannot be done afterwards is naming
-            // that text to inherit from, because it no longer names one rule.
-            //
-            if (!byPatternText.TryAdd(rule.Pattern.Text, rule.Change))
-                statedMoreThanOnce.Add(rule.Pattern.Text);
-
+            byPatternText[rule.Pattern.Text] = rule.Change;
             previous = rule.Change;
         }
 
