@@ -65,20 +65,22 @@ public static class CapabilitySnapshot
     /// <summary>
     /// Renders the given entries and the capabilities the current rules answer with.
     /// </summary>
+    /// <remarks>
+    /// The text ends with the last model rather than with a line break, which is how this repository
+    /// keeps its files. A generator disagreeing with that by one byte makes the test fail the next
+    /// time an editor tidies the file up, and the failure says that nothing changed -- which is both
+    /// true and useless.
+    /// </remarks>
     /// <param name="entries">The entries to render.</param>
-    /// <returns>The snapshot text, with a trailing newline and no carriage returns.</returns>
+    /// <returns>The snapshot text, without a trailing newline and without carriage returns.</returns>
     public static string Render(IEnumerable<CorpusEntry> entries)
     {
-        var text = new StringBuilder(HEADER);
         var lines = entries
             .OrderBy(entry => entry.Provider.ToString(), StringComparer.Ordinal)
             .ThenBy(entry => entry.ModelId, StringComparer.Ordinal)
             .Select(entry => $"{entry.Provider} | {entry.ModelId} | {Describe(AskTheCurrentRules(entry))}");
 
-        foreach (var line in lines)
-            text.Append(line).Append('\n');
-
-        return text.ToString();
+        return new StringBuilder(HEADER).AppendJoin('\n', lines).ToString();
     }
 
     /// <summary>
