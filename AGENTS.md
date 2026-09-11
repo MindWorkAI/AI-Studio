@@ -80,7 +80,21 @@ Notes:
   troubleshooting, no matter whether it came from the MCP server or from the user.
 
 ### Running Tests
-Currently, no automated test suite exists in the repository.
+The .NET tests live in `app/Tests`, a single NUnit project that holds the tests of every area; each
+area gets its own folder and namespace below it rather than a project of its own. Agents run them
+through the IDE for the same reason they build there:
+
+```
+mcp__rider__execute_terminal_command  command: "cd app/Tests && dotnet test"
+```
+
+An assembly-wide `[SetUpFixture]` in `app/Tests/TestHost.cs` fills the static application state that
+the app itself only fills while starting up, `Program.LOGGER_FACTORY` above all. Types that
+initialize a static logger from it — `Settings.Provider` among them — otherwise die in their type
+initializer before the first assertion. Prefer writing new code so that it does not reach for such
+statics at all.
+
+The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP server.
 
 ## Architecture Details
 

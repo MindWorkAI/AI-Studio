@@ -82,6 +82,15 @@
       <Folder Include="Plugins\assistants\assets\" />
     </ItemGroup>
 
+    <!--
+        The test project has to reach Program.LOGGER_FACTORY. Program is internal, and it stays that
+        way: it is the entry point, not API. Several types initialize a static logger field from that
+        factory, so a test process must assign it before it touches any of them.
+    -->
+    <ItemGroup>
+      <InternalsVisibleTo Include="Tests" />
+    </ItemGroup>
+
     <!-- Read the meta data file -->
     <Target Name="ReadMetaData" BeforeTargets="BeforeBuild">
         <Error Text="The ../../metadata.txt file was not found!" Condition="!Exists('../../metadata.txt')" />

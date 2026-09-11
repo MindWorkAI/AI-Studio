@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>AIStudio.Tests</RootNamespace>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="10.0.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.0" />
+        <!--
+            Pinned below 4.6.0 on purpose, verified by bisecting 4.4.0, 4.5.0, 4.5.1, 4.6.0 and 4.6.1
+            against the .NET 9 SDK (9.0.120, C# 13): from 4.6.0 on, the compiler no longer picks
+            Assert.That<TActual>(TActual, IResolveConstraint, ...) for a plain value. 4.6.0 added
+            Assert.That(Action, ...) and Assert.That<T>(Func<T>, ...) alongside it, and the value
+            overload drops out of the candidate set, so even Assert.That(1, Is.EqualTo(1)) fails with
+            "argument 1: cannot convert int to System.Action", a message that points nowhere near the
+            real cause. Re-test the newest version whenever the .NET SDK is raised.
+        -->
+        <PackageReference Include="NUnit" Version="4.5.1" />
+        <PackageReference Include="NUnit.Analyzers" Version="4.14.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="NUnit3TestAdapter" Version="6.3.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MindWork AI Studio\MindWork AI Studio.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="NUnit.Framework" />
+    </ItemGroup>
+
+</Project>
