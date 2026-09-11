@@ -1,0 +1,146 @@
+using System.Text;
+
+using AIStudio.Tests.Models.Corpus;
+
+namespace AIStudio.Tests.Models;
+
+/// <summary>
+/// Holds the current capability rules to their word, model by model.
+/// </summary>
+/// <remarks>
+/// These tests state nothing about what is right. They state what the code answers today, so that
+/// rebuilding the capability system cannot change an answer by accident: every difference shows up
+/// here and has to be either a porting mistake or a decision somebody wrote down.
+///
+/// When a diff appears, read it before touching anything. If every line of it is wanted, run the
+/// snapshot writer and commit the new file together with the change that caused it.
+/// </remarks>
+[TestFixture]
+public sealed class CapabilityCharacterizationTests
+{
+    /// <summary>
+    /// How many differing lines the failure message shows before it stops.
+    /// </summary>
+    private const int LINES_SHOWN = 25;
+
+    [Test]
+    public void TheCorpusStillGetsTheAnswersTheSnapshotRecorded()
+    {
+        var recorded = CapabilitySnapshot.Read();
+        var current = CapabilitySnapshot.Render(SnapshotEntries());
+
+        if (recorded is null)
+        {
+            File.WriteAllText(CapabilitySnapshot.FILE_PATH, current);
+            Assert.Fail($"There was no snapshot yet, so one was written to {CapabilitySnapshot.FILE_PATH}. Read it line by line and commit it, then this test turns green.");
+            return;
+        }
+
+        if (recorded == current)
+        {
+            //
+            // A leftover file from an earlier failure would otherwise sit in the working tree and
+            // get committed by somebody who did not notice it:
+            //
+            File.Delete(CapabilitySnapshot.ACTUAL_FILE_PATH);
+            return;
+        }
+
+        File.WriteAllText(CapabilitySnapshot.ACTUAL_FILE_PATH, current);
+        Assert.Fail($"The capabilities of {DescribeDifference(recorded, current)}{Environment.NewLine}{Environment.NewLine}The full result was written to {CapabilitySnapshot.ACTUAL_FILE_PATH}.");
+    }
+
+    /// <summary>
+    /// Checks that the models the audit found wrong answers for are still answered the wrong way.
+    /// </summary>
+    /// <remarks>
+    /// This test is written the other way round from every other one here, and it is meant to fail
+    /// the day the rebuild takes over: that is the signal that the entry has done its job. When it
+    /// does, swap the two assertions below for a single one comparing against AnswerWanted, and
+    /// drop AnswerToday from the entry.
+    /// </remarks>
+    [Test]
+    public void TheAnswersTheAuditFoundWrongAreStillTheOldOnes()
+    {
+        Assert.Multiple(() =>
+        {
+            foreach (var change in ExpectedChanges.ENTRIES)
+            {
+                var entry = new CorpusEntry(change.Provider, change.ModelId, CorpusOrigin.NAMED_BY_NO_RULE);
+                var current = CapabilitySnapshot.Describe(CapabilitySnapshot.AskTheCurrentRules(entry));
+
+                Assert.That(current, Is.EqualTo(CapabilitySnapshot.Describe(change.AnswerToday)), $"The wrong answer for {change.Provider} {change.ModelId} has changed. If that was on purpose, this entry is done: compare against AnswerWanted from now on.");
+                Assert.That(current, Is.Not.EqualTo(CapabilitySnapshot.Describe(change.AnswerWanted)), $"{change.Provider} {change.ModelId} already answers the way the rebuild is meant to. Move the entry into the snapshot.");
+            }
+        });
+    }
+
+    /// <summary>
+    /// The corpus entries the snapshot covers, which is all of them except the known-wrong ones.
+    /// </summary>
+    /// <returns>The entries whose answer must not change.</returns>
+    private static IEnumerable<CorpusEntry> SnapshotEntries()
+    {
+        var knownWrong = ExpectedChanges.ENTRIES.Select(change => (change.Provider, change.ModelId)).ToHashSet();
+        return ModelCorpus.ENTRIES.Where(entry => !knownWrong.Contains((entry.Provider, entry.ModelId)));
+    }
+
+    /// <summary>
+    /// Describes how two snapshots differ, in the words of the lines that differ.
+    /// </summary>
+    /// <param name="recorded">The snapshot as it was recorded.</param>
+    /// <param name="current">The snapshot as the code answers now.</param>
+    /// <returns>A description naming the changed, added, and removed lines.</returns>
+    private static string DescribeDifference(string recorded, string current)
+    {
+        var recordedLines = ModelLinesOf(recorded);
+        var currentLines = ModelLinesOf(current);
+
+        var changed = recordedLines.Keys.Intersect(currentLines.Keys).Where(model => recordedLines[model] != currentLines[model]).ToList();
+        var added = currentLines.Keys.Except(recordedLines.Keys).ToList();
+        var removed = recordedLines.Keys.Except(currentLines.Keys).ToList();
+
+        var message = new StringBuilder($"{changed.Count} model(s) changed, {added.Count} came into the corpus, {removed.Count} left it:").Append(Environment.NewLine);
+        foreach (var model in changed.Take(LINES_SHOWN))
+        {
+            message.Append(Environment.NewLine).Append("  ").Append(model);
+            message.Append(Environment.NewLine).Append("    was: ").Append(recordedLines[model]);
+            message.Append(Environment.NewLine).Append("    now: ").Append(currentLines[model]);
+        }
+
+        foreach (var model in added.Take(LINES_SHOWN))
+            message.Append(Environment.NewLine).Append("  + ").Append(model).Append(": ").Append(currentLines[model]);
+
+        foreach (var model in removed.Take(LINES_SHOWN))
+            message.Append(Environment.NewLine).Append("  - ").Append(model).Append(": ").Append(recordedLines[model]);
+
+        return message.ToString();
+    }
+
+    /// <summary>
+    /// Splits a snapshot into what each line says about which model.
+    /// </summary>
+    /// <remarks>
+    /// The provider and the model ID make up everything before the last separator, which is the one
+    /// place a split is safe: a model ID may contain anything, the capability list may not.
+    /// </remarks>
+    /// <param name="snapshot">The snapshot text.</param>
+    /// <returns>The capability text of every line, keyed by provider and model.</returns>
+    private static Dictionary<string, string> ModelLinesOf(string snapshot)
+    {
+        var lines = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var line in snapshot.Split('\n'))
+        {
+            if (line.Length is 0 || line.StartsWith('#'))
+                continue;
+
+            var separatorIndex = line.LastIndexOf(" | ", StringComparison.Ordinal);
+            if (separatorIndex is -1)
+                continue;
+
+            lines[line[..separatorIndex]] = line[(separatorIndex + 3)..];
+        }
+
+        return lines;
+    }
+}
