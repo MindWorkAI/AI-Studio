@@ -6,6 +6,7 @@ using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.Rust;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -233,7 +234,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.GetAllProviders().Select(x => x.InstanceName.ToLowerInvariant()).ToList();
 
         this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
-        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters)
+                                  || this.capabilityOverrides.HasOverrides
+                                  || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -422,6 +425,30 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return this.OnDataFilePathChanged(string.Empty);
     }
 
+    /// <summary>
+    /// Takes the first dropped path which can serve as a tokenizer.
+    /// </summary>
+    /// <remarks>
+    /// A provider carries exactly one tokenizer, so a multi-selection cannot be honored as a whole.
+    /// Everything which is not a readable JSON file is skipped rather than handed to the runtime:
+    /// the validation would reject it anyway, and saying so right away names the actual mistake.
+    /// </remarks>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task OnTokenizerPathsDropped(List<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path) || !FileTypes.IsAllowedPath(path, FileTypes.JSON))
+                continue;
+
+            await this.OnDataFilePathChanged(path);
+            return;
+        }
+
+        this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+    }
+
     private async Task OnDataFilePathChanged(string filePath)
     {
         this.dataFilePath = filePath;
@@ -582,6 +609,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// The catalog of the provider, where the user can read up on the models before choosing one.
     /// </summary>
     private string ModelsOverviewURL => this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId);
+
+    /// <summary>
+    /// Whether the custom tokenizer is offered at all. It is an expert setting which only makes
+    /// sense while the RAG preview is enabled.
+    /// </summary>
+    private bool ShowTokenizerSettings => this.DataLLMProvider != LLMProviders.NONE && PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
 
     private void UpdateModelSelectionAfterLoading()
     {

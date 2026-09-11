@@ -6,7 +6,7 @@
     @T("You can attach source files as optional context for your coding question.")
 </MudJustifiedText>
 <div class="mb-3">
-    <AttachDocuments Name="Coding Source Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+    <AttachDocuments Name="Coding Source Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 </div>
 
 <MudStack Row="@false" Class="mb-3">

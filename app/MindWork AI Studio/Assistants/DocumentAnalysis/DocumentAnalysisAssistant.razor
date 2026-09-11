@@ -74,7 +74,7 @@ else
             @T("Documents for the analysis")
         </MudText>
 
-        <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+        <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
     </div>
 }
 else
@@ -128,7 +128,9 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
+                @* No default target for the rule zones: while the policy definition is open, three
+                   zones are in play, so each drop has to be aimed at the one it belongs to. *@
+                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules" EnableDragDrop="true" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 <MudJustifiedText Typo="Typo.body1" Class="mt-3">
                     @T("After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.")
@@ -136,7 +138,7 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
+                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" EnableDragDrop="true" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
                 {
@@ -153,7 +155,7 @@ else
 
         <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
 
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.documentSelectionExpanded" ExpandedChanged="@this.DocumentSelectionExpandedChanged">
             <MudText Typo="Typo.h5" Class="mb-1">
                 @T("Policy Description")
             </MudText>
@@ -166,7 +168,10 @@ else
                 @T("Documents for the analysis")
             </MudText>
 
-            <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+            @* The whole assistant catches drops, but only while this panel is the open one. A
+               collapsed panel keeps its content in the DOM with a height of zero, so without this
+               the invisible zone would swallow the drops meant for the policy definition. *@
+            <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="@this.documentSelectionExpanded" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
         </ExpansionPanel>
     </MudExpansionPanels>

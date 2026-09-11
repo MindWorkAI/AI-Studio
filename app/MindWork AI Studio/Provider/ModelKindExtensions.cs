@@ -46,7 +46,16 @@ public static class ModelKindExtensions
 
     private static readonly string[] IMAGE_GENERATION_MARKERS = ["flux", "stable-diffusion", "sdxl", "dall-e", "midjourney", "gpt-image"];
 
-    private static readonly string[] VIDEO_GENERATION_MARKERS = ["sora", "veo-", "runway"];
+    //
+    // Google names its image models after the chat model they grew out of and appends "image":
+    // gemini-3-pro-image, gemini-3.1-flash-image, gemini-2.5-flash-image. Read as a plain substring,
+    // that word is too greedy -- it also sits inside "imagenet" and "reimagined", and a chat model
+    // carrying such a word would disappear from the user's list. It therefore counts only where a
+    // name segment begins and ends with it.
+    //
+    private static readonly string[] IMAGE_GENERATION_WORD_MARKERS = ["image"];
+
+    private static readonly string[] VIDEO_GENERATION_MARKERS = ["sora", "veo-", "runway", "hailuo"];
 
     //
     // Markers which have to stand as a word of their own. "kling" is such a case: taken as a plain
@@ -107,7 +116,7 @@ public static class ModelKindExtensions
         if (HasAnyMarker(model.Id, TEXT_COMPLETION_MARKERS))
             return ModelKind.TEXT_COMPLETION;
 
-        if (HasAnyMarker(model.Id, IMAGE_GENERATION_MARKERS))
+        if (HasAnyMarker(model.Id, IMAGE_GENERATION_MARKERS) || HasAnyWordMarker(model.Id, IMAGE_GENERATION_WORD_MARKERS))
             return ModelKind.IMAGE_GENERATION;
 
         if (HasAnyMarker(model.Id, VIDEO_GENERATION_MARKERS) || HasAnyWordMarker(model.Id, VIDEO_GENERATION_WORD_MARKERS))

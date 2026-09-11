@@ -243,6 +243,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
         ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
         ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
+        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TB("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
         ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
         ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.InstanceName),
         _ => string.Empty,
@@ -340,6 +341,9 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     protected virtual ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
     {
+        if (statusCode is HttpStatusCode.BadRequest && IsToolsNotSupportedFailure(responseBody))
+            return ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED;
+
         if (statusCode is not HttpStatusCode.TooManyRequests)
             return ProviderRequestFailureReason.NONE;
 
@@ -351,7 +355,78 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (IsTooManyRequestsError(errorCode) || IsTooManyRequestsError(errorType) || IsTooManyRequestsError(errorMessage))
             return ProviderRequestFailureReason.TOO_MANY_REQUESTS;
 
+        //
+        // Some providers do not refuse the request outright, they open the stream and put the
+        // refusal into the first event. It is the same failure, so it gets the same answer:
+        //
+        if (IsToolsNotSupportedFailure(errorMessage) || IsToolsNotSupportedFailure(responseBody))
+            return ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED;
+
         return ProviderRequestFailureReason.NONE;
+    }
+
+    //
+    // The words a provider uses for the ability to call tools, and the words it uses to deny an
+    // ability. Neither list is complete, and neither can be: every provider words this in its own
+    // way. Ollama says "<model> does not support tools", Mistral "Function calling is not enabled
+    // for this model", others again something else. What they have in common is one word from each
+    // of these two lists.
+    //
+    private static readonly string[] TOOL_CALLING_WORDS = ["tool", "function call", "function_call", "function-call", "functions"];
+
+    private static readonly string[] ABILITY_DENIALS = ["not support", "unsupported", "not enabled", "not available", "not allowed", "not capable", "no support", "not implemented"];
+
+    //
+    // How far apart the two words may stand and still be read as one statement. The distance is
+    // what makes the check trustworthy: a provider which quotes the failed request back sends our
+    // whole tool list along with the error, so the word "tool" is then in the body no matter what
+    // actually went wrong. A denial elsewhere in such a body says nothing about tool calling.
+    //
+    private const int TOOL_DENIAL_MAX_DISTANCE = 60;
+
+    /// <summary>
+    /// Recognizes the answer a provider gives when the model cannot use the tools we offered it.
+    /// </summary>
+    /// <remarks>
+    /// There is no error code for this either, which is why this reads the wording like the
+    /// context length check above does. AI Studio needs to recognize it because it assumes tool
+    /// calling for models it does not know: without this, the user would see nothing but the raw
+    /// provider message and no hint at what to do about it.
+    /// </remarks>
+    /// <param name="responseBody">What the provider said about the failure.</param>
+    /// <returns>True, when the provider denied the ability to call tools.</returns>
+    private static bool IsToolsNotSupportedFailure(string? responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return false;
+
+        foreach (var denial in ABILITY_DENIALS)
+        {
+            var denialIndex = responseBody.IndexOf(denial, StringComparison.OrdinalIgnoreCase);
+            while (denialIndex is not -1)
+            {
+                if (MentionsToolCallingNearby(responseBody, denialIndex, denial.Length))
+                    return true;
+
+                // The same denial may appear again later in the body, next to the tool words:
+                denialIndex = responseBody.IndexOf(denial, denialIndex + 1, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MentionsToolCallingNearby(string responseBody, int denialIndex, int denialLength)
+    {
+        var windowStart = Math.Max(0, denialIndex - TOOL_DENIAL_MAX_DISTANCE);
+        var windowEnd = Math.Min(responseBody.Length, denialIndex + denialLength + TOOL_DENIAL_MAX_DISTANCE);
+        var window = responseBody.AsSpan(windowStart, windowEnd - windowStart);
+
+        foreach (var word in TOOL_CALLING_WORDS)
+            if (window.Contains(word, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+        return false;
     }
 
     private static bool IsTooManyRequestsError(string? value)

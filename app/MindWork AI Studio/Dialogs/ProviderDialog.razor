@@ -175,33 +175,6 @@
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
-            @if (this.DataLLMProvider != LLMProviders.NONE)
-            {
-                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                    @T("For better token estimates, you can configure a custom tokenizer for this provider.")
-                </MudJustifiedText>
-                <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
-                    <MudTextField
-                        T="string"
-                        Text="@this.dataFilePath"
-                        TextChanged="@this.OnDataFilePathChanged"
-                        Label="@T("Selected file path for the custom tokenizer")"
-                        Validation="@this.providerValidation.ValidatingCustomTokenizer"
-                        Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.AttachFile"
-                        UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                        Variant="Variant.Outlined"
-                        Clearable="@true"
-                        Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
-                        ErrorText="@this.dataCustomTokenizerValidationIssue"
-                        OnClearButtonClick="@this.ClearPathTokenizer"
-                    />
-                    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@this.isTokenizerFileDialogOpen" OnClick="@this.OpenTokenizerFileDialog">
-                        @T("Choose File")
-                    </MudButton>
-                </MudStack>
-            }
-            
             <MudStack>
                 <MudButton OnClick="@this.ToggleExpertSettings">
                     @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
@@ -273,6 +246,38 @@
                         @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                     </MudJustifiedText>
                     <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                    @if (this.ShowTokenizerSettings)
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">
+                            @T("For better token estimates, you can configure a custom tokenizer for this provider.")
+                        </MudJustifiedText>
+                        <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
+                            <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+                                <MudTextField
+                                    T="string"
+                                    Text="@this.dataFilePath"
+                                    TextChanged="@this.OnDataFilePathChanged"
+                                    Label="@T("Selected file path for the custom tokenizer")"
+                                    Disabled="@this.IsEnterpriseConfiguration"
+                                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                    Variant="Variant.Outlined"
+                                    Clearable="@true"
+                                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                                    ErrorText="@this.dataCustomTokenizerValidationIssue"
+                                    OnClearButtonClick="@this.ClearPathTokenizer"
+                                />
+                                <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
+                                    @T("Choose File")
+                                </MudButton>
+                            </MudStack>
+                            <MudText Typo="Typo.body2">
+                                @T("You can also drag & drop the tokenizer file here.")
+                            </MudText>
+                        </PathDropZone>
+                    }
                 </MudCollapse>
             </MudStack>
         </MudForm>

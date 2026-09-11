@@ -279,6 +279,20 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     #endregion
 
+    /// <summary>
+    /// Takes over a content list which came from a file or from a drop.
+    /// </summary>
+    /// <remarks>
+    /// Assigning the text is not enough: the two topic selections below it are derived from the
+    /// content list, so the derivation has to run again, exactly as it does when the user types.
+    /// </remarks>
+    /// <param name="content">The loaded content list.</param>
+    private void ContentLoadedFromFile(string content)
+    {
+        this.inputContent = content;
+        this.OnContentChanged(content);
+    }
+
     private void OnContentChanged(string content)
     {
         var previousSelectedFoci = new HashSet<string>();

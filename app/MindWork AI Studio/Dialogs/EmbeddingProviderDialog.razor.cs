@@ -388,7 +388,31 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     {
         return this.OnDataFilePathChanged(string.Empty);
     }
-    
+
+    /// <summary>
+    /// Takes the first dropped path which can serve as a tokenizer.
+    /// </summary>
+    /// <remarks>
+    /// A provider carries exactly one tokenizer, so a multi-selection cannot be honored as a whole.
+    /// Everything which is not a readable JSON file is skipped rather than handed to the runtime:
+    /// the validation would reject it anyway, and saying so right away names the actual mistake.
+    /// </remarks>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task OnTokenizerPathsDropped(List<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path) || !FileTypes.IsAllowedPath(path, FileTypes.JSON))
+                continue;
+
+            await this.OnDataFilePathChanged(path);
+            return;
+        }
+
+        this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+    }
+
     private async Task OnDataFilePathChanged(string filePath)
     {
         this.dataFilePath = filePath;

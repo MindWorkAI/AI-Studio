@@ -5,6 +5,8 @@
 
 <MudDialog>
     <DialogContent>
+        @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
+        <PathDropZone IsArea="@true">
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -51,7 +53,7 @@
             }
             @if (this.CanChangeSourceAndEmbedding)
             {
-                <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" />
+                <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />
             }
             else
             {
@@ -191,6 +193,7 @@
             </MudStack>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
+        </PathDropZone>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">

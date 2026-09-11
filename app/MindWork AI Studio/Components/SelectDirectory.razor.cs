@@ -34,13 +34,9 @@ public partial class SelectDirectory : MSGComponentBase
     public bool EnableDragDrop { get; set; }
 
     /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
-    /// </summary>
-    [Parameter]
-    public int Layer { get; set; } = DropLayers.ROOT;
-
-    /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// Makes this component the default target of its area, meaning of its page, assistant, or
+    /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
+    /// of their own.
     /// </summary>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
