@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -11,11 +12,52 @@ using LuaTable = Lua.LuaTable;
 namespace AIStudio.Settings;
 
 /// <summary>
-/// Optional expert capability overrides for a configured LLM provider.
-/// Missing values keep the automatic capability detection result.
+/// What a person stated about the model of their own provider instance, against what the rules
+/// worked out. Anything left unsaid keeps the automatic answer.
 /// </summary>
+/// <remarks>
+/// The name says capabilities because that is all this could hold when it was written, and renaming
+/// it now would break every settings file and every rolled-out configuration which spells the word.
+/// What it holds is everything a person can say about the model behind their own provider: what it
+/// can do, how it reasons, how much it reads, and how many pictures it takes.
+///
+/// The numbers carry the same key names a model plugin uses for the same questions, down to the
+/// spelling. The two surfaces answer different questions -- a plugin describes a model, this
+/// describes one installation of it -- but an administrator writing both should not have to learn
+/// two vocabularies to say the same thing twice.
+/// </remarks>
 public sealed record ProviderCapabilityOverrides
 {
+    /// <summary>
+    /// How wide the window of this installation is, in tokens.
+    /// </summary>
+    private const string CONTEXT_WINDOW_KEY = "CONTEXT_WINDOW";
+
+    /// <summary>
+    /// How many images one message may carry here.
+    /// </summary>
+    private const string MAX_IMAGES_PER_MESSAGE_KEY = "MAX_IMAGES_PER_MESSAGE";
+
+    /// <summary>
+    /// How many images one request may carry here.
+    /// </summary>
+    private const string MAX_IMAGES_PER_REQUEST_KEY = "MAX_IMAGES_PER_REQUEST";
+
+    /// <summary>
+    /// The keys which name a number rather than a capability.
+    /// </summary>
+    /// <remarks>
+    /// They share the table with the capability words, so the parser has to ask which sort of key
+    /// it is looking at before it asks what the value should be: a number where a switch belongs is
+    /// as wrong as a switch where a number belongs, and neither may quietly become the other.
+    /// </remarks>
+    private static readonly IReadOnlyList<string> NUMERIC_KEYS =
+    [
+        CONTEXT_WINDOW_KEY,
+        MAX_IMAGES_PER_MESSAGE_KEY,
+        MAX_IMAGES_PER_REQUEST_KEY,
+    ];
+
     /// <summary>
     /// The capabilities a person switches on or off directly, without the reasoning words.
     /// </summary>
@@ -77,6 +119,34 @@ public sealed record ProviderCapabilityOverrides
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? ReasoningByDefault { get; init; }
 
+    /// <summary>
+    /// How many tokens this installation reads and writes, or null to keep the automatic answer.
+    /// </summary>
+    /// <remarks>
+    /// One number, where the rules know two. What a model card calls "raisable to" is a statement
+    /// about the model: somebody could configure the engine that way. A person filling this in has
+    /// already configured it, or has not, and either way says what their installation does today.
+    /// Stating a ceiling next to it would be describing a possibility they are the only one able to
+    /// realize.
+    /// </remarks>
+    [JsonPropertyName(CONTEXT_WINDOW_KEY)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? ContextWindowTokens { get; init; }
+
+    /// <summary>
+    /// How many images one message may carry, or null to keep the automatic answer.
+    /// </summary>
+    [JsonPropertyName(MAX_IMAGES_PER_MESSAGE_KEY)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? MaxImagesPerMessage { get; init; }
+
+    /// <summary>
+    /// How many images one request may carry, or null to keep the automatic answer.
+    /// </summary>
+    [JsonPropertyName(MAX_IMAGES_PER_REQUEST_KEY)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? MaxImagesPerRequest { get; init; }
+
     [JsonIgnore]
     public bool HasOverrides =>
         this.AudioInput is not null ||
@@ -86,7 +156,10 @@ public sealed record ProviderCapabilityOverrides
         this.VideoInput is not null ||
         this.OptionalReasoning is not null ||
         this.AlwaysReasoning is not null ||
-        this.ReasoningByDefault is not null;
+        this.ReasoningByDefault is not null ||
+        this.ContextWindowTokens is not null ||
+        this.MaxImagesPerMessage is not null ||
+        this.MaxImagesPerRequest is not null;
 
     public bool? GetOverride(Capability capability) => capability switch
     {
@@ -115,6 +188,35 @@ public sealed record ProviderCapabilityOverrides
     };
 
     /// <summary>
+    /// Reads the number a key stands for.
+    /// </summary>
+    /// <param name="key">One of the numeric keys.</param>
+    /// <returns>The number, or null when nobody stated it.</returns>
+    private int? GetNumber(string key) => key switch
+    {
+        CONTEXT_WINDOW_KEY => this.ContextWindowTokens,
+        MAX_IMAGES_PER_MESSAGE_KEY => this.MaxImagesPerMessage,
+        MAX_IMAGES_PER_REQUEST_KEY => this.MaxImagesPerRequest,
+
+        _ => null,
+    };
+
+    /// <summary>
+    /// States the number a key stands for.
+    /// </summary>
+    /// <param name="key">One of the numeric keys.</param>
+    /// <param name="value">The number, or null to keep the automatic answer.</param>
+    /// <returns>The overrides with that number in them.</returns>
+    private ProviderCapabilityOverrides SetNumber(string key, int? value) => key switch
+    {
+        CONTEXT_WINDOW_KEY => this with { ContextWindowTokens = value },
+        MAX_IMAGES_PER_MESSAGE_KEY => this with { MaxImagesPerMessage = value },
+        MAX_IMAGES_PER_REQUEST_KEY => this with { MaxImagesPerRequest = value },
+
+        _ => this,
+    };
+
+    /// <summary>
     /// Applies what a person said about their own installation to what the rules worked out.
     /// </summary>
     /// <remarks>
@@ -128,7 +230,52 @@ public sealed record ProviderCapabilityOverrides
     {
         Capabilities = this.ApplyToCapabilities(profile.Capabilities),
         Reasoning = this.ResolveReasoning(profile.Reasoning),
+        Context = this.ResolveContext(profile.Context),
+        Images = this.ResolveImages(profile.Images),
     };
+
+    /// <summary>
+    /// Works out how wide the window is, out of what the rules say and what a person said.
+    /// </summary>
+    /// <remarks>
+    /// A stated number replaces the window whole, the ceiling included. Keeping "raisable to
+    /// 131,072" next to a person's own 16,384 would be reporting a possibility as a property of
+    /// their installation, and whoever reads that number is asking what fits, not what could be
+    /// made to fit.
+    ///
+    /// A number which is not a width at all is ignored rather than repaired. Both places a person
+    /// can write one refuse it with a message, so one arriving here came out of a settings file
+    /// somebody edited by hand, and the honest answer to that is the one nobody made up.
+    /// </remarks>
+    /// <param name="stated">What the rules worked out.</param>
+    /// <returns>The window after the overrides.</returns>
+    private ContextWindow ResolveContext(ContextWindow stated) => this.ContextWindowTokens is { } tokens and > 0 ? ContextWindow.Of(tokens) : stated;
+
+    /// <summary>
+    /// Works out how many images fit, out of what the rules say and what a person said.
+    /// </summary>
+    /// <remarks>
+    /// Each of the two numbers stands for itself, the way each switch above does: stating one says
+    /// nothing about the other, and the one left unsaid keeps whatever the rules worked out. The
+    /// smaller of the two still decides what fits into a message, so a person who states the larger
+    /// number alone may well see no change -- which is the correct answer, not a bug: they have not
+    /// contradicted the limit that is actually in the way.
+    /// </remarks>
+    /// <param name="stated">What the rules worked out.</param>
+    /// <returns>The limits after the overrides.</returns>
+    private ImageLimits ResolveImages(ImageLimits stated) => new(CountOfImages(this.MaxImagesPerMessage) ?? stated.MaxPerMessage, CountOfImages(this.MaxImagesPerRequest) ?? stated.MaxPerRequest);
+
+    /// <summary>
+    /// Takes a stated image limit, where it is one.
+    /// </summary>
+    /// <remarks>
+    /// Zero is a real limit here: an engine can be configured to take no pictures at all. A
+    /// negative number is not a limit at all, and is ignored for the same reason a window of zero
+    /// tokens is.
+    /// </remarks>
+    /// <param name="limit">What was stated.</param>
+    /// <returns>The limit, or null when nothing usable was stated.</returns>
+    private static int? CountOfImages(int? limit) => limit >= 0 ? limit : null;
 
     /// <summary>
     /// Switches the plain capabilities on and off.
@@ -256,6 +403,14 @@ public sealed record ProviderCapabilityOverrides
             builder.AppendLine($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
         }
 
+        foreach (var key in NUMERIC_KEYS)
+        {
+            if (this.GetNumber(key) is not { } number)
+                continue;
+
+            builder.AppendLine($@"{indentation}    [""{key}""] = {number.ToString(CultureInfo.InvariantCulture)},");
+        }
+
         builder.Append($@"{indentation}}},");
         return builder.ToString();
     }
@@ -283,9 +438,21 @@ public sealed record ProviderCapabilityOverrides
                 continue;
             }
 
+            if (TryMatchNumericKey(keyText, out var numericKey))
+            {
+                if (!TryReadNumber(pair.Value, numericKey, out var number))
+                {
+                    logger.LogWarning("The configured provider {ProviderIndex} states a '{OverrideKey}' which is not {Expectation}. The automatic answer will be used for it. (Plugin ID: {PluginId})", idx, numericKey, ExpectationOf(numericKey), configPluginId);
+                    continue;
+                }
+
+                result = result.SetNumber(numericKey, number);
+                continue;
+            }
+
             if (!TryParseSupportedCapability(keyText, out var capability))
             {
-                logger.LogWarning("The configured provider {ProviderIndex} contains an unsupported capability override '{CapabilityKey}'. The entry will be ignored. (Plugin ID: {PluginId})", idx, keyText, configPluginId);
+                logger.LogWarning("The configured provider {ProviderIndex} contains an unsupported override '{OverrideKey}'. The entry will be ignored. (Plugin ID: {PluginId})", idx, keyText, configPluginId);
                 continue;
             }
 
@@ -300,6 +467,58 @@ public sealed record ProviderCapabilityOverrides
 
         return result.HasOverrides ? result : null;
     }
+
+    /// <summary>
+    /// Recognizes a key which names a number, whichever way it was spelled.
+    /// </summary>
+    /// <remarks>
+    /// Spelled loosely for the same reason the capability words are: a table written by hand is
+    /// read by the app, not by a compiler, and rejecting "context_window" over its letters would be
+    /// a riddle rather than a message. What comes back is the canonical spelling, so everything
+    /// after this point deals with one name per question.
+    /// </remarks>
+    /// <param name="key">The key as it was written.</param>
+    /// <param name="numericKey">The canonical spelling of that key.</param>
+    /// <returns>True when the key names a number.</returns>
+    private static bool TryMatchNumericKey(string key, out string numericKey)
+    {
+        foreach (var candidate in NUMERIC_KEYS)
+            if (string.Equals(candidate, key, StringComparison.OrdinalIgnoreCase))
+            {
+                numericKey = candidate;
+                return true;
+            }
+
+        numericKey = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Reads a number, where it is one this key accepts.
+    /// </summary>
+    /// <remarks>
+    /// A window has to be a width, so zero token is refused: nothing fits into it, and a provider
+    /// which can hold nothing is not what anybody meant to state. A picture count of zero is a
+    /// different matter and allowed because an engine really can be told to take no pictures.
+    /// </remarks>
+    /// <param name="value">The value as it stands in the table.</param>
+    /// <param name="numericKey">The canonical key it stands under.</param>
+    /// <param name="number">The number read.</param>
+    /// <returns>True, when the value is a number, this key accepts.</returns>
+    private static bool TryReadNumber(LuaValue value, string numericKey, out int number)
+    {
+        if (!value.TryRead<int>(out number))
+            return false;
+
+        return numericKey is CONTEXT_WINDOW_KEY ? number > 0 : number >= 0;
+    }
+
+    /// <summary>
+    /// What a key accepts, said in the words of a warning.
+    /// </summary>
+    /// <param name="numericKey">The canonical key.</param>
+    /// <returns>The expectation.</returns>
+    private static string ExpectationOf(string numericKey) => numericKey is CONTEXT_WINDOW_KEY ? "a number of tokens greater than zero" : "a number of images of zero or more";
 
     private static bool TryParseSupportedCapability(string capabilityKey, out Capability capability)
     {
