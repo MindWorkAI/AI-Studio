@@ -49,4 +49,5 @@ public enum ModelVendor
     SERVICE_NOW,
     SHANGHAI_AI_LAB,
     SWISS_AI,
+    NOMIC_AI,
 }

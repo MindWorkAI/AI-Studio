@@ -1,4 +1,3 @@
-using AIStudio.Models;
 using AIStudio.Models.Registry;
 using AIStudio.Provider;
 using AIStudio.Tests.Models.Corpus;
@@ -6,86 +5,32 @@ using AIStudio.Tests.Models.Corpus;
 namespace AIStudio.Tests.Models;
 
 /// <summary>
-/// Holds the rebuilt rules against the old ones, provider by provider, as the porting proceeds.
+/// Holds the rebuilt rules against the old ones, over the whole corpus.
 /// </summary>
 /// <remarks>
-/// This is the test the whole rebuild is being carried by. For every provider already ported, the
-/// new rules have to answer exactly what the old ones answer -- except where the audit found the
-/// old answer wrong, and there they have to answer what was written down instead. Anything else is
-/// either a porting mistake or a decision somebody has to make on purpose and record.
+/// This is the test the whole rebuild is being carried by. Every model the new rules answer for has
+/// to be answered exactly the way the old ones answer it -- except where the audit found the old
+/// answer wrong, and there it has to be answered the way ExpectedChanges says instead. Anything
+/// else is either a porting mistake or a decision somebody has to make on purpose and record.
 ///
-/// The two lists below are what grow. A provider not on either is simply not compared yet: its
-/// models reach rules which have not been written, and holding them to anything would only say
-/// that.
+/// While the porting was under way, this was scoped by two growing lists: first the providers whose
+/// models had rules, then the vendors, because open weights arrive through gateways which serve
+/// everybody. Both are gone now that every family exists. What is left is simpler and says more:
+/// whatever a rule answers is compared, and whatever no rule answers has to stand in
+/// LeftToTheDefault with a reason.
 /// </remarks>
 [TestFixture]
 public sealed class PortingDifferenceTests
 {
-    /// <summary>
-    /// The providers whose models the rebuilt rules already answer for.
-    /// </summary>
-    /// <remarks>
-    /// A vendor's own cloud comes first, because there a name arrives the way its vendor writes it.
-    /// The gateways and the self-hosted engines come last: they serve everybody's models, so they
-    /// are only fully answerable once everybody has been ported.
-    /// </remarks>
-    private static readonly IReadOnlyList<LLMProviders> PROVIDERS_ALREADY_PORTED =
-    [
-        LLMProviders.OPEN_AI,
-        LLMProviders.ANTHROPIC,
-        LLMProviders.GOOGLE,
-        LLMProviders.MISTRAL,
-        LLMProviders.ALIBABA_CLOUD,
-        LLMProviders.DEEP_SEEK,
-        LLMProviders.PERPLEXITY,
-        LLMProviders.X,
-    ];
-
-    /// <summary>
-    /// The vendors whose models the rebuilt rules already answer for, whoever serves them.
-    /// </summary>
-    /// <remarks>
-    /// Open weights are the reason this list exists next to the one above. They arrive through the
-    /// gateways and the local engines, and none of those can be called ported until every vendor
-    /// they carry is. The vendor is the unit the porting actually proceeds in: as soon as the Llama
-    /// rules exist, every Llama of the corpus is compared, whichever gateway it came from.
-    ///
-    /// It is also what finally holds the cloud vendors to their models on somebody else's gateway,
-    /// which the provider list alone never reached: a Claude at GWDG and a DeepSeek distill at
-    /// OpenRouter are compared here, not at Anthropic and not at DeepSeek.
-    ///
-    /// Only vendors, never UNKNOWN: that is what a model nobody wrote a rule for answers with, and
-    /// putting it here would compare everything against everything.
-    /// </remarks>
-    private static readonly IReadOnlyList<ModelVendor> VENDORS_ALREADY_PORTED =
-    [
-        ModelVendor.OPEN_AI,
-        ModelVendor.ANTHROPIC,
-        ModelVendor.GOOGLE,
-        ModelVendor.MISTRAL_AI,
-        ModelVendor.ALIBABA,
-        ModelVendor.DEEP_SEEK,
-        ModelVendor.PERPLEXITY,
-        ModelVendor.XAI,
-        ModelVendor.META,
-        ModelVendor.Z_AI,
-        ModelVendor.MICROSOFT,
-        ModelVendor.NVIDIA,
-    ];
-
-    /// <summary>
-    /// Who built the models of each family, by the name its rules name as their origin.
-    /// </summary>
-    private static readonly IReadOnlyDictionary<string, ModelVendor> VENDOR_OF_FAMILY = ModelRegistry.Shared.Families.ToDictionary(family => family.Name, family => family.Vendor, StringComparer.Ordinal);
-
     [Test]
-    public void EveryPortedModelGetsExactlyTheAnswerItGetsToday()
+    public void EveryModelTheRulesAnswerForGetsExactlyTheAnswerItGetsToday()
     {
-        var compared = ComparableEntries().Where(entry => !IsKnownToBeWrong(entry)).ToList();
+        var compared = ModelCorpus.ENTRIES.Where(IsAnswered).Where(entry => !IsKnownToBeWrong(entry)).ToList();
 
         Assert.Multiple(() =>
         {
             Assert.That(compared, Is.Not.Empty, "Nothing was compared at all, which would make this test green for the wrong reason.");
+
             foreach (var entry in compared)
             {
                 var today = CapabilitySnapshot.Describe(CapabilitySnapshot.AskTheCurrentRules(entry));
@@ -97,15 +42,15 @@ public sealed class PortingDifferenceTests
     }
 
     [Test]
-    public void EveryPortedModelTheAuditFoundWrongIsNowAnsweredTheWayItShouldBe()
+    public void EveryModelTheAuditFoundWrongIsNowAnsweredTheWayItShouldBe()
     {
-        var ported = ExpectedChanges.ENTRIES.Where(change => IsCompared(change.Provider, change.ModelId)).ToList();
+        var corrected = ExpectedChanges.ENTRIES.Where(change => IsAnswered(change.Provider, change.ModelId)).ToList();
 
         Assert.Multiple(() =>
         {
-            Assert.That(ported, Is.Not.Empty, "No ported provider has an entry the audit found wrong, so this test proves nothing. Check the list of ported providers.");
+            Assert.That(corrected, Is.Not.Empty, "Nothing the audit found wrong is answered by a rule at all, which would make this test green for the wrong reason.");
 
-            foreach (var change in ported)
+            foreach (var change in corrected)
             {
                 var entry = new CorpusEntry(change.Provider, change.ModelId, CorpusOrigin.NAMED_BY_NO_RULE);
                 var rebuilt = CapabilitySnapshot.Describe(RebuiltRules.Ask(entry));
@@ -116,35 +61,43 @@ public sealed class PortingDifferenceTests
     }
 
     [Test]
-    public void EveryPortedModelIsAnsweredByARuleRatherThanFallingThrough()
+    public void EveryModelOfTheCorpusIsEitherAnsweredByARuleOrLeftToTheDefaultOnPurpose()
     {
         //
-        // Comparing answers alone cannot catch this. A model nobody wrote a rule for gets an empty
-        // profile, and where the old answer was empty too, the comparison is happy -- while the
-        // model has in fact disappeared from the rules. This is the test which notices.
+        // Comparing answers alone cannot catch a model falling through. It gets an empty profile,
+        // the global default answers for it, and nothing about that looks wrong from the outside --
+        // a family nobody got round to and a family nobody wanted are both simply missing. This is
+        // the test which makes the difference visible, by asking for the reason.
         //
-        // Only the ported providers, and on purpose: a model is on the vendor list exactly because
-        // a rule answered for it, so asking those the same question would answer itself.
+        var fallenThrough = ModelCorpus.ENTRIES
+            .Where(entry => !IsAnswered(entry))
+            .Where(entry => !IsLeftToTheDefault(entry))
+            .Select(entry => $"{entry.Provider} \"{entry.ModelId}\"");
+
+        Assert.That(fallenThrough, Is.Empty, "No rule answers for these, and nothing says that is on purpose. Write a family for them, or put them into LeftToTheDefault with the reason.");
+    }
+
+    [Test]
+    public void NothingLeftToTheDefaultIsAnsweredByARuleAfterAll()
+    {
         //
-        var named = EntriesOfPortedProviders().Where(entry => !string.IsNullOrWhiteSpace(entry.ModelId)).ToList();
+        // The other direction, so the list cannot rot: once a family is written, the models it
+        // answers for have no business standing among the ones nobody wrote a rule for.
+        //
+        var answeredAfterAll = LeftToTheDefault.ENTRIES
+            .Where(left => IsAnswered(left.Provider, left.ModelId))
+            .Select(left => $"{left.Provider} \"{left.ModelId}\"");
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(named, Is.Not.Empty, "Nothing was asked about at all, which would make this test green for the wrong reason.");
-
-            foreach (var entry in named)
-                Assert.That(ModelRegistry.Shared.Explain(entry.Provider, entry.ModelId).IsKnown, Is.True, $"No rule answers for {entry.Provider} \"{entry.ModelId}\".");
-        });
+        Assert.That(answeredAfterAll, Is.Empty, "A rule answers for these now, so they can be taken off the list of models left to the default.");
     }
 
     [Test]
     public void NoModelOfTheCorpusIsClaimedByTwoRulesWithTheSameRight()
     {
         //
-        // The whole corpus, ported or not: a tie needs two rules that both exist, so every name is
-        // worth asking about as soon as anything answers for it. This is where a family which
-        // repeats what another one already said shows up -- reading the rules alone cannot find
-        // that, because the two patterns are written differently and only meet on a real name.
+        // Two rules of the same specificity which can both match one name are a mistake, not a coin
+        // toss. Reading the rules alone cannot find it -- the two patterns are written differently
+        // and only meet on a real name, which is what the corpus is full of.
         //
         Assert.Multiple(() =>
         {
@@ -158,36 +111,26 @@ public sealed class PortingDifferenceTests
     }
 
     /// <summary>
-    /// Every corpus entry of a provider which has been ported, known-wrong ones included.
+    /// Whether any rule knows this model.
     /// </summary>
-    /// <returns>The entries.</returns>
-    private static IEnumerable<CorpusEntry> EntriesOfPortedProviders() => ModelCorpus.ENTRIES.Where(entry => PROVIDERS_ALREADY_PORTED.Contains(entry.Provider));
+    /// <param name="entry">The corpus entry to ask about.</param>
+    /// <returns>True, when a rule answers for it.</returns>
+    private static bool IsAnswered(CorpusEntry entry) => IsAnswered(entry.Provider, entry.ModelId);
 
     /// <summary>
-    /// Every corpus entry the rebuilt rules are already meant to answer for.
-    /// </summary>
-    /// <returns>The entries.</returns>
-    private static IEnumerable<CorpusEntry> ComparableEntries() => ModelCorpus.ENTRIES.Where(entry => IsCompared(entry.Provider, entry.ModelId));
-
-    /// <summary>
-    /// Whether the rebuilt rules are held to what the old ones answer for this model.
+    /// Whether any rule knows this model.
     /// </summary>
     /// <param name="provider">Who serves the model.</param>
     /// <param name="modelId">The model ID as that provider reports it.</param>
-    /// <returns>True, when the two answers have to agree.</returns>
-    private static bool IsCompared(LLMProviders provider, string modelId) => PROVIDERS_ALREADY_PORTED.Contains(provider) || VENDORS_ALREADY_PORTED.Contains(VendorAnswering(provider, modelId));
+    /// <returns>True, when a rule answers for it.</returns>
+    private static bool IsAnswered(LLMProviders provider, string modelId) => ModelRegistry.Shared.Explain(provider, modelId).IsKnown;
 
     /// <summary>
-    /// Whose rules answered for a model, as far as any did.
+    /// Whether this model reaches the global default because somebody decided it may.
     /// </summary>
-    /// <param name="provider">Who serves the model.</param>
-    /// <param name="modelId">The model ID as that provider reports it.</param>
-    /// <returns>The vendor of the family whose rule chose, or UNKNOWN when none did.</returns>
-    private static ModelVendor VendorAnswering(LLMProviders provider, string modelId)
-    {
-        var selector = ModelRegistry.Shared.Explain(provider, modelId).Selector;
-        return selector is null ? ModelVendor.UNKNOWN : VENDOR_OF_FAMILY.GetValueOrDefault(selector.Origin, ModelVendor.UNKNOWN);
-    }
+    /// <param name="entry">The corpus entry to look up.</param>
+    /// <returns>True, when it stands in the list of models left to the default.</returns>
+    private static bool IsLeftToTheDefault(CorpusEntry entry) => LeftToTheDefault.ENTRIES.Any(left => left.Provider == entry.Provider && string.Equals(left.ModelId, entry.ModelId, StringComparison.Ordinal));
 
     /// <summary>
     /// Whether the audit found the current answer for this entry wrong.

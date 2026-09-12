@@ -135,6 +135,22 @@ public static class ExpectedChanges
             Source: "The GWDG entry \"gpt-5.5\" of this corpus is the same model and does report reasoning by default."),
 
         //
+        // A rule written for one spelling of a name, while the engine people actually run writes
+        // another. The rule is right about the model and never fires.
+        //
+        new(SELF_HOSTED, "granite4.2:8b",
+            AnswerToday: [TEXT_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, TEXT_OUTPUT, REASONING_BY_DEFAULT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            Reason: "Granite 4.2 thinks unless the request says otherwise, and there is a rule which says so -- for \"granite-4.2\". Ollama glues the version to the family name, so the rule never sees the models anybody runs locally.",
+            Source: "IBM documents thinking on by default from Granite 4.2; the Ollama library lists the same checkpoint as \"granite4.2\"."),
+
+        new(SELF_HOSTED, "granite3.3:8b",
+            AnswerToday: [TEXT_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, TEXT_OUTPUT, OPTIONAL_REASONING, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            Reason: "The same spelling problem one generation earlier: Granite 3.3 has a thinking toggle, and the rule for it is written as \"granite-3.3\".",
+            Source: "IBM documents the thinking toggle for Granite 3.2 and 3.3; the Ollama library lists the checkpoint as \"granite3.3\"."),
+
+        //
         // One vendor's block swallowing another vendor's model, for no reason but where the two
         // blocks stand in the file.
         //
