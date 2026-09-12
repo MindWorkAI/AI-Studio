@@ -21,7 +21,7 @@ public sealed class LlamaFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.META;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://www.llama.com/docs/model-cards-and-prompt-formats/", new DateOnly(2026, 9, 11), "Ported unchanged from the Llama block of ProviderExtensions.OpenSource.cs.");
+    public override ModelSource Source => new("https://www.llama.com/docs/model-cards-and-prompt-formats/", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from the Llama block of ProviderExtensions.OpenSource.cs. The model cards give the 3.x generations a 128k window; the 4 line is not stated here, because Scout and Maverick differ by an order of magnitude and the name alone does not say which one it is.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -41,10 +41,16 @@ public sealed class LlamaFamily : ModelFamily
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT)
             .Apis(CHAT_COMPLETION_API);
 
-        // From 3.1 on, Llama calls functions. Three spellings, one statement:
+        //
+        // From 3.1 on, Llama calls functions and reads 128k tokens. Three spellings, one statement.
+        // What an operator actually serves is another matter: Ollama ships with a far smaller window
+        // until somebody raises num_ctx, which is why the window of a self-hosted model is a ceiling
+        // rather than a promise.
+        //
         builder.Rule("llama3.").AsSubstring().NotContains("vision")
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(131_072);
 
         builder.Rule("llama-3.").AsSubstring().NotContains("vision").Inherits();
 

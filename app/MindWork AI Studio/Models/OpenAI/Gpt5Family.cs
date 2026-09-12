@@ -24,15 +24,21 @@ public sealed class Gpt5Family : ModelFamily
     public override ModelVendor Vendor => ModelVendor.OPEN_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://platform.openai.com/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.OpenAI.cs, one rule per generation, except that the chat alias no longer inherits the reasoning it is named for not having.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.OpenAI.cs, one rule per generation, except that the chat alias no longer inherits the reasoning it is named for not having. Context windows read per generation from the model pages below that URL.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
     {
+        //
+        // The window grows once in this line, between 5.3 and 5.4: everything up to 5.2 is
+        // documented at 400,000 tokens and everything from 5.4 on at 1,050,000. Both numbers are
+        // the whole window, input and output together, which is how OpenAI states them.
+        //
         builder.Rule("gpt-5").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(400_000);
 
         //
         // The alias for the model of this generation which does not reason. The previous rules had
@@ -47,10 +53,19 @@ public sealed class Gpt5Family : ModelFamily
             .Reasoning(ReasoningSupport.OPTIONAL);
 
         builder.Rule("gpt-5.2").AsPrefix().InheritsFrom("gpt-5.1");
-        builder.Rule("gpt-5.3").AsPrefix().InheritsFrom("gpt-5.1");
-        builder.Rule("gpt-5.4").AsPrefix().InheritsFrom("gpt-5.1");
 
-        builder.Rule("gpt-5.5").AsPrefix().InheritsFrom("gpt-5.1")
+        //
+        // The one generation OpenAI documents nothing about: there is no model page for it, so the
+        // rule exists to keep a 5.3 answering like the rest of the line if one ever appears. What it
+        // must not do is carry 5.1's window as if somebody had looked it up.
+        //
+        builder.Rule("gpt-5.3").AsPrefix().InheritsFrom("gpt-5.1")
+            .WithoutContextWindow();
+
+        builder.Rule("gpt-5.4").AsPrefix().InheritsFrom("gpt-5.1")
+            .ContextWindow(1_050_000);
+
+        builder.Rule("gpt-5.5").AsPrefix().InheritsFrom("gpt-5.4")
             .Reasoning(ReasoningSupport.ON_BY_DEFAULT);
 
         builder.Rule("gpt-5.6").AsPrefix().InheritsFrom("gpt-5.5");

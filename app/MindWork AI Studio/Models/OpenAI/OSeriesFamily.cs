@@ -20,7 +20,7 @@ public sealed class OSeriesFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.OPEN_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://platform.openai.com/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.OpenAI.cs, one rule per generation and one per mini.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.OpenAI.cs, one rule per generation and one per mini. The o1 and o3 pages state 200,000 tokens; the two cut-down minis have no page of their own, so no window is stated for them.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -28,7 +28,8 @@ public sealed class OSeriesFamily : ModelFamily
         builder.Rule("o1").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(RESPONSES_API)
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(200_000);
 
         builder.Rule("o1-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
@@ -38,7 +39,8 @@ public sealed class OSeriesFamily : ModelFamily
         builder.Rule("o3").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(200_000);
 
         builder.Rule("o3-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)

@@ -23,6 +23,16 @@ public sealed class CapabilityCharacterizationTests
     /// </summary>
     private const int LINES_SHOWN = 25;
 
+    /// <summary>
+    /// How many columns a snapshot line carries after the model ID.
+    /// </summary>
+    /// <remarks>
+    /// The capabilities, the kind, and the context window. Adding a column to the snapshot means
+    /// raising this, and forgetting to would split a line inside its last column instead of in
+    /// front of it -- which makes every model look changed at once.
+    /// </remarks>
+    private const int TRAILING_COLUMNS = 3;
+
     [Test]
     public void TheCorpusStillGetsTheAnswersTheSnapshotRecorded()
     {
@@ -96,9 +106,9 @@ public sealed class CapabilityCharacterizationTests
     /// Splits a snapshot into what each line says about which model.
     /// </summary>
     /// <remarks>
-    /// The provider and the model ID make up everything before the last two separators, which are
-    /// the one place a split is safe: a model ID may contain anything, the capability list and the
-    /// kind may not.
+    /// The provider and the model ID make up everything before the trailing columns, and those are
+    /// the one place a split is safe: a model ID may contain anything, while the capability list,
+    /// the kind and the context window may not.
     /// </remarks>
     /// <param name="snapshot">The snapshot text.</param>
     /// <returns>What every line says about a model, keyed by provider and model.</returns>
@@ -110,11 +120,14 @@ public sealed class CapabilityCharacterizationTests
             if (line.Length is 0 || line.StartsWith('#'))
                 continue;
 
-            var kindSeparatorIndex = line.LastIndexOf(" | ", StringComparison.Ordinal);
-            if (kindSeparatorIndex is -1)
-                continue;
+            var separatorIndex = line.Length;
+            for (var column = 0; column < TRAILING_COLUMNS; column++)
+            {
+                separatorIndex = line.LastIndexOf(" | ", separatorIndex - 1, StringComparison.Ordinal);
+                if (separatorIndex is -1)
+                    break;
+            }
 
-            var separatorIndex = line.LastIndexOf(" | ", kindSeparatorIndex - 1, StringComparison.Ordinal);
             if (separatorIndex is -1)
                 continue;
 

@@ -187,6 +187,22 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     }
 
     /// <summary>
+    /// Takes back a context window this rule inherited, because nobody states one for this variant.
+    /// </summary>
+    /// <remarks>
+    /// A variant can already hand back a capability its family granted; a number has to be handed
+    /// back too. Without this, a generation whose window nobody documents would quietly carry the
+    /// number of the generation it inherits from -- and the app would then show a person that
+    /// number as a fact about their model.
+    /// </remarks>
+    /// <returns>The rule, to go on stating.</returns>
+    public ModelRuleBuilder WithoutContextWindow()
+    {
+        this.context = Models.ContextWindow.UNKNOWN;
+        return this;
+    }
+
+    /// <summary>
     /// Which tokenizer counts this model's tokens.
     /// </summary>
     /// <param name="kind">What sort of tokenizer it is.</param>

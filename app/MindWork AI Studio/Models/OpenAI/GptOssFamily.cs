@@ -20,11 +20,12 @@ public sealed class GptOssFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.OPEN_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://huggingface.co/openai/gpt-oss-120b", new DateOnly(2026, 9, 11), "Ported unchanged from the gpt-oss check of ProviderExtensions.OpenSource.cs.");
+    public override ModelSource Source => new("https://huggingface.co/openai/gpt-oss-120b", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from the gpt-oss check of ProviderExtensions.OpenSource.cs. The model card states a 128k token window, which both sizes share.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder) =>
         builder.Rule("gpt-oss").AsSegment()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(131_072);
 }

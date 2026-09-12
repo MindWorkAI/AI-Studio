@@ -24,7 +24,7 @@ public sealed class GeminiFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.GOOGLE;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://ai.google.dev/gemini-api/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.Google.cs: one shape for all of Gemini, one sentence per generation about thinking.");
+    public override ModelSource Source => new("https://ai.google.dev/gemini-api/docs/gemini-3", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.Google.cs: one shape for all of Gemini, one sentence per generation about thinking. The Gemini 3 guide states a one million token input window; the 2.5 model pages state their input limit as 1,048,576, and both numbers are written here as their page gives them.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -46,18 +46,25 @@ public sealed class GeminiFamily : ModelFamily
             .Capabilities(TEXT_INPUT | AUDIO_INPUT | SPEECH_INPUT | VIDEO_INPUT | TEXT_OUTPUT | SPEECH_OUTPUT | FUNCTION_CALLING)
             .Apis(CHAT_COMPLETION_API);
 
+        //
+        // Google states an input limit and an output limit rather than one window. The input limit
+        // is the one a conversation is measured against, because that is where the conversation
+        // accumulates, so that is the number written here.
+        //
         builder.Rule("gemini-2.5").AsPrefix().InheritsFrom("gemini")
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(1_048_576);
 
         //
         // The one exception of the 2.5 line: it can think, but only when asked. From the 3.x line
         // on, even the Flash Lite models think at their lowest level.
         //
-        builder.Rule("gemini-2.5-flash-lite").AsPrefix().InheritsFrom("gemini")
+        builder.Rule("gemini-2.5-flash-lite").AsPrefix().InheritsFrom("gemini-2.5")
             .Reasoning(ReasoningSupport.OPTIONAL);
 
         builder.Rule("gemini-3").AsPrefix().InheritsFrom("gemini")
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(1_000_000);
 
         builder.Rule("gemini-3.1").AsPrefix().InheritsFrom("gemini-3");
         builder.Rule("gemini-3.7").AsPrefix().InheritsFrom("gemini-3");

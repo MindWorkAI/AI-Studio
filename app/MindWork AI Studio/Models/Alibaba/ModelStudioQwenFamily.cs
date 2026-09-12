@@ -26,7 +26,7 @@ public sealed class ModelStudioQwenFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.ALIBABA;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://www.alibabacloud.com/help/en/model-studio/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.Alibaba.cs, which follow Alibaba's own list of models that call functions.");
+    public override ModelSource Source => new("https://www.alibabacloud.com/help/en/model-studio/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.Alibaba.cs, which follow Alibaba's own list of models that call functions. Alibaba's announcement of Qwen3.8-Max states a window of up to one million tokens; the other Qwen models are served at sizes their list does not state per model.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -77,6 +77,7 @@ public sealed class ModelStudioQwenFamily : ModelFamily
         // it is reached through Model Studio:
         //
         builder.Rule("qwen3.8-max").AsPrefix().OnlyOn(LLMProviders.ALIBABA_CLOUD).InheritsFrom("qwen3.8-flash")
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(1_000_000);
     }
 }

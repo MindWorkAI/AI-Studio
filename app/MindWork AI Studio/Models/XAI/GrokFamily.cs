@@ -20,7 +20,7 @@ public sealed class GrokFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.XAI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://docs.x.ai/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the Grok block of ProviderExtensions.OpenSource.cs.");
+    public override ModelSource Source => new("https://docs.x.ai/docs/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from the Grok block of ProviderExtensions.OpenSource.cs. The windows come from the pricing table on the same page, which states one per model.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -40,7 +40,8 @@ public sealed class GrokFamily : ModelFamily
         //
         builder.Rule("grok-build").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(256_000);
 
         builder.Rule("grok-3-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
@@ -57,7 +58,17 @@ public sealed class GrokFamily : ModelFamily
             .Apis(CHAT_COMPLETION_API)
             .Reasoning(ReasoningSupport.ALWAYS);
 
-        builder.Rule("grok-4.20").AsPrefix().InheritsFrom("grok-4");
+        //
+        // The window is the one thing which differs across the 4 line, so each version states it:
+        // 4.5 and 4.6 are served at 500k, while 4.3 and the whole 4.20 line are served at 1M. Plain
+        // "grok-4" gets none, because xAI's table has no row for it any more.
+        //
+        builder.Rule("grok-4.3").AsPrefix().InheritsFrom("grok-4").ContextWindow(1_000_000);
+        builder.Rule("grok-4.5").AsPrefix().InheritsFrom("grok-4").ContextWindow(500_000);
+        builder.Rule("grok-4.6").AsPrefix().InheritsFrom("grok-4").ContextWindow(500_000);
+
+        builder.Rule("grok-4.20").AsPrefix().InheritsFrom("grok-4")
+            .ContextWindow(1_000_000);
 
         // One member of the 4.20 line answers without thinking, and it says so in its name:
         builder.Rule("grok-4.20").AsPrefix().AlsoContains("non-reasoning").Inherits()

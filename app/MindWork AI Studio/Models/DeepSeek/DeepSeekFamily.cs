@@ -25,7 +25,7 @@ public sealed class DeepSeekFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.DEEP_SEEK;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://api-docs.deepseek.com/", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.DeepSeek.cs and the DeepSeek block of ProviderExtensions.OpenSource.cs.");
+    public override ModelSource Source => new("https://api-docs.deepseek.com/quick_start/pricing", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.DeepSeek.cs and the DeepSeek block of ProviderExtensions.OpenSource.cs. The pricing page states a 1M window for the V4 models; the older lines are served at different sizes depending on who serves them, so no window is stated for them.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -58,7 +58,8 @@ public sealed class DeepSeekFamily : ModelFamily
             .Removes(FUNCTION_CALLING);
 
         builder.Rule("deepseek-v4").AsPrefix().InheritsFrom("deepseek-v3")
-            .Reasoning(ReasoningSupport.ON_BY_DEFAULT);
+            .Reasoning(ReasoningSupport.ON_BY_DEFAULT)
+            .ContextWindow(1_000_000);
 
         builder.Rule("deepseek-v4").AsPrefix().AlsoContains("vision").Inherits()
             .Capabilities(MULTIPLE_IMAGE_INPUT);

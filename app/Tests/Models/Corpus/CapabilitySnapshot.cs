@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using AIStudio.Models;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -26,6 +28,16 @@ public static class CapabilitySnapshot
     /// </remarks>
     private const string NOTHING = "(nothing)";
 
+    /// <summary>
+    /// What a model nobody stated a context window for is written as.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not a zero. A window nobody has looked up is a different statement from a
+    /// window of no tokens, and reading the two as the same is the mistake this whole rebuild set
+    /// out to stop making.
+    /// </remarks>
+    private const string NO_WINDOW = "(unknown)";
+
     private const string HEADER =
         """
         # What the rules answer, for every model of the corpus.
@@ -34,8 +46,12 @@ public static class CapabilitySnapshot
         # the diff. Every line of it is a statement about a model which somebody has to agree with.
         #
         # Columns are provider, model ID as the provider reports it, the capabilities sorted by
-        # name, and what the model is made for. The ID stands here unchanged, so a line may well
-        # carry leading or trailing spaces.
+        # name, what the model is made for, and its context window in tokens. The ID stands here
+        # unchanged, so a line may well carry leading or trailing spaces.
+        #
+        # A window written as "(unknown)" is one nobody has stated a source for. That is a gap, not
+        # a claim: the app then shows a person how many tokens their conversation uses without
+        # telling them what it may grow to.
         #
         # Models the audit found a wrong answer for are not in here. They live in
         # ExpectedChanges.cs, together with the answer they have to arrive at.
@@ -97,7 +113,26 @@ public static class CapabilitySnapshot
     private static string Line(CorpusEntry entry)
     {
         var profile = entry.Provider.GetModelProfile(new Model(entry.ModelId, null));
-        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind}";
+        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)}";
+    }
+
+    /// <summary>
+    /// Writes a context window the way a snapshot line does.
+    /// </summary>
+    /// <remarks>
+    /// Plain digits rather than thousands separators: the number is read by whoever reviews the
+    /// diff, and a separator would make the file depend on which machine generated it.
+    /// </remarks>
+    /// <param name="window">The window to write.</param>
+    /// <returns>The window, or a marker when nobody stated one.</returns>
+    public static string Describe(ContextWindow window)
+    {
+        if (!window.IsKnown)
+            return NO_WINDOW;
+
+        return window.RaisableToTokens is { } raisable
+            ? $"{window.DefaultTokens} up to {raisable}"
+            : window.DefaultTokens.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <summary>

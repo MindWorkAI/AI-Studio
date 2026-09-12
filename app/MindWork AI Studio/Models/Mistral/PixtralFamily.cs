@@ -14,11 +14,12 @@ public sealed class PixtralFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.MISTRAL_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://docs.mistral.ai/getting-started/models/models_overview/", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.Mistral.cs: images in every release.");
+    public override ModelSource Source => new("https://docs.mistral.ai/getting-started/models/models_overview/", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.Mistral.cs: images in every release. Mistral states a 128k window for Pixtral.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder) =>
         builder.Rule("pixtral").AsSegment()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(128_000);
 }

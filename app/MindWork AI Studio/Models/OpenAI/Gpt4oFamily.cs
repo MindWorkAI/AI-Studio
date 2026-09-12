@@ -18,14 +18,15 @@ public sealed class Gpt4oFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.OPEN_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://platform.openai.com/docs/models/gpt-4o", new DateOnly(2026, 9, 11), "The answer the previous rules gave these models through their fallback: images, tool calling, and web search on the Responses API.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models/gpt-4o", new DateOnly(2026, 9, 12), "The answer the previous rules gave these models through their fallback: images, tool calling, and web search on the Responses API. The model page states a 128,000 token window, which the minis and the search previews share.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
     {
         builder.Rule("gpt-4o").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
-            .Apis(RESPONSES_API);
+            .Apis(RESPONSES_API)
+            .ContextWindow(128_000);
 
         //
         // The search previews are the same generation and almost nothing like it: they search the
@@ -35,10 +36,12 @@ public sealed class Gpt4oFamily : ModelFamily
         //
         builder.Rule("gpt-4o-search-preview").AsExact()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | WEB_SEARCH)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(128_000);
 
         builder.Rule("gpt-4o-mini-search-preview").AsExact()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | WEB_SEARCH)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .ContextWindow(128_000);
     }
 }

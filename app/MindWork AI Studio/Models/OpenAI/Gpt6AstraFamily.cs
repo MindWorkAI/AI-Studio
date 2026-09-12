@@ -15,12 +15,13 @@ public sealed class Gpt6AstraFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.OPEN_AI;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://platform.openai.com/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.OpenAI.cs: reasons on every request, both APIs.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.OpenAI.cs: reasons on every request, both APIs. The models page states the window as 1.05M tokens.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder) =>
         builder.Rule("gpt-6-astra").AsPrefix()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API | CHAT_COMPLETION_API)
-            .Reasoning(ReasoningSupport.ALWAYS);
+            .Reasoning(ReasoningSupport.ALWAYS)
+            .ContextWindow(1_050_000);
 }
