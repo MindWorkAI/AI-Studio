@@ -38,6 +38,15 @@ public static class CapabilitySnapshot
     /// </remarks>
     private const string NO_WINDOW = "(unknown)";
 
+    /// <summary>
+    /// What a model nobody stated an image limit for is written as.
+    /// </summary>
+    /// <remarks>
+    /// The same reasoning as the window, and the same warning against reading it as a zero: a model
+    /// whose vendor says nothing takes as many images as it takes, and the app treats it that way.
+    /// </remarks>
+    private const string NO_IMAGE_LIMIT = "(unknown)";
+
     private const string HEADER =
         """
         # What the rules answer, for every model of the corpus.
@@ -46,12 +55,14 @@ public static class CapabilitySnapshot
         # the diff. Every line of it is a statement about a model which somebody has to agree with.
         #
         # Columns are provider, model ID as the provider reports it, the capabilities sorted by
-        # name, what the model is made for, and its context window in tokens. The ID stands here
-        # unchanged, so a line may well carry leading or trailing spaces.
+        # name, what the model is made for, its context window in tokens, and how many images it
+        # accepts. The ID stands here unchanged, so a line may well carry leading or trailing
+        # spaces.
         #
-        # A window written as "(unknown)" is one nobody has stated a source for. That is a gap, not
-        # a claim: the app then shows a person how many tokens their conversation uses without
-        # telling them what it may grow to.
+        # A window or an image limit written as "(unknown)" is one nobody has stated a source for.
+        # That is a gap, not a claim: the app then shows a person how many tokens their conversation
+        # uses without telling them what it may grow to, and it stops nobody from attaching a
+        # hundred pictures to a model which may well take them.
         #
         # Models the audit found a wrong answer for are not in here. They live in
         # ExpectedChanges.cs, together with the answer they have to arrive at.
@@ -113,7 +124,32 @@ public static class CapabilitySnapshot
     private static string Line(CorpusEntry entry)
     {
         var profile = entry.Provider.GetModelProfile(new Model(entry.ModelId, null));
-        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)}";
+        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)} | {Describe(profile.Images)}";
+    }
+
+    /// <summary>
+    /// Writes an image limit the way a snapshot line does.
+    /// </summary>
+    /// <remarks>
+    /// Both numbers are named where both are known, because they answer different questions and a
+    /// vendor may state either alone. Naming the one which happens to be smaller would turn two
+    /// statements into one and lose which of them was actually read from a page.
+    /// </remarks>
+    /// <param name="limits">The limits to write.</param>
+    /// <returns>The limits, or a marker when nobody stated any.</returns>
+    public static string Describe(ImageLimits limits)
+    {
+        if (!limits.IsKnown)
+            return NO_IMAGE_LIMIT;
+
+        var parts = new List<string>(2);
+        if (limits.MaxPerMessage is { } perMessage)
+            parts.Add($"{perMessage.ToString(CultureInfo.InvariantCulture)} per message");
+
+        if (limits.MaxPerRequest is { } perRequest)
+            parts.Add($"{perRequest.ToString(CultureInfo.InvariantCulture)} per request");
+
+        return string.Join(", ", parts);
     }
 
     /// <summary>

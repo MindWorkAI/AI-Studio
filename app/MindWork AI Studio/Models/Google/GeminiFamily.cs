@@ -27,11 +27,24 @@ public sealed class GeminiFamily : ModelFamily
     public override ModelSource Source => new("https://ai.google.dev/gemini-api/docs/gemini-3", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.Google.cs: one shape for all of Gemini, one sentence per generation about thinking. The Gemini 3 guide states a one million token input window; the 2.5 model pages state their input limit as 1,048,576, and both numbers are written here as their page gives them.");
 
     /// <inheritdoc />
+    public override IReadOnlyList<ModelSource> FurtherSources =>
+    [
+        new("https://ai.google.dev/gemini-api/docs/image-understanding", new DateOnly(2026, 9, 12), "States one number for the whole family: \"Gemini models support a maximum of 3,600 image files per request.\" The 20 MB it also names is a limit on the request body rather than on the number of images.")
+    ];
+
+    /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
     {
+        //
+        // Google states the image limit once, for all of Gemini, so it sits on the fallback and
+        // every generation inherits it. The two rules below which do not inherit from here say
+        // nothing about it: the live model looks at no still images at all, and for the 1.0 vision
+        // model Google's current pages state no number any more.
+        //
         builder.Rule("gemini").AsSegment()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | AUDIO_INPUT | SPEECH_INPUT | VIDEO_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .Images(maxPerRequest: 3_600);
 
         // The one Gemini which only ever read text and images:
         builder.Rule("gemini-1.0-pro-vision").AsPrefix()

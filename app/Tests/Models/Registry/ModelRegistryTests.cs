@@ -42,7 +42,14 @@ public sealed class ModelRegistryTests
     [Test]
     public void EveryFamilySaysWhereItsStatementsCanBeCheckedAndWhen()
     {
-        var unstated = ModelRegistry.Shared.Families.Where(family => !family.Source.IsStated).Select(family => family.Name);
+        //
+        // The further sources are asked the same question as the first one. A family which reads
+        // its windows from one page and its image limits from another has two pages to name, and a
+        // second page named without a day is exactly as uncheckable as no page at all.
+        //
+        var unstated = ModelRegistry.Shared.Families
+            .Where(family => !family.Source.IsStated || family.FurtherSources.Any(source => !source.IsStated))
+            .Select(family => family.Name);
 
         Assert.That(unstated, Is.Empty);
     }

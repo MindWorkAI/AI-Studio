@@ -35,4 +35,21 @@ public readonly record struct ImageLimits(int? MaxPerMessage, int? MaxPerRequest
     /// Whether either of the two numbers is known.
     /// </summary>
     public bool IsKnown => this.MaxPerMessage.HasValue || this.MaxPerRequest.HasValue;
+
+    /// <summary>
+    /// How many images may travel in one message, as far as anybody has said.
+    /// </summary>
+    /// <remarks>
+    /// A message is part of a request, so a message cannot carry more than a whole request may --
+    /// whichever of the two numbers is smaller decides, and a number nobody stated does not decide
+    /// anything. Null means nobody stated either, which is a gap and never a limit of zero.
+    /// </remarks>
+    public int? MaxInOneMessage => (this.MaxPerMessage, this.MaxPerRequest) switch
+    {
+        ({ } perMessage, { } perRequest) => Math.Min(perMessage, perRequest),
+        ({ } perMessage, null) => perMessage,
+        (null, { } perRequest) => perRequest,
+
+        _ => null,
+    };
 }

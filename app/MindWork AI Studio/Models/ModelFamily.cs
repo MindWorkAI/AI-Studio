@@ -30,6 +30,17 @@ public abstract class ModelFamily
     public abstract ModelSource Source { get; }
 
     /// <summary>
+    /// The other pages this family was read from, where one was not enough.
+    /// </summary>
+    /// <remarks>
+    /// A vendor keeps what a model can do, how much it reads and how many images it takes on three
+    /// different pages often enough. The source above stays the one to start from; these are the
+    /// rest, and the same is asked of them -- a page and a day, so that every number in the family
+    /// leads back to something somebody can open.
+    /// </remarks>
+    public virtual IReadOnlyList<ModelSource> FurtherSources => [];
+
+    /// <summary>
     /// What this family is called, which is what its rules name as their origin.
     /// </summary>
     public string Name => this.GetType().Name;

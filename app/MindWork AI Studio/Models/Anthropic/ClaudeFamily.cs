@@ -1,3 +1,5 @@
+using AIStudio.Models.Matching;
+
 using static AIStudio.Provider.Capability;
 
 namespace AIStudio.Models.Anthropic;
@@ -14,14 +16,61 @@ namespace AIStudio.Models.Anthropic;
 /// Claude nobody has written a rule for yet is still a Claude, and every one of them so far reads
 /// images and calls tools. It answers for whole name parts, so every rule bound to the start of a
 /// name beats it, whatever their lengths -- which is what lets it sit first and mean "unless".
+///
+/// The one thing no rule below states is how many images a Claude takes. Anthropic ties that number
+/// to the context window instead of to the model, so it is worked out afterwards rather than written
+/// on every line which sets a window.
 /// </remarks>
 public sealed class ClaudeFamily : ModelFamily
 {
+    /// <summary>
+    /// The window every Claude has unless its own rule states the larger one.
+    /// </summary>
+    private const int STANDARD_WINDOW = 200_000;
+
+    /// <summary>
+    /// The window of the Claude models which read a million tokens.
+    /// </summary>
+    private const int LARGE_WINDOW = 1_000_000;
+
+    /// <summary>
+    /// How many images one request may carry when the model has the standard window.
+    /// </summary>
+    private const int IMAGES_PER_REQUEST_STANDARD_WINDOW = 100;
+
+    /// <summary>
+    /// How many images one request may carry for every other Claude.
+    /// </summary>
+    private const int IMAGES_PER_REQUEST_OTHERWISE = 600;
+
     /// <inheritdoc />
     public override ModelVendor Vendor => ModelVendor.ANTHROPIC;
 
     /// <inheritdoc />
     public override ModelSource Source => new("https://platform.claude.com/docs/en/build-with-claude/context-windows", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.Anthropic.cs: one shape for all of Claude, and one sentence per generation about how it thinks. The context window page names the models with a 1M window and says every other Claude has 200k.");
+
+    /// <inheritdoc />
+    public override IReadOnlyList<ModelSource> FurtherSources =>
+    [
+        new("https://platform.claude.com/docs/en/build-with-claude/vision", new DateOnly(2026, 9, 12), "The vision page gives the image limit as a rule rather than as a number per model: 100 images per request on the API for models with a 200k-token context window, 600 per request for all other models. The 20 it also names belongs to claude.ai, not to the API.")
+    ];
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Anthropic states no image limit per model. They state a rule which reads off the context
+    /// window, and this is that rule -- written once rather than repeated as a number on every line
+    /// which sets a window. Two statements of one fact drift apart, and the way they drift here is
+    /// silent: the next Claude with the larger window would quietly keep the smaller limit because
+    /// somebody wrote one number and not the other.
+    /// </remarks>
+    public override ModelProfile Refine(in ModelId id, in ModelProfile selected)
+    {
+        if (!selected.Context.IsKnown)
+            return selected;
+
+        var perRequest = selected.Context.DefaultTokens is STANDARD_WINDOW ? IMAGES_PER_REQUEST_STANDARD_WINDOW : IMAGES_PER_REQUEST_OTHERWISE;
+        return selected with { Images = new ImageLimits(null, perRequest) };
+    }
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -35,7 +84,7 @@ public sealed class ClaudeFamily : ModelFamily
         builder.Rule("claude").AsSegment()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(CHAT_COMPLETION_API)
-            .ContextWindow(200_000);
+            .ContextWindow(STANDARD_WINDOW);
 
         //
         // The 3.x models say nothing beyond the shape above, so nothing is written for them: the
@@ -57,22 +106,22 @@ public sealed class ClaudeFamily : ModelFamily
         // through 4.8 and Sonnet 4.6 have the 1M window, while the 4.0, 4.1 and 4.5 models of the
         // same prefixes keep the 200k they were released with.
         //
-        builder.Rule("claude-opus-4-6").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(1_000_000);
-        builder.Rule("claude-opus-4-7").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(1_000_000);
-        builder.Rule("claude-opus-4-8").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(1_000_000);
-        builder.Rule("claude-sonnet-4-6").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(1_000_000);
+        builder.Rule("claude-opus-4-6").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(LARGE_WINDOW);
+        builder.Rule("claude-opus-4-7").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(LARGE_WINDOW);
+        builder.Rule("claude-opus-4-8").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(LARGE_WINDOW);
+        builder.Rule("claude-sonnet-4-6").AsPrefix().InheritsFrom("claude-opus-4").ContextWindow(LARGE_WINDOW);
 
         // Opus 5 and Sonnet 5 think adaptively unless thinking is turned off:
         builder.Rule("claude-opus-5").AsPrefix().InheritsFrom("claude")
             .Reasoning(ReasoningSupport.ON_BY_DEFAULT)
-            .ContextWindow(1_000_000);
+            .ContextWindow(LARGE_WINDOW);
 
         builder.Rule("claude-sonnet-5").AsPrefix().InheritsFrom("claude-opus-5");
 
         // Fable 5 and Mythos 5 always think, and there is no switch for it:
         builder.Rule("claude-fable-5").AsPrefix().InheritsFrom("claude")
             .Reasoning(ReasoningSupport.ALWAYS)
-            .ContextWindow(1_000_000);
+            .ContextWindow(LARGE_WINDOW);
 
         builder.Rule("claude-mythos-5").AsPrefix().InheritsFrom("claude-fable-5");
     }
