@@ -170,7 +170,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             [
                 ..result.Models.Where(model =>
                         model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        !this.IsEmbeddingModel(model.Id))
+                        !model.IsEmbeddingModel())
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -189,7 +189,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
         {
             Models =
             [
-                ..result.Models.Where(model => this.IsEmbeddingModel(model.Id))
+                ..result.Models.Where(model => model.IsEmbeddingModel())
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -220,12 +220,6 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                 _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
             },
             token: token);
-    }
-
-    private bool IsEmbeddingModel(string modelId)
-    {
-        return modelId.Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
-               modelId.Contains("embed", StringComparison.OrdinalIgnoreCase);
     }
 
     private Model WithDisplayNameFallback(Model model)
