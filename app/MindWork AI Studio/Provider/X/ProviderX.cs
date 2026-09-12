@@ -84,7 +84,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
             // "-image", which said nothing about grok-imagine-video: that one made films and stood
             // in the list of things to chat with.
             //
-            Models = [..result.Models.Where(model => model.IsChatModel())]
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
         };
     }
 

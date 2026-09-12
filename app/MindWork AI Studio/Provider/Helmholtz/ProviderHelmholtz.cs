@@ -84,7 +84,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsChatModel())
+                ..result.Models.Where(model => model.IsChatModel(this.Provider))
             ]
         };
     }
@@ -103,7 +103,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsEmbeddingModel())
+                ..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))
             ]
         };
     }
@@ -116,7 +116,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsTranscriptionModel())
+                ..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))
             ]
         };
     }

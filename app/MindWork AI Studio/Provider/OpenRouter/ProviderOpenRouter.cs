@@ -117,7 +117,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             "models",
             modelResponse => modelResponse.Data
                 .Select(n => new Model(n.Id, n.Name))
-                .Where(model => model.IsChatModel()),
+                .Where(model => model.IsChatModel(this.Provider)),
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {

@@ -8,14 +8,15 @@ namespace AIStudio.Tests.Models;
 /// Holds the rules to what a model is made for.
 /// </summary>
 /// <remarks>
-/// What a model can do and what it is for are two questions, and until now two pieces of code
-/// answered them, each walking the same name with rules of its own. This is the test which says the
-/// second answer did not change when it moved: the marker list is still there and still answers, so
-/// every example can be put to both and the two have to agree.
+/// What a model can do and what it is for are two questions, and they used to be answered by two
+/// pieces of code, each walking the same name with rules of its own. While both existed, the tests
+/// here held one against the other. The marker list is gone now, and with it the comparison: the
+/// corpus-wide check moved into the snapshot, which carries the kind of every model in a column of
+/// its own.
 ///
-/// The day the call sites move to the profile, the marker list goes and the test below which asks
-/// it goes with it. What stays is the first test: the examples say what each name is, in words a
-/// person can check against a model card.
+/// What is left says what a name is, in words a person can check against a model card -- and holds
+/// the handful of decisions where the rules deliberately answer something else than the markers did.
+/// Those stand in the corpus next to the name, with the reason.
 /// </remarks>
 [TestFixture]
 public sealed class ModelKindTests
@@ -30,46 +31,6 @@ public sealed class ModelKindTests
                 var profile = ModelRegistry.Shared.Profile(example.Provider, example.ModelId);
 
                 Assert.That(profile.Kind, Is.EqualTo(example.Kind), $"{example.Provider} \"{example.ModelId}\"");
-            }
-        });
-    }
-
-    [Test]
-    public void TheMarkersBeingReplacedAnswerEveryExampleTheSameWay()
-    {
-        Assert.Multiple(() =>
-        {
-            foreach (var example in ModelKindCorpus.ENTRIES)
-            {
-                var today = new Model(example.ModelId, null).DetermineKind();
-                var wanted = example.AnsweredTodayAs ?? example.Kind;
-                var because = example.AnsweredTodayAs is null
-                    ? $"{example.Provider} \"{example.ModelId}\" is sorted differently by the rules than by the markers they replace."
-                    : $"{example.Provider} \"{example.ModelId}\": {example.Reason}";
-
-                Assert.That(today, Is.EqualTo(wanted), because);
-            }
-        });
-    }
-
-    [Test]
-    public void EveryModelOfTheCapabilityCorpusKeepsTheKindItHasToday()
-    {
-        //
-        // The examples above are names chosen to reach a rule. This asks the other way round: the
-        // corpus is full of models nobody wants sorted anywhere but into a chat, and a word inside
-        // one of those names claiming a kind would take the model out of the user's list without
-        // anything else going wrong.
-        //
-        Assert.Multiple(() =>
-        {
-            foreach (var entry in ModelCorpus.ENTRIES)
-            {
-                var today = new Model(entry.ModelId, null).DetermineKind();
-                var rebuilt = ModelRegistry.Shared.Profile(entry.Provider, entry.ModelId).Kind;
-                var wanted = ModelKindCorpus.AnsweredTodayAs(entry.Provider, entry.ModelId) ?? rebuilt;
-
-                Assert.That(today, Is.EqualTo(wanted), $"{entry.Provider} \"{entry.ModelId}\" is sorted as {rebuilt} by the rules and as {today} by the markers they replace.");
             }
         });
     }

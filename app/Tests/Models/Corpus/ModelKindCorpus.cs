@@ -209,13 +209,4 @@ public static class ModelKindCorpus
         ..STILL_CHAT_MODELS,
     ];
 
-    /// <summary>
-    /// What the markers being replaced answer for a name, where that is not what the rules answer.
-    /// </summary>
-    /// <param name="provider">Who serves the model.</param>
-    /// <param name="modelId">The model ID as that provider reports it.</param>
-    /// <returns>The old answer, or null when nobody recorded a difference for this name.</returns>
-    public static ModelKind? AnsweredTodayAs(LLMProviders provider, string modelId) => ENTRIES
-        .FirstOrDefault(example => example.Provider == provider && string.Equals(example.ModelId, modelId, StringComparison.Ordinal))
-        ?.AnsweredTodayAs;
 }

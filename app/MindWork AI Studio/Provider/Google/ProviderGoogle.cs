@@ -176,7 +176,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                 //
                 ..result.Models.Where(model =>
                         model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        model.IsChatModel())
+                        model.IsChatModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -195,7 +195,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsEmbeddingModel())
+                ..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };

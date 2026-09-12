@@ -367,25 +367,25 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, model => model.IsImageModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, model => model.IsTranscriptionModel(this.Provider), apiKeyProvisional, token);
     }
     
     #endregion

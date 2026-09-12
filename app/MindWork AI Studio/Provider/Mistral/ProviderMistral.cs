@@ -97,7 +97,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                 // kind detection:
                 ..modelResponse.Models.Where(n =>
                     !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    n.IsChatModel())
+                    n.IsChatModel(this.Provider))
             ]
         };
     }
@@ -111,7 +111,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         
         return modelResponse with
         {
-            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel())]
+            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel(this.Provider))]
         };
     }
     

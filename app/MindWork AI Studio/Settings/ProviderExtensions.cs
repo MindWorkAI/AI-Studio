@@ -65,4 +65,47 @@ public static partial class ProviderExtensions
     /// <param name="provider">The configured provider.</param>
     /// <returns><c>true</c> when the model accepts image input.</returns>
     public static bool SupportsImageInput(this Provider provider) => provider.GetModelProfile().HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT);
+
+    /// <summary>
+    /// Checks whether this model can be used for chatting.
+    /// </summary>
+    /// <remarks>
+    /// What a model can do and what it is made for used to be two questions answered by two pieces
+    /// of code, each walking the same name with rules of its own. They disagreed: a model like
+    /// nomic-embed-text was an embedding model at one provider and a chat model at the next. Both
+    /// come out of the same rules now, which is why this takes the provider -- the same name means
+    /// different things depending on who serves it, and only the provider knows how to unwrap it.
+    ///
+    /// The direction of the answer is deliberate. Everything not recognized as something else is a
+    /// chat model, so a provider adding a family we have never seen keeps it visible to the person
+    /// paying for it. Getting it wrong the other way would hide a model.
+    /// </remarks>
+    /// <param name="model">The model to check.</param>
+    /// <param name="provider">The provider serving it.</param>
+    /// <returns>True, when the model is a chat model or when we recognize no other kind.</returns>
+    public static bool IsChatModel(this Model model, LLMProviders provider) => provider.GetModelProfile(model).Kind is ModelKind.CHAT;
+
+    /// <summary>
+    /// Checks whether this model creates embeddings.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <param name="provider">The provider serving it.</param>
+    /// <returns>True, when the model is an embedding model.</returns>
+    public static bool IsEmbeddingModel(this Model model, LLMProviders provider) => provider.GetModelProfile(model).Kind is ModelKind.EMBEDDING;
+
+    /// <summary>
+    /// Checks whether this model transcribes audio.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <param name="provider">The provider serving it.</param>
+    /// <returns>True, when the model is a transcription model.</returns>
+    public static bool IsTranscriptionModel(this Model model, LLMProviders provider) => provider.GetModelProfile(model).Kind is ModelKind.TRANSCRIPTION;
+
+    /// <summary>
+    /// Checks whether this model generates images.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <param name="provider">The provider serving it.</param>
+    /// <returns>True, when the model is an image generation model.</returns>
+    public static bool IsImageModel(this Model model, LLMProviders provider) => provider.GetModelProfile(model).Kind is ModelKind.IMAGE_GENERATION;
 }
