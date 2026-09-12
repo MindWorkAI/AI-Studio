@@ -140,11 +140,7 @@ public static partial class ProviderExtensions
     /// </remarks>
     /// <param name="provider">The configured provider.</param>
     /// <returns><c>true</c> when the model accepts image input.</returns>
-    public static bool SupportsImageInput(this Provider provider)
-    {
-        var capabilities = provider.GetModelCapabilities();
-        return capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
-    }
+    public static bool SupportsImageInput(this Provider provider) => provider.GetModelProfile().HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT);
 
     /// <summary>
     /// Get the capabilities of a model for a specific provider.

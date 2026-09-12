@@ -267,17 +267,16 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             FileTypes.IsAllowedPath(source.Path, FileTypes.IMAGE)).ToArray();
         if (imageSources.Length == 0)
             return;
-        var capabilities = provider.GetModelCapabilities();
+        var profile = provider.GetModelProfile();
         var acceptsImages = imageSources.Length == 1
-            ? capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) ||
-              capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)
-            : capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
+            ? profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT)
+            : profile.Has(Capability.MULTIPLE_IMAGE_INPUT);
         if (!acceptsImages)
             throw new VisualBriefingBuildException(
                 VisualBriefingFailureCode.MODEL_CAPABILITY_MISSING,
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
                 "The selected model cannot process the number of source images and visual assets.",
-                $"ImageCount={imageSources.Length}; SingleImage={capabilities.Contains(Capability.SINGLE_IMAGE_INPUT)}; MultipleImages={capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)}.");
+                $"ImageCount={imageSources.Length}; SingleImage={profile.Has(Capability.SINGLE_IMAGE_INPUT)}; MultipleImages={profile.Has(Capability.MULTIPLE_IMAGE_INPUT)}.");
     }
 
     /// <summary>

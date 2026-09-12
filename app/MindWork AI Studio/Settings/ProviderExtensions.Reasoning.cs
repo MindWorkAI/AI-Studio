@@ -1,3 +1,4 @@
+using AIStudio.Models;
 using AIStudio.Provider;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
@@ -39,12 +40,12 @@ public static partial class ProviderExtensions
     /// </remarks>
     public static ReasoningIndicatorState GetReasoningIndicatorState(this Provider provider)
     {
-        var capabilities = provider.GetModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
+        var reasoning = provider.GetModelProfile().Reasoning;
+        if (reasoning is ReasoningSupport.ALWAYS)
             return ReasoningIndicatorState.ALWAYS_ON;
-    
+
         var reasoningConfigurationState = GetReasoningConfigurationState(provider);
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
+        if (reasoning is ReasoningSupport.ON_BY_DEFAULT)
         {
             return reasoningConfigurationState switch
             {
@@ -54,7 +55,7 @@ public static partial class ProviderExtensions
             };
         }
 
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING) &&
+        if (reasoning is ReasoningSupport.OPTIONAL &&
             reasoningConfigurationState is ReasoningConfigurationState.EXPLICITLY_ENABLED)
             return ReasoningIndicatorState.CONFIGURED;
 

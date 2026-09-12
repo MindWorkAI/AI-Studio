@@ -42,8 +42,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                                // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
                                var messages = host switch
                                {
-                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, effectiveChatModel),
-                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, effectiveChatModel),
+                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
+                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
                                };
 
                                return new ChatCompletionAPIRequest

@@ -49,7 +49,5 @@ public class NoProvider : IProvider
     
     public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts) => Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
 
-    public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
-
     #endregion
 }
