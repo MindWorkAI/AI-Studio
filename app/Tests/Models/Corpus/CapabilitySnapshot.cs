@@ -28,16 +28,17 @@ public static class CapabilitySnapshot
 
     private const string HEADER =
         """
-        # The capabilities the current rules answer with, for every model of the corpus.
+        # What the rules answer, for every model of the corpus.
         #
         # Generated. Do not edit by hand: run the SnapshotWriter test to write it anew, then read
         # the diff. Every line of it is a statement about a model which somebody has to agree with.
         #
-        # Columns are provider, model ID as the provider reports it, and the capabilities sorted by
-        # name. The ID stands here unchanged, so a line may well carry leading or trailing spaces.
+        # Columns are provider, model ID as the provider reports it, the capabilities sorted by
+        # name, and what the model is made for. The ID stands here unchanged, so a line may well
+        # carry leading or trailing spaces.
         #
-        # Models whose current answer the audit showed to be wrong are not in here. They live in
-        # ExpectedChanges.cs, together with the answer the rebuild has to arrive at.
+        # Models the audit found a wrong answer for are not in here. They live in
+        # ExpectedChanges.cs, together with the answer they have to arrive at.
         #
 
         """;
@@ -78,17 +79,26 @@ public static class CapabilitySnapshot
         var lines = entries
             .OrderBy(entry => entry.Provider.ToString(), StringComparer.Ordinal)
             .ThenBy(entry => entry.ModelId, StringComparer.Ordinal)
-            .Select(entry => $"{entry.Provider} | {entry.ModelId} | {Describe(AskTheCurrentRules(entry))}");
+            .Select(Line);
 
         return new StringBuilder(HEADER).AppendJoin('\n', lines).ToString();
     }
 
     /// <summary>
-    /// Asks the current capability rules about one corpus entry.
+    /// Writes one corpus entry as a snapshot line.
     /// </summary>
-    /// <param name="entry">The entry to ask about.</param>
-    /// <returns>The capabilities the current rules answer with.</returns>
-    public static List<Capability> AskTheCurrentRules(CorpusEntry entry) => entry.Provider.GetModelCapabilities(new Model(entry.ModelId, null));
+    /// <remarks>
+    /// The kind stands next to the capabilities rather than among them: the two answer different
+    /// questions, and a model changing from a chat model into an embedding one is a different kind
+    /// of news than a model gaining image input.
+    /// </remarks>
+    /// <param name="entry">The entry to write.</param>
+    /// <returns>The line.</returns>
+    private static string Line(CorpusEntry entry)
+    {
+        var profile = entry.Provider.GetModelProfile(new Model(entry.ModelId, null));
+        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind}";
+    }
 
     /// <summary>
     /// Writes capabilities the way a snapshot line does.

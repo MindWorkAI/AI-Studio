@@ -13,7 +13,7 @@ namespace AIStudio.Tests.Models.Corpus;
 /// </remarks>
 /// <param name="Provider">The provider the model is reached through.</param>
 /// <param name="ModelId">The model ID, exactly as it appears in the corpus.</param>
-/// <param name="AnswerToday">What the current rules answer. Written down so a change here is seen.</param>
+/// <param name="AnswerToday">What the rules being replaced answered. History now: the code that produced it is gone, so nothing checks this any more. It stays because an entry saying only what is right leaves the reader wondering what was wrong.</param>
 /// <param name="AnswerWanted">What the rebuilt rules have to answer.</param>
 /// <param name="Reason">Why the current answer is wrong, in one sentence.</param>
 /// <param name="Source">Where that can be checked.</param>

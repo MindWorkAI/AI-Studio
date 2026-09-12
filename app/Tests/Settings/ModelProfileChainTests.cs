@@ -36,29 +36,6 @@ public sealed class ModelProfileChainTests
     }
 
     [Test]
-    public void NothingLeftToTheDefaultGainsACapabilityItDoesNotHaveToday()
-    {
-        //
-        // The direction which matters. These models lose things on the way over -- the thinking of
-        // a family nobody wrote down, the image input of another -- and every loss was decided and
-        // written next to the entry. What may never happen is the other direction: the switch-over
-        // handing a model an ability the old rules denied it, which nobody decided and nobody would
-        // see until a request comes back as an error.
-        //
-        Assert.Multiple(() =>
-        {
-            foreach (var left in LeftToTheDefault.ENTRIES)
-            {
-                var entry = new CorpusEntry(left.Provider, left.ModelId, CorpusOrigin.NAMED_BY_NO_RULE);
-                var today = CapabilitySnapshot.AskTheCurrentRules(entry);
-                var gained = RebuiltRules.AsCapabilities(left.Provider.GetModelProfile(new Model(left.ModelId, null))).Except(today).ToList();
-
-                Assert.That(gained, Is.Empty, $"{left.Provider} \"{left.ModelId}\" would gain {string.Join(", ", gained)}, which nobody decided.");
-            }
-        });
-    }
-
-    [Test]
     public void AModelNoRuleKnowsReadsAndWritesTextAndCallsFunctions()
     {
         var profile = LLMProviders.SELF_HOSTED.GetModelProfile(new Model("a-model-nobody-has-heard-of", null));

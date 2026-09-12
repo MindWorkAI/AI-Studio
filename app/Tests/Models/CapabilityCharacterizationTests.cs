@@ -51,31 +51,6 @@ public sealed class CapabilityCharacterizationTests
     }
 
     /// <summary>
-    /// Checks that the models the audit found wrong answers for are still answered the wrong way.
-    /// </summary>
-    /// <remarks>
-    /// This test is written the other way round from every other one here, and it is meant to fail
-    /// the day the rebuild takes over: that is the signal that the entry has done its job. When it
-    /// does, swap the two assertions below for a single one comparing against AnswerWanted, and
-    /// drop AnswerToday from the entry.
-    /// </remarks>
-    [Test]
-    public void TheAnswersTheAuditFoundWrongAreStillTheOldOnes()
-    {
-        Assert.Multiple(() =>
-        {
-            foreach (var change in ExpectedChanges.ENTRIES)
-            {
-                var entry = new CorpusEntry(change.Provider, change.ModelId, CorpusOrigin.NAMED_BY_NO_RULE);
-                var current = CapabilitySnapshot.Describe(CapabilitySnapshot.AskTheCurrentRules(entry));
-
-                Assert.That(current, Is.EqualTo(CapabilitySnapshot.Describe(change.AnswerToday)), $"The wrong answer for {change.Provider} {change.ModelId} has changed. If that was on purpose, this entry is done: compare against AnswerWanted from now on.");
-                Assert.That(current, Is.Not.EqualTo(CapabilitySnapshot.Describe(change.AnswerWanted)), $"{change.Provider} {change.ModelId} already answers the way the rebuild is meant to. Move the entry into the snapshot.");
-            }
-        });
-    }
-
-    /// <summary>
     /// The corpus entries the snapshot covers, which is all of them except the known-wrong ones.
     /// </summary>
     /// <returns>The entries whose answer must not change.</returns>
@@ -121,11 +96,12 @@ public sealed class CapabilityCharacterizationTests
     /// Splits a snapshot into what each line says about which model.
     /// </summary>
     /// <remarks>
-    /// The provider and the model ID make up everything before the last separator, which is the one
-    /// place a split is safe: a model ID may contain anything, the capability list may not.
+    /// The provider and the model ID make up everything before the last two separators, which are
+    /// the one place a split is safe: a model ID may contain anything, the capability list and the
+    /// kind may not.
     /// </remarks>
     /// <param name="snapshot">The snapshot text.</param>
-    /// <returns>The capability text of every line, keyed by provider and model.</returns>
+    /// <returns>What every line says about a model, keyed by provider and model.</returns>
     private static Dictionary<string, string> ModelLinesOf(string snapshot)
     {
         var lines = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -134,7 +110,11 @@ public sealed class CapabilityCharacterizationTests
             if (line.Length is 0 || line.StartsWith('#'))
                 continue;
 
-            var separatorIndex = line.LastIndexOf(" | ", StringComparison.Ordinal);
+            var kindSeparatorIndex = line.LastIndexOf(" | ", StringComparison.Ordinal);
+            if (kindSeparatorIndex is -1)
+                continue;
+
+            var separatorIndex = line.LastIndexOf(" | ", kindSeparatorIndex - 1, StringComparison.Ordinal);
             if (separatorIndex is -1)
                 continue;
 

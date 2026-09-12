@@ -5,42 +5,23 @@ using AIStudio.Tests.Models.Corpus;
 namespace AIStudio.Tests.Models;
 
 /// <summary>
-/// Holds the rebuilt rules against the old ones, over the whole corpus.
+/// Holds the rules to the answers somebody decided on, over the whole corpus.
 /// </summary>
 /// <remarks>
-/// This is the test the whole rebuild is being carried by. Every model the new rules answer for has
-/// to be answered exactly the way the old ones answer it -- except where the audit found the old
-/// answer wrong, and there it has to be answered the way ExpectedChanges says instead. Anything
-/// else is either a porting mistake or a decision somebody has to make on purpose and record.
+/// While the old rules still stood, this was the test the rebuild was carried by: every model was
+/// asked of both and the two had to agree, except where the audit had found the old answer wrong.
+/// That comparison is over -- the old rules are gone, and the snapshot took over the job of noticing
+/// when an answer changes.
 ///
-/// While the porting was under way, this was scoped by two growing lists: first the providers whose
-/// models had rules, then the vendors, because open weights arrive through gateways which serve
-/// everybody. Both are gone now that every family exists. What is left is simpler and says more:
-/// whatever a rule answers is compared, and whatever no rule answers has to stand in
-/// LeftToTheDefault with a reason.
+/// What remains is the part no snapshot can do, because it is about intent rather than about
+/// answers. The models the audit found wrong have to end up where the audit said. Every model
+/// reaching the global assumption has to be one somebody let reach it, and every model somebody
+/// listed there has to still be reaching it. And no name may be claimed by two rules with the same
+/// right.
 /// </remarks>
 [TestFixture]
 public sealed class PortingDifferenceTests
 {
-    [Test]
-    public void EveryModelTheRulesAnswerForGetsExactlyTheAnswerItGetsToday()
-    {
-        var compared = ModelCorpus.ENTRIES.Where(IsAnswered).Where(entry => !IsKnownToBeWrong(entry)).ToList();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(compared, Is.Not.Empty, "Nothing was compared at all, which would make this test green for the wrong reason.");
-
-            foreach (var entry in compared)
-            {
-                var today = CapabilitySnapshot.Describe(CapabilitySnapshot.AskTheCurrentRules(entry));
-                var rebuilt = CapabilitySnapshot.Describe(RebuiltRules.Ask(entry));
-
-                Assert.That(rebuilt, Is.EqualTo(today), $"{entry.Provider} \"{entry.ModelId}\" is answered differently by the rebuilt rules.");
-            }
-        });
-    }
-
     [Test]
     public void EveryModelTheAuditFoundWrongIsNowAnsweredTheWayItShouldBe()
     {

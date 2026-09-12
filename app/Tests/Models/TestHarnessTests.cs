@@ -32,8 +32,8 @@ public sealed class TestHarnessTests
     [Test]
     public void TheCapabilityApiOfTheAppIsReachable()
     {
-        var capabilities = LLMProviders.OPEN_AI.GetModelCapabilities(new Model("gpt-5.1", null));
+        var profile = LLMProviders.OPEN_AI.GetModelProfile(new Model("gpt-5.1", null));
 
-        Assert.That(capabilities, Does.Contain(Capability.FUNCTION_CALLING));
+        Assert.That(profile.Has(Capability.FUNCTION_CALLING), Is.True);
     }
 }
