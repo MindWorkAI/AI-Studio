@@ -34,7 +34,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -168,9 +168,15 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
         {
             Models =
             [
+                //
+                // Asking what a model is made for, rather than only ruling out the embedding ones.
+                // Google names everything after the chat model it grew out of, so the catalog is
+                // full of names which look like something to talk to and are not: the image models,
+                // and the computer use model whose API refuses a request without its tool.
+                //
                 ..result.Models.Where(model =>
                         model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        !this.IsEmbeddingModel(model.Id))
+                        model.IsChatModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -189,7 +195,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
         {
             Models =
             [
-                ..result.Models.Where(model => this.IsEmbeddingModel(model.Id))
+                ..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -220,12 +226,6 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                 _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
             },
             token: token);
-    }
-
-    private bool IsEmbeddingModel(string modelId)
-    {
-        return modelId.Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
-               modelId.Contains("embed", StringComparison.OrdinalIgnoreCase);
     }
 
     private Model WithDisplayNameFallback(Model model)

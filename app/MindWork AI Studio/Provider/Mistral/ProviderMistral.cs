@@ -38,7 +38,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                                    apiParameters["random_seed"] = parsedRandomSeed;
 
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -97,7 +97,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                 // kind detection:
                 ..modelResponse.Models.Where(n =>
                     !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    n.IsChatModel())
+                    n.IsChatModel(this.Provider))
             ]
         };
     }
@@ -111,7 +111,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         
         return modelResponse with
         {
-            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel())]
+            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel(this.Provider))]
         };
     }
     

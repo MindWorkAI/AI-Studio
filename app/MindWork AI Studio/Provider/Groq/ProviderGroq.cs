@@ -35,7 +35,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
                                    apiParameters["seed"] = parsedSeed;
 
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -83,7 +83,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsChatModel())]
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
         };
     }
 
@@ -105,7 +105,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsTranscriptionModel())]
+            Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
         };
     }
     

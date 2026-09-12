@@ -40,7 +40,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -88,7 +88,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsChatModel())]
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
         };
     }
 
@@ -112,7 +112,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         if (!result.Success)
             return result;
 
-        var embeddingModels = result.Models.Where(model => model.IsEmbeddingModel()).ToList();
+        var embeddingModels = result.Models.Where(model => model.IsEmbeddingModel(this.Provider)).ToList();
         if (embeddingModels.Count is 0)
             return ModelLoadResult.FromModels(KNOWN_EMBEDDING_MODELS);
 

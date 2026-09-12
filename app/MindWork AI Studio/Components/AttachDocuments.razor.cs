@@ -258,8 +258,16 @@ public partial class AttachDocuments : MSGComponentBase
         this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
         foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
-        
+
         this.ReconcileOwnerPendingTranscripts();
+
+        //
+        // Said out loud, like every other path in this file. Removing a file in the dialog changed
+        // the attachments while whoever owns them heard nothing about it -- the chat then kept
+        // showing what the message no longer carries.
+        //
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
     }
 
     private async Task ClearAllFiles()

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
@@ -54,9 +56,10 @@ public partial class ChatComponent : MSGComponentBase
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private ConversationTokenCounter ConversationTokenCounter { get; init; } = null!;
     
-    [Inject] 
-    private RustService RustService { get; init; } = null!;
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
@@ -93,11 +96,112 @@ public partial class ChatComponent : MSGComponentBase
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
-    private string tokenCount = "0";
-    private bool HasCustomTokenizer => !string.IsNullOrWhiteSpace(this.Provider.TokenizerPath);
-    private string TokenCountMessage => this.HasCustomTokenizer
-        ? $"{this.T("Estimated amount of tokens:")} {this.tokenCount}"
-        : string.Empty;
+    private ConversationTokens conversationTokens = ConversationTokens.UNAVAILABLE;
+
+    /// <summary>
+    /// How much of the window must be used before the number starts saying so.
+    /// </summary>
+    private const double WINDOW_NEARLY_FULL = 0.8d;
+
+    /// <summary>
+    /// How long the token count stays quiet after it ran, while nothing is being written.
+    /// </summary>
+    /// <remarks>
+    /// A render is cheap to ask about and a count is not. This is what keeps a burst of renders --
+    /// loading a chat touches several things in a row -- from turning into a burst of counting,
+    /// while staying short enough that switching a profile moves the number right away.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_QUIET_TIME = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// How long the token count stays quiet while an answer is being written.
+    /// </summary>
+    /// <remarks>
+    /// An answer grows with every word, so each count finds a new number, shows it, and thereby
+    /// renders -- which asks for the next count. That makes this the whole cadence while a model
+    /// writes, and three seconds is the pace the chat itself keeps: the job service hands its
+    /// progress to the screen no more often than that.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_STREAMING_QUIET_TIME = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// How long the token count waits for a reason before counting anyway.
+    /// </summary>
+    /// <remarks>
+    /// For what happens outside AI Studio: an attached document is read from disk every time it is
+    /// sent, so somebody editing it in another program changes what the next message costs without
+    /// anything here rendering.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_HEARTBEAT = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Recomputes the token count whenever something might have changed.
+    /// </summary>
+    private ConversationTokenTracker? tokenTracker;
+
+    /// <summary>
+    /// How long to leave the token count alone after it ran.
+    /// </summary>
+    private TimeSpan TokenCountQuietTime() => this.IsCurrentChatStreaming ? TOKEN_COUNT_STREAMING_QUIET_TIME : TOKEN_COUNT_QUIET_TIME;
+
+    /// <summary>
+    /// The culture the token numbers are written in.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the language plugin the user chose, not from the machine. AI Studio's language is
+    /// a setting of its own, and a German who set German would otherwise read English separators
+    /// inside a German sentence -- where "1,234" means something a thousand times smaller.
+    /// </remarks>
+    private CultureInfo currentCulture = CultureInfo.InvariantCulture;
+
+    /// <summary>
+    /// What the helper text under the input field says about the token budget.
+    /// </summary>
+    /// <remarks>
+    /// Four sentences rather than one built from pieces, because a translator needs to see the
+    /// whole thing: which of the two numbers is the limit, and where the word for "about" belongs,
+    /// are decisions no language makes the same way.
+    ///
+    /// The images are named rather than counted. Every vendor charges a picture differently, and
+    /// none of those rules can be applied without decoding the file, so the honest answer is to say
+    /// how many of them the number does not include.
+    /// </remarks>
+    private string TokenCountMessage
+    {
+        get
+        {
+            if (!this.conversationTokens.IsKnown)
+                return string.Empty;
+
+            var used = TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture);
+            var budget = this.conversationTokens.Window.IsKnown
+                ? string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} of {1} tokens") : this.T("{0} of {1} tokens"), used, TokenAmount.Format(this.conversationTokens.Window.DefaultTokens, this.currentCulture))
+                : string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} tokens") : this.T("{0} tokens"), used);
+
+            if (this.conversationTokens.UncountedImages is 0)
+                return budget;
+
+            //
+            // The pictures of the whole conversation, not of the message being written: every one
+            // of them is sent again with every further message, so a chat runs past the model's
+            // limit long after anybody last thought about images.
+            //
+            var images = this.conversationTokens.TooManyImages
+                ? string.Format(this.T("plus {0} image(s), which is more than the {1} this model accepts"), this.conversationTokens.UncountedImages, this.conversationTokens.ImageLimits.MaxInOneMessage)
+                : string.Format(this.T("plus {0} image(s), which cannot be counted"), this.conversationTokens.UncountedImages);
+
+            return $"{budget} {images}";
+        }
+    }
+
+    /// <summary>
+    /// Takes over the culture of the language the user chose for AI Studio.
+    /// </summary>
+    private async Task RefreshCulture()
+    {
+        var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        this.currentCulture = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
+    }
 
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
 
@@ -125,6 +229,15 @@ public partial class ChatComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        await this.RefreshCulture();
+
+        //
+        // The number under the input field follows from the conversation, and nothing in a
+        // conversation announces that it changed: blocks, attachments and the answer being written
+        // are plain objects somebody mutates. So it is recomputed rather than notified.
+        //
+        this.tokenTracker = new(this.RecountTokensAsync, this.TokenCountQuietTime, TOKEN_COUNT_HEARTBEAT);
+        this.tokenTracker.Start();
 
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
@@ -374,28 +487,30 @@ public partial class ChatComponent : MSGComponentBase
             await this.inputField.FocusAsync();
 
         this.previousInputForbidden = inputForbidden;
+
+        //
+        // Everything which can move the token count also renders this component: the selections in
+        // the toolbar, the attachments and the composer all travel through an event callback whose
+        // receiver is this component, and the streamed answer arrives as a message which already
+        // asks for a render. So this one line stands in for the fifteen call sites which used to be
+        // spread over this file -- and which kept missing one.
+        //
+        this.tokenTracker?.Nudge();
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task OnParametersSetAsync()
     {
         var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
-        var providerChanged = this.Provider != this.lastSeenProvider;
         if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
         {
             this.lastSeenChatId = incomingChatId;
             this.lastSeenProvider = this.Provider;
-            if (providerChanged)
-                this.tokenCount = "0";
-
             this.previousInputForbidden = true;
         }
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
-        if (providerChanged && this.HasCustomTokenizer)
-            await this.CalculateTokenCount();
-
         await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
@@ -539,7 +654,45 @@ public partial class ChatComponent : MSGComponentBase
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
 
-    private string UserInputClass => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    private string UserInputClass => $"{(this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty)} {this.TokenBudgetClass}".Trim();
+
+    /// <summary>
+    /// How much of the model's context window the conversation already takes.
+    /// </summary>
+    /// <remarks>
+    /// Zero whenever nobody wrote the window down. There is then nothing to be full of, and a share
+    /// of an unknown total would be a number made up on the spot.
+    /// </remarks>
+    private double TokenBudgetFill => this.conversationTokens is { IsKnown: true, Window.IsKnown: true }
+        ? (double) this.conversationTokens.Tokens / this.conversationTokens.Window.DefaultTokens
+        : 0d;
+
+    /// <summary>
+    /// What the number under the input field is coloured with, if anything.
+    /// </summary>
+    /// <remarks>
+    /// Two steps rather than a gradient: below four fifths there is nothing to do about it, above
+    /// it there is -- shorten the chat, start a new one, or pick a model which reads more -- and
+    /// past the window the request will be refused or trimmed by the provider.
+    ///
+    /// Images share the second step and have no first one. There is no "nearly too many pictures":
+    /// either they fit or the request comes back as an error, and no number of them is worth a
+    /// warning as long as it fits.
+    /// </remarks>
+    private string TokenBudgetClass
+    {
+        get
+        {
+            //
+            // Too many pictures is the same kind of news as a full window: the request will be
+            // refused, and for the same reason -- more was put in than the model takes.
+            //
+            if (this.conversationTokens.TooManyImages || this.TokenBudgetFill >= 1d)
+                return "token-budget-exceeded";
+
+            return this.TokenBudgetFill >= WINDOW_NEARLY_FULL ? "token-budget-nearly-full" : string.Empty;
+        }
+    }
     
     private void ApplyStandardDataSourceOptions()
     {
@@ -603,15 +756,20 @@ public partial class ChatComponent : MSGComponentBase
     private async Task ProfileWasChanged(Profile profile)
     {
         this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
-        if(this.ChatThread is null)
-            return;
 
-        this.ChatThread = this.ChatThread with
+        //
+        // A thread which already exists has to carry the choice. Before the first message there is
+        // none, and the choice then travels in the thread a new chat is started with.
+        //
+        if (this.ChatThread is not null)
         {
-            SelectedProfile = this.currentProfile.Id,
-        };
-        
-        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+            this.ChatThread = this.ChatThread with
+            {
+                SelectedProfile = this.currentProfile.Id,
+            };
+
+            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        }
     }
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
@@ -623,10 +781,8 @@ public partial class ChatComponent : MSGComponentBase
         // Apply template's file attachments (replaces existing):
         this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
 
-        if(this.ChatThread is null)
-            return;
-
-        await this.StartNewChat(true);
+        if (this.ChatThread is not null)
+            await this.StartNewChat(true);
     }
 
     private void RefreshCurrentProfileAndChatTemplate()
@@ -726,10 +882,7 @@ public partial class ChatComponent : MSGComponentBase
         
         // Was a modifier key pressed as well?
         var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
-        
-        if (isEnter)
-            await this.CalculateTokenCount();
-        
+
         // Depending on the user's settings, might react to shortcuts:
         switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
         {
@@ -774,21 +927,13 @@ public partial class ChatComponent : MSGComponentBase
 
         this.RefreshCurrentProfileAndChatTemplate();
         var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
-        this.ChatThread = new()
+        var threadName = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
+            ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
+            : promptName;
+
+        this.ChatThread = this.NewChatThread(threadName) with
         {
-            IncludeDateTime = true,
-            SelectedProvider = this.Provider.Id,
-            SelectedProfile = this.currentProfile.Id,
-            SelectedChatTemplate = this.currentChatTemplate.Id,
-            SelectedToolIds = [..this.selectedToolIds],
-            SystemPrompt = SystemPrompts.DEFAULT,
-            WorkspaceId = this.currentWorkspaceId,
-            ChatId = Guid.NewGuid(),
             DataSourceOptions = this.earlyDataSourceOptions,
-            Name = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
-                ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
-                : promptName,
-            Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
         };
 
         await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
@@ -819,21 +964,11 @@ public partial class ChatComponent : MSGComponentBase
         // Create a new chat thread if necessary:
         if (this.ChatThread is null)
         {
-            this.ChatThread = new()
+            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput)) with
             {
-                IncludeDateTime = true,
-                SelectedProvider = this.Provider.Id,
-                SelectedProfile = this.currentProfile.Id,
-                SelectedChatTemplate = this.currentChatTemplate.Id,
-                SelectedToolIds = [..this.selectedToolIds],
-                SystemPrompt = SystemPrompts.DEFAULT,
-                WorkspaceId = this.currentWorkspaceId,
-                ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
-                Name = this.ExtractThreadName(this.ComposerState.UserInput),
-                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
-            
+
             this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
@@ -916,8 +1051,7 @@ public partial class ChatComponent : MSGComponentBase
         this.ComposerState.Clear();
 
         await this.inputField.BlurAsync();
-        this.tokenCount = "0";
-        
+
         // Enable the stream state for the chat component:
         this.hasUnsavedChanges = true;
         
@@ -962,7 +1096,7 @@ public partial class ChatComponent : MSGComponentBase
     private void ApplyToolSelectionOfLoadedChat() =>
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
-    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    private void SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
 
@@ -977,8 +1111,6 @@ public partial class ChatComponent : MSGComponentBase
             this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
             this.hasUnsavedChanges = true;
         }
-
-        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -1087,19 +1219,7 @@ public partial class ChatComponent : MSGComponentBase
             // reset the chat thread only. The workspace id and the workspace name remain
             // the same:
             //
-            this.ChatThread = new()
-            {
-                IncludeDateTime = true,
-                SelectedProvider = this.Provider.Id,
-                SelectedProfile = this.currentProfile.Id,
-                SelectedChatTemplate = this.currentChatTemplate.Id,
-                SelectedToolIds = [..this.selectedToolIds],
-                SystemPrompt = SystemPrompts.DEFAULT,
-                WorkspaceId = this.currentWorkspaceId,
-                ChatId = Guid.NewGuid(),
-                Name = string.Empty,
-                Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
-            };
+            this.ChatThread = this.NewChatThread(string.Empty);
         }
 
         this.ComposerState.ApplyTemplate(this.currentChatTemplate);
@@ -1112,7 +1232,7 @@ public partial class ChatComponent : MSGComponentBase
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
-    
+
     private async Task MoveChatToWorkspace()
     {
         if(this.ChatThread is null)
@@ -1215,7 +1335,7 @@ public partial class ChatComponent : MSGComponentBase
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
-    
+
     private async Task SelectProviderWhenLoadingChat()
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
@@ -1270,37 +1390,35 @@ public partial class ChatComponent : MSGComponentBase
     {
         if(this.ChatThread is null)
             return Task.CompletedTask;
-        
+
         if (block is not ContentText textBlock)
             return Task.CompletedTask;
-        
+
         var lastBlock = this.ChatThread.Blocks.Last();
         var lastBlockContent = lastBlock.Content;
         if(lastBlockContent is null)
             return Task.CompletedTask;
-        
+
         this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
-        
         return Task.CompletedTask;
     }
-    
+
     private Task EditLastBlock(IContent block)
     {
         if(this.ChatThread is null)
             return Task.CompletedTask;
-        
+
         if (block is not ContentText textBlock)
             return Task.CompletedTask;
-        
+
         this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
-        
         return Task.CompletedTask;
     }
 
@@ -1309,42 +1427,115 @@ public partial class ChatComponent : MSGComponentBase
         this.ComposerState.RestoreFromTextBlock(textBlock);
     }
     
-    private async Task CalculateTokenCount()
+    /// <summary>
+    /// Works out what the next request would take out of the model's context window.
+    /// </summary>
+    /// <remarks>
+    /// The whole conversation, not only what is being typed. A number counting the draft alone
+    /// answers a question nobody asks: what decides whether the next message fits is everything
+    /// which travels with it, and in a chat of any age the draft is the smallest part of that.
+    ///
+    /// This used to run only for providers with a tokenizer of their own, which is almost nobody,
+    /// so almost nobody ever saw a number. The runtime falls back to the tokenizer shipped with AI
+    /// Studio when a provider names none, so the count is available everywhere -- it is then an
+    /// estimate, and it says so.
+    ///
+    /// Read the text from the bound property rather than from the input field: the field is a
+    /// component reference, which is only set once the component has rendered.
+    ///
+    /// Called by the tracker, never directly. Whoever thinks something changed nudges it instead,
+    /// and it decides when the work is worth doing.
+    /// </remarks>
+    /// <param name="token">Ends the count when the component goes away.</param>
+    private async Task RecountTokensAsync(CancellationToken token)
     {
-        if (!this.HasCustomTokenizer)
-        {
-            if (this.tokenCount != "0")
-            {
-                this.tokenCount = "0";
-                this.StateHasChanged();
-            }
-
-            return;
-        }
+        var provider = AIStudio.Settings.Provider.NONE;
+        var parts = ConversationParts.NOTHING;
 
         //
-        // Read the text from the bound property rather than from the input field: the field is a
-        // component reference, which is only set once the component has rendered. Counting is also
-        // triggered while parameters are set, which happens before that.
+        // Collected on the render thread, counted off it. Counting may take an IPC call per text,
+        // and while it runs, the background job which writes the answer appends to the very list
+        // which is walked here.
         //
-        var currentInput = this.UserInput;
-        if (string.IsNullOrEmpty(currentInput))
+        await this.InvokeAsync(() =>
         {
-            this.tokenCount = "0";
-            return;
-        }
+            //
+            // Before the first message there is no thread yet, so what is measured is the one a new
+            // chat would start with. A preselected profile or a chat template is already part of
+            // that, and it may even bring an example conversation along -- reporting nothing for all
+            // of it would tell a person their window is empty while their first message is not.
+            //
+            var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
+            provider = this.Provider;
+            parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput());
+        });
 
-        var response = await this.RustService.GetTokenCount(this.Provider, currentInput);
-        if (response is null)
+        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, token);
+        if (token.IsCancellationRequested)
             return;
-        if (!response.Value.Success)
+
+        await this.InvokeAsync(() =>
         {
-            this.Logger.LogWarning("Failed to calculate token count: reason='{Reason}'", response.Value.Message);
-            return;
-        }
-        this.tokenCount = response.Value.TokenCount.ToString();
-        this.StateHasChanged();
+            if (counted == this.conversationTokens)
+                return;
+
+            this.conversationTokens = counted;
+            this.StateHasChanged();
+        });
     }
+
+    /// <summary>
+    /// Works out the system prompt a thread would send.
+    /// </summary>
+    /// <remarks>
+    /// Not the prompt a person typed: a chat template may replace it, the retrieved data of a data
+    /// source is appended to it, the selected profile adds a paragraph, and the policy of the
+    /// selected tools adds another. Switching a profile while writing therefore moves the number,
+    /// which is the whole reason this is asked rather than read off the thread.
+    ///
+    /// The tools are filtered for the provider the same way they are before sending, so that a tool
+    /// the provider is not trusted enough to receive does not count either.
+    /// </remarks>
+    /// <param name="thread">The thread to build the prompt for.</param>
+    /// <returns>The system prompt as it would be sent.</returns>
+    private string BuildSystemPromptFor(ChatThread thread)
+    {
+        var toolDefinitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
+            .Select(this.ToolRegistry.GetDefinition)
+            .Where(definition => definition is not null)
+            .Select(definition => definition!)
+            .ToList();
+
+        return thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions).Text;
+    }
+
+    /// <summary>
+    /// The thread a new chat starts with, as the selections made so far decide it.
+    /// </summary>
+    /// <remarks>
+    /// In one place because three code paths used to write it out, and because the token count has
+    /// to measure the same thing they build. A count against a thread assembled differently from
+    /// the one which is then sent would be wrong in exactly the moment a person looks at it: before
+    /// they send their first message.
+    ///
+    /// The data source options are left out on purpose: two of the three callers set them and the
+    /// third replaces them right afterwards, so this stays the part they agree on.
+    /// </remarks>
+    /// <param name="name">The name of the thread.</param>
+    /// <returns>The new thread.</returns>
+    private ChatThread NewChatThread(string name) => new()
+    {
+        IncludeDateTime = true,
+        SelectedProvider = this.Provider.Id,
+        SelectedProfile = this.currentProfile.Id,
+        SelectedChatTemplate = this.currentChatTemplate.Id,
+        SelectedToolIds = [..this.selectedToolIds],
+        SystemPrompt = SystemPrompts.DEFAULT,
+        WorkspaceId = this.currentWorkspaceId,
+        ChatId = Guid.NewGuid(),
+        Name = name,
+        Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
+    };
     
     #region Overrides of MSGComponentBase
     
@@ -1372,6 +1563,7 @@ public partial class ChatComponent : MSGComponentBase
 
             case Event.CONFIGURATION_CHANGED:
             case Event.PLUGINS_RELOADED:
+                await this.RefreshCulture();
                 await this.RefreshChatSelectionsAfterConfigurationChange();
                 this.StateHasChanged();
                 break;
@@ -1419,6 +1611,10 @@ public partial class ChatComponent : MSGComponentBase
     protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        if (this.tokenTracker is not null)
+            await this.tokenTracker.DisposeAsync();
+
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

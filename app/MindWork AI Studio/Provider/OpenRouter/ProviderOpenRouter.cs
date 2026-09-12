@@ -36,7 +36,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -117,7 +117,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             "models",
             modelResponse => modelResponse.Data
                 .Select(n => new Model(n.Id, n.Name))
-                .Where(model => model.IsChatModel()),
+                .Where(model => model.IsChatModel(this.Provider)),
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {

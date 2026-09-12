@@ -34,7 +34,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -84,7 +84,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsChatModel())
+                ..result.Models.Where(model => model.IsChatModel(this.Provider))
             ]
         };
     }
@@ -103,7 +103,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsEmbeddingModel())
+                ..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))
             ]
         };
     }
@@ -116,7 +116,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
         {
             Models =
             [
-                ..result.Models.Where(model => model.IsTranscriptionModel())
+                ..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))
             ]
         };
     }

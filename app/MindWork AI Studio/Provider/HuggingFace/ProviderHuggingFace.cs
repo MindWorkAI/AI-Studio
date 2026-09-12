@@ -166,7 +166,7 @@ public sealed class ProviderHuggingFace : BaseProvider
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -237,7 +237,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>The models to offer.</returns>
     private IEnumerable<Model> SelectChatModels(ModelsResponse response)
     {
-        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel());
+        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel(this.Provider));
         var providerSlug = this.hfProvider.EndpointsId();
         if (string.IsNullOrEmpty(providerSlug))
             return ToModels(chatModels);

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Components;
+using AIStudio.Models;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.Rust;
@@ -663,33 +664,29 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (alwaysReasoning is null && optionalReasoning is null && reasoningByDefault is null)
             return ReasoningOverrideMode.AUTOMATIC;
 
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
-
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
+        return ModeOf(this.GetCurrentModelProfile().Reasoning);
     }
 
-    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode()
+    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode() => ModeOf(this.GetAutomaticModelProfile().Reasoning);
+
+    /// <summary>
+    /// Which of the choices in this dialog a reasoning state is.
+    /// </summary>
+    /// <remarks>
+    /// The five entries of the list were always this one answer, only written as three flags and
+    /// read back by asking for them in the right order. Now they are the same four words plus
+    /// "automatic", which is the absence of a statement rather than a state a model can be in.
+    /// </remarks>
+    /// <param name="reasoning">How the model reasons.</param>
+    /// <returns>The choice standing for it.</returns>
+    private static ReasoningOverrideMode ModeOf(ReasoningSupport reasoning) => reasoning switch
     {
-        var capabilities = this.GetAutomaticModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
+        ReasoningSupport.ALWAYS => ReasoningOverrideMode.ALWAYS_ON,
+        ReasoningSupport.ON_BY_DEFAULT => ReasoningOverrideMode.ON_BY_DEFAULT,
+        ReasoningSupport.OPTIONAL => ReasoningOverrideMode.CAN_BE_ENABLED,
 
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
-    }
+        _ => ReasoningOverrideMode.NO_REASONING,
+    };
 
     private void SetReasoningOverrideMode(ReasoningOverrideMode mode)
     {
@@ -746,11 +743,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private bool HasCapabilityOverride(Capability capability) => this.capabilityOverrides.GetOverride(capability) is not null;
 
-    private bool IsCapabilityEnabled(Capability capability)
-    {
-        var capabilities = this.GetCurrentModelCapabilities();
-        return capabilities.Contains(capability);
-    }
+    private bool IsCapabilityEnabled(Capability capability) => this.GetCurrentModelProfile().Has(capability);
 
     private string GetCapabilityEffectiveLabel(Capability capability)
     {
@@ -761,21 +754,25 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return isEnabled ? T("Enabled (Auto)") : T("Disabled (Auto)");
     }
 
-    private List<Capability> GetCurrentModelCapabilities()
-    {
-        var currentProviderSettings = this.CreateProviderSettings();
-        return currentProviderSettings.GetModelCapabilities();
-    }
+    /// <summary>
+    /// What the model can do as this provider instance is configured, the person's own settings included.
+    /// </summary>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetCurrentModelProfile() => this.CreateProviderSettings().GetModelProfile();
 
-    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.GetSelectedModel());
+    /// <summary>
+    /// What the rules alone say about the model, which is what each switch shows as its automatic answer.
+    /// </summary>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetAutomaticModelProfile() => this.DataLLMProvider.GetModelProfile(this.GetSelectedModel());
 
     private string GetCurrentModelApiLabel()
     {
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.RESPONSES_API))
+        var profile = this.GetCurrentModelProfile();
+        if (profile.Has(Capability.RESPONSES_API))
             return "Responses API";
 
-        if (capabilities.Contains(Capability.CHAT_COMPLETION_API))
+        if (profile.Has(Capability.CHAT_COMPLETION_API))
             return "Chat Completions API";
 
         return "Unknown";

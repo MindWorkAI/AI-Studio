@@ -251,6 +251,7 @@
                         <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">
                             @T("For better token estimates, you can configure a custom tokenizer for this provider.")
                         </MudJustifiedText>
+                        <TokenizerHint LLMProvider="@this.DataLLMProvider" Model="@this.DataModel"/>
                         <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
                             <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
                                 <MudTextField
