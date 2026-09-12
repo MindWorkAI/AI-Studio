@@ -70,6 +70,7 @@ public sealed class PortingDifferenceTests
         ModelVendor.META,
         ModelVendor.Z_AI,
         ModelVendor.MICROSOFT,
+        ModelVendor.NVIDIA,
     ];
 
     /// <summary>

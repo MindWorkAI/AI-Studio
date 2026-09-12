@@ -135,6 +135,16 @@ public static class ExpectedChanges
             Source: "The GWDG entry \"gpt-5.5\" of this corpus is the same model and does report reasoning by default."),
 
         //
+        // One vendor's block swallowing another vendor's model, for no reason but where the two
+        // blocks stand in the file.
+        //
+        new(SELF_HOSTED, "llama-3.3-nemotron-super-49b",
+            AnswerToday: [TEXT_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, TEXT_OUTPUT, OPTIONAL_REASONING, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            Reason: "An NVIDIA model is answered by the Llama rules because it carries the name of the weights it was built from, and the Llama block stands above the Nemotron one. It loses the thinking switch, which is one of the two things NVIDIA changed about those weights.",
+            Source: "The corpus entry \"nemotron-3-49b\" is the generation after it and does report thinking; NVIDIA documents the detailed thinking switch for the Llama-Nemotron models."),
+
+        //
         // A prefix rule swallowing the variant which says the opposite.
         //
         new(OPEN_AI, "gpt-5-chat-latest",
