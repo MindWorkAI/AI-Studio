@@ -64,9 +64,14 @@ public sealed record ModelProfileChange
     /// carried them could say that a model both always reasons and reasons on request. A rule which
     /// declares one has still made a mistake, which is why the tests and the verification run look
     /// for it instead of relying on this line to hide it.
+    ///
+    /// Every member of a profile is named below, so the copy could be written as a new profile
+    /// instead. It stays a copy on purpose: the day a profile learns something this change does not
+    /// know about yet, a modifier has to hand that on rather than reset it to nothing.
     /// </remarks>
     /// <param name="profile">What is known so far.</param>
-    /// <returns>What is known afterwards.</returns>
+    /// <returns>What is known afterward.</returns>
+    // ReSharper disable once WithExpressionModifiesAllMembers
     public ModelProfile ApplyTo(in ModelProfile profile) => profile with
     {
         Capabilities = (profile.Capabilities | this.Adds) & ~this.Removes & ~ModelProfile.REASONING_VOCABULARY,

@@ -227,11 +227,11 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     /// Worth preferring over the plain form in a family with more than one generation: naming the
     /// rule survives somebody reordering the file, while "the one before" does not.
     /// </remarks>
-    /// <param name="patternText">The text of the rule to inherit from.</param>
+    /// <param name="inheritedPatternText">The text of the rule to inherit from.</param>
     /// <returns>The rule, to go on stating.</returns>
-    public ModelRuleBuilder InheritsFrom(string patternText)
+    public ModelRuleBuilder InheritsFrom(string inheritedPatternText)
     {
-        this.inheritsFromText = patternText;
+        this.inheritsFromText = inheritedPatternText;
         return this;
     }
 

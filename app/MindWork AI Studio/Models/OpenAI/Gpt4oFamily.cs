@@ -1,4 +1,5 @@
 using static AIStudio.Provider.Capability;
+// ReSharper disable InconsistentNaming
 
 namespace AIStudio.Models.OpenAI;
 
@@ -7,7 +8,7 @@ namespace AIStudio.Models.OpenAI;
 /// </summary>
 /// <remarks>
 /// The previous rules never named this family. Its models reached the last line of the OpenAI
-/// function, the one which answers for everything nobody wrote a rule for, and that line happened
+/// function, the one that answers for everything nobody wrote a rule for, and that line happened
 /// to describe GPT-4o exactly. Writing it down changes no answer and takes the family out of the
 /// fallback, where a wrong answer looks like no answer.
 /// </remarks>

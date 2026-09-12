@@ -53,7 +53,6 @@ public readonly record struct RuleSpecificity(int ExplicitRank, int Kind, int Pa
         MatchKind.EXACT => 3,
         MatchKind.PREFIX => 2,
         MatchKind.SEGMENT => 1,
-        MatchKind.SUBSTRING => 0,
 
         _ => 0,
     };

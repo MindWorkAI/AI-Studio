@@ -1,5 +1,6 @@
 using AIStudio.Models.Registry;
 using AIStudio.Provider;
+// ReSharper disable InconsistentNaming
 
 namespace AIStudio.Tests.Models.ZAI;
 
@@ -8,7 +9,7 @@ namespace AIStudio.Tests.Models.ZAI;
 /// </summary>
 /// <remarks>
 /// Z AI marks its vision models by gluing a "v" to the version number: glm-4v, glm-4.1v, glm-4.5v.
-/// That is not a name part, so no pattern can ask about it and the family works it out of the name
+/// That is not a name part, so no pattern can ask about it, and the family works it out of the name
 /// instead -- the second of the two places in the rebuilt rules where a capability is calculated.
 ///
 /// These need tests of their own because the corpus cannot tell the calculation apart from a

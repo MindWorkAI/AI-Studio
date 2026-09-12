@@ -28,13 +28,12 @@ public readonly struct ModelId(string modelId) : IEquatable<ModelId>
     /// </summary>
     private const int MAX_STACK_ALLOCATED_MODEL_ID_LENGTH = 256;
 
-    private readonly string originalId = modelId ?? string.Empty;
     private readonly string normalizedId = Normalize(modelId);
 
     /// <summary>
     /// The ID exactly as the provider reported it. This is what a person sees.
     /// </summary>
-    public string Original => this.originalId ?? string.Empty;
+    public string Original => modelId ?? string.Empty;
 
     /// <summary>
     /// The ID in lowercase, with every separator written as a single hyphen.
