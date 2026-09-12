@@ -1,4 +1,3 @@
-using AIStudio.Models;
 using AIStudio.Models.Registry;
 using AIStudio.Provider;
 using AIStudio.Settings;

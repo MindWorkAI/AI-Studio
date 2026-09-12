@@ -189,6 +189,7 @@ internal sealed class Program
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<ConversationTokenCounter>();
         builder.Services.AddSingleton<VisualBriefingArtifactService>();
         builder.Services.AddSingleton<VisualBriefingStore>();
         builder.Services.AddSingleton<VisualBriefingBuildProgressService>();

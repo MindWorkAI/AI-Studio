@@ -146,10 +146,8 @@ public sealed record ChatThread
     /// </summary>
     public bool MayRunTools(SettingsManager settingsManager) => this.RuntimeToolsAreAssistantManaged || settingsManager.IsToolSelectionVisible(this.RuntimeComponent);
     
-    private bool allowProfile = true;
-
     /// <summary>
-    /// Prepares the system prompt for the chat thread.
+    /// Prepares the system prompt for the chat thread, and remembers what it was built from.
     /// </summary>
     /// <remarks>
     /// The actual system prompt depends on the selected profile. If no profile is selected,
@@ -161,7 +159,35 @@ public sealed record ChatThread
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {
-        this.allowProfile = true;
+        var prepared = this.BuildSystemPrompt(settingsManager, runnableToolDefinitions);
+
+        // We need a way to save the changed system prompt in our chat thread.
+        // Otherwise, the chat thread will always tell us that it is using the
+        // default system prompt:
+        this.SystemPrompt = prepared.BasePrompt;
+        LOGGER.LogInformation(prepared.Explanation);
+
+        return prepared.Text;
+    }
+
+    /// <summary>
+    /// Works out the system prompt without changing anything about the thread.
+    /// </summary>
+    /// <remarks>
+    /// Split off from the preparation above so that somebody can ask how long the next request
+    /// would be. Counting the tokens of a conversation has to ask the same question the request
+    /// asks -- a count against the prompt a person typed, rather than against the one a chat
+    /// template, a data source, a profile and the tool policy make of it, is a number about a
+    /// request which is never sent.
+    ///
+    /// Nothing here writes to the thread and nothing logs, because this runs while somebody types.
+    /// </remarks>
+    /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <param name="runnableToolDefinitions">The tools which may run in this thread. Null when the thread runs without tools.</param>
+    /// <returns>The system prompt and what building it decided.</returns>
+    public PreparedSystemPrompt BuildSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
+    {
+        var allowProfile = true;
 
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
@@ -186,18 +212,12 @@ public sealed record ChatThread
                     else
                     {
                         logMessage = $"Using chat template '{chatTemplate.Name}' for chat thread '{this.Name}'.";
-                        this.allowProfile = chatTemplate.AllowProfileUsage;
+                        allowProfile = chatTemplate.AllowProfileUsage;
                         systemPromptTextWithChatTemplate = chatTemplate.ToSystemPrompt();
                     }
                 }
             }
         }
-        
-        // We need a way to save the changed system prompt in our chat thread.
-        // Otherwise, the chat thread will always tell us that it is using the
-        // default system prompt:
-        this.SystemPrompt = systemPromptTextWithChatTemplate;
-        LOGGER.LogInformation(logMessage);
 
         //
         // Add augmented data, if available:
@@ -214,18 +234,16 @@ public sealed record ChatThread
             false => systemPromptTextWithChatTemplate,
         };
         
-        if(isAugmentedDataAvailable)
-            LOGGER.LogInformation("Augmented data is available for the chat thread.");
-        else
-            LOGGER.LogInformation("No augmented data is available for the chat thread.");
-        
-        
+        logMessage = isAugmentedDataAvailable
+            ? $"{logMessage} Augmented data is available for the chat thread."
+            : $"{logMessage} No augmented data is available for the chat thread.";
+
         //
         // Add information from the profile if available and allowed:
         //
         string systemPromptText;
-        logMessage = $"Using no profile for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !this.allowProfile)
+        var profileNote = $"Using no profile for chat thread '{this.Name}'.";
+        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !allowProfile)
             systemPromptText = systemPromptWithAugmentedData;
         else
         {
@@ -242,7 +260,7 @@ public sealed record ChatThread
                         systemPromptText = systemPromptWithAugmentedData;
                     else
                     {
-                        logMessage = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
+                        profileNote = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
                         systemPromptText = $"""
                                             {systemPromptWithAugmentedData}
 
@@ -252,8 +270,6 @@ public sealed record ChatThread
                 }
             }
         }
-        
-        LOGGER.LogInformation(logMessage);
 
         var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(runnableToolDefinitions ?? []);
         if (!string.IsNullOrWhiteSpace(toolPolicy))
@@ -265,9 +281,10 @@ public sealed record ChatThread
                                 """;
         }
 
+        var explanation = $"{logMessage} {profileNote}";
         if(!this.IncludeDateTime)
-            return systemPromptText;
-        
+            return new(systemPromptText, systemPromptTextWithChatTemplate, allowProfile, explanation);
+
         //
         // Prepend the current date and time to the system prompt:
         //
@@ -278,11 +295,13 @@ public sealed record ChatThread
             $"Today is {nowUtc:dddd, MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:dddd, MMMM d, yyyy h:mm tt} (local time)."
         );
 
-        return $"""
-                {currentDateTime}
+        var withDateTime = $"""
+                            {currentDateTime}
 
-                {systemPromptText}
-                """;
+                            {systemPromptText}
+                            """;
+
+        return new(withDateTime, systemPromptTextWithChatTemplate, allowProfile, explanation);
     }
 
     /// <summary>
