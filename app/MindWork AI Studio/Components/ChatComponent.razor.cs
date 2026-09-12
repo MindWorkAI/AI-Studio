@@ -181,7 +181,16 @@ public partial class ChatComponent : MSGComponentBase
             if (this.conversationTokens.UncountedImages is 0)
                 return budget;
 
-            return $"{budget} {string.Format(this.T("plus {0} image(s), which cannot be counted"), this.conversationTokens.UncountedImages)}";
+            //
+            // The pictures of the whole conversation, not of the message being written: every one
+            // of them is sent again with every further message, so a chat runs past the model's
+            // limit long after anybody last thought about images.
+            //
+            var images = this.conversationTokens.TooManyImages
+                ? string.Format(this.T("plus {0} image(s), which is more than the {1} this model accepts"), this.conversationTokens.UncountedImages, this.conversationTokens.ImageLimits.MaxInOneMessage)
+                : string.Format(this.T("plus {0} image(s), which cannot be counted"), this.conversationTokens.UncountedImages);
+
+            return $"{budget} {images}";
         }
     }
 
@@ -665,14 +674,25 @@ public partial class ChatComponent : MSGComponentBase
     /// Two steps rather than a gradient: below four fifths there is nothing to do about it, above
     /// it there is -- shorten the chat, start a new one, or pick a model which reads more -- and
     /// past the window the request will be refused or trimmed by the provider.
+    ///
+    /// Images share the second step and have no first one. There is no "nearly too many pictures":
+    /// either they fit or the request comes back as an error, and no number of them is worth a
+    /// warning as long as it fits.
     /// </remarks>
-    private string TokenBudgetClass => this.TokenBudgetFill switch
+    private string TokenBudgetClass
     {
-        >= 1d => "token-budget-exceeded",
-        >= WINDOW_NEARLY_FULL => "token-budget-nearly-full",
+        get
+        {
+            //
+            // Too many pictures is the same kind of news as a full window: the request will be
+            // refused, and for the same reason -- more was put in than the model takes.
+            //
+            if (this.conversationTokens.TooManyImages || this.TokenBudgetFill >= 1d)
+                return "token-budget-exceeded";
 
-        _ => string.Empty,
-    };
+            return this.TokenBudgetFill >= WINDOW_NEARLY_FULL ? "token-budget-nearly-full" : string.Empty;
+        }
+    }
     
     private void ApplyStandardDataSourceOptions()
     {

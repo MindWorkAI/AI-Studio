@@ -61,4 +61,23 @@ public readonly record struct ConversationTokens
     /// orders of magnitude longer than what any vendor charges for the picture.
     /// </remarks>
     public int UncountedImages { get; init; }
+
+    /// <summary>
+    /// How many images the model takes, where its vendor stated a number.
+    /// </summary>
+    public ImageLimits ImageLimits { get; init; }
+
+    /// <summary>
+    /// Whether more images travel than the model is documented to accept.
+    /// </summary>
+    /// <remarks>
+    /// Counted over the whole conversation rather than over the message being written, because that
+    /// is what a request carries: every picture anybody attached is sent again with every further
+    /// message, so a chat crosses this line long after the message which added the picture -- and
+    /// the person who crosses it has usually forgotten that the pictures are still there.
+    ///
+    /// False whenever nobody stated a limit, which is most models. An invented ceiling would refuse
+    /// something that works.
+    /// </remarks>
+    public bool TooManyImages => this.ImageLimits.MaxInOneMessage is { } allowed && this.UncountedImages > allowed;
 }

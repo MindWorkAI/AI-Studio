@@ -122,6 +122,7 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
             IsEstimate = string.IsNullOrWhiteSpace(provider.TokenizerPath),
             Window = profile.Context,
             UncountedImages = parts.Images,
+            ImageLimits = profile.Images,
         };
     }
 
