@@ -168,9 +168,15 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
         {
             Models =
             [
+                //
+                // Asking what a model is made for, rather than only ruling out the embedding ones.
+                // Google names everything after the chat model it grew out of, so the catalog is
+                // full of names which look like something to talk to and are not: the image models,
+                // and the computer use model whose API refuses a request without its tool.
+                //
                 ..result.Models.Where(model =>
                         model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        !model.IsEmbeddingModel())
+                        model.IsChatModel())
                     .Select(this.WithDisplayNameFallback)
             ]
         };

@@ -204,6 +204,7 @@ public static class ModelCorpus
         new(X, "grok-3-mini", NAMED_BY_A_RULE),
         new(X, "grok-2-vision-1212", NAMED_BY_A_RULE),
         new(X, "grok-5", NAMED_BY_NO_RULE),
+        new(X, "grok-build-0.1", NAMED_BY_A_RULE),
     ];
 
     /// <summary>

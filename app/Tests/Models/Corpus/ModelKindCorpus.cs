@@ -69,6 +69,9 @@ public static class ModelKindCorpus
         new(OPEN_AI, "sora-2", VIDEO_GENERATION),
         new(GOOGLE, "veo-3.0-generate-001", VIDEO_GENERATION),
         new(SELF_HOSTED, "kling-video-v2", VIDEO_GENERATION),
+
+        new(X, "grok-imagine-video", VIDEO_GENERATION, AnsweredTodayAs: CHAT, Reason: "Found in the chat list while testing. No marker knew the name, and the xAI provider only kept models whose name lacks \"-image\" -- which \"-imagine\" does."),
+        new(X, "grok-imagine-video-1.5", VIDEO_GENERATION, AnsweredTodayAs: CHAT, Reason: "The same, one version on."),
     ];
 
     /// <summary>
@@ -108,6 +111,16 @@ public static class ModelKindCorpus
 
         // The name the marker file names as the reason for asking this question before the others:
         new(OPEN_AI, "gpt-realtime-whisper", REALTIME),
+
+        new(OPEN_AI, "gpt-live-1", REALTIME, AnsweredTodayAs: CHAT, Reason: "Found in the chat list while testing. The line which succeeds the realtime models dropped the word, and it is even less of a chat partner: it listens and speaks at once and leaves the thinking to a text model behind it."),
+    ];
+
+    /// <summary>
+    /// The models which work a screen.
+    /// </summary>
+    private static readonly ModelKindExample[] COMPUTER_USE_ENTRIES =
+    [
+        new(GOOGLE, "gemini-2.5-computer-use-preview-10-2025", COMPUTER_USE, AnsweredTodayAs: CHAT, Reason: "Found in the chat list while testing. Its API refuses every request which does not carry the computer use tool, so a conversation with it cannot even begin."),
     ];
 
     /// <summary>
@@ -161,6 +174,19 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "llama-2-7b-chat-klingon", CHAT),
         new(SELF_HOSTED, "llama3.3:70b", CHAT),
         new(OPEN_AI, "gpt-5.1", CHAT),
+
+        //
+        // Three which were questioned while testing and stay all the same. Grok Build is the coding
+        // model behind the xAI CLI and answers like any other Grok. The Groq compound systems are
+        // models with tools already built in, reached through the ordinary chat completion API. And
+        // Gemini Robotics ER answers in text; it is built for pointing at things in a picture rather
+        // than for conversation, but a conversation with it works, and a model which works belongs
+        // in the list.
+        //
+        new(X, "grok-build-0.1", CHAT),
+        new(GROQ, "groq/compound", CHAT),
+        new(GROQ, "groq/compound-mini", CHAT),
+        new(GOOGLE, "gemini-robotics-er-1.5-preview", CHAT),
     ];
 
     /// <summary>
@@ -175,6 +201,7 @@ public static class ModelKindCorpus
         ..TRANSCRIPTION_ENTRIES,
         ..SPEECH_ENTRIES,
         ..REALTIME_ENTRIES,
+        ..COMPUTER_USE_ENTRIES,
         ..TEXT_COMPLETION_ENTRIES,
         ..OCR_ENTRIES,
         ..MODERATION_ENTRIES,

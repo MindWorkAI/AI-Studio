@@ -34,6 +34,14 @@ public sealed class GrokFamily : ModelFamily
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT)
             .Apis(CHAT_COMPLETION_API);
 
+        //
+        // Grok Build is the agentic coding model behind their CLI. It reads pictures, which the
+        // family fallback does not know about, and it does not think out loud.
+        //
+        builder.Rule("grok-build").AsPrefix()
+            .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
+            .Apis(CHAT_COMPLETION_API);
+
         builder.Rule("grok-3-mini").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(CHAT_COMPLETION_API)

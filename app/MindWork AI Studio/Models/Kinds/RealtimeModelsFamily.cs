@@ -23,11 +23,20 @@ public sealed class RealtimeModelsFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.UNKNOWN;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://platform.openai.com/docs/guides/realtime", new DateOnly(2026, 9, 12), "Ported from the realtime marker of Provider/ModelKindExtensions.cs, where the same precedence was written as the order of two if statements.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models/gpt-live-1", new DateOnly(2026, 9, 12), "Ported from the realtime marker of Provider/ModelKindExtensions.cs, where the same precedence was written as the order of two if statements. GPT-Live was added after it turned up in the chat list while testing.");
 
     /// <inheritdoc />
-    protected override void Declare(ModelFamilyBuilder builder) =>
+    protected override void Declare(ModelFamilyBuilder builder)
+    {
         builder.Modifier("realtime").AsSubstring()
             .Rank(1, THE_CONNECTION_DECIDES)
             .Kind(ModelKind.REALTIME);
+
+        //
+        // The line which dropped the word. GPT-Live listens and speaks at the same time and leaves
+        // the thinking to a text model behind it, so there is even less of a conversation in it than
+        // in the realtime models it succeeds -- and nothing in the name says so any more.
+        //
+        builder.Modifier("gpt-live").AsSegment().Inherits();
+    }
 }

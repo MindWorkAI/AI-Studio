@@ -35,5 +35,8 @@ public sealed class ImageGenerationModelsFamily : ModelFamily
         builder.Modifier("midjourney").AsSubstring().Inherits();
 
         builder.Modifier("image").AsSegment().Inherits();
+
+        // The other half of Grok Imagine, which the video rule steps aside for:
+        builder.Modifier("grok-imagine").AsSegment().NotContains("video").Inherits();
     }
 }

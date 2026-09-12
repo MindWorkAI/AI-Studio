@@ -168,5 +168,14 @@ public static class ExpectedChanges
             AnswerWanted: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, WEB_SEARCH, RESPONSES_API],
             Reason: "The alias for the non-reasoning GPT-5 is claimed by the \"gpt-5-\" prefix rule and is told it always reasons, which is the one thing its name rules out.",
             Source: "OpenAI names this alias as the non-reasoning model of the GPT-5 line; the corpus entry \"gpt-5\" next to it is the reasoning one."),
+
+        //
+        // A model nobody had written a rule for yet, found while testing the switch-over.
+        //
+        new(X, "grok-build-0.1",
+            AnswerToday: [TEXT_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            AnswerWanted: [TEXT_INPUT, MULTIPLE_IMAGE_INPUT, TEXT_OUTPUT, FUNCTION_CALLING, CHAT_COMPLETION_API],
+            Reason: "The agentic coding model of the Grok line reads pictures, and the family fallback it reaches says text only.",
+            Source: "https://x.ai/news/grok-build-0-1 states text and image input, tool calling, and a 256K context window."),
     ];
 }
