@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 
+using AIStudio.Models;
 using AIStudio.Provider;
 
 using Lua;
@@ -15,6 +16,23 @@ namespace AIStudio.Settings;
 /// </summary>
 public sealed record ProviderCapabilityOverrides
 {
+    /// <summary>
+    /// The capabilities a person switches on or off directly, without the reasoning words.
+    /// </summary>
+    /// <remarks>
+    /// How a model reasons is one answer out of four, not three flags which can contradict each
+    /// other, so it is resolved on its own below. The three words stay in the list above because
+    /// that is the vocabulary a settings file and a configuration plugin are written in.
+    /// </remarks>
+    private static readonly IReadOnlyList<Capability> DIRECTLY_SETTABLE_CAPABILITIES =
+    [
+        Capability.AUDIO_INPUT,
+        Capability.FUNCTION_CALLING,
+        Capability.MULTIPLE_IMAGE_INPUT,
+        Capability.SPEECH_INPUT,
+        Capability.VIDEO_INPUT,
+    ];
+
     private static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
     [
         Capability.AUDIO_INPUT,
@@ -95,6 +113,85 @@ public sealed record ProviderCapabilityOverrides
         Capability.REASONING_BY_DEFAULT => this with { ReasoningByDefault = value },
         _ => this
     };
+
+    /// <summary>
+    /// Applies what a person said about their own installation to what the rules worked out.
+    /// </summary>
+    /// <remarks>
+    /// The topmost link of the chain: an explicit statement about one's own provider wins over
+    /// everything the rules could know, because the person can see the installation and the rules
+    /// cannot.
+    /// </remarks>
+    /// <param name="profile">What the rules worked out.</param>
+    /// <returns>The profile as this provider instance was told it is.</returns>
+    public ModelProfile ApplyTo(in ModelProfile profile) => profile with
+    {
+        Capabilities = this.ApplyToCapabilities(profile.Capabilities),
+        Reasoning = this.ResolveReasoning(profile.Reasoning),
+    };
+
+    /// <summary>
+    /// Switches the plain capabilities on and off.
+    /// </summary>
+    /// <param name="stated">What the rules worked out.</param>
+    /// <returns>The capabilities after the overrides.</returns>
+    private Capability ApplyToCapabilities(Capability stated)
+    {
+        var capabilities = stated;
+        foreach (var capability in DIRECTLY_SETTABLE_CAPABILITIES)
+            switch (this.GetOverride(capability))
+            {
+                case true:
+                    capabilities |= capability;
+                    break;
+
+                case false:
+                    capabilities &= ~capability;
+                    break;
+            }
+
+        return capabilities;
+    }
+
+    /// <summary>
+    /// Works out how a model reasons, out of what the rules say and what a person said.
+    /// </summary>
+    /// <remarks>
+    /// This replaces thirty lines which repaired states that could not exist -- a model both always
+    /// reasoning and reasoning on request -- by an answer which cannot be in two of them at once.
+    /// The expert dialog writes all three words together, so the five combinations it produces are
+    /// answered exactly as they are today.
+    ///
+    /// One thing changes, and it is a defect going away. A word nobody said anything about used to
+    /// destroy the answer: a provider carrying any override at all, say tool calling turned off, lost
+    /// "reasoning on by default" on the way through, because the old repair took the word away unless
+    /// "reasoning on request" stood next to it -- which no rule ever states. Here a "no" only takes
+    /// away what it names.
+    /// </remarks>
+    /// <param name="stated">How the rules say the model reasons.</param>
+    /// <returns>How it reasons after the overrides.</returns>
+    private ReasoningSupport ResolveReasoning(ReasoningSupport stated)
+    {
+        // A "yes" is the whole answer, whatever else is written next to it:
+        if (this.AlwaysReasoning is true)
+            return ReasoningSupport.ALWAYS;
+
+        if (this.ReasoningByDefault is true)
+            return ReasoningSupport.ON_BY_DEFAULT;
+
+        if (this.OptionalReasoning is true)
+            return ReasoningSupport.OPTIONAL;
+
+        // A "no" only contradicts the state it names:
+        return stated switch
+        {
+            ReasoningSupport.ALWAYS => this.AlwaysReasoning is false ? ReasoningSupport.NONE : ReasoningSupport.ALWAYS,
+            ReasoningSupport.ON_BY_DEFAULT => this.ReasoningByDefault is false || this.OptionalReasoning is false ? ReasoningSupport.NONE : ReasoningSupport.ON_BY_DEFAULT,
+            ReasoningSupport.OPTIONAL => this.OptionalReasoning is false ? ReasoningSupport.NONE : ReasoningSupport.OPTIONAL,
+
+            _ => ReasoningSupport.NONE,
+        };
+    }
 
     public List<Capability> ApplyTo(IEnumerable<Capability> automaticCapabilities)
     {

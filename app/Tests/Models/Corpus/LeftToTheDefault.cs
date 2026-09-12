@@ -59,7 +59,6 @@ public static class LeftToTheDefault
         new(SELF_HOSTED, "ling-1t", THE_DEFAULT_SAYS_THE_SAME),
         new(SELF_HOSTED, "inclusionai/ling-mini-2.0", THE_DEFAULT_SAYS_THE_SAME),
         new(SELF_HOSTED, "starling-lm:7b", THE_DEFAULT_SAYS_THE_SAME),
-        new(SELF_HOSTED, "ernie-4.5-21b", THE_DEFAULT_SAYS_THE_SAME),
         new(SELF_HOSTED, "phi3:14b", "The Phi rules were written for the fourth generation and the ones before it already reached the default, which answers them the same as it does today."),
 
         //
@@ -70,7 +69,6 @@ public static class LeftToTheDefault
         new(SELF_HOSTED, "olmo-3-32b-think", THE_DEFAULT_KEEPS_WHAT_MATTERS),
         new(SELF_HOSTED, "seed-oss:36b", THE_DEFAULT_KEEPS_WHAT_MATTERS),
         new(SELF_HOSTED, "ring-1t", THE_DEFAULT_KEEPS_WHAT_MATTERS),
-        new(SELF_HOSTED, "ernie-x1.1-thinking", THE_DEFAULT_KEEPS_WHAT_MATTERS),
         new(SELF_HOSTED, "smollm3:3b", THE_DEFAULT_KEEPS_WHAT_MATTERS),
         new(HUGGINGFACE, "HuggingFaceTB/SmolLM3-3B", THE_DEFAULT_KEEPS_WHAT_MATTERS),
         new(SELF_HOSTED, "internlm3:8b", THE_DEFAULT_KEEPS_WHAT_MATTERS),
@@ -81,9 +79,6 @@ public static class LeftToTheDefault
         //
         new(SELF_HOSTED, "internvl3-8b", THE_DEFAULT_DROPS_THE_MODALITIES),
         new(GWDG, "internvl2.5-8b", THE_DEFAULT_DROPS_THE_MODALITIES),
-        new(SELF_HOSTED, "ernie-4.5-vl-28b", THE_DEFAULT_DROPS_THE_MODALITIES),
-        new(SELF_HOSTED, "apriel-1.5-15b-thinker", THE_DEFAULT_DROPS_THE_MODALITIES),
-        new(SELF_HOSTED, "apriel-1.6-15b-thinker", THE_DEFAULT_DROPS_THE_MODALITIES),
         new(SELF_HOSTED, "apertus-1.5-8b", "A family we decided not to write down, and the one which loses the most by it: it reads images and listens to audio, and the default knows about neither."),
 
         //

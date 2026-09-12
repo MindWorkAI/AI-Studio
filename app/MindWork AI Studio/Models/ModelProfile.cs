@@ -38,6 +38,31 @@ public readonly record struct ModelProfile
     public static readonly ModelProfile UNKNOWN = new();
 
     /// <summary>
+    /// What the app assumes about a model when no rule says anything about it.
+    /// </summary>
+    /// <remarks>
+    /// Hugging Face alone carries more than a hundred thousand models, so falling through here is
+    /// the normal case rather than a gap somebody forgot to close. The assumption describes what an
+    /// instruction-tuned model of the last few years does: it reads and writes text, it speaks the
+    /// chat completion API, and it calls functions.
+    ///
+    /// Tool calling is the part that was weighed rather than observed. Counted over the corpus, 17
+    /// of the models which reach this answer would be described wrongly without it and 8 with it --
+    /// and those 8 are named, in WithoutToolCallingFamily. A model that is offered tools it cannot
+    /// use fails visibly, and the person turns tool calling off in the expert settings; a model
+    /// that is never offered any fails invisibly, because nothing ever asks it. On top of that, a
+    /// model released from here on is far more likely to call functions than not.
+    ///
+    /// This is the whole assumption. Everything else stays unknown on purpose: a context window
+    /// nobody stated is not 4096 tokens, and a model whose name says nothing about images does not
+    /// get image input for free -- that is what the expert settings and the model plugins are for.
+    /// </remarks>
+    public static readonly ModelProfile ASSUMED = new()
+    {
+        Capabilities = Capability.TEXT_INPUT | Capability.TEXT_OUTPUT | Capability.CHAT_COMPLETION_API | Capability.FUNCTION_CALLING,
+    };
+
+    /// <summary>
     /// What the model can do.
     /// </summary>
     public Capability Capabilities { get; init; }
