@@ -13,8 +13,11 @@
 # uses without telling them what it may grow to, and it stops nobody from attaching a
 # hundred pictures to a model which may well take them.
 #
-# Models the audit found a wrong answer for are not in here. They live in
-# ExpectedChanges.cs, together with the answer they have to arrive at.
+# Every model of the corpus stands here, the ones the audit found a wrong answer for
+# included. While the old rules still stood those were kept out, so that a known-wrong
+# answer could not be frozen into this file. The old rules are gone and their answers are
+# corrected, so keeping them out only hid four of their columns: ExpectedChanges.cs states
+# what each of them must answer, but it states capabilities alone.
 #
 ALIBABA_CLOUD | qvq-max | ALWAYS_REASONING, CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwen-max-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -40,6 +43,7 @@ ALIBABA_CLOUD | qwen3.8-flash | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_
 ALIBABA_CLOUD | qwen3.8-max | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | CHAT | 1000000 | (unknown) | (unknown)
 ALIBABA_CLOUD | qwq-32b | ALWAYS_REASONING, CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwq-plus | ALWAYS_REASONING, CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+ALIBABA_CLOUD | text-embedding-v3 | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | (unknown)
 ANTHROPIC | claude-3-5-haiku-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 200000 | 100 per request | PROVIDER_API /v1/messages/count_tokens
 ANTHROPIC | claude-3-5-sonnet-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 200000 | 100 per request | PROVIDER_API /v1/messages/count_tokens
 ANTHROPIC | claude-3-7-sonnet-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, OPTIONAL_REASONING, TEXT_INPUT, TEXT_OUTPUT | CHAT | 200000 | 100 per request | PROVIDER_API /v1/messages/count_tokens
@@ -60,6 +64,7 @@ DEEP_SEEK | deepseek-v4-vision | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE
 FIREWORKS | accounts/fireworks/models/deepseek-v3 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 FIREWORKS | accounts/fireworks/models/llama-v3p1-405b-instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | 131072 | (unknown) | (unknown)
 FIREWORKS | accounts/fireworks/models/qwen3-235b-a22b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+FIREWORKS | whisper-v3 | SPEECH_INPUT, TEXT_OUTPUT | TRANSCRIPTION | (unknown) | (unknown) | (unknown)
 GOOGLE | gemini-1.0-pro-vision | CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 GOOGLE | gemini-2.0-flash | AUDIO_INPUT, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | CHAT | (unknown) | 3600 per request | PROVIDER_API countTokens
 GOOGLE | gemini-2.0-flash-live-001 | AUDIO_INPUT, CHAT_COMPLETION_API, FUNCTION_CALLING, SPEECH_INPUT, SPEECH_OUTPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -73,17 +78,23 @@ GOOGLE | gemini-3-pro-image | ALWAYS_REASONING, CHAT_COMPLETION_API, IMAGE_OUTPU
 GOOGLE | gemini-3.1-flash-image | ALWAYS_REASONING, CHAT_COMPLETION_API, IMAGE_OUTPUT, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | IMAGE_GENERATION | (unknown) | (unknown) | (unknown)
 GOOGLE | gemini-flash-latest | ALWAYS_REASONING, AUDIO_INPUT, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | CHAT | 1000000 | 3600 per request | PROVIDER_API countTokens
 GOOGLE | gemini-pro-latest | ALWAYS_REASONING, AUDIO_INPUT, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, TEXT_INPUT, TEXT_OUTPUT, VIDEO_INPUT | CHAT | 1000000 | 3600 per request | PROVIDER_API countTokens
+GOOGLE | imagen-4.0-generate-001 | IMAGE_OUTPUT, TEXT_INPUT | IMAGE_GENERATION | (unknown) | (unknown) | (unknown)
+GOOGLE | text-embedding-004 | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | (unknown)
 GROQ | llama-3.3-70b-versatile | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | 131072 | (unknown) | (unknown)
 GROQ | moonshotai/kimi-k2-instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 GROQ | openai/gpt-oss-120b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 131072 | (unknown) | (unknown)
 GROQ | qwen/qwen3-32b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+GROQ | whisper-large-v3-turbo | SPEECH_INPUT, TEXT_OUTPUT | TRANSCRIPTION | (unknown) | (unknown) | (unknown)
 GWDG | claude-sonnet-5 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 1000000 | 600 per request | PROVIDER_API /v1/messages/count_tokens
 GWDG | deepseek-r1 | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+GWDG | e5-mistral-7b-instruct | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | (unknown)
 GWDG | gemma-3-27b-it | CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 GWDG | gpt-5.5 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 1050000 | (unknown) | TIKTOKEN o200k_base
 GWDG | internvl2.5-8b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 GWDG | meta-llama-3.1-8b-instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | 131072 | (unknown) | (unknown)
 GWDG | qwen3-235b-a22b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+GWDG | whisper-large-v2 | SPEECH_INPUT, TEXT_OUTPUT | TRANSCRIPTION | (unknown) | (unknown) | (unknown)
+HELMHOLTZ | 01 - GPT-5.5 - great overall performance | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 1050000 | (unknown) | TIKTOKEN o200k_base
 HELMHOLTZ | 1 - Llama3 405 the best general model | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 HELMHOLTZ | 10 - Muse Glimmer 30b - the newest META model | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 HELMHOLTZ | Qwen 3.8-27B with DFlash on haicluster | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -102,6 +113,7 @@ IONOS | meta-llama/Llama-3.3-70B-Instruct | CHAT_COMPLETION_API, FUNCTION_CALLIN
 IONOS | mistralai/Mistral-Small-24B-Instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 LITE_LLM | anthropic/claude-sonnet-5 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 1000000 | 600 per request | PROVIDER_API /v1/messages/count_tokens
 LITE_LLM | azure/gpt-5.6 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 1050000 | (unknown) | TIKTOKEN o200k_base
+LITE_LLM | bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 LITE_LLM | the-fast-one | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 MISTRAL | codestral-2508 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 MISTRAL | magistral-medium-2506 | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -139,6 +151,7 @@ OPEN_AI | gpt-4o-mini | FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, T
 OPEN_AI | gpt-4o-mini-search-preview | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 128000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | gpt-4o-search-preview | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 128000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | gpt-5 | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 400000 | (unknown) | TIKTOKEN o200k_base
+OPEN_AI | gpt-5-chat-latest | FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 400000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | gpt-5-mini | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 400000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | gpt-5-nano | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 400000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | gpt-5.1 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, OPTIONAL_REASONING, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 400000 | (unknown) | TIKTOKEN o200k_base
@@ -157,6 +170,8 @@ OPEN_AI | o3 | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONS
 OPEN_AI | o3-mini | ALWAYS_REASONING, FUNCTION_CALLING, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | o3-pro | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 200000 | (unknown) | TIKTOKEN o200k_base
 OPEN_AI | o4-mini | ALWAYS_REASONING, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, RESPONSES_API, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 200000 | (unknown) | TIKTOKEN o200k_base
+OPEN_AI | text-embedding-3-large | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | TIKTOKEN cl100k_base
+OPEN_AI | whisper-1 | SPEECH_INPUT, TEXT_OUTPUT | TRANSCRIPTION | (unknown) | (unknown) | (unknown)
 OPEN_ROUTER | anthropic/claude-opus-5 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 1000000 | 600 per request | PROVIDER_API /v1/messages/count_tokens
 OPEN_ROUTER | deepseek/deepseek-chat-v3.1 | CHAT_COMPLETION_API, FUNCTION_CALLING, OPTIONAL_REASONING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 OPEN_ROUTER | deepseek/deepseek-r1-distill-llama-70b | ALWAYS_REASONING, CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -214,7 +229,10 @@ SELF_HOSTED | glm-4.6:latest | CHAT_COMPLETION_API, FUNCTION_CALLING, OPTIONAL_R
 SELF_HOSTED | glm-5-2 | CHAT_COMPLETION_API, FUNCTION_CALLING, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | glm-5.3-flash-nvfp4 | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | gpt-oss:20b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT, WEB_SEARCH | CHAT | 131072 | (unknown) | (unknown)
+SELF_HOSTED | granite-embedding:278m | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | granite3.2-vision:2b | CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+SELF_HOSTED | granite3.3:8b | CHAT_COMPLETION_API, FUNCTION_CALLING, OPTIONAL_REASONING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+SELF_HOSTED | granite4.2:8b | CHAT_COMPLETION_API, FUNCTION_CALLING, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | hunyuan:7b | CHAT_COMPLETION_API, FUNCTION_CALLING, OPTIONAL_REASONING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | inclusionai/ling-mini-2.0 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | internlm3:8b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -225,6 +243,7 @@ SELF_HOSTED | kimi-k3:latest | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_C
 SELF_HOSTED | kimi-vl:16b | ALWAYS_REASONING, CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | ling-1t | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | llama-3.1-405b-base | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | 131072 | (unknown) | (unknown)
+SELF_HOSTED | llama-3.3-nemotron-super-49b | CHAT_COMPLETION_API, FUNCTION_CALLING, OPTIONAL_REASONING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | llama2:13b | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | llama3.2-vision:11b | CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | llama3.2:3b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | 131072 | (unknown) | (unknown)
@@ -233,9 +252,11 @@ SELF_HOSTED | minimax-m2:latest | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTIO
 SELF_HOSTED | minimax-text-01 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | ministral-8b-instruct-2410 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | mistral-nemo:12b | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+SELF_HOSTED | mistral-small-3.1-24b-instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | mistral-small3.2:24b | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | muse-glimmer-30b | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | nemotron-3-49b | CHAT_COMPLETION_API, FUNCTION_CALLING, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+SELF_HOSTED | nomic-embed-text:latest | EMBEDDING, TEXT_INPUT | EMBEDDING | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | nvidia-nemotron-3.5-lightning-30b-a3b-nvfp4 | CHAT_COMPLETION_API, FUNCTION_CALLING, REASONING_BY_DEFAULT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | occiglot-7b-eu5 | CHAT_COMPLETION_API, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 SELF_HOSTED | olmo-3-32b-think | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
@@ -275,3 +296,4 @@ X | grok-4-fast-reasoning | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALL
 X | grok-4.20 | ALWAYS_REASONING, CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 1000000 | (unknown) | (unknown)
 X | grok-4.20-non-reasoning | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 1000000 | (unknown) | (unknown)
 X | grok-5 | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
+X | grok-build-0.1 | CHAT_COMPLETION_API, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | 256000 | (unknown) | (unknown)

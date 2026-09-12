@@ -37,7 +37,7 @@ public sealed class CapabilityCharacterizationTests
     public void TheCorpusStillGetsTheAnswersTheSnapshotRecorded()
     {
         var recorded = CapabilitySnapshot.Read();
-        var current = CapabilitySnapshot.Render(SnapshotEntries());
+        var current = CapabilitySnapshot.Render(ModelCorpus.ENTRIES);
 
         if (recorded is null)
         {
@@ -58,16 +58,6 @@ public sealed class CapabilityCharacterizationTests
 
         File.WriteAllText(CapabilitySnapshot.ACTUAL_FILE_PATH, current);
         Assert.Fail($"The capabilities of {DescribeDifference(recorded, current)}{Environment.NewLine}{Environment.NewLine}The full result was written to {CapabilitySnapshot.ACTUAL_FILE_PATH}.");
-    }
-
-    /// <summary>
-    /// The corpus entries the snapshot covers, which is all of them except the known-wrong ones.
-    /// </summary>
-    /// <returns>The entries whose answer must not change.</returns>
-    private static IEnumerable<CorpusEntry> SnapshotEntries()
-    {
-        var knownWrong = ExpectedChanges.ENTRIES.Select(change => (change.Provider, change.ModelId)).ToHashSet();
-        return ModelCorpus.ENTRIES.Where(entry => !knownWrong.Contains((entry.Provider, entry.ModelId)));
     }
 
     /// <summary>

@@ -6,10 +6,14 @@ namespace AIStudio.Tests.Models.Corpus;
 /// A corpus entry whose current answer the audit showed to be wrong.
 /// </summary>
 /// <remarks>
-/// These are kept apart from the snapshot on purpose. The snapshot says "this must not change", and
-/// writing a known-wrong answer into it would turn the rebuild into a copy of the mistake. Here the
-/// wrong answer is written down as well, so that it cannot drift unnoticed either, next to the
-/// answer the rebuild has to arrive at.
+/// While the old rules still stood, these were kept out of the snapshot: it says "this must not
+/// change", and writing a known-wrong answer into it would have turned the rebuild into a copy of
+/// the mistake. That has been over since the old rules were deleted, and keeping them out had a
+/// price nobody had counted -- an entry here states capabilities and nothing else, so the kind, the
+/// context window, the image limit and the tokenizer of these models were reviewed nowhere at all.
+/// Five embedding models sat in that blind spot. They are in the snapshot now like everything else,
+/// and what this file still does is the part no snapshot can: saying what the answer has to be,
+/// rather than only noticing that it changed.
 /// </remarks>
 /// <param name="Provider">The provider the model is reached through.</param>
 /// <param name="ModelId">The model ID, exactly as it appears in the corpus.</param>

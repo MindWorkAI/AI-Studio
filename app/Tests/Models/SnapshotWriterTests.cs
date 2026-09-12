@@ -18,10 +18,7 @@ public sealed class SnapshotWriterTests
     [Test]
     public void TakeTheSnapshotAnew()
     {
-        var knownWrong = ExpectedChanges.ENTRIES.Select(change => (change.Provider, change.ModelId)).ToHashSet();
-        var entries = ModelCorpus.ENTRIES.Where(entry => !knownWrong.Contains((entry.Provider, entry.ModelId)));
-
-        File.WriteAllText(CapabilitySnapshot.FILE_PATH, CapabilitySnapshot.Render(entries));
+        File.WriteAllText(CapabilitySnapshot.FILE_PATH, CapabilitySnapshot.Render(ModelCorpus.ENTRIES));
         File.Delete(CapabilitySnapshot.ACTUAL_FILE_PATH);
 
         TestContext.Out.WriteLine($"Wrote {CapabilitySnapshot.FILE_PATH}. Read the diff before committing it.");

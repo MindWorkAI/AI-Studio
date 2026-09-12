@@ -74,8 +74,11 @@ public static class CapabilitySnapshot
         # uses without telling them what it may grow to, and it stops nobody from attaching a
         # hundred pictures to a model which may well take them.
         #
-        # Models the audit found a wrong answer for are not in here. They live in
-        # ExpectedChanges.cs, together with the answer they have to arrive at.
+        # Every model of the corpus stands here, the ones the audit found a wrong answer for
+        # included. While the old rules still stood those were kept out, so that a known-wrong
+        # answer could not be frozen into this file. The old rules are gone and their answers are
+        # corrected, so keeping them out only hid four of their columns: ExpectedChanges.cs states
+        # what each of them must answer, but it states capabilities alone.
         #
 
         """;
