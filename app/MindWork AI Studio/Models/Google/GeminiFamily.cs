@@ -29,7 +29,8 @@ public sealed class GeminiFamily : ModelFamily
     /// <inheritdoc />
     public override IReadOnlyList<ModelSource> FurtherSources =>
     [
-        new("https://ai.google.dev/gemini-api/docs/image-understanding", new DateOnly(2026, 9, 12), "States one number for the whole family: \"Gemini models support a maximum of 3,600 image files per request.\" The 20 MB it also names is a limit on the request body rather than on the number of images.")
+        new("https://ai.google.dev/gemini-api/docs/image-understanding", new DateOnly(2026, 9, 12), "States one number for the whole family: \"Gemini models support a maximum of 3,600 image files per request.\" The 20 MB it also names is a limit on the request body rather than on the number of images."),
+        new("https://ai.google.dev/gemini-api/docs/tokens", new DateOnly(2026, 9, 12), "Google publishes no tokenizer file for Gemini. Counting happens through the countTokens method of the API, which returns the number of tokens of the input alone.")
     ];
 
     /// <inheritdoc />
@@ -44,7 +45,8 @@ public sealed class GeminiFamily : ModelFamily
         builder.Rule("gemini").AsSegment()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | AUDIO_INPUT | SPEECH_INPUT | VIDEO_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(CHAT_COMPLETION_API)
-            .Images(maxPerRequest: 3_600);
+            .Images(maxPerRequest: 3_600)
+            .Tokenizer(TokenizerKind.PROVIDER_API, "countTokens");
 
         // The one Gemini which only ever read text and images:
         builder.Rule("gemini-1.0-pro-vision").AsPrefix()

@@ -47,6 +47,16 @@ public static class CapabilitySnapshot
     /// </remarks>
     private const string NO_IMAGE_LIMIT = "(unknown)";
 
+    /// <summary>
+    /// What a model nobody named a tokenizer for is written as.
+    /// </summary>
+    /// <remarks>
+    /// Which is what the app already does for all of them: it counts with the tokenizer it ships
+    /// and says that the number is an estimate. Naming one changes nothing about the counting yet;
+    /// it tells a person which file to look for, and for two vendors that there is none.
+    /// </remarks>
+    private const string NO_TOKENIZER = "(unknown)";
+
     private const string HEADER =
         """
         # What the rules answer, for every model of the corpus.
@@ -55,9 +65,9 @@ public static class CapabilitySnapshot
         # the diff. Every line of it is a statement about a model which somebody has to agree with.
         #
         # Columns are provider, model ID as the provider reports it, the capabilities sorted by
-        # name, what the model is made for, its context window in tokens, and how many images it
-        # accepts. The ID stands here unchanged, so a line may well carry leading or trailing
-        # spaces.
+        # name, what the model is made for, its context window in tokens, how many images it
+        # accepts, and which tokenizer it uses. The ID stands here unchanged, so a line may well
+        # carry leading or trailing spaces.
         #
         # A window or an image limit written as "(unknown)" is one nobody has stated a source for.
         # That is a gap, not a claim: the app then shows a person how many tokens their conversation
@@ -124,8 +134,20 @@ public static class CapabilitySnapshot
     private static string Line(CorpusEntry entry)
     {
         var profile = entry.Provider.GetModelProfile(new Model(entry.ModelId, null));
-        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)} | {Describe(profile.Images)}";
+        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)} | {Describe(profile.Images)} | {Describe(profile.Tokenizer)}";
     }
+
+    /// <summary>
+    /// Writes a tokenizer reference the way a snapshot line does.
+    /// </summary>
+    /// <remarks>
+    /// The kind travels with the name, because the name alone would be a riddle: "o200k_base" is
+    /// not a repository somebody can open, and "/v1/messages/count_tokens" is not a file somebody
+    /// can download. What sort of thing it is decides what a person can do with it.
+    /// </remarks>
+    /// <param name="tokenizer">The reference to write.</param>
+    /// <returns>The reference, or a marker when nobody named one.</returns>
+    public static string Describe(TokenizerRef tokenizer) => tokenizer.IsKnown ? $"{tokenizer.Kind} {tokenizer.Id}" : NO_TOKENIZER;
 
     /// <summary>
     /// Writes an image limit the way a snapshot line does.

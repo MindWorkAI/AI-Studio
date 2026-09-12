@@ -7065,6 +7065,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Duplicate k
 -- Override Model Capabilities
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3904244586"] = "Override Model Capabilities"
 
+-- The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3965340739"] = "The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer."
+
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually."
 
@@ -7079,6 +7082,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4285779702"] = "Choose File
 
 -- Video input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4289835208"] = "Video input"
+
+-- This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T466506475"] = "This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer."
 
 -- We are currently unable to communicate with the provider to load models. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
@@ -7100,6 +7106,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Provider"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900713019"] = "Cancel"
+
+-- This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T924854143"] = "This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating."
 
 -- For better token estimates, you can configure a custom tokenizer for this provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T961454300"] = "For better token estimates, you can configure a custom tokenizer for this provider."

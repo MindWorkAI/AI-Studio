@@ -27,6 +27,12 @@ public sealed class Gpt5Family : ModelFamily
     public override ModelSource Source => new("https://developers.openai.com/api/docs/models", new DateOnly(2026, 9, 12), "Capabilities ported unchanged from ProviderExtensions.OpenAI.cs, one rule per generation, except that the chat alias no longer inherits the reasoning it is named for not having. Context windows read per generation from the model pages below that URL.");
 
     /// <inheritdoc />
+    public override IReadOnlyList<ModelSource> FurtherSources =>
+    [
+        new("https://github.com/openai/tiktoken/blob/main/tiktoken/model.py", new DateOnly(2026, 9, 12), "OpenAI's own mapping from model names to encodings. It maps the prefix \"gpt-5\" to o200k_base, which covers every model of this line.")
+    ];
+
+    /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
     {
         //
@@ -38,7 +44,8 @@ public sealed class Gpt5Family : ModelFamily
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
             .Reasoning(ReasoningSupport.ALWAYS)
-            .ContextWindow(400_000);
+            .ContextWindow(400_000)
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
 
         //
         // The alias for the model of this generation which does not reason. The previous rules had

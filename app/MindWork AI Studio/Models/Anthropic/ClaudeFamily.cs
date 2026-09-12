@@ -52,7 +52,8 @@ public sealed class ClaudeFamily : ModelFamily
     /// <inheritdoc />
     public override IReadOnlyList<ModelSource> FurtherSources =>
     [
-        new("https://platform.claude.com/docs/en/build-with-claude/vision", new DateOnly(2026, 9, 12), "The vision page gives the image limit as a rule rather than as a number per model: 100 images per request on the API for models with a 200k-token context window, 600 per request for all other models. The 20 it also names belongs to claude.ai, not to the API.")
+        new("https://platform.claude.com/docs/en/build-with-claude/vision", new DateOnly(2026, 9, 12), "The vision page gives the image limit as a rule rather than as a number per model: 100 images per request on the API for models with a 200k-token context window, 600 per request for all other models. The 20 it also names belongs to claude.ai, not to the API."),
+        new("https://platform.claude.com/docs/en/build-with-claude/token-counting", new DateOnly(2026, 9, 12), "Anthropic publishes no tokenizer file at all; they count through the /v1/messages/count_tokens endpoint instead. The same page warns that Claude 4.7 and later use a newer tokenizer, on which the same text counts roughly 30 percent higher -- so AI Studio's built-in estimate is further off for those models than for the older ones.")
     ];
 
     /// <inheritdoc />
@@ -84,7 +85,8 @@ public sealed class ClaudeFamily : ModelFamily
         builder.Rule("claude").AsSegment()
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING)
             .Apis(CHAT_COMPLETION_API)
-            .ContextWindow(STANDARD_WINDOW);
+            .ContextWindow(STANDARD_WINDOW)
+            .Tokenizer(TokenizerKind.PROVIDER_API, "/v1/messages/count_tokens");
 
         //
         // The 3.x models say nothing beyond the shape above, so nothing is written for them: the

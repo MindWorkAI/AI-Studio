@@ -14,11 +14,18 @@ public sealed class Gpt35Family : ModelFamily
     public override ModelSource Source => new("https://platform.openai.com/docs/models", new DateOnly(2026, 9, 11), "Ported unchanged from the rules in ProviderExtensions.OpenAI.cs: text in, text out, no tools and no images.");
 
     /// <inheritdoc />
+    public override IReadOnlyList<ModelSource> FurtherSources =>
+    [
+        new("https://github.com/openai/tiktoken/blob/main/tiktoken/model.py", new DateOnly(2026, 9, 12), "OpenAI's own mapping from model names to encodings. It maps \"gpt-3.5\", \"gpt-3.5-turbo\" and the prefix \"gpt-3.5-turbo-\" to cl100k_base.")
+    ];
+
+    /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
     {
         builder.Rule("gpt-3.5").AsPrefix()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
-            .Apis(CHAT_COMPLETION_API);
+            .Apis(CHAT_COMPLETION_API)
+            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base");
 
         //
         // The odd one out, and kept odd on purpose: the previous rules put this one model on the
@@ -28,6 +35,7 @@ public sealed class Gpt35Family : ModelFamily
         //
         builder.Rule("gpt-3.5-turbo").AsExact()
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
-            .Apis(RESPONSES_API);
+            .Apis(RESPONSES_API)
+            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base");
     }
 }
