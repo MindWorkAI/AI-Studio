@@ -5031,6 +5031,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1392042694"] = "Rep
 -- License:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1908172666"] = "Lizenz:"
 
+-- The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T3965340739"] = "Der Anbieter dieses Modells veröffentlicht keine Tokenizer-Datei und zählt die Token über seine API ({0}). AI Studio schätzt die Tokenanzahl daher mit dem integrierten Tokenizer."
+
+-- This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T466506475"] = "Dieses Modell verwendet die {0}-Kodierung von OpenAI, die nicht als Datei „tokenizer.json“ verfügbar ist. AI Studio schätzt die Anzahl der Tokens daher mit seinem integrierten Tokenizer."
+
+-- This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T924854143"] = "Dieses Modell verwendet den Tokenizer von {0}. Laden Sie die Datei „tokenizer.json“ herunter und wählen Sie sie unten aus, um die Tokenanzahl exakt statt geschätzt zu ermitteln."
+
 -- Tool selection is hidden
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2096103917"] = "Werkzeugauswahl ist ausgeblendet"
 
@@ -7065,9 +7074,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Doppelter S
 -- Override Model Capabilities
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3904244586"] = "Modellfähigkeiten überschreiben"
 
--- The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3965340739"] = "Der Anbieter dieses Modells veröffentlicht keine Tokenizer-Datei und zählt die Tokens stattdessen über seine API ({0}). AI Studio schätzt die Anzahl der Tokens daher mit seinem integrierten Tokenizer."
-
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Derzeit können wir die Modelle für den ausgewählten Anbieter und/oder Host nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
 
@@ -7082,9 +7088,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4285779702"] = "Datei ausw�
 
 -- Video input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4289835208"] = "Videoeingabe"
-
--- This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T466506475"] = "Dieses Modell verwendet die {0}-Kodierung von OpenAI, die nicht als tokenizer.json-Datei vorliegt. AI Studio schätzt die Anzahl der Token daher mit seinem integrierten Tokenizer."
 
 -- We are currently unable to communicate with the provider to load models. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "Wir können derzeit nicht mit dem Anbieter kommunizieren, um Modelle zu laden. Bitte versuchen Sie es später erneut."
@@ -7106,9 +7109,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Anbieter"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900713019"] = "Abbrechen"
-
--- This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T924854143"] = "Dieses Modell verwendet den Tokenizer von {0}. Laden Sie die Datei „tokenizer.json“ herunter und wählen Sie sie unten aus, um exakt statt nur geschätzt zu zählen."
 
 -- For better token estimates, you can configure a custom tokenizer for this provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T961454300"] = "Für genauere Token-Schätzungen können Sie einen benutzerdefinierten Tokenizer für diesen Anbieter konfigurieren."

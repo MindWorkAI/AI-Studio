@@ -778,35 +778,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return "Unknown";
     }
 
-    /// <summary>
-    /// What the dialog says about the tokenizer of the current model, if anything.
-    /// </summary>
-    /// <remarks>
-    /// The field below this sentence takes a tokenizer.json file and nothing else, and until now it
-    /// said nothing about which file. That leaves two kinds of people stuck: the ones who could
-    /// download the right file and do not know its name, and the ones who spend an evening looking
-    /// for Anthropic's tokenizer file, which does not exist.
-    ///
-    /// Empty for a model nobody stated a tokenizer for, which is most of them. An empty sentence
-    /// hides the whole line rather than claiming that nothing is known about it.
-    /// </remarks>
-    /// <returns>The sentence, or nothing.</returns>
-    private string GetCurrentModelTokenizerLabel()
-    {
-        var tokenizer = this.GetCurrentModelProfile().Tokenizer;
-        if (!tokenizer.IsKnown)
-            return string.Empty;
-
-        return tokenizer.Kind switch
-        {
-            TokenizerKind.HUGGING_FACE => string.Format(T("This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating."), tokenizer.Id),
-            TokenizerKind.TIKTOKEN => string.Format(T("This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer."), tokenizer.Id),
-            TokenizerKind.PROVIDER_API => string.Format(T("The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer."), tokenizer.Id),
-
-            _ => string.Empty,
-        };
-    }
-
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
     {
         Capability.AUDIO_INPUT => T("Audio input"),

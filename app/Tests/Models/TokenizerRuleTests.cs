@@ -33,6 +33,9 @@ public sealed class TokenizerRuleTests
     [TestCase(LLMProviders.OPEN_AI, "gpt-4", "cl100k_base", Description = "The older encoding, which is where the 4 line stayed.")]
     [TestCase(LLMProviders.OPEN_AI, "gpt-4-turbo", "cl100k_base")]
     [TestCase(LLMProviders.OPEN_AI, "gpt-3.5-turbo", "cl100k_base")]
+    [TestCase(LLMProviders.OPEN_AI, "text-embedding-3-small", "cl100k_base", Description = "The embedding models stayed on the older encoding as well, and their dialog asks the same question.")]
+    [TestCase(LLMProviders.OPEN_AI, "text-embedding-3-large", "cl100k_base")]
+    [TestCase(LLMProviders.OPEN_AI, "text-embedding-ada-002", "cl100k_base")]
     public void OpenAINamesAnEncodingRatherThanAFile(LLMProviders provider, string modelId, string encoding)
     {
         var tokenizer = provider.GetModelProfile(new Model(modelId, null)).Tokenizer;
