@@ -1,3 +1,5 @@
+using AIStudio.Models.Registry;
+
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
@@ -64,6 +66,7 @@ public static partial class PluginFactory
         // declare an ID which differs from its directory name, and a single directory may even hold
         // several plugins:
         //
+        var unloadedAModelPlugin = false;
         foreach (var plugin in AVAILABLE_PLUGINS.Where(plugin => IsPathInside(configurationDirectory, plugin.LocalPath)).ToList())
         {
             AVAILABLE_PLUGINS.Remove(plugin);
@@ -71,6 +74,7 @@ public static partial class PluginFactory
             if (RUNNING_PLUGINS.FirstOrDefault(runningPlugin => runningPlugin.Id == plugin.Id) is { } runningPluginToRemove)
             {
                 RUNNING_PLUGINS.Remove(runningPluginToRemove);
+                unloadedAModelPlugin |= runningPluginToRemove is PluginModels;
 
                 // The plugin is unloaded, so its Lua runtime is of no use anymore:
                 runningPluginToRemove.Dispose();
@@ -78,6 +82,15 @@ public static partial class PluginFactory
 
             LOG.LogInformation("Unloaded the plugin '{PluginName}' ({PluginId}). Reason: {Reason}.", plugin.Name, plugin.Id, reason);
         }
+
+        //
+        // This clean-up runs after the plugins were started, and nothing starts them again
+        // afterwards. A model plugin whose configuration is gone would otherwise go on describing
+        // models until the next restart, which is the one thing withdrawing a configuration has to
+        // stop:
+        //
+        if (unloadedAModelPlugin)
+            ModelRegistry.Shared.Declare(GetModelDeclarations());
 
         if (!Directory.Exists(configurationDirectory))
             return;

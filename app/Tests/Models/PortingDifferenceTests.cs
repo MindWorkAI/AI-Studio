@@ -112,11 +112,4 @@ public sealed class PortingDifferenceTests
     /// <param name="entry">The corpus entry to look up.</param>
     /// <returns>True, when it stands in the list of models left to the default.</returns>
     private static bool IsLeftToTheDefault(CorpusEntry entry) => LeftToTheDefault.ENTRIES.Any(left => left.Provider == entry.Provider && string.Equals(left.ModelId, entry.ModelId, StringComparison.Ordinal));
-
-    /// <summary>
-    /// Whether the audit found the current answer for this entry wrong.
-    /// </summary>
-    /// <param name="entry">The entry to look up.</param>
-    /// <returns>True, when the rebuild is meant to answer differently.</returns>
-    private static bool IsKnownToBeWrong(CorpusEntry entry) => ExpectedChanges.ENTRIES.Any(change => change.Provider == entry.Provider && change.ModelId == entry.ModelId);
 }

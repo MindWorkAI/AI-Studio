@@ -3,6 +3,7 @@ using System.Collections.Frozen;
 
 using AIStudio.Models.Hosting;
 using AIStudio.Models.Matching;
+using AIStudio.Models.Plugins;
 using AIStudio.Provider;
 
 namespace AIStudio.Models.Registry;
@@ -11,11 +12,12 @@ namespace AIStudio.Models.Registry;
 /// Everything the app knows about models, as one question with one answer.
 /// </summary>
 /// <remarks>
-/// Four things happen to a name here, and the order they happen in is the whole design. The host
+/// A few things happen to a name here, and the order they happen in is the whole design. The host
 /// takes off whatever wrapping the provider put around the name, so that a rule can be written once
-/// instead of once per provider. The rules answer the bare name, and the most specific of them
-/// wins, computed rather than written down. The family which won may then work something out of the
-/// name that no rule can express. And the host says what the way there took away.
+/// instead of once per provider. What an organization declared about its own models answers first,
+/// where it says anything. Otherwise the built-in rules answer the bare name, and the most specific
+/// of them wins, computed rather than written down. The family which won may then work something
+/// out of the name that no rule can express. And the host says what the way there took away.
 ///
 /// Nothing in here reaches for application state, so a test can build a registry and ask it
 /// questions without the app ever having started.
@@ -34,16 +36,14 @@ public sealed class ModelRegistry
     private readonly FrozenDictionary<string, ModelFamily> familiesByName;
 
     /// <summary>
-    /// The answers already worked out, so that a name is measured against the rules once.
+    /// What the plugins declare, and the answers worked out while they declared it.
     /// </summary>
     /// <remarks>
-    /// This is the reason the whole rebuild is worth doing at all. The question is asked from
-    /// components which re-render on every streamed chunk, and the expert dialog asks it about a
-    /// dozen times per render. A profile cannot be changed after it was built, so handing the same
-    /// one to every caller is safe -- unlike the old code, which handed out a list and had one
-    /// caller quietly change it.
+    /// The two belong together and are therefore replaced together. A cache which outlived the
+    /// declarations it was filled under would keep handing out what the rules said before a
+    /// plugin arrived, and a reader holding one half of a swap would mix the two.
     /// </remarks>
-    private readonly ConcurrentDictionary<(LLMProviders Provider, string ModelId), ModelProfile> answered = new();
+    private volatile Answers answers = new(null);
 
     private ModelRegistry(IReadOnlyList<ModelFamily> families, ModelFamilyIndex rules, ModelHostIndex hosts, FrozenDictionary<string, ModelFamily> familiesByName)
     {
@@ -72,6 +72,29 @@ public sealed class ModelRegistry
     /// Which host answers for which provider.
     /// </summary>
     public ModelHostIndex Hosts { get; }
+
+    /// <summary>
+    /// The rules the running model plugins declare, in the order the index holds them.
+    /// </summary>
+    public IReadOnlyList<ModelRule> Declared => this.answers.Declared?.Rules ?? [];
+
+    /// <summary>
+    /// Takes over what the model plugins declare, replacing whatever they declared before.
+    /// </summary>
+    /// <remarks>
+    /// Replacing rather than adding, because this is called again whenever the plugins are
+    /// reloaded: a plugin somebody removed has to stop being heard, and a declaration somebody
+    /// corrected must not go on answering alongside its correction.
+    ///
+    /// The declarations are pushed in rather than fetched. Nothing in here knows that plugins
+    /// exist, which is what keeps a registry buildable in a test without the plugin system, the
+    /// settings, or the app having started.
+    /// </remarks>
+    /// <param name="declarations">What the plugins declare, with each pattern claimed by one of them.</param>
+    public void Declare(IReadOnlyList<ModelDeclaration> declarations)
+    {
+        this.answers = new(declarations.Count is 0 ? null : ModelFamilyIndex.Build(declarations.Select(declaration => declaration.ToRule())));
+    }
 
     /// <summary>
     /// Builds a registry over a set of families and hosts.
@@ -112,7 +135,12 @@ public sealed class ModelRegistry
         if (NothingCanBeSaid(provider, modelId))
             return ModelProfile.UNKNOWN;
 
-        return this.answered.GetOrAdd((provider, modelId), static (key, registry) => registry.Explain(key.Provider, key.ModelId).Profile, this);
+        //
+        // Read once, then used throughout: the plugins may be reloaded while this is running, and
+        // an answer worked out from one set of declarations belongs in the cache of that same set.
+        //
+        var current = this.answers;
+        return current.Cached.GetOrAdd((provider, modelId), static (key, state) => state.Registry.Explain(key.Provider, key.ModelId, state.Answers).Profile, (Registry: this, Answers: current));
     }
 
     /// <summary>
@@ -126,14 +154,39 @@ public sealed class ModelRegistry
     /// <param name="provider">Who serves the model.</param>
     /// <param name="modelId">The model ID exactly as that provider reports it.</param>
     /// <returns>The resolution, including the profile as the provider serves it.</returns>
-    public ModelResolution Explain(LLMProviders provider, string modelId)
+    public ModelResolution Explain(LLMProviders provider, string modelId) => this.Explain(provider, modelId, this.answers);
+
+    /// <summary>
+    /// Says what is known about a model, against one particular set of plugin declarations.
+    /// </summary>
+    /// <param name="provider">Who serves the model.</param>
+    /// <param name="modelId">The model ID exactly as that provider reports it.</param>
+    /// <param name="current">The declarations to answer against, and the cache belonging to them.</param>
+    /// <returns>The resolution, including the profile as the provider serves it.</returns>
+    private ModelResolution Explain(LLMProviders provider, string modelId, Answers current)
     {
         if (NothingCanBeSaid(provider, modelId))
             return ModelResolution.NOTHING;
 
         var id = new ModelId(modelId);
         var bare = this.Hosts.Unwrap(id, provider, out var declaredVendor);
-        var resolution = this.Rules.Explain(bare, provider, declaredVendor ?? ModelVendor.UNKNOWN);
+        var vendor = declaredVendor ?? ModelVendor.UNKNOWN;
+
+        //
+        // What an organization declared about a model comes before what the built-in rules work out
+        // of its name, and it comes instead of it rather than on top of it: a declaration is the
+        // whole statement about the models it matches. Letting the built-in rules add to it would
+        // mean a modifier nobody was thinking about could overrule what an organization stated --
+        // "guard" would still turn their own chat model into a moderation model.
+        //
+        // What stays is the transport, because that is not a statement about the model at all: a
+        // gateway which cannot pass an API through does not pass it through, whoever describes the
+        // model behind it.
+        //
+        if (current.Declared?.Explain(bare, provider, vendor) is { IsKnown: true } declared)
+            return declared with { Profile = this.Hosts.ApplyTransport(declared.Profile, provider) };
+
+        var resolution = this.Rules.Explain(bare, provider, vendor);
 
         //
         // Only the family which chose the model refines it. A modifier adjusts an answer; it does
@@ -162,4 +215,31 @@ public sealed class ModelRegistry
     /// <param name="selector">The rule which chose the model.</param>
     /// <returns>The family, or nothing when no rule chose.</returns>
     private ModelFamily? FamilyOf(ModelRule? selector) => selector is null ? null : this.familiesByName.GetValueOrDefault(selector.Origin);
+
+    /// <summary>
+    /// What the registry answers with, and what it has answered so far.
+    /// </summary>
+    /// <remarks>
+    /// The cache is the reason the whole rebuild is worth doing at all. The question is asked from
+    /// components which re-render on every streamed chunk, and the expert dialog asks it about a
+    /// dozen times per render. A profile cannot be changed after it was built, so handing the same
+    /// one to every caller is safe -- unlike the old code, which handed out a list and had one
+    /// caller quietly change it.
+    ///
+    /// It sits next to the declarations rather than beside them, so that replacing what the plugins
+    /// say throws away exactly the answers which were given while they said something else.
+    /// </remarks>
+    /// <param name="declared">What the running model plugins declare, or null when they declare nothing.</param>
+    private sealed class Answers(ModelFamilyIndex? declared)
+    {
+        /// <summary>
+        /// What the running model plugins declare.
+        /// </summary>
+        public ModelFamilyIndex? Declared { get; } = declared;
+
+        /// <summary>
+        /// The answers already worked out, so that a name is measured against the rules once.
+        /// </summary>
+        public ConcurrentDictionary<(LLMProviders Provider, string ModelId), ModelProfile> Cached { get; } = new();
+    }
 }
