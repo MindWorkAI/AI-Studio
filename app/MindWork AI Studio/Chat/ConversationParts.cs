@@ -23,6 +23,17 @@ public sealed record ConversationParts
     public IReadOnlyList<string> Texts { get; init; } = [];
 
     /// <summary>
+    /// The texts which are still being written.
+    /// </summary>
+    /// <remarks>
+    /// They cost exactly what the others cost; what sets them apart is that they will never be seen
+    /// again in this shape. The sentence somebody is typing changes with the next pause, and an
+    /// answer being streamed is a different text three seconds later -- so remembering what they
+    /// cost fills memory with answers nobody will ask for again.
+    /// </remarks>
+    public IReadOnlyList<string> GrowingTexts { get; init; } = [];
+
+    /// <summary>
     /// The documents whose content is put into the request.
     /// </summary>
     public IReadOnlyList<FileAttachment> Documents { get; init; } = [];
@@ -52,6 +63,7 @@ public sealed record ConversationParts
     public static ConversationParts Of(ChatThread? thread, string systemPrompt, string draft, IEnumerable<FileAttachment>? draftAttachments, bool imagesAreSent)
     {
         var texts = new List<string>();
+        var growing = new List<string>();
         var documents = new List<FileAttachment>();
         var images = 0;
 
@@ -70,13 +82,17 @@ public sealed record ConversationParts
                 if (block.ContentType is not ContentType.TEXT || block.Content is not ContentText text || string.IsNullOrWhiteSpace(text.Text))
                     continue;
 
-                texts.Add(text.Text);
+                if (text.IsStreaming)
+                    growing.Add(text.Text);
+                else
+                    texts.Add(text.Text);
+
                 Sort(text.FileAttachments, documents, ref images);
             }
         }
 
         if (!string.IsNullOrWhiteSpace(draft))
-            texts.Add(draft);
+            growing.Add(draft);
 
         if (draftAttachments is not null)
             Sort(draftAttachments, documents, ref images);
@@ -84,6 +100,7 @@ public sealed record ConversationParts
         return new()
         {
             Texts = texts,
+            GrowingTexts = growing,
             Documents = documents,
             Images = imagesAreSent ? images : 0,
         };

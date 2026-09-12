@@ -99,6 +99,52 @@ public partial class ChatComponent : MSGComponentBase
     private ConversationTokens conversationTokens = ConversationTokens.UNAVAILABLE;
 
     /// <summary>
+    /// How much of the window must be used before the number starts saying so.
+    /// </summary>
+    private const double WINDOW_NEARLY_FULL = 0.8d;
+
+    /// <summary>
+    /// How long the token count stays quiet after it ran, while nothing is being written.
+    /// </summary>
+    /// <remarks>
+    /// A render is cheap to ask about and a count is not. This is what keeps a burst of renders --
+    /// loading a chat touches several things in a row -- from turning into a burst of counting,
+    /// while staying short enough that switching a profile moves the number right away.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_QUIET_TIME = TimeSpan.FromMilliseconds(500);
+
+    /// <summary>
+    /// How long the token count stays quiet while an answer is being written.
+    /// </summary>
+    /// <remarks>
+    /// An answer grows with every word, so each count finds a new number, shows it, and thereby
+    /// renders -- which asks for the next count. That makes this the whole cadence while a model
+    /// writes, and three seconds is the pace the chat itself keeps: the job service hands its
+    /// progress to the screen no more often than that.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_STREAMING_QUIET_TIME = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// How long the token count waits for a reason before counting anyway.
+    /// </summary>
+    /// <remarks>
+    /// For what happens outside AI Studio: an attached document is read from disk every time it is
+    /// sent, so somebody editing it in another program changes what the next message costs without
+    /// anything here rendering.
+    /// </remarks>
+    private static readonly TimeSpan TOKEN_COUNT_HEARTBEAT = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Recomputes the token count whenever something might have changed.
+    /// </summary>
+    private ConversationTokenTracker? tokenTracker;
+
+    /// <summary>
+    /// How long to leave the token count alone after it ran.
+    /// </summary>
+    private TimeSpan TokenCountQuietTime() => this.IsCurrentChatStreaming ? TOKEN_COUNT_STREAMING_QUIET_TIME : TOKEN_COUNT_QUIET_TIME;
+
+    /// <summary>
     /// The culture the token numbers are written in.
     /// </summary>
     /// <remarks>
@@ -175,6 +221,14 @@ public partial class ChatComponent : MSGComponentBase
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await this.RefreshCulture();
+
+        //
+        // The number under the input field follows from the conversation, and nothing in a
+        // conversation announces that it changed: blocks, attachments and the answer being written
+        // are plain objects somebody mutates. So it is recomputed rather than notified.
+        //
+        this.tokenTracker = new(this.RecountTokensAsync, this.TokenCountQuietTime, TOKEN_COUNT_HEARTBEAT);
+        this.tokenTracker.Start();
 
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
@@ -424,6 +478,15 @@ public partial class ChatComponent : MSGComponentBase
             await this.inputField.FocusAsync();
 
         this.previousInputForbidden = inputForbidden;
+
+        //
+        // Everything which can move the token count also renders this component: the selections in
+        // the toolbar, the attachments and the composer all travel through an event callback whose
+        // receiver is this component, and the streamed answer arrives as a message which already
+        // asks for a render. So this one line stands in for the fifteen call sites which used to be
+        // spread over this file -- and which kept missing one.
+        //
+        this.tokenTracker?.Nudge();
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -439,14 +502,6 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
-
-        //
-        // Both of these change the answer, and the chat is the reason the count is no longer about
-        // the draft alone: opening another conversation, or loading one, changes what the next
-        // message would carry along with it.
-        //
-        await this.CalculateTokenCount();
-
         await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
@@ -590,7 +645,34 @@ public partial class ChatComponent : MSGComponentBase
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
 
-    private string UserInputClass => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    private string UserInputClass => $"{(this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty)} {this.TokenBudgetClass}".Trim();
+
+    /// <summary>
+    /// How much of the model's context window the conversation already takes.
+    /// </summary>
+    /// <remarks>
+    /// Zero whenever nobody wrote the window down. There is then nothing to be full of, and a share
+    /// of an unknown total would be a number made up on the spot.
+    /// </remarks>
+    private double TokenBudgetFill => this.conversationTokens is { IsKnown: true, Window.IsKnown: true }
+        ? (double) this.conversationTokens.Tokens / this.conversationTokens.Window.DefaultTokens
+        : 0d;
+
+    /// <summary>
+    /// What the number under the input field is coloured with, if anything.
+    /// </summary>
+    /// <remarks>
+    /// Two steps rather than a gradient: below four fifths there is nothing to do about it, above
+    /// it there is -- shorten the chat, start a new one, or pick a model which reads more -- and
+    /// past the window the request will be refused or trimmed by the provider.
+    /// </remarks>
+    private string TokenBudgetClass => this.TokenBudgetFill switch
+    {
+        >= 1d => "token-budget-exceeded",
+        >= WINDOW_NEARLY_FULL => "token-budget-nearly-full",
+
+        _ => string.Empty,
+    };
     
     private void ApplyStandardDataSourceOptions()
     {
@@ -657,8 +739,7 @@ public partial class ChatComponent : MSGComponentBase
 
         //
         // A thread which already exists has to carry the choice. Before the first message there is
-        // none, and the choice then travels in the thread a new chat is started with -- so the
-        // count below has to happen either way, which is what the early return here used to skip.
+        // none, and the choice then travels in the thread a new chat is started with.
         //
         if (this.ChatThread is not null)
         {
@@ -669,9 +750,6 @@ public partial class ChatComponent : MSGComponentBase
 
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
-
-        // A profile is a paragraph of the system prompt, so choosing another one changes the count:
-        await this.CalculateTokenCount();
     }
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
@@ -685,13 +763,6 @@ public partial class ChatComponent : MSGComponentBase
 
         if (this.ChatThread is not null)
             await this.StartNewChat(true);
-
-        //
-        // Counted in both cases. Without a thread nothing is started anew, but the template already
-        // decides the system prompt, the attachments and possibly an example conversation of the
-        // first message, and all of that costs before anything is sent.
-        //
-        await this.CalculateTokenCount();
     }
 
     private void RefreshCurrentProfileAndChatTemplate()
@@ -729,9 +800,6 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         await this.ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange();
-
-        // The provider, the profile and the template may all have moved, and each of them counts:
-        await this.CalculateTokenCount();
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -794,10 +862,7 @@ public partial class ChatComponent : MSGComponentBase
         
         // Was a modifier key pressed as well?
         var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
-        
-        if (isEnter)
-            await this.CalculateTokenCount();
-        
+
         // Depending on the user's settings, might react to shortcuts:
         switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
         {
@@ -825,20 +890,13 @@ public partial class ChatComponent : MSGComponentBase
         this.hasUnsavedChanges = true;
     }
 
-    private async Task ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
+    private void ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
     {
         if (!ReferenceEquals(this.ComposerState.FileAttachments, attachments))
             this.ComposerState.ReplaceFileAttachments(attachments);
 
         this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
-
-        //
-        // A document is usually the largest thing a person attaches, so this is the moment the
-        // number matters most. It is also the expensive one: the file is read and measured here,
-        // once, and remembered afterwards.
-        //
-        await this.CalculateTokenCount();
     }
 
     /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
@@ -974,13 +1032,6 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.inputField.BlurAsync();
 
-        //
-        // The draft just became part of the conversation, so the number does not drop back: what
-        // was being typed a moment ago now travels with every further message.
-        //
-        await this.CalculateTokenCount();
-
-
         // Enable the stream state for the chat component:
         this.hasUnsavedChanges = true;
         
@@ -1025,7 +1076,7 @@ public partial class ChatComponent : MSGComponentBase
     private void ApplyToolSelectionOfLoadedChat() =>
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
-    private async Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    private void SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
 
@@ -1040,12 +1091,6 @@ public partial class ChatComponent : MSGComponentBase
             this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
             this.hasUnsavedChanges = true;
         }
-
-        //
-        // Every tool the model may run describes itself in the system prompt, so picking tools costs
-        // tokens before a single one of them is called.
-        //
-        await this.CalculateTokenCount();
     }
     
     private async Task SaveThread()
@@ -1166,7 +1211,6 @@ public partial class ChatComponent : MSGComponentBase
         await this.SyncForegroundChatAsync();
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
-        await this.CalculateTokenCount();
     }
 
     private async Task MoveChatToWorkspace()
@@ -1270,9 +1314,8 @@ public partial class ChatComponent : MSGComponentBase
         await this.SyncForegroundChatAsync();
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
-        await this.CalculateTokenCount();
     }
-    
+
     private async Task SelectProviderWhenLoadingChat()
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
@@ -1306,9 +1349,6 @@ public partial class ChatComponent : MSGComponentBase
         this.hasUnsavedChanges = true;
         await this.SaveThread();
         this.StateHasChanged();
-
-        // One message less in the conversation is one message less in every request from here on:
-        await this.CalculateTokenCount();
     }
 
     private async Task RegenerateBlock(IContent aiBlock)
@@ -1326,46 +1366,40 @@ public partial class ChatComponent : MSGComponentBase
         await this.SendMessage(reuseLastUserPrompt: true);
     }
     
-    private async Task EditLastUserBlock(IContent block)
+    private Task EditLastUserBlock(IContent block)
     {
         if(this.ChatThread is null)
-            return;
+            return Task.CompletedTask;
 
         if (block is not ContentText textBlock)
-            return;
+            return Task.CompletedTask;
 
         var lastBlock = this.ChatThread.Blocks.Last();
         var lastBlockContent = lastBlock.Content;
         if(lastBlockContent is null)
-            return;
+            return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
-
-        //
-        // The message moved out of the conversation and back into the composer, attachments and
-        // all. It costs the same either way, but nothing says so unless it is counted again.
-        //
-        await this.CalculateTokenCount();
+        return Task.CompletedTask;
     }
 
-    private async Task EditLastBlock(IContent block)
+    private Task EditLastBlock(IContent block)
     {
         if(this.ChatThread is null)
-            return;
+            return Task.CompletedTask;
 
         if (block is not ContentText textBlock)
-            return;
+            return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
-
-        await this.CalculateTokenCount();
+        return Task.CompletedTask;
     }
 
     private void RestoreComposerFromTextBlock(ContentText textBlock)
@@ -1387,24 +1421,47 @@ public partial class ChatComponent : MSGComponentBase
     /// estimate, and it says so.
     ///
     /// Read the text from the bound property rather than from the input field: the field is a
-    /// component reference, which is only set once the component has rendered, while counting is
-    /// also triggered while parameters are set.
+    /// component reference, which is only set once the component has rendered.
+    ///
+    /// Called by the tracker, never directly. Whoever thinks something changed nudges it instead,
+    /// and it decides when the work is worth doing.
     /// </remarks>
-    private async Task CalculateTokenCount()
+    /// <param name="token">Ends the count when the component goes away.</param>
+    private async Task RecountTokensAsync(CancellationToken token)
     {
+        var provider = AIStudio.Settings.Provider.NONE;
+        var parts = ConversationParts.NOTHING;
+
         //
-        // Before the first message there is no thread yet, so what is measured is the one a new
-        // chat would start with. A preselected profile or a chat template is already part of that,
-        // and it may even bring an example conversation along -- reporting nothing for all of it
-        // would tell a person their window is empty while their first message already is not.
+        // Collected on the render thread, counted off it. Counting may take an IPC call per text,
+        // and while it runs, the background job which writes the answer appends to the very list
+        // which is walked here.
         //
-        var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
-        var counted = await this.ConversationTokenCounter.CountAsync(this.Provider, thread, this.BuildSystemPromptFor(thread), this.UserInput, this.ComposerState.FileAttachments);
-        if (counted == this.conversationTokens)
+        await this.InvokeAsync(() =>
+        {
+            //
+            // Before the first message there is no thread yet, so what is measured is the one a new
+            // chat would start with. A preselected profile or a chat template is already part of
+            // that, and it may even bring an example conversation along -- reporting nothing for all
+            // of it would tell a person their window is empty while their first message is not.
+            //
+            var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
+            provider = this.Provider;
+            parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput());
+        });
+
+        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, token);
+        if (token.IsCancellationRequested)
             return;
 
-        this.conversationTokens = counted;
-        this.StateHasChanged();
+        await this.InvokeAsync(() =>
+        {
+            if (counted == this.conversationTokens)
+                return;
+
+            this.conversationTokens = counted;
+            this.StateHasChanged();
+        });
     }
 
     /// <summary>
@@ -1477,9 +1534,6 @@ public partial class ChatComponent : MSGComponentBase
                 this.hasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
-
-                // The answer just became part of what every further message carries:
-                await this.CalculateTokenCount();
                 break;
 
             case Event.WORKSPACE_RENAMED:
@@ -1537,6 +1591,10 @@ public partial class ChatComponent : MSGComponentBase
     protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        if (this.tokenTracker is not null)
+            await this.tokenTracker.DisposeAsync();
+
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

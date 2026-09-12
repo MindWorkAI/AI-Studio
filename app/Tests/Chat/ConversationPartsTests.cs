@@ -46,7 +46,47 @@ public sealed class ConversationPartsTests
 
         var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true);
 
-        Assert.That(parts.Texts, Is.EqualTo(new[] { "You are helpful.", "What is the capital of France?", "Paris.", "And of Italy?" }));
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.EqualTo(new[] { "You are helpful.", "What is the capital of France?", "Paris." }));
+            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "And of Italy?" }));
+        });
+    }
+
+    [Test]
+    public void WhatIsStillBeingWrittenIsKeptApartFromWhatStands()
+    {
+        //
+        // Both cost the same and both are counted. They are kept apart because of what happens
+        // afterwards: a message which stands says the same thing forever and its count is worth
+        // remembering, while the answer being streamed is a different text three seconds later.
+        //
+        var streaming = Block("The answer so far");
+        ((ContentText)streaming.Content!).IsStreaming = true;
+        var thread = new ChatThread { Blocks = [Block("A question."), streaming] };
+
+        var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.EqualTo(new[] { "A question." }));
+            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "The answer so far", "a draft" }));
+        });
+    }
+
+    [Test]
+    public void AnAnswerWhichIsFinishedStandsLikeAnyOtherMessage()
+    {
+        var finished = Block("The whole answer.");
+        ((ContentText)finished.Content!).IsStreaming = false;
+
+        var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.EqualTo(new[] { "The whole answer." }));
+            Assert.That(parts.GrowingTexts, Is.Empty);
+        });
     }
 
     [Test]
@@ -85,7 +125,11 @@ public sealed class ConversationPartsTests
     {
         var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true);
 
-        Assert.That(parts.Texts, Is.EqualTo(new[] { "Hello" }));
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.Empty);
+            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "Hello" }));
+        });
     }
 
     [TestCase("")]
@@ -94,7 +138,11 @@ public sealed class ConversationPartsTests
     {
         var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true);
 
-        Assert.That(parts.Texts, Is.Empty);
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.Empty);
+            Assert.That(parts.GrowingTexts, Is.Empty);
+        });
     }
 
     [Test]
