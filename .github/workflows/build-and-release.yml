@@ -784,16 +784,25 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2 xdg-utils gstreamer1.0-plugins-base gstreamer1.0-plugins-good
 
-      - name: Place a stand-in for the .NET sidecar
+      - name: Place stand-ins for what Tauri's build script expects
         run: |
-          # Tauri's build script copies the .NET app in as a sidecar and refuses to run while that
-          # file is missing, so nothing Rust compiles without it. This job never bundles anything
-          # and never starts the app; it compiles, tests and lints the Rust code. An empty file is
-          # therefore enough, and publishing the real one would cost minutes for a binary nobody
-          # here runs.
+          # Tauri's build script insists that everything the configuration lists is already there,
+          # and refuses to run otherwise -- so nothing Rust compiles without it. Two of those
+          # things are products of a build which has not run here: the .NET app as a sidecar, and
+          # the PDF library which the build downloads into the resources. The other two resource
+          # directories, notices and tokenizers, are in the repository and need nothing.
+          #
+          # This job never bundles anything and never starts the app; it compiles, tests and lints
+          # the Rust code, and no test opens either file. Empty stand-ins are therefore enough,
+          # while publishing the sidecar and downloading the library would cost minutes for files
+          # nobody here reads. Should a Rust test ever need the real library, this job has to
+          # deploy it the way build_main does instead of placing a stand-in.
           mkdir -p "app/MindWork AI Studio/bin/dist"
           touch "app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-x86_64-unknown-linux-gnu"
           chmod +x "app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-x86_64-unknown-linux-gnu"
+
+          mkdir -p runtime/resources/libraries
+          touch runtime/resources/libraries/stand-in-for-verify.txt
 
       - name: Run the quality gate
         run: |

@@ -35,7 +35,7 @@ public sealed class VerifyCommand
         };
 
         var runtimeDirectory = Environment.GetRustRuntimeDirectory();
-        if (HasSidecar())
+        if (WhatTauriExpectsIsThere())
         {
             results.Add(("Rust tests", await CommandRunner.RunAsync(runtimeDirectory, "cargo", "test")));
             results.Add(("Clippy", await CommandRunner.RunAsync(runtimeDirectory, "cargo", "clippy --all-targets -- -D warnings")));
@@ -43,12 +43,13 @@ public sealed class VerifyCommand
         else
         {
             //
-            // Tauri's build script copies the .NET app in as a sidecar and refuses to run at all
-            // while that file is missing, so nothing Rust compiles without it. Failing here would
-            // be a trap rather than a gate: the way to produce the sidecar is `dotnet run build`,
-            // and that command runs this gate first -- a fresh clone would never get past it.
+            // Tauri's build script insists that everything the configuration lists is already
+            // there and refuses to run otherwise, so nothing Rust compiles until a build has
+            // produced those files once. Failing here would be a trap rather than a gate: the way
+            // to produce them is `dotnet run build`, and that command runs this gate first -- a
+            // fresh clone would never get past it.
             //
-            Console.WriteLine("- Skipping the Rust tests and Clippy: the .NET sidecar is missing, and Tauri's build script needs it before anything Rust compiles.");
+            Console.WriteLine("- Skipping the Rust tests and Clippy: the .NET sidecar or the downloaded libraries are missing, and Tauri's build script needs both before anything Rust compiles.");
             Console.WriteLine("   Run 'dotnet run build --skip-verify' once. From then on, this part of the gate runs with the rest.");
         }
 
@@ -70,9 +71,22 @@ public sealed class VerifyCommand
         return 1;
     }
 
-    private static bool HasSidecar()
+    /// <summary>
+    /// Whether a build has already produced the files Tauri's build script reads.
+    /// </summary>
+    /// <remarks>
+    /// Both are products of a build rather than of the repository: the .NET app arrives as a
+    /// sidecar, and the PDF library is downloaded into the resources. The other resource
+    /// directories the configuration names are in the repository and are always there.
+    /// </remarks>
+    /// <returns>True, when cargo can get past the build script.</returns>
+    private static bool WhatTauriExpectsIsThere()
     {
         var distributionDirectory = Path.Combine(Environment.GetAIStudioDirectory(), "bin", "dist");
-        return Directory.Exists(distributionDirectory) && Directory.EnumerateFiles(distributionDirectory, $"{SIDECAR_PREFIX}*").Any();
+        if (!Directory.Exists(distributionDirectory) || !Directory.EnumerateFiles(distributionDirectory, $"{SIDECAR_PREFIX}*").Any())
+            return false;
+
+        var librariesDirectory = Path.Combine(Environment.GetRustRuntimeDirectory(), "resources", "libraries");
+        return Directory.Exists(librariesDirectory) && Directory.EnumerateFiles(librariesDirectory).Any();
     }
 }
