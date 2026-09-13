@@ -242,6 +242,64 @@
                             </MudSelect>
                         </MudPaper>
                     </MudStack>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @T("Override Model Limits")
+                    </MudText>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                        @T("Where the stored numbers do not match your installation, state yours here. This matters most for self-hosted models: they run with whatever their operator configured, which the model card cannot know.")
+                    </MudJustifiedText>
+                    <MudStack Class="mb-4" Spacing="2">
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudNumericField T="int?"
+                                             Value="@this.capabilityOverrides.ContextWindowTokens"
+                                             ValueChanged="@this.SetContextWindowOverride"
+                                             Label="@T("Context window in tokens")"
+                                             HelperText="@this.ContextWindowHelperText"
+                                             Placeholder="@this.AutomaticContextWindowPlaceholder"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Min="1"
+                                             HideSpinButtons="@true"
+                                             Clearable="@true"
+                                             Disabled="@this.IsEnterpriseConfiguration"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Filled.Straighten"
+                                             AdornmentColor="Color.Info" />
+                        </MudPaper>
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudText Typo="Typo.body2">
+                                @T("Images")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @this.ImageLimitsEffectiveLabel
+                            </MudText>
+                            <MudStack Row="@true" Spacing="3" Wrap="Wrap.Wrap" Class="border-dashed border rounded-lg pa-3 mt-3">
+                                <MudNumericField T="int?"
+                                                 Value="@this.capabilityOverrides.MaxImagesPerMessage"
+                                                 ValueChanged="@this.SetMaxImagesPerMessageOverride"
+                                                 Label="@T("Per message")"
+                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerMessage)"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="0"
+                                                 Clearable="@true"
+                                                 Disabled="@this.IsEnterpriseConfiguration" />
+                                <MudNumericField T="int?"
+                                                 Value="@this.capabilityOverrides.MaxImagesPerRequest"
+                                                 ValueChanged="@this.SetMaxImagesPerRequestOverride"
+                                                 Label="@T("Per request")"
+                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerRequest)"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="0"
+                                                 Clearable="@true"
+                                                 Disabled="@this.IsEnterpriseConfiguration" />
+                            </MudStack>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                @T("Vendors state one of the two, the other, or neither. Whichever is smaller decides how many images one message may carry; an empty field states nothing.")
+                            </MudText>
+                        </MudPaper>
+                    </MudStack>
                     <MudJustifiedText Typo="Typo.body2" Class="mb-4">
                         @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                     </MudJustifiedText>

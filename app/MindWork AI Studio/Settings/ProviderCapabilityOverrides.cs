@@ -507,7 +507,7 @@ public sealed record ProviderCapabilityOverrides
     /// <returns>True, when the value is a number, this key accepts.</returns>
     private static bool TryReadNumber(LuaValue value, string numericKey, out int number)
     {
-        if (!value.TryRead<int>(out number))
+        if (!value.TryRead(out number))
             return false;
 
         return numericKey is CONTEXT_WINDOW_KEY ? number > 0 : number >= 0;
