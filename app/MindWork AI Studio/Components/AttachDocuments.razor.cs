@@ -459,6 +459,8 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
             { x => x.Document, fileAttachment },
+            { x => x.AttachPaths, this.AttachDroppedPathsAsync },
+            { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

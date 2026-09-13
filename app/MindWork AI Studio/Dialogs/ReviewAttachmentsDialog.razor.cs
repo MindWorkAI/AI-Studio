@@ -163,6 +163,19 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
             { x => x.Document, fileAttachment },
         };
 
+        //
+        // Give the preview our own way of attaching, so a file dropped onto it lands in this list
+        // as well. Not when we cannot attach anything ourselves: the preview would then claim every
+        // drop and do nothing with it.
+        //
+        if (this.CanAttach)
+        {
+            dialogParameters.Add(x => x.AttachPaths, this.AttachPathsAsync);
+
+            if (this.IsAttachingUnavailable is not null)
+                dialogParameters.Add(x => x.IsAttachingUnavailable, this.IsAttachingUnavailable);
+        }
+
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 }
