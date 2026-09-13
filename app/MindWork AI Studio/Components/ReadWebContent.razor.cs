@@ -35,7 +35,20 @@ public partial class ReadWebContent : MSGComponentBase
     
     [Parameter]
     public EventCallback<string> ContentChanged { get; set; }
-    
+
+    /// <summary>
+    /// The URL the content is loaded from.
+    /// </summary>
+    /// <remarks>
+    /// The URL belongs to the parent, so that it is cleared when the parent resets its form and
+    /// is kept when the parent stores its state.
+    /// </remarks>
+    [Parameter]
+    public string URL { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> URLChanged { get; set; }
+
     [Parameter]
     public AIStudio.Settings.Provider ProviderSettings { get; set; } = AIStudio.Settings.Provider.NONE;
     
@@ -60,8 +73,6 @@ public partial class ReadWebContent : MSGComponentBase
     private readonly Process<ReadWebContentSteps> process = Process<ReadWebContentSteps>.INSTANCE;
     private ProcessStepValue processStep;
     
-    private string providedURL = string.Empty;
-    private bool urlIsValid;
     private bool isProviderValid;
 
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
@@ -105,7 +116,7 @@ public partial class ReadWebContent : MSGComponentBase
             // the URL, so their own network is not off limits.
             //
             var retrievedPage = await this.WebPageRetrievalService.RetrieveAsync(
-                new Uri(this.providedURL),
+                new Uri(this.URL),
                 new WebPageRetrievalOptions
                 {
                     TimeoutSeconds = TIMEOUT_SECONDS,
@@ -115,14 +126,14 @@ public partial class ReadWebContent : MSGComponentBase
             this.processStep = this.process[ReadWebContentSteps.PARSING];
             this.StateHasChanged();
             markdown = retrievedPage.ExtractedPage.Markdown;
-            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.providedURL));
+            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.URL));
             
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
                 this.AgentTextContentCleaner.ProviderSettings = this.providerSettings;
                 var additionalData = new Dictionary<string, string>
                 {
-                    { "sourceURL", this.providedURL },
+                    { "sourceURL", this.URL },
                 };
             
                 this.processStep = this.process[ReadWebContentSteps.CLEANING];
@@ -164,8 +175,8 @@ public partial class ReadWebContent : MSGComponentBase
             // and the reasons a page cannot be read are things the user can act on: a link to a
             // PDF rather than a page, a host that does not answer, a server refusing the request.
             //
-            this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.providedURL);
-            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.providedURL, exception.Message)));
+            this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.URL);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.URL, exception.Message)));
         }
 
         this.Content = markdown;
@@ -176,14 +187,29 @@ public partial class ReadWebContent : MSGComponentBase
     {
         get
         {
-            if(!this.urlIsValid)
+            if(!this.UrlIsValid)
                 return false;
-            
+
             if(this.PreselectContentCleanerAgent && !this.isProviderValid)
                 return false;
-            
+
             return true;
         }
+    }
+
+    /// <summary>
+    /// Whether the current URL can be loaded.
+    /// </summary>
+    /// <remarks>
+    /// Asked of the current value instead of remembered from the last validation run: the parent
+    /// clears the URL when it resets its form, and the form validation does not run again at that
+    /// point. The fetch button would otherwise stay enabled with an empty field.
+    /// </remarks>
+    private bool UrlIsValid => this.ValidateURL(this.URL) is null;
+
+    private async Task URLValueChanged(string url)
+    {
+        await this.URLChanged.InvokeAsync(url);
     }
 
     private async Task ShowWebContentReaderChanged(bool state)
@@ -211,25 +237,15 @@ public partial class ReadWebContent : MSGComponentBase
     private string? ValidateURL(string url)
     {
         if(string.IsNullOrWhiteSpace(url))
-        {
-            this.urlIsValid = false;
             return T("Please provide a URL to load the content from.");
-        }
 
         var urlParsingResult = Uri.TryCreate(url, UriKind.Absolute, out var uriResult);
         if(!urlParsingResult)
-        {
-            this.urlIsValid = false;
             return T("Please provide a valid URL.");
-        }
 
         if(uriResult is not { Scheme: "http" or "https" })
-        {
-            this.urlIsValid = false;
             return T("Please provide a valid HTTP or HTTPS URL.");
-        }
 
-        this.urlIsValid = true;
         return null;
     }
 }

@@ -36,6 +36,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     {
         this.inputLegalDocument = string.Empty;
         this.inputQuestions = string.Empty;
+        this.webContentURL = string.Empty;
         if (!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
@@ -58,11 +59,13 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     private bool showWebContentReader;
     private bool useContentCleanerAgent;
     private bool isAgentRunning;
+    private string webContentURL = string.Empty;
     private string inputLegalDocument = string.Empty;
     private string inputQuestions = string.Empty;
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
     private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_LEGAL_DOCUMENT_STATE_KEY = new(nameof(inputLegalDocument));
     private static readonly AssistantSessionStateKey<string> INPUT_QUESTIONS_STATE_KEY = new(nameof(inputQuestions));
 
@@ -72,6 +75,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
         state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
         state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(WEB_CONTENT_URL_STATE_KEY, this.webContentURL);
         state.Set(INPUT_LEGAL_DOCUMENT_STATE_KEY, this.inputLegalDocument);
         state.Set(INPUT_QUESTIONS_STATE_KEY, this.inputQuestions);
     }
@@ -82,6 +86,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
         state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
         state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(WEB_CONTENT_URL_STATE_KEY, value => this.webContentURL = value);
         state.Restore(INPUT_LEGAL_DOCUMENT_STATE_KEY, value => this.inputLegalDocument = value);
         state.Restore(INPUT_QUESTIONS_STATE_KEY, value => this.inputQuestions = value);
     }
