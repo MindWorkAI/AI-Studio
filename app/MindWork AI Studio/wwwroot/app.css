@@ -470,3 +470,25 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
 }
+
+/*
+ * Rows of the tool selection which the chat and the assistants open from their footer. There will be
+ * far more tools than the ones we start with, so a row must not waste height: MudBlazor's settings
+ * button alone puts 12px of padding around a 24px icon, which makes a row 48px tall before the
+ * switch and the frame are counted at all. Size.Small takes most of that away; the rule below takes
+ * the rest, and it has to name the MudBlazor class to outweigh its specificity. Alternating rows
+ * carry a grey ground, which tells a long list apart better than a separator line does and costs no
+ * height at all. The colors are MudBlazor palette variables, so both grounds follow the theme.
+ */
+.tool-selection-rows > .tool-selection-row {
+    padding: 0.15rem 0.25rem;
+    border-radius: var(--mud-default-borderradius);
+}
+
+.tool-selection-rows > .tool-selection-row:nth-child(odd) {
+    background-color: var(--mud-palette-background-gray);
+}
+
+.tool-selection-row .mud-icon-button {
+    padding: 0.2em;
+}
