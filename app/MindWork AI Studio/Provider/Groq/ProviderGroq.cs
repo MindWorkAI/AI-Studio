@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -35,7 +36,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
                                    apiParameters["seed"] = parsedSeed;
 
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -83,7 +84,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsChatModel())]
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
         };
     }
 
@@ -105,7 +106,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsTranscriptionModel())]
+            Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
         };
     }
     
@@ -113,10 +114,12 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
 
     private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
-        return this.LoadModelsResponse<ModelsResponse>(
+        return this.LoadModelsResponse<GroqModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data,
-            apiKeyProvisional, token: token);
+            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, null)),
+            apiKeyProvisional,
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
     }
 }

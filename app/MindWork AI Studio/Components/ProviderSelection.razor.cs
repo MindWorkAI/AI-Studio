@@ -55,16 +55,16 @@ public partial class ProviderSelection : MSGComponentBase
 
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
     {
-        var capabilities = provider.GetModelCapabilities();
+        var profile = provider.GetModelProfile();
         List<CapabilityIcon> capabilityIcons = [];
 
-        if (capabilities.Contains(Capability.AUDIO_INPUT))
+        if (profile.Has(Capability.AUDIO_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
 
-        if (capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT))
+        if (profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
 
-        if (capabilities.Contains(Capability.SPEECH_INPUT))
+        if (profile.Has(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();

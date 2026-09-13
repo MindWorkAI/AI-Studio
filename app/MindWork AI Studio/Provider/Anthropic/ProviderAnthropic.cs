@@ -41,8 +41,8 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
-            this.Provider, chatModel,
-            
+            this.CreateSettingsProvider(chatModel),
+
             // Anthropic-specific role mapping:
             role => role switch
             {

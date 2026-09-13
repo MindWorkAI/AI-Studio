@@ -101,6 +101,19 @@
     border-color: var(--confidence-color) !important;
 }
 
+/*
+ * The token count under the chat input. It is a plain grey number until the conversation is near
+ * the model's context window, and then it says so by colour: there is nothing to do about four
+ * fifths of a window, and quite a lot to do about a full one.
+ */
+.token-budget-nearly-full .mud-input-helper-text {
+    color: var(--mud-palette-warning);
+}
+
+.token-budget-exceeded .mud-input-helper-text {
+    color: var(--mud-palette-error);
+}
+
 :root {
     --custom-icon-color: #000000;
 }

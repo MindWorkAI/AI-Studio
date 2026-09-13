@@ -3573,8 +3573,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Geben Sie
 -- Your Prompt (use selected instance '{0}', provider '{1}')
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1967611328"] = "Ihr Prompt (verwendete Instanz: '{0}', Anbieter: '{1}')"
 
+-- approx. {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1992478915"] = "ca. {0} von {1} Token"
+
 -- Code
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
+
+-- plus {0} image(s), which is more than the {1} this model accepts
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2059172343"] = "plus {0} Bild(er), also mehr als die {1}, die dieses Modell akzeptiert"
 
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Kursiv"
@@ -3597,14 +3603,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2991985411"] = "Diesen Ch
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Chat in den Arbeitsbereich verschieben"
 
+-- {0} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3244065777"] = "{0} Token"
+
+-- plus {0} image(s), which cannot be counted
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "zuzüglich {0} Bild(er), die nicht gezählt werden können"
+
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wähle zuerst einen Anbieter aus"
 
--- Estimated amount of tokens:
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T377990776"] = "Geschätzte Anzahl an Token:"
-
 -- Start new chat in workspace "{0}"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Chat im Arbeitsbereich '{0}' starten"
+
+-- {0} of {1} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} von {1} Tokens"
 
 -- New disappearing chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Neuen selbstlöschenden Chat starten"
@@ -3620,6 +3632,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Verschiebe
 
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T733672375"] = "Ihre Arbeitsbereiche anzeigen"
+
+-- approx. {0} tokens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T857715435"] = "ca. {0} Token"
 
 -- Create template from current chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1112722156"] = "Vorlage aus aktuellem Chat erstellen"
@@ -5015,6 +5030,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1392042694"] = "Rep
 
 -- License:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1908172666"] = "Lizenz:"
+
+-- The vendor of this model publishes no tokenizer file and counts through their API instead ({0}). AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T3965340739"] = "Der Anbieter dieses Modells veröffentlicht keine Tokenizer-Datei und zählt die Token über seine API ({0}). AI Studio schätzt die Tokenanzahl daher mit dem integrierten Tokenizer."
+
+-- This model uses OpenAI's {0} encoding, which does not come as a tokenizer.json file. AI Studio therefore estimates the token count with its built-in tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T466506475"] = "Dieses Modell verwendet die {0}-Kodierung von OpenAI, die nicht als Datei „tokenizer.json“ verfügbar ist. AI Studio schätzt die Anzahl der Tokens daher mit seinem integrierten Tokenizer."
+
+-- This model uses the tokenizer of {0}. Download its tokenizer.json file and select it below to count exactly instead of estimating.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOKENIZERHINT::T924854143"] = "Dieses Modell verwendet den Tokenizer von {0}. Laden Sie die Datei „tokenizer.json“ herunter und wählen Sie sie unten aus, um die Tokenanzahl exakt statt geschätzt zu ermitteln."
 
 -- Tool selection is hidden
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2096103917"] = "Werkzeugauswahl ist ausgeblendet"
@@ -6903,14 +6927,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1108876344"] = "Experten-Ei
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
 
+-- Where the stored numbers do not match your installation, state yours here. This matters most for self-hosted models: they run with whatever their operator configured, which the model card cannot know.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T115770087"] = "Falls die hinterlegten Zahlen nicht mit Ihrer Installation übereinstimmen, geben Sie hier Ihre eigenen an. Das ist besonders wichtig bei selbst gehosteten Modellen: Sie laufen mit den Einstellungen, die ihr Betreiber festgelegt hat und die die Modellkarte nicht kennen kann."
+
+-- Per message
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1316004715"] = "Pro Nachricht"
+
 -- API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1324664716"] = "API-Schlüssel"
 
 -- Create account
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Konto erstellen"
 
+-- Per request
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1363121973"] = "Auf Anfrage"
+
 -- Failed to validate the selected tokenizer. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1384494471"] = "Die Überprüfung des ausgewählten Tokenizers ist fehlgeschlagen. Bitte versuchen Sie es erneut."
+
+-- Override Model Limits
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1518445332"] = "Modellbeschränkungen überschreiben"
 
 -- Load models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Modelle laden"
@@ -6957,6 +6993,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2029870721"] = "Das aktuell
 -- Additional API parameters must form a JSON object.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2051143391"] = "Zusätzliche API-Parameter müssen ein JSON-Objekt bilden."
 
+-- Nobody has stated a window for this model. Left empty, the chat counts the tokens of a conversation without saying what they may grow to.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2138841031"] = "Für dieses Modell wurde kein Kontextfenster angegeben. Bleibt das Feld leer, zählt der Chat die Tokens einer Unterhaltung, ohne anzugeben, wie groß sie werden darf."
+
 -- Use detected model behavior: {0}.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2141072961"] = "Erkanntes Modellverhalten verwenden: {0}"
 
@@ -6977,6 +7016,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2439094236"] = "Fehler beim
 
 -- Invalid tokenizer:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2448302543"] = "Ungültiger Tokenizer:"
+
+-- Vendors state one of the two, the other, or neither. Whichever is smaller decides how many images one message may carry; an empty field states nothing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2519267200"] = "Anbieter geben den einen, den anderen oder keinen der beiden Werte an. Der kleinere Wert bestimmt, wie viele Bilder eine Nachricht enthalten darf; ein leeres Feld macht keine Angabe."
 
 -- Enabled
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2626085950"] = "Aktiviert"
@@ -7005,6 +7047,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instanzname
 -- On by default
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2843289040"] = "Standardmäßig aktiviert"
 
+-- No limit known, so AI Studio does not stop anybody from attaching more.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2986951856"] = "Keine Begrenzung bekannt, daher hindert AI Studio niemanden daran, weitere anzuhängen."
+
 -- No reasoning (thinking) capability.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T301695429"] = "Keine Fähigkeit für Schlussfolgerungen (Denken)."
 
@@ -7013,6 +7058,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3079061205"] = "Achtung: Fe
 
 -- Reasoning (thinking) is available and on unless additional API parameters disable it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T310420667"] = "Schlussfolgerungen (Denken) sind verfügbar und aktiviert, sofern es nicht durch zusätzliche API-Parameter deaktiviert wird."
+
+-- Detected: {0} tokens. Leave the field empty to use that.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T311903903"] = "Erkannt: {0} Token. Lassen Sie das Feld leer, um diesen Wert zu verwenden."
+
+-- At most {0} images at once.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3187806707"] = "Maximal {0} Bilder gleichzeitig."
 
 -- Disabled
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3217987877"] = "Deaktiviert"
@@ -7049,6 +7100,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Doppelter S
 
 -- Override Model Capabilities
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3904244586"] = "Modellfähigkeiten überschreiben"
+
+-- Images
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T401363915"] = "Bilder"
+
+-- Context window in tokens
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4083607555"] = "Kontextfenster in Tokens"
 
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Derzeit können wir die Modelle für den ausgewählten Anbieter und/oder Host nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
@@ -9939,6 +9996,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2337053319"] = "Der Anbieter
 -- The embedding request to the provider '{0}' failed: {1}
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2423374763"] = "Die Einbettungsanfrage an den Anbieter „{0}“ ist fehlgeschlagen: {1}"
 
+-- The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T265391888"] = "Das ausgewählte Modell kann keine Tools verwenden. Bitte wählen Sie ein Modell, das dazu in der Lage ist, oder öffnen Sie die Einstellungen des Anbieters „{0}“, zeigen Sie dessen Experteneinstellungen an und deaktivieren Sie dort die Function-Calling-Funktion."
+
 -- The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2819996431"] = "Der Anbieter „{0}“ konnte nicht erreicht werden. Bitte prüfen Sie, ob er läuft und erreichbar ist, und versuchen Sie es anschließend erneut."
 
@@ -9965,6 +10025,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben ve
 
 -- The provider '{0}' does not know the selected model. Please select another model.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T411393889"] = "Der Anbieter „{0}“ kennt das ausgewählte Modell nicht. Bitte wählen Sie ein anderes Modell aus."
+
+-- The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T479223640"] = "Der Text war länger, als das ausgewählte Modell verarbeiten kann (maximal {0} Token). Bitte wählen Sie ein Modell für längere Texte oder verringern Sie die Chunk-Größe der Datenquelle."
 
 -- The provider '{0}' reported an error: {1}
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "Der Anbieter „{0}“ hat einen Fehler gemeldet: {1}"
@@ -11421,6 +11484,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T4112586014"] = 
 -- The field LANG_NAME does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T4204700759"] = "Das Feld LANG_NAME existiert nicht oder ist keine gültige Zeichenkette."
 
+-- The table MODELS does not exist or is using an invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINMODELS::T976664425"] = "Die Tabelle MODELS existiert nicht oder verwendet eine ungültige Syntax."
+
 -- Artists
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T1142248183"] = "Künstler"
 
@@ -11462,6 +11528,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T62
 
 -- Software developers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTARGETGROUPEXTENSIONS::T831424531"] = "Softwareentwickler"
+
+-- Model plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T1507522553"] = "Modell-Plugin"
 
 -- Theme plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T1682350097"] = "Theme-Plugin"

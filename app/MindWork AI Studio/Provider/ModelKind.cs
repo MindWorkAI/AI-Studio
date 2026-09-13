@@ -77,6 +77,16 @@ public enum ModelKind
     REALTIME,
 
     /// <summary>
+    /// The model drives a computer: it looks at a screen and says what to click next.
+    /// </summary>
+    /// <remarks>
+    /// These refuse a plain conversation outright. Google's answer to a request without the computer
+    /// use tool is "This model requires the use of the Computer Use tool", so the model belongs in no
+    /// chat list, however much its name looks like the chat model it grew out of.
+    /// </remarks>
+    COMPUTER_USE,
+
+    /// <summary>
     /// The model extracts text from images or scanned documents.
     /// </summary>
     OCR,

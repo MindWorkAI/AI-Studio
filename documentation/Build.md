@@ -23,6 +23,21 @@ Regardless of whether you want to build the app locally for yourself (not trusti
 
 This is necessary because the build script and the Tauri framework assume that the .NET app is available as a so-called "sidecar." Although the sidecar is only necessary for the final release and shipping, Tauri requires it to be present during development as well.
 
+## The quality gate
+One command checks that what you are about to build is sound:
+
+1. Open a terminal.
+2. Navigate to the `/app/Build` directory within the repository.
+3. Run `dotnet run verify`.
+
+It runs the .NET tests, the Rust tests, Clippy (`cargo clippy --all-targets -- -D warnings`), and a report on the pages the model rules were written from. Every check runs, even after one of them has failed, so that a single run tells you everything that is wrong instead of the first thing.
+
+`dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
+
+Two notes:
+- The Rust half of the gate needs the .NET sidecar (see "One-time mandatory steps" above). While that file is missing, the gate skips the Rust tests and Clippy and says so rather than failing, because the command which produces the sidecar is `dotnet run build` itself.
+- `dotnet run verify-models` reports how long ago somebody last read the pages behind the model rules, and names everything older than six months. It is a report and never a failure: a page nobody has looked at for a while is not a page which changed. Everything else about the model rules — whether two rules claim the same names, whether every family names a page and a day, whether every pattern is written the way model names arrive — is checked by the test project, and therefore by `dotnet test`.
+
 ## Build AI Studio from source
 In order to build MindWork AI Studio from source instead of using the pre-built binaries, follow these steps:
 1. Ensure you have met all the prerequisites.

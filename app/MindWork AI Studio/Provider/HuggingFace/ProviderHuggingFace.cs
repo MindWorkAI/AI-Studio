@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -127,10 +129,10 @@ public sealed class ProviderHuggingFace : BaseProvider
     }
 
     /// <inheritdoc />
-    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason)
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default)
     {
         if (failureReason is not ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER)
-            return base.GetProviderRequestFailureUserMessage(failureReason);
+            return base.GetProviderRequestFailureUserMessage(failureReason, contextWindow);
 
         //
         // When Hugging Face chose the provider itself, naming it back to the user would help
@@ -166,7 +168,7 @@ public sealed class ProviderHuggingFace : BaseProvider
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -221,7 +223,23 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", this.SelectChatModels, apiKeyProvisional, token: token);
+        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", this.SelectChatModels, apiKeyProvisional, listingFactory: this.ListingsOf, token: token);
+    }
+
+    /// <summary>
+    /// What the router stated about the models it knows.
+    /// </summary>
+    /// <remarks>
+    /// Every model the router reports, not only the ones offered for chatting below: which models
+    /// are offered depends on the chosen inference provider, while a window belongs to whoever is
+    /// configured here, and both questions are asked of the same list.
+    /// </remarks>
+    /// <param name="response">The response of the model endpoint.</param>
+    /// <returns>One listing per model, which says nothing for the models nobody stated a window for.</returns>
+    private IEnumerable<ModelListing> ListingsOf(ModelsResponse response)
+    {
+        var providerSlug = this.hfProvider.EndpointsId();
+        return response.Data.Select(hfModel => ModelListing.For(hfModel.Id, hfModel.ContextWindowTokens(providerSlug)));
     }
 
     /// <summary>
@@ -237,7 +255,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <returns>The models to offer.</returns>
     private IEnumerable<Model> SelectChatModels(ModelsResponse response)
     {
-        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel());
+        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel(this.Provider));
         var providerSlug = this.hfProvider.EndpointsId();
         if (string.IsNullOrEmpty(providerSlug))
             return ToModels(chatModels);
@@ -253,8 +271,8 @@ public sealed class ProviderHuggingFace : BaseProvider
             return false;
 
         return hfModel.Providers.Any(provider =>
-            string.Equals(provider.Provider, providerSlug, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(provider.Status, "live", StringComparison.OrdinalIgnoreCase));
+            provider.IsLive &&
+            string.Equals(provider.Provider, providerSlug, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />

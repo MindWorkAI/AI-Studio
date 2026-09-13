@@ -31,7 +31,13 @@ public sealed partial class RustService
     /// already gone.
     /// </param>
     /// <returns>The result of reading the file.</returns>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, CancellationToken token = default)
+    /// <param name="reportPromptInjections">
+    /// Whether to tell the user about passages which were filtered out of the file. Pass false only
+    /// where the content is measured and thrown away again, such as counting the tokens of an
+    /// attachment: nothing leaves the app on that path, so there is nothing to warn about, and
+    /// reporting it there would warn a second time when the file is actually sent.
+    /// </param>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, CancellationToken token = default)
     {
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
@@ -238,9 +244,12 @@ public sealed partial class RustService
 
         //
         // Reported from here rather than from the callers: every way of reading a file passes
-        // through this method, so this is the one place where no caller can forget it.
+        // through this method, so this is the one place where no caller can forget it. The
+        // filtering itself has already happened either way -- only the telling is skipped, and only
+        // where the content never leaves the app.
         //
-        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+        if (reportPromptInjections)
+            await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
 
         //
         // Filtering does not change the outcome: the passages were removed and the document

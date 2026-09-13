@@ -504,10 +504,10 @@ fn read_locale_from_environment() -> Option<(String, &'static str)> {
     }
 
     for key in ["LC_ALL", "LC_MESSAGES", "LANG"] {
-        if let Ok(value) = env::var(key) {
-            if let Some(locale) = normalize_locale_tag(&value) {
-                return Some((locale, key));
-            }
+        if let Ok(value) = env::var(key)
+            && let Some(locale) = normalize_locale_tag(&value)
+        {
+            return Some((locale, key));
         }
     }
 

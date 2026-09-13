@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -36,7 +37,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -117,7 +118,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             "models",
             modelResponse => modelResponse.Data
                 .Select(n => new Model(n.Id, n.Name))
-                .Where(model => model.IsChatModel()),
+                .Where(model => model.IsChatModel(this.Provider)),
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {
@@ -125,9 +126,21 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                 request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
                 request.Headers.Add("X-Title", PROJECT_NAME);
             },
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
             token: token);
     }
 
+    /// <summary>
+    /// Loads the models OpenRouter offers for embedding, which live on a route of their own.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is reported from here: this route answers with the embedding models alone, and what
+    /// is reported replaces everything an instance said before. The windows of the chat models
+    /// would go missing the moment somebody opens the embedding settings.
+    /// </remarks>
+    /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <returns>The embedding models.</returns>
     private Task<ModelLoadResult> LoadEmbeddingModels(string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
