@@ -308,7 +308,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
     /// Called when the user loads a file through this dialog. We don't use a two-way binding here,
     /// since we have to refresh the preview whenever the content changes.
     /// </summary>
-    /// <param name="fileContent">The content of the file the user has loaded.</param>
+    /// <param name="loadedContent">The content of the file the user has loaded.</param>
     private void ApplyLoadedFileContent(string loadedContent)
     {
         this.fileContent = loadedContent;
