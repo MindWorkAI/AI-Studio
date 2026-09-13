@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Chat;
-using AIStudio.Models;
 using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
@@ -322,23 +321,9 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     /// <summary>
     /// What an engine stated about the models it serves.
     /// </summary>
-    /// <remarks>
-    /// A window of zero or less is dropped rather than repaired. An engine answering that way is
-    /// telling us something we cannot interpret, and falling back to what the rules say about the
-    /// weights is the one answer nobody has to invent.
-    /// </remarks>
     /// <param name="models">The models exactly as the engine listed them.</param>
-    /// <returns>One listing per model the engine said something usable about.</returns>
-    private static IEnumerable<ModelListing> ListingsOf(IEnumerable<Model> models)
-    {
-        foreach (var model in models)
-        {
-            if (string.IsNullOrWhiteSpace(model.Id) || model.ContextWindowTokens is not > 0)
-                continue;
-
-            yield return new(model.Id, ContextWindow.Of(model.ContextWindowTokens.Value));
-        }
-    }
+    /// <returns>One listing per model, which says nothing for the models the engine was silent about.</returns>
+    private static IEnumerable<ModelListing> ListingsOf(IEnumerable<Model> models) => models.Select(model => ModelListing.For(model.Id, model.ContextWindowTokens));
 
     private static bool IsMatchingLlamaCppTextModel(Model model, string[] ignorePhrases, string[] filterPhrases)
     {

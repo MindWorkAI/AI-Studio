@@ -29,6 +29,22 @@ public readonly record struct ModelListing(string ModelId, ContextWindow Context
     public bool IsKnown => this.Context.IsKnown;
 
     /// <summary>
+    /// What a provider stated about one model, as every model list states it: a name and a number.
+    /// </summary>
+    /// <remarks>
+    /// A window of zero or less is dropped rather than repaired, and so is a nameless entry. A
+    /// provider answering that way is saying something we cannot interpret, and falling back to
+    /// what the rules say about the model is the one answer nobody has to invent. Every dialect
+    /// comes through here, so that none of them has to decide that on its own.
+    /// </remarks>
+    /// <param name="modelId">The model, named the way the provider names it.</param>
+    /// <param name="contextWindowTokens">The window the provider stated, where it stated one.</param>
+    /// <returns>The listing, or nothing when there is nothing usable to keep.</returns>
+    public static ModelListing For(string modelId, int? contextWindowTokens) => string.IsNullOrWhiteSpace(modelId) || contextWindowTokens is not > 0
+        ? NOTHING
+        : new(modelId, ContextWindow.Of(contextWindowTokens.Value));
+
+    /// <summary>
     /// Puts what the provider stated over what the rules worked out.
     /// </summary>
     /// <remarks>

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -139,6 +140,8 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
             storeType,
             "models",
             modelResponse => modelResponse.Data.Select(n => new Provider.Model(n.Id, null)),
-            apiKeyProvisional, token: token);
+            apiKeyProvisional,
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
     }
 }

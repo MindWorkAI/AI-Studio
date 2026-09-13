@@ -151,4 +151,29 @@ public sealed class ListedModelsTests
     {
         Assert.That(ModelListing.NOTHING.ApplyTo(WHAT_THE_RULES_SAY), Is.EqualTo(WHAT_THE_RULES_SAY));
     }
+
+    [Test]
+    public void AWindowAProviderStatedIsTakenAsItIs()
+    {
+        Assert.That(ModelListing.For(MODEL, 32_768).Context.DefaultTokens, Is.EqualTo(32_768));
+    }
+
+    [TestCase(0, TestName = "A window of no tokens")]
+    [TestCase(-1, TestName = "A window of negative tokens")]
+    [TestCase(null, TestName = "No window at all")]
+    public void AWindowWhichIsNoWidthIsDroppedRatherThanRepaired(int? tokens)
+    {
+        //
+        // Every dialect comes through this one factory, so a provider answering with something
+        // nobody can interpret falls back to what the rules say -- and does so the same way for
+        // all of them, rather than once per provider and slightly differently each time.
+        //
+        Assert.That(ModelListing.For(MODEL, tokens), Is.EqualTo(ModelListing.NOTHING));
+    }
+
+    [Test]
+    public void AnEntryWithoutANameIsNoListing()
+    {
+        Assert.That(ModelListing.For(string.Empty, 32_768), Is.EqualTo(ModelListing.NOTHING));
+    }
 }

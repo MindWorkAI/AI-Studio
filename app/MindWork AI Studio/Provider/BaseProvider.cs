@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
@@ -191,6 +192,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         Action<HttpRequestMessage, string>? requestConfigurator = null,
         JsonSerializerOptions? jsonSerializerOptions = null,
         bool isTryingSecret = false,
+        Func<TResponse, IEnumerable<ModelListing>>? listingFactory = null,
         CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
@@ -219,6 +221,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var parsedResponse = JsonSerializer.Deserialize<TResponse>(responseBody, jsonSerializerOptions ?? JSON_SERIALIZER_OPTIONS);
                 if (parsedResponse is null)
                     return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, "Model list response could not be deserialized.");
+
+                //
+                // What the list stated about the models, read before anything is filtered out of
+                // it: a model left out below as an embedding model is still a model somebody may
+                // have configured this instance with, and a list like this one is the only place
+                // its window is ever stated. Only pass a whole list in here -- reporting a part of
+                // one would tell the app that everything left out has stopped existing.
+                //
+                if (listingFactory is not null)
+                    ListedModels.Shared.Report(this.ConfiguredProviderId, listingFactory(parsedResponse));
 
                 return SuccessfulModelLoadResult(modelFactory(parsedResponse));
             }
