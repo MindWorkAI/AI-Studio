@@ -853,10 +853,15 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private ModelProfile GetCurrentModelProfile() => this.CreateProviderSettings().GetModelProfile();
 
     /// <summary>
-    /// What the rules alone say about the model, which is what each switch shows as its automatic answer.
+    /// What holds without anybody switching anything, which is what each field shows as its automatic answer.
     /// </summary>
+    /// <remarks>
+    /// The rules, plus whatever the provider itself stated when the model list was loaded a moment
+    /// ago. A self-hosted engine is the case this matters for: it reports the window it was started
+    /// with, and that is the number a person gets by leaving the field below empty.
+    /// </remarks>
     /// <returns>The profile.</returns>
-    private ModelProfile GetAutomaticModelProfile() => this.DataLLMProvider.GetModelProfile(this.GetSelectedModel());
+    private ModelProfile GetAutomaticModelProfile() => this.CreateProviderSettings().GetAutomaticModelProfile();
 
     private string GetCurrentModelApiLabel()
     {

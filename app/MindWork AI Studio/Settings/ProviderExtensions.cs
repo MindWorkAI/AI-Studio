@@ -1,4 +1,5 @@
 using AIStudio.Models;
+using AIStudio.Models.Live;
 using AIStudio.Models.Registry;
 using AIStudio.Provider;
 
@@ -11,23 +12,42 @@ public static partial class ProviderExtensions
     /// </summary>
     /// <remarks>
     /// The one door to that question. Behind it stand the links of the chain, in the order they
-    /// win: what the person said about their own installation, then what the rules worked out from
-    /// the name, then what the app assumes when nothing else said anything.
+    /// win: what the person said about their own installation, then what the installation itself
+    /// reported, then what the rules worked out from the name, and last what the app assumes when
+    /// nothing else said anything.
     /// </remarks>
     /// <param name="provider">The configured provider.</param>
     /// <returns>The profile of the configured model.</returns>
     public static ModelProfile GetModelProfile(this Provider provider)
     {
-        var stated = provider.UsedLLMProvider.GetModelProfile(provider.Model);
-        return provider.CapabilityOverrides?.ApplyTo(stated) ?? stated;
+        var automatic = provider.GetAutomaticModelProfile();
+        return provider.CapabilityOverrides?.ApplyTo(automatic) ?? automatic;
     }
 
     /// <summary>
-    /// Everything the rules know about a model at a provider, without anybody's own settings.
+    /// Everything known about the configured model except what the person themselves switched.
     /// </summary>
     /// <remarks>
-    /// What the expert dialog shows next to each switch as the automatic answer, so that a person
-    /// can see what they are overriding.
+    /// This is what happens when somebody fills in nothing, which is why the expert dialog shows it
+    /// as the automatic answer. It has to include what the provider reported: a person who leaves
+    /// the window empty gets the number their own engine stated, and a placeholder showing them a
+    /// different one would be a promise the app does not keep.
+    /// </remarks>
+    /// <param name="provider">The configured provider.</param>
+    /// <returns>The profile of the configured model, without that provider's overrides.</returns>
+    public static ModelProfile GetAutomaticModelProfile(this Provider provider)
+    {
+        var stated = provider.UsedLLMProvider.GetModelProfile(provider.Model);
+        return ListedModels.Shared.Of(provider.Id, provider.Model.Id).ApplyTo(stated);
+    }
+
+    /// <summary>
+    /// Everything the rules know about a model at a provider, without anybody's own installation.
+    /// </summary>
+    /// <remarks>
+    /// The answer to the model as such, which is the same for everybody who uses that name at that
+    /// provider -- and therefore the answer the registry caches. What one particular installation
+    /// says about it is asked one link further up, where the instance is known.
     ///
     /// The assumed profile fills in where no rule stated a single capability. It fills in the
     /// capabilities only: a modifier may well have said what the model is made for without any rule

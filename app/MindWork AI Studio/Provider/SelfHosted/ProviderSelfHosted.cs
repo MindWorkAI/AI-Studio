@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Models;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -188,8 +190,23 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 return FailedModelLoadResult(this.GetModelLoadFailureReason(lmStudioResponse, responseBody), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}; Body='{responseBody}'");
             }
 
-            var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            //
+            // Read with the shared options, the way every other model list of this app is read.
+            // This one route did without them, which quietly cost it every field an engine spells
+            // in snake case: owned_by has been arriving as nothing all along, and the next field
+            // somebody adds here would have gone the same way without anything failing.
+            //
+            var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(JSON_SERIALIZER_OPTIONS, token);
             var models = lmStudioModelResponse.Data ?? [];
+
+            //
+            // What the engine said about its own models, taken from the whole list rather than
+            // from what is offered below: a model filtered out here as an embedding model is still
+            // a model somebody may have configured this instance with, and this list is the only
+            // place its window is ever stated.
+            //
+            ListedModels.Shared.Report(this.ConfiguredProviderId, ListingsOf(models));
+
             return SuccessfulModelLoadResult(models.
                 Where(model => !string.IsNullOrWhiteSpace(model.Id) &&
                                !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
@@ -299,6 +316,27 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         {
             LOGGER.LogError(e, "Failed to load models from llama.cpp provider '{ProviderInstanceName}'.", this.InstanceName);
             return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
+        }
+    }
+
+    /// <summary>
+    /// What an engine stated about the models it serves.
+    /// </summary>
+    /// <remarks>
+    /// A window of zero or less is dropped rather than repaired. An engine answering that way is
+    /// telling us something we cannot interpret, and falling back to what the rules say about the
+    /// weights is the one answer nobody has to invent.
+    /// </remarks>
+    /// <param name="models">The models exactly as the engine listed them.</param>
+    /// <returns>One listing per model the engine said something usable about.</returns>
+    private static IEnumerable<ModelListing> ListingsOf(IEnumerable<Model> models)
+    {
+        foreach (var model in models)
+        {
+            if (string.IsNullOrWhiteSpace(model.Id) || model.ContextWindowTokens is not > 0)
+                continue;
+
+            yield return new(model.Id, ContextWindow.Of(model.ContextWindowTokens.Value));
         }
     }
 
