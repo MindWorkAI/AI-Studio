@@ -265,7 +265,15 @@ public sealed class ModelRuleBuilder(string patternText, ModelRuleKind ruleKind,
     /// <returns>The rule, to go on stating.</returns>
     public ModelRuleBuilder Rank(int rank, string reason)
     {
-        _ = reason;
+        //
+        // Asking for a reason is what the second parameter does; insisting that it says something
+        // is what keeps an empty string from passing for one. Without this, the way to write a rank
+        // nobody can account for is still open, and it is the one thing the computed specificity
+        // exists to get rid of.
+        //
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException($"The rule \"{patternText}\" of {origin} sets the rank {rank} without saying what the computed specificity gets wrong here.", nameof(reason));
+
         this.explicitRank = rank;
         return this;
     }

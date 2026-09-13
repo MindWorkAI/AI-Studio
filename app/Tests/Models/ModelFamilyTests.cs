@@ -126,6 +126,21 @@ public sealed class ModelFamilyTests
     }
 
     [Test]
+    public void ARankNobodyAccountedForIsRefused()
+    {
+        //
+        // The rank is the way past everything the specificity computes, and the sentence next to it
+        // is the only thing keeping it accountable. The compiler asks for that sentence; this is
+        // what keeps an empty one from passing for it, because a number without an explanation
+        // reads as noise to whoever comes next -- and noise is what the computation replaced.
+        //
+        var family = new FamilyRankingWithoutSayingWhy();
+        var refused = Assert.Throws<ArgumentException>(() => _ = family.Rules);
+
+        Assert.That(refused?.Message, Does.Contain("specificity gets wrong"));
+    }
+
+    [Test]
     public void AFamilyWhichAdjustsRatherThanChoosesStatesAModifier()
     {
         var family = new FamilyWithAModifier();
@@ -248,6 +263,15 @@ public sealed class ModelFamilyTests
             builder.Rule("thing").AlsoContains("special").Capabilities(Capability.FUNCTION_CALLING);
             builder.Rule("thing-mini").InheritsFrom("thing");
         }
+    }
+
+    private sealed class FamilyRankingWithoutSayingWhy : ModelFamily
+    {
+        public override ModelVendor Vendor => ModelVendor.UNKNOWN;
+
+        public override ModelSource Source => new("https://example.invalid/rank", new DateOnly(2026, 9, 13), "A family moving one of its rules by hand without saying what it moves it past.");
+
+        protected override void Declare(ModelFamilyBuilder builder) => builder.Rule("thing").Rank(1, "   ").Capabilities(Capability.TEXT_INPUT);
     }
 
     private sealed class FamilyWithAModifier : ModelFamily

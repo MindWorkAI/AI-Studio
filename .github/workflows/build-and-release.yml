@@ -724,9 +724,85 @@ jobs:
           overwrite: true
           retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
 
+  #
+  # The quality gate. Deliberately without an `if` on build_enabled: a pull request only builds
+  # when somebody sets the run-pipeline label, and a gate which is closed exactly while nobody is
+  # looking is not a gate. It is cheap for the same reason it is unconditional -- one platform, no
+  # Tauri bundle, no signing, no artifacts.
+  #
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read the toolchain versions from the metadata
+        run: |
+          # The .NET SDK version. The format is '9.0.205 (commit 3e1383b780)',
+          # so we extract the version number alone:
+          dotnet_sdk_version=$(sed -n '4p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          # The Rust version, written the same way:
+          rust_version=$(sed -n '6p' metadata.txt | sed 's/[^0-9.]*\([0-9.]*\).*/\1/')
+
+          echo "DOTNET_SDK_VERSION=${dotnet_sdk_version}" >> $GITHUB_ENV
+          echo "RUST_VERSION=${rust_version}" >> $GITHUB_ENV
+
+          echo ".NET SDK version: '${dotnet_sdk_version}'"
+          echo "Rust version: '${rust_version}'"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+          cache: true
+          cache-dependency-path: 'app/MindWork AI Studio/packages.lock.json'
+
+      - name: Cache Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/git/db/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            runtime/target
+
+          key: verify-linux-x64-rust-${{ env.RUST_VERSION }}
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
+
+      - name: Setup dependencies (Ubuntu-specific)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2 xdg-utils gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+
+      - name: Place a stand-in for the .NET sidecar
+        run: |
+          # Tauri's build script copies the .NET app in as a sidecar and refuses to run while that
+          # file is missing, so nothing Rust compiles without it. This job never bundles anything
+          # and never starts the app; it compiles, tests and lints the Rust code. An empty file is
+          # therefore enough, and publishing the real one would cost minutes for a binary nobody
+          # here runs.
+          mkdir -p "app/MindWork AI Studio/bin/dist"
+          touch "app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-x86_64-unknown-linux-gnu"
+          chmod +x "app/MindWork AI Studio/bin/dist/mindworkAIStudioServer-x86_64-unknown-linux-gnu"
+
+      - name: Run the quality gate
+        run: |
+          cd "app/Build"
+          dotnet run verify
+
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})
-    needs: [determine_run_mode, read_metadata]
+    needs: [determine_run_mode, read_metadata, verify]
     if: needs.determine_run_mode.outputs.build_enabled == 'true'
     permissions:
       contents: read
