@@ -31,7 +31,7 @@
 
             @{
                 var currentFolder = string.Empty;
-                foreach (var fileAttachment in this.DocumentPaths)
+                foreach (var fileAttachment in this.OrderedAttachments)
                 {
                     var folderPath = Path.GetDirectoryName(fileAttachment.FilePath);
                     if (folderPath != currentFolder)

@@ -74,6 +74,21 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     }
 
     /// <summary>
+    /// The attachments, sorted by their folder and, within it, by their file name.
+    /// </summary>
+    /// <remarks>
+    /// The list below starts a new heading whenever the folder changes from one attachment to the
+    /// next, which names every folder exactly once -- but only as long as the attachments of a
+    /// folder arrive together. The set behind them keeps no order of its own to guarantee that:
+    /// removing one attachment already scrambles it, and one attached while this dialog is open
+    /// lands at its end, giving its folder a second heading further down. Sorting here is what that
+    /// list assumes anyway.
+    /// </remarks>
+    private IEnumerable<FileAttachment> OrderedAttachments => this.DocumentPaths
+        .OrderBy(attachment => Path.GetDirectoryName(attachment.FilePath) ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(attachment => attachment.FileName, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Attaches what the user dropped onto this dialog and answers which files that became.
     /// </summary>
     /// <remarks>
