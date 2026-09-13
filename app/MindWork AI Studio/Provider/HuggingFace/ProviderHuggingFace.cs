@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models;
 using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
@@ -128,10 +129,10 @@ public sealed class ProviderHuggingFace : BaseProvider
     }
 
     /// <inheritdoc />
-    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason)
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default)
     {
         if (failureReason is not ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER)
-            return base.GetProviderRequestFailureUserMessage(failureReason);
+            return base.GetProviderRequestFailureUserMessage(failureReason, contextWindow);
 
         //
         // When Hugging Face chose the provider itself, naming it back to the user would help

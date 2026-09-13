@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
+using AIStudio.Models;
 using AIStudio.Models.Live;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
@@ -247,13 +248,34 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
 
-    protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    /// <summary>
+    /// Says what a failed request means for the user.
+    /// </summary>
+    /// <remarks>
+    /// The window is only ever known where the caller knows which model the request was for, which
+    /// is why it is optional rather than a second required argument: most failures say nothing
+    /// about a length and need no number to explain themselves.
+    /// </remarks>
+    /// <param name="failureReason">Why the request failed.</param>
+    /// <param name="contextWindow">What the model reads, where that is known.</param>
+    /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
+    protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
         ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
         ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
         ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
         ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
         ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
+        //
+        // Naming the number is the whole point of knowing it: "too long" leaves the user guessing
+        // by how much, while the window turns the next step into arithmetic. Where nobody knows the
+        // window, no number is invented -- the sentence below says the same thing without one.
+        //
+        // Written out in full rather than shortened the way the chat shortens it. The sentence ends
+        // by asking the user to set a chunk size, and 32.77k is not a number anybody types into a
+        // field.
+        //
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown => string.Format(TB("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
         ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
         ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TB("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
         ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
@@ -279,10 +301,18 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// Shared with the providers which talk to an embedding endpoint of their own: what the user
     /// needs to know does not depend on which route the request took.
     /// </remarks>
-    protected ProviderRequestException CreateEmbeddingRequestException(HttpStatusCode statusCode, string reasonPhrase, string responseBody)
+    protected ProviderRequestException CreateEmbeddingRequestException(HttpStatusCode statusCode, string reasonPhrase, string responseBody, Model embeddingModel)
     {
+        //
+        // What the rules know about this model, corrected by whatever this installation reported
+        // about it. That is the same walk a configured chat provider takes, minus the expert
+        // settings: an embedding provider has none, so there is nothing above the two to ask.
+        //
+        var stated = this.Provider.GetModelProfile(embeddingModel);
+        var contextWindow = ListedModels.Shared.Of(this.ConfiguredProviderId, embeddingModel.Id).ApplyTo(stated).Context;
+
         var failureReason = this.ClassifyEmbeddingRequestFailure(statusCode, responseBody);
-        var userMessage = this.GetProviderRequestFailureUserMessage(failureReason);
+        var userMessage = this.GetProviderRequestFailureUserMessage(failureReason, contextWindow);
 
         // We know nothing about this failure, so we pass on what the provider said about it:
         if (string.IsNullOrWhiteSpace(userMessage))
@@ -1551,7 +1581,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 // thousands being indexed in the background or the one thing the user just asked
                 // for, and only it can decide how often the user should hear about it.
                 //
-                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody);
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody, embeddingModel);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<EmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);

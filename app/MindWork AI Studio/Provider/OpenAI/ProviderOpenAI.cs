@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Models;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -48,10 +49,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
     }
 
-    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
         ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
-        _ => base.GetProviderRequestFailureUserMessage(failureReason),
+        _ => base.GetProviderRequestFailureUserMessage(failureReason, contextWindow),
     };
 
     /// <inheritdoc />

@@ -116,7 +116,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             if (!response.IsSuccessStatusCode)
             {
                 LOGGER.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody);
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody, embeddingModel);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<GoogleEmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);

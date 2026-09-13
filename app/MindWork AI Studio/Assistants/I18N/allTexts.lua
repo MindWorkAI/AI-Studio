@@ -10024,6 +10024,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "We tried to 
 -- The provider '{0}' does not know the selected model. Please select another model.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T411393889"] = "The provider '{0}' does not know the selected model. Please select another model."
 
+-- The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T479223640"] = "The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."
+
 -- The provider '{0}' reported an error: {1}
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "The provider '{0}' reported an error: {1}"
 
