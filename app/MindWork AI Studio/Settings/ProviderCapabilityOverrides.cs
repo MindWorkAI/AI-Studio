@@ -304,16 +304,16 @@ public sealed record ProviderCapabilityOverrides
     /// Works out how a model reasons, out of what the rules say and what a person said.
     /// </summary>
     /// <remarks>
-    /// This replaces thirty lines which repaired states that could not exist -- a model both always
+    /// This replaced thirty lines which repaired states that cannot exist -- a model both always
     /// reasoning and reasoning on request -- by an answer which cannot be in two of them at once.
-    /// The expert dialog writes all three words together, so the five combinations it produces are
-    /// answered exactly as they are today.
+    /// The expert dialog writes all three words together, and every combination it produces means
+    /// exactly what it meant before.
     ///
-    /// One thing changes, and it is a defect going away. A word nobody said anything about used to
-    /// destroy the answer: a provider carrying any override at all, say tool calling turned off, lost
-    /// "reasoning on by default" on the way through, because the old repair took the word away unless
-    /// "reasoning on request" stood next to it -- which no rule ever states. Here a "no" only takes
-    /// away what it names.
+    /// One thing did change, and it is a defect going away. A word nobody said anything about used
+    /// to destroy the answer: a provider carrying any override at all, say tool calling turned off,
+    /// lost "reasoning on by default" on the way through, because the repair took the word away
+    /// unless "reasoning on request" stood next to it -- which no rule ever states. Here a "no" only
+    /// takes away what it names.
     /// </remarks>
     /// <param name="stated">How the rules say the model reasons.</param>
     /// <returns>How it reasons after the overrides.</returns>
@@ -338,53 +338,6 @@ public sealed record ProviderCapabilityOverrides
 
             _ => ReasoningSupport.NONE,
         };
-    }
-
-    public List<Capability> ApplyTo(IEnumerable<Capability> automaticCapabilities)
-    {
-        var mergedCapabilities = automaticCapabilities.Distinct().ToList();
-        foreach (var capability in SUPPORTED_CAPABILITIES)
-        {
-            var overrideValue = this.GetOverride(capability);
-            if (overrideValue == true && !mergedCapabilities.Contains(capability))
-                mergedCapabilities.Add(capability);
-            else if (overrideValue == false)
-                mergedCapabilities.Remove(capability);
-        }
-
-        this.NormalizeReasoningCapabilities(mergedCapabilities);
-        return mergedCapabilities;
-    }
-
-    private void NormalizeReasoningCapabilities(List<Capability> capabilities)
-    {
-        if (this.AlwaysReasoning == true ||
-            this.AlwaysReasoning is not false &&
-            this.OptionalReasoning is not true &&
-            this.ReasoningByDefault is not true &&
-            capabilities.Contains(Capability.ALWAYS_REASONING))
-        {
-            capabilities.Remove(Capability.OPTIONAL_REASONING);
-            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
-            return;
-        }
-
-        if (this.AlwaysReasoning == false ||
-            this.OptionalReasoning == true ||
-            this.ReasoningByDefault == true)
-            capabilities.Remove(Capability.ALWAYS_REASONING);
-
-        if (this.OptionalReasoning == false)
-        {
-            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
-            return;
-        }
-
-        if (this.ReasoningByDefault == true && !capabilities.Contains(Capability.OPTIONAL_REASONING))
-            capabilities.Add(Capability.OPTIONAL_REASONING);
-
-        if (!capabilities.Contains(Capability.OPTIONAL_REASONING))
-            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
     }
 
     public string ExportAsLuaTable(string indentation)

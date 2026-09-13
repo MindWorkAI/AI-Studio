@@ -9,14 +9,19 @@ namespace AIStudio.Tests.Settings;
 /// </summary>
 /// <remarks>
 /// The expert dialog writes the three reasoning words together, in five combinations. Those five
-/// are the whole surface the app produces, so they are the ones held against the code being
-/// replaced: every one of them has to come out of the new resolution exactly as it comes out of the
-/// old repair today.
+/// are the whole surface the app produces, so each of them is stated below with the one thing it
+/// means -- whatever the rules said about the model, because that is what choosing from a list of
+/// five does.
 ///
-/// A configuration plugin can write the three words one at a time, and there the two differ on
-/// purpose. The old repair took a word away unless another one stood next to it, so an override
-/// about something else destroyed an answer nobody had touched. Those cases are stated below, one
-/// by one, with what they answer now.
+/// These used to be measured against the repair they replaced, by running both and comparing. That
+/// comparison is gone with the repair itself: keeping a dead implementation alive so a test can ask
+/// it questions makes the test the only reason it still exists, and the next reader cannot tell
+/// which of the two is the real one. What it guaranteed is written out instead.
+///
+/// A configuration plugin can write the three words one at a time, and there the two differed on
+/// purpose. The repair took a word away unless another one stood next to it, so an override about
+/// something else destroyed an answer nobody had touched. Those cases are stated below, one by one,
+/// with what they answer now.
 /// </remarks>
 [TestFixture]
 public sealed class ProviderCapabilityOverridesTests
@@ -24,55 +29,53 @@ public sealed class ProviderCapabilityOverridesTests
     private static readonly ReasoningSupport[] EVERY_STATE = [ReasoningSupport.NONE, ReasoningSupport.OPTIONAL, ReasoningSupport.ON_BY_DEFAULT, ReasoningSupport.ALWAYS];
 
     /// <summary>
-    /// The five combinations the expert dialog writes, in the order its list shows them.
+    /// The four combinations the expert dialog writes, in the order its list shows them, and the
+    /// one state each of them means.
     /// </summary>
     /// <remarks>
-    /// "Automatic" is not among them. It means the person said nothing, and a provider carrying
-    /// nothing but nothing is saved without an override record at all, so it never reaches here --
-    /// which is exactly why the defect below went unnoticed for so long: it needed a second,
-    /// unrelated switch to become visible.
+    /// "Automatic" is the fifth choice and is not among them. It means the person said nothing, and
+    /// a provider carrying nothing but nothing is saved without an override record at all, so it
+    /// never reaches here -- which is exactly why the defect below went unnoticed for so long: it
+    /// needed a second, unrelated switch to become visible.
     /// </remarks>
-    private static readonly ProviderCapabilityOverrides[] WHAT_THE_DIALOG_WRITES =
+    private static readonly (ProviderCapabilityOverrides Overrides, ReasoningSupport Means)[] WHAT_THE_DIALOG_WRITES =
     [
-        new() { AlwaysReasoning = false, OptionalReasoning = false, ReasoningByDefault = false },
-        new() { AlwaysReasoning = false, OptionalReasoning = true, ReasoningByDefault = false },
-        new() { AlwaysReasoning = false, OptionalReasoning = true, ReasoningByDefault = true },
-        new() { AlwaysReasoning = true, OptionalReasoning = false, ReasoningByDefault = false },
+        (new() { AlwaysReasoning = false, OptionalReasoning = false, ReasoningByDefault = false }, ReasoningSupport.NONE),
+        (new() { AlwaysReasoning = false, OptionalReasoning = true, ReasoningByDefault = false }, ReasoningSupport.OPTIONAL),
+        (new() { AlwaysReasoning = false, OptionalReasoning = true, ReasoningByDefault = true }, ReasoningSupport.ON_BY_DEFAULT),
+        (new() { AlwaysReasoning = true, OptionalReasoning = false, ReasoningByDefault = false }, ReasoningSupport.ALWAYS),
     ];
 
     [Test]
-    public void EveryChoiceTheExpertDialogOffersMeansTheSameAsItDoesToday()
+    public void EveryChoiceTheExpertDialogOffersMeansOneStateAndNothingElse()
     {
+        //
+        // Whatever the rules said about the model is beside the point here: somebody picked one of
+        // five entries from a list, and each entry says outright how this model reasons. That is
+        // also what makes these four the cheapest guard there is against somebody rearranging the
+        // resolution below them.
+        //
         Assert.Multiple(() =>
         {
-            foreach (var overrides in WHAT_THE_DIALOG_WRITES)
+            foreach (var (overrides, means) in WHAT_THE_DIALOG_WRITES)
             foreach (var stated in EVERY_STATE)
-            {
-                var rebuilt = overrides.ApplyTo(ProfileWhichReasons(stated)).Reasoning;
-                var today = ReasoningOf(overrides.ApplyTo(CapabilitiesWhichReason(stated)));
-
-                Assert.That(rebuilt, Is.EqualTo(today), $"A model which reasons {stated}, with {Describe(overrides)}.");
-            }
+                Assert.That(overrides.ApplyTo(ProfileWhichReasons(stated)).Reasoning, Is.EqualTo(means), $"A model which reasons {stated}, with {Describe(overrides)}.");
         });
     }
 
     [Test]
-    public void AnOverrideAboutSomethingElseNoLongerTakesTheThinkingAway()
+    public void AnOverrideAboutSomethingElseLeavesTheThinkingAlone()
     {
         //
-        // The defect this replaces. Turning tool calling off said nothing about reasoning, and yet
+        // The defect this replaced. Turning tool calling off said nothing about reasoning, and yet
         // a model which thinks unless asked not to came out of it as a model which never thinks --
         // because the repair kept "on by default" only where "on request" stood next to it, which
-        // no rule has ever stated.
+        // no rule has ever stated. It cannot come back through this door: the answer is one value
+        // now, and the combination the repair existed for cannot be written down any more.
         //
         var overrides = new ProviderCapabilityOverrides { FunctionCalling = false };
-        var thinker = ProfileWhichReasons(ReasoningSupport.ON_BY_DEFAULT);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(overrides.ApplyTo(thinker).Reasoning, Is.EqualTo(ReasoningSupport.ON_BY_DEFAULT));
-            Assert.That(ReasoningOf(overrides.ApplyTo(CapabilitiesWhichReason(ReasoningSupport.ON_BY_DEFAULT))), Is.EqualTo(ReasoningSupport.NONE), "Which is what it used to answer, and the reason this test exists.");
-        });
+        Assert.That(overrides.ApplyTo(ProfileWhichReasons(ReasoningSupport.ON_BY_DEFAULT)).Reasoning, Is.EqualTo(ReasoningSupport.ON_BY_DEFAULT));
     }
 
     [TestCase(ReasoningSupport.ALWAYS, ReasoningSupport.ALWAYS, Description = "Saying it is not on by default says nothing about a model which cannot turn it off.")]
@@ -126,51 +129,6 @@ public sealed class ProviderCapabilityOverridesTests
         Capabilities = Capability.TEXT_INPUT | Capability.TEXT_OUTPUT,
         Reasoning = reasoning,
     };
-
-    /// <summary>
-    /// The same model, written the way the rules being replaced answer.
-    /// </summary>
-    /// <param name="reasoning">How the model reasons.</param>
-    /// <returns>The capabilities, with the one word which stands for that state.</returns>
-    private static List<Capability> CapabilitiesWhichReason(ReasoningSupport reasoning)
-    {
-        List<Capability> capabilities = [Capability.TEXT_INPUT, Capability.TEXT_OUTPUT];
-        switch (reasoning)
-        {
-            case ReasoningSupport.OPTIONAL:
-                capabilities.Add(Capability.OPTIONAL_REASONING);
-                break;
-
-            case ReasoningSupport.ON_BY_DEFAULT:
-                capabilities.Add(Capability.REASONING_BY_DEFAULT);
-                break;
-
-            case ReasoningSupport.ALWAYS:
-                capabilities.Add(Capability.ALWAYS_REASONING);
-                break;
-        }
-
-        return capabilities;
-    }
-
-    /// <summary>
-    /// Which state a list of capabilities stands for, read the way the app reads it today.
-    /// </summary>
-    /// <param name="capabilities">The capabilities.</param>
-    /// <returns>The state they stand for.</returns>
-    private static ReasoningSupport ReasoningOf(List<Capability> capabilities)
-    {
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningSupport.ALWAYS;
-
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningSupport.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningSupport.OPTIONAL;
-
-        return ReasoningSupport.NONE;
-    }
 
     private static string Describe(ProviderCapabilityOverrides overrides) => $"always={overrides.AlwaysReasoning?.ToString() ?? "auto"}, optional={overrides.OptionalReasoning?.ToString() ?? "auto"}, byDefault={overrides.ReasoningByDefault?.ToString() ?? "auto"}";
 }
