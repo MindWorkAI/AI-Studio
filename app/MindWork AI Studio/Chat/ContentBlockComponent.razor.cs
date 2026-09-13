@@ -732,7 +732,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             //
             if (format.UsesPandoc())
                 await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
-            else if (this.Content.TryGetMarkdownText(out var markdown))
+            else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
         }
         catch (ArgumentOutOfRangeException e)
