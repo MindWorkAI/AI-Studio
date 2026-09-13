@@ -3,7 +3,7 @@
 
 @if (!this.SettingsManager.ConfigurationData.Translation.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
+    <ReadWebContent @bind-Content="@this.inputText" @bind-URL="@this.webContentURL" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
 }
 
 <ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" CatchAllDocuments="true"/>
