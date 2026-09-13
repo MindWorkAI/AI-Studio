@@ -275,7 +275,7 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
         foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
 
