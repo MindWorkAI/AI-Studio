@@ -189,6 +189,8 @@ You want to know how to build MindWork AI Studio from source? [Check out the ins
 
 Do you want to add or maintain model-driven tools? [Read the tool development guide here](documentation/Tools.md).
 
+Do you want to teach AI Studio what a model can do? [Read the model capabilities guide here](documentation/Models.md).
+
 </details>
 
 <details>
