@@ -7,6 +7,30 @@ use log::{error, info, warn};
 pub static PDFIUM_LIB_PATH: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
 static PDFIUM: OnceCell<Pdfium> = OnceCell::new();
 
+/// Grants one caller at a time the right to talk to PDFium.
+static PDFIUM_ACCESS: Mutex<()> = Mutex::new(());
+
+/// Runs the given action with PDFium all to itself.
+///
+/// PDFium is not thread-safe, and nothing else guarantees that for us: the `thread_safe` feature of
+/// `pdfium-render` has only granted `Send` and `Sync` since its release 0.9.0 and no longer locks
+/// anything, although its documentation still says so. Two documents read at the same time -- a
+/// chat attachment while a data source is being indexed, say -- therefore corrupt PDFium's memory
+/// and take the whole runtime down with a segmentation fault.
+///
+/// Every call to PDFium belongs in here, and so does everything holding a page or a document open:
+/// closing them calls PDFium as well. What does not belong in here is anything that waits, our own
+/// work on the extracted text above all, because everybody else waits along with it.
+pub fn with_pdfium_access<T>(action: impl FnOnce() -> T) -> T {
+    //
+    // A panic while reading a document poisons this lock. Refusing every PDF from then on would
+    // turn one broken document into a broken feature, so we take the lock either way: what the
+    // panic left behind is inside PDFium, not inside the unit value we guard with.
+    //
+    let _access = PDFIUM_ACCESS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    action()
+}
+
 pub trait PdfiumInit {
     fn ai_studio_init() -> Result<&'static Pdfium, Box<dyn Error + Send + Sync>>;
 }
