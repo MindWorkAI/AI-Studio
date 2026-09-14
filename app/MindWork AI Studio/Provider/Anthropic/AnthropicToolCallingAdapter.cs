@@ -19,8 +19,12 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
 {
     private readonly List<IMessageBase> internalMessages = [];
     private readonly List<AnthropicToolResultContent> pendingToolResults = [];
+    private readonly List<string> recordedRequestTexts = [];
     private readonly List<AnthropicTool> tools = runnableTools.Select(x => ProviderToolAdapters.ToAnthropicTool(x.Definition)).ToList();
     private AnthropicResponse? lastResponse;
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <inheritdoc />
     public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
@@ -76,13 +80,30 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
         // returned unchanged for the model to continue from them.
         //
         this.internalMessages.Add(new AnthropicMessage([..this.lastResponse.Content]));
+
+        //
+        // And they are counted exactly as they arrived, for the same reason: a thinking block is
+        // sent back whole, so what it costs is what it says, not what we could read out of it.
+        //
+        foreach (var contentBlock in this.lastResponse.Content)
+            this.recordedRequestTexts.Add(contentBlock.GetRawText());
     }
 
     /// <inheritdoc />
-    public void RecordToolResult(string callId, string content, bool isError = false) => this.pendingToolResults.Add(new AnthropicToolResultContent
+    public void RecordToolResult(string callId, string content, bool isError = false)
     {
-        ToolUseId = callId,
-        Content = content,
-        IsError = isError,
-    });
+        this.pendingToolResults.Add(new AnthropicToolResultContent
+        {
+            ToolUseId = callId,
+            Content = content,
+            IsError = isError,
+        });
+
+        //
+        // Noted here rather than when the results are flushed into their message: the round they
+        // belong to is over, and whoever asks in the meantime has to see what it cost.
+        //
+        if (!string.IsNullOrWhiteSpace(content))
+            this.recordedRequestTexts.Add(content);
+    }
 }

@@ -22,8 +22,12 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
 {
     private readonly List<IMessageBase> internalMessages = [];
+    private readonly List<string> recordedRequestTexts = [];
     private ChatCompletionResponseMessage? lastResponseMessage;
     private List<ChatCompletionToolCall> lastToolCalls = [];
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <inheritdoc />
     public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
@@ -79,23 +83,55 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     }
 
     /// <inheritdoc />
-    public void RecordAssistantTurn() => this.internalMessages.Add(new AssistantToolCallMessage
+    public void RecordAssistantTurn()
     {
-        Content = this.lastResponseMessage?.RawContent,
-        ReasoningContent = this.lastResponseMessage?.ReasoningContent,
-        ToolCalls = this.lastToolCalls,
-    });
+        this.internalMessages.Add(new AssistantToolCallMessage
+        {
+            Content = this.lastResponseMessage?.RawContent,
+            ReasoningContent = this.lastResponseMessage?.ReasoningContent,
+            ToolCalls = this.lastToolCalls,
+        });
+
+        //
+        // The text of the message, not the message: this adapter builds the message itself, so it
+        // knows which of its fields carry words rather than wire format. The name of a call travels
+        // with its arguments because the model is charged for both.
+        //
+        this.Record(this.lastResponseMessage?.Content);
+        this.Record(this.lastResponseMessage?.ReasoningContent);
+        foreach (var toolCall in this.lastToolCalls)
+            this.Record($"{toolCall.Function?.Name}{toolCall.Function?.Arguments}");
+    }
 
     /// <inheritdoc />
     /// <remarks>
     /// Chat Completions has no error flag on a tool message, so a failure travels in the content
     /// like any other result.
     /// </remarks>
-    public void RecordToolResult(string callId, string content, bool isError = false) => this.internalMessages.Add(new ToolResultMessage
+    public void RecordToolResult(string callId, string content, bool isError = false)
     {
-        Content = content,
-        ToolCallId = callId,
-    });
+        this.internalMessages.Add(new ToolResultMessage
+        {
+            Content = content,
+            ToolCallId = callId,
+        });
+
+        this.Record(content);
+    }
+
+    /// <summary>
+    /// Notes one piece of text as part of what the next round sends.
+    /// </summary>
+    /// <remarks>
+    /// Empty pieces are left out rather than noted as nothing. A round without text and a round
+    /// without reasoning are the normal case here, and a list of empty strings would be carried
+    /// through the whole counting for no answer it could change.
+    /// </remarks>
+    private void Record(string? text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+            this.recordedRequestTexts.Add(text);
+    }
 
     /// <summary>
     /// Normalizes the tool calls of one response.
