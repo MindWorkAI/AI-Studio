@@ -3348,6 +3348,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "The selected mode
 -- We could load models from '{0}', but the provider did not return any usable text models.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3378120620"] = "We could load models from '{0}', but the provider did not return any usable text models."
 
+-- Your data sources could not be used. This answer was created without them.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T373499115"] = "Your data sources could not be used. This answer was created without them."
+
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "The local image file does not exist. Skipping the image."
 
@@ -3899,6 +3902,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T168406579"] = "AI-S
 
 -- AI-based data validation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "AI-based data validation"
+
+-- These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1852534051"] = "These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:"
 
 -- Yes, I want to use data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1975014927"] = "Yes, I want to use data sources."
@@ -10464,6 +10470,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3267850764"] = "The sel
 -- We could load models from '{0}', but the provider did not return any usable text models.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3378120620"] = "We could load models from '{0}', but the provider did not return any usable text models."
 
+-- Your data sources could not be used. This answer was created without them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T373499115"] = "Your data sources could not be used. This answer was created without them."
+
 -- Software Development
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ASSISTANTCATEGORYEXTENSIONS::T1025369409"] = "Software Development"
 
@@ -11570,6 +11579,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T
 
 -- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread."
+
+-- The check of which passages fit your question failed. This answer uses all passages that were found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T392269104"] = "The check of which passages fit your question failed. This answer uses all passages that were found."
 
 -- Automatic AI data source selection with heuristik source reduction
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T2339257645"] = "Automatic AI data source selection with heuristik source reduction"

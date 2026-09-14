@@ -58,11 +58,15 @@
                                                Disabled="@this.IsRowDisabled(item)" OnClick="@(async () => await this.ToggleToolFromRow(item))">
                                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                                             @*
-                                                The switch only shows the state; the surrounding button does the switching.
+                                                A checkbox rather than a switch, because this row is one entry of a set the
+                                                user picks from, not a setting of its own -- the same question the data source
+                                                selection next to it asks, and it should not look like a different one.
+
+                                                The checkbox only shows the state; the surrounding button does the switching.
                                                 It therefore takes no pointer events at all: its label reaches past the visible
-                                                switch and would otherwise swallow the clicks landing in that strip.
+                                                box and would otherwise swallow the clicks landing in that strip.
                                             *@
-                                            <MudSwitch T="bool" Size="Size.Small" Color="Color.Primary" Value="@isSelected" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
+                                            <MudCheckBox T="bool" Size="Size.Small" Dense="@true" Color="Color.Primary" Value="@isSelected" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
                                             <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
                                             @if (!item.IsActive)
                                             {

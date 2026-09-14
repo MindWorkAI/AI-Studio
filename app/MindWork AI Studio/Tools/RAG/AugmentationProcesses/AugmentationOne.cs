@@ -80,8 +80,12 @@ public sealed class AugmentationOne : IAugmentationProcess
             }
             else
             {
+                //
+                // No message to the user here: which providers are trusted enough is a setting, not
+                // an event. It does not change between two answers, so a message would repeat itself
+                // with every single one until the setting changes.
+                //
                 LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available. Continuing augmentation with all retrieved contexts.");
-                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FactCheck, TB("No provider is trusted enough to check which passages fit your question. This answer uses all passages that were found.")));
             }
         }
         
