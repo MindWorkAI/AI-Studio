@@ -89,19 +89,19 @@
                                     
                                 case false:
                                     <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.aiBasedSourceSelection">
-                                        <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" Style="max-height: 14em;">
+                                        <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" Style="max-height: 14em;">
                                             @foreach (var source in this.availableDataSources)
                                             {
                                                 <MudListItem Value="@source">
                                                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                                        <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
+                                                        <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                             @source.Name
                                                         </MudText>
                                                         @if (source is IInternalDataSource internalSource)
                                                         {
                                                             <MudSpacer/>
                                                             <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                                                <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                             </MudTooltip>
                                                         }
                                                     </MudStack>
@@ -114,19 +114,19 @@
                                 case true:
                                     <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
                                         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" HeaderText="@T("Available Data Sources")">
-                                            <MudList T="IDataSource" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
+                                            <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
                                                 @foreach (var source in this.availableDataSources)
                                                 {
                                                     <MudListItem Value="@source">
                                                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                                            <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
+                                                            <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                                 @source.Name
                                                             </MudText>
                                                             @if (source is IInternalDataSource internalSource)
                                                             {
                                                                 <MudSpacer/>
                                                                 <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                    <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                                                    <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                 </MudTooltip>
                                                             }
                                                         </MudStack>
@@ -135,20 +135,20 @@
                                             </MudList>
                                         </ExpansionPanel>
                                         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Filter" HeaderText="@T("AI-Selected Data Sources")">
-                                            <MudList T="DataSourceAgentSelected" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
+                                            <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
                                                 @foreach (var source in this.DataSourcesAISelected)
                                                 {
                                                     <MudListItem Value="@source">
                                                         <ChildContent>
                                                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                                                <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
+                                                                <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                                     @source.DataSource.Name
                                                                 </MudText>
                                                                 @if (source.DataSource is IInternalDataSource internalSource)
                                                                 {
                                                                     <MudSpacer/>
                                                                     <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                                                        <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                     </MudTooltip>
                                                                 }
                                                             </MudStack>
@@ -211,19 +211,19 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticSelectionLocked()"/>
             <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticValidationLocked()"/>
             <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@(this.aiBasedSourceSelection || this.IsPreselectedDataSourceIdsLocked())">
-                <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" ReadOnly="@this.IsPreselectedDataSourceIdsLocked()">
+                <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" ReadOnly="@this.IsPreselectedDataSourceIdsLocked()">
                     @foreach (var source in this.availableDataSources)
                     {
                         <MudListItem Value="@source">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
+                                <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                     @source.Name
                                 </MudText>
                                 @if (source is IInternalDataSource internalSource)
                                 {
                                     <MudSpacer/>
                                     <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                                        <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                     </MudTooltip>
                                 }
                             </MudStack>

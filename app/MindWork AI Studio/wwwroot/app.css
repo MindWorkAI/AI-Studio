@@ -492,3 +492,23 @@ tr:has(> .provider-group-header) .mud-icon-button {
 .tool-selection-row .mud-icon-button {
     padding: 0.2em;
 }
+
+/*
+ * Rows of the data source lists, in the popover next to the tool selection as well as in the
+ * settings dialog. A row carries a name and at most one icon, so there is no reason for it to be
+ * 48px tall: MudBlazor pads the item with 8px on both sides and the text slot with another 4px,
+ * which is more frame than content. Dense on the list halves the first part, the rule below takes
+ * the second one away, and it has to name the MudBlazor class to outweigh its specificity. The
+ * alternating grey ground is the one the tool rows above use, for the same reason: it tells a long
+ * list apart without costing any height. MudBlazor marks the selected row with an !important of its
+ * own, so the striping can never hide what is selected.
+ */
+.data-source-rows .mud-list-item-text {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.data-source-rows > .mud-list-item:nth-child(odd) {
+    background-color: var(--mud-palette-background-gray);
+    border-radius: var(--mud-default-borderradius);
+}
