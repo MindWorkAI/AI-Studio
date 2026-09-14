@@ -1,4 +1,7 @@
+using System.Text.Json;
+
 using AIStudio.Chat;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tests.Chat;
 
@@ -11,6 +14,10 @@ namespace AIStudio.Tests.Chat;
 /// travels with it. So what is collected here has to be what the message builder actually sends --
 /// no more, because a number which counts something that stays behind is wrong in the direction
 /// that makes a person stop writing.
+///
+/// Beyond the messages, a request carries the schema of every tool the model may call, and, while
+/// it runs, everything those tools have returned so far. Both are invisible on the screen, and the
+/// second one is where a window fills up fastest.
 /// </remarks>
 [TestFixture]
 public sealed class ConversationPartsTests
@@ -44,7 +51,7 @@ public sealed class ConversationPartsTests
             ],
         };
 
-        var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -65,7 +72,7 @@ public sealed class ConversationPartsTests
         ((ContentText)streaming.Content!).IsStreaming = true;
         var thread = new ChatThread { Blocks = [Block("A question."), streaming] };
 
-        var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -80,7 +87,7 @@ public sealed class ConversationPartsTests
         var finished = Block("The whole answer.");
         ((ContentText)finished.Content!).IsStreaming = false;
 
-        var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -100,7 +107,7 @@ public sealed class ConversationPartsTests
         //
         var thread = new ChatThread { SystemPrompt = "What the person typed." };
 
-        var parts = ConversationParts.Of(thread, "What the request carries.", string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, "What the request carries.", string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Texts, Is.EqualTo(new[] { "What the request carries." }));
     }
@@ -115,7 +122,7 @@ public sealed class ConversationPartsTests
         var hidden = Block("An instruction the user does not see.");
         var thread = new ChatThread { Blocks = [new() { ContentType = hidden.ContentType, Role = hidden.Role, Content = hidden.Content, HideFromUser = true }] };
 
-        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Texts, Is.EqualTo(new[] { "An instruction the user does not see." }));
     }
@@ -123,7 +130,7 @@ public sealed class ConversationPartsTests
     [Test]
     public void WithoutAConversationOnlyTheDraftCounts()
     {
-        var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -136,7 +143,7 @@ public sealed class ConversationPartsTests
     [TestCase("   ")]
     public void NothingWrittenIsNothingToCount(string draft)
     {
-        var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -157,7 +164,7 @@ public sealed class ConversationPartsTests
         var empty = Block(string.Empty);
         ((ContentText)empty.Content!).FileAttachments.Add(FileAttachment.FromPath(document));
 
-        var parts = ConversationParts.Of(new() { Blocks = [empty] }, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [empty] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -179,7 +186,7 @@ public sealed class ConversationPartsTests
         var block = Block("Please read this.");
         ((ContentText)block.Content!).FileAttachments.Add(FileAttachment.FromPath(older));
 
-        var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And this one.", [FileAttachment.FromPath(draft)], imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And this one.", [FileAttachment.FromPath(draft)], imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Documents.Select(document => document.FileName), Is.EqualTo(new[] { "older.txt", "draft.txt" }));
     }
@@ -192,7 +199,7 @@ public sealed class ConversationPartsTests
         //
         var attachment = FileAttachment.FromPath(Path.Combine(this.directory, "never-existed.txt"));
 
-        var parts = ConversationParts.Of(null, string.Empty, "Here", [attachment], imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Here", [attachment], imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Documents, Is.Empty);
     }
@@ -203,7 +210,7 @@ public sealed class ConversationPartsTests
         var document = this.WriteFile("notes.txt", "content");
         var image = this.WriteFile("photo.png", "not really a png");
 
-        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(document), FileAttachment.FromPath(image)], imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(document), FileAttachment.FromPath(image)], imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -221,10 +228,122 @@ public sealed class ConversationPartsTests
         //
         var image = this.WriteFile("photo.png", "not really a png");
 
-        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(image)], imagesAreSent: false);
+        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(image)], imagesAreSent: false, toolDefinitions: null);
 
         Assert.That(parts.Images, Is.Zero);
     }
+
+    [Test]
+    public void ABlockWithoutTextCountsWhileItsToolsAreStillRunning()
+    {
+        //
+        // While a model calls tools there is no text yet: the answer arrives in one piece at the
+        // end, and everything in between travels with every further round of the same request. The
+        // block which looks emptiest is therefore the one whose request is growing the fastest --
+        // and the one which used to be skipped for having nothing to say.
+        //
+        var running = Block(string.Empty);
+        ((ContentText)running.Content!).PendingToolConversation = ["What the web search found.", "What the page said."];
+
+        var parts = ConversationParts.Of(new() { Blocks = [running] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.Empty);
+            Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "What the web search found.", "What the page said." }));
+        });
+    }
+
+    [Test]
+    public void TwoToolResultsWhichReadTheSameCostTwice()
+    {
+        //
+        // The request carries both, so both are paid for. Folding them into one would promise a
+        // smaller request than the one which is sent -- and a model reading the same page twice is
+        // not a rare accident but a thing that happens on any busy search.
+        //
+        var running = Block(string.Empty);
+        ((ContentText)running.Content!).PendingToolConversation = ["The same page.", "The same page."];
+
+        var parts = ConversationParts.Of(new() { Blocks = [running] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
+
+        Assert.That(parts.GrowingTexts, Is.EqualTo(new[] { "The same page.", "The same page." }));
+    }
+
+    [Test]
+    public void OnceTheAnswerStandsTheToolConversationIsGone()
+    {
+        //
+        // It travels with the rounds of one request and with nothing afterwards: the next request is
+        // built from the messages alone. A number which kept counting it would report a window
+        // fuller than it is, and would never fall back.
+        //
+        var answered = Block("Here is what I found.");
+        var content = (ContentText)answered.Content!;
+        content.PendingToolConversation = ["What the web search found."];
+        content.EndToolRun();
+
+        var parts = ConversationParts.Of(new() { Blocks = [answered] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.EqualTo(new[] { "Here is what I found." }));
+            Assert.That(parts.GrowingTexts, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void TheToolSchemasCountAndTheyCountWithWhatStands()
+    {
+        //
+        // Every request carries the schema of every offered tool, whether or not the model calls a
+        // single one of them. They belong with the lasting texts: a schema is the same string all
+        // session long, so its count is worth remembering.
+        //
+        var parts = ConversationParts.Of(null, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions:
+        [
+            Tool("web_search", "Searches the web.", """{"type":"object"}"""),
+            Tool("read_web_page", "Reads one page.", """{"type":"string"}"""),
+        ]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(parts.Texts, Is.EqualTo(new[]
+            {
+                """web_searchSearches the web.{"type":"object"}""",
+                """read_web_pageReads one page.{"type":"string"}""",
+            }));
+
+            Assert.That(parts.GrowingTexts, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void AToolWhichStatesNoArgumentsCountsLikeAnyOther()
+    {
+        //
+        // A definition which never names a parameter schema leaves an empty JSON element behind,
+        // and asking such an element for its text throws. A tool arriving from a plugin may well
+        // say nothing about its arguments, and the number under the input field is not the place
+        // to find that out.
+        //
+        var parts = ConversationParts.Of(null, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions:
+        [
+            new() { Function = new() { Name = "ping", DescriptionForLLM = "Says hello." } },
+        ]);
+
+        Assert.That(parts.Texts, Is.EqualTo(new[] { "pingSays hello." }));
+    }
+
+    private static ToolDefinition Tool(string name, string description, string parameterSchema) => new()
+    {
+        Function = new()
+        {
+            Name = name,
+            DescriptionForLLM = description,
+            Parameters = JsonDocument.Parse(parameterSchema).RootElement.Clone(),
+        },
+    };
 
     private static ContentBlock Block(string text) => new()
     {

@@ -16,7 +16,11 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     Func<ResponsesAPIRequest, CancellationToken, Task<ResponsesResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<object> internalItems = [];
+    private readonly List<string> recordedRequestTexts = [];
     private ResponsesResponse? lastResponse;
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <summary>
     /// The tools offered to the model: the provider-native ones plus our local functions.
@@ -77,7 +81,17 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         // Every output item, not just the function calls: the API rejects a continuation whose
         // reasoning items are missing.
         foreach (var outputItem in this.lastResponse.Output)
+        {
             this.internalItems.Add(outputItem);
+
+            //
+            // The item as it came in, because that is how it goes back out. Reading the text out
+            // of it would mean knowing every item type the API has, including the ones it gains
+            // later -- and a reasoning item nobody recognized would then cost nothing here while
+            // costing its tokens on the wire.
+            //
+            this.recordedRequestTexts.Add(outputItem.GetRawText());
+        }
     }
 
     /// <inheritdoc />
@@ -85,11 +99,17 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     /// The Responses API has no error flag on a function call output, so a failure travels in the
     /// output like any other result.
     /// </remarks>
-    public void RecordToolResult(string callId, string content, bool isError = false) => this.internalItems.Add(new ResponsesFunctionCallOutputItem
+    public void RecordToolResult(string callId, string content, bool isError = false)
     {
-        CallId = callId,
-        Output = content,
-    });
+        this.internalItems.Add(new ResponsesFunctionCallOutputItem
+        {
+            CallId = callId,
+            Output = content,
+        });
+
+        if (!string.IsNullOrWhiteSpace(content))
+            this.recordedRequestTexts.Add(content);
+    }
 
     private static IList<object> BuildEffectiveProviderTools(IList<object> providerTools, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools)
     {

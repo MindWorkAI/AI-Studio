@@ -1270,7 +1270,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
+        currentAssistantContent?.BeginToolRun();
 
         TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)

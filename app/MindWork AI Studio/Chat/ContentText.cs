@@ -55,6 +55,49 @@ public sealed class ContentText : IContent
     [JsonIgnore]
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
 
+    /// <summary>
+    /// What the tool conversation of the running request adds to it, as far as it has got.
+    /// </summary>
+    /// <remarks>
+    /// A model which calls tools asks several times before it answers, and every one of those
+    /// requests carries everything the tools returned so far -- up to three hundred thousand
+    /// characters of it. None of that is in this block's text, and none of it is in the traces
+    /// either: those say what happened, not what it costs. So it is kept here, where whoever
+    /// counts the conversation walks past anyway.<br/><br/>
+    /// Replaced as a whole, never appended to: it is written by the thread which runs the tools
+    /// and read by the one which renders, and an exchange leaves the reader with a list which was
+    /// true at some moment rather than with one being rewritten under it.<br/><br/>
+    /// Gone when the answer is there, and never persisted. The accumulated tool conversation lives
+    /// in the provider adapter, which is created for one request and dropped with it -- so the next
+    /// request does not carry it, and a number which still counted it would promise a cost nobody
+    /// is going to pay.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlyList<string> PendingToolConversation { get; set; } = [];
+
+    /// <summary>
+    /// Clears what the previous run of the tools left behind.
+    /// </summary>
+    /// <remarks>
+    /// Both parts at once, because both belong to one request: the traces the user reads and the
+    /// payload the counting needs. They were cleared separately for exactly as long as there was
+    /// only one of them.
+    /// </remarks>
+    public void BeginToolRun()
+    {
+        this.ToolInvocations.Clear();
+        this.PendingToolConversation = [];
+    }
+
+    /// <summary>
+    /// Says that no request is running anymore.
+    /// </summary>
+    /// <remarks>
+    /// The traces stay -- they are what the user reads afterwards to see how the answer came
+    /// about. What goes is the payload, which belonged to a request that is over.
+    /// </remarks>
+    public void EndToolRun() => this.PendingToolConversation = [];
+
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
@@ -177,7 +220,8 @@ public sealed class ContentText : IContent
         finally
         {
             this.Text = this.Text.RemoveThinkTags().Trim();
-        
+            this.EndToolRun();
+
             // Inform the UI that the streaming is done:
             await this.StreamingDone();
         }
