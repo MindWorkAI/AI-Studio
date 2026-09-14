@@ -11589,8 +11589,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCS
 -- Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
 
--- None of your selected data sources is available for the chosen provider. This answer was created without them.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T1696726639"] = "Keine der von Ihnen ausgewählten Datenquellen ist für den gewählten Anbieter verfügbar. Diese Antwort wurde ohne sie erstellt."
+-- None of your selected data sources could be used. This answer was created without them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T2995829558"] = "Keine Ihrer ausgewählten Datenquellen konnte verwendet werden. Diese Antwort wurde ohne sie erstellt."
 
 -- This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
