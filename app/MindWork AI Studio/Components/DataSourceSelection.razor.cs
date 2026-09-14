@@ -258,7 +258,16 @@ public partial class DataSourceSelection : MSGComponentBase
     private async Task SelectionChanged(IReadOnlyCollection<IDataSource>? chosenDataSources)
     {
         this.selectedDataSources = chosenDataSources ?? [];
-        this.DataSourceOptions.PreselectedDataSourceIds = this.selectedDataSources.Select(ds => ds.Id).ToList();
+
+        //
+        // The list offers only the data sources which survived the filters, so what the user picks
+        // there says nothing about the preselected ones it could not show. Those are kept: dropping
+        // them would undo a choice the user never revisited, and it is these ids -- not this list --
+        // which the RAG process reads when an answer is created. The query has to run before the
+        // assignment, because it reads what we are about to replace.
+        //
+        var keptDataSourceIds = this.GetUnavailablePreselectedDataSources().Select(ds => ds.Id).ToList();
+        this.DataSourceOptions.PreselectedDataSourceIds = [..keptDataSourceIds, ..this.selectedDataSources.Select(ds => ds.Id)];
 
         await this.OptionsChanged();
     }
