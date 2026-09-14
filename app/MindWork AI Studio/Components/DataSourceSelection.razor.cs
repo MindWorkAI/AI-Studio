@@ -183,19 +183,19 @@ public partial class DataSourceSelection : MSGComponentBase
     }
 
     /// <summary>
-    /// Names the preselected data sources which the filters removed.
+    /// Collects the preselected data sources which the filters removed.
     /// </summary>
     /// <remarks>
-    /// This list shows what survived the filters, while the preselection keeps what the user asked
-    /// for. Without this, a preselected source which cannot be used right now is simply missing
-    /// from the list, and nothing says so. Preselected ids without a configured source are left
-    /// out: that source is gone, not unavailable.
+    /// The list of available sources shows what survived the filters, while the preselection keeps
+    /// what the user asked for. Without this, a preselected source which cannot be used right now
+    /// is simply missing from that list, and nothing says so. Preselected ids without a configured
+    /// source are left out: that source is gone, not unavailable.
     /// </remarks>
-    /// <returns>The names of the unusable preselected data sources, or an empty string when there are none.</returns>
-    private string GetUnavailablePreselectedDataSourceNames()
+    /// <returns>The unusable preselected data sources, or an empty list when there are none.</returns>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSources()
     {
         var availableDataSourceIds = this.availableDataSources.Select(ds => ds.Id).ToHashSet(StringComparer.Ordinal);
-        return string.Join(", ", this.GetDataSourcesFromConfiguredIds().Where(ds => !availableDataSourceIds.Contains(ds.Id)).Select(ds => ds.Name));
+        return this.GetDataSourcesFromConfiguredIds().Where(ds => !availableDataSourceIds.Contains(ds.Id)).ToList();
     }
     
     private async Task LoadAndApplyFilters()
