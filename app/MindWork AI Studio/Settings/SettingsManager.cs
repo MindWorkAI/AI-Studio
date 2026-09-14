@@ -33,7 +33,17 @@ public sealed class SettingsManager
 
     private readonly ILogger<SettingsManager> logger;
     private readonly RustService rustService;
-    private readonly SemaphoreSlim settingsWriteSemaphore = new(1, 1);
+
+    /// <summary>
+    /// Lets only one operation at a time touch the settings files.
+    /// </summary>
+    /// <remarks>
+    /// Reading takes this as well as writing does, for two reasons. A read migrates and backs up
+    /// what it found, so it writes the very files a store writes. And it re-evaluates whether
+    /// writes are blocked at all, starting out by clearing that block: a store slipping through
+    /// that moment would overwrite the settings the block exists to protect.
+    /// </remarks>
+    private readonly SemaphoreSlim settingsFileSemaphore = new(1, 1);
 
     /// <summary>
     /// The settings manager.
@@ -104,6 +114,19 @@ public sealed class SettingsManager
     /// </summary>
     /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
     public async Task<Data?> TryReadSettingsSnapshot()
+    {
+        await this.settingsFileSemaphore.WaitAsync();
+        try
+        {
+            return await this.ReadSettingsSnapshot();
+        }
+        finally
+        {
+            this.settingsFileSemaphore.Release();
+        }
+    }
+
+    private async Task<Data?> ReadSettingsSnapshot()
     {
         this.SettingsWriteBlockReason = SettingsWriteBlockReason.NONE;
         if(!this.IsSetUp)
@@ -295,7 +318,7 @@ public sealed class SettingsManager
     /// </summary>
     public async Task StoreSettings()
     {
-        await this.settingsWriteSemaphore.WaitAsync();
+        await this.settingsFileSemaphore.WaitAsync();
         try
         {
             if(!this.IsSetUp)
@@ -317,7 +340,7 @@ public sealed class SettingsManager
         }
         finally
         {
-            this.settingsWriteSemaphore.Release();
+            this.settingsFileSemaphore.Release();
         }
     }
 

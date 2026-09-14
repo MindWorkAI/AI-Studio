@@ -180,7 +180,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     protected override void ResetForm()
     {
         this.loadedDocumentPaths.Clear();
-        this.policyNameWasEdited = false;
         if (!this.MightPreselectValues())
         {
             this.policyName = string.Empty;
@@ -221,7 +220,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAllowedToolIds = [..this.selectedPolicy.AllowedToolIds];
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
-            this.policyNameWasEdited = false;
 
             return true;
         }
@@ -257,47 +255,64 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task AutoSave(bool force = false)
     {
-        if(this.selectedPolicy is null)
-            return;
-
-        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
-        var hasChanges = this.selectedPolicy.PreselectedProfile != this.policyPreselectedProfile;
-        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
-
-        // Enterprise configurations cannot be modified at all:
-        if(this.selectedPolicy.IsEnterpriseConfiguration)
-            return;
-        
-        var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
-        if (canEditProtectedFields)
-        {
-            hasChanges = hasChanges
-                         || this.policyNameWasEdited
-                         || this.selectedPolicy.PreselectedProvider != this.policyPreselectedProviderId
-                         || this.selectedPolicy.PolicyDescription != this.policyDescription
-                         || this.selectedPolicy.IsProtected != this.policyIsProtected
-                         || this.selectedPolicy.HidePolicyDefinition != this.policyHidePolicyDefinition
-                         || this.selectedPolicy.AnalysisRules != this.policyAnalysisRules
-                         || this.selectedPolicy.OutputRules != this.policyOutputRules
-                         || this.selectedPolicy.MinimumProviderConfidence != this.policyMinimumProviderConfidence
-                         || !this.selectedPolicy.AllowedToolIds.SetEquals(this.policyAllowedToolIds);
-
-            this.selectedPolicy.PreselectedProvider = this.policyPreselectedProviderId;
-            this.selectedPolicy.PolicyName = this.policyName;
-            this.selectedPolicy.PolicyDescription = this.policyDescription;
-            this.selectedPolicy.IsProtected = this.policyIsProtected;
-            this.selectedPolicy.HidePolicyDefinition = this.policyHidePolicyDefinition;
-            this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
-            this.selectedPolicy.OutputRules = this.policyOutputRules;
-            this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
-            this.selectedPolicy.AllowedToolIds = [..this.policyAllowedToolIds];
-        }
+        //
+        // A pending name store is a property of the settings, not of the selected policy: the name
+        // is written into its policy the very moment it is typed, so what is still outstanding is
+        // the store itself. It therefore outlives a form reset and a switch to another policy, and
+        // only a completed store clears it.
+        //
+        var hasChanges = this.policyNameStorePending;
+        if(this.selectedPolicy is { } policy)
+            hasChanges |= this.ApplyFormToPolicy(policy, force);
 
         if (!hasChanges)
             return;
 
         await this.SettingsManager.StoreSettings();
-        this.policyNameWasEdited = false;
+        this.policyNameStorePending = false;
+    }
+
+    /// <summary>
+    /// Takes the form values over into the given policy.
+    /// </summary>
+    /// <param name="policy">The policy to write the form values to.</param>
+    /// <param name="force">Whether the protected fields may be written as well.</param>
+    /// <returns>True when this changed anything about the policy, false otherwise.</returns>
+    private bool ApplyFormToPolicy(DataDocumentAnalysisPolicy policy, bool force)
+    {
+        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
+        var hasChanges = policy.PreselectedProfile != this.policyPreselectedProfile;
+        policy.PreselectedProfile = this.policyPreselectedProfile;
+
+        // Enterprise configurations cannot be modified at all:
+        if(policy.IsEnterpriseConfiguration)
+            return false;
+
+        var canEditProtectedFields = force || (!policy.IsProtected && !this.policyIsProtected);
+        if (!canEditProtectedFields)
+            return hasChanges;
+
+        hasChanges = hasChanges
+                     || policy.PolicyName != this.policyName
+                     || policy.PreselectedProvider != this.policyPreselectedProviderId
+                     || policy.PolicyDescription != this.policyDescription
+                     || policy.IsProtected != this.policyIsProtected
+                     || policy.HidePolicyDefinition != this.policyHidePolicyDefinition
+                     || policy.AnalysisRules != this.policyAnalysisRules
+                     || policy.OutputRules != this.policyOutputRules
+                     || policy.MinimumProviderConfidence != this.policyMinimumProviderConfidence
+                     || !policy.AllowedToolIds.SetEquals(this.policyAllowedToolIds);
+
+        policy.PreselectedProvider = this.policyPreselectedProviderId;
+        policy.PolicyName = this.policyName;
+        policy.PolicyDescription = this.policyDescription;
+        policy.IsProtected = this.policyIsProtected;
+        policy.HidePolicyDefinition = this.policyHidePolicyDefinition;
+        policy.AnalysisRules = this.policyAnalysisRules;
+        policy.OutputRules = this.policyOutputRules;
+        policy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+        policy.AllowedToolIds = [..this.policyAllowedToolIds];
+        return hasChanges;
     }
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
@@ -316,7 +331,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// </remarks>
     private bool documentSelectionExpanded;
     private string policyName = string.Empty;
-    private bool policyNameWasEdited;
+
+    /// <summary>
+    /// Whether a typed policy name still waits to be written to the settings file.
+    /// </summary>
+    /// <remarks>
+    /// Typing a name applies it to its policy at once, so that the policy list shows the new name
+    /// right away -- which leaves nothing for the auto-save to compare the form against. This flag
+    /// is what tells it that a store is nevertheless due. It belongs to no particular policy: the
+    /// name has long arrived where it belongs, only the file has not caught up yet.
+    /// </remarks>
+    private bool policyNameStorePending;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
@@ -496,7 +521,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.selectedPolicy.PolicyName = this.policyName;
-        this.policyNameWasEdited = true;
+        this.policyNameStorePending = true;
     }
     
     private async Task PolicyProtectionWasChanged(bool state)

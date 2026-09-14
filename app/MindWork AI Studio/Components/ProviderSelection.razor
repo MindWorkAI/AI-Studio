@@ -24,9 +24,9 @@
         </MudSelectItem>
     }
 </MudSelect>
-@if (availableProviderItems.Count is 0)
+@if (availableProviderItems.Count is 0 && this.GetEmptySelectionHint() is { } emptySelectionHint)
 {
     <MudText Typo="Typo.body2" Color="Color.Error" Class="mb-3">
-        @T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.")
+        @emptySelectionHint
     </MudText>
 }
