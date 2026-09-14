@@ -385,8 +385,15 @@ CONFIG["SETTINGS"] = {}
 -- A short notification is still shown when this setting is disabled.
 -- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
 
--- Configure the user permission to add providers:
+-- Configure the master permission to add providers. When set to false, the add
+-- buttons stay visible but are disabled regardless of the provider-specific settings.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
+
+-- Fine-tune the permission to add each provider type. These settings only allow
+-- adding providers while DataApp.AllowUserToAddProvider is also true.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
