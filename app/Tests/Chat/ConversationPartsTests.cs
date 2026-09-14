@@ -44,7 +44,7 @@ public sealed class ConversationPartsTests
             ],
         };
 
-        var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, "You are helpful.", "And of Italy?", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -65,7 +65,7 @@ public sealed class ConversationPartsTests
         ((ContentText)streaming.Content!).IsStreaming = true;
         var thread = new ChatThread { Blocks = [Block("A question."), streaming] };
 
-        var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, string.Empty, "a draft", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -80,7 +80,7 @@ public sealed class ConversationPartsTests
         var finished = Block("The whole answer.");
         ((ContentText)finished.Content!).IsStreaming = false;
 
-        var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [finished] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -100,7 +100,7 @@ public sealed class ConversationPartsTests
         //
         var thread = new ChatThread { SystemPrompt = "What the person typed." };
 
-        var parts = ConversationParts.Of(thread, "What the request carries.", string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, "What the request carries.", string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Texts, Is.EqualTo(new[] { "What the request carries." }));
     }
@@ -115,7 +115,7 @@ public sealed class ConversationPartsTests
         var hidden = Block("An instruction the user does not see.");
         var thread = new ChatThread { Blocks = [new() { ContentType = hidden.ContentType, Role = hidden.Role, Content = hidden.Content, HideFromUser = true }] };
 
-        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(thread, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Texts, Is.EqualTo(new[] { "An instruction the user does not see." }));
     }
@@ -123,7 +123,7 @@ public sealed class ConversationPartsTests
     [Test]
     public void WithoutAConversationOnlyTheDraftCounts()
     {
-        var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Hello", null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -136,7 +136,7 @@ public sealed class ConversationPartsTests
     [TestCase("   ")]
     public void NothingWrittenIsNothingToCount(string draft)
     {
-        var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, draft, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -157,7 +157,7 @@ public sealed class ConversationPartsTests
         var empty = Block(string.Empty);
         ((ContentText)empty.Content!).FileAttachments.Add(FileAttachment.FromPath(document));
 
-        var parts = ConversationParts.Of(new() { Blocks = [empty] }, string.Empty, string.Empty, null, imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [empty] }, string.Empty, string.Empty, null, imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -179,7 +179,7 @@ public sealed class ConversationPartsTests
         var block = Block("Please read this.");
         ((ContentText)block.Content!).FileAttachments.Add(FileAttachment.FromPath(older));
 
-        var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And this one.", [FileAttachment.FromPath(draft)], imagesAreSent: true);
+        var parts = ConversationParts.Of(new() { Blocks = [block] }, string.Empty, "And this one.", [FileAttachment.FromPath(draft)], imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Documents.Select(document => document.FileName), Is.EqualTo(new[] { "older.txt", "draft.txt" }));
     }
@@ -192,7 +192,7 @@ public sealed class ConversationPartsTests
         //
         var attachment = FileAttachment.FromPath(Path.Combine(this.directory, "never-existed.txt"));
 
-        var parts = ConversationParts.Of(null, string.Empty, "Here", [attachment], imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Here", [attachment], imagesAreSent: true, toolDefinitions: null);
 
         Assert.That(parts.Documents, Is.Empty);
     }
@@ -203,7 +203,7 @@ public sealed class ConversationPartsTests
         var document = this.WriteFile("notes.txt", "content");
         var image = this.WriteFile("photo.png", "not really a png");
 
-        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(document), FileAttachment.FromPath(image)], imagesAreSent: true);
+        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(document), FileAttachment.FromPath(image)], imagesAreSent: true, toolDefinitions: null);
 
         Assert.Multiple(() =>
         {
@@ -221,7 +221,7 @@ public sealed class ConversationPartsTests
         //
         var image = this.WriteFile("photo.png", "not really a png");
 
-        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(image)], imagesAreSent: false);
+        var parts = ConversationParts.Of(null, string.Empty, "Look", [FileAttachment.FromPath(image)], imagesAreSent: false, toolDefinitions: null);
 
         Assert.That(parts.Images, Is.Zero);
     }
