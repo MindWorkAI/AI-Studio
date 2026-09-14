@@ -27,4 +27,19 @@ public partial class MudTextSwitch : ComponentBase
     
     [Parameter]
     public string LabelOff { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Whether to render this switch in its compact form.
+    /// </summary>
+    /// <remarks>
+    /// For places which stack several of these switches above other content, such as the data source
+    /// selection the chat opens from its footer. The roomy form stays the default, so that nothing
+    /// changes where this was never asked for.
+    /// </remarks>
+    [Parameter]
+    public bool Dense { get; set; }
+    
+    private string FieldClasses => this.Dense ? "mb-2" : "mb-3";
+    
+    private Size SwitchSize => this.Dense ? Size.Small : Size.Medium;
 }
