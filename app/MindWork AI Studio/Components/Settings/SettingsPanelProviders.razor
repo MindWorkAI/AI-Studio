@@ -78,5 +78,5 @@
         </MudText>
     }
     
-    <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" Class="mt-3" />
+    <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddLLMProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" Class="mt-3" />
 </ExpansionPanel>

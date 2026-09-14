@@ -155,6 +155,21 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
 
     /// <summary>
+    /// Should the user be allowed to add LLM providers?
+    /// </summary>
+    public bool AllowUserToAddLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add embedding providers?
+    /// </summary>
+    public bool AllowUserToAddEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add transcription providers?
+    /// </summary>
+    public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
+
+    /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>
     public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
