@@ -1,7 +1,10 @@
 @using AIStudio.Settings
 @inherits MSGComponentBase
+@{
+    var availableProviderItems = this.GetAvailableProviderSelectionItems().ToList();
+}
 <MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Margin="Margin.Dense" Label="@T("Provider")" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined" Disabled="@this.Disabled">
-    @foreach (var providerItem in this.GetAvailableProviderSelectionItems())
+    @foreach (var providerItem in availableProviderItems)
     {
         <MudSelectItem Value="@providerItem.Provider">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100" Wrap="Wrap.NoWrap">
@@ -21,3 +24,9 @@
         </MudSelectItem>
     }
 </MudSelect>
+@if (availableProviderItems.Count is 0)
+{
+    <MudText Typo="Typo.body2" Color="Color.Error" Class="mb-3">
+        @T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.")
+    </MudText>
+}

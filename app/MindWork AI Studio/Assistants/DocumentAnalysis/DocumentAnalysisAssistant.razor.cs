@@ -180,6 +180,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     protected override void ResetForm()
     {
         this.loadedDocumentPaths.Clear();
+        this.policyNameWasEdited = false;
         if (!this.MightPreselectValues())
         {
             this.policyName = string.Empty;
@@ -220,6 +221,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAllowedToolIds = [..this.selectedPolicy.AllowedToolIds];
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
+            this.policyNameWasEdited = false;
 
             return true;
         }
@@ -259,6 +261,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
+        var hasChanges = this.selectedPolicy.PreselectedProfile != this.policyPreselectedProfile;
         this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
         // Enterprise configurations cannot be modified at all:
@@ -268,6 +271,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
         if (canEditProtectedFields)
         {
+            hasChanges = hasChanges
+                         || this.policyNameWasEdited
+                         || this.selectedPolicy.PreselectedProvider != this.policyPreselectedProviderId
+                         || this.selectedPolicy.PolicyDescription != this.policyDescription
+                         || this.selectedPolicy.IsProtected != this.policyIsProtected
+                         || this.selectedPolicy.HidePolicyDefinition != this.policyHidePolicyDefinition
+                         || this.selectedPolicy.AnalysisRules != this.policyAnalysisRules
+                         || this.selectedPolicy.OutputRules != this.policyOutputRules
+                         || this.selectedPolicy.MinimumProviderConfidence != this.policyMinimumProviderConfidence
+                         || !this.selectedPolicy.AllowedToolIds.SetEquals(this.policyAllowedToolIds);
+
             this.selectedPolicy.PreselectedProvider = this.policyPreselectedProviderId;
             this.selectedPolicy.PolicyName = this.policyName;
             this.selectedPolicy.PolicyDescription = this.policyDescription;
@@ -279,7 +293,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.selectedPolicy.AllowedToolIds = [..this.policyAllowedToolIds];
         }
 
+        if (!hasChanges)
+            return;
+
         await this.SettingsManager.StoreSettings();
+        this.policyNameWasEdited = false;
     }
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
@@ -298,6 +316,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// </remarks>
     private bool documentSelectionExpanded;
     private string policyName = string.Empty;
+    private bool policyNameWasEdited;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
@@ -477,6 +496,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.selectedPolicy.PolicyName = this.policyName;
+        this.policyNameWasEdited = true;
     }
     
     private async Task PolicyProtectionWasChanged(bool state)
@@ -488,7 +508,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyIsProtected = state;
-        this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
         this.documentSelectionExpanded = state;
         await this.AutoSave(true);
@@ -503,7 +522,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyHidePolicyDefinition = state;
-        this.selectedPolicy.HidePolicyDefinition = state;
         await this.AutoSave(true);
     }
 
@@ -580,17 +598,19 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// <summary>
     /// Takes over the tools this policy permits.
     /// </summary>
-    private async Task PolicyAllowedToolsWasChangedAsync(HashSet<string> allowedToolIds)
+    private void PolicyAllowedToolsWasChanged(HashSet<string> allowedToolIds)
     {
         this.policyAllowedToolIds = allowedToolIds;
-        await this.AutoSave();
+        if (this.selectedPolicy is not null)
+            this.selectedPolicy.AllowedToolIds = [..allowedToolIds];
     }
 
-    private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
+    private void PolicyMinimumConfidenceWasChanged(ConfidenceLevel level)
     {
         this.policyMinimumProviderConfidence = level;
-        await this.AutoSave();
-        
+        if (this.selectedPolicy is not null)
+            this.selectedPolicy.MinimumProviderConfidence = level;
+
         this.ApplyPolicyPreselection();
     }
 
@@ -605,14 +625,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection();
     }
 
-    private async Task PolicyPreselectedProfileWasChangedAsync(ProfilePreselection selection)
+    private void PolicyPreselectedProfileWasChanged(ProfilePreselection selection)
     {
         this.policyPreselectedProfile = selection;
         if (this.selectedPolicy is not null)
             this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
         this.CurrentProfile = this.ResolveProfileSelection();
-        await this.AutoSave();
     }
 
     #region Overrides of MSGComponentBase
