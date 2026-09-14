@@ -165,8 +165,18 @@ public static class DirectChatLauncherLuaWriter
         builder.AppendLine("ASSISTANT = {");
         builder.AppendLine($"    [\"Title\"] = \"{Escape(definition.Title)}\",");
         builder.AppendLine($"    [\"Description\"] = \"{Escape(definition.Description)}\",");
-        builder.AppendLine($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME)}\",");
-        builder.AppendLine($"    [\"WorkspaceName\"] = \"{Escape(definition.Launch.WorkspaceName.Trim())}\",");
+        //
+        // The behavior follows from the workspace rather than being tracked next to it. A launcher
+        // without one has no name to write, and the plugin loader rejects a WorkspaceName there, so
+        // the field is left out the same way the optional IDs below are:
+        //
+        if (definition.Launch.OpensTemporaryChat)
+            builder.AppendLine($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_TEMPORARY_CHAT)}\",");
+        else
+        {
+            builder.AppendLine($"    [\"LaunchBehavior\"] = \"{nameof(AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME)}\",");
+            builder.AppendLine($"    [\"WorkspaceName\"] = \"{Escape(definition.Launch.WorkspaceName.Trim())}\",");
+        }
 
         //
         // Omitted IDs mean "use the chat defaults", while an empty GUID explicitly selects no
