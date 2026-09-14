@@ -216,8 +216,12 @@ public partial class DataSourceSelection : MSGComponentBase
         this.waitingForDataSources = true;
         this.StateHasChanged();
             
-        // Load the data sources:
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.selectedDataSources);
+        //
+        // Load the data sources. We ask with the preselection rather than with the field below:
+        // that field holds what was usable the last time we looked, so a source filtered out once
+        // would never come back, while the RAG process keeps reading it from the preselection.
+        //
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
