@@ -85,9 +85,25 @@ public sealed class ContentText : IContent
                 var rag = new AISrcSelWithRetCtxVal();
                 chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
             }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                //
+                // The user canceled the request. That is not an error, and it must not reach the
+                // user as one. We do not rethrow here: the streaming task below observes the same
+                // token and ends the request itself, which keeps its finally block intact. That
+                // block is what tells the UI that the streaming is over.
+                //
+                LOGGER.LogInformation("The RAG process was canceled before the answer was requested.");
+            }
             catch (Exception e)
             {
                 LOGGER.LogError(e, "Skipping the RAG process due to an error.");
+
+                //
+                // The answer is about to be created without the data the user expected it to use.
+                // Without this message, that answer is indistinguishable from one that did use it:
+                //
+                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
             }
         }
 

@@ -50,7 +50,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             }
 
             // Log the selected data sources:
-            var selectedDataSourceInfo = aiSelectedDataSources.Select(ds => $"[Id={ds.Id}, reason={ds.Reason}, confidence={ds.Confidence}]").Aggregate((a, b) => $"'{a}', '{b}'");
+            var selectedDataSourceInfo = string.Join(", ", aiSelectedDataSources.Select(ds => $"'[Id={ds.Id}, reason={ds.Reason}, confidence={ds.Confidence}]'"));
             LOGGER.LogInformation($"The AI selected the data sources automatically. {aiSelectedDataSources.Count} data source(s) are selected: {selectedDataSourceInfo}.");
 
             //

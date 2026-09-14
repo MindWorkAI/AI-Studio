@@ -2,6 +2,8 @@ namespace AIStudio.Tools;
 
 public static class IConfidenceExtensions
 {
+    private static readonly ILogger<IConfidence> LOGGER = Program.LOGGER_FACTORY.CreateLogger<IConfidence>();
+
     public static TargetWindow DetermineTargetWindow<T>(this IReadOnlyList<T> items, TargetWindowStrategy strategy, int numMaximumItems = 30) where T : IConfidence 
     {
         switch (strategy)
@@ -53,8 +55,18 @@ public static class IConfidenceExtensions
     {
         if(!targetWindow.IsValid())
         {
-            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<IConfidence>>()!;
-            logger.LogWarning("The target window is invalid. Returning 0f as threshold.");
+            LOGGER.LogWarning("The target window is invalid. Returning 0f as threshold.");
+            return 0f;
+        }
+
+        //
+        // Without items there is no threshold to find, and the Min and Max calls below would throw
+        // on an empty sequence. Every caller checks this today, which is precisely how such a guard
+        // goes missing once a new caller arrives. It belongs here, next to the calls it protects:
+        //
+        if(items.Count == 0)
+        {
+            LOGGER.LogWarning("There are no items to determine a confidence threshold for. Returning 0f as threshold.");
             return 0f;
         }
 
@@ -91,10 +103,7 @@ public static class IConfidenceExtensions
             }
         }
         else
-        {
-            var logger = Program.SERVICE_PROVIDER.GetService<ILogger<IConfidence>>()!;
-            logger.LogWarning("The confidence values are too close. Returning 0f as threshold.");
-        }
+            LOGGER.LogWarning("The confidence values are too close. Returning 0f as threshold.");
         
         return threshold;
     }
