@@ -309,6 +309,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         aiText.InitialRemoteWait = false;
         aiText.IsStreaming = false;
         aiText.Text = aiText.Text.RemoveThinkTags().Trim();
+        aiText.EndToolRun();
 
         RemoveEmptyAIResponse(state);
 

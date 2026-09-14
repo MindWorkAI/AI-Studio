@@ -9,6 +9,11 @@ namespace AIStudio.Chat;
 /// sends: the system prompt, the text of every block, and the attachments hanging off those
 /// blocks -- plus whatever is standing in the composer but has not been sent yet, because that is
 /// the part a person is deciding about while they look at the number.
+///
+/// And, while a request is running, what its tools have returned so far. That is the one part
+/// which is not about the next request but about the one in flight: it is what the model is
+/// reading at this moment, it is what fills the window while somebody watches, and it is gone
+/// again once the answer stands.
 /// </remarks>
 public sealed record ConversationParts
 {
@@ -23,13 +28,17 @@ public sealed record ConversationParts
     public IReadOnlyList<string> Texts { get; init; } = [];
 
     /// <summary>
-    /// The texts which are still being written.
+    /// The texts which belong to this moment alone.
     /// </summary>
     /// <remarks>
     /// They cost exactly what the others cost; what sets them apart is that they will never be seen
     /// again in this shape. The sentence somebody is typing changes with the next pause, and an
     /// answer being streamed is a different text three seconds later -- so remembering what they
     /// cost fills memory with answers nobody will ask for again.
+    ///
+    /// What a model's tools have returned so far belongs here for the same reason, although nobody
+    /// is writing it: it travels with every further round of one request and with nothing after
+    /// that, so it is measured while it matters and forgotten when the answer is there.
     /// </remarks>
     public IReadOnlyList<string> GrowingTexts { get; init; } = [];
 
@@ -48,7 +57,9 @@ public sealed record ConversationParts
     /// </summary>
     /// <remarks>
     /// Blocks without text are skipped, because the message builder skips them too: a block whose
-    /// text is empty never becomes a message, whatever else hangs off it.
+    /// text is empty never becomes a message, whatever else hangs off it. What such a block may
+    /// still carry is the tool conversation of a request which is running right now -- that one
+    /// does travel, and it is read before the text is looked at.
     /// </remarks>
     /// <param name="thread">The conversation so far, or null when there is none yet.</param>
     /// <param name="systemPrompt">
@@ -79,7 +90,18 @@ public sealed record ConversationParts
             //
             foreach (var block in thread.Blocks)
             {
-                if (block.ContentType is not ContentType.TEXT || block.Content is not ContentText text || string.IsNullOrWhiteSpace(text.Text))
+                if (block.ContentType is not ContentType.TEXT || block.Content is not ContentText text)
+                    continue;
+
+                //
+                // Asked before the text is, because while a model calls tools there is no text yet:
+                // the answer arrives in one piece at the end, and everything in between travels as
+                // the tool conversation. A block skipped for having nothing to say is exactly the
+                // block whose request is growing the fastest.
+                //
+                growing.AddRange(text.PendingToolConversation);
+
+                if (string.IsNullOrWhiteSpace(text.Text))
                     continue;
 
                 if (text.IsStreaming)

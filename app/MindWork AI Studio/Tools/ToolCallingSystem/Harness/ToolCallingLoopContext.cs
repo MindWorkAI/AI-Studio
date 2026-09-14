@@ -59,6 +59,24 @@ public sealed class ToolCallingLoopContext
     }
 
     /// <summary>
+    /// Hands the conversation the adapter has accumulated to the assistant message.
+    /// </summary>
+    /// <remarks>
+    /// Called after every recording, not once per round: a round which reads five web pages is the
+    /// one during which the request grows the most, and a number which only moves between rounds
+    /// would stand still through exactly that.
+    /// </remarks>
+    /// <param name="adapter">The adapter of this run, which knows what it has recorded.</param>
+    public async Task PublishPendingToolConversationAsync(IToolCallingProviderAdapter adapter)
+    {
+        if (this.CurrentAssistantContent is null)
+            return;
+
+        this.CurrentAssistantContent.PendingToolConversation = [..adapter.RecordedRequestTexts];
+        await this.CurrentAssistantContent.StreamingEvent();
+    }
+
+    /// <summary>
     /// Tells the UI that the named tools are running.
     /// </summary>
     public async Task ShowToolRuntimeStatusAsync(IEnumerable<string> toolNames)
