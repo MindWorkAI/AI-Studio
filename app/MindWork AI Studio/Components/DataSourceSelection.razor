@@ -67,6 +67,13 @@
                                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged"/>
                             }
 
+                            @if (!this.aiBasedSourceSelection && this.GetUnavailablePreselectedDataSourceNames().Length > 0)
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Warning" Class="mb-3">
+                                    @T("These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:") @this.GetUnavailablePreselectedDataSourceNames()
+                                </MudText>
+                            }
+
                             @switch (this.aiBasedSourceSelection)
                             {
                                 case true when this.availableDataSources.Count == 0:
