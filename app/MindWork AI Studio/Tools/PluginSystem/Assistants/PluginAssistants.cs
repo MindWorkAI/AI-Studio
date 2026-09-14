@@ -223,38 +223,61 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         if (launchBehavior is AssistantPluginLaunchBehavior.NONE)
             return true;
 
+        //
+        // Both launch behaviors describe the same chat and differ only in where it is kept, so only
+        // the workspace is read per behavior. Everything else follows below, for both of them:
+        //
+        var workspaceName = string.Empty;
         switch (launchBehavior)
         {
             case AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME:
                 if (!assistantTable.TryGetValue("WorkspaceName", out var workspaceNameValue) ||
-                    !workspaceNameValue.TryRead<string>(out var workspaceName))
+                    !workspaceNameValue.TryRead<string>(out var configuredWorkspaceName))
                 {
                     message = TB("The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName.");
                     return false;
                 }
 
-                workspaceName = workspaceName.Trim();
+                workspaceName = configuredWorkspaceName.Trim();
                 if (string.IsNullOrWhiteSpace(workspaceName))
                 {
                     message = TB("The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'.");
                     return false;
                 }
 
-                if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
-                    !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
-                    !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
-                    !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message) ||
-                    !TryReadOptionalToolIds(assistantTable, out var toolIds, out message))
+                break;
+
+            //
+            // A chat without a workspace has no name to carry, so one written here can only be a
+            // mistake. We reject it rather than dropping it silently: a misspelled LaunchBehavior
+            // would otherwise turn a workspace launcher into a disappearing one, and the author
+            // would only notice it by the chats going missing.
+            //
+            case AssistantPluginLaunchBehavior.OPEN_TEMPORARY_CHAT:
+                if (assistantTable.TryGetValue("WorkspaceName", out var unexpectedWorkspaceNameValue) &&
+                    unexpectedWorkspaceNameValue.TryRead<string>(out var unexpectedWorkspaceName) &&
+                    !string.IsNullOrWhiteSpace(unexpectedWorkspaceName))
+                {
+                    message = TB("The ASSISTANT table contains a WorkspaceName for LaunchBehavior 'OPEN_TEMPORARY_CHAT'. A chat without a workspace cannot have one.");
                     return false;
+                }
 
-                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds, toolIds);
-
-                return true;
+                break;
 
             default:
                 message = TB("The ASSISTANT table contains an unsupported LaunchBehavior value.");
                 return false;
         }
+
+        if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
+            !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
+            !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
+            !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message) ||
+            !TryReadOptionalToolIds(assistantTable, out var toolIds, out message))
+            return false;
+
+        this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds, toolIds);
+        return true;
     }
 
     private static bool TryReadOptionalGuid(LuaTable assistantTable, string fieldName, bool allowEmpty, out Guid? id, out string message)
