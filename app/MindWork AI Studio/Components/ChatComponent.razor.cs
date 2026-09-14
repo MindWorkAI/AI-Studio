@@ -1025,7 +1025,16 @@ public partial class ChatComponent : MSGComponentBase
             }
         }
         else
-            lastUserPrompt = this.ChatThread.Blocks.Last(x => x.Role is ChatRole.USER).Content;
+        {
+            //
+            // Regenerating asks again with the prompt that led to this answer. A thread which never
+            // carried one -- a chat template whose example conversation holds AI blocks only -- has
+            // nothing to reuse here. That is no reason to fail: the thread itself is what the model
+            // is given, and everything downstream already reads a missing prompt as "no data source
+            // lookup, just answer again".
+            //
+            lastUserPrompt = this.ChatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.USER)?.Content;
+        }
 
         //
         // Add the AI response to the thread:
