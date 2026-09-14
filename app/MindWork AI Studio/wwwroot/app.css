@@ -512,3 +512,16 @@ tr:has(> .provider-group-header) .mud-icon-button {
     background-color: var(--mud-palette-background-gray);
     border-radius: var(--mud-default-borderradius);
 }
+
+/*
+ * The frame around a text switch in its compact form. MudBlazor pads the slot of an outlined field
+ * with 18.5px above and below, which is the right amount for the line of text such a field usually
+ * holds -- a switch of 24px is left swimming in the middle of it. Size.Small already took the switch
+ * down; this brings the frame with it, and it has to name the MudBlazor classes to outweigh their
+ * specificity. Only the two vertical values of that shorthand are replaced, so the 14px to the left
+ * and right stay as they are.
+ */
+.text-switch-dense .mud-input-slot.mud-input-root-outlined {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}

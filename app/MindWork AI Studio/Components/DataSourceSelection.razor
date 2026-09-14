@@ -7,11 +7,11 @@
         <MudTooltip Text="@T("Select the data you want to use here.")" Placement="Placement.Top">
             @if (this.PopoverTriggerMode is PopoverTriggerMode.ICON)
             {
-                <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())"/>
+                <MudIconButton Icon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection"/>
             }
             else
             {
-                <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@(() => this.ToggleDataSourceSelection())">
+                <MudButton Variant="Variant.Filled" StartIcon="@AppIcons.DATABASE" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleDataSourceSelection">
                     @T("Select data")
                 </MudButton>
             }
@@ -89,7 +89,7 @@
                                     
                                 case false:
                                     <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-2" Disabled="@this.aiBasedSourceSelection">
-                                        <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" Style="max-height: 14em;">
+                                        <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" Style="max-height: 14em;">
                                             @foreach (var source in this.availableDataSources)
                                             {
                                                 <MudListItem Value="@source">
@@ -200,7 +200,7 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
         
         @if (!string.IsNullOrWhiteSpace(this.ConfigurationHeaderMessage))
         {
-            <MudText Typo="Typo.body1">
+            <MudText Typo="Typo.body2">
                 @this.ConfigurationHeaderMessage
             </MudText>
         }

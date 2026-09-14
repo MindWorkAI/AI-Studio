@@ -39,7 +39,7 @@ public partial class MudTextSwitch : ComponentBase
     [Parameter]
     public bool Dense { get; set; }
     
-    private string FieldClasses => this.Dense ? "mb-2" : "mb-3";
+    private string FieldClasses => this.Dense ? "mb-2 text-switch-dense" : "mb-3";
     
     private Size SwitchSize => this.Dense ? Size.Small : Size.Medium;
 }
