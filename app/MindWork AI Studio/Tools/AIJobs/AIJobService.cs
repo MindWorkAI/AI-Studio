@@ -240,6 +240,12 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             catch (Exception e)
             {
                 logger.LogError(e, "Skipping the RAG process due to an error.");
+
+                //
+                // The answer is about to be created without the data the user expected it to use.
+                // Without this message, that answer is indistinguishable from one that did use it:
+                //
+                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
             }
 
             token.ThrowIfCancellationRequested();

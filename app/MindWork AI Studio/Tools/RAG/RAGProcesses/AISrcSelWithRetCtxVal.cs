@@ -106,6 +106,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             {
                 LOGGER.LogWarning("No data sources are selected. The RAG process is skipped.");
                 proceedWithRAG = false;
+
+                //
+                // When the user picked the sources, none of them survived the security and
+                // confidence checks. That is worth saying out loud: the user chose them and
+                // expects this answer to use them. When the AI picked instead, finding nothing
+                // suitable for this prompt is a normal outcome and stays in the log.
+                //
+                if(!chatThread.DataSourceOptions.AutomaticDataSourceSelection)
+                    await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("None of your selected data sources is available for the chosen provider. This answer was created without them.")));
             }
             else
             {

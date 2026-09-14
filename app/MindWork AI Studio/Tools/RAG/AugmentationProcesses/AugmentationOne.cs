@@ -70,10 +70,19 @@ public sealed class AugmentationOne : IAugmentationProcess
                 catch (Exception exception)
                 {
                     LOGGER.LogError(exception, "Retrieval context validation failed. Continuing augmentation with all retrieved contexts.");
+
+                    //
+                    // The user switched this check on. Continuing without it silently would hide
+                    // that the answer rests on unfiltered passages:
+                    //
+                    await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FactCheck, TB("The check of which passages fit your question failed. This answer uses all passages that were found.")));
                 }
             }
             else
+            {
                 LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available. Continuing augmentation with all retrieved contexts.");
+                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FactCheck, TB("No provider is trusted enough to check which passages fit your question. This answer uses all passages that were found.")));
+            }
         }
         
         LOGGER.LogInformation($"Starting the augmentation process over {retrievalContexts.Count:###,###,###,###} of {numTotalRetrievalContexts:###,###,###,###} retrieved contexts.");
