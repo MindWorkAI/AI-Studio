@@ -4,6 +4,8 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 internal sealed class WebSearchResultRetrievalService(WebPageRetrievalService webPageRetrievalService)
 {
+    private static readonly ILogger<WebSearchResultRetrievalService> LOGGER = Program.LOGGER_FACTORY.CreateLogger<WebSearchResultRetrievalService>();
+
     private const int MAX_PARALLEL_RETRIEVALS = 4;
 
     /// <summary>
@@ -110,9 +112,16 @@ internal sealed class WebSearchResultRetrievalService(WebPageRetrievalService we
             Interlocked.Increment(ref counters.PageTimedOut);
             return new(candidate, null, WebSearchPageRetrievalOutcome.PAGE_TIMED_OUT);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException exception)
         {
+            //
+            // The only outcome here which is not an expected one: a page was blocked on purpose,
+            // and a timeout is a limit the user set, but this is something going wrong. It is
+            // logged rather than only counted, because a search which quietly returns one result
+            // fewer is a search nobody can tell was incomplete.
+            //
             Interlocked.Increment(ref counters.Failed);
+            LOGGER.LogError(exception, "Reading a search result page failed. Url={Url}", candidate.RetrievalUrl);
             return new(candidate, null, WebSearchPageRetrievalOutcome.FAILED);
         }
         finally
