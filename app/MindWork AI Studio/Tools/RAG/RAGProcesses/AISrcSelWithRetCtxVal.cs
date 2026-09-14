@@ -104,19 +104,16 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
             if(selectedDataSources.Count == 0)
             {
+                //
+                // Reaching this point means the user never saw a source of theirs selected: the
+                // selection shows what survived the filters, so an empty result there is an empty
+                // selection on screen as well. Telling them per answer that their sources were
+                // lost would announce a loss they were never shown in the first place. This state
+                // belongs into the selection instead, which names the preselected sources it
+                // cannot use.
+                //
                 LOGGER.LogWarning("No data sources are selected. The RAG process is skipped.");
                 proceedWithRAG = false;
-
-                //
-                // The user picked the sources and expects this answer to use them, so losing them
-                // is worth saying out loud. Only when other sources were usable, though: with
-                // nothing usable at all, the data source selection already states that permanently,
-                // and repeating it with every answer tells the user nothing new. When the AI picked
-                // instead, finding nothing suitable for this prompt is a normal outcome and stays
-                // in the log.
-                //
-                if(!chatThread.DataSourceOptions.AutomaticDataSourceSelection && dataSources.AllowedDataSources.Count > 0)
-                    await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("None of your selected data sources could be used. This answer was created without them.")));
             }
             else
             {
