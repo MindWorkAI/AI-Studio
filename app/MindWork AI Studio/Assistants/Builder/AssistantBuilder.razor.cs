@@ -591,7 +591,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
 
         var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
         suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
-            ? $"{suggestion} {T("The chat belongs to no workspace and disappears again.")}"
+            ? $"{suggestion} {T("The chat opens as a disappearing chat, without a workspace.")}"
             : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
 
         this.assistantDescription = suggestion;

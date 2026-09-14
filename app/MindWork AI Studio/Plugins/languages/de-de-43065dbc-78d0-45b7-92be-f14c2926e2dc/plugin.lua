@@ -753,6 +753,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1428868592"] 
 -- Tile title (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T145442870"] = "Kacheltitel (optional)"
 
+-- The direct chat launcher tile has no input form of its own. It opens a new chat right away, with the provider, profile, chat template, and data sources you select below. Name a workspace for that chat, or leave the workspace empty to open a disappearing chat.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1455505413"] = "Die Kachel für den Chat-Schnellstart verfügt über kein eigenes Eingabeformular. Sie öffnet einen neuen Chat – mit dem Anbieter, Profil, der Chat-Vorlage und den Datenquellen, die Sie unten auswählen. Benennen Sie einen Arbeitsbereich für diesen Chat oder lassen Sie den Arbeitsbereich leer, um einen selbstlöschenden Chat zu öffnen."
+
 -- Additional changes (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1502888752"] = "Zusätzliche Änderungen (optional)"
 
@@ -764,6 +767,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1517869254"] 
 
 -- An expected user prompt, e.g. summarize this document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1565792607"] = "Eine erwartete Nutzereingabe, z. B. „Fasse dieses Dokument zusammen“"
+
+-- The chat opens as a disappearing chat, without a workspace.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1621773509"] = "Der Chat wird ohne Arbeitsbereich als selbstlöschender Chat geöffnet."
 
 -- Return to the original assistant description. The current draft and the plugin preview will be discarded.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1622920412"] = "Zur ursprünglichen Beschreibung des Assistenten zurückkehren. Der aktuelle Entwurf und die Plugin-Vorschau werden verworfen."
@@ -921,9 +927,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3843866124"] 
 -- Install assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] = "Assistent installieren"
 
--- The direct chat launcher tile has no input form of its own. It opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T395398616"] = "Die Kachel für den direkten Chat-Schnellstart hat kein eigenes Eingabeformular. Sie öffnet sofort einen neuen Chat – im unten benannten Arbeitsbereich und mit dem dort ausgewählten Anbieter, Profil, der Chat-Vorlage und den Datenquellen."
-
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistentenentwurf"
 
@@ -944,9 +947,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4217647404"] 
 
 -- Please create an assistant draft first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4269176489"] = "Bitte erstellen Sie zuerst einen Entwurf für einen Assistenten."
-
--- Please select or enter a workspace name for the chat launcher.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4396903"] = "Bitte wählen Sie einen Namen für den Arbeitsbereich des Chat-Schnellstarts aus oder geben Sie einen ein."
 
 -- The assistant asks users for input through a form and builds its own prompt from it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T451049798"] = "Der Assistent fragt Nutzer über ein Formular nach Eingaben und erstellt daraus seinen eigenen Prompt."
@@ -3957,6 +3957,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1286170698"] = "
 -- Chat provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1648955896"] = "Chat-Anbieter"
 
+-- The tile opens its chat in this workspace and creates the workspace when it does not exist yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "Die Kachel öffnet ihren Chat in diesem Arbeitsbereich oder erstellt den Arbeitsbereich, falls er noch nicht existiert."
+
+-- Workspace name (Optional)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1873204484"] = "Name des Arbeitsbereichs (optional)"
+
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2205839602"] = "Kein Profil verwenden"
 
@@ -3975,11 +3981,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2886517443"] = "
 -- Choose an existing workspace or enter a name that should be created when the launcher is opened.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2901190527"] = "Wählen Sie einen vorhandenen Arbeitsbereich aus oder geben Sie einen Namen ein, der beim Verwenden des Chat-Schnellstarts erstellt werden soll."
 
--- Workspace name
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T295876489"] = "Name des Arbeitsbereichs"
-
 -- Data sources (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3259309302"] = "Datenquellen (optional)"
+
+-- Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3611496116"] = "Ohne Arbeitsbereich öffnet die Kachel einen selbstlöschenden Chat: Er gehört keinem Arbeitsbereich an und wird gemäß den Wartungseinstellungen für Ihre Arbeitsbereiche gelöscht."
 
 -- Use the normal chat data source defaults
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3898572329"] = "Die Standardwerte der Datenquelle für den normalen Chat verwenden"
@@ -6320,9 +6326,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"]
 
 -- the required provider confidence level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T818422588"] = "das erforderliche Vertrauensniveau des Anbieters"
-
--- Please select or enter a workspace name for this tile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1505747232"] = "Bitte wählen Sie einen Namen für den Arbeitsbereich für diese Kachel aus oder geben Sie einen ein."
 
 -- Resulting Lua plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1671332249"] = "Resultierendes Lua-Plugin"
@@ -11180,6 +11183,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1
 
 -- Failed to parse the UI render tree from the ASSISTANT lua table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Der UI-Render-Baum konnte nicht aus der ASSISTANT-Lua-Tabelle geparst werden."
+
+-- The ASSISTANT table contains a WorkspaceName for LaunchBehavior 'OPEN_TEMPORARY_CHAT'. A chat without a workspace cannot have one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1331424201"] = "Die Tabelle ASSISTANT enthält für LaunchBehavior „OPEN_TEMPORARY_CHAT“ einen WorkspaceName. Ein Chat ohne Arbeitsbereich kann keinen haben."
 
 -- The provided ASSISTANT lua table does not contain a valid UI table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1841068402"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige UI-Tabelle."
