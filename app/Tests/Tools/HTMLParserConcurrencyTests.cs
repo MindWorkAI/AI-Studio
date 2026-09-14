@@ -38,27 +38,16 @@ public sealed class HTMLParserConcurrencyTests
         // overlap for this test to mean anything, and only starting them together makes that
         // certain.
         //
+        // What a thread works with is handed over when it starts rather than captured. The barrier
+        // is disposed at the end of this method, and while the joins below make sure no thread is
+        // still at it by then, that is nothing one can see from inside a lambda.
+        //
         using var startSignal = new Barrier(THREAD_COUNT);
         var threads = new List<Thread>(THREAD_COUNT);
         for (var threadIndex = 0; threadIndex < THREAD_COUNT; threadIndex++)
         {
-            var thread = new Thread(() =>
-            {
-                startSignal.SignalAndWait();
-                for (var conversion = 0; conversion < CONVERSIONS_PER_THREAD; conversion++)
-                {
-                    try
-                    {
-                        results.Add(HTMLParser.ParseToMarkdown(html));
-                    }
-                    catch (Exception exception)
-                    {
-                        failures.Add(exception);
-                    }
-                }
-            });
-
-            thread.Start();
+            var thread = new Thread(ConvertRepeatedly);
+            thread.Start(new ConversionRun(startSignal, html, results, failures));
             threads.Add(thread);
         }
 
@@ -73,6 +62,27 @@ public sealed class HTMLParserConcurrencyTests
             Assert.That(failures, Is.Empty, $"Converting in parallel threw {failures.Count} times ({failureKinds}). A conversion must not depend on what another thread is converting.");
             Assert.That(deviatingCount, Is.Zero, $"{deviatingCount} of {results.Count} conversions came back different from the same page converted on its own. Their indentation was counted from ancestors belonging to another conversion.");
         });
+    }
+
+    /// <summary>
+    /// Converts the same page over and over, once every thread has arrived at the barrier.
+    /// </summary>
+    private static void ConvertRepeatedly(object? state)
+    {
+        var run = (ConversionRun)state!;
+        run.StartSignal.SignalAndWait();
+
+        for (var conversion = 0; conversion < CONVERSIONS_PER_THREAD; conversion++)
+        {
+            try
+            {
+                run.Results.Add(HTMLParser.ParseToMarkdown(run.Html));
+            }
+            catch (Exception exception)
+            {
+                run.Failures.Add(exception);
+            }
+        }
     }
 
     /// <summary>
@@ -118,4 +128,9 @@ public sealed class HTMLParserConcurrencyTests
 
         return string.Concat(Enumerable.Repeat(BLOCK, 20));
     }
+
+    /// <summary>
+    /// Everything one thread of this test needs, so that it is passed rather than captured.
+    /// </summary>
+    private sealed record ConversionRun(Barrier StartSignal, string Html, ConcurrentBag<string> Results, ConcurrentBag<Exception> Failures);
 }
