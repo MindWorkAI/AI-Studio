@@ -255,31 +255,64 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task AutoSave(bool force = false)
     {
-        if(this.selectedPolicy is null)
-            return;
+        //
+        // A pending name store is a property of the settings, not of the selected policy: the name
+        // is written into its policy the very moment it is typed, so what is still outstanding is
+        // the store itself. It therefore outlives a form reset and a switch to another policy, and
+        // only a completed store clears it.
+        //
+        var hasChanges = this.policyNameStorePending;
+        if(this.selectedPolicy is { } policy)
+            hasChanges |= this.ApplyFormToPolicy(policy, force);
 
-        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
-        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
-
-        // Enterprise configurations cannot be modified at all:
-        if(this.selectedPolicy.IsEnterpriseConfiguration)
+        if (!hasChanges)
             return;
-        
-        var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
-        if (canEditProtectedFields)
-        {
-            this.selectedPolicy.PreselectedProvider = this.policyPreselectedProviderId;
-            this.selectedPolicy.PolicyName = this.policyName;
-            this.selectedPolicy.PolicyDescription = this.policyDescription;
-            this.selectedPolicy.IsProtected = this.policyIsProtected;
-            this.selectedPolicy.HidePolicyDefinition = this.policyHidePolicyDefinition;
-            this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
-            this.selectedPolicy.OutputRules = this.policyOutputRules;
-            this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
-            this.selectedPolicy.AllowedToolIds = [..this.policyAllowedToolIds];
-        }
 
         await this.SettingsManager.StoreSettings();
+        this.policyNameStorePending = false;
+    }
+
+    /// <summary>
+    /// Takes the form values over into the given policy.
+    /// </summary>
+    /// <param name="policy">The policy to write the form values to.</param>
+    /// <param name="force">Whether the protected fields may be written as well.</param>
+    /// <returns>True when this changed anything about the policy, false otherwise.</returns>
+    private bool ApplyFormToPolicy(DataDocumentAnalysisPolicy policy, bool force)
+    {
+        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
+        var hasChanges = policy.PreselectedProfile != this.policyPreselectedProfile;
+        policy.PreselectedProfile = this.policyPreselectedProfile;
+
+        // Enterprise configurations cannot be modified at all:
+        if(policy.IsEnterpriseConfiguration)
+            return false;
+
+        var canEditProtectedFields = force || (!policy.IsProtected && !this.policyIsProtected);
+        if (!canEditProtectedFields)
+            return hasChanges;
+
+        hasChanges = hasChanges
+                     || policy.PolicyName != this.policyName
+                     || policy.PreselectedProvider != this.policyPreselectedProviderId
+                     || policy.PolicyDescription != this.policyDescription
+                     || policy.IsProtected != this.policyIsProtected
+                     || policy.HidePolicyDefinition != this.policyHidePolicyDefinition
+                     || policy.AnalysisRules != this.policyAnalysisRules
+                     || policy.OutputRules != this.policyOutputRules
+                     || policy.MinimumProviderConfidence != this.policyMinimumProviderConfidence
+                     || !policy.AllowedToolIds.SetEquals(this.policyAllowedToolIds);
+
+        policy.PreselectedProvider = this.policyPreselectedProviderId;
+        policy.PolicyName = this.policyName;
+        policy.PolicyDescription = this.policyDescription;
+        policy.IsProtected = this.policyIsProtected;
+        policy.HidePolicyDefinition = this.policyHidePolicyDefinition;
+        policy.AnalysisRules = this.policyAnalysisRules;
+        policy.OutputRules = this.policyOutputRules;
+        policy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+        policy.AllowedToolIds = [..this.policyAllowedToolIds];
+        return hasChanges;
     }
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
@@ -298,6 +331,17 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// </remarks>
     private bool documentSelectionExpanded;
     private string policyName = string.Empty;
+
+    /// <summary>
+    /// Whether a typed policy name still waits to be written to the settings file.
+    /// </summary>
+    /// <remarks>
+    /// Typing a name applies it to its policy at once, so that the policy list shows the new name
+    /// right away -- which leaves nothing for the auto-save to compare the form against. This flag
+    /// is what tells it that a store is nevertheless due. It belongs to no particular policy: the
+    /// name has long arrived where it belongs, only the file has not caught up yet.
+    /// </remarks>
+    private bool policyNameStorePending;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
@@ -477,6 +521,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.selectedPolicy.PolicyName = this.policyName;
+        this.policyNameStorePending = true;
     }
     
     private async Task PolicyProtectionWasChanged(bool state)
@@ -488,7 +533,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyIsProtected = state;
-        this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
         this.documentSelectionExpanded = state;
         await this.AutoSave(true);
@@ -503,7 +547,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyHidePolicyDefinition = state;
-        this.selectedPolicy.HidePolicyDefinition = state;
         await this.AutoSave(true);
     }
 
@@ -580,17 +623,19 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// <summary>
     /// Takes over the tools this policy permits.
     /// </summary>
-    private async Task PolicyAllowedToolsWasChangedAsync(HashSet<string> allowedToolIds)
+    private void PolicyAllowedToolsWasChanged(HashSet<string> allowedToolIds)
     {
         this.policyAllowedToolIds = allowedToolIds;
-        await this.AutoSave();
+        if (this.selectedPolicy is not null)
+            this.selectedPolicy.AllowedToolIds = [..allowedToolIds];
     }
 
-    private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
+    private void PolicyMinimumConfidenceWasChanged(ConfidenceLevel level)
     {
         this.policyMinimumProviderConfidence = level;
-        await this.AutoSave();
-        
+        if (this.selectedPolicy is not null)
+            this.selectedPolicy.MinimumProviderConfidence = level;
+
         this.ApplyPolicyPreselection();
     }
 
@@ -605,14 +650,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection();
     }
 
-    private async Task PolicyPreselectedProfileWasChangedAsync(ProfilePreselection selection)
+    private void PolicyPreselectedProfileWasChanged(ProfilePreselection selection)
     {
         this.policyPreselectedProfile = selection;
         if (this.selectedPolicy is not null)
             this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
         this.CurrentProfile = this.ResolveProfileSelection();
-        await this.AutoSave();
     }
 
     #region Overrides of MSGComponentBase

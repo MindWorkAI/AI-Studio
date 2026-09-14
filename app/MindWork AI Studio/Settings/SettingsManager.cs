@@ -35,6 +35,17 @@ public sealed class SettingsManager
     private readonly RustService rustService;
 
     /// <summary>
+    /// Lets only one operation at a time touch the settings files.
+    /// </summary>
+    /// <remarks>
+    /// Reading takes this as well as writing does, for two reasons. A read migrates and backs up
+    /// what it found, so it writes the very files a store writes. And it re-evaluates whether
+    /// writes are blocked at all, starting out by clearing that block: a store slipping through
+    /// that moment would overwrite the settings the block exists to protect.
+    /// </remarks>
+    private readonly SemaphoreSlim settingsFileSemaphore = new(1, 1);
+
+    /// <summary>
     /// The settings manager.
     /// </summary>
     public SettingsManager(ILogger<SettingsManager> logger, RustService rustService)
@@ -103,6 +114,19 @@ public sealed class SettingsManager
     /// </summary>
     /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
     public async Task<Data?> TryReadSettingsSnapshot()
+    {
+        await this.settingsFileSemaphore.WaitAsync();
+        try
+        {
+            return await this.ReadSettingsSnapshot();
+        }
+        finally
+        {
+            this.settingsFileSemaphore.Release();
+        }
+    }
+
+    private async Task<Data?> ReadSettingsSnapshot()
     {
         this.SettingsWriteBlockReason = SettingsWriteBlockReason.NONE;
         if(!this.IsSetUp)
@@ -294,49 +318,62 @@ public sealed class SettingsManager
     /// </summary>
     public async Task StoreSettings()
     {
-        if(!this.IsSetUp)
+        await this.settingsFileSemaphore.WaitAsync();
+        try
         {
-            this.logger.LogWarning("Cannot store settings, because the configuration is not set up yet.");
-            return;
-        }
+            if(!this.IsSetUp)
+            {
+                this.logger.LogWarning("Cannot store settings, because the configuration is not set up yet.");
+                return;
+            }
 
-        if(this.SettingsWriteBlocked)
+            if(this.SettingsWriteBlocked)
+            {
+                this.logger.LogWarning($"Cannot store settings, because settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+                return;
+            }
+
+            var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
+            var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
+            await this.StoreSettingsSnapshot(settingsJson, settingsPath);
+            await this.StoreCurrentVersionBackup(this.ConfigurationData.Version, settingsJson);
+        }
+        finally
         {
-            this.logger.LogWarning($"Cannot store settings, because settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
-            return;
+            this.settingsFileSemaphore.Release();
         }
-
-        var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
-        await this.StoreSettingsSnapshot(this.ConfigurationData, settingsPath);
-        await this.StoreCurrentVersionBackup(this.ConfigurationData);
     }
 
     private static string GetBackupSettingsFilename(Version version) => $"settings.{version.ToString().ToLowerInvariant()}.json";
 
     private static string GetBackupSettingsPath(Version version) => Path.Combine(ConfigDirectory!, GetBackupSettingsFilename(version));
 
-    private async Task StoreCurrentVersionBackup(Data settingsData)
+    private Task StoreCurrentVersionBackup(Data settingsData) =>
+        this.StoreCurrentVersionBackup(settingsData.Version, JsonSerializer.Serialize(settingsData, JSON_OPTIONS));
+
+    private async Task StoreCurrentVersionBackup(Version settingsVersion, string settingsJson)
     {
-        if(settingsData.Version != CURRENT_SETTINGS_VERSION)
+        if(settingsVersion != CURRENT_SETTINGS_VERSION)
         {
-            this.logger.LogWarning($"Skipping settings backup because the settings version '{settingsData.Version}' is not the current version '{CURRENT_SETTINGS_VERSION}'.");
+            this.logger.LogWarning($"Skipping settings backup because the settings version '{settingsVersion}' is not the current version '{CURRENT_SETTINGS_VERSION}'.");
             return;
         }
 
         var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
-        await this.StoreSettingsSnapshot(settingsData, backupSettingsPath);
+        await this.StoreSettingsSnapshot(settingsJson, backupSettingsPath);
         this.logger.LogInformation($"Stored the settings backup file '{backupSettingsPath}'.");
     }
 
-    private async Task StoreSettingsSnapshot(Data settingsData, string settingsPath)
+    private Task StoreSettingsSnapshot(Data settingsData, string settingsPath) =>
+        this.StoreSettingsSnapshot(JsonSerializer.Serialize(settingsData, JSON_OPTIONS), settingsPath);
+
+    private async Task StoreSettingsSnapshot(string settingsJson, string settingsPath)
     {
         if(!Directory.Exists(ConfigDirectory))
         {
             this.logger.LogInformation("Creating the configuration directory.");
             Directory.CreateDirectory(ConfigDirectory!);
         }
-
-        var settingsJson = JsonSerializer.Serialize(settingsData, JSON_OPTIONS);
 
         //
         // We write the new settings next to the previous ones and replace them afterwards, so that
@@ -349,7 +386,7 @@ public sealed class SettingsManager
         try
         {
             await File.WriteAllTextAsync(tempFile, settingsJson);
-            File.Move(tempFile, settingsPath, true);
+            await Task.Run(() => File.Move(tempFile, settingsPath, true));
         }
         catch
         {

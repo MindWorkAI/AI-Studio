@@ -53,6 +53,28 @@ public partial class ProviderSelection : MSGComponentBase
             yield return new(provider, this.GetCapabilityIcons(provider));
     }
 
+    /// <summary>
+    /// Says why there is nothing to choose from, or nothing at all when that is not the user's doing.
+    /// </summary>
+    /// <remarks>
+    /// An empty list has two causes the user can act on, and they lead to different places in the
+    /// settings: there is no provider yet, or none of the configured ones reaches the confidence
+    /// this component asks for. Naming the wrong one sends the user looking in the wrong place --
+    /// a first start has nobody to blame for a confidence level it never set. A missing or invalid
+    /// component is a third case and neither of those: it is a defect, it was logged as one, and
+    /// any explanation offered to the user here would be a guess.
+    /// </remarks>
+    private string? GetEmptySelectionHint()
+    {
+        if (this.Component is null or Tools.Components.NONE)
+            return null;
+
+        if (!this.SettingsManager.GetAllProviders().Any(x => x.UsedLLMProvider is not LLMProviders.NONE))
+            return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+
+        return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
+    }
+
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
     {
         var profile = provider.GetModelProfile();
