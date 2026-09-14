@@ -83,8 +83,6 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddTranscriptionProvider">
-            @T("Add transcription provider")
-        </MudButton>
+        <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="mt-3" />
     </ExpansionPanel>
 }
