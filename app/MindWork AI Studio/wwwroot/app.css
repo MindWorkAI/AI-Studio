@@ -499,6 +499,27 @@ tr:has(> .provider-group-header) .mud-icon-button {
 }
 
 /*
+ * The checkboxes MudBlazor renders into a multi-selection list come out larger than the box of the
+ * tool selection next to it, and MudList has no parameter for their size. So the three rules below
+ * state it: the 20px icon and the 4px of padding which Size.Small together with Dense produce over
+ * there, plus the 4px between the box and the name which the tool row takes from the spacing of its
+ * stack -- the list puts its checkbox outside the slot that holds our own markup, so no stack of
+ * ours reaches it. The icon needs a rule of its own because MudBlazor gives it an explicit font
+ * size, which no inherited one can outrank.
+ */
+.data-source-rows .mud-checkbox {
+    margin-inline-end: 0.25rem;
+}
+
+.data-source-rows .mud-checkbox .mud-icon-button {
+    padding: 0.25rem;
+}
+
+.data-source-rows .mud-checkbox .mud-icon-root {
+    font-size: 1.25rem;
+}
+
+/*
  * The frame around a text switch in its compact form. MudBlazor pads the slot of an outlined field
  * with 18.5px above and below, which is the right amount for the line of text such a field usually
  * holds -- a switch of 24px is left swimming in the middle of it. Size.Small already took the switch
