@@ -10,7 +10,15 @@
     </MudSelect>
 }
 
-<MudTextField T="string" Text="@this.WorkspaceName" TextChanged="@this.SetWorkspaceName" Validation="@this.ValidateWorkspaceName" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Text="@this.WorkspaceName" TextChanged="@this.SetWorkspaceName" AdornmentIcon="@(this.OpensTemporaryChat ? Icons.Material.Filled.Timer : Icons.Material.Filled.CreateNewFolder)" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+@* The tile behaves differently with and without a workspace, so the form says which of the two is
+   chosen right now instead of only explaining that both are possible. *@
+<MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+    @(this.OpensTemporaryChat
+        ? T("Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.")
+        : T("The tile opens its chat in this workspace and creates the workspace when it does not exist yet."))
+</MudText>
 <MudSelect T="string" Value="@this.ProviderId" ValueChanged="@this.SetProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))

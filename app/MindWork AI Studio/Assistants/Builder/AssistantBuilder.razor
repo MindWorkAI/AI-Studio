@@ -23,7 +23,7 @@
     </MudField>
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @(this.createChatLauncher
-            ? T("The direct chat launcher tile has no input form of its own. It opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there.")
+            ? T("The direct chat launcher tile has no input form of its own. It opens a new chat right away, with the provider, profile, chat template, and data sources you select below. Name a workspace for that chat, or leave the workspace empty to open a disappearing chat.")
             : T("The assistant asks users for input through a form and builds its own prompt from it."))
     </MudJustifiedText>
     @if (this.createChatLauncher)
@@ -39,8 +39,7 @@
                                     @bind-ProfileId="@this.launcherProfileId"
                                     @bind-ChatTemplateId="@this.launcherChatTemplateId"
                                     @bind-DataSourceIds="@this.launcherDataSourceIds"
-                                    @bind-ToolIds="@this.launcherToolIds"
-                                    ValidateWorkspaceName="@this.ValidateLauncherWorkspaceName"/>
+                                    @bind-ToolIds="@this.launcherToolIds"/>
         </MudPaper>
     }
 

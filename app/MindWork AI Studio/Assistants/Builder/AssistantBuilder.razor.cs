@@ -375,14 +375,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         return null;
     }
 
-    private string? ValidateLauncherWorkspaceName(string workspaceName)
-    {
-        if (this.createChatLauncher && string.IsNullOrWhiteSpace(workspaceName))
-            return T("Please select or enter a workspace name for the chat launcher.");
-
-        return null;
-    }
-
     private async Task GenerateAssistantSpec()
     {
         await this.Form!.Validate();
@@ -589,7 +581,8 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     // The description stays required for both kinds of assistant. Users who only want a tile
     // usually flip the switch before typing anything, so the Builder offers a starting point they
     // can edit or replace. The workspace is picked after that, hence the suggestion is refreshed
-    // whenever the workspace changes:
+    // whenever the workspace changes — including when it is cleared again, which turns the tile
+    // into one that opens a disappearing chat:
     //
     private void SuggestLauncherDescription()
     {
@@ -597,8 +590,9 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             return;
 
         var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
-        if (!string.IsNullOrWhiteSpace(this.launcherWorkspaceName))
-            suggestion = $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
+        suggestion = string.IsNullOrWhiteSpace(this.launcherWorkspaceName)
+            ? $"{suggestion} {T("The chat belongs to no workspace and disappears again.")}"
+            : $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
 
         this.assistantDescription = suggestion;
         this.descriptionSuggestion = suggestion;

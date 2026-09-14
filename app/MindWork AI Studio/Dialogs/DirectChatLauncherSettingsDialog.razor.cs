@@ -152,7 +152,9 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
 
         //
         // An empty selection means "use the chat defaults" and is left out of the plugin, whereas
-        // the empty GUID explicitly selects no profile or no chat template:
+        // the empty GUID explicitly selects no profile or no chat template. Clearing the workspace
+        // name is a change of its own: the tile then opens a disappearing chat, and the writer
+        // switches the launch behavior accordingly.
         //
         return new(
             this.workspaceName.Trim(),
@@ -247,8 +249,6 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private string? ValidateTitle(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a title for this tile.") : null;
 
     private string? ValidateDescription(string value) => string.IsNullOrWhiteSpace(value) ? T("Please provide a description for this tile.") : null;
-
-    private string? ValidateWorkspaceName(string value) => string.IsNullOrWhiteSpace(value) ? T("Please select or enter a workspace name for this tile.") : null;
 
     private void Cancel() => this.MudDialog.Cancel();
 
