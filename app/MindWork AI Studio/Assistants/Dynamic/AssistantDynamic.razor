@@ -56,18 +56,26 @@ else
 }
 
 @code {
-    private protected override RenderFragment? HeaderActions => this.CanReviseCurrentAssistant
-        ? @<MudTooltip Text="@T("Revise assistant")">
-              <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
-          </MudTooltip>
-        : null;
+    private bool ShowDataSourceSelection => PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
 
-    private protected override RenderFragment? FooterActions => PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager)
-        ? @<DataSourceSelection LLMProvider="@this.ProviderSettings"
-                                DataSourceOptions="@this.dataSourceOptions"
-                                DataSourceOptionsChanged="@this.DataSourceOptionsChanged"
-                                DataSourcesAISelected="@(this.ChatThread?.AISelectedDataSources ?? [])"
-                                PopoverTriggerMode="PopoverTriggerMode.ICON" />
+    private protected override RenderFragment? HeaderActions => this.CanReviseCurrentAssistant || this.ShowDataSourceSelection
+        ? @<text>
+              @if (this.CanReviseCurrentAssistant)
+              {
+                  <MudTooltip Text="@T("Revise assistant")">
+                      <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
+                  </MudTooltip>
+              }
+
+              @if (this.ShowDataSourceSelection)
+              {
+                  <DataSourceSelection LLMProvider="@this.ProviderSettings"
+                                       DataSourceOptions="@this.dataSourceOptions"
+                                       DataSourceOptionsChanged="@this.DataSourceOptionsChanged"
+                                       DataSourcesAISelected="@(this.ChatThread?.AISelectedDataSources ?? [])"
+                                       PopoverTriggerMode="PopoverTriggerMode.ICON" />
+              }
+          </text>
         : null;
 
     private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
