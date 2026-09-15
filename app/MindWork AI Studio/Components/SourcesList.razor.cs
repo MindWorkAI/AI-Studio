@@ -17,6 +17,12 @@ namespace AIStudio.Components;
 /// </remarks>
 public partial class SourcesList : MSGComponentBase
 {
+    //
+    // The name is about the alignment the function uses, not about the page: it brings the element
+    // into view with its end at the bottom, which for a list at the end of an answer shows all of it.
+    //
+    private const string SCROLL_INTO_VIEW_FUNCTION = "scrollToBottom";
+
     /// <summary>
     /// The sources to show.
     /// </summary>
@@ -27,9 +33,24 @@ public partial class SourcesList : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
     private ILogger<SourcesList> Logger { get; init; } = null!;
 
     private readonly List<SourceEntryGroup> groups = [];
+
+    private ElementReference listElement;
+
+    /// <summary>
+    /// Brings this list into view.
+    /// </summary>
+    /// <remarks>
+    /// The counter above an answer says how many sources it rests on; this is how it takes the
+    /// reader to them. The element stays here, where it is rendered, rather than being handed to
+    /// whoever wants to scroll to it.
+    /// </remarks>
+    public async Task ScrollIntoViewAsync() => await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, SCROLL_INTO_VIEW_FUNCTION, this.listElement);
 
     #region Overrides of ComponentBase
 
