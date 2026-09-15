@@ -1030,9 +1030,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             fingerprint,
             parentFile.CreationUtc,
             parentFile.LastWriteUtc,
-            embeddedAtUtc,
-            parentFile.ConfidenceLevel,
-            parentFile.ConfidenceLevelRank)).ToList();
+            embeddedAtUtc)).ToList();
 
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }
