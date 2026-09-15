@@ -16,6 +16,22 @@ public sealed partial class DataSourceEmbeddingService
     internal const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
     private const bool IMAGE_EMBEDDING_ENABLED = false;
 
+    /// <summary>
+    /// What this build writes next to a chunk besides its text. Raise it whenever that changes.
+    /// </summary>
+    /// <remarks>
+    /// A stored chunk keeps the metadata of the run which wrote it, and nothing recomputes it: the
+    /// fingerprint of a file says whether the file changed, not whether we got better at reading
+    /// it. Raising this number makes the embedding signature differ, which drops the index and
+    /// builds it again — the only way corrected page numbers reach a data source somebody indexed
+    /// earlier.
+    ///
+    /// Version 2: the page of a chunk is taken from the runtime metadata instead of being read back
+    /// out of the chunk text, which is what left Word and OpenDocument files, and passages
+    /// continuing across a page break, without a page.
+    /// </remarks>
+    private const string CHUNK_METADATA_VERSION = "2";
+
     private enum RagFileIndexingDecision
     {
         INDEXABLE,
@@ -23,9 +39,22 @@ public sealed partial class DataSourceEmbeddingService
         UNSUPPORTED,
     }
 
-    private sealed record ExtractedFileSegment(string Text, int? TokenCount);
+    private sealed record ExtractedFileSegment(string Text, int? TokenCount, int? PageNumber);
 
     private sealed record ExtractedFileContent(string Text, IReadOnlyList<ExtractedFileSegment> SourceSegments);
+
+    /// <summary>
+    /// One chunk as the chunking produced it, together with the page it starts on.
+    /// </summary>
+    /// <remarks>
+    /// The page is carried rather than read back out of the chunk text. The runtime states it, and
+    /// the chunking knows which source segment a chunk begins in, so nothing has to be derived from
+    /// a marker in the text — which is what used to leave Word files and continued passages without
+    /// a page.
+    /// </remarks>
+    /// <param name="Text">The chunk itself, overlap prefix included.</param>
+    /// <param name="PageNumber">The page the chunk's own content starts on, or null when it has none.</param>
+    private sealed record EmbeddingChunk(string Text, int? PageNumber);
 
     private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
 
@@ -37,7 +66,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
 
-    private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = this.GetChunkingOptions(dataSource, embeddingProvider);
         var strategy = this.GetChunkingStrategy(filePath);
@@ -55,26 +84,31 @@ public sealed partial class DataSourceEmbeddingService
         {
             var normalized = NormalizeChunkSegment(segment.Content);
             if (!string.IsNullOrWhiteSpace(normalized))
-                segments.Add(new(normalized, segment.TokenCount));
+                segments.Add(new(normalized, segment.TokenCount, segment.PageNumber));
         }
 
         return new(string.Join("\n", segments.Select(segment => segment.Text)).Trim(), segments);
     }
 
-    private async IAsyncEnumerable<string> SplitByChunkingStrategyAsync(ExtractedFileContent content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> SplitByChunkingStrategyAsync(ExtractedFileContent content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var estimatedTokenCount = SumTokenCounts(content.SourceSegments);
-        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, token, estimatedTokenCount: estimatedTokenCount))
+
+        // The whole text starts where the first segment starts, so that is the page it is on until
+        // the splitting reaches a segment boundary:
+        var firstPageNumber = content.SourceSegments.Count > 0 ? content.SourceSegments[0].PageNumber : null;
+        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, estimatedTokenCount: estimatedTokenCount))
             yield return chunk;
     }
 
-    private async IAsyncEnumerable<string> SplitTextByRulesAsync(
+    private async IAsyncEnumerable<EmbeddingChunk> SplitTextByRulesAsync(
         string text,
         IReadOnlyList<ExtractedFileSegment> sourceSegments,
         ChunkingStrategy strategy,
         int ruleIndex,
         ChunkingOptions options,
         EmbeddingProvider embeddingProvider,
+        int? currentPageNumber,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
         string requiredOverlapPrefix = "",
         int? estimatedTokenCount = null)
@@ -91,14 +125,14 @@ public sealed partial class DataSourceEmbeddingService
             tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, textWithOverlap, token);
             if (tokenCount <= options.MaxChunkTokenLength)
             {
-                yield return textWithOverlap;
+                yield return new(textWithOverlap, currentPageNumber);
                 yield break;
             }
         }
 
         if (ruleIndex >= strategy.Rules.Count)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return hardChunk;
 
             yield break;
@@ -107,7 +141,7 @@ public sealed partial class DataSourceEmbeddingService
         var rule = strategy.Rules[ruleIndex];
         if (rule.Split is null)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return hardChunk;
 
             yield break;
@@ -116,7 +150,7 @@ public sealed partial class DataSourceEmbeddingService
         var units = NormalizeSplitUnits(rule.Split(text, sourceSegments.Select(segment => segment.Text).ToList()), text);
         if (units.Count <= 1)
         {
-            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, token, requiredOverlapPrefix, estimatedTokenCount))
+            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, currentPageNumber, token, requiredOverlapPrefix, estimatedTokenCount))
                 yield return chunk;
 
             yield break;
@@ -135,6 +169,15 @@ public sealed partial class DataSourceEmbeddingService
         var overlapPrefix = requiredOverlapPrefix;
         var unitTokenCounts = EstimateSplitUnitTokenCounts(units, sourceSegments, rule.UsesSourceSegmentCounts, estimatedTokenCount);
 
+        //
+        // The first rule of every strategy cuts along the segments the runtime delivered, so there
+        // a unit is a segment and carries that segment's page. Every later rule cuts inside a
+        // single segment, where all units share the page they were handed. This is what ties a
+        // chunk to a page without anybody reading the text.
+        //
+        var unitsAreSourceSegments = rule.UsesSourceSegmentCounts && sourceSegments.Count == units.Count;
+        int? PageOfUnit(int unitIndex) => unitsAreSourceSegments ? sourceSegments[unitIndex].PageNumber ?? currentPageNumber : currentPageNumber;
+
         while (index < units.Count)
         {
             token.ThrowIfCancellationRequested();
@@ -145,8 +188,14 @@ public sealed partial class DataSourceEmbeddingService
                 var rawChunk = string.Concat(units.Skip(index).Take(unitCount)).Trim();
                 var chunk = AddOverlapPrefix(rawChunk, overlapPrefix);
                 overlapPrefix = string.Empty;
+
+                //
+                // The page of the first unit this chunk covers, not of the overlap prefix in front
+                // of it: the prefix repeats what the chunk before already said, while the page has
+                // to name where this chunk's own content begins.
+                //
                 if (!string.IsNullOrWhiteSpace(chunk))
-                    yield return chunk;
+                    yield return new(chunk, PageOfUnit(index));
 
                 var nextIndex = index + unitCount;
                 if (nextIndex >= units.Count)
@@ -178,9 +227,10 @@ public sealed partial class DataSourceEmbeddingService
 
             string? lastSplitUnit = null;
             var unitTokenCount = unitTokenCounts?[index];
-            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [new(units[index], unitTokenCount)], strategy, ruleIndex + 1, options, embeddingProvider, token, overlapPrefix, unitTokenCount))
+            var unitPageNumber = PageOfUnit(index);
+            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [new(units[index], unitTokenCount, unitPageNumber)], strategy, ruleIndex + 1, options, embeddingProvider, unitPageNumber, token, overlapPrefix, unitTokenCount))
             {
-                lastSplitUnit = splitUnit;
+                lastSplitUnit = splitUnit.Text;
                 yield return splitUnit;
             }
 
@@ -372,10 +422,15 @@ public sealed partial class DataSourceEmbeddingService
         return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
     }
 
-    private async IAsyncEnumerable<string> SplitTextByHardCutAsync(
+    /// <remarks>
+    /// The hard cut is only ever reached inside a single piece of text which no rule could split
+    /// any further, so every chunk it produces sits on the page that piece was handed.
+    /// </remarks>
+    private async IAsyncEnumerable<EmbeddingChunk> SplitTextByHardCutAsync(
         string text,
         ChunkingOptions options,
         EmbeddingProvider embeddingProvider,
+        int? currentPageNumber,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
         string requiredOverlapPrefix = "",
         int? estimatedTokenCount = null)
@@ -455,7 +510,7 @@ public sealed partial class DataSourceEmbeddingService
 
             var chunk = AddOverlapPrefix(text[startIndex..bestEndIndex].Trim(), overlapPrefix);
             if (!string.IsNullOrWhiteSpace(chunk))
-                yield return chunk;
+                yield return new(chunk, currentPageNumber);
 
             if (bestEndIndex >= text.Length)
                 yield break;
@@ -934,6 +989,7 @@ public sealed partial class DataSourceEmbeddingService
     private string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
     {
         return string.Join('|',
+            CHUNK_METADATA_VERSION,
             embeddingProvider.Id,
             embeddingProvider.UsedLLMProvider,
             embeddingProvider.Model.Id,
@@ -1084,14 +1140,6 @@ public sealed partial class DataSourceEmbeddingService
     {
         var extension = file.Extension.TrimStart('.').ToLowerInvariant();
         return string.IsNullOrWhiteSpace(extension) ? "unknown" : extension;
-    }
-
-    private static int? TryExtractPageNumber(string chunk)
-    {
-        var match = Regex.Match(chunk, @"^\s*#\s+Page\s+(\d+)\b", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        return match.Success && int.TryParse(match.Groups[1].Value, out var pageNumber) && pageNumber > 0
-            ? pageNumber
-            : null;
     }
 
     private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
