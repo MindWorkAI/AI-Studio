@@ -1237,7 +1237,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         CancellationToken token)
     {
         var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
-        var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
+        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(

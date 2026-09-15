@@ -52,9 +52,7 @@ public sealed class DataSourceLocalRetrievalService(
         int ChunkIndex,
         string Text,
         double Score,
-        int Rank,
-        string ConfidenceLevel,
-        int ConfidenceLevelRank);
+        int Rank);
     // ReSharper restore NotAccessedPositionalProperty.Local
 
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalFile dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
@@ -354,9 +352,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.Text,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
     private static LocalRetrievalHit FromBm25Result(IndexStoreSearchResult result, int rank) =>
         new(
@@ -374,9 +370,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
     private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit)
     {

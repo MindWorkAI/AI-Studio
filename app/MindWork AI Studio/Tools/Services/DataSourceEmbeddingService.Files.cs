@@ -58,7 +58,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
 
-    private sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
+    internal sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
 
     private sealed record ChunkingStrategy(string Name, IReadOnlyList<ChunkingRule> Rules);
 
@@ -986,7 +986,23 @@ public sealed partial class DataSourceEmbeddingService
         }
     }
 
-    private string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
+    /// <summary>
+    /// Describes how the vectors of a data source were made.
+    /// </summary>
+    /// <remarks>
+    /// What appears here decides when stored embeddings are thrown away: a signature differing from
+    /// the persisted one drops the whole index and builds it again. So it names the embedding model,
+    /// where it runs, how the text was cut for it, and the chunk metadata version — the things a
+    /// vector actually depends on.
+    ///
+    /// The confidence level a data source asks of a provider is deliberately not among them. It
+    /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks
+    /// it against the participating chat providers and against the embedding provider, and this
+    /// service checks it again before each indexing run. It was part of this signature once, which
+    /// re-embedded every file of a data source whenever somebody raised or lowered it — real money
+    /// at a cloud embedding provider, for nothing.
+    /// </remarks>
+    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
     {
         return string.Join('|',
             CHUNK_METADATA_VERSION,
@@ -997,7 +1013,6 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Hostname,
             embeddingProvider.TokenizerPath,
             embeddingProvider.EffectiveTokenLimit,
-            GetDataSourceConfidenceLevel(dataSource).ToString(),
             dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
             dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH,
             chunkingOptions.MaxChunkTokenLength,
