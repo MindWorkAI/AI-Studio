@@ -475,20 +475,59 @@ tr:has(> .provider-group-header) .mud-icon-button {
  * Rows of the tool selection which the chat and the assistants open from their footer. There will be
  * far more tools than the ones we start with, so a row must not waste height: MudBlazor's settings
  * button alone puts 12px of padding around a 24px icon, which makes a row 48px tall before the
- * switch and the frame are counted at all. Size.Small takes most of that away; the rule below takes
- * the rest, and it has to name the MudBlazor class to outweigh its specificity. Alternating rows
- * carry a grey ground, which tells a long list apart better than a separator line does and costs no
- * height at all. The colors are MudBlazor palette variables, so both grounds follow the theme.
+ * switch and the frame are counted at all. Size.Small takes most of that away; the rules below take
+ * the rest, and the second one has to name the MudBlazor class to outweigh its specificity.
  */
 .tool-selection-rows > .tool-selection-row {
     padding: 0.15rem 0.25rem;
-    border-radius: var(--mud-default-borderradius);
-}
-
-.tool-selection-rows > .tool-selection-row:nth-child(odd) {
-    background-color: var(--mud-palette-background-gray);
 }
 
 .tool-selection-row .mud-icon-button {
     padding: 0.2em;
+}
+
+/*
+ * Rows of the data source lists, in the popover next to the tool selection as well as in the
+ * settings dialog. A row carries a name and at most one icon, so there is no reason for it to be
+ * 48px tall: MudBlazor pads the item with 8px on both sides and the text slot with another 4px,
+ * which is more frame than content. Dense on the list halves the first part, the rule below takes
+ * the second one away, and it has to name the MudBlazor class to outweigh its specificity.
+ */
+.data-source-rows .mud-list-item-text {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/*
+ * The checkboxes MudBlazor renders into a multi-selection list come out larger than the box of the
+ * tool selection next to it, and MudList has no parameter for their size. So the three rules below
+ * state it: the 20px icon and the 4px of padding which Size.Small together with Dense produce over
+ * there, plus the 4px between the box and the name which the tool row takes from the spacing of its
+ * stack -- the list puts its checkbox outside the slot that holds our own markup, so no stack of
+ * ours reaches it. The icon needs a rule of its own because MudBlazor gives it an explicit font
+ * size, which no inherited one can outrank.
+ */
+.data-source-rows .mud-checkbox {
+    margin-inline-end: 0.25rem;
+}
+
+.data-source-rows .mud-checkbox .mud-icon-button {
+    padding: 0.25rem;
+}
+
+.data-source-rows .mud-checkbox .mud-icon-root {
+    font-size: 1.25rem;
+}
+
+/*
+ * The frame around a text switch in its compact form. MudBlazor pads the slot of an outlined field
+ * with 18.5px above and below, which is the right amount for the line of text such a field usually
+ * holds -- a switch of 24px is left swimming in the middle of it. Size.Small already took the switch
+ * down; this brings the frame with it, and it has to name the MudBlazor classes to outweigh their
+ * specificity. Only the two vertical values of that shorthand are replaced, so the 14px to the left
+ * and right stay as they are.
+ */
+.text-switch-dense .mud-input-slot.mud-input-root-outlined {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
 }

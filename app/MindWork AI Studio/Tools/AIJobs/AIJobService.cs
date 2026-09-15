@@ -28,6 +28,15 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
 
         public DateTimeOffset LastCheckpoint { get; set; }
 
+        /// <summary>
+        /// When the chat was last told that something happened which was not a streamed chunk.
+        /// </summary>
+        /// <remarks>
+        /// Kept on the job rather than in the loop which streams, because the tool calling reports
+        /// from outside that loop: it runs inside the provider call the loop is waiting on.
+        /// </remarks>
+        public DateTimeOffset LastActivityNotification { get; set; }
+
         public bool IsCompletionStarted { get; set; }
 
         public readonly Lock SyncRoot = new();
@@ -77,6 +86,44 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             return null;
 
         return this.jobs.TryGetValue(jobId, out var job) ? job.ChatGenerationRequest?.ChatThread : null;
+    }
+
+    /// <summary>
+    /// Says that the answer of a chat has moved without a chunk having arrived.
+    /// </summary>
+    /// <remarks>
+    /// A model which calls tools asks several times before it says anything, and while it does,
+    /// this service sits in the provider call and hands nothing to the screen. But the request is
+    /// growing the whole time -- every tool result travels with the next round -- and the chat is
+    /// what recounts the tokens when it renders. Without this, the only thing which would ever ask
+    /// again is the ten-second heartbeat of the token tracker.
+    ///
+    /// Throttled like the streamed chunks, and by the same setting: a round which calls five tools
+    /// in a row must not turn into five renders of the whole chat when somebody asked us to go easy
+    /// on their battery.
+    ///
+    /// A chat without a running job is not an error. The same tool calling loop runs for the
+    /// assistants, which have no job behind them and no token count to update.
+    /// </remarks>
+    /// <param name="chatId">The chat whose answer moved.</param>
+    public async Task NotifyChatActivityAsync(Guid chatId)
+    {
+        if (!this.activeChatJobsByChatId.TryGetValue(chatId, out var jobId))
+            return;
+
+        if (!this.jobs.TryGetValue(jobId, out var job))
+            return;
+
+        lock (job.SyncRoot)
+        {
+            var now = DateTimeOffset.Now;
+            if (settingsManager.ConfigurationData.App.IsSavingEnergy && now - job.LastActivityNotification < STREAMING_EVENT_MIN_TIME)
+                return;
+
+            job.LastActivityNotification = now;
+        }
+
+        await this.NotifyChangedAsync(job);
     }
 
     public async Task<AIJobSnapshot?> TryStartChatGenerationAsync(ChatGenerationRequest request)
@@ -309,6 +356,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         aiText.InitialRemoteWait = false;
         aiText.IsStreaming = false;
         aiText.Text = aiText.Text.RemoveThinkTags().Trim();
+        aiText.EndToolRun();
 
         RemoveEmptyAIResponse(state);
 

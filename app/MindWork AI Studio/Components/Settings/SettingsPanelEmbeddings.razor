@@ -93,8 +93,6 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbeddingProvider">
-            @T("Add Embedding")
-        </MudButton>
+        <LockableButton Text="@T("Add Embedding")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddEmbeddingProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddEmbeddingProvider" Class="mt-3" />
     </ExpansionPanel>
 }

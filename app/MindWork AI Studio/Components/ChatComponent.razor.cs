@@ -1475,8 +1475,9 @@ public partial class ChatComponent : MSGComponentBase
             // of it would tell a person their window is empty while their first message is not.
             //
             var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
+            var toolDefinitions = this.GetRunnableToolDefinitions();
             provider = this.Provider;
-            parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput());
+            parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
         });
 
         var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, token);
@@ -1501,22 +1502,29 @@ public partial class ChatComponent : MSGComponentBase
     /// source is appended to it, the selected profile adds a paragraph, and the policy of the
     /// selected tools adds another. Switching a profile while writing therefore moves the number,
     /// which is the whole reason this is asked rather than read off the thread.
-    ///
-    /// The tools are filtered for the provider the same way they are before sending, so that a tool
-    /// the provider is not trusted enough to receive does not count either.
     /// </remarks>
     /// <param name="thread">The thread to build the prompt for.</param>
+    /// <param name="toolDefinitions">The tools whose policy the prompt states.</param>
     /// <returns>The system prompt as it would be sent.</returns>
-    private string BuildSystemPromptFor(ChatThread thread)
-    {
-        var toolDefinitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
-            .Select(this.ToolRegistry.GetDefinition)
-            .Where(definition => definition is not null)
-            .Select(definition => definition!)
-            .ToList();
+    private string BuildSystemPromptFor(ChatThread thread, IReadOnlyList<ToolDefinition> toolDefinitions) => thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions).Text;
 
-        return thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions).Text;
-    }
+    /// <summary>
+    /// The tools the next request would offer the model.
+    /// </summary>
+    /// <remarks>
+    /// Filtered for the provider the same way they are before sending, so that a tool the provider
+    /// is not trusted enough to receive does not count either.
+    ///
+    /// Asked for once and used twice: their policy goes into the system prompt, and their schemas
+    /// travel next to it in the request body. Both cost tokens, and both change the moment somebody
+    /// switches a tool on.
+    /// </remarks>
+    /// <returns>The definitions of the selected tools.</returns>
+    private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions() => this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
+        .Select(this.ToolRegistry.GetDefinition)
+        .Where(definition => definition is not null)
+        .Select(definition => definition!)
+        .ToList();
 
     /// <summary>
     /// The thread a new chat starts with, as the selections made so far decide it.
