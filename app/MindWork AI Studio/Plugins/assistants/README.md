@@ -8,6 +8,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
   - [Directory Structure](#directory-structure)
   - [Structure](#structure)
     - [Minimal Requirements Assistant Table](#example-minimal-requirements-assistant-table)
+  - [Data Sources in Form Assistants](#data-sources-in-form-assistants)
     - [Supported types (matching the Blazor UI components):](#supported-types-matching-the-blazor-ui-components)
   - [Component References](#component-references)
     - [`TEXT_AREA` reference](#text_area-reference)
@@ -107,6 +108,13 @@ ASSISTANT = {
     },
 }
 ```
+
+## Data Sources in Form Assistants
+Form assistants start with the data-source defaults configured for new chats. This includes disabled data sources, manually preselected sources, automatic source selection, and automatic context validation. AI Studio automatically displays its standard data-source icon in the assistant header. Users can override the selection there for the current open assistant without changing the chat defaults or any other assistant. Resetting the form reloads the current chat defaults.
+
+The Assistant Builder's optional expected-data field describes what kind of retrieval content the generated assistant may receive. The Builder uses it to add interpretation guidance to the `SystemPrompt`; it does not configure or select a data source. Generated assistants must treat that content as optional and remain usable when no matching retrieval content is available.
+
+Do not add a custom data-source form component: AI Studio provides the selector automatically. Form assistants cannot define individual data sources or ERI servers in `plugin.lua`. `DataSourceIds` belongs exclusively to direct chat launchers. Do not implement a separate ERI connection, network access, or retrieval pipeline in an assistant plugin. AI Studio owns authentication, provider and permission checks, retrieval, citations, warnings, and fallback behavior. A form assistant's `SystemPrompt` may use retrieval content supplied by AI Studio, but it must not promise that such content will be available.
 
 ## Direct Launch into a Chat
 Assistant plugins can optionally skip the normal assistant page and open a chat directly from the tile. The chat either lives in a workspace or in none at all; everything else about the two behaviors is the same.
