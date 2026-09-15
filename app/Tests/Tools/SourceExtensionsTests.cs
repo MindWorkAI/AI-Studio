@@ -138,6 +138,36 @@ public sealed class SourceExtensionsTests
     }
 
     [Test]
+    public void AReaderWhichCannotFollowAPageGetsTheDocumentWithoutOne()
+    {
+        IList<Source> sources =
+        [
+            new("Handbook (Page 266)", "file:///Users/someone/My Documents/handbook.pdf#page=266", SourceOrigin.RAG),
+            new("An older answer", "file:///Users/someone/handbook.pdf#chunk=3", SourceOrigin.RAG),
+            new("A section of an article", "https://example.org/article#results", SourceOrigin.LLM),
+        ];
+
+        Assert.That(EntriesOf(sources.ToMarkdown(keepPageAnchors: false)), Is.EqualTo(new[]
+        {
+            "- [1] [A section of an article](<https://example.org/article#results>)",
+            "- [2] [Handbook (Page 266)](<file:///Users/someone/My%20Documents/handbook.pdf>)",
+            "- [3] [An older answer](<file:///Users/someone/handbook.pdf>)",
+        }), "Word and LibreOffice take the fragment of a local link for part of the file name and refuse the link, so the local links lose it -- and the web link keeps its own, where a fragment names a section of the page and belongs to the address.");
+    }
+
+    [Test]
+    public void AReaderWhichFollowsAPageIsToldIt()
+    {
+        IList<Source> sources = [new("Handbook (Page 266)", "file:///Users/someone/handbook.pdf#page=266", SourceOrigin.RAG)];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(EntriesOf(sources.ToMarkdown()).Single(), Does.EndWith("handbook.pdf#page=266>)"), "A browser and a PDF reader open the document where the passage is, so they are told the page.");
+            Assert.That(EntriesOf(sources.ToExportMarkdown()).Single(), Does.EndWith("handbook.pdf#page=266>)"), "The clipboard and every text format keep it as well; only the two office formats ask for it to be dropped.");
+        });
+    }
+
+    [Test]
     public void AKnownPageRidesInTheLinkOfASource()
     {
         var location = LocationOf("file:///Users/someone/My%20Documents/Gr%C3%B6%C3%9Fere%20%C3%9Cbersicht.pdf#page=12");

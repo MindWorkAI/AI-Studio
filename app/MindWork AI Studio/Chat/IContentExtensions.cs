@@ -55,8 +55,11 @@ public static class IContentExtensions
     /// </remarks>
     /// <param name="content">The content to read.</param>
     /// <param name="markdown">The Markdown text including its sources, or an empty string when there is none.</param>
+    /// <param name="keepPageAnchors">Whether a link into a local file may name its page. Only a
+    /// format whose reader stumbles over such a link says no here; the clipboard and every text
+    /// format keep the page.</param>
     /// <returns>True, when this content carries Markdown text.</returns>
-    public static bool TryGetExportMarkdown(this IContent content, out string markdown)
+    public static bool TryGetExportMarkdown(this IContent content, out string markdown, bool keepPageAnchors = true)
     {
         if (content is not ContentText text)
         {
@@ -65,7 +68,7 @@ public static class IContentExtensions
         }
 
         var answer = text.Text.Trim();
-        var sources = text.Sources.ToExportMarkdown();
+        var sources = text.Sources.ToExportMarkdown(keepPageAnchors);
         if (sources.Length == 0)
         {
             markdown = answer;

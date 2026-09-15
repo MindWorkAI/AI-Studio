@@ -138,8 +138,9 @@ public static partial class SourceExtensions
     /// Converts a list of sources to a markdown-formatted string.
     /// </summary>
     /// <param name="sources">The list of sources to convert.</param>
+    /// <param name="keepPageAnchors">Whether a link into a local file may name its page; see the method below.</param>
     /// <returns>A markdown-formatted string representing the sources.</returns>
-    public static string ToMarkdown(this IList<Source> sources)
+    public static string ToMarkdown(this IList<Source> sources, bool keepPageAnchors = true)
     {
         var sb = new StringBuilder();
         foreach (var group in sources.GroupSources())
@@ -152,13 +153,37 @@ public static partial class SourceExtensions
 
             foreach (var numberedSource in group.Sources)
             {
+                var url = keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL);
                 sb.Append($"- [{numberedSource.Number}] ");
-                AppendMarkdownLink(sb, numberedSource.Source.Title, numberedSource.Source.URL);
+                AppendMarkdownLink(sb, numberedSource.Source.Title, url);
                 sb.AppendLine();
             }
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Takes the page off a link into a local file, for a reader which cannot follow it.
+    /// </summary>
+    /// <remarks>
+    /// Everything a local link carries in its fragment is dropped, not only a page: a chunk is no
+    /// use to any reader either, and what breaks such a link is the fragment itself rather than what
+    /// stands in it. A web address keeps its fragment untouched, because there the fragment is part
+    /// of the address and naming a section of a page is exactly what it is for.
+    /// </remarks>
+    /// <param name="url">The link of the source.</param>
+    /// <returns>The link without its fragment, or the link itself when it carries none.</returns>
+    private static string WithoutPageAnchor(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return url;
+
+        var cleanedUrl = url.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
+        if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri) || !absoluteUri.IsFile || absoluteUri.Fragment.Length == 0)
+            return url;
+
+        return absoluteUri.GetComponents(UriComponents.AbsoluteUri & ~UriComponents.Fragment, UriFormat.UriEscaped);
     }
 
     /// <summary>
@@ -171,10 +196,11 @@ public static partial class SourceExtensions
     /// for this and the chat does not.
     /// </remarks>
     /// <param name="sources">The list of sources to convert.</param>
+    /// <param name="keepPageAnchors">Whether a link into a local file may name its page.</param>
     /// <returns>A markdown-formatted string representing the sources, or an empty string when there are none.</returns>
-    public static string ToExportMarkdown(this IList<Source> sources)
+    public static string ToExportMarkdown(this IList<Source> sources, bool keepPageAnchors = true)
     {
-        var sourcesMarkdown = sources.ToMarkdown();
+        var sourcesMarkdown = sources.ToMarkdown(keepPageAnchors);
         if (string.IsNullOrWhiteSpace(sourcesMarkdown))
             return string.Empty;
 
