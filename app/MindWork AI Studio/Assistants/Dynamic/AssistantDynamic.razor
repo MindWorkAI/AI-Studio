@@ -1,5 +1,6 @@
 @attribute [Route(Routes.ASSISTANT_DYNAMIC)]
 @using AIStudio.Agents.AssistantAudit
+@using AIStudio.Settings.DataModel
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel
 @using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
@@ -59,6 +60,14 @@ else
         ? @<MudTooltip Text="@T("Revise assistant")">
               <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
           </MudTooltip>
+        : null;
+
+    private protected override RenderFragment? FooterActions => PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager)
+        ? @<DataSourceSelection LLMProvider="@this.ProviderSettings"
+                                DataSourceOptions="@this.dataSourceOptions"
+                                DataSourceOptionsChanged="@this.DataSourceOptionsChanged"
+                                DataSourcesAISelected="@(this.ChatThread?.AISelectedDataSources ?? [])"
+                                PopoverTriggerMode="PopoverTriggerMode.ICON" />
         : null;
 
     private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
