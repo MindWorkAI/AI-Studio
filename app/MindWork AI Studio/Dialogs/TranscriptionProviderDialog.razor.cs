@@ -198,18 +198,10 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             // When using self-hosted models, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
                 this.dataManuallyModel = this.DataModel.Id;
-            
-            //
-            // We cannot load the API key for self-hosted providers:
-            //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
-            {
-                await this.ReloadModels();
-                await base.OnInitializedAsync();
-                return;
-            }
-            
-            // Load the API key:
+
+            // Load the API key. Self-hosted providers may or may not need one (e.g., VLLM behind
+            // an authenticated proxy does), so we always try -- ReloadModels() below relies on
+            // dataAPIKey already being populated, otherwise it would send an empty Bearer token:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
             {
