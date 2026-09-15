@@ -5,7 +5,9 @@
 <div class="mud-markdown-body">
     @foreach (var group in this.groups)
     {
-        <MudText Typo="Typo.h2">
+        @* A level-two heading was shown as h5 while this list was Markdown, because that is what
+           Markdown.DefaultConfig overrides it to. The heading keeps that size here. *@
+        <MudText Typo="Typo.h5">
             @group.Heading
         </MudText>
         <ul>
@@ -15,7 +17,7 @@
                     @($"[{entry.Number}] ")
                     @if (entry.Document is { } document)
                     {
-                        <MudTooltip Text="@this.GetDocumentTooltip(document)" Placement="Placement.Top">
+                        <MudTooltip Text="@T("Opens this document in the program your system uses for it")" Placement="Placement.Top">
                             <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(document))">
                                 @entry.Title
                             </MudLink>

@@ -65,10 +65,6 @@ public partial class SourcesList : MSGComponentBase
         }
     }
 
-    private string GetDocumentTooltip(SourceDocumentLocation document) => document.PageNumber is > 0
-        ? string.Format(T("Opens {0} on page {1}"), document.Path, document.PageNumber)
-        : string.Format(T("Opens {0}"), document.Path);
-
     /// <summary>
     /// Opens a document in the program the system uses for it.
     /// </summary>
