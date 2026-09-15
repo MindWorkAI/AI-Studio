@@ -125,6 +125,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private protected virtual RenderFragment? HeaderActions => null;
 
+    private protected virtual RenderFragment? FooterActions => null;
+
     private protected virtual RenderFragment? AfterResultContent => null;
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];

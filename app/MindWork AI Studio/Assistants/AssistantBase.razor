@@ -183,6 +183,11 @@
                     <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
                 }
 
+                @if (this.FooterActions is not null)
+                {
+                    @this.FooterActions
+                }
+
                 <MudSpacer />
                 <HalluzinationReminder ContainerClass="my-0 ml-2"/>
             </MudStack>
