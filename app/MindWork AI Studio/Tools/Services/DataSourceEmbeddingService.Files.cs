@@ -1116,7 +1116,6 @@ public sealed partial class DataSourceEmbeddingService
     {
         file.Refresh();
         var absolutePath = Path.GetFullPath(file.FullName);
-        var confidenceLevel = GetDataSourceConfidenceLevel(dataSource);
         return new(
             this.CreateParentFileId(dataSource.Id, absolutePath),
             absolutePath,
@@ -1128,9 +1127,7 @@ public sealed partial class DataSourceEmbeddingService
             file.Exists ? new DateTimeOffset(file.CreationTimeUtc) : DateTimeOffset.UnixEpoch,
             file.Exists ? new DateTimeOffset(file.LastWriteTimeUtc) : DateTimeOffset.UnixEpoch,
             embeddedAtUtc,
-            chunkCount,
-            confidenceLevel.ToString(),
-            (int)confidenceLevel);
+            chunkCount);
     }
 
     private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTimeOffset embeddedAtUtc)
@@ -1145,11 +1142,6 @@ public sealed partial class DataSourceEmbeddingService
                 embeddedAtUtc))
             .ToList();
     }
-
-    private static ConfidenceLevel GetDataSourceConfidenceLevel(IDataSource dataSource) =>
-        dataSource is not IInternalDataSource internalDataSource || internalDataSource.ConfidenceLevel is ConfidenceLevel.NONE
-            ? ConfidenceLevel.UNKNOWN
-            : internalDataSource.ConfidenceLevel;
 
     private static string GetFileType(FileInfo file)
     {
