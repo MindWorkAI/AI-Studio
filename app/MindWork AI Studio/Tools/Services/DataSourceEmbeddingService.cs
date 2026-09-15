@@ -843,7 +843,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, embeddingProvider, token))
         {
-            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk, totalChunkCount, TryExtractPageNumber(chunk)));
+            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
 
             if (batch.Count >= embeddingBatchSize)
