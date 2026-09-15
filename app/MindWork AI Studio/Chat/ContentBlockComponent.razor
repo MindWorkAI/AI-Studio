@@ -223,7 +223,7 @@
                                 }
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                    <SourcesList Sources="@textContent.Sources"/>
                                 }
                             </div>
                         }

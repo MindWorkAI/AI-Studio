@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -80,6 +81,60 @@ public static partial class SourceExtensions
     }
     
     /// <summary>
+    /// Sorts a list of sources into the groups it is shown in, and numbers them.
+    /// </summary>
+    /// <remarks>
+    /// The order of the groups and the running number are what a reader follows, and they have to
+    /// be the same wherever the list appears: in the chat, in an exported document, and in the
+    /// clipboard. This is why both the chat and the Markdown below ask here instead of sorting the
+    /// list themselves.
+    /// </remarks>
+    /// <param name="sources">The list of sources to sort.</param>
+    /// <returns>The groups which have sources, in the order they are shown; empty when there are none.</returns>
+    public static IReadOnlyList<SourceGroup> GroupSources(this IList<Source> sources)
+    {
+        var llmSources = new List<Source>();
+        var toolSources = new List<Source>();
+        var ragSources = new List<Source>();
+        foreach (var source in sources)
+        {
+            switch (source.Origin)
+            {
+                case SourceOrigin.LLM:
+                    llmSources.Add(source);
+                    break;
+
+                case SourceOrigin.TOOL:
+                    toolSources.Add(source);
+                    break;
+
+                case SourceOrigin.RAG:
+                    ragSources.Add(source);
+                    break;
+            }
+        }
+
+        var groups = new List<SourceGroup>(3);
+        var sourceNum = 0;
+        AddGroup(groups, TB("Sources provided by the AI"), llmSources, ref sourceNum);
+        AddGroup(groups, TB("Sources used by tools"), toolSources, ref sourceNum);
+        AddGroup(groups, TB("Sources provided by the data providers"), ragSources, ref sourceNum);
+        return groups;
+    }
+
+    private static void AddGroup(ICollection<SourceGroup> groups, string heading, IReadOnlyList<Source> sources, ref int sourceNum)
+    {
+        if (sources.Count == 0)
+            return;
+
+        var numberedSources = new List<NumberedSource>(sources.Count);
+        foreach (var source in sources)
+            numberedSources.Add(new(++sourceNum, source));
+
+        groups.Add(new(heading, numberedSources));
+    }
+
+    /// <summary>
     /// Converts a list of sources to a markdown-formatted string.
     /// </summary>
     /// <param name="sources">The list of sources to convert.</param>
@@ -87,65 +142,18 @@ public static partial class SourceExtensions
     public static string ToMarkdown(this IList<Source> sources)
     {
         var sb = new StringBuilder();
-        var ragSources = new List<ISource>();
-        var toolSources = new List<ISource>();
-        var sourceNum = 0;
-        var addedLLMHeaders = false;
-        foreach (var source in sources)
+        foreach (var group in sources.GroupSources())
         {
-            switch (source.Origin)
-            {
-                case SourceOrigin.RAG: 
-                    ragSources.Add(source);
-                    break;
-                
-                case SourceOrigin.LLM:
-                    if (!addedLLMHeaders)
-                    {
-                        sb.Append("## ");
-                        sb.AppendLine(TB("Sources provided by the AI"));
-                        addedLLMHeaders = true;
-                    }
-                    
-                    sb.Append($"- [{++sourceNum}] ");
-                    AppendMarkdownLink(sb, source.Title, source.URL);
-                    sb.AppendLine();
-                    break;
-
-                case SourceOrigin.TOOL:
-                    toolSources.Add(source);
-                    break;
-            }
-        }
-
-        if(toolSources.Count > 0)
-        {
-            if(sb.Length > 0)
+            if (sb.Length > 0)
                 sb.AppendLine();
 
             sb.Append("## ");
-            sb.AppendLine(TB("Sources used by tools"));
+            sb.AppendLine(group.Heading);
 
-            foreach (var source in toolSources)
+            foreach (var numberedSource in group.Sources)
             {
-                sb.Append($"- [{++sourceNum}] ");
-                AppendMarkdownLink(sb, source.Title, source.URL);
-                sb.AppendLine();
-            }
-        }
-
-        if(ragSources.Count > 0)
-        {
-            if(sb.Length > 0)
-                sb.AppendLine();
-
-            sb.Append("## ");
-            sb.AppendLine(TB("Sources provided by the data providers"));
-
-            foreach (var source in ragSources)
-            {
-                sb.Append($"- [{++sourceNum}] ");
-                AppendMarkdownLink(sb, source.Title, source.URL);
+                sb.Append($"- [{numberedSource.Number}] ");
+                AppendMarkdownLink(sb, numberedSource.Source.Title, numberedSource.Source.URL);
                 sb.AppendLine();
             }
         }
@@ -171,6 +179,55 @@ public static partial class SourceExtensions
             return string.Empty;
 
         return $"# {TB("Sources")}{Environment.NewLine}{Environment.NewLine}{sourcesMarkdown}";
+    }
+
+    /// <summary>
+    /// Reads which document a source names, and which page of it.
+    /// </summary>
+    /// <remarks>
+    /// Only a source which names a file has such a location; a web source is opened by the browser
+    /// and never asks. The page rides in the fragment of the link as `page=N`, which is what the PDF
+    /// open parameters call for. A chat written before v26.9.1 carries `chunk=N` instead, which names
+    /// nothing a program could be sent to: such a source keeps its document and loses only the page.
+    /// </remarks>
+    /// <param name="source">The source to read.</param>
+    /// <param name="location">The document and its page, or the default when the source names no file.</param>
+    /// <returns>Whether the source names a file.</returns>
+    public static bool TryGetDocumentLocation(this ISource source, out SourceDocumentLocation location)
+    {
+        location = default;
+        if (string.IsNullOrWhiteSpace(source.URL))
+            return false;
+
+        var cleanedUrl = source.URL.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
+        if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri) || !absoluteUri.IsFile)
+            return false;
+
+        //
+        // The link was made from a path of this system, so reading it back gives that path again --
+        // percent-encoded spaces and umlauts included, and with the separators this system uses.
+        //
+        var path = absoluteUri.LocalPath;
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        location = new(path, ReadPageFromFragment(absoluteUri.Fragment));
+        return true;
+    }
+
+    private static int? ReadPageFromFragment(string fragment)
+    {
+        const string PAGE_PARAMETER = "page=";
+        foreach (var parameter in fragment.TrimStart('#').Split('&', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (!parameter.StartsWith(PAGE_PARAMETER, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (int.TryParse(parameter.AsSpan(PAGE_PARAMETER.Length), NumberStyles.None, CultureInfo.InvariantCulture, out var pageNumber) && pageNumber > 0)
+                return pageNumber;
+        }
+
+        return null;
     }
 
     /// <summary>

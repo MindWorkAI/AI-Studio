@@ -1,0 +1,37 @@
+@inherits MSGComponentBase
+
+@* The class is what the Markdown renderer wraps its own output in, so the headings and the list
+   keep the look they had while this list was Markdown. *@
+<div class="mud-markdown-body">
+    @foreach (var group in this.groups)
+    {
+        <MudText Typo="Typo.h2">
+            @group.Heading
+        </MudText>
+        <ul>
+            @foreach (var entry in group.Entries)
+            {
+                <li>
+                    @($"[{entry.Number}] ")
+                    @if (entry.Document is { } document)
+                    {
+                        <MudTooltip Text="@this.GetDocumentTooltip(document)" Placement="Placement.Top">
+                            <MudLink Typo="Typo.body1" OnClick="@(() => this.OpenDocument(document))">
+                                @entry.Title
+                            </MudLink>
+                        </MudTooltip>
+                        <MudTooltip Text="@T("Show this file in the file manager of your system")" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" OnClick="@(() => this.ShowInFileManager(document))"/>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudLink Href="@entry.Link" Target="_blank" Typo="Typo.body1">
+                            @entry.Title
+                        </MudLink>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</div>
