@@ -519,42 +519,44 @@ fn refuse_document(requested_path: &Path) -> Option<String> {
 }
 
 /// Tries to show the document on the given page, and says whether it did.
-///
-/// On macOS this always answers `false`: `open` drops the fragment of a URL before the program it
-/// starts ever sees it, with and without `-a`, so a page cannot be named from the command line.
-/// The document opens on its first page there, and the source names the page for the reader.
+#[cfg(any(windows, target_os = "linux"))]
 async fn try_open_at_page(path: &Path, page: u32) -> bool {
-    #[cfg(any(windows, target_os = "linux"))]
-    {
-        let DocumentOpenPlan::WithPage { program, arguments } = resolve_document_open_plan(path, page).await else {
-            return false;
-        };
+    let DocumentOpenPlan::WithPage { program, arguments } = resolve_document_open_plan(path, page).await else {
+        return false;
+    };
 
-        return match start_page_aware_viewer(&program, &arguments) {
-            Ok(()) => true,
+    match start_page_aware_viewer(&program, &arguments) {
+        Ok(()) => true,
 
-            //
-            // Failing to start the viewer ourselves is not something the user has to hear about:
-            // the caller opens the document plainly afterwards, only without the page.
-            //
-            Err(issue) => {
-                warn!(Source = "Tauri"; "Could not open '{}' at page {page}, opening it without a page instead: {issue}", path.to_string_lossy());
-                false
-            },
-        };
+        //
+        // Failing to start the viewer ourselves is not something the user has to hear about: the
+        // caller opens the document plainly afterwards, only without the page.
+        //
+        Err(issue) => {
+            warn!(Source = "Tauri"; "Could not open '{}' at page {page}, opening it without a page instead: {issue}", path.to_string_lossy());
+            false
+        },
     }
+}
 
-    #[cfg(target_os = "macos")]
-    {
-        let _ = (path, page);
-        false
-    }
+/// Never shows a page on macOS.
+///
+/// `open` drops the fragment of a URL before the program it starts ever sees it, with and without
+/// `-a`, so a page cannot be named from the command line at all. The document opens on its first
+/// page, and the source names the page for the reader.
+#[cfg(target_os = "macos")]
+async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
+    false
 }
 
 /// How a document viewer wants to be told which page to show.
 ///
 /// They all mean the same thing and every one of them spells it differently. A viewer which is not
 /// covered here shows its first page, which is what the system would have done anyway.
+///
+/// Which spellings exist follows from where a viewer is found: Acrobat is named by the Windows
+/// registration and by nothing else, and the three Linux viewers are named by a desktop entry and
+/// by nothing else. Only a browser is reached on both, so only its spelling is needed everywhere.
 #[cfg(any(windows, target_os = "linux", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PageArgument {
@@ -563,15 +565,19 @@ enum PageArgument {
     UrlFragment,
 
     /// Acrobat and Acrobat Reader take an open action: `/A page=12`.
+    #[cfg(any(windows, test))]
     AcrobatOpenAction,
 
     /// The GNOME document viewer and its forks count from zero, so page 12 is index 11.
+    #[cfg(any(target_os = "linux", test))]
     ZeroBasedIndex,
 
     /// Okular takes `-p 12`.
+    #[cfg(any(target_os = "linux", test))]
     OkularPage,
 
     /// Zathura takes `-P 12`.
+    #[cfg(any(target_os = "linux", test))]
     ZathuraPage,
 }
 
@@ -602,9 +608,17 @@ fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<
     let path_argument = path.to_string_lossy().to_string();
     Some(match argument {
         PageArgument::UrlFragment => vec![document_url_with_page(path, page)?],
+
+        #[cfg(any(windows, test))]
         PageArgument::AcrobatOpenAction => vec![String::from("/A"), format!("page={page}"), path_argument],
+
+        #[cfg(any(target_os = "linux", test))]
         PageArgument::ZeroBasedIndex => vec![format!("--page-index={}", page.saturating_sub(1)), path_argument],
+
+        #[cfg(any(target_os = "linux", test))]
         PageArgument::OkularPage => vec![String::from("-p"), page.to_string(), path_argument],
+
+        #[cfg(any(target_os = "linux", test))]
         PageArgument::ZathuraPage => vec![String::from("-P"), page.to_string(), path_argument],
     })
 }
