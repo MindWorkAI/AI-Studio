@@ -50,4 +50,14 @@ public sealed class RetrievalTextContext : IRetrievalContext
     /// Optional link used when this context is displayed as a source reference.
     /// </summary>
     public string ReferenceLink { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The page this passage was found on, or null when it has none.
+    /// </summary>
+    /// <remarks>
+    /// Kept as a number rather than only inside the reference title: the AI is told the page so it
+    /// can say where an answer comes from, and a source has to name a page a program can be sent
+    /// to. A slide or a sheet has no page and leaves this empty.
+    /// </remarks>
+    public int? PageNumber { get; init; }
 }

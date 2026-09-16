@@ -3,20 +3,34 @@
 <MudDialog>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
-        <PathDropZone IsArea="@true">
+        <PathDropZone IsArea="@true"
+                      IdPrefix="document-check"
+                      OnPathsDropped="@this.DropCallback"
+                      Disabled="@this.IsZoneDisabled"
+                      Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("See how we load your file. Review the content before we process it further.")
         </MudJustifiedText>
-        
-        @if (this.Document is null)
+
+        @if (this.CanAttach)
         {
-            <ReadFileContent Text="@T("Load file")" FileContent="@this.FileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("You can drag another file into this window. We attach it right away and show it here.")
+            </MudJustifiedText>
+        }
+
+        @if (this.document is null)
+        {
+            <ReadFileContent Text="@T("Load file")" FileContent="@this.fileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
         }
         else
         {
+            @* Keys have to be unique among siblings, no matter the component: this field and the
+               tabs below both stand for the document and would otherwise collide on its path. *@
             <MudTextField
+                @key="@($"file-path-{this.document.FilePath}")"
                 T="string"
-                Text="@this.Document.FilePath"
+                Text="@this.document.FilePath"
                 AdornmentIcon="@Icons.Material.Filled.FileOpen"
                 Adornment="Adornment.Start"
                 Immediate="@true"
@@ -29,7 +43,10 @@
                 />
         }
         
-        @if (!this.Document?.Exists ?? false)
+        @* The frame shows where a dropped file would land. It is drawn only while this dialog can
+           take one, and keeps its width in both states so that nothing jumps during a drag: *@
+        <div class="@this.PreviewAreaClass(isDropTarget)">
+        @if (!this.document?.Exists ?? false)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
                 @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
@@ -60,11 +77,13 @@
                 </MudAlert>
             }
             
-            <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
-                @if (this.Document?.IsImage ?? false)
+            @* Keyed by the document: a switch from an image to a text file changes which panels
+               exist, and a leftover active panel would point at one that is gone. *@
+            <MudTabs @key="@($"preview-tabs-{this.document?.FilePath}")" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
+                @if (this.document?.IsImage ?? false)
                 {
                     <MudTabPanel Text="@T("Image View")" Icon="@Icons.Material.Filled.Image">
-                        <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.Document.FilePathAsUrl"/>
+                        <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.document.FilePathAsUrl"/>
                     </MudTabPanel>
                 }
                 else
@@ -102,6 +121,7 @@
                 }
             </MudTabs>
         }
+        </div>
         </PathDropZone>
     </DialogContent>
     <DialogActions>

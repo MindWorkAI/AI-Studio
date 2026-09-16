@@ -10,6 +10,7 @@ public sealed class DocumentManager
 {
     private StringBuilder? currentPageContent;
     private int? currentPageTokenCount;
+    private int? currentPageNumber;
 
     public ContentStreamPendingContent? AddPage(ContentStreamDocumentMetadata metadata, string? content, int? tokenCount, bool extractImages)
     {
@@ -36,9 +37,12 @@ public sealed class DocumentManager
 
             //
             // The count waits here together with the page it belongs to. Handing it out along with
-            // the page we just completed would size that page by the text of this one.
+            // the page we just completed would size that page by the text of this one. The page
+            // number waits for the same reason: it belongs to the page being buffered, not to the
+            // one leaving here.
             //
             this.currentPageTokenCount = tokenCount;
+            this.currentPageNumber = pageNumber;
             return completedPage;
         }
 
@@ -72,8 +76,10 @@ public sealed class DocumentManager
 
         var result = this.currentPageContent.ToString();
         var tokenCount = this.currentPageTokenCount;
+        var pageNumber = this.currentPageNumber;
         this.currentPageContent = null;
         this.currentPageTokenCount = null;
-        return string.IsNullOrWhiteSpace(result) ? null : new ContentStreamPendingContent(result, tokenCount);
+        this.currentPageNumber = null;
+        return string.IsNullOrWhiteSpace(result) ? null : new ContentStreamPendingContent(result, tokenCount, pageNumber);
     }
 }

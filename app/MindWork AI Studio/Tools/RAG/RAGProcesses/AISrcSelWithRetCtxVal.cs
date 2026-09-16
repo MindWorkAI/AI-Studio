@@ -104,6 +104,14 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
             if(selectedDataSources.Count == 0)
             {
+                //
+                // Reaching this point means the user never saw a source of theirs selected: the
+                // selection shows what survived the filters, so an empty result there is an empty
+                // selection on screen as well. Telling them per answer that their sources were
+                // lost would announce a loss they were never shown in the first place. This state
+                // belongs into the selection instead, which names the preselected sources it
+                // cannot use.
+                //
                 LOGGER.LogWarning("No data sources are selected. The RAG process is skipped.");
                 proceedWithRAG = false;
             }

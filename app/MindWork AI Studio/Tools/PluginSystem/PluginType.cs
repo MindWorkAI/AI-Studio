@@ -8,4 +8,5 @@ public enum PluginType
     ASSISTANT,
     CONFIGURATION,
     THEME,
+    MODEL,
 }

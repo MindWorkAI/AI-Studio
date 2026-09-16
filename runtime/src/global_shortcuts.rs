@@ -149,6 +149,12 @@ struct ShortcutManager {
 /// Stores the backend-specific resources required by an active shortcut.
 enum ActiveBinding {
     /// Stores a shortcut registered through the Tauri plugin.
+    ///
+    /// Never constructed on Linux: registration there goes through the XDG portal and falls back
+    /// to the focused window, so nothing ever reaches the Tauri plugin. The variant stays all the
+    /// same, because the code which releases, suspends, and restores bindings is shared across
+    /// platforms and would otherwise have to be cut in two for one unreachable case.
+    #[cfg_attr(target_os = "linux", allow(dead_code))]
     Tauri {
         /// Contains the registered shortcut in Tauri syntax.
         shortcut: String,
@@ -247,40 +253,38 @@ pub async fn register(
     }
 
     #[cfg(target_os = "linux")]
-    {
-        match prepare_portal_binding(&request, event_sender.clone()).await {
-            Ok(new_binding) => {
-                let effective_display_name = new_binding.effective_display_name();
-                replace_portal_binding(&app_handle, &mut manager, request.id, new_binding).await;
-                info!(Source = "XDG portal"; "Global shortcut '{}' is active through the desktop portal.", request.id);
-                return ShortcutResponse::success(ShortcutBackend::Portal, effective_display_name);
-            },
+    match prepare_portal_binding(&request, event_sender.clone()).await {
+        Ok(new_binding) => {
+            let effective_display_name = new_binding.effective_display_name();
+            replace_portal_binding(&app_handle, &mut manager, request.id, new_binding).await;
+            info!(Source = "XDG portal"; "Global shortcut '{}' is active through the desktop portal.", request.id);
+            ShortcutResponse::success(ShortcutBackend::Portal, effective_display_name)
+        },
 
-            Err(error) => {
-                let current_backend = manager.bindings.get(&request.id).map(ActiveBinding::backend);
-                if may_fallback_to_local(error.kind, current_backend) {
-                    warn!(Source = "XDG portal"; "Global shortcut registration failed; using the focused-window fallback: {}", error.message);
+        Err(error) => {
+            let current_backend = manager.bindings.get(&request.id).map(ActiveBinding::backend);
+            if may_fallback_to_local(error.kind, current_backend) {
+                warn!(Source = "XDG portal"; "Global shortcut registration failed; using the focused-window fallback: {}", error.message);
 
-                    if let Some(old_binding) = manager.bindings.remove(&request.id) {
-                        close_binding(&app_handle, request.id, old_binding).await;
-                    }
-
-                    manager.bindings.insert(request.id, ActiveBinding::Local { shortcut: request.shortcut.clone() });
-                    return ShortcutResponse::success(ShortcutBackend::Local, request.shortcut);
-                } else {
-                    let cancelled = error.kind == PortalFailureKind::Cancelled;
-                    if cancelled {
-                        warn!(Source = "XDG portal"; "Global shortcut configuration was cancelled by the user; preserving the active portal binding.");
-                    } else if error.kind == PortalFailureKind::Denied {
-                        warn!(Source = "XDG portal"; "Global shortcut permission was denied; preserving the active portal binding: {}", error.message);
-                    } else {
-                        error!(Source = "XDG portal"; "Global shortcut registration failed; preserving the active portal binding: {}", error.message);
-                    }
-
-                    return ShortcutResponse::error(error.message, ShortcutBackend::Portal, cancelled);
+                if let Some(old_binding) = manager.bindings.remove(&request.id) {
+                    close_binding(&app_handle, request.id, old_binding).await;
                 }
-            },
-        }
+
+                manager.bindings.insert(request.id, ActiveBinding::Local { shortcut: request.shortcut.clone() });
+                ShortcutResponse::success(ShortcutBackend::Local, request.shortcut)
+            } else {
+                let cancelled = error.kind == PortalFailureKind::Cancelled;
+                if cancelled {
+                    warn!(Source = "XDG portal"; "Global shortcut configuration was cancelled by the user; preserving the active portal binding.");
+                } else if error.kind == PortalFailureKind::Denied {
+                    warn!(Source = "XDG portal"; "Global shortcut permission was denied; preserving the active portal binding: {}", error.message);
+                } else {
+                    error!(Source = "XDG portal"; "Global shortcut registration failed; preserving the active portal binding: {}", error.message);
+                }
+
+                ShortcutResponse::error(error.message, ShortcutBackend::Portal, cancelled)
+            }
+        },
     }
 
     #[cfg(not(target_os = "linux"))]

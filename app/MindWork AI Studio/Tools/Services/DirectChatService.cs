@@ -50,21 +50,29 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (dataSourceOptions is null)
             return new(null, dataSourceOptionsResult.ErrorMessage);
 
-        Guid workspaceId;
-        try
+        //
+        // A launcher that names no workspace wants the same chat the chat page starts on its own:
+        // one that belongs nowhere, is kept among the temporary chats, and disappears with them. The
+        // empty workspace ID is what says so, here as everywhere else in the app.
+        //
+        var workspaceId = Guid.Empty;
+        if (!launchConfiguration.OpensTemporaryChat)
         {
-            workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(launchConfiguration.WorkspaceName);
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
-            return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
-        }
+            try
+            {
+                workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(launchConfiguration.WorkspaceName);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
+                return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
+            }
 
-        if (workspaceId == Guid.Empty)
-        {
-            logger.LogWarning("Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
-            return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
+            if (workspaceId == Guid.Empty)
+            {
+                logger.LogWarning("Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
+                return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
+            }
         }
 
         //

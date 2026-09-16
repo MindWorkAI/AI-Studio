@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::convert::Infallible;
 use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
-use crate::pdfium::PdfiumInit;
+use crate::pdfium::{with_pdfium_access, PdfiumInit};
 use crate::prompt_injection::{Finding as PromptInjectionFinding, Sanitizer};
 use async_stream::stream;
 use axum::extract::Query;
@@ -827,6 +827,16 @@ fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
     }
 }
 
+/// Whether the content of a file is a program rather than something to read.
+///
+/// The extension is not asked: recognizing a program by its content is the whole point, because a
+/// program which carries a harmless extension is exactly the case worth stopping. Answering this
+/// here keeps one place in charge of what counts as a program — the reader which refuses to read
+/// one, and the endpoint which refuses to hand one to the system.
+pub(crate) fn is_executable_content(fmt: FileFormat) -> bool {
+    matches!(route_from_content(fmt), Some(ExtractionRoute::Executable))
+}
+
 async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
@@ -1139,7 +1149,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
                 return;
             }
         };
-        let doc = match pdfium.load_pdf_from_file(&path, None) {
+        let doc = match with_pdfium_access(|| pdfium.load_pdf_from_file(&path, None)) {
             Ok(document) => document,
             Err(e) => {
                 let _ = tx.blocking_send(Err(classify_pdf_load_error(&e).into()));
@@ -1152,11 +1162,27 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
         let mut number_of_failed_pages = 0;
         let mut receiver_gone = false;
 
-        for (num_page, page) in doc.pages().iter().enumerate() {
-            let page_number = num_page + 1;
+        //
+        // One page at a time, rather than the whole document: somebody else may be reading a PDF
+        // of their own, and holding PDFium for a thousand-page manual would make them wait for all
+        // of it. Between two pages, their pages get their turn.
+        //
+        let page_count = with_pdfium_access(|| doc.pages().len());
+
+        for page_index in 0..page_count {
+            let page_number = page_index as usize + 1;
             number_of_pages = page_number;
 
-            let content = match page.text().map(|t| t.all()) {
+            //
+            // The page and its text are opened and closed inside this call. Letting them outlive
+            // it would close them without PDFium to ourselves, which is a call like any other.
+            //
+            let extracted = with_pdfium_access(|| doc
+                .pages()
+                .get(page_index)
+                .and_then(|page| page.text().map(|text| text.all())));
+
+            let content = match extracted {
                 Ok(text_content) => text_content,
                 Err(e) => {
                     //
@@ -1193,23 +1219,29 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
 
         if receiver_gone {
             debug!("The consumer stopped reading the PDF stream of '{path}' after {number_of_pages} page(s).");
-            return;
+        } else {
+            debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
+
+            //
+            // Without this marker, a PDF without a text layer and a broken extraction both arrive
+            // as an empty document, and the AI would answer as if the file had no content at all.
+            //
+            if number_of_characters == 0 {
+                warn!("No text could be extracted from '{path}': {number_of_pages} page(s), {number_of_failed_pages} failed page(s). The PDF may consist of scanned images without a text layer.");
+
+                let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                    ExtractionErrorCode::NoTextExtracted,
+                    format!("No text could be extracted from {number_of_pages} page(s). The PDF may consist of scanned images without a text layer."),
+                ))));
+            }
         }
 
-        debug!("Extracted {number_of_characters} readable character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
-
         //
-        // Without this marker, a PDF without a text layer and a broken extraction both arrive as
-        // an empty document, and the AI would answer as if the file had no content at all.
+        // Closing the document calls PDFium as well, so it waits for its turn like everything else.
+        // This is why the code above says what it has to say instead of returning early: the
+        // document has to be closed on every way out of here.
         //
-        if number_of_characters == 0 {
-            warn!("No text could be extracted from '{path}': {number_of_pages} page(s), {number_of_failed_pages} failed page(s). The PDF may consist of scanned images without a text layer.");
-
-            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
-                ExtractionErrorCode::NoTextExtracted,
-                format!("No text could be extracted from {number_of_pages} page(s). The PDF may consist of scanned images without a text layer."),
-            ))));
-        }
+        with_pdfium_access(move || drop(doc));
     });
 
     Ok(Box::pin(ReceiverStream::new(rx)))

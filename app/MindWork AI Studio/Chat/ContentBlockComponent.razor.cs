@@ -123,6 +123,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private IReadOnlyList<MessageTable> cachedMessageTables = [];
     private char csvSeparator = ',';
     private ElementReference mathContentContainer;
+    private SourcesList? sourcesList;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
     private bool isDisposed;
@@ -732,7 +733,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             //
             if (format.UsesPandoc())
                 await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
-            else if (this.Content.TryGetMarkdownText(out var markdown))
+            else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
         }
         catch (ArgumentOutOfRangeException e)
@@ -813,6 +814,25 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
         this.Content.FileAttachments = [.. result];
+    }
+
+    /// <summary>
+    /// Whether the sources of this block stand below the answer, where the counter can take the reader.
+    /// </summary>
+    /// <remarks>
+    /// The same condition the block itself renders the list under. While an answer is still coming
+    /// in, its sources may already be known, but there is nothing on the page yet to scroll to --
+    /// so the counter says it cannot do anything rather than doing nothing when clicked.
+    /// </remarks>
+    private bool HasSourcesToShow => this.Content is { InitialRemoteWait: false, IsStreaming: false, Sources.Count: > 0 };
+
+    /// <summary>
+    /// Takes the reader from the source counter down to the sources themselves.
+    /// </summary>
+    private async Task ShowSources()
+    {
+        if (this.sourcesList is not null)
+            await this.sourcesList.ScrollIntoViewAsync();
     }
 
     protected override async ValueTask DisposeResourcesAsync()

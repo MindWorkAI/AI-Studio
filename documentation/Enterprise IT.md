@@ -379,7 +379,7 @@ One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limit
 
 ## Deploying other plugin types
 
-A deployment is not limited to a configuration, even though the directory it lands in is called `.config`. Your configuration server serves one archive per configuration ID, and you may use it for every kind of plugin: assistant plugins today, further types such as tool plugins as they arrive. Read the directory name as "centrally configured and rolled out", not as "configurations only".
+A deployment is not limited to a configuration, even though the directory it lands in is called `.config`. Your configuration server serves one archive per configuration ID, and you may use it for every kind of plugin: assistant plugins and model plugins today, further types such as tool plugins as they arrive. Read the directory name as "centrally configured and rolled out", not as "configurations only".
 
 Put each plugin into its own subdirectory of the archive:
 
@@ -758,6 +758,74 @@ The user's key follows the same "withdrawing a configuration" philosophy as ever
 document: if your configuration stops offering this provider, AI Studio removes the provider from
 the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
 provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
+
+## Describing your own models
+
+AI Studio knows what the models of the large vendors can do, and reads that knowledge from their
+model cards. It cannot know what your own models can do: a fine-tune of your own, a model behind an
+internal name, or an engine you configured differently from what the model card says. Two places let
+you say it, and they answer different questions.
+
+**One installation of a model: `CapabilityOverrides` on the provider.** Use this when you want to
+correct a detail for one provider entry -- an endpoint which accepts no images, or a context window
+your operator configured smaller than the model card advertises. It sits right in the provider entry
+of your configuration plugin:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Research cluster",
+    ["UsedLLMProvider"] = "SELF_HOSTED",
+    -- ...
+    ["CapabilityOverrides"] = {
+        ["MULTIPLE_IMAGE_INPUT"] = false,
+        ["CONTEXT_WINDOW"] = 32768,
+        ["MAX_IMAGES_PER_REQUEST"] = 4,
+    },
+}
+```
+
+Every key is optional and contradicts only what it names; everything else keeps the answer AI Studio
+works out by itself. The full list of keys is documented in
+`app/MindWork AI Studio/Plugins/configuration/plugin.lua`. Two notes worth knowing:
+
+- **`CONTEXT_WINDOW` feeds the token counter below the chat input.** A wrong number there misleads
+  your users about how much room they have left in a conversation.
+- **Your users can set the same values themselves**, in the expert settings of a provider. For a
+  provider you deploy, the fields show your numbers and stay locked.
+
+**A model wherever it is reached: a model plugin.** Use this when you run a model of your own and
+want AI Studio to treat it correctly everywhere it appears, rather than correcting one provider entry
+at a time. A model plugin is its own plugin with `TYPE = "MODEL"` and an ID of its own, deployed in
+its own subdirectory of your configuration archive, exactly like an assistant plugin -- see
+[Deploying other plugin types](#deploying-other-plugin-types).
+
+`app/MindWork AI Studio/Plugins/models/plugin.lua` is a complete, commented example. In short, each
+entry names the model names it describes and then states what those models can do: the capabilities,
+how the model reasons, what kind of model it is, its context window, its tokenizer, and how many
+images it takes.
+
+Three things decide whether it does what you expect:
+
+- **An entry replaces everything AI Studio would otherwise say about the names it matches.** Write it
+  as if AI Studio had never heard of these models: `CAPABILITIES` is therefore required, and it has
+  to name the APIs the model answers through. This is also why a single correction belongs in
+  `CapabilityOverrides` instead.
+- **Write the pattern the way a model name is written**: lower case, hyphens between the parts. A
+  pattern written differently can never match anything and is rejected with a message saying so.
+- **Name the page and the day.** `SOURCE_URL` and `SOURCE_CHECKED_ON` are required, for the same
+  reason AI Studio's own model rules carry them: your entry will outlive whoever wrote it, and a
+  statement nobody can check ages into a wrong answer.
+
+A model plugin only ever *describes*. It names no server, carries no API key, and runs no code,
+which is why it needs neither an approval nor a security audit the way an assistant plugin does. The
+same path-based authority applies as to everything else you deploy: what arrives under your
+configuration ID belongs to your organization, and users can neither edit nor remove it. AI Studio
+offers users no way to import a model plugin of their own; should one be placed in the local plugin
+directory by hand, anything your organization deployed wins over it.
+
+Where two of your own model plugins describe exactly the same model names, the optional `PRIORITY`
+decides. Plugins describing different models never get in each other's way, and both are used.
 
 ## Giving providers your own icon
 

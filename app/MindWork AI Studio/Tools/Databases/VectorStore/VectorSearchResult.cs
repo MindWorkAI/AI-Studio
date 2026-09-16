@@ -19,6 +19,4 @@ public sealed record VectorSearchResult(
     string Fingerprint,
     string CreationUtc,
     string LastWriteUtc,
-    string EmbeddedAtUtc,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    string EmbeddedAtUtc);

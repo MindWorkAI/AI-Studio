@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
 using AIStudio.Components;
+using AIStudio.Models;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.Rust;
@@ -163,6 +165,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
     private ProviderCapabilityOverrides capabilityOverrides = new();
+
+    /// <summary>
+    /// The culture the numbers of this dialog are written in.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio's language is a setting of its own and does not move the thread's culture along
+    /// with it. Without this, a German who chose German would read a context window of 131,072
+    /// tokens as a number a thousand times smaller.
+    /// </remarks>
+    private CultureInfo currentCulture = CultureInfo.InvariantCulture;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -226,7 +238,11 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     {
         // Call the base initialization first so that the I18N is ready:
         await base.OnInitializedAsync();
-        
+
+        // The numbers of the expert settings are written the way the chosen language writes them:
+        var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        this.currentCulture = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
+
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
@@ -663,33 +679,29 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (alwaysReasoning is null && optionalReasoning is null && reasoningByDefault is null)
             return ReasoningOverrideMode.AUTOMATIC;
 
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
-
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
+        return ModeOf(this.GetCurrentModelProfile().Reasoning);
     }
 
-    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode()
+    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode() => ModeOf(this.GetAutomaticModelProfile().Reasoning);
+
+    /// <summary>
+    /// Which of the choices in this dialog a reasoning state is.
+    /// </summary>
+    /// <remarks>
+    /// The five entries of the list were always this one answer, only written as three flags and
+    /// read back by asking for them in the right order. Now they are the same four words plus
+    /// "automatic", which is the absence of a statement rather than a state a model can be in.
+    /// </remarks>
+    /// <param name="reasoning">How the model reasons.</param>
+    /// <returns>The choice standing for it.</returns>
+    private static ReasoningOverrideMode ModeOf(ReasoningSupport reasoning) => reasoning switch
     {
-        var capabilities = this.GetAutomaticModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
+        ReasoningSupport.ALWAYS => ReasoningOverrideMode.ALWAYS_ON,
+        ReasoningSupport.ON_BY_DEFAULT => ReasoningOverrideMode.ON_BY_DEFAULT,
+        ReasoningSupport.OPTIONAL => ReasoningOverrideMode.CAN_BE_ENABLED,
 
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
-    }
+        _ => ReasoningOverrideMode.NO_REASONING,
+    };
 
     private void SetReasoningOverrideMode(ReasoningOverrideMode mode)
     {
@@ -746,11 +758,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private bool HasCapabilityOverride(Capability capability) => this.capabilityOverrides.GetOverride(capability) is not null;
 
-    private bool IsCapabilityEnabled(Capability capability)
-    {
-        var capabilities = this.GetCurrentModelCapabilities();
-        return capabilities.Contains(capability);
-    }
+    private bool IsCapabilityEnabled(Capability capability) => this.GetCurrentModelProfile().Has(capability);
 
     private string GetCapabilityEffectiveLabel(Capability capability)
     {
@@ -761,21 +769,107 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return isEnabled ? T("Enabled (Auto)") : T("Disabled (Auto)");
     }
 
-    private List<Capability> GetCurrentModelCapabilities()
+    /// <summary>
+    /// States how many tokens this installation reads and writes.
+    /// </summary>
+    /// <param name="tokens">The number of tokens, or null to go back to the automatic answer.</param>
+    private void SetContextWindowOverride(int? tokens) => this.capabilityOverrides = this.capabilityOverrides with { ContextWindowTokens = tokens };
+
+    /// <summary>
+    /// States how many images one message may carry here.
+    /// </summary>
+    /// <param name="images">The number of images, or null to go back to the automatic answer.</param>
+    private void SetMaxImagesPerMessageOverride(int? images) => this.capabilityOverrides = this.capabilityOverrides with { MaxImagesPerMessage = images };
+
+    /// <summary>
+    /// States how many images one request may carry here.
+    /// </summary>
+    /// <param name="images">The number of images, or null to go back to the automatic answer.</param>
+    private void SetMaxImagesPerRequestOverride(int? images) => this.capabilityOverrides = this.capabilityOverrides with { MaxImagesPerRequest = images };
+
+    /// <summary>
+    /// What an empty window field shows.
+    /// </summary>
+    /// <remarks>
+    /// Written without separators, unlike the number in the helper text next to it: this one stands
+    /// inside the field a person types into, and what they see there has to be what they may type.
+    /// </remarks>
+    private string AutomaticContextWindowPlaceholder
     {
-        var currentProviderSettings = this.CreateProviderSettings();
-        return currentProviderSettings.GetModelCapabilities();
+        get
+        {
+            var context = this.GetAutomaticModelProfile().Context;
+            return context.IsKnown ? context.DefaultTokens.ToString(CultureInfo.InvariantCulture) : string.Empty;
+        }
     }
 
-    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.GetSelectedModel());
+    /// <summary>
+    /// What an empty image field shows.
+    /// </summary>
+    /// <param name="limit">The limit the rules worked out, if any.</param>
+    /// <returns>The number, or nothing where nobody stated one.</returns>
+    private string AutomaticImageLimitPlaceholder(int? limit) => limit?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+    /// <summary>
+    /// What the window field says below itself.
+    /// </summary>
+    /// <remarks>
+    /// It names the automatic answer rather than the one in effect, because the number in effect is
+    /// already in the field. What a person cannot otherwise see is what they would go back to.
+    /// </remarks>
+    private string ContextWindowHelperText
+    {
+        get
+        {
+            var context = this.GetAutomaticModelProfile().Context;
+            return context.IsKnown
+                ? string.Format(T("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
+                : T("Nobody has stated a window for this model. Left empty, the chat counts the tokens of a conversation without saying what they may grow to.");
+        }
+    }
+
+    /// <summary>
+    /// What the two image fields say above themselves.
+    /// </summary>
+    /// <remarks>
+    /// The number in effect, not the two the person typed: which of them decides is the one thing
+    /// two fields cannot show on their own, and it is the one the chat and the Visual Briefing go by.
+    /// </remarks>
+    private string ImageLimitsEffectiveLabel
+    {
+        get
+        {
+            var allowed = this.GetCurrentModelProfile().Images.MaxInOneMessage;
+            return allowed is { } count
+                ? string.Format(T("At most {0} images at once."), count.ToString("N0", this.currentCulture))
+                : T("No limit known, so AI Studio does not stop anybody from attaching more.");
+        }
+    }
+
+    /// <summary>
+    /// What the model can do as this provider instance is configured, the person's own settings included.
+    /// </summary>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetCurrentModelProfile() => this.CreateProviderSettings().GetModelProfile();
+
+    /// <summary>
+    /// What holds without anybody switching anything, which is what each field shows as its automatic answer.
+    /// </summary>
+    /// <remarks>
+    /// The rules, plus whatever the provider itself stated when the model list was loaded a moment
+    /// ago. A self-hosted engine is the case this matters for: it reports the window it was started
+    /// with, and that is the number a person gets by leaving the field below empty.
+    /// </remarks>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetAutomaticModelProfile() => this.CreateProviderSettings().GetAutomaticModelProfile();
 
     private string GetCurrentModelApiLabel()
     {
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.RESPONSES_API))
+        var profile = this.GetCurrentModelProfile();
+        if (profile.Has(Capability.RESPONSES_API))
             return "Responses API";
 
-        if (capabilities.Contains(Capability.CHAT_COMPLETION_API))
+        if (profile.Has(Capability.CHAT_COMPLETION_API))
             return "Chat Completions API";
 
         return "Unknown";

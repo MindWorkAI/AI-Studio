@@ -80,7 +80,21 @@ Notes:
   troubleshooting, no matter whether it came from the MCP server or from the user.
 
 ### Running Tests
-Currently, no automated test suite exists in the repository.
+The .NET tests live in `app/Tests`, a single NUnit project that holds the tests of every area; each
+area gets its own folder and namespace below it rather than a project of its own. Agents run them
+through the IDE for the same reason they build there:
+
+```
+mcp__rider__execute_terminal_command  command: "cd app/Tests && dotnet test"
+```
+
+An assembly-wide `[SetUpFixture]` in `app/Tests/TestHost.cs` fills the static application state that
+the app itself only fills while starting up, `Program.LOGGER_FACTORY` above all. Types that
+initialize a static logger from it — `Settings.Provider` among them — otherwise die in their type
+initializer before the first assertion. Prefer writing new code so that it does not reach for such
+statics at all.
+
+The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP server.
 
 ## Architecture Details
 
@@ -141,7 +155,8 @@ Key structure:
 Plugins are written in Lua and provide:
 - **Language plugins** - I18N translations (e.g., German language pack)
 - **Configuration plugins** - Enterprise IT configurations for centrally managed providers, settings
-- **Future:** Assistant plugins for custom assistants
+- **Assistant plugins** - custom assistants and direct-chat launchers, subject to approval or a local security audit
+- **Model plugins** - what an organization's own models can do, see `documentation/Models.md`
 
 **Example configuration plugin:** `app/MindWork AI Studio/Plugins/configuration/plugin.lua`
 
@@ -176,6 +191,21 @@ When adding, changing, or removing model-driven tools, keep these parts in sync:
 - `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document each setting's field name, meaning, and data type. Tool settings need no code to be centrally manageable: an organization addresses them by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`.
 
 Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
+
+## Model Capabilities
+
+**Documentation:** `documentation/Models.md`
+
+What a model can do is answered in `app/MindWork AI Studio/Models/`, through `provider.GetModelProfile()`. Never ask `ModelRegistry` directly from a component: the extension method is what adds the expert settings and what a provider's model list reported, and the registry alone answers neither.
+
+When adding, changing, or removing model knowledge, keep these parts in sync:
+- `app/MindWork AI Studio/Models/<Vendor>/<Family>.cs` for the family itself. Creating the class is enough — the source generator in `app/SourceGeneratedMappings/` collects every non-abstract `ModelFamily` and `IModelHost` at compile time, so there is no registration list. Do not add reflection here; `PublishTrimmed` is on.
+- `app/Tests/Models/Corpus/` for the model IDs the family covers, marked as either unchanged or expected to change. A porting difference which nobody declared is what the corpus exists to catch.
+- `app/MindWork AI Studio/Models/Kinds/` when the change is about what kind of model something is, rather than what it can do. These are ordinary rules of the same engine.
+- `app/MindWork AI Studio/Models/Hosting/Hosts/` when a provider wraps model names or cannot pass an API through. A host unwraps and trims the transport; it states nothing about the model itself.
+- `app/MindWork AI Studio/Plugins/models/plugin.lua` when a new field can be declared by an organization, and `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when it can be overridden per provider instance.
+
+Rules are never tried in order: specificity is computed from the rule, and two rules of equal specificity on one name fail the test suite. State how a model reasons with `Reasoning(...)` — the three reasoning capabilities are override vocabulary and must never appear in a profile. Every family and every host has to name the page it was read from and the day somebody read it; `dotnet run verify-models` reports the ones which have gone stale.
 
 ## RAG (Retrieval-Augmented Generation)
 

@@ -358,6 +358,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - Write description as one sentence that says which chat this tile opens and what it is for. Do not describe an input form, a prompt, or a submit button, because a launcher has none.
           - Write all three texts in the language of the approved draft.
           - Do not mention workspace names, provider names, profile names, template names, data source IDs, or tool IDs in any of the three texts.
+          - When the chat launch names no workspace, the tile opens a chat that belongs to no workspace and disappears again. You may say the chat is temporary, but never invent a workspace name.
           - Do not return Markdown, code fences, explanations, or text outside the JSON object.
           """;
 
@@ -512,6 +513,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
               - Explain omitted provider, profile, template, data-source, or tool values as using the normal chat defaults.
               - In the {{TB("Tools")}} section, say what the preselected tools let the chat do and that users may change the selection once the chat is open.
               - Explain the empty profile/template GUID as explicitly selecting no profile/template.
+              - When the ChatLaunch names no workspace, write in the {{TB("Workspace")}} section that the tile opens a chat without a workspace: it is kept among the temporary chats and is deleted by the maintenance the user configured for them. Never invent a workspace name.
               - Do not propose UI components, submit behavior, BuildPrompt, or a plugin SystemPrompt for a chat launcher.
               """;
 
@@ -620,10 +622,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - Keep TYPE = "ASSISTANT".
           - Keep the assistant locally managed. DEPLOYED_USING_CONFIG_SERVER must not be true.
           {{builderMetadataRule}}
-          - Set assistant.kind to "CHAT_LAUNCHER" exactly when the revised ASSISTANT table uses LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME"; otherwise set it to "FORM".
+          - Set assistant.kind to "CHAT_LAUNCHER" exactly when the revised ASSISTANT table uses LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME" or "OPEN_TEMPORARY_CHAT"; otherwise set it to "FORM".
           - For a form assistant, include system_prompt, submit_text, and allow_ai_studio_profiles in the JSON assistant object and omit launch. Include tool_ids exactly when the revised ASSISTANT table carries ToolIds.
           - Change ASSISTANT.ToolIds only when the requested change asks for it. Use only tool IDs from the "Available tools" list in the plugin context for tools you add; never invent an ID. Drop the field entirely rather than writing an empty list.
-          - For a chat launcher, include launch with the exact WorkspaceName and optional ProviderId, ProfileId, ChatTemplateId, DataSourceIds, and ToolIds values from the revised ASSISTANT table; omit system_prompt, submit_text, and allow_ai_studio_profiles.
+          - For a chat launcher, include launch with the optional ProviderId, ProfileId, ChatTemplateId, DataSourceIds, and ToolIds values from the revised ASSISTANT table; omit system_prompt, submit_text, and allow_ai_studio_profiles. Include workspace_name with the exact WorkspaceName exactly when the table uses OPEN_WORKSPACE_CHAT_BY_NAME, and omit it for OPEN_TEMPORARY_CHAT.
+          - Keep the LaunchBehavior a launcher already has unless the requested change asks to add or drop its workspace. OPEN_WORKSPACE_CHAT_BY_NAME requires a WorkspaceName, and OPEN_TEMPORARY_CHAT must not carry one.
           - A chat launcher must not include SystemPrompt, SubmitText, AllowProfiles, BuildPrompt, or UI in its ASSISTANT table.
           - Preserve an empty profile or template GUID when it explicitly means no profile or no template. Do not emit empty provider or data-source GUIDs.
           - Preserve existing behavior unless the requested change explicitly modifies it.
@@ -757,8 +760,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (launch is null)
             return true;
 
-        if (string.IsNullOrWhiteSpace(launch.WorkspaceName) ||
-            !IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||
+        //
+        // No workspace name is a choice rather than a gap: the launcher then opens a chat that
+        // belongs to no workspace. Only the remaining fields have a shape to check.
+        //
+        if (!IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||
             !IsOptionalGuid(launch.ProfileId, allowEmpty: true) ||
             !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
             return false;

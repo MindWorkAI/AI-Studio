@@ -41,8 +41,8 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
-            this.Provider, chatModel,
-            
+            this.CreateSettingsProvider(chatModel),
+
             // Anthropic-specific role mapping:
             role => role switch
             {
@@ -81,7 +81,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
+        currentAssistantContent?.BeginToolRun();
 
         var providerSettings = this.CreateSettingsProvider(chatModel);
         var runnableTools = toolRegistry is null

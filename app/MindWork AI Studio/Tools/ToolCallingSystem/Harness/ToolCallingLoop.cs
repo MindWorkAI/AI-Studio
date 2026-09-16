@@ -114,6 +114,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 // The model's turn has to be recorded before its results, or the provider sees
                 // results for a turn it does not know about:
                 adapter.RecordAssistantTurn();
+                await context.PublishPendingToolConversationAsync(adapter);
 
                 foreach (var call in round.Calls)
                 {
@@ -124,6 +125,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                         toolResultCharacterCount += invalidContent.Length;
                         await context.AddToolInvocationAsync(invalidTrace);
                         adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
+                        await context.PublishPendingToolConversationAsync(adapter);
                         continue;
                     }
 
@@ -135,6 +137,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     if (callsUnavailableInstruction is not null)
                     {
                         adapter.RecordToolResult(call.CallId, callsUnavailableInstruction);
+                        await context.PublishPendingToolConversationAsync(adapter);
                         continue;
                     }
 
@@ -156,6 +159,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     // A blocked call counts as a failure towards the model as much as an errored
                     // one does: in both cases it did not get the data it asked for.
                     adapter.RecordToolResult(call.CallId, toolContent, trace.Status is not ToolInvocationTraceStatus.SUCCESS);
+                    await context.PublishPendingToolConversationAsync(adapter);
                 }
             }
             finally

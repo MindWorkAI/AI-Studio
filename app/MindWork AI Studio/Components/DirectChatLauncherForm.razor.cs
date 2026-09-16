@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// The selection a direct chat launcher needs: the workspace its chat is created in, and the
-/// provider, profile, chat template, and data sources that chat starts with.
+/// The selection a direct chat launcher needs: the workspace its chat is created in — or no
+/// workspace, for a disappearing chat — and the provider, profile, chat template, and data sources
+/// that chat starts with.
 /// </summary>
 /// <remarks>
 /// The Assistant Builder uses this form to describe a launcher it is about to generate, while the
@@ -15,7 +16,8 @@ public partial class DirectChatLauncherForm : MSGComponentBase
 {
     /// <summary>
     /// The name of the workspace the launcher opens its chat in. The workspace is created when it
-    /// does not exist yet, hence this is a free-text field and not a workspace ID.
+    /// does not exist yet, hence this is a free-text field and not a workspace ID. An empty name is
+    /// a choice of its own: the launcher then opens a disappearing chat.
     /// </summary>
     [Parameter]
     public string WorkspaceName { get; set; } = string.Empty;
@@ -75,11 +77,9 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     public EventCallback<HashSet<string>> ToolIdsChanged { get; set; }
 
     /// <summary>
-    /// Validates the workspace name. The hosts differ here: the Builder requires a name only while
-    /// its launcher switch is on, whereas the settings dialog always requires one.
+    /// Whether the launcher currently describes a chat without a workspace.
     /// </summary>
-    [Parameter]
-    public Func<string, string?>? ValidateWorkspaceName { get; set; }
+    private bool OpensTemporaryChat => string.IsNullOrWhiteSpace(this.WorkspaceName);
 
     private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
 

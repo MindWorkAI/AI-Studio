@@ -32,7 +32,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -79,7 +79,12 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["grok-"], apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(n => !n.Id.Contains("-image", StringComparison.OrdinalIgnoreCase))]
+            //
+            // Asking what a model is made for rather than testing its name for a word. The word was
+            // "-image", which said nothing about grok-imagine-video: that one made films and stood
+            // in the list of things to chat with.
+            //
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
         };
     }
 

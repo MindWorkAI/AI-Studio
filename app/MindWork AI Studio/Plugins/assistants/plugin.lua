@@ -444,7 +444,8 @@ ASSISTANT = {
     },
 }
 
--- direct chat launcher example; form-only fields and UI are not used in this mode:
+-- direct chat launcher example opening the chat in a workspace; form-only fields and UI are not
+-- used in this mode:
 ASSISTANT = {
     ["Title"] = "<main title of chat launcher>",
     ["Description"] = "<description of the chat that will be opened>",
@@ -463,4 +464,16 @@ ASSISTANT = {
     ["ToolIds"] = {
         "<optional tool ID>",
     },
+}
+
+-- direct chat launcher example without a workspace: the tile opens a disappearing chat, which is
+-- kept apart from the workspaces and cleaned up according to the workspace maintenance settings.
+-- A WorkspaceName next to this launch behavior is an error instead of being ignored, so a leftover
+-- name cannot silently change the kind of chat the tile opens. Every optional field of the example
+-- above works here as well:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_TEMPORARY_CHAT",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Models;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -48,10 +49,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
     }
 
-    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
         ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
-        _ => base.GetProviderRequestFailureUserMessage(failureReason),
+        _ => base.GetProviderRequestFailureUserMessage(failureReason, contextWindow),
     };
 
     /// <inheritdoc />
@@ -92,10 +93,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         // Read the model capabilities. Through the settings provider, so that the user's expert
         // capability overrides apply:
         var providerSettings = this.CreateSettingsProvider(chatModel);
-        var modelCapabilities = providerSettings.GetModelCapabilities();
+        var modelProfile = providerSettings.GetModelProfile();
         
         // Check if we are using the Responses API or the Chat Completion API:
-        var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
+        var usingResponsesAPI = modelProfile.Has(Capability.RESPONSES_API);
         
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
@@ -115,7 +116,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
         var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
                                  ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
-        IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
+        IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
             ? [ ProviderTools.WEB_SEARCH ]
             : [];
         
@@ -133,8 +134,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                async (systemPrompt, apiParameters, tools) =>
                                {
                                    var messages = await chatThread.Blocks.BuildMessagesAsync(
-                                       this.Provider,
-                                       chatModel,
+                                       providerSettings,
                                        role => role switch
                                        {
                                            ChatRole.USER => "user",
@@ -176,7 +176,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
+        currentAssistantContent?.BeginToolRun();
 
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
             ? []
@@ -198,7 +198,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
-            this.Provider, chatModel,
+            providerSettings,
             role => role switch
             {
                 ChatRole.USER => "user",
@@ -368,25 +368,25 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, model => model.IsImageModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, model => model.IsTranscriptionModel(this.Provider), apiKeyProvisional, token);
     }
     
     #endregion

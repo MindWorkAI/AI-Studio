@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
@@ -14,18 +15,39 @@ public sealed class HTMLParser
     private const int DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
     /// <summary>
-    /// The HTML to Markdown converter, built once from a fixed configuration.
+    /// The fixed configuration every HTML to Markdown conversion runs with.
     /// </summary>
     /// <remarks>
-    /// Shared rather than built per call: the configuration never changes, and one web search
-    /// converts a page per result.
+    /// This one is shared, because it is only ever read: a configuration holds no counters and no
+    /// collections which get written to. The converters reading it are not shared, see the pool
+    /// below.
     /// </remarks>
-    private static readonly Converter MARKDOWN_CONVERTER = new(new Config
+    private static readonly Config MARKDOWN_CONFIG = new()
     {
         UnknownTags = Config.UnknownTagsOption.Bypass,
         RemoveComments = true,
         SmartHrefHandling = true,
-    });
+    };
+
+    /// <summary>
+    /// The converters not currently in use, kept so that the reflection in their constructor does
+    /// not run for every page.
+    /// </summary>
+    /// <remarks>
+    /// One converter per conversion rather than one for all of them: a converter tracks the
+    /// ancestors of the node it is at in state of its own, updates that state at every single node,
+    /// and does so without any synchronization. A web search converts up to four pages at the same
+    /// time, which let those conversions tear each other's ancestor lists apart — sometimes loudly,
+    /// as an index outside the bounds of an array, and sometimes quietly, as a list indented by the
+    /// depth another page happened to be at.<br/><br/>
+    /// Which converter gets which page does not matter, so the pool needs no key: that ancestor
+    /// state is entered and left in pairs around every node, which leaves it empty once a
+    /// conversion returns. Nothing of a page outlives its own conversion. A key would, in fact, do
+    /// harm — two conversions of the same page at the same time would share one converter again.
+    /// <br/><br/>
+    /// The pool holds no more converters than are ever converting at once, which is a handful.
+    /// </remarks>
+    private static readonly ConcurrentBag<Converter> CONVERTER_POOL = [];
 
     /// <summary>
     /// Loads a web page.
@@ -238,5 +260,21 @@ public sealed class HTMLParser
     /// </summary>
     /// <param name="html">The HTML content to parse.</param>
     /// <returns>The converted Markdown content.</returns>
-    public static string ParseToMarkdown(string html) => MARKDOWN_CONVERTER.Convert(html);
+    /// <remarks>
+    /// The converter returns to the pool only after it converted without throwing, and that is
+    /// deliberately not done in a finally block: a conversion which throws leaves the ancestors it
+    /// entered behind, because the library does not unwind them itself. Such a converter would
+    /// count those ancestors into every page it is handed afterwards, so it is left to the garbage
+    /// collector rather than passed on.
+    /// </remarks>
+    public static string ParseToMarkdown(string html)
+    {
+        if (!CONVERTER_POOL.TryTake(out var converter))
+            converter = new Converter(MARKDOWN_CONFIG);
+
+        var markdown = converter.Convert(html);
+
+        CONVERTER_POOL.Add(converter);
+        return markdown;
+    }
 }

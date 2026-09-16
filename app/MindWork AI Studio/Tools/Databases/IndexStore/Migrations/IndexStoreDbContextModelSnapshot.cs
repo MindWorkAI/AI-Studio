@@ -80,15 +80,6 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("chunk_count");
 
-            entity.Property<string>("ConfidenceLevel")
-                .IsRequired()
-                .HasColumnType("TEXT")
-                .HasColumnName("confidence_level");
-
-            entity.Property<int>("ConfidenceLevelRank")
-                .HasColumnType("INTEGER")
-                .HasColumnName("confidence_level_rank");
-
             entity.Property<DateTimeOffset>("CreationUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
@@ -137,9 +128,6 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
 
             entity.HasIndex("AbsolutePath")
                 .HasDatabaseName("idx_embedded_files_absolute_path");
-
-            entity.HasIndex("ConfidenceLevelRank")
-                .HasDatabaseName("idx_embedded_files_confidence");
 
             entity.HasIndex("DataSourceId")
                 .HasDatabaseName("idx_embedded_files_data_source");
@@ -277,13 +265,6 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.Property<string>("ChunkText")
                 .IsRequired()
                 .HasColumnType("TEXT");
-
-            entity.Property<string>("ConfidenceLevel")
-                .IsRequired()
-                .HasColumnType("TEXT");
-
-            entity.Property<int>("ConfidenceLevelRank")
-                .HasColumnType("INTEGER");
 
             entity.Property<DateTimeOffset>("CreationUtc")
                 .HasConversion(utcDateTimeOffsetConverter)

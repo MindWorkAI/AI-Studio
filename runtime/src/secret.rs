@@ -23,10 +23,10 @@ fn issue_code(error: &KeyringError) -> SecretStoreIssueCode {
     }
 
     #[cfg(target_os = "linux")]
-    if let KeyringError::PlatformFailure(error) | KeyringError::NoStorageAccess(error) = error {
-        if let Some(error) = error.downcast_ref::<dbus_secret_service::Error>() {
-            return secret_service_issue_code(error);
-        }
+    if let KeyringError::PlatformFailure(error) | KeyringError::NoStorageAccess(error) = error
+        && let Some(error) = error.downcast_ref::<dbus_secret_service::Error>()
+    {
+        return secret_service_issue_code(error);
     }
 
     SecretStoreIssueCode::Unknown

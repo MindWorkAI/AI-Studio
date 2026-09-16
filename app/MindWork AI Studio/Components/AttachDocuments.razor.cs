@@ -220,11 +220,31 @@ public partial class AttachDocuments : MSGComponentBase
     /// Attaches what the user dropped on the zone of this component.
     /// </summary>
     /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
-    private async Task PathsDropped(List<string> paths)
+    private async Task PathsDropped(List<string> paths) => await this.AttachDroppedPathsAsync(paths);
+
+    /// <summary>
+    /// Attaches dropped paths and reports which files it made of them.
+    /// </summary>
+    /// <remarks>
+    /// This is what the attachment dialogs call while they are open: a drop lands in the dialog the
+    /// user is looking at, yet only this component knows how to turn a path into an attachment. The
+    /// answer is what lets those dialogs show the result, see PathsDropped for our own zone.
+    /// </remarks>
+    /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
+    /// <returns>The files this call attached, in the order they were dropped.</returns>
+    private async Task<IReadOnlyList<FileAttachment>> AttachDroppedPathsAsync(List<string> paths)
     {
-        await this.AddFileBatchAsync(paths);
+        var attached = await this.AddFileBatchAsync(paths);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
+
+        //
+        // A dialog reaches us through a delegate rather than through an event callback, so nothing
+        // renders this component afterwards. Without this, the number on the badge would stay at its
+        // old value until something else happens to render us.
+        //
+        this.StateHasChanged();
+        return attached;
     }
 
     private async Task AddFilesManually()
@@ -255,11 +275,19 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
         foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
-        
+
         this.ReconcileOwnerPendingTranscripts();
+
+        //
+        // Said out loud, like every other path in this file. Removing a file in the dialog changed
+        // the attachments while whoever owns them heard nothing about it -- the chat then kept
+        // showing what the message no longer carries.
+        //
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
     }
 
     private async Task ClearAllFiles()
@@ -299,8 +327,18 @@ public partial class AttachDocuments : MSGComponentBase
         this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
     }
 
-    private async Task AddFileBatchAsync(IEnumerable<string> paths)
+    /// <summary>
+    /// Validates the given paths and attaches every file which passes.
+    /// </summary>
+    /// <param name="paths">The paths to attach, in the order they arrived.</param>
+    /// <returns>
+    /// The files this call attached, in the order they arrived. Media files are never among them:
+    /// they go to the transcription service and become attachments only once their transcript is
+    /// ready, which is long after this call has returned.
+    /// </returns>
+    private async Task<IReadOnlyList<FileAttachment>> AddFileBatchAsync(IEnumerable<string> paths)
     {
+        var attached = new List<FileAttachment>();
         var pathList = paths.ToList();
         if (this.AllowedFileTypes is { Length: > 0 })
         {
@@ -348,18 +386,25 @@ public partial class AttachDocuments : MSGComponentBase
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                 continue;
 
-            this.DocumentPaths.Add(FileAttachment.FromPath(path));
+            //
+            // This counts as attached even when the set already held the file: the user just
+            // dropped it, and whoever asked us wants to hear about the file they aimed at, not
+            // about whether it happened to be new to us.
+            //
+            var attachment = FileAttachment.FromPath(path);
+            this.DocumentPaths.Add(attachment);
+            attached.Add(attachment);
         }
 
         if (mediaPaths.Count is 0)
-            return;
+            return attached;
 
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
             await this.MessageBus.SendWarning(new(
                 Icons.Material.Filled.VoiceChat,
                 this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
-            return;
+            return attached;
         }
 
         var names = string.Join('\n', mediaPaths.Select(path => $"- {Markdown.EscapeInlineText(Path.GetFileName(path))}"));
@@ -383,7 +428,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
-            return;
+            return attached;
 
         if (this.OwnerChat is null)
             this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
@@ -400,6 +445,7 @@ public partial class AttachDocuments : MSGComponentBase
         }
 
         this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
+        return attached;
     }
 
     private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);
@@ -413,6 +459,8 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
             { x => x.Document, fileAttachment },
+            { x => x.AttachPaths, this.AttachDroppedPathsAsync },
+            { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

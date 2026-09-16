@@ -1,3 +1,4 @@
+using AIStudio.Models.Plugins;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -437,37 +438,53 @@ public static partial class PluginFactory
 
     public static IReadOnlyList<DataMandatoryInfo> GetMandatoryInfos()
     {
-        return ResolveLivePluginContent<DataMandatoryInfo>("mandatory info", plugin => plugin.MandatoryInfos).ToList();
+        return ResolveLivePluginContent<PluginConfiguration, DataMandatoryInfo>("mandatory info", plugin => plugin.MandatoryInfos).ToList();
     }
 
     public static IReadOnlyList<DataIntroduction> GetIntroductions()
     {
-        return ResolveLivePluginContent<DataIntroduction>("introduction", plugin => plugin.Introductions)
+        return ResolveLivePluginContent<PluginConfiguration, DataIntroduction>("introduction", plugin => plugin.Introductions)
             .OrderBy(introduction => introduction.Index)
             .ThenBy(introduction => introduction.Id, StringComparer.Ordinal)
             .ToList();
     }
 
     /// <summary>
-    /// Collects live content from all running configuration plugins, so that each content ID appears exactly once.
+    /// Collects what the running model plugins declare about models.
     /// </summary>
     /// <remarks>
-    /// The IDs of live content are chosen by whoever writes the configuration, so two configuration
-    /// plugins may use the same ID. We resolve such a collision the same way a collision on a setting
-    /// is resolved: a configuration which acts on behalf of the organization wins, so nobody can push
-    /// aside what an organization deployed. Among configurations of the same origin, the declared
-    /// priority decides, and when even that is equal, the plugin which started later wins.<br/><br/>
+    /// A declaration is identified by its pattern, so two plugins claiming exactly the same model
+    /// names are a collision like any other and are settled the same way. Two plugins describing
+    /// different models never meet, and both are heard.
+    /// </remarks>
+    /// <returns>The declarations of all model plugins, with every pattern resolved to one winner.</returns>
+    public static IReadOnlyList<ModelDeclaration> GetModelDeclarations()
+    {
+        return ResolveLivePluginContent<PluginModels, ModelDeclaration>("model declaration", plugin => plugin.Declarations).ToList();
+    }
+
+    /// <summary>
+    /// Collects live content from all running plugins of one kind, so that each content ID appears exactly once.
+    /// </summary>
+    /// <remarks>
+    /// The IDs of live content are chosen by whoever writes the plugin, so two plugins may use the
+    /// same ID. We resolve such a collision the same way a collision on a setting is resolved: a
+    /// plugin which acts on behalf of the organization wins, so nobody can push aside what an
+    /// organization deployed. Among plugins of the same origin, the declared priority decides, and
+    /// when even that is equal, the plugin which started later wins.<br/><br/>
     /// Duplicates are not merely a cosmetic problem: the home page keys its panels by the introduction
-    /// ID, and the acceptance of a mandatory info is stored per ID as well.
+    /// ID, the acceptance of a mandatory info is stored per ID as well, and two model declarations
+    /// claiming the same names would tie in the matching engine, which only a person can settle.
     /// </remarks>
     /// <param name="contentKind">The kind of content, used to report a collision in the log.</param>
-    /// <param name="selector">Selects the content of one configuration plugin.</param>
+    /// <param name="selector">Selects the content of one plugin.</param>
+    /// <typeparam name="TPlugin">The kind of plugin providing the content.</typeparam>
     /// <typeparam name="T">The type of the live plugin content.</typeparam>
-    /// <returns>The content of all configuration plugins, with every ID resolved to one winner.</returns>
-    private static IEnumerable<T> ResolveLivePluginContent<T>(string contentKind, Func<PluginConfiguration, IEnumerable<T>> selector) where T : ILivePluginContent
+    /// <returns>The content of all those plugins, with every ID resolved to one winner.</returns>
+    private static IEnumerable<T> ResolveLivePluginContent<TPlugin, T>(string contentKind, Func<TPlugin, IEnumerable<T>> selector) where TPlugin : PluginBase, ILivePluginContentSource where T : ILivePluginContent
     {
         var contentById = new Dictionary<string, (T Content, int Authority, int Priority)>(StringComparer.Ordinal);
-        foreach (var plugin in RUNNING_PLUGINS.OfType<PluginConfiguration>())
+        foreach (var plugin in RUNNING_PLUGINS.OfType<TPlugin>())
         {
             var authority = GetConfigurationAuthority(plugin.PluginPath);
             foreach (var content in selector(plugin))
@@ -484,14 +501,14 @@ public static partial class PluginFactory
                     var ignoredPluginId = isTakingOver ? currentWinner.Content.EnterpriseConfigurationPluginId : content.EnterpriseConfigurationPluginId;
 
                     if (winnerPluginId == ignoredPluginId)
-                        LOG.LogWarning($"The configuration plugin '{winnerPluginId}' defines the {contentKind} ID '{content.Id}' more than once. Using its last definition and ignoring the earlier one. Please use each ID only once.");
+                        LOG.LogWarning($"The plugin '{winnerPluginId}' defines the {contentKind} ID '{content.Id}' more than once. Using its last definition and ignoring the earlier one. Please use each ID only once.");
                     else
                     {
                         var reason = isTakingOver
                             ? DescribeConfigurationPrecedence(authority, plugin.Priority, currentWinner.Authority, currentWinner.Priority)
                             : DescribeConfigurationPrecedence(currentWinner.Authority, currentWinner.Priority, authority, plugin.Priority);
 
-                        LOG.LogWarning($"Multiple configuration plugins define the {contentKind} ID '{content.Id}'. Using the one from the configuration plugin '{winnerPluginId}' and ignoring the one from the configuration plugin '{ignoredPluginId}', because {reason}.");
+                        LOG.LogWarning($"Multiple plugins define the {contentKind} ID '{content.Id}'. Using the one from the plugin '{winnerPluginId}' and ignoring the one from the plugin '{ignoredPluginId}', because {reason}.");
                     }
 
                     if (!isTakingOver)
@@ -506,7 +523,7 @@ public static partial class PluginFactory
     }
 
     /// <summary>
-    /// Explains in one phrase why one configuration plugin won a collision against another.
+    /// Explains in one phrase why one plugin won a collision against another.
     /// </summary>
     /// <remarks>
     /// Administrators read this in the log while they are testing their configuration. Naming the
@@ -515,11 +532,11 @@ public static partial class PluginFactory
     private static string DescribeConfigurationPrecedence(int winnerAuthority, int winnerPriority, int ignoredAuthority, int ignoredPriority)
     {
         if (winnerAuthority != ignoredAuthority)
-            return "a configuration which acts on behalf of your organization takes precedence over a locally placed one";
+            return "a plugin which acts on behalf of your organization takes precedence over a locally placed one";
 
         if (winnerPriority != ignoredPriority)
             return $"it declares the higher priority ({winnerPriority} instead of {ignoredPriority})";
 
-        return $"both declare the same priority ({winnerPriority}), so the configuration plugin which started later wins";
+        return $"both declare the same priority ({winnerPriority}), so the plugin which started later wins";
     }
 }

@@ -110,16 +110,31 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- surfaces.
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
---     -- Optional: expert capability overrides.
---     -- Allowed keys are exactly:
+--     -- Optional: expert overrides for the model behind this provider. Missing keys keep the
+--     -- automatic answer, and each key contradicts only what it names.
+--     --
+--     -- What the model can do. Allowed keys are exactly:
 --     -- AUDIO_INPUT, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
 --     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
 --     -- Allowed values are booleans only.
 --     -- For default-on reasoning (thinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
 --     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
---     -- Missing keys keep the automatic capability detection result.
+--     --
+--     -- How much the model reads and how many images it takes. Allowed keys are exactly:
+--     -- CONTEXT_WINDOW, MAX_IMAGES_PER_MESSAGE, MAX_IMAGES_PER_REQUEST
+--     -- Allowed values are whole numbers: tokens greater than zero for the window, and images of
+--     -- zero or more for the two limits, where zero means the model is configured to take none.
+--     -- These are the same key names a model plugin uses for the same questions, but they say
+--     -- something narrower here: a model plugin describes a model wherever it is reached, while
+--     -- these describe this one installation of it. State what your deployment actually does --
+--     -- for a self-hosted engine, the window your operator configured rather than the one the
+--     -- model card advertises.
+--     -- CONTEXT_WINDOW feeds the token counter AI Studio shows below the chat input, so a wrong
+--     -- number here misleads users about how much room they have left.
 --     -- ["CapabilityOverrides"] = {
 --     --     ["VIDEO_INPUT"] = false,
+--     --     ["CONTEXT_WINDOW"] = 32768,
+--     --     ["MAX_IMAGES_PER_REQUEST"] = 4,
 --     -- },
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
@@ -370,8 +385,15 @@ CONFIG["SETTINGS"] = {}
 -- A short notification is still shown when this setting is disabled.
 -- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
 
--- Configure the user permission to add providers:
+-- Configure the master permission to add providers. When set to false, the add
+-- buttons stay visible but are disabled regardless of the provider-specific settings.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
+
+-- Fine-tune the permission to add each provider type. These settings only allow
+-- adding providers while DataApp.AllowUserToAddProvider is also true.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.

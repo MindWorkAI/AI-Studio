@@ -31,7 +31,13 @@ public sealed partial class RustService
     /// already gone.
     /// </param>
     /// <returns>The result of reading the file.</returns>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, CancellationToken token = default)
+    /// <param name="reportPromptInjections">
+    /// Whether to tell the user about passages which were filtered out of the file. Pass false only
+    /// where the content is measured and thrown away again, such as counting the tokens of an
+    /// attachment: nothing leaves the app on that path, so there is nothing to warn about, and
+    /// reporting it there would warn a second time when the file is actually sent.
+    /// </param>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, CancellationToken token = default)
     {
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
@@ -238,9 +244,12 @@ public sealed partial class RustService
 
         //
         // Reported from here rather than from the callers: every way of reading a file passes
-        // through this method, so this is the one place where no caller can forget it.
+        // through this method, so this is the one place where no caller can forget it. The
+        // filtering itself has already happened either way -- only the telling is skipped, and only
+        // where the content never leaves the app.
         //
-        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+        if (reportPromptInjections)
+            await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
 
         //
         // Filtering does not change the outcome: the passages were removed and the document
@@ -269,7 +278,7 @@ public sealed partial class RustService
         {
             if (segment.TokenCount is { } tokenCount)
             {
-                yield return new(segment.Content, tokenCount);
+                yield return new(segment.Content, tokenCount, segment.PageNumber);
                 continue;
             }
 
@@ -282,7 +291,7 @@ public sealed partial class RustService
             var countedSegment = await this.GetTokenCount(embeddingProvider, segment.Content, token);
             if (countedSegment is { Success: true } counted)
             {
-                yield return new(segment.Content, counted.TokenCount);
+                yield return new(segment.Content, counted.TokenCount, segment.PageNumber);
                 continue;
             }
 
@@ -294,7 +303,7 @@ public sealed partial class RustService
         }
     }
 
-    private async IAsyncEnumerable<(string Content, int? TokenCount)> StreamArbitraryFileDataCore(
+    private async IAsyncEnumerable<(string Content, int? TokenCount, int? PageNumber)> StreamArbitraryFileDataCore(
         string path,
         bool extractImages,
         bool includeTokenCount,
@@ -411,12 +420,13 @@ public sealed partial class RustService
                 }
 
                 //
-                // The count comes from the processed event, not from the event which was just read:
-                // a reader may hold content back across several events, and the count of the content
-                // it releases is the count of that content, not of the event that released it.
+                // The count and the page come from the processed event, not from the event which
+                // was just read: a reader may hold content back across several events, and the
+                // count and page of the content it releases describe that content, not the event
+                // that released it.
                 //
                 if (!string.IsNullOrWhiteSpace(processedEvent.Content))
-                    yield return (processedEvent.Content, processedEvent.TokenCount);
+                    yield return (processedEvent.Content, processedEvent.TokenCount, processedEvent.PageNumber);
             }
         }
         finally
@@ -425,7 +435,7 @@ public sealed partial class RustService
         }
 
         if (finalContentChunk is { } pendingContent && !string.IsNullOrWhiteSpace(pendingContent.Content))
-            yield return (pendingContent.Content, pendingContent.TokenCount);
+            yield return (pendingContent.Content, pendingContent.TokenCount, pendingContent.PageNumber);
 
         if (promptInjectionRedactedCount is 0)
             yield break;

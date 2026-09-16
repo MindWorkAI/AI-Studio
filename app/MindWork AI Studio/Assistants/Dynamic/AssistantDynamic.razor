@@ -140,6 +140,7 @@ else
                     var webState = this.assistantState.WebContent[webContent.Name];
                     <div class="@webContent.Class" style="@GetOptionalStyle(webContent.Style)">
                         <ReadWebContent @bind-Content="@webState.Content"
+                                        @bind-URL="@webState.URL"
                                         ProviderSettings="@this.ProviderSettings"
                                         @bind-AgentIsRunning="@webState.AgentIsRunning"
                                         @bind-Preselect="@webState.Preselect"

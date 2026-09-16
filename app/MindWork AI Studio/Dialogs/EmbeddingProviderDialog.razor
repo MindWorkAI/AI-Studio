@@ -187,6 +187,7 @@
                             Disabled="@this.IsEnterpriseConfiguration"
                             Validation="@this.ValidateEmbeddingBatchSize"
                             HelperText="@T("How many chunks are sent to the embedding provider at once. The default is 1.")"/>
+                        <TokenizerHint LLMProvider="@this.DataLLMProvider" Model="@this.DataModel"/>
                         <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
                             <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
                                 <MudTextField
