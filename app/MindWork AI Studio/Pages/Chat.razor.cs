@@ -27,6 +27,7 @@ public partial class Chat : MSGComponentBase
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private double splitterPosition = 30;
+    private bool skipRenderAfterSplitterChange;
     private readonly ChatComposerState composerState = new();
     
     private readonly Timer splitterSaveTimer = new(TimeSpan.FromSeconds(1.6));
@@ -57,7 +58,31 @@ public partial class Chat : MSGComponentBase
         
         await base.OnInitializedAsync();
     }
-    
+
+    /// <summary>
+    /// Decides whether this page renders again.
+    /// </summary>
+    /// <remarks>
+    /// Dragging the splitter reports every movement, and Blazor renders this page after each of
+    /// them. That render is pure waste: all it would contribute is the position the splitter just
+    /// reported, and the splitter has it already -- it renders itself after its own event, which is
+    /// what resizes the two panels. What this page rebuilds instead is everything else it holds,
+    /// the workspace tree above all, which has no render guard of its own and draws an item with
+    /// three buttons for every chat. That is what the user sees stutter while they drag.<br/><br/>
+    /// Dropping that one render costs nothing, because the splitter never needed it. Should a
+    /// message from the bus ask for a render in the very same moment, this swallows it -- both sit
+    /// on the same dispatcher and the render of a movement follows it without a gap, so the window
+    /// is as good as closed, and the next render brings the message along anyway.
+    /// </remarks>
+    protected override bool ShouldRender()
+    {
+        if (!this.skipRenderAfterSplitterChange)
+            return true;
+
+        this.skipRenderAfterSplitterChange = false;
+        return false;
+    }
+
     #endregion
     
     private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
@@ -85,6 +110,7 @@ public partial class Chat : MSGComponentBase
         this.splitterPosition = position;
         this.splitterSaveTimer.Stop();
         this.splitterSaveTimer.Start();
+        this.skipRenderAfterSplitterChange = true;
     }
     
     private void ToggleWorkspacesOverlay()
