@@ -1,37 +1,6 @@
 @using AIStudio.Settings
 @using AIStudio.Provider
 @inherits MSGComponentBase
-@*
-    One row of the data source lists below. A data source waiting for its index stays in the list
-    instead of disappearing from it, but cannot be picked, and the tooltip says why. The tool
-    selection next to this one in the chat answers the same question the same way.
-
-    The tooltip sits around the list item rather than inside it: a disabled item has its pointer
-    events switched off and would swallow the hover.
-*@
-@{
-    RenderFragment<IDataSource> dataSourceRow = source =>
-        @<MudTooltip Text="@T("This data source is waiting to be indexed again. Until that is finished, it cannot be searched.")" Disabled="@(!this.IsAwaitingReindex(source))" RootStyle="display: block;" Placement="Placement.Top">
-            <MudListItem Value="@source" Disabled="@this.IsAwaitingReindex(source)">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                    <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
-                        @source.Name
-                    </MudText>
-                    @if (source is IInternalDataSource internalSource)
-                    {
-                        <MudSpacer/>
-                        @if (this.IsAwaitingReindex(source))
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.HourglassTop" Size="Size.Small" Color="Color.Warning" Style="flex-shrink: 0;"/>
-                        }
-                        <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                            <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
-                        </MudTooltip>
-                    }
-                </MudStack>
-            </MudListItem>
-        </MudTooltip>;
-}
 @if (this.SelectionMode is DataSourceSelectionMode.SELECTION_MODE)
 {
     <div class="d-flex">
@@ -123,7 +92,7 @@
                                         <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" Style="max-height: 14em;">
                                             @foreach (var source in this.GetListedDataSources())
                                             {
-                                                @dataSourceRow(source)
+                                                <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
                                             }
                                         </MudList>
                                     </MudField>
@@ -135,7 +104,7 @@
                                             <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
                                                 @foreach (var source in this.GetListedDataSources())
                                                 {
-                                                    @dataSourceRow(source)
+                                                    <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
                                                 }
                                             </MudList>
                                         </ExpansionPanel>
@@ -217,22 +186,13 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticValidationLocked()"/>
             <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@(this.aiBasedSourceSelection || this.IsPreselectedDataSourceIdsLocked())">
                 <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" ReadOnly="@this.IsPreselectedDataSourceIdsLocked()">
+                    @*
+                        The configuration mode lists what was configured, without filtering it, so no
+                        row here is ever waiting for an index.
+                    *@
                     @foreach (var source in this.availableDataSources)
                     {
-                        <MudListItem Value="@source">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
-                                    @source.Name
-                                </MudText>
-                                @if (source is IInternalDataSource internalSource)
-                                {
-                                    <MudSpacer/>
-                                    <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                        <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
-                                    </MudTooltip>
-                                }
-                            </MudStack>
-                        </MudListItem>
+                        <DataSourceSelectionRow DataSource="@source"/>
                     }
                 </MudList>
             </MudField>
