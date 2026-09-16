@@ -18,6 +18,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 {
     private const int VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD = 100_000;
 
+    /// <summary>
+    /// How often the block progress within one file is reported to the user interface at most.
+    /// </summary>
+    private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
+
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -646,6 +651,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
             this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
 
+            //
+            // What the page says while one file is being worked on. Without it, a document of
+            // several thousand pages leaves the same sentence standing for hours, and a progress
+            // which never moves cannot be told apart from one which is stuck.
+            //
+            var lastBlockReportUtc = DateTimeOffset.MinValue;
+
             try
             {
                 logger.LogInformation(
@@ -658,7 +670,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
+                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, ReportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
@@ -780,6 +792,24 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, failureMessage, failureDetails, permanentlySkippedFiles));
             }
+
+            continue;
+
+            void ReportBlockProgress(int blockNumber, int? pageNumber)
+            {
+                //
+                // The first block goes out at once, so the line is there instead of blank. After
+                // that, at most one message every BLOCK_PROGRESS_INTERVAL: each one re-renders the
+                // embedding page, the navigation bar and the table in the settings, and the blocks
+                // of a large file arrive far faster than anybody can read them.
+                //
+                var nowUtc = DateTimeOffset.UtcNow;
+                if (blockNumber > 1 && nowUtc - lastBlockReportUtc < BLOCK_PROGRESS_INTERVAL)
+                    return;
+
+                lastBlockReportUtc = nowUtc;
+                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles, blockNumber, pageNumber));
+            }
         }
 
         manifest.SourceHash = metadataSnapshot.SourceHash;
@@ -823,6 +853,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IProvider provider,
         DataSourceEmbeddingManifest manifest,
         VectorStoreOptimizationTracker optimizationTracker,
+        Action<int, int?> reportBlockProgress,
         CancellationToken token)
     {
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
@@ -845,6 +876,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         {
             batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
+            reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
             if (batch.Count >= embeddingBatchSize)
                 await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
@@ -1443,7 +1475,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         string currentFile = "",
         string lastError = "",
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
-        int permanentlySkippedFiles = 0)
+        int permanentlySkippedFiles = 0,
+        int? currentFileBlock = null,
+        int? currentFilePage = null)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
@@ -1456,7 +1490,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentFile,
             lastError,
             failures?.ToList() ?? [],
-            permanentlySkippedFiles);
+            permanentlySkippedFiles,
+            currentFileBlock,
+            currentFilePage);
     }
 
     /// <remarks>

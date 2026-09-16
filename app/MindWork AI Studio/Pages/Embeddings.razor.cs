@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
@@ -35,6 +37,13 @@ public partial class Embeddings : MSGComponentBase
     private string? expandedDataSourceId;
     private bool userChoseExpansion;
 
+    /// <remarks>
+    /// The language of AI Studio is chosen in its settings and does not move the thread's culture
+    /// along with it. Without this, a German reading a German page would find a file count written
+    /// with English separators.
+    /// </remarks>
+    private CultureInfo currentCulture = CultureInfo.InvariantCulture;
+
     private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedFiles);
 
     private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalFiles - status.IndexedFiles - status.FailedFiles - status.PermanentlySkippedFiles));
@@ -69,20 +78,28 @@ public partial class Embeddings : MSGComponentBase
             return;
         }
 
-        this.ApplyFilters([], [ Event.RAG_EMBEDDING_STATUS_CHANGED, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.RAG_EMBEDDING_STATUS_CHANGED, Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
+        await this.RefreshCulture();
         await base.OnInitializedAsync();
         this.ReloadStatuses();
     }
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (triggeredEvent is Event.RAG_EMBEDDING_STATUS_CHANGED or Event.CONFIGURATION_CHANGED)
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
+            await this.RefreshCulture();
+
+        if (triggeredEvent is Event.RAG_EMBEDDING_STATUS_CHANGED or Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
         {
             this.ReloadStatuses();
             this.StateHasChanged();
         }
+    }
 
-        return Task.CompletedTask;
+    private async Task RefreshCulture()
+    {
+        var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        this.currentCulture = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
     }
 
     private void ReloadStatuses()
@@ -154,6 +171,34 @@ public partial class Embeddings : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<SettingsDialogDataSources>(null, dialogParameters, DialogOptions.FULLSCREEN);
         await dialogReference.Result;
     }
+
+    /// <summary>
+    /// What the panel of a data source says about its progress through the files.
+    /// </summary>
+    /// <remarks>
+    /// While a file is being worked on, the sentence names that file and how far into it we are.
+    /// Counting finished files alone leaves the same sentence standing for hours on a document of
+    /// several thousand pages, and a progress which never moves cannot be told apart from one which
+    /// is stuck. The total number of blocks is not part of it: the blocks are produced while the
+    /// file is read, so nobody knows how many there will be until the file is done.
+    /// </remarks>
+    private string GetFileProgressText(DataSourceEmbeddingStatus status)
+    {
+        if (status.State is not DataSourceEmbeddingState.RUNNING || status.CurrentFileBlock is not { } block)
+            return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedFiles), this.FormatNumber(status.TotalFiles));
+
+        //
+        // Everything already dealt with, plus the one in hand. Skipped and failed files are part of
+        // that: they are behind us in the folder, and leaving them out would let the number fall
+        // behind the file whose name is shown right next to it.
+        //
+        var currentFileNumber = Math.Min(status.TotalFiles, status.IndexedFiles + status.PermanentlySkippedFiles + status.FailedFiles + 1);
+        return status.CurrentFilePage is { } page
+            ? string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block), this.FormatNumber(page))
+            : string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block));
+    }
+
+    private string FormatNumber(int value) => value.ToString("N0", this.currentCulture);
 
     private static Color GetStatusColor(DataSourceEmbeddingStatus status) => status.State switch
     {
