@@ -69,6 +69,16 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         yield return (TB("Permanently skipped files"), (await context.PermanentIndexingFailures.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
     }
 
+    public override async Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        return await context.DataSources
+            .AsNoTracking()
+            .Where(source => source.DataSourceId == dataSourceId)
+            .Select(source => new DataSourceIndexState(source.EmbeddingProviderId, source.EmbeddingSignature, source.SourceHash, source.VectorSize))
+            .FirstOrDefaultAsync(token);
+    }
+
     public override async Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token)
     {
         await using var context = this.CreateContext();

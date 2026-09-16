@@ -23,6 +23,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </summary>
     private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
 
+    /// <summary>
+    /// How long the re-index check waits for the index database before it gives up.
+    /// </summary>
+    /// <remarks>
+    /// Asked while somebody waits for the data source selection to open, and possibly while a run
+    /// writes to the same database.
+    /// </remarks>
+    private static readonly TimeSpan REINDEX_CHECK_TIMEOUT = TimeSpan.FromSeconds(2);
+
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -209,6 +218,103 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                // A data source whose files were all skipped for good has index state as well,
                // even though nothing was indexed of it:
                || manifest.PermanentFailures.Count > 0;
+    }
+
+    /// <summary>
+    /// Whether a data source cannot answer a search right now because its index has to be built anew.
+    /// </summary>
+    /// <remarks>
+    /// Says nothing about a data source which is only catching up with a handful of changed files:
+    /// everything indexed before is still there and still searchable. What this catches is the case
+    /// where the whole index was thrown away, or is about to be, because the embedding configuration
+    /// changed under it. Between discarding the old vectors and finishing the new ones, the data
+    /// source looks perfectly fine and finds nothing.
+    ///
+    /// Two things are asked, in this order. The stored signature tells whether the vectors still
+    /// belong to the current configuration; it is written back right after the reset, so on its own
+    /// it would call a rebuild in progress finished. The stored hash of the data source closes that
+    /// gap: it survives an ordinary run but not a reset, so an empty one means no run has completed
+    /// since the index was discarded.
+    ///
+    /// Anything unclear counts as not waiting. Whoever asks does so to grey out a row, and a data
+    /// source wrongly greyed out for good is worse than one which turns out to have nothing to say.
+    /// </remarks>
+    /// <param name="dataSource">The data source to ask about.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
+    public async Task<bool> IsAwaitingReindexAsync(IDataSource dataSource, CancellationToken token = default)
+    {
+        //
+        // This guard also keeps the index database out of the picture while local RAG is switched
+        // off: asking for the store creates the database and runs its migrations on the first call,
+        // which must not happen because somebody opened the data source selection.
+        //
+        if (!this.IsSupportedInternalDataSource(dataSource))
+            return false;
+
+        if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
+            return false;
+
+        try
+        {
+            //
+            // A timeout of its own: this runs while the user waits for a popover to open, and the
+            // embedding service may be writing to the same database at the time.
+            //
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(REINDEX_CHECK_TIMEOUT);
+
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(timeout.Token);
+            if (!indexStore.IsAvailable)
+                return false;
+
+            var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, timeout.Token);
+            var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
+            var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
+            var runState = this.statuses.TryGetValue(dataSource.Id, out var status) ? status.State : (DataSourceEmbeddingState?)null;
+
+            return IsIndexAwaitingRebuild(indexState, embeddingSignature, runState);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not tell whether data source '{DataSourceName}' ({DataSourceId}) is waiting for a re-index. Treating it as usable.", dataSource.Name, dataSource.Id);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Decides from the stored index state alone whether a data source has to be indexed anew.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from reading the database so the decision itself can be pinned down in a test.
+    /// The order of the three questions is what makes it correct, see IsAwaitingReindexAsync.
+    /// </remarks>
+    /// <param name="indexState">What the index holds about the data source, or null when it holds nothing.</param>
+    /// <param name="currentEmbeddingSignature">The signature the current embedding configuration produces.</param>
+    /// <param name="runState">The state of this data source's last or current run, when one is known.</param>
+    /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
+    internal static bool IsIndexAwaitingRebuild(DataSourceIndexState? indexState, string currentEmbeddingSignature, DataSourceEmbeddingState? runState)
+    {
+        // Nothing stored at all: this data source has never been indexed, so there is nothing to
+        // search in it yet.
+        if (indexState is null)
+            return true;
+
+        // The stored vectors belong to another embedding configuration. They will be thrown away
+        // as soon as the next run starts, and they are of no use before that either.
+        if (!string.Equals(indexState.EmbeddingSignature, currentEmbeddingSignature, StringComparison.Ordinal))
+            return true;
+
+        // A run has worked through the whole data source since the index was last discarded.
+        if (!string.IsNullOrWhiteSpace(indexState.SourceHash))
+            return false;
+
+        //
+        // The index was discarded and nothing has finished since. A failed run is the exception:
+        // whatever it managed to index is searchable, and the embeddings page already names the
+        // problem, so there is nothing to be gained from locking the row as well.
+        //
+        return runState is not DataSourceEmbeddingState.FAILED;
     }
 
     public Task QueueDataSourceAsync(IDataSource dataSource)

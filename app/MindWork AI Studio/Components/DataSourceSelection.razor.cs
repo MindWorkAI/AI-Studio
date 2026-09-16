@@ -49,6 +49,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool showDataSourceSelection;
     private bool waitingForDataSources = true;
     private IReadOnlyList<IDataSource> availableDataSources = [];
+    private IReadOnlyList<IDataSource> dataSourcesAwaitingReindex = [];
+    private HashSet<string> dataSourceIdsAwaitingReindex = new(StringComparer.Ordinal);
     private IReadOnlyCollection<IDataSource> selectedDataSources = [];
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
@@ -226,10 +228,42 @@ public partial class DataSourceSelection : MSGComponentBase
             return;
 
         this.availableDataSources = sources.AllowedDataSources;
+        this.dataSourcesAwaitingReindex = sources.DataSourcesAwaitingReindex;
+        this.dataSourceIdsAwaitingReindex = sources.DataSourcesAwaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
         this.selectedDataSources = sources.SelectedDataSources;
         this.waitingForDataSources = false;
         this.StateHasChanged();
     }
+
+    private bool IsAwaitingReindex(IDataSource dataSource) => this.dataSourceIdsAwaitingReindex.Contains(dataSource.Id);
+
+    /// <summary>
+    /// The data sources the list shows: the usable ones, plus the ones waiting for their index.
+    /// </summary>
+    /// <remarks>
+    /// Kept in the order the data sources were configured in, rather than usable ones first. A row
+    /// which jumps to another place the moment its data source starts being re-indexed is a row the
+    /// user has to find again.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetListedDataSources()
+    {
+        if (this.dataSourcesAwaitingReindex.Count == 0)
+            return this.availableDataSources;
+
+        var listedIds = this.availableDataSources.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        listedIds.UnionWith(this.dataSourceIdsAwaitingReindex);
+        return this.GetConfiguredDataSourcesSnapshot().Where(source => listedIds.Contains(source.Id)).ToList();
+    }
+
+    /// <summary>
+    /// The preselected but unusable data sources the warning box lists.
+    /// </summary>
+    /// <remarks>
+    /// The ones waiting for their index are left out: they have a row of their own in the list
+    /// above, which says the same thing in the place the user is already looking.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSourcesToList() =>
+        this.GetUnavailablePreselectedDataSources().Where(source => !this.IsAwaitingReindex(source)).ToList();
     
     private async Task EnabledChanged(bool state)
     {

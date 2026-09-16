@@ -6,6 +6,14 @@ public abstract class IndexStoreClient(string name, string path) : DatabaseClien
 {
     public abstract Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token);
 
+    /// <summary>
+    /// Reads what the index knows about a data source as a whole, without its files.
+    /// </summary>
+    /// <param name="dataSourceId">The data source to read.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The stored state, or null when the index holds nothing about this data source.</returns>
+    public abstract Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token);
+
     public abstract Task UpsertDataSourceAsync(
         string dataSourceId,
         string dataSourceType,
