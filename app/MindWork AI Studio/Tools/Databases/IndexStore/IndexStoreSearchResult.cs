@@ -4,7 +4,6 @@ public sealed record IndexStoreSearchResult(
     string ChunkId,
     string ParentFileId,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string AbsolutePath,
     string FileName,

@@ -23,11 +23,6 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("data_source_id");
 
-            entity.Property<string>("DataSourceName")
-                .IsRequired()
-                .HasColumnType("TEXT")
-                .HasColumnName("data_source_name");
-
             entity.Property<string>("DataSourceType")
                 .IsRequired()
                 .HasColumnType("TEXT")
@@ -271,10 +266,6 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT");
 
             entity.Property<string>("DataSourceId")
-                .IsRequired()
-                .HasColumnType("TEXT");
-
-            entity.Property<string>("DataSourceName")
                 .IsRequired()
                 .HasColumnType("TEXT");
 

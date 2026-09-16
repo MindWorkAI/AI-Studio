@@ -8,8 +8,6 @@ internal sealed class IndexStoreSearchResultEntity
 
     public string DataSourceId { get; set; } = string.Empty;
 
-    public string DataSourceName { get; set; } = string.Empty;
-
     public string DataSourceType { get; set; } = string.Empty;
 
     public string AbsolutePath { get; set; } = string.Empty;
