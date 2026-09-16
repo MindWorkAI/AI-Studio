@@ -106,7 +106,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1331274154"] = 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1345848634"] = "Bitte stellen Sie einen Moderator für das Meeting oder Seminar zur Verfügung. Wer wird die Diskussion leiten?"
 
 -- Please start each line of your content list with a dash (-) to create a bullet point list.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1384718254"] = "Bitte beginnen Sie jede Zeile ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1384718254"] = "Bitte beginnen Sie jede Zeile Ihrer Inhaltsliste mit einem Strich (-), um eine Aufzählungsliste zu erstellen."
 
 -- Describe the objective(s) of the meeting, seminar, etc. What should be achieved?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T142537978"] = "Beschreiben Sie das Ziel bzw. die Ziele des Treffens, Seminars usw. Was soll erreicht werden?"
@@ -1270,7 +1270,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T3167933145"] 
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Bitte wählen Sie eines Ihrer Profile aus."
 
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage Ihrer Angaben."
 
 -- Your name for the closing salutation of your e-mail.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T134060413"] = "Ihr Name für die Grußformel am Ende ihrer E-Mail."
@@ -1486,7 +1486,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2149175535"] = "Warnu
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2176833082"] = "Einbettungsmethode hinzufügen"
 
 -- For your ERI server, you need to retrieve data that matches a chat or prompt in some way. We call this the retrieval process. You must describe at least one such process. You may offer several retrieval processes from which users can choose. This allows you to test with beta users which process works better. Or you might generally want to give users the choice so they can select the process that best suits their circumstances.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T218617347"] = "Für ihren ERI-Server müssen Sie Daten abrufen, die in irgendeiner Weise zu einem Chat oder einem Prompt passen. Diesen Vorgang nennen wir „Retrieval-Prozess“ (Abrufprozess). Sie müssen mindestens einen solchen Prozess beschreiben. Sie können auch mehrere Abrufprozesse anbieten, aus denen die Nutzer wählen können. So können Sie mit Beta-Nutzern testen, welcher Prozess besser funktioniert. Oder Sie möchten den Nutzern grundsätzlich die Wahl lassen, damit sie den Prozess auswählen können, der am besten zu ihren Bedürfnissen passt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T218617347"] = "Für Ihren ERI-Server müssen Sie Daten abrufen, die in irgendeiner Weise zu einem Chat oder einem Prompt passen. Diesen Vorgang nennen wir „Retrieval-Prozess“ (Abrufprozess). Sie müssen mindestens einen solchen Prozess beschreiben. Sie können auch mehrere Abrufprozesse anbieten, aus denen die Nutzer wählen können. So können Sie mit Beta-Nutzern testen, welcher Prozess besser funktioniert. Oder Sie möchten den Nutzern grundsätzlich die Wahl lassen, damit sie den Prozess auswählen können, der am besten zu ihren Bedürfnissen passt."
 
 -- You can specify more than one embedding method. This can be useful when you want to use different embeddings for different queries or data types. For example, one embedding for texts, another for images, and a third for videos, etc.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T2202387805"] = "Sie können mehr als eine Einbettungsmethode angeben. Das ist nützlich, wenn Sie unterschiedliche Einbettungen für verschiedene Abfragen oder Datentypen verwenden möchten. Zum Beispiel eine Einbettung für Texte, eine andere für Bilder und eine dritte für Videos usw."
@@ -1570,7 +1570,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T315946275"] = "Einbet
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3178184134"] = "Bitte wählen Sie mindestens eine Authentifizierungsmethode aus."
 
 -- The ERI specification will change over time. You probably want to keep your ERI server up to date. This means you might want to regenerate the code for your ERI server. To avoid having to make all inputs each time, all your inputs and decisions can be automatically saved. Would you like this?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3203532492"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Sie möchten wahrscheinlich, dass ihr ERI-Server immer auf dem neuesten Stand ist. Das bedeutet, dass Sie den Code für ihren ERI-Server eventuell erneut generieren müssen. Damit Sie nicht jedes Mal alle Eingaben erneut machen müssen, können alle ihre Eingaben und Entscheidungen automatisch gespeichert werden. Möchten Sie das?"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3203532492"] = "Die ERI-Spezifikation wird sich im Laufe der Zeit ändern. Sie möchten wahrscheinlich, dass Ihr ERI-Server immer auf dem neuesten Stand ist. Das bedeutet, dass Sie den Code für Ihren ERI-Server eventuell erneut generieren müssen. Damit Sie nicht jedes Mal alle Eingaben erneut machen müssen, können alle Ihre Eingaben und Entscheidungen automatisch gespeichert werden. Möchten Sie das?"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3267849393"] = "Bearbeiten"
@@ -1594,13 +1594,13 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3379345517"] = "Wicht
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3443687246"] = "ERI-Server {0}"
 
 -- You will likely use one or more embedding methods to encode the meaning of your data into a typically high-dimensional vector space. In this case, you will use a vector database to store and search these vectors (called embeddings). However, you don't have to use embedding methods. When your retrieval method works without any embedding, you can ignore this section. An example: You store files on a file server, and your retrieval method works exclusively with file names in the file system, so you don't need embeddings.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "Sie werden wahrscheinlich eine oder mehrere Einbettungs-Methoden verwenden, um die Bedeutung Ihrer Daten in einen typischerweise hochdimensionalen Vektorraum zu kodieren. In diesem Fall nutzen Sie eine Vektordatenbank, um diese Vektoren (sogenannte Einbettungen) zu speichern und zu durchsuchen. Es ist jedoch nicht zwingend erforderlich, Einbettungs-Methoden zu verwenden. Wenn ihre Suchmethode ohne Einbettungen funktioniert, können Sie diesen Abschnitt ignorieren. Ein Beispiel: Sie speichern Dateien auf einem Dateiserver, und ihre Suchmethode arbeitet ausschließlich mit Dateinamen im Dateisystem – dann benötigen Sie keine Einbettungen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3446047228"] = "Sie werden wahrscheinlich eine oder mehrere Einbettungs-Methoden verwenden, um die Bedeutung Ihrer Daten in einen typischerweise hochdimensionalen Vektorraum zu kodieren. In diesem Fall nutzen Sie eine Vektordatenbank, um diese Vektoren (sogenannte Einbettungen) zu speichern und zu durchsuchen. Es ist jedoch nicht zwingend erforderlich, Einbettungs-Methoden zu verwenden. Wenn Ihre Suchmethode ohne Einbettungen funktioniert, können Sie diesen Abschnitt ignorieren. Ein Beispiel: Sie speichern Dateien auf einem Dateiserver, und Ihre Suchmethode arbeitet ausschließlich mit Dateinamen im Dateisystem – dann benötigen Sie keine Einbettungen."
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3512062061"] = "Typ"
 
 -- It may happen that the AI generates a file this time that you manually created last time. In this case, your manually created file will then be overwritten. Therefore, you should always create a Git repository and commit or revert all changes before using this assistant. With a diff visualization, you can immediately see where the AI has made changes. It is best to use an IDE suitable for your selected language for this purpose.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3541842180"] = "Es kann passieren, dass die KI diesmal eine Datei generiert, die Sie beim letzten Mal manuell erstellt haben. In diesem Fall wird ihre manuell erstellte Datei überschrieben. Sie sollten daher immer ein Git-Repository anlegen und alle Änderungen vor der Nutzung dieses Assistenten committen oder gegebenenfalls zurücksetzen. Mit einer Diff-Ansicht können Sie sofort erkennen, wo die KI Änderungen vorgenommen hat. Am besten nutzen Sie dafür eine IDE, die für die von ihnen gewählte Programmiersprache geeignet ist."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3541842180"] = "Es kann passieren, dass die KI diesmal eine Datei generiert, die Sie beim letzten Mal manuell erstellt haben. In diesem Fall wird Ihre manuell erstellte Datei überschrieben. Sie sollten daher immer ein Git-Repository anlegen und alle Änderungen vor der Nutzung dieses Assistenten committen oder gegebenenfalls zurücksetzen. Mit einer Diff-Ansicht können Sie sofort erkennen, wo die KI Änderungen vorgenommen hat. Am besten nutzen Sie dafür eine IDE, die für die von Ihnen gewählte Programmiersprache geeignet ist."
 
 -- Please describe how the selected authentication methods should be used.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T356079033"] = "Bitte beschreiben Sie, wie die ausgewählten Authentifizierungsmethoden verwendet werden sollen."
@@ -1612,7 +1612,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3565127422"] = "Authe
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3617128581"] = "Abrufprozess hinzufügen"
 
 -- Please provide a brief description of your ERI server. Describe or explain what your ERI server does and what data it uses for this purpose. This description will be shown to users in AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3637826231"] = "Bitte geben Sie eine kurze Beschreibung ihres ERI-Servers an. Beschreiben oder erklären Sie, was Ihr ERI-Server macht und welche Daten dafür verwendet werden. Diese Beschreibung wird den Nutzern in AI Studio angezeigt."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3637826231"] = "Bitte geben Sie eine kurze Beschreibung Ihres ERI-Servers an. Beschreiben oder erklären Sie, was Ihr ERI-Server macht und welche Daten dafür verwendet werden. Diese Beschreibung wird den Nutzern in AI Studio angezeigt."
 
 -- Please provide the port of the data source.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3641304143"] = "Bitte geben Sie den Port der Datenquelle an."
@@ -1645,7 +1645,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3897494556"] = "ERI-S
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3956615326"] = "Aber Vorsicht:"
 
 -- Please provide a description for your ERI server. What data will the server retrieve? This description will be used to inform users about the purpose of your ERI server.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Bitte geben Sie eine Beschreibung für Ihren ERI-Server an. Welche Daten wird der Server abrufen? Diese Beschreibung wird dazu verwendet, die Nutzer über den Zweck ihres ERI-Servers zu informieren."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T3973182416"] = "Bitte geben Sie eine Beschreibung für Ihren ERI-Server an. Welche Daten wird der Server abrufen? Diese Beschreibung wird dazu verwendet, die Nutzer über den Zweck Ihres ERI-Servers zu informieren."
 
 -- Please select a data source for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4010020894"] = "Bitte wählen Sie eine Datenquelle für den ERI-Server aus."
@@ -1657,7 +1657,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4027569219"] = "Bitte
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4078115997"] = "Datenschutzeinstellungen"
 
 -- Please describe the data source of your ERI server.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4156384463"] = "Bitte beschreiben Sie die Datenquelle ihres ERI-Servers."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4156384463"] = "Bitte beschreiben Sie die Datenquelle Ihres ERI-Servers."
 
 -- ERI Server
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4204533420"] = "ERI-Server"
@@ -1666,7 +1666,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4204533420"] = "ERI-S
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4215418115"] = "Der Name ihres ERI-Servers muss zwischen 6 und 60 Zeichen lang sein."
 
 -- Describe your data source
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4272497758"] = "Beschreiben Sie ihre Datenquelle"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T4272497758"] = "Beschreiben Sie Ihre Datenquelle"
 
 -- The ERI is the External Retrieval Interface for AI Studio and other tools. The ERI acts as a contract between decentralized data sources and, e.g., AI Studio. The ERI is implemented by the data sources, allowing them to be integrated into AI Studio later. This means that the data sources assume the server role and AI Studio (or any other LLM tool) assumes the client role of the API. This approach serves to realize a Retrieval-Augmented Generation (RAG) process with external data.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T458158948"] = "Das ERI ist die externe Abrufschnittstelle (External Retrieval Interface) für AI Studio und andere Werkzeuge. Das ERI fungiert als Vertrag zwischen dezentralen Datenquellen und beispielsweise AI Studio. Die Implementierung des ERI erfolgt durch die Datenquellen, wodurch diese später in AI Studio integriert werden können. Das bedeutet, dass die Datenquellen die Serverrolle übernehmen und AI Studio (oder ein anderes LLM-Werkzeug) die Rolle des API-Clients einnimmt. Dieser Ansatz dient dazu, einen Retrieval-Augmented Generation (RAG)-Prozess mit externen Daten zu ermöglichen."
@@ -1915,7 +1915,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T4239378
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T596802185"] = "Ihr Kontext"
 
 -- Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T653229070"] = "Bitte geben Sie einen Kontext an. Das hilft der KI, das passende Icon zu finden. Sie können einfach ein Stichwort eingeben oder einen Satz aus ihrem Text kopieren, zum Beispiel von einer Folie, auf der Sie das Icon verwenden möchten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T653229070"] = "Bitte geben Sie einen Kontext an. Das hilft der KI, das passende Icon zu finden. Sie können einfach ein Stichwort eingeben oder einen Satz aus Ihrem Text kopieren, zum Beispiel von einer Folie, auf der Sie das Icon verwenden möchten."
 
 -- (Optional) The company name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1134022609"] = "(Optional) Unternehmensname"
@@ -2029,13 +2029,13 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T3754447
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4016275181"] = "Stellen Sie ein juristisches Dokument bereit und stellen Sie eine Frage dazu. Dieser Assistent ersetzt keine Rechtsberatung. Wenden Sie sich an einen Anwalt, um professionelle Beratung zu erhalten. Bitte beachten Sie, dass Sprachmodelle Antworten und Fakten erfinden können. Verlassen Sie sich daher nicht auf diese Antworten."
 
 -- Please provide your questions as input.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4154383818"] = "Bitte geben Sie ihre Fragen ein."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4154383818"] = "Bitte geben Sie Ihre Fragen ein."
 
 -- Answer the following questions about a legal document:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597664"] = "Beantworte die folgenden Fragen zu einem rechtlichen Dokument:"
 
 -- Ask your questions
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Stellen Sie ihre Fragen"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Stellen Sie Ihre Fragen"
 
 -- Find
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1042076026"] = "Suchen"
@@ -2320,7 +2320,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T1994150308"] = "Text umformulieren & verbessern"
 
 -- Improve your text
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433"] = "Verbessern Sie ihren Text"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433"] = "Verbessern Sie Ihren Text"
 
 -- Load text from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2210807298"] = "Text aus Datei laden"
@@ -2341,7 +2341,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3754048862"] = "Schreibstil"
 
 -- Rewrite and improve your text. Please note, that the capabilities of the different LLM providers will vary.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T480915300"] = "Überarbeiten und verbesseren Sie ihren Text. Bitte beachte Sie, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T480915300"] = "Überarbeiten und verbessern Sie Ihren Text. Bitte beachten Sie, dass die Fähigkeiten der verschiedenen LLM-Anbieter unterschiedlich sein können."
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
@@ -3649,7 +3649,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1333844707"] = "N
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T1335399555"] = "Einstellungen der Chat-Vorlagen öffnen"
 
 -- Manage your templates
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T3058934130"] = "Verwalten Sie ihre Vorlagen"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATTEMPLATESELECTION::T3058934130"] = "Verwalten Sie Ihre Vorlagen"
 
 -- Region
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T1227782301"] = "Region"
@@ -3910,7 +3910,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1852534051"] = "Die
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1975014927"] = "Ja, ich möchte Datenquellen verwenden."
 
 -- You haven't configured any data sources. To grant the AI access to your data, you need to add such a source. However, if you wish to use data from your device, you first have to set up a so-called embedding. This embedding is necessary so the AI can effectively search your data, find and retrieve the correct information required for each task. In addition to local data, you can also incorporate your company's data. To do so, your company must provide the data through an ERI (External Retrieval Interface).
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2113594442"] = "Sie haben noch keine Datenquellen konfiguriert. Um der KI Zugriff auf ihre Daten zu ermöglichen, müssen Sie zunächst eine solche Quelle hinzufügen. Wenn Sie jedoch Daten von ihrem Gerät verwenden möchten, müssen Sie zuerst eine sogenannte Einbettung einrichten. Diese Einbettung ist notwendig, damit die KI ihre Daten effektiv durchsuchen, die passenden Informationen finden und für jede Aufgabe bereitstellen kann. Neben lokalen Daten können Sie auch die Daten ihres Unternehmens einbinden. Dafür muss Ihr Unternehmen die Daten über eine ERI (External Retrieval Interface) bereitstellen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2113594442"] = "Sie haben noch keine Datenquellen konfiguriert. Um der KI Zugriff auf Ihre Daten zu ermöglichen, müssen Sie zunächst eine solche Quelle hinzufügen. Wenn Sie jedoch Daten von Ihrem Gerät verwenden möchten, müssen Sie zuerst eine sogenannte Einbettung einrichten. Diese Einbettung ist notwendig, damit die KI Ihre Daten effektiv durchsuchen, die passenden Informationen finden und für jede Aufgabe bereitstellen kann. Neben lokalen Daten können Sie auch die Daten Ihres Unternehmens einbinden. Dafür muss Ihr Unternehmen die Daten über eine ERI (External Retrieval Interface) bereitstellen."
 
 -- Select the data you want to use here.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Wählen Sie hier die Daten aus, die Sie verwenden möchten."
@@ -4021,7 +4021,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "L
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Probleme"
 
 -- Some tools selected for this run are not fully configured and stay unused: {0}. Please complete their settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T1319635088"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind nicht vollständig eingerichtet und bleiben daher ungenutzt: \"{0}\". Bitte vervollständigen Sie ihre Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T1319635088"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind nicht vollständig eingerichtet und bleiben daher ungenutzt: \"{0}\". Bitte vervollständigen Sie deren Einstellungen."
 
 -- Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter „{0}“ verwendet werden. Bitte wählen Sie einen Anbieter mit einer höheren Vertrauensstufe, um alle Werkzeuge zu nutzen."
@@ -4213,13 +4213,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T2003449133"] = "W�
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILEFORMSELECTION::T3654011106"] = "Profil-Optionen öffnen"
 
 -- Manage your profiles
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3609533889"] = "Verwalten Sie ihre Profile"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3609533889"] = "Verwalten Sie Ihre Profile"
 
 -- Open Profile Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3654011106"] = "Profil-Optionen öffnen"
 
 -- You can switch between your profiles here
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier können Sie zwischen ihren Profilen wechseln."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier können Sie zwischen Ihren Profilen wechseln."
 
 -- No LLM providers are configured yet. Add a provider in the app settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1166628228"] = "Bisher wurden keine LLM-Anbieter konfiguriert. Bitte fügen Sie einen Anbieter in den App-Einstellungen hinzu."
@@ -4549,7 +4549,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"]
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1599198973"] = "Farbschema"
 
 -- Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"] = "Möchten Sie eines ihrer Profile als Standard für die gesamte App festlegen? Wenn Sie einem Assistenten ein anderes Profil zuweisen, hat dieses immer Vorrang."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"] = "Möchten Sie eines Ihrer Profile als Standard für die gesamte App festlegen? Wenn Sie einem Assistenten ein anderes Profil zuweisen, hat dieses immer Vorrang."
 
 -- seconds
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"] = "Sekunden"
@@ -4666,7 +4666,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"]
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3985928190"] = "Zusätzliche Stammzertifikate sind deaktiviert"
 
 -- Preselect one of your profiles?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"] = "Möchten Sie eines Ihrer Profile vorauswählen?"
 
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "Wenn aktiviert, ist die Rechtschreibprüfung in allen Eingabefeldern aktiv. Je nach Betriebssystem werden Fehler möglicherweise nicht visuell hervorgehoben, aber ein Rechtsklick kann dennoch Korrekturvorschläge anzeigen."
@@ -4828,7 +4828,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T29196
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T305753126"] = "Konfigurierte Anbieter für Einbettungen"
 
 -- This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3251217940"] = "Dies hilft AI Studio, Dinge auf eine Art und Weise zu verstehen und zu vergleichen, die der menschlichen Denkweise ähnelt. Wenn Sie an etwas arbeiten, kann AI Studio automatisch verwandte Dokumente und Daten erkennen, indem es ihre digitalen Fingerabdrücke vergleicht. Wenn Sie zum Beispiel über Kundenservice schreiben, kann AI Studio sofort andere Dokumente in ihren Daten finden, die über ähnliche Themen oder Erfahrungen sprechen – selbst wenn sie andere Begriffe verwenden."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3251217940"] = "Dies hilft AI Studio, Dinge auf eine Art und Weise zu verstehen und zu vergleichen, die der menschlichen Denkweise ähnelt. Wenn Sie an etwas arbeiten, kann AI Studio automatisch verwandte Dokumente und Daten erkennen, indem es ihre digitalen Fingerabdrücke vergleicht. Wenn Sie zum Beispiel über Kundenservice schreiben, kann AI Studio sofort andere Dokumente in Ihren Daten finden, die über ähnliche Themen oder Erfahrungen sprechen – selbst wenn sie andere Begriffe verwenden."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3267849393"] = "Bearbeiten"
@@ -5149,10 +5149,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTIONFIELD::T4209882371"] = "1 We
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTIONFIELD::T807707919"] = "{0} Werkzeuge ausgewählt"
 
 -- You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1015366320"] = "Sie werden mit den KI-Systemen über ihre Stimme interagieren. Dafür möchten wir Spracheingabe (Sprache-zu-Text) und Sprachausgabe (Text-zu-Sprache) integrieren. Später soll außerdem ein natürlicher Gesprächsfluss möglich sein, also eine nahtlose Unterhaltung."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1015366320"] = "Sie werden mit den KI-Systemen über Ihre Stimme interagieren. Dafür möchten wir Spracheingabe (Sprache-zu-Text) und Sprachausgabe (Text-zu-Sprache) integrieren. Später soll außerdem ein natürlicher Gesprächsfluss möglich sein, also eine nahtlose Unterhaltung."
 
 -- We hope this vision excites you as much as it excites us. Together, let's build a powerful and flexible AI toolkit to support all your creative, professional, and everyday needs with MindWork AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1061000046"] = "Wir hoffen, dass diese Vision Sie genauso begeistert wie uns. Lassen Sie uns gemeinsam mit MindWork AI Studio ein leistungsstarkes und flexibles KI-Werkzeug schaffen, das Sie bei all ihren kreativen, beruflichen und alltäglichen Aufgaben unterstützt."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1061000046"] = "Wir hoffen, dass diese Vision Sie genauso begeistert wie uns. Lassen Sie uns gemeinsam mit MindWork AI Studio ein leistungsstarkes und flexibles KI-Werkzeug schaffen, das Sie bei all Ihren kreativen, beruflichen und alltäglichen Aufgaben unterstützt."
 
 -- Integration of enterprise data
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1127694951"] = "Integration von Unternehmensdaten"
@@ -5161,13 +5161,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1127694951"] = "Integration von 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T127032776"] = "Entspricht ihren Bedürfnissen"
 
 -- We're integrating a writing mode to help you create extensive works, like comprehensive project proposals, tenders, or your next fantasy novel.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1457213518"] = "Wir integrieren einen Schreibmodus, der Ihnen dabei hilft, umfangreiche Werke zu erstellen – zum Beispiel ausführliche Projektvorschläge, Ausschreibungen oder ihren nächsten Fantasyroman."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1457213518"] = "Wir integrieren einen Schreibmodus, der Ihnen dabei hilft, umfangreiche Werke zu erstellen – zum Beispiel ausführliche Projektvorschläge, Ausschreibungen oder Ihren nächsten Fantasyroman."
 
 -- Email monitoring
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1520989255"] = "E-Mail-Überwachung"
 
 -- You'll be able to integrate your data into AI Studio, like your PDF or Office files, or your Markdown notes.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1648606751"] = "Sie können ihre Daten in AI Studio integrieren, zum Beispiel ihre PDF- oder Office-Dateien oder ihre Markdown-Notizen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1648606751"] = "Sie können Ihre Daten in AI Studio integrieren, zum Beispiel Ihre PDF- oder Office-Dateien oder Ihre Markdown-Notizen."
 
 -- It will soon be possible to integrate data from the corporate network using a specified interface (External Retrieval Interface, ERI for short). This will likely require development work by the organization in question.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1926587044"] = "Bald wird es möglich sein, Daten aus dem Firmennetzwerk über eine festgelegte Schnittstelle (External Retrieval Interface, kurz ERI) zu integrieren. Dafür wird voraussichtlich Entwicklungsaufwand seitens der jeweiligen Organisation nötig sein."
@@ -5176,13 +5176,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1926587044"] = "Bald wird es mö
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1986314327"] = "Demokratisierung von KI"
 
 -- Whatever your job or task is, MindWork AI Studio aims to meet your needs: whether you're a project manager, scientist, artist, author, software developer, or game developer.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2144737937"] = "Was auch immer ihr Beruf oder ihre Aufgabe ist, MindWork AI Studio möchte ihre Bedürfnisse erfüllen: Egal, ob Sie Projektmanager, Wissenschaftler, Künstler, Autor, Softwareentwickler oder Spieleentwickler sind."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2144737937"] = "Was auch immer Ihr Beruf oder Ihre Aufgabe ist, MindWork AI Studio möchte Ihre Bedürfnisse erfüllen: Egal, ob Sie Projektmanager, Wissenschaftler, Künstler, Autor, Softwareentwickler oder Spieleentwickler sind."
 
 -- We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models. MindWork AI Studio itself is available free of charge.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2201645589"] = "Wir möchten zur Demokratisierung von KI beitragen. MindWork AI Studio läuft sogar auf kostengünstiger Hardware, einschließlich Computern für etwa 100 € wie dem Raspberry Pi. Dadurch werden die App und ihr voller Funktionsumfang auch für Menschen und Familien mit begrenztem Budget zugänglich. Sie können mit lokalen LLMs starten oder günstige Cloud-Modelle nutzen. MindWork AI Studio selbst ist kostenlos erhältlich."
 
 -- You can connect your email inboxes with AI Studio. The AI will read your emails and notify you of important events. You'll also be able to access knowledge from your emails in your chats.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2289234741"] = "Sie können ihre E-Mail-Postfächer mit AI Studio verbinden. Die KI liest ihre E-Mails und benachrichtigt Sie über wichtige Ereignisse. Außerdem haben Sie in ihren Chats Zugriff auf das Wissen aus ihren E-Mails."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2289234741"] = "Sie können Ihre E-Mail-Postfächer mit AI Studio verbinden. Die KI liest Ihre E-Mails und benachrichtigt Sie über wichtige Ereignisse. Außerdem haben Sie in Ihren Chats Zugriff auf das Wissen aus Ihren E-Mails."
 
 -- Browser usage
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2345974992"] = "Browser-Nutzung"
@@ -5203,13 +5203,13 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2868740431"] = "Spezifische Anfo
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T2899555955"] = "Wir werden weitere Assistenten für alltägliche Aufgaben entwickeln."
 
 -- We're working on offering AI Studio features in your browser via a plugin, allowing, e.g., for spell-checking or text rewriting directly in the browser.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T308543246"] = "Wir arbeiten daran, die Funktionen von AI Studio über ein Plugin auch in ihrem Browser anzubieten. So können Sie zum Beispiel direkt im Browser Rechtschreibprüfungen durchführen oder Texte umformulieren lassen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T308543246"] = "Wir arbeiten daran, die Funktionen von AI Studio über ein Plugin auch in Ihrem Browser anzubieten. So können Sie zum Beispiel direkt im Browser Rechtschreibprüfungen durchführen oder Texte umformulieren lassen."
 
 -- There will be an interface for AI Studio to create content in other apps. You could, for example, create blog posts directly on the target platform or add entries to an internal knowledge management tool. This requires development work by the tool developers.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T3290746961"] = "Es wird eine Schnittstelle für AI Studio geben, um Inhalte in anderen Apps zu erstellen. So könnten Sie zum Beispiel Blogbeiträge direkt auf der Zielplattform verfassen oder Einträge zu einem internen Wissensmanagement-Tool hinzufügen. Dafür ist Entwicklungsarbeit durch die jeweiligen Tool-Entwickler erforderlich."
 
 -- Want an assistant that suits your specific needs? We aim to offer a plugin architecture so organizations and enthusiasts can implement such ideas.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T3440464089"] = "Sie möchten einen Assistenten, der genau auf ihre Bedürfnisse zugeschnitten ist? Wir planen, eine Plugin-Architektur anzubieten, damit Organisationen und Interessierte solche Ideen umsetzen können."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T3440464089"] = "Sie möchten einen Assistenten, der genau auf Ihre Bedürfnisse zugeschnitten ist? Wir planen, eine Plugin-Architektur anzubieten, damit Organisationen und Interessierte solche Ideen umsetzen können."
 
 -- Writing mode
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T3640675146"] = "Schreibmodus"
@@ -5293,7 +5293,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "Keine Chats 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1939006681"] = "Chat erstellen"
 
 -- Please name your workspace:
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Bitte benennen Sie ihren Arbeitsbereich:"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Bitte benennen Sie Ihren Arbeitsbereich:"
 
 -- Are you sure you want to load another chat? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2133593288"] = "Möchten Sie wirklich einen anderen Chat laden? Alle ungespeicherten Änderungen gehen dabei verloren."
@@ -5323,7 +5323,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Sind Sie sic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Chat in den Arbeitsbereich verschieben"
 
 -- Please enter a new or edit the name for your workspace '{0}':
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Bitte geben Sie einen neuen Namen für ihren Arbeitsbereich „{0}“ ein oder bearbeiten Sie ihn:"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Bitte geben Sie einen neuen Namen für Ihren Arbeitsbereich „{0}“ ein oder bearbeiten Sie ihn:"
 
 -- There is already a workspace with this name. Please choose a different name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3249036008"] = "Es gibt bereits einen Arbeitsbereich mit diesem Namen. Bitte wählen Sie einen anderen Namen."
@@ -5335,7 +5335,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Bitte geben 
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Umbenennen"
 
 -- Please enter a new or edit the name for your chat '{0}':
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3419791373"] = "Bitte geben Sie einen neuen Namen für ihren Chat „{0}“ ein oder bearbeiten Sie ihn:"
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3419791373"] = "Bitte geben Sie einen neuen Namen für Ihren Chat „{0}“ ein oder bearbeiten Sie ihn:"
 
 -- Search chat contents
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3436662033"] = "Chat-Inhalte durchsuchen"
@@ -5656,7 +5656,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T204496403"] = "Der Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profilnutzung"
 
 -- Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Fügen Sie Nachrichten einer Beispiel-Konversation hinzu (Nutzereingabe, gefolgt von einer Antwort des Assistenten), um das gewünschte Interaktionsmuster zu demonstrieren. Diese Beispiele helfen der KI, ihre Erwartungen zu verstehen, indem Sie das korrekte Format, den Stil und den Inhalt von Antworten zeigen, bevor tatsächliche Nutzereingaben erfolgen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Fügen Sie Nachrichten einer Beispiel-Konversation hinzu (Nutzereingabe, gefolgt von einer Antwort des Assistenten), um das gewünschte Interaktionsmuster zu demonstrieren. Diese Beispiele helfen der KI, Ihre Erwartungen zu verstehen, indem Sie das korrekte Format, den Stil und den Inhalt von Antworten zeigen, bevor tatsächliche Nutzereingaben erfolgen."
 
 -- File Attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "Dateianhänge"
@@ -5743,10 +5743,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3893704289"] = "Nachric
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Verwenden Sie den Standard-System-Prompt"
 
 -- Tell the AI your predefined user input.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Teilen Sie der KI ihre vordefinierte Benutzereingabe mit."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Teilen Sie der KI Ihre vordefinierte Benutzereingabe mit."
 
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Erstellen Sie ihre eigene Chat-Vorlage, um das Verhalten des LLMs für bestimmte Aufgaben oder Bereiche anzupassen. Definieren Sie einen individuellen System-Prompt und geben Sie eine Beispiel-Konversation vor, um eine KI-Erfahrung zu gestalten, die genau auf ihre Anforderungen zugeschnitten ist."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Erstellen Sie Ihre eigene Chat-Vorlage, um das Verhalten des LLMs für bestimmte Aufgaben oder Bereiche anzupassen. Definieren Sie einen individuellen System-Prompt und geben Sie eine Beispiel-Konversation vor, um eine KI-Erfahrung zu gestalten, die genau auf Ihre Anforderungen zugeschnitten ist."
 
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Nachricht eingeben"
@@ -6106,7 +6106,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2406580478"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Hinzufügen"
 
 -- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb ihrer Organisation. Ihre Daten werden nicht in die Cloud übertragen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb Ihrer Organisation. Ihre Daten werden nicht in die Cloud übertragen."
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Einbettung"
@@ -6262,7 +6262,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2406580478"] = "
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Hinzufügen"
 
 -- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb Ihrer Organisation. Ihre Daten werden nicht in die Cloud gesendet."
 
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "Einbettung"
@@ -6859,7 +6859,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T994314591"] = "Ziel"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1254789334"] = "Lade aus einer Datei, was die KI tun soll"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind Ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
 
 -- Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beachten Sie, dass Ihre Profilinformationen Teil des System-Prompts werden. Das bedeutet, sie belegen einen Teil des Kontexts – den „Speicher“, den das LLM nutzt, um Ihre Anfrage zu verstehen und darauf zu antworten. Wenn Ihr Profil extrem lang ist, kann das LLM Schwierigkeiten haben, die Aufgabe auszuführen."
@@ -6868,7 +6868,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1717545317"] = "Bitte beacht
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1847791252"] = "Aktualisieren"
 
 -- Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2119274961"] = "Erzählen Sie der KI etwas über sich. Was ist ihr Beruf? Wie erfahren sind Sie in diesem Beruf? Welche Technologien verwenden Sie?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2119274961"] = "Erzählen Sie der KI etwas über sich. Was ist Ihr Beruf? Wie erfahren sind Sie in diesem Beruf? Welche Technologien verwenden Sie?"
 
 -- What should the AI do for you?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T2261456575"] = "Was soll die KI für Sie tun?"
@@ -6892,16 +6892,16 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3448155331"] = "Schließen"
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T3708405102"] = "Bitte geben Sie ein, was das LLM über Sie wissen sollte und/oder welche Aktionen es ausführen soll."
 
 -- The name of the profile is mandatory. Each profile must have a unique name. Whether you provide information about yourself or only fill out the actions is up to you. Only one of these pieces is required.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4061896123"] = "Der Name des Profils ist erforderlich. Jedes Profil muss einen eindeutigen Namen haben. Ob Sie zusätzliche Angaben zu ihrer Person machen oder nur die Aktionen ausfüllen, bleibt Ihnen überlassen. Es reicht aus, eines von beidem anzugeben."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4061896123"] = "Der Name des Profils ist erforderlich. Jedes Profil muss einen eindeutigen Namen haben. Ob Sie zusätzliche Angaben zu Ihrer Person machen oder nur die Aktionen ausfüllen, bleibt Ihnen überlassen. Es reicht aus, eines von beidem anzugeben."
 
 -- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4125557797"] = "Speichern Sie persönliche Daten über sich in verschiedenen Profilen, damit die KIs ihren persönlichen Kontext kennen. So müssen Sie ihren Kontext nicht jedes Mal, zum Beispiel in jedem Chat, neu erklären. Wenn Sie unterschiedlichen Rollen haben, können Sie für jede Rolle ein eigenes Profil anlegen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4125557797"] = "Speichern Sie persönliche Daten über sich in verschiedenen Profilen, damit die KIs Ihren persönlichen Kontext kennen. So müssen Sie Ihren Kontext nicht jedes Mal, zum Beispiel in jedem Chat, neu erklären. Wenn Sie unterschiedliche Rollen haben, können Sie für jede Rolle ein eigenes Profil anlegen."
 
 -- What should the AI know about you?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T4227846635"] = "Was sollte die KI über Sie wissen?"
 
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für ihre Projektmanagement-Aufgaben erstellen, eines für ihre wissenschaftliche Arbeit und ein Profil für das Schreiben von Programmcode. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie gerne oder weniger gerne nutzen. Später können Sie auswählen, wann und wo Sie jedes Profil verwenden möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für Ihre Projektmanagement-Aufgaben erstellen, eines für Ihre wissenschaftliche Arbeit und ein Profil für das Schreiben von Programmcode. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie gerne oder weniger gerne nutzen. Später können Sie auswählen, wann und wo Sie jedes Profil verwenden möchten."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T900713019"] = "Abbrechen"
@@ -7201,7 +7201,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1082847843"] = "Par
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1093935834"] = "Parameterbeschreibung"
 
 -- The retrieval process name must not be empty. Please name your retrieval process.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1133451355"] = "Der Name des Abrufprozesses darf nicht leer sein. Bitte benennen Sie ihren Abrufvorgang."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1133451355"] = "Der Name des Abrufprozesses darf nicht leer sein. Bitte benennen Sie Ihren Abrufvorgang."
 
 -- The parameter name must not be empty. Please name the parameter.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T1359500913"] = "Der Parametername darf nicht leer sein. Bitte geben Sie einen Namen für den Parameter ein."
@@ -7240,13 +7240,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2646845972"] = "Hin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T2933579640"] = "Sie haben {0} Methoden zur Einbettung ausgewählt."
 
 -- Please provide some general information about your retrieval process first. This data may be displayed to the users.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3015844908"] = "Bitte geben Sie zunächst einige allgemeine Informationen über ihren Abrufprozess an. Diese Angaben können den Nutzern angezeigt werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3015844908"] = "Bitte geben Sie zunächst einige allgemeine Informationen über Ihren Abrufprozess an. Diese Angaben können den Nutzern angezeigt werden."
 
 -- The name of your retrieval process.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3207262684"] = "Der Name ihres Abrufprozesses."
 
 -- You may want to parameterize your retrieval process. However, this is optional. You can specify any parameters that can be set by the user or the system during the call. Nevertheless, you should use sensible default values in your code so that users are not forced to set the parameters manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3292152705"] = "Möglicherweise möchten Sie ihren Abrufprozess parameterisieren. Dies ist jedoch optional. Sie können beliebige Parameter angeben, die vom Benutzer oder vom System während des Aufrufs festgelegt werden können. Dennoch sollten Sie sinnvolle Standardwerte in ihrem Code verwenden, damit Benutzer die Parameter nicht manuell einstellen müssen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3292152705"] = "Möglicherweise möchten Sie Ihren Abrufprozess parameterisieren. Dies ist jedoch optional. Sie können beliebige Parameter angeben, die vom Benutzer oder vom System während des Aufrufs festgelegt werden können. Dennoch sollten Sie sinnvolle Standardwerte in Ihrem Code verwenden, damit Benutzer die Parameter nicht manuell einstellen müssen."
 
 -- Select a parameter to show and edit it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3300669027"] = "Wählen Sie einen Parameter aus, um ihn anzuzeigen und zu bearbeiten."
@@ -7267,7 +7267,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3481092305"] = "Nam
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3524519535"] = "Eine kurze Beschreibung des Abrufprozesses."
 
 -- Currently, you have not defined any embedding methods. If your retrieval process does not require embedding, you can ignore this part. Otherwise, you can define one or more embedding methods in the previous view to assign them to your retrieval process here.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3821108204"] = "Derzeit haben Sie keine Methoden zur Einbettung definiert. Falls Ihr Abrufprozess keine Einbettungen benötigt, können Sie diesen Abschnitt ignorieren. Andernfalls können Sie im vorherigen Bereich eine oder mehrere Methoden zur Einbettung festlegen, die Sie hier ihrem Abrufprozess zuweisen können."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3821108204"] = "Derzeit haben Sie keine Methoden zur Einbettung definiert. Falls Ihr Abrufprozess keine Einbettungen benötigt, können Sie diesen Abschnitt ignorieren. Andernfalls können Sie im vorherigen Bereich eine oder mehrere Methoden zur Einbettung festlegen, die Sie hier Ihrem Abrufprozess zuweisen können."
 
 -- Retrieval Process Parameters
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T3894388618"] = "Parameter für den Abrufprozess"
@@ -7480,7 +7480,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2322
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2345162613"] = "Welche Sprache soll vorausgewählt werden?"
 
 -- Reset your bias-of-the-day statistics
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2350981714"] = "Setzen Sie ihre Statistik zum „Vorurteil des Tages“ zurück"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2350981714"] = "Setzen Sie Ihre Statistik zum „Vorurteil des Tages“ zurück"
 
 -- Preselect another language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T2382415529"] = "Eine andere Sprache vorauswählen"
@@ -7501,7 +7501,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3848
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T3875604319"] = "Optionen sind vorausgewählt"
 
 -- Are you sure you want to reset your bias-of-the-day statistics? The system will no longer remember which biases you already know. As a result, biases you are already familiar with may be addressed again.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T405627382"] = "Sind Sie sicher, dass Sie ihre „Vorurteil des Tages“-Statistiken zurücksetzen möchten? Das System merkt sich dann nicht mehr, welche Verzerrungen Sie bereits kennen. Dadurch kann es sein, dass Ihnen bereits bekannte Verzerrungen erneut angezeigt werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T405627382"] = "Sind Sie sicher, dass Sie Ihre „Vorurteil des Tages“-Statistiken zurücksetzen möchten? Das System merkt sich dann nicht mehr, welche Verzerrungen Sie bereits kennen. Dadurch kann es sein, dass Ihnen bereits bekannte Verzerrungen erneut angezeigt werden."
 
 -- Assistant: Bias of the Day Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T4235808594"] = "Assistent: Optionen für „Bias des Tages“"
@@ -7702,10 +7702,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] = "Die neueste Nachricht nach dem Laden anzeigen?"
 
 -- Do you want to use any shortcut to send your input?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Möchten Sie eine Tastenkombination verwenden, um ihre Eingabe zu senden?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Möchten Sie eine Tastenkombination verwenden, um Ihre Eingabe zu senden?"
 
 -- Would you like to set one of your chat templates as the default for chats?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Möchten Sie eine ihrer Chat-Vorlagen als Standard für alle Chats festlegen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Möchten Sie eine Ihrer Chat-Vorlagen als Standard für alle Chats festlegen?"
 
 -- No chat options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3383186996"] = "Keine Chat-Optionen sind vorausgewählt"
@@ -7738,7 +7738,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] =
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "Wenn diese Option aktiviert ist, wird nach dem Laden eines Chats die neueste Nachricht angezeigt. Wenn sie deaktiviert ist, wird die erste (älteste) Nachricht angezeigt."
 
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, chat templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Passen Sie ihre KI-Erfahrung mit Chat-Vorlagen an. Egal, ob Sie mit Prompt-Engineering experimentieren, einfach einen eigenen System-Prompt im normalen Chat verwenden oder einen spezialisierten Assistenten erstellen möchten – mit Chat-Vorlagen haben Sie die volle Kontrolle. Ähnlich wie in den Playgrounds gängiger KI-Anbieter können Sie eigene System-Prompts festlegen und bei unterstützenden Anbietern auch Assistenten-Prompts nutzen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Passen Sie Ihre KI-Erfahrung mit Chat-Vorlagen an. Egal, ob Sie mit Prompt-Engineering experimentieren, einfach einen eigenen System-Prompt im normalen Chat verwenden oder einen spezialisierten Assistenten erstellen möchten – mit Chat-Vorlagen haben Sie die volle Kontrolle. Ähnlich wie in den Playgrounds gängiger KI-Anbieter können Sie eigene System-Prompts festlegen und bei unterstützenden Anbietern auch Assistenten-Prompts nutzen."
 
 -- Copy attachments into plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1345613295"] = "Anhänge in das Plugin kopieren"
@@ -8113,7 +8113,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T386503194
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4058414654"] = "Dieses Profil wird von Ihrer Organisation verwaltet."
 
 -- Store personal data about yourself in various profiles so that the AIs know your personal context. This saves you from having to explain your context each time, for example, in every chat. When you have different roles, you can create a profile for each role.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4125557797"] = "Speichern Sie persönliche Daten über sich in verschiedenen Profilen, damit die KIs ihren persönlichen Kontext kennen. So müssen Sie den Kontext nicht jedes Mal erneut erklären, zum Beispiel in jedem Chat. Wenn Sie verschiedene Rollen haben, können Sie für jede Rolle ein eigenes Profil anlegen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4125557797"] = "Speichern Sie persönliche Daten über sich in verschiedenen Profilen, damit die KIs Ihren persönlichen Kontext kennen. So müssen Sie den Kontext nicht jedes Mal erneut erklären, zum Beispiel in jedem Chat. Wenn Sie verschiedene Rollen haben, können Sie für jede Rolle ein eigenes Profil anlegen."
 
 -- View Profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T4219233997"] = "Profil anzeigen"
@@ -8125,7 +8125,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T424806724
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"] = "Möchten Sie das Profil „{0}“ wirklich löschen?"
 
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für ihre Projektmanagement-Aktivitäten anlegen, eines für ihre wissenschaftliche Arbeit und ein weiteres Profil, wenn Sie Programmcode schreiben müssen. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie bevorzugen oder nicht gerne verwenden. Später können Sie dann auswählen, wann und wo Sie jedes Profil nutzen möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für Ihre Projektmanagement-Aktivitäten anlegen, eines für Ihre wissenschaftliche Arbeit und ein weiteres Profil, wenn Sie Programmcode schreiben müssen. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie bevorzugen oder nicht gerne verwenden. Später können Sie dann auswählen, wann und wo Sie jedes Profil nutzen möchten."
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1417990312"] = "Zielsprache vorwählen"
@@ -9076,7 +9076,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Selbstlöschender Chat"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3059773282"] = "Arbeitsbereiche durchsuchen"
 
 -- Configure your workspaces
-UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Konfigurieren Sie ihre Arbeitsbereiche"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Konfigurieren Sie Ihre Arbeitsbereiche"
 
 -- Your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3745240468"] = "Ihre Arbeitsbereiche"
@@ -9184,7 +9184,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1009708591"] = "Im Gegensatz zu Dienste
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1024253064"] = "Willkommen bei MindWork AI Studio!"
 
 -- Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1146553980"] = "Vielen Dank, dass Sie MindWork AI Studio für ihre KI-Anwendungen in Betracht ziehen. Diese App wurde entwickelt, um Ihnen die Nutzung von leistungsstarken Sprachmodellen (LLMs) zu ermöglichen. Bitte beachten Sie, dass die App kein integriertes LLM enthält. Stattdessen benötigen Sie einen API-Schlüssel von einem passenden Anbieter."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1146553980"] = "Vielen Dank, dass Sie MindWork AI Studio für Ihre KI-Anwendungen in Betracht ziehen. Diese App wurde entwickelt, um Ihnen die Nutzung von leistungsstarken Sprachmodellen (LLMs) zu ermöglichen. Bitte beachten Sie, dass die App kein integriertes LLM enthält. Stattdessen benötigen Sie einen API-Schlüssel von einem passenden Anbieter."
 
 -- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1301599515"] = "Sie sind nicht an einen einzigen Anbieter gebunden. Stattdessen können Sie den Anbieter wählen, der am besten zu Ihren Anforderungen passt. Derzeit unterstützen wir OpenAI (GPT5, o1 usw.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimentell), IONOS, LiteLLM, Hugging Face, Groq, Fireworks sowie selbst gehostete Modelle mit vLLM, llama.cpp, ollama oder LM Studio. Für Wissenschaftlerinnen und Wissenschaftler sowie Mitarbeitende von Forschungseinrichtungen unterstützen wir außerdem die KI-Dienste von Helmholtz und GWDG. Diese sind über föderierte Logins wie eduGAIN für alle 18 Helmholtz-Zentren, die Max-Planck-Gesellschaft, die meisten deutschen sowie viele internationale Universitäten verfügbar."
@@ -9193,7 +9193,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1301599515"] = "Sie sind nicht an einen
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T144565305"] = "Die App benötigt nur wenig Speicherplatz für die Installation und verwendet wenig Arbeitsspeicher. Außerdem hat sie einen minimalen Einfluss auf die Systemressourcen, was sich positiv auf die Akkulaufzeit auswirkt."
 
 -- You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T149711988"] = "Sie zahlen nur für das, was Sie tatsächlich nutzen – das kann günstiger sein als monatliche Abos wie ChatGPT Plus, vor allem bei gelegentlicher Nutzung. Aber Vorsicht: Bei sehr intensiver Nutzung können die API-Kosten deutlich höher ausfallen. Leider bieten die Anbieter derzeit keine Möglichkeit, die aktuellen Kosten direkt in der App anzuzeigen. Prüfen Sie deshalb regelmäßig Ihr Konto beim jeweiligen Anbieter, um ihre Ausgaben im Blick zu behalten. Nutzen Sie, wenn möglich, Prepaid-Optionen und legen Sie ein Ausgabenlimit fest."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T149711988"] = "Sie zahlen nur für das, was Sie tatsächlich nutzen – das kann günstiger sein als monatliche Abos wie ChatGPT Plus, vor allem bei gelegentlicher Nutzung. Aber Vorsicht: Bei sehr intensiver Nutzung können die API-Kosten deutlich höher ausfallen. Leider bieten die Anbieter derzeit keine Möglichkeit, die aktuellen Kosten direkt in der App anzuzeigen. Prüfen Sie deshalb regelmäßig Ihr Konto beim jeweiligen Anbieter, um Ihre Ausgaben im Blick zu behalten. Nutzen Sie, wenn möglich, Prepaid-Optionen und legen Sie ein Ausgabenlimit fest."
 
 -- Version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1573770551"] = "Version"
@@ -9223,7 +9223,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2331588413"] = "Los geht's"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2348849647"] = "Letztes Änderungsprotokoll"
 
 -- Choose the provider and model best suited for your current task.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2588488920"] = "Wählen Sie den Anbieter und das Modell aus, die am besten zu ihrer aktuellen Aufgabe passen."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2588488920"] = "Wählen Sie den Anbieter und das Modell aus, die am besten zu Ihrer aktuellen Aufgabe passen."
 
 -- Quick Start Guide
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3002014720"] = "Schnellstart-Anleitung"
@@ -9232,7 +9232,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3002014720"] = "Schnellstart-Anleitung"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3228075421"] = "Sie möchten einfach schnell einen Text übersetzen? Für solche und andere Aufgaben gibt es in AI Studio sogenannte Assistenten. Beim Arbeiten mit diesen Assistenten sind keine Eingabeaufforderungen erforderlich."
 
 -- We hope you enjoy using MindWork AI Studio to bring your AI projects to life!
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3275341342"] = "Wir hoffen, dass Sie viel Freude daran haben, mit MindWork AI Studio ihre KI-Projekte zum Leben zu erwecken!"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3275341342"] = "Wir hoffen, dass Sie viel Freude daran haben, mit MindWork AI Studio Ihre KI-Projekte zum Leben zu erwecken!"
 
 -- Cost-effective
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3341379752"] = "Kosteneffizient"
@@ -9244,7 +9244,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3723223888"] = "Flexibilität"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3959064551"] = "Datenschutz"
 
 -- You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T457410099"] = "Sie können über die Einstellungen zur Anbietervertrauenswürdigkeit steuern, welche Anbieter ihre Daten erhalten. Zum Beispiel können Sie für das Schreiben von E-Mails einen anderen Schutzlevel festlegen als für allgemeine Chats usw. Außerdem garantieren die meisten Anbieter, dass ihre Daten nicht zum Trainieren neuer KI-Systeme verwendet werden."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T457410099"] = "Sie können über die Einstellungen zur Anbietervertrauenswürdigkeit steuern, welche Anbieter Ihre Daten erhalten. Zum Beispiel können Sie für das Schreiben von E-Mails einen anderen Schutzlevel festlegen als für allgemeine Chats usw. Außerdem garantieren die meisten Anbieter, dass Ihre Daten nicht zum Trainieren neuer KI-Systeme verwendet werden."
 
 -- Free of charge
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T617579208"] = "Kostenlos"
@@ -9268,7 +9268,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startprotokollda
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T103551060"] = "Die konfigurierten Root-Zertifikate konnten nicht verwendet werden."
 
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über Ihre Beiträge."
 
 -- Vector store version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1124039623"] = "Vektordatenbankversion"
@@ -9559,7 +9559,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
 
 -- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Verbinden Sie AI Studio mit den Daten ihrer Organisation über unsere Schnittstelle für externe Datenabfrage (ERI)."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Verbinden Sie AI Studio mit den Daten Ihrer Organisation über unsere Schnittstelle für externe Datenabfrage (ERI)."
 
 -- Have feature ideas? Submit suggestions for future AI Studio enhancements.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Haben Sie Ideen für neue Funktionen? Senden Sie uns Vorschläge für zukünftige Verbesserungen von AI Studio."
@@ -10003,7 +10003,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T838479287"] = "Spenden von Untern
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T991294232"] = "Vielen herzlichen Dank, Kerstin, dass du dich um die Erstellung des Wikis gekümmert hast."
 
 -- Write your text
-UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T2220943334"] = "Schreiben Sie ihren Text"
+UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T2220943334"] = "Schreiben Sie Ihren Text"
 
 -- Writer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T2979224202"] = "Autor"
@@ -10099,7 +10099,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T991839585"] = "Der API-Schl�
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob ihre Daten sicher sind."
 
 -- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder ihre Organisation betreiben das LLM lokal oder innerhalb ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder Ihre Organisation betreiben das LLM lokal oder innerhalb Ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
 
 -- The provider operates its service in the EU and is subject to the **GDPR** (General Data Protection Regulation). It provides access to **open source models**. However, the service is currently **experimental**, and performance and availability are not guaranteed. We have no provider-specific information about whether submitted data is used for training.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2930312134"] = "Der Anbieter betreibt seinen Dienst in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Er bietet Zugang zu **Open-Source-Modellen**. Der Dienst befindet sich jedoch derzeit in einer **experimentellen** Phase; Leistung und Verfügbarkeit werden nicht garantiert. Uns liegen keine anbieterspezifischen Informationen dazu vor, ob übermittelte Daten für das Training verwendet werden."
@@ -10117,7 +10117,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3370749159"] = "Sie oder Ihre 
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3528165925"] = "Der Anbieter betreibt seinen Dienst aus den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Bei Verdacht können US-Behörden auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht für Trainingszwecke** verwendet."
 
 -- The provider operates its service from the USA and is subject to **U.S. jurisdiction**. In case of suspicion, authorities in the USA can access your data. Please inform yourself about the use of your data. We do not know if your data is safe.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3788466789"] = "Der Anbieter betreibt seinen Service in den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Im Verdachtsfall können US-Behörden auf ihre Daten zugreifen. Bitte informieren Sie sich über die Verwendung ihrer Daten. Wir wissen nicht, ob ihre Daten sicher sind."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3788466789"] = "Der Anbieter betreibt seinen Service in den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Im Verdachtsfall können US-Behörden auf Ihre Daten zugreifen. Bitte informieren Sie sich über die Verwendung Ihrer Daten. Wir wissen nicht, ob Ihre Daten sicher sind."
 
 -- The provider operates its service from China. In case of suspicion, authorities in the respective countries of operation may access your data. However, **your data is not used for training** purposes.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T991875725"] = "Der Anbieter betreibt seinen Dienst von China aus. Im Verdachtsfall können Behörden in den jeweiligen Ländern auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht zum Trainieren** verwendet."
@@ -10459,7 +10459,7 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1848
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2056842933"] = "Plugins: Vorschau auf unser Pluginsystems, mit dem Sie die Funktionalität der App erweitern können"
 
 -- RAG: Preview of our RAG implementation where you can refer your files or integrate enterprise data within your company
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2708939138"] = "RAG: Vorschau auf unsere RAG-Implementierung, mit der Sie auf ihre Dateien zugreifen oder Unternehmensdaten in ihrem Unternehmen integrieren können"
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2708939138"] = "RAG: Vorschau auf unsere RAG-Implementierung, mit der Sie auf Ihre Dateien zugreifen oder Unternehmensdaten in Ihrem Unternehmen integrieren können"
 
 -- Unknown preview feature
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2722827307"] = "Unbekannte Vorschau-Funktion"
@@ -11062,7 +11062,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2897122009"] 
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3262447403"] = "Die Datei „{0}“ ist eine {1}, die AI Studio nicht lesen kann. Daher wurde sie nicht gesendet."
 
 -- The file '{0}' is actually a {1} and was read as such. Please correct its file extension.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719"] = "Die Datei „{0}“ ist tatsächlich eine {1} und wurde als solche gelesen. Bitte korrigieren Sie ihre Dateiendung."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719"] = "Die Datei „{0}“ ist tatsächlich eine {1} und wurde als solche gelesen. Bitte korrigieren Sie deren Dateiendung."
 
 -- The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3303873344"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht gesendet. Ihr Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung."
@@ -12394,7 +12394,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::SEARXNG::SEARXNGSEARCHBACKEND::T318306081"] = "Dokumentation"
 
 -- Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::SEARXNG::SEARXNGSEARCHBACKEND::T4198847064"] = "Basis-URL der SearXNG-Instanz. Sie können entweder die Stamm-URL der Instanz oder den Endpunkt „/search“ eingeben. In der Instanz muss das JSON-Format aktiviert sein, d. h. „json“ muss in ihrer Datei „settings.yml“ unter „search.formats“ aufgeführt sein. Öffentliche Instanzen stellen normalerweise nur die Weboberfläche bereit und blockieren zudem automatisierte Anfragen. Daher ist eine selbst gehostete Instanz die zuverlässige Option."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::SEARXNG::SEARXNGSEARCHBACKEND::T4198847064"] = "Basis-URL der SearXNG-Instanz. Sie können entweder die Stamm-URL der Instanz oder den Endpunkt „/search“ eingeben. In der Instanz muss das JSON-Format aktiviert sein, d. h. „json“ muss in Ihrer Datei „settings.yml“ unter „search.formats“ aufgeführt sein. Öffentliche Instanzen stellen normalerweise nur die Weboberfläche bereit und blockieren zudem automatisierte Anfragen. Daher ist eine selbst gehostete Instanz die zuverlässige Option."
 
 -- The configured SearXNG URL must start with http:// or https://.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::SEARXNG::SEARXNGSEARCHBACKEND::T944878454"] = "Die konfigurierte SearXNG-URL muss mit http:// oder https:// beginnen."
@@ -12640,7 +12640,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2025964684"
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2160507967"] = "Der Name darf maximal 40 Zeichen lang sein."
 
 -- Please select your security policy.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Bitte wählen Sie ihre Sicherheitsrichtlinie aus."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Bitte wählen Sie Ihre Sicherheitsrichtlinie aus."
 
 -- Please test the connection before saving.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T285470497"] = "Bitte testen Sie die Verbindung, bevor Sie speichern."
@@ -12649,7 +12649,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T285470497"]
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2999173576"] = "Der ausgewählte Einbettungsanbieter hat das Vertrauensniveau „{0}“, aber diese Datenquelle erfordert das Vertrauensniveau „{1}“. Bitte wählen Sie einen Einbettungsanbieter mit gleichem oder höherem Vertrauensniveau oder senken Sie das erforderliche Vertrauensniveau."
 
 -- Please enter your secure access token.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3086932434"] = "Bitte geben Sie ihren sicheren Zugangstoken ein."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3086932434"] = "Bitte geben Sie Ihren sicheren Zugangstoken ein."
 
 -- The path does not exist. Please select a valid directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T3146272446"] = "Der Pfad existiert nicht. Bitte wählen Sie einen gültigen Ordner aus."
