@@ -36,7 +36,7 @@
     </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
-        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
+        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" Sensitivity="0.05" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
             <StartContent>
                 @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
                 {

@@ -1015,7 +1015,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             item.ChunkId,
             vectors[index],
             dataSource.Id,
-            dataSource.Name,
             dataSource.Type.ToString(),
             item.ChunkId,
             parentFile.ParentFileId,
@@ -1274,7 +1273,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         await indexStore.UpsertDataSourceAsync(
             dataSource.Id,
-            dataSource.Name,
             dataSource.Type.ToString(),
             manifest.EmbeddingProviderId,
             manifest.EmbeddingSignature,

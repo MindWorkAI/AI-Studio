@@ -184,7 +184,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            this.OnFormChange().Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
