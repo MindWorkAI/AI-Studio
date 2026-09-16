@@ -4222,7 +4222,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier k�
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1166628228"] = "Bisher wurden keine LLM-Anbieter konfiguriert. Bitte fügen Sie einen Anbieter in den App-Einstellungen hinzu."
 
 -- No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1220991024"] = "Kein LLM-Anbieter erfüllt die Sicherheitsanforderungen. Bitte konfiguriere Sie einen gültigen Anbieter in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1220991024"] = "Kein LLM-Anbieter erfüllt die Vertrauensanforderungen. Bitte konfigurieren Sie einen geeigneten Anbieter in den App-Einstellungen."
 
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audioeingabe möglich"
@@ -11605,7 +11605,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T335338363
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standardmäßiger Erweiterungsprozess"
 
 -- No provider is trusted enough to check which passages fit your question. This answer uses all passages that were found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T2710880477"] = "Kein Anbieter ist vertrauenswürdig genug, um zu prüfen, welche Abschnitte zu deiner Frage passen. Diese Antwort verwendet alle gefundenen Abschnitte."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T2710880477"] = "Kein Anbieter ist vertrauenswürdig genug, um zu prüfen, welche Abschnitte zu Ihrer Frage passen. Diese Antwort verwendet alle gefundenen Abschnitte."
 
 -- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "Dies ist der Standard-Erweiterungsprozess, bei dem alle abgerufenen Kontexte verwendet werden, um den Chatverlauf zu ergänzen."
