@@ -41,7 +41,12 @@ public sealed class SettingsManager
     /// Reading takes this as well as writing does, for two reasons. A read migrates and backs up
     /// what it found, so it writes the very files a store writes. And it re-evaluates whether
     /// writes are blocked at all, starting out by clearing that block: a store slipping through
-    /// that moment would overwrite the settings the block exists to protect.
+    /// that moment would overwrite the settings the block exists to protect.<br/><br/>
+    /// What this does not do is guard the settings themselves. It guards the files: what one store
+    /// writes, the next one no longer has to fear. The configuration data behind them stays open to
+    /// everybody, and a store serializes it while the rest of the app goes on editing it -- a list
+    /// growing mid-serialization still throws. Whoever wants that answered needs one of their own;
+    /// this lock is not it.
     /// </remarks>
     private readonly SemaphoreSlim settingsFileSemaphore = new(1, 1);
 
@@ -335,8 +340,8 @@ public sealed class SettingsManager
 
             var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
             var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
-            await this.StoreSettingsSnapshot(settingsJson, settingsPath);
-            await this.StoreCurrentVersionBackup(this.ConfigurationData.Version, settingsJson);
+            await this.StoreSerializedSettings(settingsJson, settingsPath);
+            await this.StoreSerializedVersionBackup(this.ConfigurationData.Version, settingsJson);
         }
         finally
         {
@@ -349,9 +354,20 @@ public sealed class SettingsManager
     private static string GetBackupSettingsPath(Version version) => Path.Combine(ConfigDirectory!, GetBackupSettingsFilename(version));
 
     private Task StoreCurrentVersionBackup(Data settingsData) =>
-        this.StoreCurrentVersionBackup(settingsData.Version, JsonSerializer.Serialize(settingsData, JSON_OPTIONS));
+        this.StoreSerializedVersionBackup(settingsData.Version, JsonSerializer.Serialize(settingsData, JSON_OPTIONS));
 
-    private async Task StoreCurrentVersionBackup(Version settingsVersion, string settingsJson)
+    /// <summary>
+    /// Writes the backup file from settings which were serialized already.
+    /// </summary>
+    /// <remarks>
+    /// The store hands the same JSON to this method and to the one writing the settings file, so
+    /// that both files say the same thing. Serializing twice cannot promise that: the configuration
+    /// data may well have changed in between, and the backup would then describe a state the
+    /// settings file never had.
+    /// </remarks>
+    /// <param name="settingsVersion">The version the serialized settings carry.</param>
+    /// <param name="settingsJson">The serialized settings.</param>
+    private async Task StoreSerializedVersionBackup(Version settingsVersion, string settingsJson)
     {
         if(settingsVersion != CURRENT_SETTINGS_VERSION)
         {
@@ -360,14 +376,19 @@ public sealed class SettingsManager
         }
 
         var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
-        await this.StoreSettingsSnapshot(settingsJson, backupSettingsPath);
+        await this.StoreSerializedSettings(settingsJson, backupSettingsPath);
         this.logger.LogInformation($"Stored the settings backup file '{backupSettingsPath}'.");
     }
 
     private Task StoreSettingsSnapshot(Data settingsData, string settingsPath) =>
-        this.StoreSettingsSnapshot(JsonSerializer.Serialize(settingsData, JSON_OPTIONS), settingsPath);
+        this.StoreSerializedSettings(JsonSerializer.Serialize(settingsData, JSON_OPTIONS), settingsPath);
 
-    private async Task StoreSettingsSnapshot(string settingsJson, string settingsPath)
+    /// <summary>
+    /// Writes settings which were serialized already to the given path.
+    /// </summary>
+    /// <param name="settingsJson">The serialized settings.</param>
+    /// <param name="settingsPath">The file to write them to.</param>
+    private async Task StoreSerializedSettings(string settingsJson, string settingsPath)
     {
         if(!Directory.Exists(ConfigDirectory))
         {
@@ -386,7 +407,7 @@ public sealed class SettingsManager
         try
         {
             await File.WriteAllTextAsync(tempFile, settingsJson);
-            await Task.Run(() => File.Move(tempFile, settingsPath, true));
+            File.Move(tempFile, settingsPath, true);
         }
         catch
         {
