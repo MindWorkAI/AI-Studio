@@ -1015,7 +1015,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             item.ChunkId,
             vectors[index],
             dataSource.Id,
-            dataSource.Name,
             dataSource.Type.ToString(),
             item.ChunkId,
             parentFile.ParentFileId,

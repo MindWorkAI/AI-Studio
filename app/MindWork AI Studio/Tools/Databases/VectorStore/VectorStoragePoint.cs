@@ -4,7 +4,6 @@ public sealed record VectorStoragePoint(
     string PointId,
     IReadOnlyList<float> Vector,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string ChunkId,
     string ParentFileId,
