@@ -39,6 +39,16 @@ public partial class Chat : MSGComponentBase
         
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
         this.splitterSaveTimer.AutoReset = false;
+        //
+        // Mind that this handler deliberately stays off the renderer thread, although it writes the
+        // configuration data from a thread pool thread. The position is a single double, and every
+        // target we ship is 64 bit, so the write cannot tear -- and the worst a lost one could do is
+        // a splitter standing somewhere else after the next start. What a jump to the dispatcher
+        // would cost instead is paid by the user: storing the settings serializes all of them and
+        // writes two files, and it would do that in the very queue which draws the drag they are in
+        // the middle of. The splitter then stutters under their hand. Whoever synchronizes the
+        // configuration data one day should do it without moving that work onto the renderer.
+        //
         this.splitterSaveTimer.Elapsed += (_, _) =>
         {
             this.SettingsManager.ConfigurationData.Workspace.SplitterPosition = this.splitterPosition;
