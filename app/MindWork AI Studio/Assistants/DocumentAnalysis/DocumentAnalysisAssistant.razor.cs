@@ -286,7 +286,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         // Enterprise configurations cannot be modified at all:
         if(policy.IsEnterpriseConfiguration)
-            return false;
+            return hasChanges;
 
         var canEditProtectedFields = force || (!policy.IsProtected && !this.policyIsProtected);
         if (!canEditProtectedFields)
@@ -314,6 +314,20 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         policy.AllowedToolIds = [..this.policyAllowedToolIds];
         return hasChanges;
     }
+
+    /// <summary>
+    /// Whether the given policy may take over an edit of one of its protected fields right now.
+    /// </summary>
+    /// <remarks>
+    /// The handlers which write their value straight into the policy have to ask this themselves.
+    /// ApplyFormToPolicy asks the same question, but it never gets to judge their fields: they have
+    /// already brought policy and form in line, so nothing is left for it to compare. The markup
+    /// disables those controls for a protected policy and an enterprise policy is always a protected
+    /// one, which is why nobody should ever reach a handler that way -- this keeps the rule in the
+    /// code as well, where the next handler will look for it. The form value counts alongside the
+    /// stored one, because the protection switch is flipped before the store which writes it has run.
+    /// </remarks>
+    private bool AcceptsProtectedFieldEdits(DataDocumentAnalysisPolicy policy) => policy is { IsEnterpriseConfiguration: false, IsProtected: false } && !this.policyIsProtected;
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private bool policyIsProtected;
@@ -630,19 +644,19 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private void PolicyAllowedToolsWasChanged(HashSet<string> allowedToolIds)
     {
         this.policyAllowedToolIds = allowedToolIds;
-        if (this.selectedPolicy is null)
+        if (this.selectedPolicy is not { } policy || !this.AcceptsProtectedFieldEdits(policy))
             return;
 
-        this.selectedPolicy.AllowedToolIds = [..allowedToolIds];
+        policy.AllowedToolIds = [..allowedToolIds];
         this.policyStorePending = true;
     }
 
     private void PolicyMinimumConfidenceWasChanged(ConfidenceLevel level)
     {
         this.policyMinimumProviderConfidence = level;
-        if (this.selectedPolicy is not null)
+        if (this.selectedPolicy is { } policy && this.AcceptsProtectedFieldEdits(policy))
         {
-            this.selectedPolicy.MinimumProviderConfidence = level;
+            policy.MinimumProviderConfidence = level;
             this.policyStorePending = true;
         }
 
@@ -651,11 +665,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private void PolicyPreselectedProviderWasChanged(string providerId)
     {
-        if (this.selectedPolicy is null)
+        if (this.selectedPolicy is not { } policy || !this.AcceptsProtectedFieldEdits(policy))
             return;
 
         this.policyPreselectedProviderId = providerId;
-        this.selectedPolicy.PreselectedProvider = providerId;
+        policy.PreselectedProvider = providerId;
         this.policyStorePending = true;
         this.ProviderSettings = Settings.Provider.NONE;
         this.ApplyPolicyPreselection();
