@@ -3151,7 +3151,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTE
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2192261405"] = "Die Antwort des Modells enthielt unerwartete Felder. Bitte versuche es erneut oder wähle ein anderes Modell aus."
 
 -- AI Studio was closed while this briefing was being built. You can resume the build.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2197645770"] = "AI Studio wurde geschlossen, während dieses Briefing erstellt wurde. Du kannst die Erstellung fortsetzen."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2197645770"] = "AI Studio wurde geschlossen, während dieses Briefing erstellt wurde. Sie können die Erstellung fortsetzen."
 
 -- The presentation of the model response did not match the briefing contract. Please try again or select another model.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2376983148"] = "Die Darstellung der Modellantwort entsprach nicht den Vorgaben des Briefings. Bitte versuchen Sie es erneut oder wählen Sie ein anderes Modell aus."
@@ -3954,6 +3954,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Date
 -- Available Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Verfügbare Datenquellen"
 
+-- This data source is waiting to be indexed again. Until that is finished, it cannot be searched.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTIONROW::T1692539409"] = "Diese Datenquelle wartet darauf, erneut indexiert zu werden. Bis dies abgeschlossen ist, kann sie nicht durchsucht werden."
+
 -- Tools (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1019749907"] = "Werkzeuge (optional)"
 
@@ -4423,7 +4426,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDI
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb des Mindest-Audit-Levels blockiert."
 
 -- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optional können Sie einen speziellen Provider für Audits auswählen. Wenn dieses Feld leer bleibt, verwendet AI Studio den appweiten Standardprovider."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optional können Sie einen speziellen Anbieter für Audits auswählen. Wenn dieses Feld leer bleibt, verwendet AI Studio den appweiten Standardanbieter."
 
 -- This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T893652865"] = "Dieser Agent überprüft neu installierte oder aktualisierte externe Plugin-Assistenten vor ihrer Aktivierung auf Sicherheitsrisiken und speichert die neueste Audit-Karte, bis sich das Plugin ändert."
@@ -5410,7 +5413,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1357418474"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1423034104"] = "Bei dieser Überprüfung wurden keine Sicherheitsprobleme gefunden."
 
 -- No provider configured
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1476185409"] = "Kein Provider konfiguriert"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1476185409"] = "Kein Anbieter konfiguriert"
 
 -- {0:0.##} KB
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T14914764"] = "{0:0.##} KB"
@@ -5461,7 +5464,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2562655035"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T273798258"] = "Das Assistenten-Plugin konnte für die Überprüfung nicht aufgelöst werden."
 
 -- Audit provider
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2757790517"] = "Provider prüfen"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2757790517"] = "Anbieter prüfen"
 
 -- Size
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = "Größe"
@@ -5773,7 +5776,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2107991661
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2150386772"] = "{0} Pflichtangabe"
 
 -- You can install the plugin again later, but any changes you made to its settings are lost.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745"] = "Du kannst das Plugin später erneut installieren, aber alle Änderungen an seinen Einstellungen gehen verloren."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745"] = "Sie können das Plugin später erneut installieren, aber alle Änderungen an seinen Einstellungen gehen verloren."
 
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} Profil"
@@ -6958,7 +6961,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T871282530"] = "
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inferenz-Anbieter"
 
 -- This provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1090492389"] = "Dieser Provider wird von Ihrer Organisation verwaltet. Host, Modell und andere Einstellungen sind gesperrt. Sie können Ihren eigenen API-Schlüssel unten festlegen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1090492389"] = "Dieser Anbieter wird von Ihrer Organisation verwaltet. Host, Modell und andere Einstellungen sind gesperrt. Sie können Ihren eigenen API-Schlüssel unten festlegen."
 
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1108876344"] = "Experten-Einstellungen ausblenden"
@@ -7312,7 +7315,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T1839536175"] = "An
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2111340711"] = "Derzeit sind keine Dateianhänge vorhanden."
 
 -- You can drag more files into this window to attach them right away.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2653077974"] = "Du kannst weitere Dateien in dieses Fenster ziehen, um sie sofort anzuhängen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2653077974"] = "Sie können weitere Dateien in dieses Fenster ziehen, um sie sofort anzuhängen."
 
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T285154968"] = "Dokumentvorschau"
@@ -9099,6 +9102,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1143368054"] = "Andere Ursache"
 -- Current file: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1166856644"] = "Aktuelle Datei: {0}"
 
+-- File {0} of {1} is being indexed: block {2}, page {3}.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1298290372"] = "Datei {0} von {1} wird indexiert: Block {2}, Seite {3}."
+
 -- Could not open the file location: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Der Speicherort der Datei konnte nicht geöffnet werden: {0}"
 
@@ -9147,6 +9153,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T309404893"] = "Fehlerhafte Dateie
 -- Show this file in the file browser of your system
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3273105305"] = "Diese Datei im Dateibrowser Ihres Systems anzeigen"
 
+-- Data source {0} of {1} is being worked on. The others are waiting their turn.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3389674086"] = "Datenquelle {0} von {1} wird gerade bearbeitet. Die anderen warten, bis sie an der Reihe sind."
+
 -- Unknown error
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3461425987"] = "Unbekannter Fehler"
 
@@ -9161,6 +9170,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3865031940"] = "Aktionen"
 
 -- Skipped until the file changes
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T542386347"] = "Übersprungen, bis sich die Datei ändert"
+
+-- File {0} of {1} is being indexed: block {2}.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T615458954"] = "Datei {0} von {1} wird indexiert: Block {2}."
 
 -- File
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T723007075"] = "Datei"
@@ -9604,7 +9616,7 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3444344506"] = "Das Crate „aho
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird mit Unternehmenskonfigurationen unter Verwendung von Konfigurations-Plugins betrieben. Eine zentrale Konfigurationsverwaltung wird nicht eingesetzt."
 
 -- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "Du verwendest eine Entwicklerversion von AI Studio, die sich niemals selbst aktualisiert. Hole stattdessen die neuesten Änderungen und erstelle die App neu."
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "Sie verwenden eine Entwicklerversion von AI Studio, die sich niemals selbst aktualisiert. Holen Sie stattdessen die neuesten Änderungen und erstellen Sie die App neu."
 
 -- Unknown error
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3461425987"] = "Unbekannter Fehler"
@@ -10075,7 +10087,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben ve
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T411393889"] = "Der Anbieter „{0}“ kennt das ausgewählte Modell nicht. Bitte wählen Sie ein anderes Modell aus."
 
 -- The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T479223640"] = "Der Text war länger, als das ausgewählte Modell verarbeiten kann (maximal {0} Token). Bitte wählen Sie ein Modell für längere Texte oder verringern Sie die Chunk-Größe der Datenquelle."
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T479223640"] = "Der Text war länger, als das ausgewählte Modell verarbeiten kann (maximal {0} Token). Bitte wählen Sie ein Modell für längere Texte oder verringern Sie die Blockgröße der Datenquelle."
 
 -- The provider '{0}' reported an error: {1}
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "Der Anbieter „{0}“ hat einen Fehler gemeldet: {1}"
@@ -11604,9 +11616,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T335338363
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standardmäßiger Erweiterungsprozess"
 
--- No provider is trusted enough to check which passages fit your question. This answer uses all passages that were found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T2710880477"] = "Kein Anbieter ist vertrauenswürdig genug, um zu prüfen, welche Abschnitte zu Ihrer Frage passen. Diese Antwort verwendet alle gefundenen Abschnitte."
-
 -- This is the standard augmentation process, which uses all retrieval contexts to augment the chat thread.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T3240406069"] = "Dies ist der Standard-Erweiterungsprozess, bei dem alle abgerufenen Kontexte verwendet werden, um den Chatverlauf zu ergänzen."
 
@@ -11618,9 +11627,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCS
 
 -- Automatically selects the appropriate data sources based on the last prompt. Applies a heuristic reduction at the end to reduce the number of data sources.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::DATASOURCESELECTIONPROCESSES::AGENTICSRCSELWITHDYNHEUR::T648937779"] = "Wählt automatisch die passenden Datenquellen basierend auf der letzten Eingabe aus. Wendet am Ende eine heuristische Reduzierung an, um die Anzahl der Datenquellen zu verringern."
-
--- None of your selected data sources is available for the chosen provider. This answer was created without them.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T1696726639"] = "Keine der ausgewählten Datenquellen ist für den gewählten Anbieter verfügbar. Diese Antwort wurde ohne sie erstellt."
 
 -- This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3047786484"] = "Dieser RAG-Prozess filtert Datenquellen, wählt automatisch passende Quellen aus, ermöglicht optional die manuelle Auswahl von Quellen, ruft Daten ab und überprüft den Abrufkontext automatisch."
@@ -11990,6 +11996,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T29
 
 -- The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector for your message.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T3469074321"] = "Die Datenquelle „{0}“ wurde in der Antwort nicht berücksichtigt: Der Einbettungsanbieter „{1}“ hat für Ihre Nachricht keinen Vektor zurückgegeben."
+
+-- The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4022014739"] = "Die Datenquelle „{0}“ wurde in der Antwort nicht berücksichtigt, da sie erneut indexiert wird und erst nach Abschluss dieses Vorgangs durchsucht werden kann."
 
 -- Page {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4127287940"] = "Seite {0}"
@@ -12742,7 +12751,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T649507886"] =
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Bitte wählen Sie ein Modell aus."
 
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1016188706"] = "Möchtest du den Chat '{0}' im Arbeitsbereich '{1}' wirklich löschen?"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1016188706"] = "Möchten Sie den Chat '{0}' im Arbeitsbereich '{1}' wirklich löschen?"
 
 -- Unnamed workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannter Arbeitsbereich"
@@ -12751,7 +12760,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannt
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
 
 -- Are you sure you want to delete the temporary chat '{0}'?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Möchtest du den temporären Chat '{0}' wirklich löschen?"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Möchten Sie den temporären Chat '{0}' wirklich löschen?"
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unbenannter Chat"
