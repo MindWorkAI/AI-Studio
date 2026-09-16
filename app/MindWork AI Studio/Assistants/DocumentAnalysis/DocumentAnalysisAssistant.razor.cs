@@ -256,12 +256,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private async Task AutoSave(bool force = false)
     {
         //
-        // A pending name store is a property of the settings, not of the selected policy: the name
-        // is written into its policy the very moment it is typed, so what is still outstanding is
-        // the store itself. It therefore outlives a form reset and a switch to another policy, and
-        // only a completed store clears it.
+        // A pending store is a property of the settings, not of the selected policy: the value has
+        // been written into its policy already, so what is still outstanding is the store itself.
+        // It therefore outlives a form reset and a switch to another policy, and only a completed
+        // store clears it.
         //
-        var hasChanges = this.policyNameStorePending;
+        var hasChanges = this.policyStorePending;
         if(this.selectedPolicy is { } policy)
             hasChanges |= this.ApplyFormToPolicy(policy, force);
 
@@ -269,7 +269,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         await this.SettingsManager.StoreSettings();
-        this.policyNameStorePending = false;
+        this.policyStorePending = false;
     }
 
     /// <summary>
@@ -333,15 +333,19 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string policyName = string.Empty;
 
     /// <summary>
-    /// Whether a typed policy name still waits to be written to the settings file.
+    /// Whether an edit already applied to a policy still waits to be written to the settings file.
     /// </summary>
     /// <remarks>
-    /// Typing a name applies it to its policy at once, so that the policy list shows the new name
-    /// right away -- which leaves nothing for the auto-save to compare the form against. This flag
-    /// is what tells it that a store is nevertheless due. It belongs to no particular policy: the
-    /// name has long arrived where it belongs, only the file has not caught up yet.
+    /// Some handlers apply their value to the selected policy at once, because the rest of the
+    /// assistant reads it back from there right away: the policy list has to show a new name while
+    /// it is being typed, and the provider preselection is recomputed from the policy, not from the
+    /// form. Doing so leaves the auto-save nothing to compare the form against -- form and policy
+    /// already agree -- so every such handler has to announce the store itself. That is what this
+    /// flag is for. It belongs to no particular policy: the value has long arrived where it
+    /// belongs, only the file has not caught up yet, which is why a form reset or a switch to
+    /// another policy does not clear it. Only a completed store does.
     /// </remarks>
-    private bool policyNameStorePending;
+    private bool policyStorePending;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
@@ -521,7 +525,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.selectedPolicy.PolicyName = this.policyName;
-        this.policyNameStorePending = true;
+        this.policyStorePending = true;
     }
     
     private async Task PolicyProtectionWasChanged(bool state)
@@ -626,15 +630,21 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private void PolicyAllowedToolsWasChanged(HashSet<string> allowedToolIds)
     {
         this.policyAllowedToolIds = allowedToolIds;
-        if (this.selectedPolicy is not null)
-            this.selectedPolicy.AllowedToolIds = [..allowedToolIds];
+        if (this.selectedPolicy is null)
+            return;
+
+        this.selectedPolicy.AllowedToolIds = [..allowedToolIds];
+        this.policyStorePending = true;
     }
 
     private void PolicyMinimumConfidenceWasChanged(ConfidenceLevel level)
     {
         this.policyMinimumProviderConfidence = level;
         if (this.selectedPolicy is not null)
+        {
             this.selectedPolicy.MinimumProviderConfidence = level;
+            this.policyStorePending = true;
+        }
 
         this.ApplyPolicyPreselection();
     }
@@ -646,6 +656,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         this.policyPreselectedProviderId = providerId;
         this.selectedPolicy.PreselectedProvider = providerId;
+        this.policyStorePending = true;
         this.ProviderSettings = Settings.Provider.NONE;
         this.ApplyPolicyPreselection();
     }
@@ -654,7 +665,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         this.policyPreselectedProfile = selection;
         if (this.selectedPolicy is not null)
+        {
             this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
+            this.policyStorePending = true;
+        }
 
         this.CurrentProfile = this.ResolveProfileSelection();
     }
