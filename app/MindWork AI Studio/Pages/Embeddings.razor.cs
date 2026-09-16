@@ -43,6 +43,19 @@ public partial class Embeddings : MSGComponentBase
 
     private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedFiles);
 
+    /// <remarks>
+    /// The chips above count files, which says nothing about how far the list of data sources itself
+    /// has come. While several of them wait their turn, this is the one line saying so. With a single
+    /// data source there is nothing to say: its own row already tells the whole story.
+    /// </remarks>
+    private bool IsWorkingThroughDataSources => this.Statuses.Count > 1 && this.Statuses.Any(status => status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED);
+
+    /// <remarks>
+    /// The one being worked on is the one after those which are done. A data source which needs
+    /// attention counts as done here: nothing is going to happen to it during this pass.
+    /// </remarks>
+    private int CurrentDataSourceNumber => Math.Min(this.Statuses.Count, this.Statuses.Count(status => status.State is DataSourceEmbeddingState.COMPLETED or DataSourceEmbeddingState.FAILED) + 1);
+
     protected override async Task OnInitializedAsync()
     {
         //

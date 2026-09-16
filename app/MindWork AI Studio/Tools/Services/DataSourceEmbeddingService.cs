@@ -1164,6 +1164,31 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG embedding state will be retried during this pass. File watchers will be activated after this check completes.",
             supportedDataSources.Count);
 
+        //
+        // Every data source gets its row before the first run starts. This pass works through them
+        // one after the other, and re-indexing a large source takes its time: without this, the
+        // embeddings page would show the one source being worked on and nothing else, which reads
+        // as if the others were gone rather than waiting their turn. The queueing path does the
+        // same thing when it reserves a slot, which is why it never had this problem.
+        //
+        foreach (var dataSource in supportedDataSources)
+        {
+            if (this.statuses.TryGetValue(dataSource.Id, out var knownStatus) && knownStatus.State is DataSourceEmbeddingState.RUNNING)
+                continue;
+
+            this.statuses[dataSource.Id] = this.CreateStatus(
+                dataSource,
+                DataSourceEmbeddingState.QUEUED,
+                knownStatus?.TotalFiles ?? 0,
+                knownStatus?.IndexedFiles ?? 0,
+                knownStatus?.FailedFiles ?? 0,
+                failures: knownStatus?.Failures ?? [],
+                permanentlySkippedFiles: knownStatus?.PermanentlySkippedFiles ?? 0);
+        }
+
+        // One message for the whole list, rather than one per data source:
+        this.PublishStatusChanged();
+
         foreach (var dataSource in supportedDataSources)
         {
             token.ThrowIfCancellationRequested();
