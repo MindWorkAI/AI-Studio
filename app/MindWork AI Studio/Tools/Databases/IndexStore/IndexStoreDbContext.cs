@@ -29,7 +29,6 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.HasKey(dataSource => dataSource.DataSourceId);
 
             entity.Property(dataSource => dataSource.DataSourceId).HasColumnName("data_source_id");
-            entity.Property(dataSource => dataSource.DataSourceName).HasColumnName("data_source_name").IsRequired();
             entity.Property(dataSource => dataSource.DataSourceType).HasColumnName("data_source_type").IsRequired();
             entity.Property(dataSource => dataSource.EmbeddingProviderId).HasColumnName("embedding_provider_id").IsRequired();
             entity.Property(dataSource => dataSource.EmbeddingSignature).HasColumnName("embedding_signature").IsRequired();
