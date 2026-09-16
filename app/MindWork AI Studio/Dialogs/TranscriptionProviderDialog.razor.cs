@@ -199,9 +199,10 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
                 this.dataManuallyModel = this.DataModel.Id;
 
-            // Load the API key. Self-hosted providers may or may not need one (e.g., VLLM behind
-            // an authenticated proxy does), so we always try -- ReloadModels() below relies on
-            // dataAPIKey already being populated, otherwise it would send an empty Bearer token:
+            // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
+            // token of its own, and any of these servers can sit behind an authenticating proxy.
+            // So we try for every host and treat a missing key as the normal case (isTrying).
+            // ReloadModels() below reads dataAPIKey, so the key has to be here before it runs:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
             {
