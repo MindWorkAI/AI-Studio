@@ -70,7 +70,6 @@ pub struct QdrantEdgeStoragePoint {
     pub point_id: String,
     pub vector: Vec<f32>,
     pub data_source_id: String,
-    pub data_source_name: String,
     pub data_source_type: String,
     pub chunk_id: String,
     pub parent_file_id: String,
@@ -141,7 +140,6 @@ pub struct QdrantEdgeSearchResult {
     pub point_id: String,
     pub score: f32,
     pub data_source_id: String,
-    pub data_source_name: String,
     pub data_source_type: String,
     pub chunk_id: String,
     pub parent_file_id: String,
@@ -299,15 +297,7 @@ impl QdrantEdgeDatabase {
             return Err("All vectors in one insert request must have the same size.".into());
         }
 
-        let data_source_name = first_point.data_source_name.clone();
-        validate_data_source_name(&data_source_name)?;
-        if points.iter().any(|point| point.data_source_name != data_source_name) {
-            return Err("All points in one insert request must belong to the same data source name.".into());
-        }
-
-        let store_path = self.store_path(store_name)?;
         let (shard, _) = self.get_or_create_store(store_name, vector_size)?;
-        write_store_display_name(&store_path, &data_source_name)?;
         let points = points
             .into_iter()
             .map(to_qdrant_edge_point)
@@ -738,7 +728,6 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdran
         Vectors::new_named([(VECTOR_NAME, point.vector)]),
         json!({
             "data_source_id": point.data_source_id,
-            "data_source_name": point.data_source_name,
             "data_source_type": point.data_source_type,
             "chunk_id": point.chunk_id,
             "parent_file_id": point.parent_file_id,
@@ -765,7 +754,6 @@ fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
         point_id: point_id_to_string(point.id),
         score: point.score,
         data_source_id: payload_string(&payload, "data_source_id"),
-        data_source_name: payload_string(&payload, "data_source_name"),
         data_source_type: payload_string(&payload, "data_source_type"),
         chunk_id: payload_string(&payload, "chunk_id"),
         parent_file_id: payload_string(&payload, "parent_file_id"),

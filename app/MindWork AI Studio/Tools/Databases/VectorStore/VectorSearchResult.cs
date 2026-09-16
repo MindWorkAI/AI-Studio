@@ -4,7 +4,6 @@ public sealed record VectorSearchResult(
     string PointId,
     double Score,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string ChunkId,
     string ParentFileId,

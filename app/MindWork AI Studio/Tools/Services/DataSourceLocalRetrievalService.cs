@@ -42,7 +42,6 @@ public sealed class DataSourceLocalRetrievalService(
         string ChunkId,
         string ParentFileId,
         string DataSourceId,
-        string DataSourceName,
         string DataSourceType,
         string AbsolutePath,
         string FileName,
@@ -93,7 +92,7 @@ public sealed class DataSourceLocalRetrievalService(
 
         return hits
             .Where(hit => !string.IsNullOrWhiteSpace(hit.Text))
-            .Select(ToRetrievalContext)
+            .Select(hit => ToRetrievalContext(hit, dataSource))
             .ToList();
     }
 
@@ -342,7 +341,6 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkId,
             result.ParentFileId,
             result.DataSourceId,
-            result.DataSourceName,
             result.DataSourceType,
             FirstNonEmpty(result.AbsolutePath, result.FilePath),
             result.FileName,
@@ -360,7 +358,6 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkId,
             result.ParentFileId,
             result.DataSourceId,
-            result.DataSourceName,
             result.DataSourceType,
             result.AbsolutePath,
             result.FileName,
@@ -372,9 +369,9 @@ public sealed class DataSourceLocalRetrievalService(
             result.Score,
             rank);
 
-    private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit)
+    private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit, IInternalDataSource dataSource)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
+        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
 
@@ -387,15 +384,15 @@ public sealed class DataSourceLocalRetrievalService(
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(hit),
+            ReferenceTitle = BuildReferenceTitle(hit, dataSource),
             ReferenceLink = referenceLink,
             PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
         };
     }
 
-    private static string BuildReferenceTitle(LocalRetrievalHit hit)
+    private static string BuildReferenceTitle(LocalRetrievalHit hit, IInternalDataSource dataSource)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
+        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
     }
 

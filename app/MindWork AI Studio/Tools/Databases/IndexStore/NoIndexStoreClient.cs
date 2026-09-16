@@ -28,7 +28,6 @@ public sealed class NoIndexStoreClient(string name, string? unavailableReason, D
 
     public override Task UpsertDataSourceAsync(
         string dataSourceId,
-        string dataSourceName,
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,

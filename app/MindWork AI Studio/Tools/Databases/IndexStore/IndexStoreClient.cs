@@ -8,7 +8,6 @@ public abstract class IndexStoreClient(string name, string path) : DatabaseClien
 
     public abstract Task UpsertDataSourceAsync(
         string dataSourceId,
-        string dataSourceName,
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,

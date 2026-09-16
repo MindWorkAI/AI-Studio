@@ -118,7 +118,6 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
     public override async Task UpsertDataSourceAsync(
         string dataSourceId,
-        string dataSourceName,
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,
@@ -137,7 +136,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             context.DataSources.Add(dataSource);
         }
 
-        ApplyDataSource(dataSource, dataSourceName, dataSourceType, embeddingProviderId, embeddingSignature, sourceHash, vectorSize);
+        ApplyDataSource(dataSource, dataSourceType, embeddingProviderId, embeddingSignature, sourceHash, vectorSize);
         await context.SaveChangesAsync(token);
     }
 
@@ -287,7 +286,6 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
                                       c.chunk_id AS ChunkId,
                                       c.parent_file_id AS ParentFileId,
                                       ds.data_source_id AS DataSourceId,
-                                      ds.data_source_name AS DataSourceName,
                                       ds.data_source_type AS DataSourceType,
                                       f.absolute_path AS AbsolutePath,
                                       f.file_name AS FileName,
@@ -363,14 +361,12 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
     private static void ApplyDataSource(
         EmbeddingStateDataSourceEntity dataSource,
-        string dataSourceName,
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,
         string sourceHash,
         int vectorSize)
     {
-        dataSource.DataSourceName = dataSourceName;
         dataSource.DataSourceType = dataSourceType;
         dataSource.EmbeddingProviderId = embeddingProviderId;
         dataSource.EmbeddingSignature = embeddingSignature;
@@ -426,7 +422,6 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         result.ChunkId,
         result.ParentFileId,
         result.DataSourceId,
-        result.DataSourceName,
         result.DataSourceType,
         result.AbsolutePath,
         result.FileName,
