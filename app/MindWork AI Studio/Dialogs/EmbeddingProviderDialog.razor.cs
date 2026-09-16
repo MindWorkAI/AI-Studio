@@ -209,17 +209,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
                 this.dataManuallyModel = this.DataModel.Id;
             
-            //
-            // We cannot load the API key for self-hosted providers:
-            //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA && this.DataHost is not Host.VLLM)
-            {
-                await this.ReloadModels();
-                await base.OnInitializedAsync();
-                return;
-            }
-            
-            // Load the API key:
+            // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
+            // token of its own, and any of these servers can sit behind an authenticating proxy.
+            // So we try for every host and treat a missing key as the normal case (isTrying).
+            // ReloadModels() below reads dataAPIKey, so the key has to be here before it runs:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
             {

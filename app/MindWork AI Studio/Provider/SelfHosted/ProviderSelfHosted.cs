@@ -173,12 +173,17 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
     private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, string? apiKeyProvisional, CancellationToken token)
     {
-        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, true);
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret: true);
 
         try
         {
             using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
-            if(secretKey is not null)
+
+            // An empty token is worse than none at all: a proxy which enforces authentication
+            // rejects an empty bearer with 401, where it would have let a request without any
+            // authorization header through. The dialogs hand us their key field as it stands, so
+            // an empty string arrives here whenever the user stored no key:
+            if(!string.IsNullOrWhiteSpace(secretKey))
                 lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
             using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
