@@ -302,9 +302,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
                                       f.creation_utc AS CreationUtc,
                                       f.last_write_utc AS LastWriteUtc,
                                       c.embedded_at_utc AS EmbeddedAtUtc,
-                                      f.chunk_count AS ChunkCount,
-                                      f.confidence_level AS ConfidenceLevel,
-                                      f.confidence_level_rank AS ConfidenceLevelRank
+                                      f.chunk_count AS ChunkCount
                                   FROM embedding_chunks_fts
                                   JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
                                   JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
@@ -394,8 +392,6 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         fileEntity.LastWriteUtc = file.LastWriteUtc;
         fileEntity.EmbeddedAtUtc = file.EmbeddedAtUtc;
         fileEntity.ChunkCount = file.ChunkCount;
-        fileEntity.ConfidenceLevel = file.ConfidenceLevel;
-        fileEntity.ConfidenceLevelRank = file.ConfidenceLevelRank;
     }
 
     private static void ApplyPermanentFailure(IndexingFailureEntity failureEntity, string dataSourceId, PermanentIndexingFailure failure)
@@ -445,9 +441,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         result.CreationUtc,
         result.LastWriteUtc,
         result.EmbeddedAtUtc,
-        result.ChunkCount,
-        result.ConfidenceLevel,
-        result.ConfidenceLevelRank);
+        result.ChunkCount);
 
     private static string BuildFtsQuery(string query)
     {

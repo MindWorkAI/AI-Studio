@@ -19,6 +19,4 @@ public sealed record IndexStoreSearchResult(
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
-    int ChunkCount,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    int ChunkCount);

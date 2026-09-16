@@ -55,6 +55,7 @@ pub fn start_runtime_api() {
         .route("/select/files", post(crate::file_actions::select_files))
         .route("/save/file", post(crate::file_actions::save_file))
         .route("/open/path", post(crate::file_actions::open_path_in_file_manager))
+        .route("/open/document", post(crate::file_actions::open_document))
         .route("/secrets/get", post(crate::secret::get_secret))
         .route("/secrets/store", post(crate::secret::store_secret))
         .route("/secrets/delete", post(crate::secret::delete_secret))

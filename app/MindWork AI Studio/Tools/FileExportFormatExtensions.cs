@@ -205,6 +205,26 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Determines whether a link into a local file may name the page it points at.
+    /// </summary>
+    /// <remarks>
+    /// A page is named by the fragment of the link, the way the PDF open parameters call for. A
+    /// browser and a PDF reader follow that and open the document on the page; Word and LibreOffice
+    /// take the fragment for part of the file name, look for a file which does not exist, and refuse
+    /// the link altogether. There the page is dropped, so the link at least opens the document --
+    /// which page it was stays in the title of the source. Verified on 2026-09-15 with LibreOffice
+    /// on an exported .odt. A format added later keeps the page unless it is known to stumble too.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a reader of this format follows such a link.</returns>
+    public static bool FollowsPageAnchors(this FileExportFormat format) => format switch
+    {
+        FileExportFormat.MICROSOFT_WORD or FileExportFormat.OPEN_DOCUMENT_TEXT => false,
+
+        _ => true,
+    };
+
+    /// <summary>
     /// Returns the name Pandoc knows the format by.
     /// </summary>
     /// <param name="format">The format.</param>

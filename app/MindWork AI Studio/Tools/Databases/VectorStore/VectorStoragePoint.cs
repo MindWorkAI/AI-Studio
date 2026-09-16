@@ -19,6 +19,4 @@ public sealed record VectorStoragePoint(
     string Fingerprint,
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
-    DateTimeOffset EmbeddedAtUtc,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    DateTimeOffset EmbeddedAtUtc);

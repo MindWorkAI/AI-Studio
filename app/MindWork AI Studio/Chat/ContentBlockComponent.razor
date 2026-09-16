@@ -48,7 +48,7 @@
                 {
                     <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
                         <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                            <MudIconButton Icon="@Icons.Material.Filled.Link"/>
+                            <MudIconButton Icon="@Icons.Material.Filled.Link" Disabled="@(!this.HasSourcesToShow)" OnClick="@this.ShowSources"/>
                         </MudBadge>
                     </MudTooltip>
                 }
@@ -223,7 +223,7 @@
                                 }
                                 @if (textContent.Sources.Count > 0)
                                 {
-                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                    <SourcesList @ref="this.sourcesList" Sources="@textContent.Sources"/>
                                 }
                             </div>
                         }

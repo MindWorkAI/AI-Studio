@@ -52,9 +52,7 @@ public sealed class DataSourceLocalRetrievalService(
         int ChunkIndex,
         string Text,
         double Score,
-        int Rank,
-        string ConfidenceLevel,
-        int ConfidenceLevelRank);
+        int Rank);
     // ReSharper restore NotAccessedPositionalProperty.Local
 
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalFile dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
@@ -354,9 +352,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.Text,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
     private static LocalRetrievalHit FromBm25Result(IndexStoreSearchResult result, int rank) =>
         new(
@@ -374,9 +370,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
     private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit)
     {
@@ -395,6 +389,7 @@ public sealed class DataSourceLocalRetrievalService(
             SurroundingContent = [],
             ReferenceTitle = BuildReferenceTitle(hit),
             ReferenceLink = referenceLink,
+            PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
         };
     }
 
@@ -413,11 +408,19 @@ public sealed class DataSourceLocalRetrievalService(
         return $"{sourceName} ({location})";
     }
 
+    /// <remarks>
+    /// A known page is written as the fragment `#page=N`, which is what the PDF open parameters
+    /// call for: a program which understands them opens the document where the passage is. Without
+    /// a page there is nothing to send a program to, and the chunk stays in the link so the
+    /// reference still points at something.
+    /// </remarks>
     private static string BuildReferenceLink(string path, LocalRetrievalHit hit)
     {
         var link = NormalizeLocalReferencePath(path);
         var separator = link.Contains('#', StringComparison.Ordinal) ? "&" : "#";
-        return $"{link}{separator}chunk={hit.ChunkIndex}";
+        return hit.PageNumber is > 0
+            ? $"{link}{separator}page={hit.PageNumber}"
+            : $"{link}{separator}chunk={hit.ChunkIndex}";
     }
 
     private static string NormalizeLocalReferencePath(string path)

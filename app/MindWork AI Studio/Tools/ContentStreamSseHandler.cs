@@ -19,13 +19,19 @@ public static class ContentStreamSseHandler
                     case ContentStreamTextMetadata:
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
 
+                    //
+                    // The heading tells the AI which page it is reading. The number is handed on
+                    // separately as well, because whoever indexes this content needs it as a
+                    // number: reading it back out of the heading would mean guessing at something
+                    // the runtime already stated.
+                    //
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
                         return ContentStreamProcessedEvent.FromContent($"""
                                 # Page {pageNumber}
                                 {sseEvent.Content}
 
-                                """, sseEvent.TokenCount);
+                                """, sseEvent.TokenCount, pageNumber > 0 ? pageNumber : null);
 
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
@@ -45,9 +51,10 @@ public static class ContentStreamSseHandler
                     // a page can follow its Markdown. Documents converted as a whole, e.g. by Pandoc,
                     // carry no page number and are passed on unchanged.
                     //
-                    // The buffering is why the count comes back from the reader rather than from
-                    // this event: the page which is released here arrived one event ago, and this
-                    // event's count belongs to the page which is now being buffered.
+                    // The buffering is why the count and the page come back from the reader rather
+                    // than from this event: the page which is released here arrived one event ago,
+                    // and this event's count and number belong to the page which is now being
+                    // buffered.
                     //
                     case ContentStreamDocumentMetadata documentMetadata:
                         if (documentMetadata.Document?.PageNumber is not > 0)
@@ -55,7 +62,7 @@ public static class ContentStreamSseHandler
 
                         var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
                         var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, sseEvent.TokenCount, extractImages);
-                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent.Value.Content, documentContent.Value.TokenCount);
+                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent.Value.Content, documentContent.Value.TokenCount, documentContent.Value.PageNumber);
 
                     case ContentStreamImageMetadata:
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content, sseEvent.TokenCount);
@@ -184,7 +191,9 @@ public static class ContentStreamSseHandler
     /// <remarks>
     /// The readers which assemble pages or slides always keep the last one of them: nothing tells
     /// them that no further image is coming. It is released here, and it carries its own token
-    /// count, because a chunk without one cannot be sized by the caller.
+    /// count, because a chunk without one cannot be sized by the caller. Only the page reader
+    /// states a page; a stream is read by one of them, so there is no second number to weigh
+    /// against.
     /// </remarks>
     /// <param name="streamId">The stream to release and forget.</param>
     /// <returns>The content which was held back, or null when there was none.</returns>
@@ -195,6 +204,7 @@ public static class ContentStreamSseHandler
 
         var finalContentChunk = new StringBuilder();
         int? tokenCount = 0;
+        int? pageNumber = null;
         if(SLIDE_MANAGERS.TryGetValue(streamId, out var slideManager)
            && slideManager.GetAllSlidesInOrder() is { } slides
            && !string.IsNullOrWhiteSpace(slides.Content))
@@ -209,6 +219,7 @@ public static class ContentStreamSseHandler
         {
             finalContentChunk.Append(page.Content);
             tokenCount = ContentStreamPendingContent.AddTokenCounts(tokenCount, page.TokenCount);
+            pageNumber = page.PageNumber;
         }
 
         SLIDE_MANAGERS.TryRemove(streamId, out _);
@@ -217,6 +228,6 @@ public static class ContentStreamSseHandler
         foreach (var key in CHUNKED_IMAGES.Keys.Where(k => k.StartsWith(imageIdPrefix, StringComparison.InvariantCultureIgnoreCase)))
             CHUNKED_IMAGES.TryRemove(key, out _);
 
-        return finalContentChunk.Length > 0 ? new ContentStreamPendingContent(finalContentChunk.ToString(), tokenCount) : null;
+        return finalContentChunk.Length > 0 ? new ContentStreamPendingContent(finalContentChunk.ToString(), tokenCount, pageNumber) : null;
     }
 }

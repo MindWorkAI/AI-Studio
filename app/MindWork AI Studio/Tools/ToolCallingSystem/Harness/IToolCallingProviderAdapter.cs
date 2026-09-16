@@ -49,4 +49,19 @@ public interface IToolCallingProviderAdapter
     /// the others carry the failure in the content, which is where it has to be legible anyway.
     /// </param>
     public void RecordToolResult(string callId, string content, bool isError = false);
+
+    /// <summary>
+    /// The texts which everything recorded so far adds to the request of every following round.
+    /// </summary>
+    /// <remarks>
+    /// Kept by the adapter rather than by the loop, because the adapter is the only place which
+    /// knows what actually travels. The loop hands over arguments and results and would count
+    /// those; what the Responses API additionally demands back -- its reasoning items -- never
+    /// passes through the loop at all, and a conversation whose largest part is invisible is the
+    /// very thing this is here to rule out.<br/><br/>
+    /// These texts exist for as long as the adapter does, which is one streaming call. Nothing of
+    /// this reaches the next request the user sends: the accumulated conversation goes away with
+    /// the adapter.
+    /// </remarks>
+    public IReadOnlyList<string> RecordedRequestTexts { get; }
 }

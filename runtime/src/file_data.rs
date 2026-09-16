@@ -827,6 +827,16 @@ fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
     }
 }
 
+/// Whether the content of a file is a program rather than something to read.
+///
+/// The extension is not asked: recognizing a program by its content is the whole point, because a
+/// program which carries a harmless extension is exactly the case worth stopping. Answering this
+/// here keeps one place in charge of what counts as a program — the reader which refuses to read
+/// one, and the endpoint which refuses to hand one to the system.
+pub(crate) fn is_executable_content(fmt: FileFormat) -> bool {
+    matches!(route_from_content(fmt), Some(ExtractionRoute::Executable))
+}
+
 async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");

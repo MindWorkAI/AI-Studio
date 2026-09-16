@@ -118,7 +118,7 @@ public static class PandocExport
         // We read the text before we ask for a path: when there is nothing to convert, the user
         // should learn that right away instead of picking a file first and getting an error afterwards.
         //
-        if (!markdownContent.TryGetExportMarkdown(out var markdownText))
+        if (!markdownContent.TryGetExportMarkdown(out var markdownText, format.FollowsPageAnchors()))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));

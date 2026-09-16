@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+using AIStudio.Tools.ToolCallingSystem;
+
 namespace AIStudio.Chat;
 
 /// <summary>
@@ -6,9 +10,15 @@ namespace AIStudio.Chat;
 /// <remarks>
 /// Collected here rather than while counting, so that what counts towards a token budget is one
 /// question with one answer which a test can ask. It follows what the message builder actually
-/// sends: the system prompt, the text of every block, and the attachments hanging off those
-/// blocks -- plus whatever is standing in the composer but has not been sent yet, because that is
-/// the part a person is deciding about while they look at the number.
+/// sends: the system prompt, the schema of every tool the model may call, the text of every block,
+/// and the attachments hanging off those blocks -- plus whatever is standing in the composer but
+/// has not been sent yet, because that is the part a person is deciding about while they look at
+/// the number.
+///
+/// And, while a request is running, what its tools have returned so far. That is the one part
+/// which is not about the next request but about the one in flight: it is what the model is
+/// reading at this moment, it is what fills the window while somebody watches, and it is gone
+/// again once the answer stands.
 /// </remarks>
 public sealed record ConversationParts
 {
@@ -23,13 +33,17 @@ public sealed record ConversationParts
     public IReadOnlyList<string> Texts { get; init; } = [];
 
     /// <summary>
-    /// The texts which are still being written.
+    /// The texts which belong to this moment alone.
     /// </summary>
     /// <remarks>
     /// They cost exactly what the others cost; what sets them apart is that they will never be seen
     /// again in this shape. The sentence somebody is typing changes with the next pause, and an
     /// answer being streamed is a different text three seconds later -- so remembering what they
     /// cost fills memory with answers nobody will ask for again.
+    ///
+    /// What a model's tools have returned so far belongs here for the same reason, although nobody
+    /// is writing it: it travels with every further round of one request and with nothing after
+    /// that, so it is measured while it matters and forgotten when the answer is there.
     /// </remarks>
     public IReadOnlyList<string> GrowingTexts { get; init; } = [];
 
@@ -48,7 +62,9 @@ public sealed record ConversationParts
     /// </summary>
     /// <remarks>
     /// Blocks without text are skipped, because the message builder skips them too: a block whose
-    /// text is empty never becomes a message, whatever else hangs off it.
+    /// text is empty never becomes a message, whatever else hangs off it. What such a block may
+    /// still carry is the tool conversation of a request which is running right now -- that one
+    /// does travel, and it is read before the text is looked at.
     /// </remarks>
     /// <param name="thread">The conversation so far, or null when there is none yet.</param>
     /// <param name="systemPrompt">
@@ -59,8 +75,12 @@ public sealed record ConversationParts
     /// <param name="draft">What stands in the composer.</param>
     /// <param name="draftAttachments">What is attached to the composer.</param>
     /// <param name="imagesAreSent">Whether the model takes images at all. When it does not, none are sent.</param>
+    /// <param name="toolDefinitions">
+    /// The tools the model may call, filtered for the provider the same way they are before
+    /// sending, or null when there are none.
+    /// </param>
     /// <returns>The parts of the conversation.</returns>
-    public static ConversationParts Of(ChatThread? thread, string systemPrompt, string draft, IEnumerable<FileAttachment>? draftAttachments, bool imagesAreSent)
+    public static ConversationParts Of(ChatThread? thread, string systemPrompt, string draft, IEnumerable<FileAttachment>? draftAttachments, bool imagesAreSent, IEnumerable<ToolDefinition>? toolDefinitions)
     {
         var texts = new List<string>();
         var growing = new List<string>();
@@ -69,6 +89,15 @@ public sealed record ConversationParts
 
         if (!string.IsNullOrWhiteSpace(systemPrompt))
             texts.Add(systemPrompt);
+
+        //
+        // The tools ride along beside the messages, one schema each, in every single request of a
+        // conversation. Counted with the lasting texts rather than with the growing ones: a schema
+        // is the same string all session long, so measuring it once and remembering it is exactly
+        // what the cache is for.
+        //
+        foreach (var definition in toolDefinitions ?? [])
+            texts.Add(Describe(definition));
 
         if (thread is not null)
         {
@@ -79,7 +108,18 @@ public sealed record ConversationParts
             //
             foreach (var block in thread.Blocks)
             {
-                if (block.ContentType is not ContentType.TEXT || block.Content is not ContentText text || string.IsNullOrWhiteSpace(text.Text))
+                if (block.ContentType is not ContentType.TEXT || block.Content is not ContentText text)
+                    continue;
+
+                //
+                // Asked before the text is, because while a model calls tools there is no text yet:
+                // the answer arrives in one piece at the end, and everything in between travels as
+                // the tool conversation. A block skipped for having nothing to say is exactly the
+                // block whose request is growing the fastest.
+                //
+                growing.AddRange(text.PendingToolConversation);
+
+                if (string.IsNullOrWhiteSpace(text.Text))
                     continue;
 
                 if (text.IsStreaming)
@@ -104,6 +144,27 @@ public sealed record ConversationParts
             Documents = documents,
             Images = imagesAreSent ? images : 0,
         };
+    }
+
+    /// <summary>
+    /// What one tool costs the request it is offered in.
+    /// </summary>
+    /// <remarks>
+    /// Its name, what it tells the model it does, and the arguments it takes -- that is what the
+    /// provider adapters put into the tool list of the request body. The wire shape differs
+    /// between the APIs: they name the fields differently, and a strict schema is rewritten for
+    /// the OpenAI ones. None of that changes the length by an amount which matters next to a
+    /// conversation, and the number is reported as an estimate anyway.
+    /// </remarks>
+    /// <param name="definition">The tool as it was declared.</param>
+    /// <returns>The text to count for it.</returns>
+    private static string Describe(ToolDefinition definition)
+    {
+        var parameters = definition.Function.Parameters.ValueKind is JsonValueKind.Undefined
+            ? string.Empty
+            : definition.Function.Parameters.GetRawText();
+
+        return $"{definition.Function.Name}{definition.Function.DescriptionForLLM}{parameters}";
     }
 
     /// <summary>

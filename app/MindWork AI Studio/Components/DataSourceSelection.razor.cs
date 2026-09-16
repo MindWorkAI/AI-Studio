@@ -181,6 +181,22 @@ public partial class DataSourceSelection : MSGComponentBase
         var preselectedDataSourceIds = this.DataSourceOptions.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal);
         return this.GetConfiguredDataSourcesSnapshot().Where(ds => preselectedDataSourceIds.Contains(ds.Id)).ToList();
     }
+
+    /// <summary>
+    /// Collects the preselected data sources which the filters removed.
+    /// </summary>
+    /// <remarks>
+    /// The list of available sources shows what survived the filters, while the preselection keeps
+    /// what the user asked for. Without this, a preselected source which cannot be used right now
+    /// is simply missing from that list, and nothing says so. Preselected ids without a configured
+    /// source are left out: that source is gone, not unavailable.
+    /// </remarks>
+    /// <returns>The unusable preselected data sources, or an empty list when there are none.</returns>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSources()
+    {
+        var availableDataSourceIds = this.availableDataSources.Select(ds => ds.Id).ToHashSet(StringComparer.Ordinal);
+        return this.GetDataSourcesFromConfiguredIds().Where(ds => !availableDataSourceIds.Contains(ds.Id)).ToList();
+    }
     
     private async Task LoadAndApplyFilters()
     {
@@ -200,8 +216,12 @@ public partial class DataSourceSelection : MSGComponentBase
         this.waitingForDataSources = true;
         this.StateHasChanged();
             
-        // Load the data sources:
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.selectedDataSources);
+        //
+        // Load the data sources. We ask with the preselection rather than with the field below:
+        // that field holds what was usable the last time we looked, so a source filtered out once
+        // would never come back, while the RAG process keeps reading it from the preselection.
+        //
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
@@ -242,7 +262,16 @@ public partial class DataSourceSelection : MSGComponentBase
     private async Task SelectionChanged(IReadOnlyCollection<IDataSource>? chosenDataSources)
     {
         this.selectedDataSources = chosenDataSources ?? [];
-        this.DataSourceOptions.PreselectedDataSourceIds = this.selectedDataSources.Select(ds => ds.Id).ToList();
+
+        //
+        // The list offers only the data sources which survived the filters, so what the user picks
+        // there says nothing about the preselected ones it could not show. Those are kept: dropping
+        // them would undo a choice the user never revisited, and it is these ids -- not this list --
+        // which the RAG process reads when an answer is created. The query has to run before the
+        // assignment, because it reads what we are about to replace.
+        //
+        var keptDataSourceIds = this.GetUnavailablePreselectedDataSources().Select(ds => ds.Id).ToList();
+        this.DataSourceOptions.PreselectedDataSourceIds = [..keptDataSourceIds, ..this.selectedDataSources.Select(ds => ds.Id)];
 
         await this.OptionsChanged();
     }

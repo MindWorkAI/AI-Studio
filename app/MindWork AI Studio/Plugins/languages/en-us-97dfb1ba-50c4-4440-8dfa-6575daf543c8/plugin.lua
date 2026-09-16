@@ -3903,6 +3903,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T168406579"] = "AI-S
 -- AI-based data validation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "AI-based data validation"
 
+-- These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1852534051"] = "These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:"
+
 -- Yes, I want to use data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1975014927"] = "Yes, I want to use data sources."
 
@@ -5033,6 +5036,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Are you sure you want to delete the transcription provider '{0}'?"
+
+-- Could not open the file location.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1118835751"] = "Could not open the file location."
+
+-- Could not open the file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1455637941"] = "Could not open the file location: {0}"
+
+-- Show this file in the file manager of your system
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T1587653504"] = "Show this file in the file manager of your system"
+
+-- Opens this document in the program your system uses for it
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3169582185"] = "Opens this document in the program your system uses for it"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3461425987"] = "Unknown error"
+
+-- Could not open the document.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T3570758363"] = "Could not open the document."
+
+-- Could not open the document: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SOURCESLIST::T945417289"] = "Could not open the document: {0}"
 
 -- Copy {0} to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TEXTINFOLINE::T2206391442"] = "Copy {0} to the clipboard"
@@ -12210,6 +12234,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1238078807"] = "No com
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Failed to store the API key due to an API issue."
 
+-- The runtime document endpoint returned '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1843760475"] = "The runtime document endpoint returned '{0}'."
+
 -- The global shortcut could not be registered because of a desktop integration error.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2032590244"] = "The global shortcut could not be registered because of a desktop integration error."
 
@@ -12237,6 +12264,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Succes
 -- The desktop service returned an invalid response while registering the global shortcut.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3369097283"] = "The desktop service returned an invalid response while registering the global shortcut."
 
+-- The runtime document endpoint failed without details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T353458993"] = "The runtime document endpoint failed without details."
+
 -- AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3611400673"] = "AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."
 
@@ -12254,6 +12284,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3929880252"] = "No sav
 
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Failed to get the secret data due to an API issue."
+
+-- The runtime document endpoint is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T541638186"] = "The runtime document endpoint is not available."
 
 -- AI Studio could not access secure storage. See the log for technical details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T624023541"] = "AI Studio could not access secure storage. See the log for technical details."

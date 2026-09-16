@@ -39,8 +39,4 @@ internal sealed class IndexStoreSearchResultEntity
     public DateTimeOffset EmbeddedAtUtc { get; set; }
 
     public int ChunkCount { get; set; }
-
-    public string ConfidenceLevel { get; set; } = string.Empty;
-
-    public int ConfidenceLevelRank { get; set; }
 }
