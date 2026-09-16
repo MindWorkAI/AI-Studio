@@ -1030,9 +1030,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             fingerprint,
             parentFile.CreationUtc,
             parentFile.LastWriteUtc,
-            embeddedAtUtc,
-            parentFile.ConfidenceLevel,
-            parentFile.ConfidenceLevelRank)).ToList();
+            embeddedAtUtc)).ToList();
 
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }
@@ -1237,7 +1235,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         CancellationToken token)
     {
         var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
-        var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
+        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
