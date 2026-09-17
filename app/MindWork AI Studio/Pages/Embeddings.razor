@@ -19,6 +19,12 @@
             <MudChip T="string" Color="Color.Default" Variant="Variant.Filled">@string.Format(T("Skipped files: {0}"), this.TotalPermanentlySkippedFiles)</MudChip>
             <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed files: {0}"), this.TotalFailedFiles)</MudChip>
         </MudStack>
+        @if (this.IsWorkingThroughDataSources)
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">
+                @string.Format(T("Data source {0} of {1} is being worked on. The others are waiting their turn."), this.CurrentDataSourceNumber, this.Statuses.Count)
+            </MudText>
+        }
     </MudPaper>
 
     @if (this.Statuses.Count == 0)
@@ -62,7 +68,7 @@
                             <MudProgressLinear Value="@status.ProgressPercent" Rounded="@true" Color="@GetStatusColor(status)" />
 
                             <MudText Typo="Typo.body2">
-                                @string.Format(T("{0} of {1} files are indexed."), status.IndexedFiles, status.TotalFiles)
+                                @this.GetFileProgressText(status)
                             </MudText>
 
                             @if (status.PermanentlySkippedFiles > 0)

@@ -23,8 +23,9 @@ public sealed class NoIndexStoreClient(string name, string? unavailableReason, D
         await Task.CompletedTask;
     }
 
-    public override Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token) =>
-        Task.FromResult(new DataSourceEmbeddingManifest());
+    public override Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token) => Task.FromResult(new DataSourceEmbeddingManifest());
+
+    public override Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token) => Task.FromResult<DataSourceIndexState?>(null);
 
     public override Task UpsertDataSourceAsync(
         string dataSourceId,

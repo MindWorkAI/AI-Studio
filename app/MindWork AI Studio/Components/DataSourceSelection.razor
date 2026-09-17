@@ -69,7 +69,7 @@
 
                             @switch (this.aiBasedSourceSelection)
                             {
-                                case true when this.availableDataSources.Count == 0:
+                                case true when this.GetListedDataSources().Count == 0:
                                     <MudText Typo="Typo.body2" Class="mb-2">
                                         @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
@@ -81,7 +81,7 @@
                                     </MudText>
                                     break;
                                     
-                                case false when this.availableDataSources.Count == 0:
+                                case false when this.GetListedDataSources().Count == 0:
                                     <MudText Typo="Typo.body2" Class="mb-2">
                                         @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
@@ -90,22 +90,9 @@
                                 case false:
                                     <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-2" Disabled="@this.aiBasedSourceSelection">
                                         <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" Style="max-height: 14em;">
-                                            @foreach (var source in this.availableDataSources)
+                                            @foreach (var source in this.GetListedDataSources())
                                             {
-                                                <MudListItem Value="@source">
-                                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                                        <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
-                                                            @source.Name
-                                                        </MudText>
-                                                        @if (source is IInternalDataSource internalSource)
-                                                        {
-                                                            <MudSpacer/>
-                                                            <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
-                                                            </MudTooltip>
-                                                        }
-                                                    </MudStack>
-                                                </MudListItem>
+                                                <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
                                             }
                                         </MudList>
                                     </MudField>
@@ -115,22 +102,9 @@
                                     <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
                                         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
                                             <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
-                                                @foreach (var source in this.availableDataSources)
+                                                @foreach (var source in this.GetListedDataSources())
                                                 {
-                                                    <MudListItem Value="@source">
-                                                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                                            <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
-                                                                @source.Name
-                                                            </MudText>
-                                                            @if (source is IInternalDataSource internalSource)
-                                                            {
-                                                                <MudSpacer/>
-                                                                <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                                                    <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
-                                                                </MudTooltip>
-                                                            }
-                                                        </MudStack>
-                                                    </MudListItem>
+                                                    <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
                                                 }
                                             </MudList>
                                         </ExpansionPanel>
@@ -166,13 +140,13 @@
                                     break;
                             }
 
-                            @if (!this.aiBasedSourceSelection && this.GetUnavailablePreselectedDataSources().Count > 0)
+                            @if (!this.aiBasedSourceSelection && this.GetUnavailablePreselectedDataSourcesToList().Count > 0)
                             {
                                 <MudJustifiedText Typo="Typo.body2" Color="Color.Warning">
                                     @T("These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:")
                                 </MudJustifiedText>
                                 <ul class="unavailable-data-sources mb-3 mt-1">
-                                    @foreach (var source in this.GetUnavailablePreselectedDataSources())
+                                    @foreach (var source in this.GetUnavailablePreselectedDataSourcesToList())
                                     {
                                         <li>@source.Name</li>
                                     }
@@ -212,22 +186,13 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticValidationLocked()"/>
             <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@(this.aiBasedSourceSelection || this.IsPreselectedDataSourceIdsLocked())">
                 <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" ReadOnly="@this.IsPreselectedDataSourceIdsLocked()">
+                    @*
+                        The configuration mode lists what was configured, without filtering it, so no
+                        row here is ever waiting for an index.
+                    *@
                     @foreach (var source in this.availableDataSources)
                     {
-                        <MudListItem Value="@source">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
-                                <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
-                                    @source.Name
-                                </MudText>
-                                @if (source is IInternalDataSource internalSource)
-                                {
-                                    <MudSpacer/>
-                                    <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
-                                        <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
-                                    </MudTooltip>
-                                }
-                            </MudStack>
-                        </MudListItem>
+                        <DataSourceSelectionRow DataSource="@source"/>
                     }
                 </MudList>
             </MudField>

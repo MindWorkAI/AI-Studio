@@ -18,16 +18,18 @@ public sealed class DataSourceService
     // ReSharper disable once NotAccessedPositionalProperty.Local
     private readonly record struct ParticipatingProvider(string Role, bool IsTrusted, ConfidenceLevel ConfidenceLevel);
 
+    private readonly DataSourceEmbeddingService embeddingService;
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
     private readonly ILogger<DataSourceService> logger;
 
-    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService)
+    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
     {
         this.logger = logger;
         this.rustService = rustService;
         this.settingsManager = settingsManager;
-        
+        this.embeddingService = embeddingService;
+
         this.logger.LogInformation("The data source service has been initialized.");
     }
     
@@ -49,7 +51,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
             this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
-            return new([], []);
+            return new([], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -78,7 +80,15 @@ public sealed class DataSourceService
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
         var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
-        return await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+        var allowedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+
+        //
+        // Whoever asks this way has no list to show, so a data source waiting for its index is
+        // dropped rather than marked. Handing it back would start a chat with a data source which
+        // finds nothing -- the very thing being greyed out elsewhere is meant to prevent.
+        //
+        var awaitingReindexIds = (await this.GetDataSourcesAwaitingReindex(allowedDataSources)).Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        return allowedDataSources.Where(source => !awaitingReindexIds.Contains(source.Id)).ToList();
     }
     
     /// <summary>
@@ -99,7 +109,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider is NoProvider)
         {
             this.logger.LogWarning("The selected LLM provider is the default provider. We cannot filter the data sources by any means.");
-            return new([], []);
+            return new([], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -142,9 +152,47 @@ public sealed class DataSourceService
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
         var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
-        var filteredSelectedDataSources = filteredDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
-        
-        return new(filteredDataSources, filteredSelectedDataSources);
+
+        //
+        // Which of the sources that passed every check cannot answer a search right now. They are
+        // held back from both lists below rather than removed altogether: a source whose index is
+        // being rebuilt is usable again in a while, and saying so on its own row beats letting it
+        // disappear from the selection without a word.
+        //
+        var awaitingReindex = await this.GetDataSourcesAwaitingReindex(filteredDataSources);
+        var awaitingReindexIds = awaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        var usableDataSources = filteredDataSources.Where(source => !awaitingReindexIds.Contains(source.Id)).ToList();
+        var filteredSelectedDataSources = usableDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
+
+        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex);
+    }
+
+    /// <summary>
+    /// Picks out the data sources whose index has to be rebuilt before they can be searched.
+    /// </summary>
+    /// <remarks>
+    /// Asked for every data source at once, the same way the checks above run in parallel. Each
+    /// answer is a single row read from the index database, and anything unclear counts as usable.
+    /// </remarks>
+    /// <param name="dataSources">The data sources which passed every other check.</param>
+    /// <returns>Those of them which are waiting for their index, in the order they came in.</returns>
+    private async Task<IReadOnlyList<IDataSource>> GetDataSourcesAwaitingReindex(IReadOnlyList<IDataSource> dataSources)
+    {
+        var checks = new List<Task<bool>>(dataSources.Count);
+        foreach (var dataSource in dataSources)
+            checks.Add(this.embeddingService.IsAwaitingReindexAsync(dataSource));
+
+        var awaitingReindex = new List<IDataSource>();
+        for (var index = 0; index < dataSources.Count; index++)
+        {
+            if (await checks[index])
+            {
+                this.logger.LogInformation("The data source '{DataSourceName}' ({DataSourceId}) is waiting for its index to be rebuilt. It is shown, but cannot be selected.", dataSources[index].Name, dataSources[index].Id);
+                awaitingReindex.Add(dataSources[index]);
+            }
+        }
+
+        return awaitingReindex;
     }
 
     private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)

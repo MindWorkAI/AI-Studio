@@ -13,7 +13,7 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(
     SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    ILogger<DataSourceLocalRetrievalService> logger)
+    DataSourceEmbeddingService embeddingService, ILogger<DataSourceLocalRetrievalService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
 
@@ -72,6 +72,23 @@ public sealed class DataSourceLocalRetrievalService(
         var maxMatches = (int)dataSource.MaxMatches;
         if (maxMatches == 0)
             return [];
+
+        //
+        // A data source waiting for its index is kept out of the selection before the RAG process
+        // starts. This catches whatever reaches retrieval another way, and turns an answer quietly
+        // put together without the data into a sentence saying so.
+        //
+        // Asked here rather than inside one of the two channels below, because both of them read
+        // what the rebuild is about to discard: with only the embedding signature changed, the old
+        // chunks are still in place and the keyword search would happily answer from them while
+        // the vector search finds nothing.
+        //
+        if (await embeddingService.IsAwaitingReindexAsync(dataSource, token))
+        {
+            logger.LogWarning("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because its index has to be built anew.", dataSource.Name, dataSource.Id);
+            await this.ReportRetrievalGapAsync(dataSource, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
+            return [];
+        }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
         var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
