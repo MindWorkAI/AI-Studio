@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
@@ -60,16 +61,37 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
     public override async IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo()
     {
-        await using var context = this.CreateContext();
+        //
+        // Read everything before yielding the first line: this is an iterator, and a try/catch
+        // cannot wrap a yield return. Each probe therefore catches its own failure and answers
+        // with an empty string, which shows up as "unknown" below. Without that, a single failing
+        // PRAGMA would throw out of here and the information page would replace the entire block
+        // with the fallback client.
+        //
+        var snapshot = await this.ReadDisplaySnapshotAsync();
 
         yield return (TB("Reported version"), version);
+        yield return (TB("Library source ID"), OrUnknown(snapshot.LibrarySourceId));
+        yield return (TB("Native library"), OrUnknown(SqliteRuntimeInfo.GetNativeLibraryName()));
+        yield return (TB("Native library path"), OrNotDetermined(SqliteRuntimeInfo.GetNativeLibraryPath()));
+        yield return (TB("Wrapper version"), OrUnknown(SqliteRuntimeInfo.GetWrapperVersion()));
+        yield return (TB("Process architecture"), OrUnknown(SqliteRuntimeInfo.GetProcessArchitecture()));
+
+        // Only worth a line when the process runs on a foreign architecture, Rosetta above all:
+        var systemArchitecture = SqliteRuntimeInfo.GetSystemArchitecture();
+        if (!string.IsNullOrWhiteSpace(systemArchitecture))
+            yield return (TB("System architecture"), systemArchitecture);
+
+        yield return (TB("Full-text search (FTS5)"), OrUnknown(snapshot.FullTextSearch));
         yield return (TB("Database path"), this.databasePath);
+        yield return (TB("Journal mode"), OrUnknown(snapshot.JournalMode));
+        yield return (TB("Schema version"), OrUnknown(snapshot.SchemaVersion));
+        yield return (TB("Database tables"), OrUnknown(snapshot.TableCount));
         yield return (TB("Storage size"), this.GetStorageSize());
-        yield return (TB("Indexed data sources"), (await context.DataSources.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
-        yield return (TB("Indexed files"), (await context.EmbeddedFiles.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
-        var searchChunks = await this.GetTotalChunkCountAsync(CancellationToken.None);
-        yield return (TB("Search chunks"), searchChunks?.ToString(CultureInfo.InvariantCulture) ?? TB("unknown"));
-        yield return (TB("Permanently skipped files"), (await context.PermanentIndexingFailures.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        yield return (TB("Indexed data sources"), OrUnknown(snapshot.DataSourceCount));
+        yield return (TB("Indexed files"), OrUnknown(snapshot.FileCount));
+        yield return (TB("Search chunks"), OrUnknown(snapshot.ChunkCount));
+        yield return (TB("Permanently skipped files"), OrUnknown(snapshot.FailureCount));
     }
 
     public override async Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token)
@@ -374,6 +396,150 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
     public override void Dispose()
     {
+    }
+
+    /// <summary>
+    /// Everything the display info reads out of the database in one go.
+    /// </summary>
+    /// <remarks>
+    /// Every property is empty when its probe could not answer. The caller turns that into "unknown".
+    /// </remarks>
+    private sealed record DisplaySnapshot
+    {
+        public string LibrarySourceId { get; init; } = string.Empty;
+
+        public string FullTextSearch { get; init; } = string.Empty;
+
+        public string JournalMode { get; init; } = string.Empty;
+
+        public string SchemaVersion { get; init; } = string.Empty;
+
+        public string TableCount { get; init; } = string.Empty;
+
+        public string DataSourceCount { get; init; } = string.Empty;
+
+        public string FileCount { get; init; } = string.Empty;
+
+        public string ChunkCount { get; init; } = string.Empty;
+
+        public string FailureCount { get; init; } = string.Empty;
+    }
+
+    private static string OrUnknown(string value) => string.IsNullOrWhiteSpace(value) ? TB("unknown") : value;
+
+    private static string OrNotDetermined(string value) => string.IsNullOrWhiteSpace(value) ? TB("not determined") : value;
+
+    private async Task<DisplaySnapshot> ReadDisplaySnapshotAsync()
+    {
+        var token = CancellationToken.None;
+        try
+        {
+            await using var context = this.CreateContext();
+            return new DisplaySnapshot
+            {
+                LibrarySourceId = await QueryScalarTextAsync(context, "SELECT sqlite_source_id()", token),
+                FullTextSearch = await GetFullTextSearchStateAsync(context, token),
+                JournalMode = (await QueryScalarTextAsync(context, "PRAGMA journal_mode;", token)).ToUpperInvariant(),
+                SchemaVersion = await GetSchemaVersionAsync(context, token),
+                TableCount = await GetTableCountAsync(context, token),
+                DataSourceCount = await FormatCountAsync(context.DataSources, token),
+                FileCount = await FormatCountAsync(context.EmbeddedFiles, token),
+                ChunkCount = (await this.GetTotalChunkCountAsync(token))?.ToString("N0", I18N.I.Culture) ?? string.Empty,
+                FailureCount = await FormatCountAsync(context.PermanentIndexingFailures, token),
+            };
+        }
+        catch (Exception exception)
+        {
+            //
+            // Opening the database failed altogether. The runtime details the caller shows next to
+            // these values still say which library was loaded and for which architecture, which is
+            // what a support case needs most in exactly this situation. So hand back an empty
+            // snapshot instead of letting the whole block fall back.
+            //
+            this.Logger?.LogWarning(exception, "Failed to read the display details of the local RAG index.");
+            return new DisplaySnapshot();
+        }
+    }
+
+    private static async Task<string> QueryScalarTextAsync(IndexStoreDbContext context, string sql, CancellationToken token)
+    {
+        try
+        {
+            //
+            // Go through the raw connection rather than through SqlQueryRaw: that one expects a
+            // column named "Value" and wraps the statement, neither of which works for a PRAGMA.
+            //
+            var connection = context.Database.GetDbConnection();
+            if (connection.State is not ConnectionState.Open)
+                await connection.OpenAsync(token);
+
+            await using var command = connection.CreateCommand();
+            command.CommandText = sql;
+
+            var result = await command.ExecuteScalarAsync(token);
+            return result?.ToString() ?? string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static async Task<string> GetFullTextSearchStateAsync(IndexStoreDbContext context, CancellationToken token)
+    {
+        var compiledIn = await QueryScalarTextAsync(context, "SELECT sqlite_compileoption_used('ENABLE_FTS5')", token);
+        return compiledIn switch
+        {
+            "1" => TB("available"),
+            "0" => TB("not available"),
+            _ => string.Empty
+        };
+    }
+
+    private static async Task<string> GetTableCountAsync(IndexStoreDbContext context, CancellationToken token)
+    {
+        //
+        // Counts the migration history, the FTS5 virtual table and its shadow tables as well. That
+        // is the point: a missing shadow table is a finding, not noise.
+        //
+        var tables = await QueryScalarTextAsync(context, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", token);
+        return int.TryParse(tables, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tableCount) ? tableCount.ToString("N0", I18N.I.Culture) : string.Empty;
+    }
+
+    private static async Task<string> GetSchemaVersionAsync(IndexStoreDbContext context, CancellationToken token)
+    {
+        try
+        {
+            //
+            // Reading the applied migrations only touches the history table, no assembly scan. The
+            // pending ones do scan, but the schema migrator walks that same path on every start, so
+            // the DynamicDependency attributes over there already keep the migration types alive.
+            //
+            var appliedMigrations = (await context.Database.GetAppliedMigrationsAsync(token)).ToList();
+            if (appliedMigrations.Count == 0)
+                return TB("no migration applied");
+
+            var pendingMigrations = (await context.Database.GetPendingMigrationsAsync(token)).ToList();
+            return pendingMigrations.Count == 0
+                ? string.Format(I18N.I.Culture, TB("{0} ({1} applied)"), appliedMigrations[^1], appliedMigrations.Count)
+                : string.Format(I18N.I.Culture, TB("{0} ({1} applied, {2} pending)"), appliedMigrations[^1], appliedMigrations.Count, pendingMigrations.Count);
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static async Task<string> FormatCountAsync<T>(IQueryable<T> query, CancellationToken token) where T : class
+    {
+        try
+        {
+            return (await query.CountAsync(token)).ToString("N0", I18N.I.Culture);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 
     private async Task InitializeAsync(CancellationToken token)
