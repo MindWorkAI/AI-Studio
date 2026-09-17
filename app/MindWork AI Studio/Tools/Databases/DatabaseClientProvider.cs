@@ -69,6 +69,25 @@ public sealed class DatabaseClientProvider(RustService rustService, ILoggerFacto
             client.Status);
     }
 
+    /// <summary>
+    /// Builds the client which stands in for a database role that cannot serve right now.
+    /// </summary>
+    /// <remarks>
+    /// Callers outside this namespace get their stand-in from here instead of naming the concrete
+    /// type themselves, so a new role does not have to be spelled out in every one of them.
+    /// </remarks>
+    /// <param name="databaseRole">The role the stand-in has to fill.</param>
+    /// <param name="name">The name to show for the database.</param>
+    /// <param name="reason">Why the database is not available.</param>
+    /// <param name="status">Whether the database is starting or unavailable.</param>
+    /// <returns>A client which answers every operation without a database behind it.</returns>
+    public static DatabaseClient CreateUnavailableClient(DatabaseRole databaseRole, string name, string? reason, DatabaseClientStatus status) => databaseRole switch
+    {
+        DatabaseRole.VECTOR_STORE => new NoVectorStoreClient(name, reason, status),
+        DatabaseRole.INDEX_STORE => new NoIndexStoreClient(name, reason, status),
+        _ => new NoDatabaseClient(name, reason, status)
+    };
+
     private DatabaseClient CacheIfAvailable(DatabaseRole databaseRole, DatabaseClient client)
     {
         if (!client.IsAvailable)

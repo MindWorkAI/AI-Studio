@@ -1,5 +1,3 @@
-using System.Globalization;
-
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;

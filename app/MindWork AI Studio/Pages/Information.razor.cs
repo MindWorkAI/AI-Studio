@@ -4,7 +4,6 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -98,22 +97,40 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionVectorStore
+    /// <summary>
+    /// Builds the headline of one database block.
+    /// </summary>
+    /// <remarks>
+    /// The vector store names the version from the build metadata, which is what this page always
+    /// showed. The index store names the one its client read from the running database instead:
+    /// there, which SQLite build actually got loaded is the whole point of showing it.
+    /// </remarks>
+    private string DatabaseHeaderText(DatabaseSection section)
     {
-        get
+        var (nameLabel, versionLabel) = section.Role switch
         {
-            if (this.vectorStore is null)
-                return $"{T("Vector store")}: {T("checking availability")}";
+            DatabaseRole.VECTOR_STORE => (T("Vector store"), T("Vector store version")),
+            _ => (T("Local RAG index"), T("Local RAG index version"))
+        };
 
-            return this.vectorStore.Status switch
-            {
-                DatabaseClientStatus.AVAILABLE => $"{T("Vector store version")}: {this.vectorStore.Name} v{META_DATA_VECTOR_STORE.VectorStoreVersion}",
-                DatabaseClientStatus.STARTING => $"{T("Vector store")}: {this.vectorStore.Name} - {T("starting")}",
-                _ => $"{T("Vector store")}: {this.vectorStore.Name} - {T("not available")}"
-            };
-        }
+        if (section.Client is null)
+            return $"{nameLabel}: {T("checking availability")}";
+
+        var version = section.Role switch
+        {
+            DatabaseRole.VECTOR_STORE => META_DATA_VECTOR_STORE.VectorStoreVersion,
+            _ => section.Client.Version
+        };
+
+        return section.Client.Status switch
+        {
+            DatabaseClientStatus.AVAILABLE when !string.IsNullOrWhiteSpace(version) => $"{versionLabel}: {section.Client.Name} v{version}",
+            DatabaseClientStatus.AVAILABLE => $"{nameLabel}: {section.Client.Name}",
+            DatabaseClientStatus.STARTING => $"{nameLabel}: {section.Client.Name} - {T("starting")}",
+            _ => $"{nameLabel}: {section.Client.Name} - {T("not available")}"
+        };
     }
-    
+
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
 
@@ -121,7 +138,6 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
-    private bool showVectorStoreDetails;
     private bool showExternalHttpCustomRootCertificateDetails;
 
     private List<IAvailablePlugin> configPlugins = [];
@@ -141,10 +157,30 @@ public partial class Information : MSGComponentBase
 
     private sealed record MandatoryInfoPanelData(string HeaderText, string PluginName, DataMandatoryInfo Info, DataMandatoryInfoAcceptance? Acceptance);
     
-    private sealed record VectorStoreDisplayInfo(string Label, string Value);
-    private readonly List<VectorStoreDisplayInfo> vectorStoreDisplayInfo = new();
-    private DatabaseClient? vectorStore;
-    private CancellationTokenSource? vectorStoreRefreshCancellationTokenSource;
+    private sealed record DatabaseDisplayInfo(string Label, string Value);
+
+    /// <summary>
+    /// Everything one database block on this page needs to show itself.
+    /// </summary>
+    /// <remarks>
+    /// Both blocks work the same way, so they share their state and their methods and differ only
+    /// in their role. Whoever adds a third database adds one field here, not another set of methods.
+    /// </remarks>
+    private sealed class DatabaseSection(DatabaseRole role)
+    {
+        public DatabaseRole Role => role;
+
+        public DatabaseClient? Client { get; set; }
+
+        public bool ShowDetails { get; set; }
+
+        public List<DatabaseDisplayInfo> DisplayInfo { get; } = [];
+
+        public CancellationTokenSource? RefreshCancellationTokenSource { get; set; }
+    }
+
+    private readonly DatabaseSection vectorStoreSection = new(DatabaseRole.VECTOR_STORE);
+    private readonly DatabaseSection indexStoreSection = new(DatabaseRole.INDEX_STORE);
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -191,9 +227,16 @@ public partial class Information : MSGComponentBase
         this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await this.RefreshVectorStoreInfo(CancellationToken.None);
-        if (this.vectorStore?.Status is DatabaseClientStatus.STARTING)
-            this.StartShortVectorStoreRefreshLoop();
+        // The index store goes first: the vector store asks it for the number of stored vectors,
+        // and this way that client is already cached when it does.
+        await this.RefreshDatabaseInfo(this.indexStoreSection, CancellationToken.None);
+        await this.RefreshDatabaseInfo(this.vectorStoreSection, CancellationToken.None);
+
+        if (this.indexStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop(this.indexStoreSection);
+
+        if (this.vectorStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop(this.vectorStoreSection);
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -301,22 +344,31 @@ public partial class Information : MSGComponentBase
         this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
     }
     
-    private void ToggleVectorStoreDetails()
+    private void ToggleDatabaseDetails(DatabaseSection section)
     {
-        this.showVectorStoreDetails = !this.showVectorStoreDetails;
+        section.ShowDetails = !section.ShowDetails;
     }
 
-    private async Task RefreshVectorStoreInfo(CancellationToken cancellationToken)
+    private IReadOnlyList<ConfigInfoRowItem> BuildDatabaseInfoItems(DatabaseSection section) => section.DisplayInfo
+        .Select((item, index) => new ConfigInfoRowItem(
+            Icons.Material.Filled.ArrowRightAlt,
+            $"{item.Label}: {item.Value}",
+            item.Value,
+            $"{T("Copies the following to the clipboard")}: {item.Value}",
+            index == 0 ? string.Empty : "margin-top: 4px;"))
+        .ToList();
+
+    private async Task RefreshDatabaseInfo(DatabaseSection section, CancellationToken cancellationToken)
     {
-        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
-        this.vectorStore = refreshedClient;
-        this.vectorStoreDisplayInfo.Clear();
+        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(section.Role, cancellationToken);
+        section.Client = refreshedClient;
+        section.DisplayInfo.Clear();
 
         try
         {
             await foreach (var (label, value) in refreshedClient.GetDisplayInfo().WithCancellation(cancellationToken))
             {
-                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+                section.DisplayInfo.Add(new DatabaseDisplayInfo(label, value));
             }
         }
         catch (OperationCanceledException)
@@ -325,20 +377,24 @@ public partial class Information : MSGComponentBase
         }
         catch (Exception e)
         {
-            this.vectorStore = new NoVectorStoreClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
-            await foreach (var (label, value) in this.vectorStore.GetDisplayInfo().WithCancellation(cancellationToken))
+            // Drop whatever came in before the failure: those lines would otherwise stand next to
+            // the status and reason of the stand-in client and read like current values.
+            section.DisplayInfo.Clear();
+
+            section.Client = DatabaseClientProvider.CreateUnavailableClient(section.Role, refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            await foreach (var (label, value) in section.Client.GetDisplayInfo().WithCancellation(cancellationToken))
             {
-                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+                section.DisplayInfo.Add(new DatabaseDisplayInfo(label, value));
             }
         }
     }
 
-    private void StartShortVectorStoreRefreshLoop()
+    private void StartShortDatabaseRefreshLoop(DatabaseSection section)
     {
-        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
-        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
-        this.vectorStoreRefreshCancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = this.vectorStoreRefreshCancellationTokenSource.Token;
+        section.RefreshCancellationTokenSource?.Cancel();
+        section.RefreshCancellationTokenSource?.Dispose();
+        section.RefreshCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = section.RefreshCancellationTokenSource.Token;
 
         Task.Run(async () =>
         {
@@ -350,11 +406,11 @@ public partial class Information : MSGComponentBase
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
                     await this.InvokeAsync(async () =>
                     {
-                        await this.RefreshVectorStoreInfo(cancellationToken);
+                        await this.RefreshDatabaseInfo(section, cancellationToken);
                         this.StateHasChanged();
                     });
 
-                    if (this.vectorStore?.Status is not DatabaseClientStatus.STARTING)
+                    if (section.Client?.Status is not DatabaseClientStatus.STARTING)
                         return;
                 }
                 catch (OperationCanceledException)
@@ -366,7 +422,14 @@ public partial class Information : MSGComponentBase
                     return;
                 }
             }
-        }, cancellationToken).Observe($"{nameof(Information)}: refreshing the vector store info");
+        }, cancellationToken).Observe($"{nameof(Information)}: refreshing the {section.Role} info");
+    }
+
+    private void CancelDatabaseRefreshLoop(DatabaseSection section)
+    {
+        section.RefreshCancellationTokenSource?.Cancel();
+        section.RefreshCancellationTokenSource?.Dispose();
+        section.RefreshCancellationTokenSource = null;
     }
 
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
@@ -525,8 +588,8 @@ public partial class Information : MSGComponentBase
 
     protected override void DisposeResources()
     {
-        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
-        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
+        this.CancelDatabaseRefreshLoop(this.vectorStoreSection);
+        this.CancelDatabaseRefreshLoop(this.indexStoreSection);
         base.DisposeResources();
     }
 
