@@ -25,6 +25,8 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
     public override string CacheKey => $"{this.Name}:{this.databasePath}:{version}";
 
+    public override string Version => version;
+
     public static async Task<DatabaseClient> CreateAsync(
         ILogger logger,
         ILogger<DatabaseClient> databaseClientLogger,
@@ -65,7 +67,8 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         yield return (TB("Storage size"), this.GetStorageSize());
         yield return (TB("Indexed data sources"), (await context.DataSources.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
         yield return (TB("Indexed files"), (await context.EmbeddedFiles.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
-        yield return (TB("Search chunks"), (await context.EmbeddingChunks.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        var searchChunks = await this.GetTotalChunkCountAsync(CancellationToken.None);
+        yield return (TB("Search chunks"), searchChunks?.ToString(CultureInfo.InvariantCulture) ?? TB("unknown"));
         yield return (TB("Permanently skipped files"), (await context.PermanentIndexingFailures.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
     }
 
@@ -346,6 +349,27 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             .ExecuteDeleteAsync(token);
 
         await transaction.CommitAsync(token);
+    }
+
+    public override async Task<long?> GetTotalChunkCountAsync(CancellationToken token)
+    {
+        try
+        {
+            await using var context = this.CreateContext();
+
+            //
+            // Sum the chunk counts the files carry instead of counting the rows of the chunk table:
+            // embedded_files holds one row per file, embedding_chunks one per chunk. On a large index
+            // that is a difference of two orders of magnitude, and the information page reads this on
+            // every visit.
+            //
+            return await context.EmbeddedFiles.SumAsync(file => (long)file.ChunkCount, token);
+        }
+        catch (Exception exception)
+        {
+            this.Logger?.LogWarning(exception, "Failed to count the search chunks of the local RAG index.");
+            return null;
+        }
     }
 
     public override void Dispose()

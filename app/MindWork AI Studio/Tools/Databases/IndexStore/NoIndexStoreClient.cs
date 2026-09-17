@@ -55,6 +55,8 @@ public sealed class NoIndexStoreClient(string name, string? unavailableReason, D
 
     public override Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 
+    public override Task<long?> GetTotalChunkCountAsync(CancellationToken token) => Task.FromResult<long?>(null);
+
     public override void Dispose()
     {
     }
