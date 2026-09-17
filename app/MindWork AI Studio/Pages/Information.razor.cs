@@ -107,10 +107,10 @@ public partial class Information : MSGComponentBase
     /// </remarks>
     private string DatabaseHeaderText(DatabaseSection section)
     {
-        var (nameLabel, versionLabel) = section.Role switch
+        var nameLabel = section.Role switch
         {
-            DatabaseRole.VECTOR_STORE => (T("Vector store"), T("Vector store version")),
-            _ => (T("Local RAG index"), T("Local RAG index version"))
+            DatabaseRole.VECTOR_STORE => T("Vector database"),
+            _ => T("Index database"),
         };
 
         if (section.Client is null)
@@ -124,7 +124,7 @@ public partial class Information : MSGComponentBase
 
         return section.Client.Status switch
         {
-            DatabaseClientStatus.AVAILABLE when !string.IsNullOrWhiteSpace(version) => $"{versionLabel}: {section.Client.Name} v{version}",
+            DatabaseClientStatus.AVAILABLE when !string.IsNullOrWhiteSpace(version) => $"{nameLabel}: {section.Client.Name} v{version}",
             DatabaseClientStatus.AVAILABLE => $"{nameLabel}: {section.Client.Name}",
             DatabaseClientStatus.STARTING => $"{nameLabel}: {section.Client.Name} - {T("starting")}",
             _ => $"{nameLabel}: {section.Client.Name} - {T("not available")}"

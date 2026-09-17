@@ -12,7 +12,7 @@ namespace AIStudio.Tools.Databases.IndexStore;
 
 public sealed class SqliteIndexStoreClientImplementation(string name, string databasePath, string basePath, string version) : IndexStoreClient(name, basePath)
 {
-    private const string DATABASE_NAME = "Local RAG Index";
+    private const string DATABASE_NAME = "SQLite";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";
     private const int MAX_FTS_QUERY_TERMS = 32;
     private const int CHUNK_UPSERT_BATCH_SIZE = 500;
