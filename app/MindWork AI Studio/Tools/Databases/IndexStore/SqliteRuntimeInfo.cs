@@ -34,42 +34,6 @@ internal static class SqliteRuntimeInfo
     }
 
     /// <summary>
-    /// Where the native library sits on disk.
-    /// </summary>
-    /// <remarks>
-    /// This probes the file system instead of enumerating the loaded modules: Process.Modules throws
-    /// on macOS, and NativeLibrary hands out no path at all. For our single-file builds, the base
-    /// directory is where the runtime extracts the native assets to, so that is the first candidate.
-    /// </remarks>
-    public static string GetNativeLibraryPath()
-    {
-        try
-        {
-            var libraryName = GetNativeLibraryName();
-            if (string.IsNullOrWhiteSpace(libraryName))
-                return string.Empty;
-
-            var fileName = GetNativeFileName(libraryName);
-            var baseDirectory = AppContext.BaseDirectory;
-            string[] candidates =
-            [
-                Path.Combine(baseDirectory, fileName),
-                Path.Combine(baseDirectory, "runtimes", RuntimeInformation.RuntimeIdentifier, "native", fileName),
-            ];
-
-            foreach (var candidate in candidates)
-                if (File.Exists(candidate))
-                    return candidate;
-
-            return string.Empty;
-        }
-        catch
-        {
-            return string.Empty;
-        }
-    }
-
-    /// <summary>
     /// The version of the managed SQLitePCLRaw wrapper, which is a different thing than the SQLite version.
     /// </summary>
     public static string GetWrapperVersion()
@@ -120,16 +84,5 @@ internal static class SqliteRuntimeInfo
         {
             return string.Empty;
         }
-    }
-
-    private static string GetNativeFileName(string libraryName)
-    {
-        if (OperatingSystem.IsWindows())
-            return $"{libraryName}.dll";
-
-        if (OperatingSystem.IsMacOS())
-            return $"lib{libraryName}.dylib";
-
-        return $"lib{libraryName}.so";
     }
 }

@@ -26,7 +26,6 @@ public sealed class NoIndexStoreClient(string name, string? unavailableReason, D
         // user sees, so this is the one place where those details matter most.
         //
         yield return (TB("Native library"), OrUnknown(SqliteRuntimeInfo.GetNativeLibraryName()));
-        yield return (TB("Native library path"), OrUnknown(SqliteRuntimeInfo.GetNativeLibraryPath()));
         yield return (TB("Process architecture"), OrUnknown(SqliteRuntimeInfo.GetProcessArchitecture()));
 
         await Task.CompletedTask;

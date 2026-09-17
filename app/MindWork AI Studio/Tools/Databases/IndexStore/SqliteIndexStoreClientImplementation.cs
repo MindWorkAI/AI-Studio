@@ -71,9 +71,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         var snapshot = await this.ReadDisplaySnapshotAsync();
 
         yield return (TB("Reported version"), version);
-        yield return (TB("Library source ID"), OrUnknown(snapshot.LibrarySourceId));
         yield return (TB("Native library"), OrUnknown(SqliteRuntimeInfo.GetNativeLibraryName()));
-        yield return (TB("Native library path"), OrNotDetermined(SqliteRuntimeInfo.GetNativeLibraryPath()));
         yield return (TB("Wrapper version"), OrUnknown(SqliteRuntimeInfo.GetWrapperVersion()));
         yield return (TB("Process architecture"), OrUnknown(SqliteRuntimeInfo.GetProcessArchitecture()));
 
@@ -83,14 +81,12 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             yield return (TB("System architecture"), systemArchitecture);
 
         yield return (TB("Full-text search (FTS5)"), OrUnknown(snapshot.FullTextSearch));
-        yield return (TB("Database path"), this.databasePath);
         yield return (TB("Journal mode"), OrUnknown(snapshot.JournalMode));
         yield return (TB("Schema version"), OrUnknown(snapshot.SchemaVersion));
         yield return (TB("Database tables"), OrUnknown(snapshot.TableCount));
         yield return (TB("Storage size"), this.GetStorageSize());
         yield return (TB("Indexed data sources"), OrUnknown(snapshot.DataSourceCount));
         yield return (TB("Indexed files"), OrUnknown(snapshot.FileCount));
-        yield return (TB("Search chunks"), OrUnknown(snapshot.ChunkCount));
         yield return (TB("Permanently skipped files"), OrUnknown(snapshot.FailureCount));
     }
 
@@ -406,8 +402,6 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
     /// </remarks>
     private sealed record DisplaySnapshot
     {
-        public string LibrarySourceId { get; init; } = string.Empty;
-
         public string FullTextSearch { get; init; } = string.Empty;
 
         public string JournalMode { get; init; } = string.Empty;
@@ -420,14 +414,10 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
         public string FileCount { get; init; } = string.Empty;
 
-        public string ChunkCount { get; init; } = string.Empty;
-
         public string FailureCount { get; init; } = string.Empty;
     }
 
     private static string OrUnknown(string value) => string.IsNullOrWhiteSpace(value) ? TB("unknown") : value;
-
-    private static string OrNotDetermined(string value) => string.IsNullOrWhiteSpace(value) ? TB("not determined") : value;
 
     private async Task<DisplaySnapshot> ReadDisplaySnapshotAsync()
     {
@@ -437,14 +427,12 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             await using var context = this.CreateContext();
             return new DisplaySnapshot
             {
-                LibrarySourceId = await QueryScalarTextAsync(context, "SELECT sqlite_source_id()", token),
                 FullTextSearch = await GetFullTextSearchStateAsync(context, token),
                 JournalMode = (await QueryScalarTextAsync(context, "PRAGMA journal_mode;", token)).ToUpperInvariant(),
                 SchemaVersion = await GetSchemaVersionAsync(context, token),
                 TableCount = await GetTableCountAsync(context, token),
                 DataSourceCount = await FormatCountAsync(context.DataSources, token),
                 FileCount = await FormatCountAsync(context.EmbeddedFiles, token),
-                ChunkCount = (await this.GetTotalChunkCountAsync(token))?.ToString("N0", I18N.I.Culture) ?? string.Empty,
                 FailureCount = await FormatCountAsync(context.PermanentIndexingFailures, token),
             };
         }
@@ -503,7 +491,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         // is the point: a missing shadow table is a finding, not noise.
         //
         var tables = await QueryScalarTextAsync(context, "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'", token);
-        return int.TryParse(tables, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tableCount) ? tableCount.ToString("N0", I18N.I.Culture) : string.Empty;
+        return int.TryParse(tables, NumberStyles.Integer, CultureInfo.InvariantCulture, out var tableCount) ? tableCount.CompactCount() : string.Empty;
     }
 
     private static async Task<string> GetSchemaVersionAsync(IndexStoreDbContext context, CancellationToken token)
@@ -521,8 +509,8 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
             var pendingMigrations = (await context.Database.GetPendingMigrationsAsync(token)).ToList();
             return pendingMigrations.Count == 0
-                ? string.Format(I18N.I.Culture, TB("{0} ({1} applied)"), appliedMigrations[^1], appliedMigrations.Count)
-                : string.Format(I18N.I.Culture, TB("{0} ({1} applied, {2} pending)"), appliedMigrations[^1], appliedMigrations.Count, pendingMigrations.Count);
+                ? string.Format(I18N.I.Culture, TB("{0} ({1} applied)"), appliedMigrations[^1], appliedMigrations.Count.CompactCount())
+                : string.Format(I18N.I.Culture, TB("{0} ({1} applied, {2} pending)"), appliedMigrations[^1], appliedMigrations.Count.CompactCount(), pendingMigrations.Count.CompactCount());
         }
         catch
         {
@@ -534,7 +522,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
     {
         try
         {
-            return (await query.CountAsync(token)).ToString("N0", I18N.I.Culture);
+            return (await query.CountAsync(token)).CompactCount();
         }
         catch
         {

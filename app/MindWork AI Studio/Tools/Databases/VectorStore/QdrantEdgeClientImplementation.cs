@@ -91,8 +91,8 @@ public sealed class QdrantEdgeClientImplementation(
 
         yield return (TB("Reported version"), displayVersion);
         yield return (TB("Storage size"), $"{this.GetStorageSize()}");
-        yield return (TB("Number of vector stores"), displayStoresCount.ToString("N0", I18N.I.Culture));
-        yield return (TB("Stored vectors"), storedVectors?.ToString("N0", I18N.I.Culture) ?? TB("unknown"));
+        yield return (TB("Number of vector stores"), displayStoresCount.CompactCount());
+        yield return (TB("Stored vectors"), storedVectors?.CompactCount() ?? TB("unknown"));
     }
 
     /// <summary>
