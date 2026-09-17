@@ -9111,6 +9111,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Der Speicherort d
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Einstellungen öffnen"
 
+-- Datei {0} von {1} wird indexiert.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1616414701"] = "Datei {0} von {1} wird indexiert."
+
 -- Tried again during the next run
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1946414905"] = "Beim nächsten Durchlauf erneut versucht"
 

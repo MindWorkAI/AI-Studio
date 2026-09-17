@@ -181,10 +181,15 @@ public partial class Embeddings : MSGComponentBase
     /// several thousand pages, and a progress which never moves cannot be told apart from one which
     /// is stuck. The total number of blocks is not part of it: the blocks are produced while the
     /// file is read, so nobody knows how many there will be until the file is done.
+    ///
+    /// Which sentence is shown depends on the file, not on the block. A file has no blocks yet
+    /// while it is being read, and hanging the choice on the block number let the line jump back
+    /// and forth between two entirely different sentences at every file. Now the beginning of the
+    /// sentence stays put and the blocks are appended to it as soon as the first one arrives.
     /// </remarks>
     private string GetFileProgressText(DataSourceEmbeddingStatus status)
     {
-        if (status.State is not DataSourceEmbeddingState.RUNNING || status.CurrentFileBlock is not { } block)
+        if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentFile))
             return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedFiles), this.FormatNumber(status.TotalFiles));
 
         //
@@ -193,9 +198,12 @@ public partial class Embeddings : MSGComponentBase
         // behind the file whose name is shown right next to it.
         //
         var currentFileNumber = Math.Min(status.TotalFiles, status.IndexedFiles + status.PermanentlySkippedFiles + status.FailedFiles + 1);
-        return status.CurrentFilePage is { } page
-            ? string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block), this.FormatNumber(page))
-            : string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block));
+        return status switch
+        {
+            { CurrentFileBlock: { } block, CurrentFilePage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block), this.FormatNumber(page)),
+            { CurrentFileBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block)),
+            _ => string.Format(T("File {0} of {1} is being indexed."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles)),
+        };
     }
 
     private string FormatNumber(int value) => value.ToString("N0", this.currentCulture);

@@ -9109,6 +9109,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Could not open th
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Open the settings"
 
+-- File {0} of {1} is being indexed.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1616414701"] = "File {0} of {1} is being indexed."
+
 -- Tried again during the next run
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1946414905"] = "Tried again during the next run"
 
