@@ -1,15 +1,24 @@
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Databases.VectorStore;
 
+/// <param name="indexStoreAccessor">
+/// Resolves the index store, which is where the number of stored vectors comes from. Counting the
+/// points in Qdrant Edge itself would have to load every shard first and would hold the global
+/// database mutex against ongoing inserts and searches. The accessor is only called while building
+/// the display info, never while this client is created: creating it already holds the vector store
+/// lock, and the accessor takes the index store lock, so the two are never held at the same time.
+/// </param>
 public sealed class QdrantEdgeClientImplementation(
     string name,
     string path,
     string version,
     int storesCount,
-    RustService rustService) : VectorStoreClient(name, path)
+    RustService rustService,
+    Func<CancellationToken, Task<IndexStoreClient>> indexStoreAccessor) : VectorStoreClient(name, path)
 {
     private const string DATABASE_NAME = "Qdrant Edge";
     private const string INFO_PATH = "/system/qdrant-edge/info";
@@ -28,6 +37,7 @@ public sealed class QdrantEdgeClientImplementation(
 
     public static async Task<DatabaseClient> CreateAsync(
         RustService rustService,
+        Func<CancellationToken, Task<IndexStoreClient>> indexStoreAccessor,
         ILogger logger,
         ILogger<DatabaseClient> databaseClientLogger,
         CancellationToken cancellationToken)
@@ -60,7 +70,7 @@ public sealed class QdrantEdgeClientImplementation(
             return CreateNoVectorStoreClient(DATABASE_NAME, $"Failed to get the {DATABASE_NAME} path from Rust.", DatabaseClientStatus.UNAVAILABLE, databaseClientLogger);
 
         var name = string.IsNullOrWhiteSpace(qdrantEdgeInfo.Name) ? DATABASE_NAME : qdrantEdgeInfo.Name;
-        var client = new QdrantEdgeClientImplementation(name, qdrantEdgeInfo.Path, qdrantEdgeInfo.Version, qdrantEdgeInfo.StoresCount, rustService);
+        var client = new QdrantEdgeClientImplementation(name, qdrantEdgeInfo.Path, qdrantEdgeInfo.Version, qdrantEdgeInfo.StoresCount, rustService, indexStoreAccessor);
         client.SetLogger(databaseClientLogger);
         return client;
     }
@@ -77,9 +87,35 @@ public sealed class QdrantEdgeClientImplementation(
         if (!currentInfo.IsAvailable)
             yield return (TB("Status"), currentInfo.UnavailableReason ?? TB("Qdrant Edge is not available."));
 
+        var storedVectors = await this.GetStoredVectorCountAsync();
+
         yield return (TB("Reported version"), displayVersion);
         yield return (TB("Storage size"), $"{this.GetStorageSize()}");
-        yield return (TB("Number of vector stores"), displayStoresCount.ToString());
+        yield return (TB("Number of vector stores"), displayStoresCount.CompactCount());
+        yield return (TB("Stored vectors"), storedVectors?.CompactCount() ?? TB("unknown"));
+    }
+
+    /// <summary>
+    /// Reads how many vectors the vector stores hold in total.
+    /// </summary>
+    /// <returns>The number of vectors, or null when the index store cannot tell.</returns>
+    private async Task<long?> GetStoredVectorCountAsync()
+    {
+        try
+        {
+            //
+            // One chunk is one vector: every chunk becomes exactly one point carrying the single
+            // named vector "embedding". So the index store knows this number without Qdrant Edge
+            // having to load a single shard for it.
+            //
+            var indexStore = await indexStoreAccessor(CancellationToken.None);
+            return await indexStore.GetTotalChunkCountAsync(CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            this.Logger?.LogWarning(exception, "Failed to read the number of stored vectors from the index store.");
+            return null;
+        }
     }
 
     public override async Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>

@@ -214,8 +214,44 @@ RAG integration is currently in development (preview feature). Architecture:
 - **Data Sources** - Local files and external data via ERI servers
 - **Agents** - AI agents select data sources and validate retrieval quality
 - **Embedding providers** - Support for various embedding models
-- **Vector database** - Planned integration with Qdrant for vector storage
+- **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
+- **Index database** - SQLite, holding the file fingerprints and the chunk texts for full-text search; see "Databases" below
 - **File processing** - Extracts text from PDF, DOCX, XLSX via Rust runtime
+
+## Databases
+
+Local RAG runs on two databases, addressed through `DatabaseRole`:
+
+- **`VECTOR_STORE`** — Qdrant Edge through the `qdrant-edge` crate, running **in-process inside the
+  Rust runtime**. There is no sidecar process, no port 6333 and no Qdrant API key; .NET reaches it
+  over the internal runtime API (`/system/qdrant-edge/*`, see `runtime/src/qdrant_edge_database.rs`),
+  secured by the same TLS and API token as every other runtime call. One store per data source,
+  named `rag_<data source guid>`, holding a single named vector `embedding` per point.
+- **`INDEX_STORE`** — SQLite at `<data directory>/databases/sqlite/rag-index.sqlite3`, reached
+  through EF Core. It holds the data sources, the file fingerprints, the chunk texts and an FTS5
+  index over them, plus the files which permanently failed to index.
+
+`DatabaseClientProvider` is the only way to a client. It caches one per role and guards each role
+with its own semaphore, so never construct a client yourself.
+
+When working on these, keep in mind:
+
+- **`GetDisplayInfo()` feeds the information page.** A new diagnostic value belongs in the client
+  that knows it, not in `Pages/Information.razor.cs`. The page renders whatever label-value pairs it
+  receives and stays free of per-database knowledge.
+- **Let every probe in `GetDisplayInfo()` catch its own failure.** When the method throws, the page
+  replaces the *entire* block with the fallback client, so one unreadable value costs all the others
+  as well.
+- **Raw SQL against SQLite goes through `context.Database.GetDbConnection()`**, not through
+  `SqlQueryRaw<T>`: that one expects a column named `Value` and wraps the statement, so a `PRAGMA`
+  never works with it.
+- **A new EF Core migration needs a `[DynamicDependency]`** in `IndexStoreSchemaMigrator`, because
+  `PublishTrimmed` is on and the migration type would otherwise be trimmed away. The "Schema version"
+  line on the information page shows the applied and pending counts, so a forgotten entry becomes
+  visible there.
+- **Counts in the UI go through `long.CompactCount()` / `int.CompactCount()`** (`Tools/LongExtensions.cs`),
+  which shortens anything above 999 to `1.46k` or `4.51M` and formats it with the culture of the
+  active language plugin. Storage sizes are the exception: they keep using the byte formatters.
 
 ## Enterprise IT Support
 
@@ -245,6 +281,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - keyring - OS keyring integration
 - pdfium-render - PDF text extraction
 - calamine - Excel file parsing
+- qdrant-edge - Embedded vector database
 
 **.NET:**
 - Blazor Server - UI framework
@@ -252,6 +289,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - LuaCSharp - Lua scripting engine
 - HtmlAgilityPack - HTML parsing
 - ReverseMarkdown - HTML to Markdown conversion
+- EF Core Sqlite + SQLitePCLRaw - the local RAG index
 
 ## Security
 
