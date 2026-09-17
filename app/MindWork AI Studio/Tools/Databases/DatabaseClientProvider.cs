@@ -104,7 +104,7 @@ public sealed class DatabaseClientProvider(RustService rustService, ILoggerFacto
 
     private async Task<DatabaseClient> CreateClientAsync(DatabaseRole databaseRole, CancellationToken cancellationToken) => databaseRole switch
     {
-        DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.logger, this.databaseClientLogger, cancellationToken),
+        DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.GetIndexStoreAsync, this.logger, this.databaseClientLogger, cancellationToken),
         DatabaseRole.INDEX_STORE => await SqliteIndexStoreClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
         _ => new NoDatabaseClient(databaseRole.ToString(), "The requested database role is not supported.")
     };
