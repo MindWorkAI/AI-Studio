@@ -1,17 +1,21 @@
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Content which a reader held back, together with the token count of exactly that content.
+/// Content which a reader held back, together with the token count and the page of exactly that
+/// content.
 /// </summary>
 /// <remarks>
 /// Readers which assemble a page or a slide from several stream events cannot pass their content
 /// on right away. Its token count has to travel with it: the count describes the content, not the
 /// event which happened to arrive at the moment the content was released. Keeping the two together
-/// is what stops a page from being sized by the text of the page after it.
+/// is what stops a page from being sized by the text of the page after it. The page number travels
+/// for the very same reason, and because a number the runtime already stated must not be derived
+/// from the text again further down the line.
 /// </remarks>
 /// <param name="Content">The assembled content.</param>
 /// <param name="TokenCount">The number of tokens of that content, or null when it is unknown.</param>
-public readonly record struct ContentStreamPendingContent(string Content, int? TokenCount)
+/// <param name="PageNumber">The page that content came from, or null when it has none.</param>
+public readonly record struct ContentStreamPendingContent(string Content, int? TokenCount, int? PageNumber = null)
 {
     /// <summary>
     /// Adds up two token counts, where an unknown count makes the sum unknown as well.

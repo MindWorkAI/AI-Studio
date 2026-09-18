@@ -11,6 +11,4 @@ public sealed record EmbeddingStateFile(
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
-    int ChunkCount,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    int ChunkCount);

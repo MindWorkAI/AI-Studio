@@ -26,10 +26,6 @@ internal sealed class EmbeddingStateFileEntity
 
     public int ChunkCount { get; set; }
 
-    public string ConfidenceLevel { get; set; } = string.Empty;
-
-    public int ConfidenceLevelRank { get; set; }
-
     public EmbeddingStateDataSourceEntity? DataSource { get; set; }
 
     public List<EmbeddingStateChunkEntity> Chunks { get; set; } = [];

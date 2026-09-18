@@ -49,6 +49,10 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool showDataSourceSelection;
     private bool waitingForDataSources = true;
     private IReadOnlyList<IDataSource> availableDataSources = [];
+    private IReadOnlyList<IDataSource> dataSourcesAwaitingReindex = [];
+    private HashSet<string> dataSourceIdsAwaitingReindex = new(StringComparer.Ordinal);
+    private IReadOnlyList<IDataSource> dataSourcesNeedingRepair = [];
+    private HashSet<string> dataSourceIdsNeedingRepair = new(StringComparer.Ordinal);
     private IReadOnlyCollection<IDataSource> selectedDataSources = [];
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
@@ -226,10 +230,61 @@ public partial class DataSourceSelection : MSGComponentBase
             return;
 
         this.availableDataSources = sources.AllowedDataSources;
+        this.dataSourcesAwaitingReindex = sources.DataSourcesAwaitingReindex;
+        this.dataSourceIdsAwaitingReindex = sources.DataSourcesAwaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        this.dataSourcesNeedingRepair = sources.DataSourcesNeedingRepair;
+        this.dataSourceIdsNeedingRepair = sources.DataSourcesNeedingRepair.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
         this.selectedDataSources = sources.SelectedDataSources;
         this.waitingForDataSources = false;
         this.StateHasChanged();
     }
+
+    /// <summary>
+    /// Why a data source is listed but cannot be picked, if it cannot.
+    /// </summary>
+    /// <remarks>
+    /// The repair is asked about first. The service hands a data source to one of the two lists
+    /// only, but should that ever change, the reason the user can act on is the one worth showing.
+    /// </remarks>
+    private DataSourceBlockReason GetBlockReason(IDataSource dataSource)
+    {
+        if (this.dataSourceIdsNeedingRepair.Contains(dataSource.Id))
+            return DataSourceBlockReason.NEEDS_REPAIR;
+
+        if (this.dataSourceIdsAwaitingReindex.Contains(dataSource.Id))
+            return DataSourceBlockReason.AWAITING_REINDEX;
+
+        return DataSourceBlockReason.NONE;
+    }
+
+    /// <summary>
+    /// The data sources the list shows: the usable ones, plus the ones which cannot be searched.
+    /// </summary>
+    /// <remarks>
+    /// Kept in the order the data sources were configured in, rather than usable ones first. A row
+    /// which jumps to another place the moment its data source starts being re-indexed is a row the
+    /// user has to find again.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetListedDataSources()
+    {
+        if (this.dataSourcesAwaitingReindex.Count == 0 && this.dataSourcesNeedingRepair.Count == 0)
+            return this.availableDataSources;
+
+        var listedIds = this.availableDataSources.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        listedIds.UnionWith(this.dataSourceIdsAwaitingReindex);
+        listedIds.UnionWith(this.dataSourceIdsNeedingRepair);
+        return this.GetConfiguredDataSourcesSnapshot().Where(source => listedIds.Contains(source.Id)).ToList();
+    }
+
+    /// <summary>
+    /// The preselected but unusable data sources the warning box lists.
+    /// </summary>
+    /// <remarks>
+    /// The ones which are only blocked are left out: they have a row of their own in the list
+    /// above, which says the same thing in the place the user is already looking.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSourcesToList() =>
+        this.GetUnavailablePreselectedDataSources().Where(source => this.GetBlockReason(source) is DataSourceBlockReason.NONE).ToList();
     
     private async Task EnabledChanged(bool state)
     {

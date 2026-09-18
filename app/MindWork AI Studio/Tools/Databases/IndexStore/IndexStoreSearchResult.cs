@@ -4,7 +4,6 @@ public sealed record IndexStoreSearchResult(
     string ChunkId,
     string ParentFileId,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string AbsolutePath,
     string FileName,
@@ -19,6 +18,4 @@ public sealed record IndexStoreSearchResult(
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
-    int ChunkCount,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    int ChunkCount);

@@ -4,7 +4,6 @@ public sealed record VectorSearchResult(
     string PointId,
     double Score,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string ChunkId,
     string ParentFileId,
@@ -19,6 +18,4 @@ public sealed record VectorSearchResult(
     string Fingerprint,
     string CreationUtc,
     string LastWriteUtc,
-    string EmbeddedAtUtc,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    string EmbeddedAtUtc);

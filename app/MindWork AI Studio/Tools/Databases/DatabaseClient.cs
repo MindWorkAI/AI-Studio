@@ -8,11 +8,20 @@ public abstract class DatabaseClient(string name, string path)
 
     public virtual DatabaseClientStatus Status => DatabaseClientStatus.AVAILABLE;
 
+    /// <summary>
+    /// The version the running database reports about itself.
+    /// </summary>
+    /// <remarks>
+    /// Empty when the client cannot tell. Callers which want to show a version in a headline read it
+    /// from here instead of picking it out of the label-value pairs the display info yields.
+    /// </remarks>
+    public virtual string Version => string.Empty;
+
     public bool IsAvailable => this.Status is DatabaseClientStatus.AVAILABLE;
     
     private string Path => path;
 
-    private ILogger<DatabaseClient>? logger;
+    protected ILogger<DatabaseClient>? Logger;
     
     public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();
 
@@ -20,13 +29,13 @@ public abstract class DatabaseClient(string name, string path)
     {
         if (string.IsNullOrWhiteSpace(this.Path))
         {
-            this.logger!.LogError($"Error: Database path '{this.Path}' cannot be null or empty.");
+            this.Logger!.LogError($"Error: Database path '{this.Path}' cannot be null or empty.");
             return "0 B";
         }
 
         if (!Directory.Exists(this.Path))
         {
-            this.logger!.LogError($"Error: Database path '{this.Path}' does not exist.");
+            this.Logger!.LogError($"Error: Database path '{this.Path}' does not exist.");
             return "0 B";
         }
         var files = Directory.EnumerateFiles(this.Path, "*", SearchOption.AllDirectories)
@@ -52,7 +61,7 @@ public abstract class DatabaseClient(string name, string path)
     
     public void SetLogger(ILogger<DatabaseClient> logService)
     {
-        this.logger = logService;
+        this.Logger = logService;
     }
 
     public abstract void Dispose();

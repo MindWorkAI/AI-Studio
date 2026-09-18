@@ -491,7 +491,11 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => true,
         LLMProviders.HUGGINGFACE => true,
 
-        LLMProviders.SELF_HOSTED => host is (Host.OLLAMA or Host.VLLM),
+        // Every self-hosted engine can ask for a key: LM Studio brings its own tokens, and any of
+        // them can sit behind a proxy which authenticates. The field is labeled as optional for
+        // them, so offering it costs nothing where no key is needed, while leaving it out means
+        // the user cannot enter the one their server expects:
+        LLMProviders.SELF_HOSTED => host is not Host.NONE,
 
         _ => false,
     };

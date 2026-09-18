@@ -4,7 +4,6 @@ public sealed record VectorStoragePoint(
     string PointId,
     IReadOnlyList<float> Vector,
     string DataSourceId,
-    string DataSourceName,
     string DataSourceType,
     string ChunkId,
     string ParentFileId,
@@ -19,6 +18,4 @@ public sealed record VectorStoragePoint(
     string Fingerprint,
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
-    DateTimeOffset EmbeddedAtUtc,
-    string ConfidenceLevel,
-    int ConfidenceLevelRank);
+    DateTimeOffset EmbeddedAtUtc);

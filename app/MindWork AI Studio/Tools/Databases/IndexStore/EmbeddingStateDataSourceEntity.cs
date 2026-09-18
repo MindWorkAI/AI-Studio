@@ -4,8 +4,6 @@ internal sealed class EmbeddingStateDataSourceEntity
 {
     public string DataSourceId { get; set; } = string.Empty;
 
-    public string DataSourceName { get; set; } = string.Empty;
-
     public string DataSourceType { get; set; } = string.Empty;
 
     public string EmbeddingProviderId { get; set; } = string.Empty;

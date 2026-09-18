@@ -29,7 +29,6 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.HasKey(dataSource => dataSource.DataSourceId);
 
             entity.Property(dataSource => dataSource.DataSourceId).HasColumnName("data_source_id");
-            entity.Property(dataSource => dataSource.DataSourceName).HasColumnName("data_source_name").IsRequired();
             entity.Property(dataSource => dataSource.DataSourceType).HasColumnName("data_source_type").IsRequired();
             entity.Property(dataSource => dataSource.EmbeddingProviderId).HasColumnName("embedding_provider_id").IsRequired();
             entity.Property(dataSource => dataSource.EmbeddingSignature).HasColumnName("embedding_signature").IsRequired();
@@ -67,13 +66,10 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
-            entity.Property(file => file.ConfidenceLevel).HasColumnName("confidence_level").IsRequired();
-            entity.Property(file => file.ConfidenceLevelRank).HasColumnName("confidence_level_rank");
 
             entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
             entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");
             entity.HasIndex(file => file.FileType).HasDatabaseName("idx_embedded_files_file_type");
-            entity.HasIndex(file => file.ConfidenceLevelRank).HasDatabaseName("idx_embedded_files_confidence");
             entity.HasIndex(file => new { file.DataSourceId, file.AbsolutePath }).HasDatabaseName("idx_embedded_files_data_source_absolute_path").IsUnique();
 
             entity

@@ -18,6 +18,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 {
     private const int VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD = 100_000;
 
+    /// <summary>
+    /// How often the block progress within one file is reported to the user interface at most.
+    /// </summary>
+    private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
+
+    /// <summary>
+    /// How long the re-index check waits for the index database before it gives up.
+    /// </summary>
+    /// <remarks>
+    /// Asked while somebody waits for the data source selection to open, and possibly while a run
+    /// writes to the same database.
+    /// </remarks>
+    private static readonly TimeSpan REINDEX_CHECK_TIMEOUT = TimeSpan.FromSeconds(2);
+
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -206,6 +220,119 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                || manifest.PermanentFailures.Count > 0;
     }
 
+    /// <summary>
+    /// Whether a data source cannot answer a search right now because its index has to be built anew.
+    /// </summary>
+    /// <remarks>
+    /// Says nothing about a data source which is only catching up with a handful of changed files:
+    /// everything indexed before is still there and still searchable. What this catches is the case
+    /// where the whole index was thrown away, or is about to be, because the embedding configuration
+    /// changed under it. Between discarding the old vectors and finishing the new ones, the data
+    /// source looks perfectly fine and finds nothing.
+    ///
+    /// Two things are asked, in this order. The stored signature tells whether the vectors still
+    /// belong to the current configuration; it is written back right after the reset, so on its own
+    /// it would call a rebuild in progress finished. The stored hash of the data source closes that
+    /// gap: it survives an ordinary run but not a reset, so an empty one means no run has completed
+    /// since the index was discarded.
+    ///
+    /// Anything unclear counts as not waiting. Whoever asks does so to grey out a row, and a data
+    /// source wrongly greyed out for good is worse than one which turns out to have nothing to say.
+    /// </remarks>
+    /// <param name="dataSource">The data source to ask about.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
+    public async Task<bool> IsAwaitingReindexAsync(IDataSource dataSource, CancellationToken token = default)
+    {
+        //
+        // This guard also keeps the index database out of the picture while local RAG is switched
+        // off: asking for the store creates the database and runs its migrations on the first call,
+        // which must not happen because somebody opened the data source selection.
+        //
+        if (!this.IsSupportedInternalDataSource(dataSource))
+            return false;
+
+        if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
+            return false;
+
+        try
+        {
+            //
+            // A timeout of its own: this runs while the user waits for a popover to open, and the
+            // embedding service may be writing to the same database at the time.
+            //
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(REINDEX_CHECK_TIMEOUT);
+
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(timeout.Token);
+            if (!indexStore.IsAvailable)
+                return false;
+
+            var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, timeout.Token);
+            var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
+            var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
+            var runState = this.statuses.TryGetValue(dataSource.Id, out var status) ? status.State : (DataSourceEmbeddingState?)null;
+
+            return IsIndexAwaitingRebuild(indexState, embeddingSignature, runState);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not tell whether data source '{DataSourceName}' ({DataSourceId}) is waiting for a re-index. Treating it as usable.", dataSource.Name, dataSource.Id);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Decides from the stored index state alone whether a data source has to be indexed anew.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from reading the database so the decision itself can be pinned down in a test.
+    /// The order of the three questions is what makes it correct, see IsAwaitingReindexAsync.
+    /// </remarks>
+    /// <param name="indexState">What the index holds about the data source, or null when it holds nothing.</param>
+    /// <param name="currentEmbeddingSignature">The signature the current embedding configuration produces.</param>
+    /// <param name="runState">The state of this data source's last or current run, when one is known.</param>
+    /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
+    internal static bool IsIndexAwaitingRebuild(DataSourceIndexState? indexState, string currentEmbeddingSignature, DataSourceEmbeddingState? runState)
+    {
+        // Nothing stored at all: this data source has never been indexed, so there is nothing to
+        // search in it yet.
+        if (indexState is null)
+            return true;
+
+        // The stored vectors belong to another embedding configuration. They will be thrown away
+        // as soon as the next run starts, and they are of no use before that either.
+        if (!string.Equals(indexState.EmbeddingSignature, currentEmbeddingSignature, StringComparison.Ordinal))
+            return true;
+
+        // A run has worked through the whole data source since the index was last discarded.
+        if (!string.IsNullOrWhiteSpace(indexState.SourceHash))
+            return false;
+
+        //
+        // The index was discarded and nothing has finished since. A failed run is the exception:
+        // whatever it managed to index is searchable, and the embeddings page already names the
+        // problem, so there is nothing to be gained from locking the row as well.
+        //
+        return runState is not DataSourceEmbeddingState.FAILED;
+    }
+
+    /// <summary>
+    /// Whether a data source cannot be searched because its vector store cannot be read anymore.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the re-index check above, this reads no database at all: the state comes from the run
+    /// or the search which ran into the unreadable store, and is kept in memory only. That it does
+    /// not survive a restart is deliberate. The very same store may well open on the next start,
+    /// and a mark written to disk would then be wrong with nobody noticing. Until something touches
+    /// the store again, the data source counts as usable, and a failing search says so on its own.
+    /// </remarks>
+    /// <param name="dataSource">The data source to ask about.</param>
+    /// <returns>True when the data source waits for the user to have its index rebuilt.</returns>
+    public bool NeedsIndexRepair(IDataSource dataSource) =>
+        this.statuses.TryGetValue(dataSource.Id, out var status) &&
+        status is { State: DataSourceEmbeddingState.FAILED, VectorStoreUnreadable: true };
+
     public Task QueueDataSourceAsync(IDataSource dataSource)
     {
         return this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
@@ -318,6 +445,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
+            }
+            catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+            {
+                //
+                // Nothing is deleted and nothing is rebuilt here. The data source says what is
+                // wrong with it, stays out of the selection while it says so, and waits for the
+                // user to ask for the repair.
+                //
+                logger.LogError(
+                    exception,
+                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                    dataSource.Name,
+                    dataSource.Id);
+                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
             }
             catch (Exception exception)
             {
@@ -646,6 +787,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
             this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
 
+            //
+            // What the page says while one file is being worked on. Without it, a document of
+            // several thousand pages leaves the same sentence standing for hours, and a progress
+            // which never moves cannot be told apart from one which is stuck.
+            //
+            var lastBlockReportUtc = DateTimeOffset.MinValue;
+
             try
             {
                 logger.LogInformation(
@@ -658,7 +806,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
+                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, ReportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
@@ -755,6 +903,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     ShortHash(fingerprint));
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
             }
+            catch (VectorStoreUnreadableException)
+            {
+                //
+                // Not about this one file: the store of the whole data source cannot be opened, so
+                // every remaining file would fail the same way. Carrying on would fill the list
+                // with one entry per file and hide the single cause behind them.
+                //
+                throw;
+            }
             catch (Exception exception)
             {
                 //
@@ -779,6 +936,24 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, failureMessage, failureDetails, permanentlySkippedFiles));
+            }
+
+            continue;
+
+            void ReportBlockProgress(int blockNumber, int? pageNumber)
+            {
+                //
+                // The first block goes out at once, so the line is there instead of blank. After
+                // that, at most one message every BLOCK_PROGRESS_INTERVAL: each one re-renders the
+                // embedding page, the navigation bar and the table in the settings, and the blocks
+                // of a large file arrive far faster than anybody can read them.
+                //
+                var nowUtc = DateTimeOffset.UtcNow;
+                if (blockNumber > 1 && nowUtc - lastBlockReportUtc < BLOCK_PROGRESS_INTERVAL)
+                    return;
+
+                lastBlockReportUtc = nowUtc;
+                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles, blockNumber, pageNumber));
             }
         }
 
@@ -823,6 +998,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IProvider provider,
         DataSourceEmbeddingManifest manifest,
         VectorStoreOptimizationTracker optimizationTracker,
+        Action<int, int?> reportBlockProgress,
         CancellationToken token)
     {
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
@@ -843,8 +1019,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, embeddingProvider, token))
         {
-            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk, totalChunkCount, TryExtractPageNumber(chunk)));
+            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
+            reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
             if (batch.Count >= embeddingBatchSize)
                 await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
@@ -1015,7 +1192,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             item.ChunkId,
             vectors[index],
             dataSource.Id,
-            dataSource.Name,
             dataSource.Type.ToString(),
             item.ChunkId,
             parentFile.ParentFileId,
@@ -1030,9 +1206,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             fingerprint,
             parentFile.CreationUtc,
             parentFile.LastWriteUtc,
-            embeddedAtUtc,
-            parentFile.ConfidenceLevel,
-            parentFile.ConfidenceLevelRank)).ToList();
+            embeddedAtUtc)).ToList();
 
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }
@@ -1167,6 +1341,31 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG embedding state will be retried during this pass. File watchers will be activated after this check completes.",
             supportedDataSources.Count);
 
+        //
+        // Every data source gets its row before the first run starts. This pass works through them
+        // one after the other, and re-indexing a large source takes its time: without this, the
+        // embeddings page would show the one source being worked on and nothing else, which reads
+        // as if the others were gone rather than waiting their turn. The queueing path does the
+        // same thing when it reserves a slot, which is why it never had this problem.
+        //
+        foreach (var dataSource in supportedDataSources)
+        {
+            if (this.statuses.TryGetValue(dataSource.Id, out var knownStatus) && knownStatus.State is DataSourceEmbeddingState.RUNNING)
+                continue;
+
+            this.statuses[dataSource.Id] = this.CreateStatus(
+                dataSource,
+                DataSourceEmbeddingState.QUEUED,
+                knownStatus?.TotalFiles ?? 0,
+                knownStatus?.IndexedFiles ?? 0,
+                knownStatus?.FailedFiles ?? 0,
+                failures: knownStatus?.Failures ?? [],
+                permanentlySkippedFiles: knownStatus?.PermanentlySkippedFiles ?? 0);
+        }
+
+        // One message for the whole list, rather than one per data source:
+        this.PublishStatusChanged();
+
         foreach (var dataSource in supportedDataSources)
         {
             token.ThrowIfCancellationRequested();
@@ -1177,6 +1376,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 throw;
+            }
+            catch (VectorStoreUnreadableException exception)
+            {
+                logger.LogError(
+                    exception,
+                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                    dataSource.Name,
+                    dataSource.Id);
+                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
             }
             catch (Exception exception)
             {
@@ -1237,7 +1445,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         CancellationToken token)
     {
         var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
-        var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
+        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
@@ -1276,7 +1484,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         await indexStore.UpsertDataSourceAsync(
             dataSource.Id,
-            dataSource.Name,
             dataSource.Type.ToString(),
             manifest.EmbeddingProviderId,
             manifest.EmbeddingSignature,
@@ -1422,7 +1629,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         string currentFile = "",
         string lastError = "",
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
-        int permanentlySkippedFiles = 0)
+        int permanentlySkippedFiles = 0,
+        int? currentFileBlock = null,
+        int? currentFilePage = null,
+        bool vectorStoreUnreadable = false)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
@@ -1435,7 +1645,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentFile,
             lastError,
             failures?.ToList() ?? [],
-            permanentlySkippedFiles);
+            permanentlySkippedFiles,
+            currentFileBlock,
+            currentFilePage,
+            vectorStoreUnreadable);
     }
 
     /// <remarks>
@@ -1470,6 +1683,25 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             1,
             lastError: errorMessage,
             failures: [new DataSourceEmbeddingFailure(dataSource.Name, errorMessage, DateTimeOffset.UtcNow)]);
+    }
+
+    /// <remarks>
+    /// Deliberately not the message which came from the runtime: that one names a store name and a
+    /// path, is written in English for the log file, and says nothing about what happens next. What
+    /// the user needs to read is what this means for their chats and where the way out is.
+    /// </remarks>
+    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSource dataSource)
+    {
+        var errorMessage = string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name);
+        return this.CreateStatus(
+            dataSource,
+            DataSourceEmbeddingState.FAILED,
+            0,
+            0,
+            1,
+            lastError: errorMessage,
+            failures: [new DataSourceEmbeddingFailure(dataSource.Name, errorMessage, DateTimeOffset.UtcNow)],
+            vectorStoreUnreadable: true);
     }
 
     private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun)

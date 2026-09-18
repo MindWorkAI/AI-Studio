@@ -13,7 +13,7 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(
     SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    ILogger<DataSourceLocalRetrievalService> logger)
+    DataSourceEmbeddingService embeddingService, ILogger<DataSourceLocalRetrievalService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
 
@@ -42,7 +42,6 @@ public sealed class DataSourceLocalRetrievalService(
         string ChunkId,
         string ParentFileId,
         string DataSourceId,
-        string DataSourceName,
         string DataSourceType,
         string AbsolutePath,
         string FileName,
@@ -52,9 +51,7 @@ public sealed class DataSourceLocalRetrievalService(
         int ChunkIndex,
         string Text,
         double Score,
-        int Rank,
-        string ConfidenceLevel,
-        int ConfidenceLevelRank);
+        int Rank);
     // ReSharper restore NotAccessedPositionalProperty.Local
 
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalFile dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
@@ -76,6 +73,23 @@ public sealed class DataSourceLocalRetrievalService(
         if (maxMatches == 0)
             return [];
 
+        //
+        // A data source waiting for its index is kept out of the selection before the RAG process
+        // starts. This catches whatever reaches retrieval another way, and turns an answer quietly
+        // put together without the data into a sentence saying so.
+        //
+        // Asked here rather than inside one of the two channels below, because both of them read
+        // what the rebuild is about to discard: with only the embedding signature changed, the old
+        // chunks are still in place and the keyword search would happily answer from them while
+        // the vector search finds nothing.
+        //
+        if (await embeddingService.IsAwaitingReindexAsync(dataSource, token))
+        {
+            logger.LogWarning("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because its index has to be built anew.", dataSource.Name, dataSource.Id);
+            await this.ReportRetrievalGapAsync(dataSource, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
+            return [];
+        }
+
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
         var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
         var bm25Task = this.SearchBm25Async(dataSource, query, maxMatches, token);
@@ -95,7 +109,7 @@ public sealed class DataSourceLocalRetrievalService(
 
         return hits
             .Where(hit => !string.IsNullOrWhiteSpace(hit.Text))
-            .Select(ToRetrievalContext)
+            .Select(hit => ToRetrievalContext(hit, dataSource))
             .ToList();
     }
 
@@ -164,6 +178,17 @@ public sealed class DataSourceLocalRetrievalService(
                 "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because the embedding provider failed. FailureReason={FailureReason}, StatusCode={StatusCode}.",
                 dataSource.Name, dataSource.Id, exception.FailureReason, exception.StatusCode);
             await this.ReportRetrievalGapAsync(dataSource, $"provider-{exception.FailureReason}", string.Format(TB("The data source '{0}' was left out of the answer. {1}"), dataSource.Name, exception.UserMessage));
+            return [];
+        }
+        catch (VectorStoreUnreadableException exception)
+        {
+            //
+            // Its own gap key, because this is not a search which went wrong but an index which has
+            // to be built anew. Saying that once per session is what turns a silently shortened
+            // answer into one the user can do something about.
+            //
+            logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
+            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
             return [];
         }
         catch (Exception exception)
@@ -344,7 +369,6 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkId,
             result.ParentFileId,
             result.DataSourceId,
-            result.DataSourceName,
             result.DataSourceType,
             FirstNonEmpty(result.AbsolutePath, result.FilePath),
             result.FileName,
@@ -354,9 +378,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.Text,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
     private static LocalRetrievalHit FromBm25Result(IndexStoreSearchResult result, int rank) =>
         new(
@@ -364,7 +386,6 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkId,
             result.ParentFileId,
             result.DataSourceId,
-            result.DataSourceName,
             result.DataSourceType,
             result.AbsolutePath,
             result.FileName,
@@ -374,13 +395,11 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkIndex,
             result.ChunkText,
             result.Score,
-            rank,
-            result.ConfidenceLevel,
-            result.ConfidenceLevelRank);
+            rank);
 
-    private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit)
+    private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit, IInternalDataSource dataSource)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
+        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         var path = FirstNonEmpty(hit.AbsolutePath, hit.RelativePath);
         var referenceLink = string.IsNullOrWhiteSpace(path) ? string.Empty : BuildReferenceLink(path, hit);
 
@@ -393,14 +412,15 @@ public sealed class DataSourceLocalRetrievalService(
             Links = [],
             MatchedText = hit.Text,
             SurroundingContent = [],
-            ReferenceTitle = BuildReferenceTitle(hit),
+            ReferenceTitle = BuildReferenceTitle(hit, dataSource),
             ReferenceLink = referenceLink,
+            PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
         };
     }
 
-    private static string BuildReferenceTitle(LocalRetrievalHit hit)
+    private static string BuildReferenceTitle(LocalRetrievalHit hit, IInternalDataSource dataSource)
     {
-        var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
+        var sourceName = FirstNonEmpty(hit.FileName, dataSource.Name);
         return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
     }
 
@@ -413,11 +433,19 @@ public sealed class DataSourceLocalRetrievalService(
         return $"{sourceName} ({location})";
     }
 
+    /// <remarks>
+    /// A known page is written as the fragment `#page=N`, which is what the PDF open parameters
+    /// call for: a program which understands them opens the document where the passage is. Without
+    /// a page there is nothing to send a program to, and the chunk stays in the link so the
+    /// reference still points at something.
+    /// </remarks>
     private static string BuildReferenceLink(string path, LocalRetrievalHit hit)
     {
         var link = NormalizeLocalReferencePath(path);
         var separator = link.Contains('#', StringComparison.Ordinal) ? "&" : "#";
-        return $"{link}{separator}chunk={hit.ChunkIndex}";
+        return hit.PageNumber is > 0
+            ? $"{link}{separator}page={hit.PageNumber}"
+            : $"{link}{separator}chunk={hit.ChunkIndex}";
     }
 
     private static string NormalizeLocalReferencePath(string path)
