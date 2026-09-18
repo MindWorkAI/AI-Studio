@@ -4,6 +4,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -69,6 +70,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistantAudit? audit;
     private string securityMessage = string.Empty;
     private bool isSecurityBlocked;
+    private DataSourceOptions dataSourceOptions = new();
     private PluginAssistants? pendingChatLauncher;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -88,6 +90,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<PluginAssistantAudit?> AUDIT_STATE_KEY = new(nameof(audit));
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
     private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
+    private static readonly AssistantSessionStateKey<DataSourceOptions> DATA_SOURCE_OPTIONS_STATE_KEY = new(nameof(dataSourceOptions));
 
     private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
 
@@ -110,6 +113,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Set(AUDIT_STATE_KEY, this.audit);
         state.Set(SECURITY_MESSAGE_STATE_KEY, this.securityMessage);
         state.Set(IS_SECURITY_BLOCKED_STATE_KEY, this.isSecurityBlocked);
+        state.Set(DATA_SOURCE_OPTIONS_STATE_KEY, this.dataSourceOptions.CreateCopy());
     }
 
     /// <inheritdoc />
@@ -131,6 +135,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Restore(AUDIT_STATE_KEY, value => this.audit = value);
         state.Restore(SECURITY_MESSAGE_STATE_KEY, value => this.securityMessage = value);
         state.Restore(IS_SECURITY_BLOCKED_STATE_KEY, value => this.isSecurityBlocked = value);
+        state.Restore(DATA_SOURCE_OPTIONS_STATE_KEY, value => this.dataSourceOptions = value.CreateCopy());
     }
 
     #region Implementation of AssistantBase
@@ -205,6 +210,12 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.pendingChatLauncher = null;
         await this.OpenChatLauncherAsync(launcherPlugin);
+    }
+
+    protected override Task OnDefaultsAppliedAsync()
+    {
+        this.dataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        return Task.CompletedTask;
     }
 
     protected override void ResetForm()
@@ -693,8 +704,15 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         }
 
         this.CreateChatThread();
+        this.ChatThread!.DataSourceOptions = this.dataSourceOptions.CreateCopy();
         var time = this.AddUserRequest(await this.CollectUserPromptAsync(), false, this.CollectFileAttachments());
         await this.AddAIResponseAsync(time);
+    }
+
+    private async Task DataSourceOptionsChanged(DataSourceOptions options)
+    {
+        this.dataSourceOptions = options.CreateCopy();
+        await this.CheckpointAssistantSession();
     }
 
     private string CollectUserPromptFallback(IEnumerable<IAssistantComponent> components)
