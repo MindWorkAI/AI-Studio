@@ -317,6 +317,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return runState is not DataSourceEmbeddingState.FAILED;
     }
 
+    /// <summary>
+    /// Whether a data source cannot be searched because its vector store cannot be read anymore.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the re-index check above, this reads no database at all: the state comes from the run
+    /// or the search which ran into the unreadable store, and is kept in memory only. That it does
+    /// not survive a restart is deliberate. The very same store may well open on the next start,
+    /// and a mark written to disk would then be wrong with nobody noticing. Until something touches
+    /// the store again, the data source counts as usable, and a failing search says so on its own.
+    /// </remarks>
+    /// <param name="dataSource">The data source to ask about.</param>
+    /// <returns>True when the data source waits for the user to have its index rebuilt.</returns>
+    public bool NeedsIndexRepair(IDataSource dataSource) =>
+        this.statuses.TryGetValue(dataSource.Id, out var status) &&
+        status is { State: DataSourceEmbeddingState.FAILED, VectorStoreUnreadable: true };
+
     public Task QueueDataSourceAsync(IDataSource dataSource)
     {
         return this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);

@@ -51,7 +51,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
             this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
-            return new([], [], []);
+            return new([], [], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -83,12 +83,13 @@ public sealed class DataSourceService
         var allowedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
 
         //
-        // Whoever asks this way has no list to show, so a data source waiting for its index is
+        // Whoever asks this way has no list to show, so a data source which cannot be searched is
         // dropped rather than marked. Handing it back would start a chat with a data source which
         // finds nothing -- the very thing being greyed out elsewhere is meant to prevent.
         //
-        var awaitingReindexIds = (await this.GetDataSourcesAwaitingReindex(allowedDataSources)).Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
-        return allowedDataSources.Where(source => !awaitingReindexIds.Contains(source.Id)).ToList();
+        var unsearchableIds = (await this.GetDataSourcesAwaitingReindex(allowedDataSources)).Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        unsearchableIds.UnionWith(this.GetDataSourcesNeedingRepair(allowedDataSources).Select(source => source.Id));
+        return allowedDataSources.Where(source => !unsearchableIds.Contains(source.Id)).ToList();
     }
     
     /// <summary>
@@ -109,7 +110,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider is NoProvider)
         {
             this.logger.LogWarning("The selected LLM provider is the default provider. We cannot filter the data sources by any means.");
-            return new([], [], []);
+            return new([], [], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -159,12 +160,21 @@ public sealed class DataSourceService
         // being rebuilt is usable again in a while, and saying so on its own row beats letting it
         // disappear from the selection without a word.
         //
-        var awaitingReindex = await this.GetDataSourcesAwaitingReindex(filteredDataSources);
-        var awaitingReindexIds = awaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
-        var usableDataSources = filteredDataSources.Where(source => !awaitingReindexIds.Contains(source.Id)).ToList();
+        // A source whose index cannot be read is asked about first and then kept out of the other
+        // list: both reasons can be true at once, and of the two it is the only one the user can do
+        // anything about. Telling them to wait instead would be telling them to wait forever.
+        //
+        var needingRepair = this.GetDataSourcesNeedingRepair(filteredDataSources);
+        var needingRepairIds = needingRepair.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        var awaitingReindex = (await this.GetDataSourcesAwaitingReindex(filteredDataSources)).Where(source => !needingRepairIds.Contains(source.Id)).ToList();
+
+        var blockedIds = awaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        blockedIds.UnionWith(needingRepairIds);
+
+        var usableDataSources = filteredDataSources.Where(source => !blockedIds.Contains(source.Id)).ToList();
         var filteredSelectedDataSources = usableDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
 
-        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex);
+        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair);
     }
 
     /// <summary>
@@ -193,6 +203,30 @@ public sealed class DataSourceService
         }
 
         return awaitingReindex;
+    }
+
+    /// <summary>
+    /// Picks out the data sources whose index cannot be read anymore, so that they wait for a repair.
+    /// </summary>
+    /// <remarks>
+    /// Reads nothing from a database, unlike the re-index check above: the state is held in memory
+    /// by the embedding service, which is why this one needs no parallelism and no timeout.
+    /// </remarks>
+    /// <param name="dataSources">The data sources which passed every other check.</param>
+    /// <returns>Those of them which wait for a repair, in the order they came in.</returns>
+    private IReadOnlyList<IDataSource> GetDataSourcesNeedingRepair(IReadOnlyList<IDataSource> dataSources)
+    {
+        var needingRepair = new List<IDataSource>();
+        foreach (var dataSource in dataSources)
+        {
+            if (!this.embeddingService.NeedsIndexRepair(dataSource))
+                continue;
+
+            this.logger.LogInformation("The index of data source '{DataSourceName}' ({DataSourceId}) cannot be read. It is shown, but cannot be selected until it was repaired.", dataSource.Name, dataSource.Id);
+            needingRepair.Add(dataSource);
+        }
+
+        return needingRepair;
     }
 
     private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)

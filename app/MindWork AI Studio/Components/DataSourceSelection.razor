@@ -92,7 +92,7 @@
                                         <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@this.SelectionChanged" Style="max-height: 14em;">
                                             @foreach (var source in this.GetListedDataSources())
                                             {
-                                                <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
+                                                <DataSourceSelectionRow DataSource="@source" BlockReason="@this.GetBlockReason(source)"/>
                                             }
                                         </MudList>
                                     </MudField>
@@ -104,7 +104,7 @@
                                             <MudList T="IDataSource" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.SingleSelection" SelectedValues="@this.selectedDataSources" Style="max-height: 14em;">
                                                 @foreach (var source in this.GetListedDataSources())
                                                 {
-                                                    <DataSourceSelectionRow DataSource="@source" IsAwaitingReindex="@this.IsAwaitingReindex(source)"/>
+                                                    <DataSourceSelectionRow DataSource="@source" BlockReason="@this.GetBlockReason(source)"/>
                                                 }
                                             </MudList>
                                         </ExpansionPanel>

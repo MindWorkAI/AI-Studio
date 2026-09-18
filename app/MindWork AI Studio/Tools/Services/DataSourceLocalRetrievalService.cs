@@ -188,7 +188,7 @@ public sealed class DataSourceLocalRetrievalService(
             // answer into one the user can do something about.
             //
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it on the background embeddings page."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
             return [];
         }
         catch (Exception exception)
