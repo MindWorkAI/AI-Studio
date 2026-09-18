@@ -10822,6 +10822,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge is not available."
 
+-- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one."
+
+-- and {0} more.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2519847121"] = "and {0} more."
+
+-- This change makes the prepared documents of the following data sources unusable ({0}):
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "This change makes the prepared documents of the following data sources unusable ({0}):"
+
+-- Do you want to apply this change anyway?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Do you want to apply this change anyway?"
+
+-- Documents Will Be Prepared Again
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Documents Will Be Prepared Again"
+
+-- Your embedding provider runs in the cloud, so preparing everything again costs money.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T774305382"] = "Your embedding provider runs in the cloud, so preparing everything again costs money."
+
+-- These data sources are set up with this embedding provider ({0}):
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T858000918"] = "These data sources are set up with this embedding provider ({0}):"
+
+-- Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T874850580"] = "Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while."
+
 -- Repair Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Repair Data Source"
 

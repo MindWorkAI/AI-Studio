@@ -3810,6 +3810,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2675917723"] = "Ni
 -- No valid embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2698203405"] = "Keine gültige Einbettung"
 
+-- Repair this data source by indexing it anew
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2771708618"] = "Diese Datenquelle durch erneutes Indexieren reparieren"
+
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2838542994"] = "Einbettung"
 
@@ -3956,6 +3959,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Verf�
 
 -- This data source is waiting to be indexed again. Until that is finished, it cannot be searched.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTIONROW::T1692539409"] = "Diese Datenquelle wartet darauf, erneut indexiert zu werden. Bis dies abgeschlossen ist, kann sie nicht durchsucht werden."
+
+-- The index of this data source cannot be read anymore. Open your data source settings with the gear icon above, then use the repair action there.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTIONROW::T4047623216"] = "Der Index dieser Datenquelle kann nicht mehr gelesen werden. Öffnen Sie die Einstellungen Ihrer Datenquelle über das Zahnradsymbol oben und führen Sie dort die Reparaturaktion aus."
 
 -- Tools (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1019749907"] = "Werkzeuge (optional)"
@@ -9141,6 +9147,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2525374657"] = "{0} von {1} Datei
 -- Background embeddings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2547971789"] = "Einbettungen im Hintergrund"
 
+-- Repair this data source by indexing it anew
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2771708618"] = "Diese Datenquelle durch erneutes Indexieren reparieren"
+
 -- Refresh this data source
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2901874229"] = "Diese Datenquelle aktualisieren"
 
@@ -10815,6 +10824,36 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge ist nicht verfügbar."
 
+-- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "Sie beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass Sie sie nicht einfach auf einen anderen umstellen können."
+
+-- and {0} more.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2519847121"] = "und {0} weitere."
+
+-- This change makes the prepared documents of the following data sources unusable ({0}):
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "Durch diese Änderung werden die vorbereiteten Dokumente der folgenden Datenquellen unbrauchbar ({0}):"
+
+-- Do you want to apply this change anyway?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Möchten Sie diese Änderung trotzdem übernehmen?"
+
+-- Documents Will Be Prepared Again
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Dokumente werden erneut vorbereitet"
+
+-- Your embedding provider runs in the cloud, so preparing everything again costs money.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T774305382"] = "Ihr Einbettungsanbieter läuft in der Cloud, daher kostet es Geld, alles erneut vorzubereiten."
+
+-- These data sources are set up with this embedding provider ({0}):
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T858000918"] = "Diese Datenquellen sind mit diesem Einbettungsanbieter eingerichtet ({0}):"
+
+-- Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T874850580"] = "Alles, was für sie vorbereitet wurde, wird verworfen, und jedes ihrer Dokumente wird erneut an Ihren Einbettungsanbieter gesendet. Bei einer großen Datenquelle dauert dies eine Weile."
+
+-- Repair Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Datenquelle reparieren"
+
+-- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an Ihren Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchten Sie diese Datenquelle jetzt reparieren?"
+
 -- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "Die zugehörigen Daten dürfen an keinen LLM-Anbieter gesendet werden. Das bedeutet, dass diese Datenquelle momentan nicht verwendet werden kann."
 
@@ -12009,6 +12048,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T4515612
 -- The embedding provider answered with {0} vectors for {1} parts of the file '{2}'. Please select another embedding model or provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T667058890"] = "Der Einbettungsanbieter hat für {1} Teile der Datei „{2}“ {0} Vektoren zurückgegeben. Bitte wählen Sie ein anderes Einbettungsmodell oder einen anderen Anbieter aus."
 
+-- The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T831900720"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Die Datenquelle wird in Ihren Chats nicht verwendet, bis ihr Index neu erstellt wurde. Verwenden Sie die Aktion „Reparieren“, um dies zu starten."
+
 -- The folder '{0}' does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T871336081"] = "Der Ordner „{0}“ existiert nicht."
 
@@ -12056,6 +12098,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T40
 
 -- Page {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4127287940"] = "Seite {0}"
+
+-- The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T59210871"] = "Die Datenquelle „{0}“ wurde aus der Antwort weggelassen, weil ihr Index nicht mehr gelesen werden kann. Sie können ihn in den Einstellungen der Datenquelle reparieren."
 
 -- The data source '{0}' was left out of the answer because searching it failed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T934856625"] = "Die Datenquelle „{0}“ wurde aus der Antwort weggelassen, weil die Suche darin fehlgeschlagen ist."
