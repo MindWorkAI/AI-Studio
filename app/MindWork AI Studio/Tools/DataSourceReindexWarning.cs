@@ -72,14 +72,23 @@ public static class DataSourceReindexWarning
         IInternalDataSource before, IInternalDataSource after, CancellationToken token = default)
     {
         // Without a provider nothing is embedded at all, so nothing can be lost:
-        if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, after, out var embeddingProvider))
+        if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, after, out var afterProvider))
             return true;
 
-        if (!EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, before, after))
+        //
+        // The provider a data source points at today may be gone -- somebody deleted it, and this
+        // edit is how the source is put back to work. Standing in for it with NONE gives a signature
+        // of its own, so that edit is asked about as well, which is right: what is stored was made by
+        // a provider nobody can reach any more.
+        //
+        DataSourceEmbeddingProviders.TryResolve(settingsManager, before, out var resolvedBeforeProvider);
+        var beforeProvider = resolvedBeforeProvider ?? EmbeddingProvider.NONE;
+
+        if (!EmbeddingChangeImpact.AffectsStoredIndex(before, beforeProvider, after, afterProvider))
             return true;
 
         var affected = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
-        return await ConfirmAsync(dialogService, affected, !embeddingProvider.IsSelfHosted);
+        return await ConfirmAsync(dialogService, affected, !afterProvider.IsSelfHosted);
     }
 
     /// <summary>

@@ -28,13 +28,20 @@ internal static class EmbeddingChangeImpact
     /// <summary>
     /// Whether an edited data source invalidates what is stored for it.
     /// </summary>
-    /// <param name="embeddingProvider">The embedding provider, which the edit leaves alone.</param>
+    /// <remarks>
+    /// Each side is asked with the embedding provider it points at, never both with the same one. A
+    /// data source carries only the id of its provider, while the signature carries what that provider
+    /// is, so comparing both sides against one of them would report a changed embedding as no change
+    /// at all -- and the next indexing run would then rebuild everything unannounced.
+    /// </remarks>
     /// <param name="before">The data source as it is stored.</param>
+    /// <param name="beforeProvider">The embedding provider it points at today.</param>
     /// <param name="after">The data source as it would be stored.</param>
+    /// <param name="afterProvider">The embedding provider it would point at.</param>
     /// <returns>True when the stored index would be discarded.</returns>
-    public static bool AffectsStoredIndex(EmbeddingProvider embeddingProvider, IDataSource before, IDataSource after) =>
+    public static bool AffectsStoredIndex(IDataSource before, EmbeddingProvider beforeProvider, IDataSource after, EmbeddingProvider afterProvider) =>
         !string.Equals(
-            DataSourceEmbeddingService.BuildEmbeddingSignature(before, embeddingProvider),
-            DataSourceEmbeddingService.BuildEmbeddingSignature(after, embeddingProvider),
+            DataSourceEmbeddingService.BuildEmbeddingSignature(before, beforeProvider),
+            DataSourceEmbeddingService.BuildEmbeddingSignature(after, afterProvider),
             StringComparison.Ordinal);
 }

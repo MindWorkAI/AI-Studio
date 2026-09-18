@@ -94,8 +94,8 @@ public sealed class EmbeddingChangeImpactTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { MaxChunkTokenLength = 256 }), Is.True, "Other chunk boundaries mean other vectors.");
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 50 }), Is.True, "Another overlap changes what every chunk starts with.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { MaxChunkTokenLength = 256 }), Is.True, "Other chunk boundaries mean other vectors.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 50 }), Is.True, "Another overlap changes what every chunk starts with.");
         });
     }
 
@@ -117,12 +117,12 @@ public sealed class EmbeddingChangeImpactTests
         Assert.Multiple(() =>
         {
             Assert.That(
-                EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 8192 }),
+                EditKeepingTheProvider(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 8192 }),
                 Is.False,
                 "The provider limit typed into the field is the cut the data source already had.");
 
             Assert.That(
-                EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 4096 }),
+                EditKeepingTheProvider(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 4096 }),
                 Is.True,
                 "Anything below the provider limit really does cut the text elsewhere.");
         });
@@ -142,7 +142,7 @@ public sealed class EmbeddingChangeImpactTests
         var stored = StoredDataSource() with { MaxChunkTokenLength = 512, ChunkOverlapTokenLength = 600 };
 
         Assert.That(
-            EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 700 }),
+            EditKeepingTheProvider(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 700 }),
             Is.False,
             "Both overlaps are capped to the chunk size, so the text is cut identically.");
     }
@@ -155,12 +155,75 @@ public sealed class EmbeddingChangeImpactTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { Name = "Another name" }), Is.False, "The name is how the data source is offered, not how it was read.");
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { Description = "Another description" }), Is.False, "The description is there for the agent which picks data sources.");
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { MaxMatches = 42 }), Is.False, "How many matches an answer may use is decided per query.");
-            Assert.That(EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { ConfidenceLevel = ConfidenceLevel.HIGH }), Is.False, "The confidence level is enforced live on every request and changes no vector.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Name = "Another name" }), Is.False, "The name is how the data source is offered, not how it was read.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { Description = "Another description" }), Is.False, "The description is there for the agent which picks data sources.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { MaxMatches = 42 }), Is.False, "How many matches an answer may use is decided per query.");
+            Assert.That(EditKeepingTheProvider(embeddingProvider, stored, stored with { ConfidenceLevel = ConfidenceLevel.HIGH }), Is.False, "The confidence level is enforced live on every request and changes no vector.");
         });
     }
+
+    /// <summary>
+    /// Checks what changing the embedding of a data source costs.
+    /// </summary>
+    /// <remarks>
+    /// This is why each side has to be asked with its own provider: a data source carries only the id
+    /// of its embedding provider, and that id is nowhere in the signature. Asking both sides with the
+    /// same provider would call this edit harmless, while the next indexing run throws everything away.
+    /// </remarks>
+    [Test]
+    public void ChangingTheEmbeddingOfADataSourceDropsItsStoredIndex()
+    {
+        var storedProvider = StoredEmbeddingProvider();
+        var anotherProvider = AnotherEmbeddingProvider();
+        var stored = StoredDataSource();
+        var moved = stored with { EmbeddingId = anotherProvider.Id };
+
+        Assert.That(
+            EmbeddingChangeImpact.AffectsStoredIndex(stored, storedProvider, moved, anotherProvider),
+            Is.True,
+            "Another embedding provider means another vector space, so nothing stored survives it.");
+    }
+
+    /// <summary>
+    /// Putting a data source back to work after its provider was deleted is a rebuild as well.
+    /// </summary>
+    /// <remarks>
+    /// The provider a data source points at can be gone. What is stored was made by it, so pointing
+    /// the source at any provider at all discards that -- and nobody may be surprised by it.
+    /// </remarks>
+    [Test]
+    public void RepointingADataSourceWhoseProviderIsGoneDropsItsStoredIndex()
+    {
+        var stored = StoredDataSource();
+        var anotherProvider = AnotherEmbeddingProvider();
+
+        Assert.That(
+            EmbeddingChangeImpact.AffectsStoredIndex(stored, EmbeddingProvider.NONE, stored with { EmbeddingId = anotherProvider.Id }, anotherProvider),
+            Is.True,
+            "A provider which cannot be resolved stands in as NONE, which is a signature of its own.");
+    }
+
+    [Test]
+    public void KeepingTheEmbeddingKeepsTheStoredIndex()
+    {
+        var storedProvider = StoredEmbeddingProvider();
+        var stored = StoredDataSource();
+
+        Assert.That(
+            EmbeddingChangeImpact.AffectsStoredIndex(stored, storedProvider, stored with { Name = "Another name" }, storedProvider with { Name = "Renamed provider" }),
+            Is.False,
+            "Neither name reaches a vector, and the data source still points at the same provider.");
+    }
+
+    /// <summary>
+    /// Asks the question for an edit which leaves the embedding provider of the data source alone.
+    /// </summary>
+    /// <param name="embeddingProvider">The provider both sides point at.</param>
+    /// <param name="before">The data source as it is stored.</param>
+    /// <param name="after">The data source as it would be stored.</param>
+    /// <returns>True when the stored index would be discarded.</returns>
+    private static bool EditKeepingTheProvider(EmbeddingProvider embeddingProvider, IDataSource before, IDataSource after) =>
+        EmbeddingChangeImpact.AffectsStoredIndex(before, embeddingProvider, after, embeddingProvider);
 
     private static DataSourceLocalDirectory StoredDataSource() => new()
     {
@@ -178,4 +241,7 @@ public sealed class EmbeddingChangeImpactTests
 
     private static EmbeddingProvider StoredEmbeddingProvider() =>
         new(1, "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
+
+    private static EmbeddingProvider AnotherEmbeddingProvider() =>
+        new(2, "c1b5d5e3-2a4f-4b1b-9dae-6b7c8d9e0f12", "Other embeddings", LLMProviders.MISTRAL, new("mistral-embed", "mistral-embed"));
 }
