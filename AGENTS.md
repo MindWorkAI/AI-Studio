@@ -344,3 +344,12 @@ following words:
 - Upgraded
 
 The entire changelog is sorted by these categories in the order shown above. The language used for the changelog is US English.
+
+**Every entry has to stand on its own.** Never refer back to another entry, neither by wording such
+as "the same question", "that dialog", or "as described above", nor by relying on one read just
+before it. Readers pick out the entries which concern them; an entry which only makes sense after
+reading its neighbors turns the changelog into something nobody reads at all. Name the context
+inside the entry instead, even when that repeats a few words from another one.
+
+**Split a topic into several short entries** rather than growing a single long one, and address the
+reader with "you".
