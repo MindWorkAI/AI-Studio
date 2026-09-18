@@ -25,7 +25,13 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     
     [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-    
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private readonly DataSourceValidation dataSourceValidation;
@@ -171,8 +177,20 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
-        
+
         var addedDataSource = this.CreateDataSource();
+
+        //
+        // Ask while the dialog is still open, so a token limit which would have cost the prepared
+        // documents can be corrected right away. Asking in DataSourceManagement instead would have
+        // to be written once per data source kind, and by then the numbers are out of reach.
+        //
+        // Only when editing: while adding, DataSource is still default -- both local data sources
+        // are record structs -- and nothing has been prepared for a source which does not exist yet.
+        //
+        if (this.IsEditing && !await DataSourceReindexWarning.ConfirmDataSourceChangeAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, this.DataSource, addedDataSource))
+            return;
+
         this.MudDialog.Close(DialogResult.Ok(addedDataSource));
     }
     
