@@ -180,6 +180,17 @@ public sealed class DataSourceLocalRetrievalService(
             await this.ReportRetrievalGapAsync(dataSource, $"provider-{exception.FailureReason}", string.Format(TB("The data source '{0}' was left out of the answer. {1}"), dataSource.Name, exception.UserMessage));
             return [];
         }
+        catch (VectorStoreUnreadableException exception)
+        {
+            //
+            // Its own gap key, because this is not a search which went wrong but an index which has
+            // to be built anew. Saying that once per session is what turns a silently shortened
+            // answer into one the user can do something about.
+            //
+            logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
+            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
+            return [];
+        }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);

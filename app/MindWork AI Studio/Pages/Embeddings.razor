@@ -61,6 +61,12 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.RefreshDataSource(status))" />
                                 </MudTooltip>
                             }
+                            @if (this.CanRepair(status))
+                            {
+                                <MudTooltip Text="@T("Repair this data source by indexing it anew")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Size="Size.Small" OnClick="@(async () => await this.RepairDataSource(status))" />
+                                </MudTooltip>
+                            }
                         </div>
                     </TitleContent>
                     <ChildContent>

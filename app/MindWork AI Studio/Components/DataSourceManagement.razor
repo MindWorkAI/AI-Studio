@@ -59,6 +59,18 @@
                 <MudTooltip Text="@T("Information")">
                     <MudIconButton Color="Color.Info" Icon="@Icons.Material.Outlined.Info" OnClick="@(() => this.ShowInformation(context))"/>
                 </MudTooltip>
+                @*
+                    Outside the two branches below on purpose: an index which cannot be read is a
+                    matter of this machine, not of the configuration. Hiding the repair for a data
+                    source the organization manages would leave it locked out of every chat with no
+                    way back, and the selection points here for it.
+                *@
+                @if (this.CanRepairDataSource(context))
+                {
+                    <MudTooltip Text="@T("Repair this data source by indexing it anew")">
+                        <MudIconButton Color="Color.Warning" Icon="@Icons.Material.Filled.Build" OnClick="@(() => this.RepairDataSource(context))"/>
+                    </MudTooltip>
+                }
                 @if (context.IsEnterpriseConfiguration)
                 {
                     <MudTooltip Text="@T("This data source is managed by your organization.")">

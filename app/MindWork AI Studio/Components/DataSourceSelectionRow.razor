@@ -2,8 +2,8 @@
 @using AIStudio.Provider
 @inherits MSGComponentBase
 
-<MudTooltip Text="@T("This data source is waiting to be indexed again. Until that is finished, it cannot be searched.")" Disabled="@(!this.IsAwaitingReindex)" RootStyle="display: block;" Placement="Placement.Top">
-    <MudListItem Value="@this.DataSource" Disabled="@this.IsAwaitingReindex">
+<MudTooltip Text="@this.GetBlockedTooltip()" Disabled="@(!this.IsBlocked)" RootStyle="display: block;" Placement="Placement.Top">
+    <MudListItem Value="@this.DataSource" Disabled="@this.IsBlocked">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
             <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                 @this.DataSource.Name
@@ -11,9 +11,9 @@
             @if (this.DataSource is IInternalDataSource internalSource)
             {
                 <MudSpacer/>
-                @if (this.IsAwaitingReindex)
+                @if (this.IsBlocked)
                 {
-                    <MudIcon Icon="@Icons.Material.Filled.HourglassTop" Size="Size.Small" Color="Color.Warning" Style="flex-shrink: 0;"/>
+                    <MudIcon Icon="@this.GetBlockedIcon()" Size="Size.Small" Color="@this.GetBlockedIconColor()" Style="flex-shrink: 0;"/>
                 }
                 <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
                     <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
