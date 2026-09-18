@@ -116,6 +116,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     [Inject]
     private ILogger<EmbeddingProviderDialog> Logger { get; init; } = null!;
 
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -293,7 +299,22 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
-        
+
+        //
+        // Ask before anything is written. Storing a tokenizer deletes the previous one before it
+        // copies, and the API key goes into the OS keyring right after, so asking any later would
+        // leave those changes behind even when the user says no. Saying no also keeps this dialog
+        // open, which is the point: the value which would have cost the index can be corrected
+        // right away.
+        //
+        // Enterprise-managed providers are left out. Every field which reaches the embedding
+        // signature is locked for them, and their data sources are not queued for indexing either.
+        //
+        if (this.IsEditing && !this.IsEnterpriseConfiguration && !await DataSourceReindexWarning.ConfirmEmbeddingProviderChangeAsync(
+                this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService,
+                this.SettingsManager.GetEmbeddingProviderById(this.DataId), this.CreateEmbeddingProviderSettings()))
+            return;
+
         var response = await this.StoreOrDeleteTokenizerAsync();
         if (!response.Success)
         {
