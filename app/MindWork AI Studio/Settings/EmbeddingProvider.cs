@@ -114,14 +114,14 @@ public sealed record EmbeddingProvider(
         }
 
         var tokenLimit = DEFAULT_TOKEN_LIMIT;
-        if (table.TryGetValue("TokenLimit", out var tokenLimitValue) && (!tokenLimitValue.TryRead<int>(out tokenLimit) || tokenLimit < 1))
+        if (table.TryGetValue("TokenLimit", out var tokenLimitValue) && (!tokenLimitValue.TryRead(out tokenLimit) || tokenLimit < 1))
         {
             LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid token limit. Falling back to {DEFAULT_TOKEN_LIMIT}. (Plugin ID: {configPluginId})");
             tokenLimit = DEFAULT_TOKEN_LIMIT;
         }
 
         var embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
-        if (table.TryGetValue("EmbeddingBatchSize", out var embeddingBatchSizeValue) && (!embeddingBatchSizeValue.TryRead<int>(out embeddingBatchSize) || embeddingBatchSize < 1))
+        if (table.TryGetValue("EmbeddingBatchSize", out var embeddingBatchSizeValue) && (!embeddingBatchSizeValue.TryRead(out embeddingBatchSize) || embeddingBatchSize < 1))
         {
             LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid embedding batch size. Falling back to {DEFAULT_EMBEDDING_BATCH_SIZE}. (Plugin ID: {configPluginId})");
             embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
