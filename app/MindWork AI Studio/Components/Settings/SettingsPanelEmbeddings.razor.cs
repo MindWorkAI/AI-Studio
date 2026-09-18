@@ -133,11 +133,18 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {
-        var dialogParameters = new DialogParameters<ConfirmDialog>
-        {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name) },
-        };
-        
+        var question = string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
+        var affectedDataSources = DataSourceReindexWarning.DescribeDataSourcesLosingTheirProvider(this.SettingsManager, provider);
+
+        //
+        // The names arrive as a Markdown list, so the question travels as Markdown as well as soon
+        // as there is something to name. With no data source behind the provider, the plain message
+        // stays what it always was:
+        //
+        var dialogParameters = string.IsNullOrEmpty(affectedDataSources)
+            ? new DialogParameters<ConfirmDialog> { { x => x.Message, question } }
+            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}{Environment.NewLine}{question}" } };
+
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)

@@ -8,7 +8,8 @@ using AIStudio.Tools.Services;
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Asks before an edit makes the prepared documents of data sources useless.
+/// Asks before an edit makes the prepared documents of data sources useless, and names the data
+/// sources which depend on an embedding provider somebody is about to delete.
 /// </summary>
 /// <remarks>
 /// Kept here rather than in the dialogs which ask -- the embedding provider dialog and the two data
@@ -79,6 +80,43 @@ public static class DataSourceReindexWarning
 
         var affected = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
         return await ConfirmAsync(dialogService, affected, !embeddingProvider.IsSelfHosted);
+    }
+
+    /// <summary>
+    /// Names the data sources which would lose their embedding provider, for the deletion question.
+    /// </summary>
+    /// <remarks>
+    /// Deleting is the one case where nothing prepared is thrown away: the documents stay where they
+    /// are, but nothing can reach them by meaning any more, and nothing new can be prepared either.
+    /// The names come from the same place as the ones in the questions above so that both lists read
+    /// alike, which is also why this returns the text instead of asking on its own -- the deletion
+    /// question has more to say than this.
+    ///
+    /// Every data source pointing at the provider is named, prepared or not. A source which was never
+    /// indexed loses just as much: it can no longer be prepared at all.
+    /// </remarks>
+    /// <param name="settingsManager">The settings holding the data sources.</param>
+    /// <param name="embeddingProvider">The embedding provider which is about to be deleted.</param>
+    /// <returns>The Markdown text, or an empty string when no data source uses that provider.</returns>
+    public static string DescribeDataSourcesLosingTheirProvider(SettingsManager settingsManager, EmbeddingProvider embeddingProvider)
+    {
+        if (embeddingProvider == EmbeddingProvider.NONE)
+            return string.Empty;
+
+        var affected = GetDataSourcesUsing(settingsManager, embeddingProvider.Id).Cast<IDataSource>().ToList();
+        if (affected.Count == 0)
+            return string.Empty;
+
+        var body = new StringBuilder();
+
+        // Counted rather than put into a plural form: the I18N has no mechanism for one.
+        body.AppendLine(string.Format(TB("These data sources are set up with this embedding provider ({0}):"), affected.Count.CompactCount()));
+        body.AppendLine();
+        body.AppendLine(FormatDataSourceNames(affected));
+        body.AppendLine();
+        body.AppendLine(TB("They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one."));
+
+        return body.ToString();
     }
 
     /// <summary>
