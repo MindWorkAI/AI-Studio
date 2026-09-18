@@ -578,6 +578,15 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
 
+-- Configure the Opus bitrate used when normalizing uploaded audio/video for transcription.
+-- Allowed values are: KBPS_32, KBPS_64, KBPS_128, KBPS_256
+-- Higher bitrates improve transcription accuracy on noisy or quiet recordings, at the cost of
+-- a larger upload to the transcription provider. KBPS_128 is recommended.
+-- CONFIG["SETTINGS"]["DataApp.OpusBitrate"] = "KBPS_32"
+--
+-- Allow the user to change the Opus bitrate even though your organization set a default above:
+-- CONFIG["SETTINGS"]["DataApp.OpusBitrate.AllowUserOverride"] = true
+
 -- Configure which assistants should be hidden from the UI.
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,

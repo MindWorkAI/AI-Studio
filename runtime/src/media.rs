@@ -44,9 +44,6 @@ const OUTPUT_SAMPLE_RATE: u32 = 48_000;
 /// Number of samples in one 20 ms Opus frame at 48 kHz.
 const OPUS_FRAME_SAMPLES: usize = 960;
 
-/// Target bitrate for mono speech-oriented Opus output.
-const OPUS_BITRATE: u32 = 32_000;
-
 /// Stable normalized container name returned to upload clients.
 const OUTPUT_FORMAT: &str = "webm";
 
@@ -61,6 +58,9 @@ const OPUS_PRE_SKIP: u16 = 312;
 
 /// Default size ceiling for copying an already-normalized file unchanged.
 const DEFAULT_MAX_PASS_THROUGH_BYTES: u64 = 25 * 1024 * 1024;
+
+/// Default target bitrate for mono speech-oriented Opus output, used when a request omits it.
+const DEFAULT_OPUS_BITRATE_BPS: u32 = 128_000;
 
 /// Bounded input block used for streaming resampling.
 const RESAMPLE_INPUT_BLOCK_SAMPLES: usize = 2_048;
@@ -94,6 +94,9 @@ pub struct CreateMediaJobRequest {
 
     /// Optional size ceiling for pass-through files.
     pub max_pass_through_bytes: Option<u64>,
+
+    /// Optional target Opus encoder bitrate in bits per second.
+    pub opus_bitrate_bps: Option<u32>,
 }
 
 /// Response returned immediately after a media job has been registered.
@@ -348,8 +351,9 @@ pub async fn create_job(
         let started_at = Instant::now();
         log::info!("media job registered: job_id={completed_job_id}");
         let max_pass_through_bytes = request.max_pass_through_bytes.unwrap_or(DEFAULT_MAX_PASS_THROUGH_BYTES);
+        let opus_bitrate_bps = request.opus_bitrate_bps.unwrap_or(DEFAULT_OPUS_BITRATE_BPS);
         let task_job = Arc::clone(&job);
-        let result = tokio::task::spawn_blocking(move || normalize_media(&input_path, &output_path, max_pass_through_bytes, &task_job)).await;
+        let result = tokio::task::spawn_blocking(move || normalize_media(&input_path, &output_path, max_pass_through_bytes, opus_bitrate_bps, &task_job)).await;
         match result {
             Ok(Ok(result)) => {
                 log::info!("media job completed: job_id={completed_job_id}, elapsed_ms={}", started_at.elapsed().as_millis());
@@ -515,7 +519,7 @@ impl MediaSource for CancellationMediaSource {
 }
 
 /// Probes, normalizes, and atomically commits one media file.
-fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_through_bytes: u64, job: &MediaJob) -> Result<MediaJobResult, MediaError> {
+fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_through_bytes: u64, opus_bitrate_bps: u32, job: &MediaJob) -> Result<MediaJobResult, MediaError> {
     check_cancelled(job)?;
 
     let detected = FileFormat::from_file(input_path)
@@ -670,6 +674,7 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
             time_base: track_time_base,
             source_progress,
             job,
+            opus_bitrate_bps,
         };
         transcode(&mut *format, context)
     };
@@ -892,6 +897,9 @@ struct TranscodeContext<'a> {
 
     /// Cancellation and progress state for the job.
     job: &'a MediaJob,
+
+    /// Target Opus encoder bitrate in bits per second.
+    opus_bitrate_bps: u32,
 }
 
 /// Decodes a selected track and writes timestamp-aligned 20 ms mono Opus frames.
@@ -901,7 +909,7 @@ fn transcode(
 ) -> Result<MediaJobResult, MediaError> {
     let mut decoder = StreamDecoder::new(&context.params, context.track_delay)?;
     let mut opus_encoder = OpusEncoder::builder(OUTPUT_SAMPLE_RATE, OpusChannels::Mono, Application::Audio)
-        .bitrate(Bitrate::Bits(OPUS_BITRATE))
+        .bitrate(Bitrate::Bits(context.opus_bitrate_bps))
         .vbr(true)
         .build()
         .map_err(|error| MediaError::new(MediaErrorCode::EncoderInitFailed, error.to_string()))?;
@@ -1647,7 +1655,7 @@ mod tests {
     /// Creates a temporary output and normalizes one checked-in fixture.
     fn normalize_fixture(name: &str) -> Result<(MediaJobResult, PathBuf), MediaError> {
         let output = std::env::temp_dir().join(format!("ai-studio-fixture-{}.webm", rand::random::<u64>()));
-        let result = normalize_media(&fixtures().join(name), &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new())?;
+        let result = normalize_media(&fixtures().join(name), &output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &MediaJob::new())?;
         Ok((result, output))
     }
 
@@ -1804,7 +1812,7 @@ mod tests {
         let output = directory.join("output.webm");
         fs::write(&input, wav_silence(44_100, 4_410)).unwrap();
         let job = MediaJob::new();
-        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
+        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &job).unwrap();
         assert!(!result.pass_through);
         assert_eq!(result.output_format, OUTPUT_FORMAT);
         assert_eq!(result.output_codec, OUTPUT_CODEC);
@@ -1832,7 +1840,7 @@ mod tests {
         fs::write(&input, wav_silence(48_000, 960)).unwrap();
         let job = MediaJob::new();
         job.cancelled.store(true, Ordering::Relaxed);
-        let error = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap_err();
+        let error = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &job).unwrap_err();
         assert_eq!(error.code, MediaErrorCode::Cancelled);
         assert!(!output.exists());
         assert!(!partial_path(&output).exists());
@@ -1850,7 +1858,7 @@ mod tests {
         writer.write_packet(&[0xf8, 0xff, 0xfe], 0).unwrap();
         writer.finish().unwrap();
         let job = MediaJob::new();
-        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
+        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &job).unwrap();
         assert!(result.pass_through);
         assert_eq!(result.output_format, OUTPUT_FORMAT);
         assert_eq!(result.output_codec, OUTPUT_CODEC);
@@ -1867,7 +1875,7 @@ mod tests {
         let input = directory.join("input.wav");
         let output = directory.join("output.webm");
         fs::write(&input, wav_constant(48_000, 960, 1_000)).unwrap();
-        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new()).unwrap();
+        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &MediaJob::new()).unwrap();
         assert!(result.has_audible_signal);
         let _ = fs::remove_dir_all(directory);
     }
@@ -1914,15 +1922,15 @@ mod tests {
     #[test]
     fn fixture_errors_are_stable() {
         let damaged_output = std::env::temp_dir().join(format!("ai-studio-damaged-{}.webm", rand::random::<u64>()));
-        let damaged = normalize_media(&fixtures().join("damaged.bin"), &damaged_output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new()).unwrap_err();
+        let damaged = normalize_media(&fixtures().join("damaged.bin"), &damaged_output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &MediaJob::new()).unwrap_err();
         assert!(matches!(damaged.code, MediaErrorCode::UnknownFormat | MediaErrorCode::NotMedia | MediaErrorCode::DamagedContainer));
 
         let no_audio_output = std::env::temp_dir().join(format!("ai-studio-no-audio-{}.webm", rand::random::<u64>()));
-        let no_audio = normalize_media(&fixtures().join("no-audio.webm"), &no_audio_output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new()).unwrap_err();
+        let no_audio = normalize_media(&fixtures().join("no-audio.webm"), &no_audio_output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &MediaJob::new()).unwrap_err();
         assert_eq!(no_audio.code, MediaErrorCode::NoAudioTrack);
 
         let unknown_output = std::env::temp_dir().join(format!("ai-studio-unknown-{}.webm", rand::random::<u64>()));
-        let unknown = normalize_media(&fixtures().join("unknown-codec.mkv"), &unknown_output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new()).unwrap_err();
+        let unknown = normalize_media(&fixtures().join("unknown-codec.mkv"), &unknown_output, DEFAULT_MAX_PASS_THROUGH_BYTES, DEFAULT_OPUS_BITRATE_BPS, &MediaJob::new()).unwrap_err();
         assert_eq!(unknown.code, MediaErrorCode::UnsupportedCodec);
     }
 

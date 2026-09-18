@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -648,7 +649,8 @@ public sealed class MediaTranscriptionService(
     {
         // The quick POST is intentionally not cancelled: losing its response could orphan a job
         // whose ID the client never received. Cancellation is applied immediately after ownership.
-        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, CancellationToken.None);
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, opusBitrateBps, CancellationToken.None);
         operation.JobId = jobId;
 
         try
