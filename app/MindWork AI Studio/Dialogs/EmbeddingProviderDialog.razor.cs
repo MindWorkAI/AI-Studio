@@ -86,6 +86,17 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public string DataTokenizerPath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The fingerprint of the tokenizer this provider was stored with.
+    /// </summary>
+    /// <remarks>
+    /// Carried through the dialog untouched as long as the user leaves the tokenizer alone. Rebuilding
+    /// it from the path on every open would read a file for nothing, and an unreadable one would look
+    /// like another tokenizer and cost every data source of this provider its index.
+    /// </remarks>
+    [Parameter]
+    public string DataTokenizerFingerprint { get; set; } = string.Empty;
+
     [Parameter]
     public int DataTokenLimit { get; set; } = EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
 
@@ -121,6 +132,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
     private string dataFilePath = string.Empty;
+    private string dataTokenizerFingerprint = string.Empty;
     private string dataCustomTokenizerValidationIssue = string.Empty;
     private Task dataTokenizerValidationTask = Task.CompletedTask;
     private bool dataStoreWasAttempted;
@@ -176,6 +188,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
             TokenizerPath = this.dataFilePath,
+            TokenizerFingerprint = this.dataTokenizerFingerprint,
             EmbeddingBatchSize = this.DataEmbeddingBatchSize,
             TokenLimit = this.DataTokenLimit,
             CustomIconDataUrl = this.DataCustomIconDataUrl,
@@ -201,6 +214,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
             this.dataFilePath = this.DataTokenizerPath;
+            this.dataTokenizerFingerprint = this.DataTokenizerFingerprint;
             this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
                                       || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
                                       || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
@@ -413,8 +427,17 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
         await this.dataTokenizerValidationTask;
 
+        //
+        // The embedding signature carries the tokenizer's content, so it has to be read while we have
+        // the file the user just picked. Reading it here rather than while storing also keeps a large
+        // file off that path, where it would stall the circuit.
+        //
+        var tokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(filePath);
+
         if (validationRevision != this.dataTokenizerValidationRevision)
             return;
+
+        this.dataTokenizerFingerprint = tokenizerFingerprint;
 
         if (this.dataStoreWasAttempted)
             await this.form.Validate();

@@ -994,6 +994,13 @@ public sealed partial class DataSourceEmbeddingService
     /// where it runs, how the text was cut for it, and the chunk metadata version — the things a
     /// vector actually depends on.
     ///
+    /// Two of them are less obvious than they look. The Hugging Face inference provider belongs to
+    /// where the model runs: the same model name served by another backend is another vector source.
+    /// And a custom tokenizer enters through its content, not through its path, because a tokenizer
+    /// is stored under the name it came with — almost always tokenizer.json — so swapping one for
+    /// another lands on the identical path, while moving the data directory changes every path
+    /// without changing a single tokenizer.
+    ///
     /// The confidence level a data source asks of a provider is deliberately not among them. It
     /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks
     /// it against the participating chat providers and against the embedding provider, and this
@@ -1010,7 +1017,8 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Model.Id,
             embeddingProvider.Host,
             embeddingProvider.Hostname,
-            embeddingProvider.TokenizerPath,
+            embeddingProvider.HFInferenceProvider,
+            embeddingProvider.TokenizerFingerprint,
             embeddingProvider.EffectiveTokenLimit,
             dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
             dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH,

@@ -94,6 +94,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
             { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
+            { x => x.DataTokenizerFingerprint, embeddingProvider.TokenizerFingerprint },
             { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
             { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
             { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },

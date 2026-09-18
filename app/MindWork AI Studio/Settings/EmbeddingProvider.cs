@@ -23,6 +23,7 @@ public sealed record EmbeddingProvider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     string TokenizerPath = "",
+    string TokenizerFingerprint = "",
     int EmbeddingBatchSize = 0,
     int TokenLimit = 0,
     bool AllowUserProvidedAPIKey = false,

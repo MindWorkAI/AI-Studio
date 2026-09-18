@@ -497,7 +497,17 @@ public sealed record PluginConfigurationObject
             TokenizerModelId.ForEmbeddingProvider(provider),
             $"embedding provider '{provider.Name}'");
 
-        return provider with { TokenizerPath = syncedTokenizerPath };
+        //
+        // The embedding signature is built from the tokenizer's content, so the fingerprint travels
+        // with the provider. An unreadable file yields nothing, and writing that would look like
+        // another tokenizer and cost every data source of this provider its index -- so in that case
+        // the previous fingerprint is kept rather than cleared.
+        //
+        var syncedTokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(syncedTokenizerPath);
+        if (string.IsNullOrEmpty(syncedTokenizerFingerprint) && !string.IsNullOrWhiteSpace(syncedTokenizerPath))
+            syncedTokenizerFingerprint = provider.TokenizerFingerprint;
+
+        return provider with { TokenizerPath = syncedTokenizerPath, TokenizerFingerprint = syncedTokenizerFingerprint };
     }
 
     private static async Task<string> SyncTokenizerAsync(string configuredTokenizerPath, string pluginPath, string modelId, string logName)
