@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -32,6 +32,10 @@ const STORE_INITIALIZATION_MARKER: &str = "store_name.txt";
 const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
 const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
+
+/// Marks a response whose store exists on disk but cannot be opened. The .NET side keys its repair
+/// offer off this value instead of parsing `issue`, so rewording the message stays harmless.
+const ISSUE_CODE_STORE_UNREADABLE: &str = "store-unreadable";
 
 type QdrantEdgeResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -128,8 +132,38 @@ pub struct DeleteQdrantEdgeStoreRequest {
 pub struct QdrantEdgeResponse<T> {
     pub success: bool,
     pub issue: String,
+    pub issue_code: &'static str,
     pub data: Option<T>,
 }
+
+/// A vector store which is initialized on disk but which Qdrant Edge refuses to open.
+///
+/// This is deliberately its own error type rather than one more formatted string: a broken store
+/// is the one failure the user can act on, and the request layer has to recognize it to label the
+/// response. Nothing here deletes the store -- rebuilding the embeddings costs the user time and,
+/// with a cloud embedding provider, money, so that stays their decision.
+#[derive(Debug)]
+struct StoreUnreadableError {
+    store_name: String,
+    message: String,
+}
+
+impl StoreUnreadableError {
+    fn new(store_name: &str, path: &Path, source: impl std::fmt::Display) -> Self {
+        Self {
+            store_name: store_name.to_string(),
+            message: format!("Failed to load vector store '{store_name}' from '{}': {source}", path.display()),
+        }
+    }
+}
+
+impl std::fmt::Display for StoreUnreadableError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for StoreUnreadableError {}
 
 #[derive(Serialize)]
 pub struct QdrantEdgeEnsureStoreResult {
@@ -169,6 +203,10 @@ pub struct QdrantEdgeInfo {
 pub struct QdrantEdgeDatabase {
     base_path: PathBuf,
     shards: HashMap<String, EdgeShard>,
+
+    /// Stores whose unreadability has already been logged. A broken store is hit by every single
+    /// request against it, and one log line per request would bury everything else.
+    reported_unreadable_stores: HashSet<String>,
 }
 
 impl QdrantEdgeDatabase {
@@ -176,7 +214,14 @@ impl QdrantEdgeDatabase {
         Self {
             base_path,
             shards: HashMap::new(),
+            reported_unreadable_stores: HashSet::new(),
         }
+    }
+
+    /// Whether this store's defect still has to be written to the log. True exactly once per store,
+    /// until the store loads again.
+    fn report_unreadable_store(&mut self, store_name: &str) -> bool {
+        self.reported_unreadable_stores.insert(store_name.to_string())
     }
 
     fn store_path(&self, store_name: &str) -> QdrantEdgeResult<PathBuf> {
@@ -192,9 +237,10 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
-            EdgeShard::load(&path, None).map_err(|error| {
-                format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
-            })?
+            match EdgeShard::load(&path, None) {
+                Ok(shard) => shard,
+                Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
+            }
         } else {
             fs::create_dir_all(&path).map_err(|error| {
                 format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
@@ -216,6 +262,7 @@ impl QdrantEdgeDatabase {
             shard
         };
 
+        self.reported_unreadable_stores.remove(store_name);
         self.shards.insert(store_name.to_string(), shard);
         Ok((self.shards.get(store_name).unwrap(), !is_initialized))
     }
@@ -231,9 +278,12 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
-        let shard = EdgeShard::load(&path, None).map_err(|error| {
-            format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
-        })?;
+        let shard = match EdgeShard::load(&path, None) {
+            Ok(shard) => shard,
+            Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
+        };
+
+        self.reported_unreadable_stores.remove(store_name);
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
     }
@@ -505,6 +555,7 @@ where
         return Json(QdrantEdgeResponse {
             success: false,
             issue: "Qdrant Edge is not available.".to_string(),
+            issue_code: "",
             data: None,
         });
     };
@@ -513,14 +564,36 @@ where
         Ok(data) => Json(QdrantEdgeResponse {
             success: true,
             issue: String::new(),
+            issue_code: "",
             data: Some(data),
         }),
         Err(e) => {
             let issue = e.to_string();
-            error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+
+            //
+            // An unreadable store keeps failing for as long as the user leaves it alone, so it is
+            // logged once and then only answered. Every other failure is logged as it happens,
+            // because those are one-offs worth seeing each time.
+            //
+            let issue_code = match e.downcast_ref::<StoreUnreadableError>() {
+                Some(unreadable) => {
+                    if database.report_unreadable_store(&unreadable.store_name) {
+                        error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+                    }
+
+                    ISSUE_CODE_STORE_UNREADABLE
+                },
+
+                None => {
+                    error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+                    ""
+                },
+            };
+
             Json(QdrantEdgeResponse {
                 success: false,
                 issue,
+                issue_code,
                 data: None,
             })
         },
@@ -909,6 +982,44 @@ mod tests {
         assert_eq!(fs::read_to_string(display_name_path).unwrap(), "Renamed source");
 
         drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn an_unreadable_store_is_reported_but_never_deleted() {
+        let test_directory = std::env::temp_dir().join(format!(
+            "ai-studio-qdrant-unreadable-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        assert!(database.ensure_store_exists(store_name, "Some source", 3).unwrap().created);
+        let store_path = database.store_path(store_name).unwrap();
+
+        // Release the shard before breaking it, so the files are not held open any more.
+        drop(database);
+        fs::write(store_path.join("edge_config.json"), "this is not a config").unwrap();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let error = database.get_existing_store(store_name).unwrap_err();
+        assert!(
+            error.downcast_ref::<StoreUnreadableError>().is_some(),
+            "a store which cannot be opened has to be recognizable as such, not just a message"
+        );
+
+        // The whole point: the user's embeddings survive a defect until they ask for a rebuild.
+        assert!(store_path.join("segments").is_dir());
+        assert!(store_path.join(STORE_INITIALIZATION_MARKER).is_file());
+
+        // And the defect is logged once, not once per request.
+        assert!(database.report_unreadable_store(store_name));
+        assert!(!database.report_unreadable_store(store_name));
+
         fs::remove_dir_all(test_directory).unwrap();
     }
 
