@@ -67,7 +67,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
-        var options = this.GetChunkingOptions(dataSource, embeddingProvider);
+        var options = GetChunkingOptions(dataSource, embeddingProvider);
         var strategy = this.GetChunkingStrategy(filePath);
         var content = await this.ReadExtractedFileContentAsync(filePath, embeddingProvider, token);
 
@@ -582,7 +582,18 @@ public sealed partial class DataSourceEmbeddingService
         throw new InvalidOperationException(string.Format(TB("The tokens of the text could not be counted for the embedding provider '{0}'. {1}"), embeddingProvider.Name, message));
     }
 
-    private ChunkingOptions GetChunkingOptions(IDataSource dataSource, EmbeddingProvider embeddingProvider)
+    /// <summary>
+    /// Works out how the text of a data source is cut for a given embedding provider.
+    /// </summary>
+    /// <remarks>
+    /// Static, because the answer follows from its two arguments alone. That lets the embedding
+    /// signature be built for a configuration which is not stored yet, which is what the dialogs ask
+    /// before they save a change.
+    /// </remarks>
+    /// <param name="dataSource">The data source whose own chunk settings apply.</param>
+    /// <param name="embeddingProvider">The embedding provider whose token limit caps them.</param>
+    /// <returns>The chunk size and overlap which are actually used.</returns>
+    internal static ChunkingOptions GetChunkingOptions(IDataSource dataSource, EmbeddingProvider embeddingProvider)
     {
         var providerMaxChunkTokenLength = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
         var dataSourceMaxChunkTokenLength = dataSource is IInternalDataSource { MaxChunkTokenLength: > 0 } internalDataSource
@@ -1025,6 +1036,15 @@ public sealed partial class DataSourceEmbeddingService
             chunkingOptions.MaxChunkTokenLength,
             chunkingOptions.OverlapTokenLength);
     }
+
+    /// <summary>
+    /// Describes how the vectors of a data source were made, working the chunking out along the way.
+    /// </summary>
+    /// <param name="dataSource">The data source the vectors belong to.</param>
+    /// <param name="embeddingProvider">The embedding provider which makes them.</param>
+    /// <returns>The signature of this pairing.</returns>
+    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider) =>
+        BuildEmbeddingSignature(dataSource, embeddingProvider, GetChunkingOptions(dataSource, embeddingProvider));
 
     private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
     {

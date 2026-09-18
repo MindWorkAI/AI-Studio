@@ -209,6 +209,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         var manifest = await indexStore.GetManifestAsync(dataSourceId, token);
+        return HasStoredIndexState(manifest);
+    }
+
+    /// <summary>
+    /// Whether the index holds anything at all about a data source.
+    /// </summary>
+    /// <param name="manifest">What the index store returned for it.</param>
+    /// <returns>True when there is stored index state.</returns>
+    private static bool HasStoredIndexState(DataSourceEmbeddingManifest manifest)
+    {
         return !string.IsNullOrWhiteSpace(manifest.EmbeddingProviderId)
                || !string.IsNullOrWhiteSpace(manifest.EmbeddingSignature)
                || !string.IsNullOrWhiteSpace(manifest.SourceHash)
@@ -218,6 +228,59 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                // A data source whose files were all skipped for good has index state as well,
                // even though nothing was indexed of it:
                || manifest.PermanentFailures.Count > 0;
+    }
+
+    /// <summary>
+    /// Picks the data sources which already hold something in the index.
+    /// </summary>
+    /// <remarks>
+    /// Asked before a setting is saved which would throw those indexes away, so the question can be
+    /// put to the user with the names in it. Anything unclear counts as holding something — the
+    /// opposite of IsAwaitingReindexAsync, and for the opposite reason: there, a wrongly greyed-out
+    /// row would stay wrong for good, while a question asked once too often costs a click, and one
+    /// skipped costs whatever a cloud provider charges for embedding everything again.
+    /// </remarks>
+    /// <param name="dataSources">The data sources to ask about.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Those of them which have stored index state.</returns>
+    public async Task<IReadOnlyList<IDataSource>> GetDataSourcesWithStoredIndexAsync(IReadOnlyCollection<IDataSource> dataSources, CancellationToken token = default)
+    {
+        //
+        // Filtering first also keeps the index database from being created while local RAG is off:
+        // asking for the store runs its migrations on the first call, which must not happen because
+        // somebody opened a dialog.
+        //
+        var candidates = dataSources.Where(this.IsSupportedInternalDataSource).ToList();
+        if (candidates.Count == 0)
+            return [];
+
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(REINDEX_CHECK_TIMEOUT);
+
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(timeout.Token);
+            if (!indexStore.IsAvailable)
+            {
+                logger.LogWarning("Could not tell which data sources hold a stored index because the local RAG index database '{DatabaseName}' is unavailable. Treating all {DataSourceCount} of them as affected.", indexStore.Name, candidates.Count);
+                return candidates;
+            }
+
+            var affected = new List<IDataSource>(candidates.Count);
+            foreach (var dataSource in candidates)
+            {
+                var manifest = await indexStore.GetManifestAsync(dataSource.Id, timeout.Token);
+                if (HasStoredIndexState(manifest))
+                    affected.Add(dataSource);
+            }
+
+            return affected;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not tell which of {DataSourceCount} data source(s) hold a stored index. Treating all of them as affected.", candidates.Count);
+            return candidates;
+        }
     }
 
     /// <summary>
@@ -269,7 +332,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return false;
 
             var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, timeout.Token);
-            var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
+            var chunkingOptions = GetChunkingOptions(dataSource, embeddingProvider);
             var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
             var runState = this.statuses.TryGetValue(dataSource.Id, out var status) ? status.State : (DataSourceEmbeddingState?)null;
 
@@ -1444,7 +1507,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IndexStoreClient indexStore,
         CancellationToken token)
     {
-        var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
+        var chunkingOptions = GetChunkingOptions(dataSource, embeddingProvider);
         var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
