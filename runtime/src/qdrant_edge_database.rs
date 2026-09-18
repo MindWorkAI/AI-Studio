@@ -11,8 +11,9 @@ use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
     FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, NamedQuery, Payload, PointId,
-    PointInsertOperations, PointOperations, PointStruct, QueryEnum, ScoredPoint, SearchRequest,
-    UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface, WithVector,
+    PointInsertOperations, PointOperations, PointStruct, QueryEnum, QueryRequest, ScoredPoint,
+    ScoringQuery, UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface,
+    WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -306,7 +307,7 @@ impl QdrantEdgeDatabase {
         shard.update(UpdateOperation::PointOperation(
             PointOperations::UpsertPoints(PointInsertOperations::PointsList(points)),
         ))?;
-        shard.flush();
+        shard.flush()?;
         Ok(())
     }
 
@@ -320,18 +321,19 @@ impl QdrantEdgeDatabase {
             return Ok(vec![]);
         };
 
-        let search_results = shard.search(SearchRequest {
-            query: QueryEnum::Nearest(NamedQuery::new(
+        let search_results = shard.query(QueryRequest {
+            prefetches: Vec::new(),
+            query: Some(ScoringQuery::Vector(QueryEnum::Nearest(NamedQuery::new(
                 VectorInternal::Dense(vector),
                 VECTOR_NAME,
-            )),
+            )))),
             filter: None,
-            params: None,
+            score_threshold: None,
             limit: max_matches,
             offset: 0,
-            with_payload: Some(WithPayloadInterface::Bool(true)),
-            with_vector: Some(WithVector::Bool(false)),
-            score_threshold: None,
+            params: None,
+            with_vector: WithVector::Bool(false),
+            with_payload: WithPayloadInterface::Bool(true),
         })?;
 
         Ok(search_results
@@ -348,7 +350,7 @@ impl QdrantEdgeDatabase {
         shard.update(UpdateOperation::PointOperation(
             PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
         ))?;
-        shard.flush();
+        shard.flush()?;
         Ok(())
     }
 
@@ -361,7 +363,7 @@ impl QdrantEdgeDatabase {
         if optimized {
             info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
         }
-        shard.flush();
+        shard.flush()?;
         Ok(())
     }
 
@@ -595,7 +597,7 @@ fn remove_obsolete_qdrant_path(path: &Path) {
 
 fn edge_config(vector_size: usize) -> EdgeConfig {
     EdgeConfig {
-        on_disk_payload: true,
+        on_disk_payload: Some(true),
         vectors: HashMap::from([(
             VECTOR_NAME.to_string(),
             EdgeVectorParams {
@@ -609,13 +611,20 @@ fn edge_config(vector_size: usize) -> EdgeConfig {
             },
         )]),
         sparse_vectors: HashMap::new(),
-        hnsw_config: hnsw_config(),
+        hnsw_config: Some(hnsw_config()),
         quantization_config: None,
-        optimizers: edge_optimizers_config(),
+        optimizers: Some(edge_optimizers_config()),
         wal_options: None,
+        max_search_threads: None,
+        search_pool_core: None,
     }
 }
 
+// `on_disk` is deprecated in favor of `memory`, but Qdrant Edge does not re-export the `Memory`
+// type, so the new field cannot be named from here. Leaving both unset is not an option either:
+// the effective placement would fall back to cached instead of on-disk, which is a real change
+// and would have the optimizers rebuild the HNSW graph.
+#[allow(deprecated)]
 fn hnsw_config() -> HnswIndexConfig {
     HnswIndexConfig {
         m: HNSW_M,
@@ -623,6 +632,7 @@ fn hnsw_config() -> HnswIndexConfig {
         full_scan_threshold: HNSW_FULL_SCAN_THRESHOLD_KB,
         max_indexing_threads: HNSW_MAX_INDEXING_THREADS,
         on_disk: Some(true),
+        memory: None,
         payload_m: None,
         inline_storage: None,
     }
