@@ -942,9 +942,11 @@ public partial class ChatComponent : MSGComponentBase
         await this.SyncForegroundChatAsync();
         return this.ChatThread;
     }
-    
+
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+
+
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
@@ -952,10 +954,17 @@ public partial class ChatComponent : MSGComponentBase
 
         if (!this.IsProviderSelected)
             return;
-        
+        if (!reuseLastUserPrompt && string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
+                                 && this.ComposerState.FileAttachments.Count > 0)
+        {
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.VoiceChat,
+                this.T("The attachment has not been sent. Please enter a prompt in the chat window"))); 
+        return;
+        }
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
-
+        
         this.RefreshCurrentProfileAndChatTemplate();
 
         // Blur the focus away from the input field to be able to clear it:
