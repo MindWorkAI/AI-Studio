@@ -67,7 +67,7 @@ tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.6"
 bytes = "1.12.1"
-qdrant-edge = "0.7.2"
+qdrant-edge = "0.8.0"
 
 # Prompt-injection detection. `regex` gives us linear-time matching without backtracking, so
 # a hostile document cannot make a scan blow up, and `aho-corasick` matches the ~1600 fixed
@@ -79,12 +79,9 @@ image = { version = "0.25.10", default-features = false, features = ["jpeg", "pn
 tokenizers = "0.23.1"
 
 [patch.crates-io]
-# Issue: It was not possible to build qdrant-edge for macOS. See PR 9312: https://github.com/qdrant/qdrant/pull/9312
-# State: The PR was merged, but not yet released. We use the git version for now.
-qdrant-edge = { git = "https://github.com/SommerEngineering/qdrant.git", rev = "462c84d82ced126e4a2b7914544bfde16a509eb1" }
-
 # Issue: This repo was not updated since 2020. The rand crate was outdated. We patched it to use a newer version of rand.
-# State: There is a PR for a long time, but it was not merged. We use the git version for now.
+# State: There is a PR for a long time, but it was not merged. We use the git version for now. Qdrant Edge still depends
+#        on this crate in version 0.1.2, so the patch stays relevant: https://github.com/asimihsan/permutation-iterator-rs/pull/14
 permutation_iterator = { git = "https://github.com/SommerEngineering/permutation-iterator-rs.git", rev = "76836ed316d18dfef530ba908f58481c343e80d7" }
 
 [target.'cfg(target_os = "windows")'.dependencies]

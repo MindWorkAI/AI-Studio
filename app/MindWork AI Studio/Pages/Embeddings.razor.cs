@@ -318,11 +318,26 @@ public partial class Embeddings : MSGComponentBase
         await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the file location: {0}"), issue)));
     }
 
+    /// <remarks>
+    /// An unreadable index is left to the repair button below: another attempt would open the same
+    /// store and fail the same way, so offering both would be offering one that does nothing.
+    /// </remarks>
     private bool CanRefresh(DataSourceEmbeddingStatus status)
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
-            status.State is not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED &&
-            (status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+               status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
+               (status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+    }
+
+    /// <remarks>
+    /// Offered for the one failure which no further attempt gets past. It is a button of its own
+    /// and not the refresh one, because what it does is not what the user expects of a refresh:
+    /// everything indexed so far is thrown away and paid for again.
+    /// </remarks>
+    private bool CanRepair(DataSourceEmbeddingStatus status)
+    {
+        return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
+            status is { State: DataSourceEmbeddingState.FAILED, VectorStoreUnreadable: true };
     }
 
     /// <summary>
@@ -337,6 +352,15 @@ public partial class Embeddings : MSGComponentBase
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {
         await this.DataSourceEmbeddingService.RetryDataSourceAsync(status.DataSourceId);
+        this.ReloadStatuses();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task RepairDataSource(DataSourceEmbeddingStatus status)
+    {
+        if (!await DataSourceRepair.ConfirmAndRepairAsync(this.DialogService, this.DataSourceEmbeddingService, status.DataSourceId, status.DataSourceName))
+            return;
+
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);
     }
