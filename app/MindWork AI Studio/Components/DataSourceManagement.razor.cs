@@ -128,6 +128,25 @@ public partial class DataSourceManagement : MSGComponentBase
         return this.SettingsManager.ConfigurationData.DataSources.Any(this.CanRefreshDataSource);
     }
 
+    /// <remarks>
+    /// Shown only while the index of this data source cannot be read. The refresh button next to it
+    /// stays as it is: it would open the same store and fail the same way, but it is offered for
+    /// every internal data source regardless of state, and singling this one out would say more
+    /// about the state than that button ever has.
+    /// </remarks>
+    private bool CanRepairDataSource(IDataSource dataSource)
+    {
+        return this.DataSourceEmbeddingService.NeedsIndexRepair(dataSource);
+    }
+
+    private async Task RepairDataSource(IDataSource dataSource)
+    {
+        if (!this.CanRepairDataSource(dataSource))
+            return;
+
+        await DataSourceRepair.ConfirmAndRepairAsync(this.DialogService, this.DataSourceEmbeddingService, dataSource.Id, dataSource.Name);
+    }
+
     private async Task AutomaticRefreshChanged(bool enabled)
     {
         this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh = enabled;
