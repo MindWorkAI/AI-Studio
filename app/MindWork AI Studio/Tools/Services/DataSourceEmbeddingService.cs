@@ -430,6 +430,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             {
                 break;
             }
+            catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+            {
+                //
+                // Nothing is deleted and nothing is rebuilt here. The data source says what is
+                // wrong with it, stays out of the selection while it says so, and waits for the
+                // user to ask for the repair.
+                //
+                logger.LogError(
+                    exception,
+                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                    dataSource.Name,
+                    dataSource.Id);
+                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+            }
             catch (Exception exception)
             {
                 if (dataSource is null)
@@ -872,6 +886,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     exception.Code,
                     ShortHash(fingerprint));
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
+            }
+            catch (VectorStoreUnreadableException)
+            {
+                //
+                // Not about this one file: the store of the whole data source cannot be opened, so
+                // every remaining file would fail the same way. Carrying on would fill the list
+                // with one entry per file and hide the single cause behind them.
+                //
+                throw;
             }
             catch (Exception exception)
             {
@@ -1338,6 +1361,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             {
                 throw;
             }
+            catch (VectorStoreUnreadableException exception)
+            {
+                logger.LogError(
+                    exception,
+                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                    dataSource.Name,
+                    dataSource.Id);
+                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+            }
             catch (Exception exception)
             {
                 logger.LogError(exception, "Initial embedding hash check failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
@@ -1583,7 +1615,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
         int permanentlySkippedFiles = 0,
         int? currentFileBlock = null,
-        int? currentFilePage = null)
+        int? currentFilePage = null,
+        bool vectorStoreUnreadable = false)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
@@ -1598,7 +1631,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             failures?.ToList() ?? [],
             permanentlySkippedFiles,
             currentFileBlock,
-            currentFilePage);
+            currentFilePage,
+            vectorStoreUnreadable);
     }
 
     /// <remarks>
@@ -1633,6 +1667,25 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             1,
             lastError: errorMessage,
             failures: [new DataSourceEmbeddingFailure(dataSource.Name, errorMessage, DateTimeOffset.UtcNow)]);
+    }
+
+    /// <remarks>
+    /// Deliberately not the message which came from the runtime: that one names a store name and a
+    /// path, is written in English for the log file, and says nothing about what happens next. What
+    /// the user needs to read is what this means for their chats and where the way out is.
+    /// </remarks>
+    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSource dataSource)
+    {
+        var errorMessage = string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name);
+        return this.CreateStatus(
+            dataSource,
+            DataSourceEmbeddingState.FAILED,
+            0,
+            0,
+            1,
+            lastError: errorMessage,
+            failures: [new DataSourceEmbeddingFailure(dataSource.Name, errorMessage, DateTimeOffset.UtcNow)],
+            vectorStoreUnreadable: true);
     }
 
     private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun)
