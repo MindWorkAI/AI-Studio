@@ -20,8 +20,15 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalDirectory DataSource { get; set; }
 
+    /// <summary>
+    /// Whether the folder this data source reads must stay as it is.
+    /// </summary>
+    /// <remarks>
+    /// Set once the index holds something for this data source. The embedding is not locked along
+    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
+    /// </remarks>
     [Parameter]
-    public bool LockSourceAndEmbedding { get; set; }
+    public bool LockSource { get; set; }
 
     [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
@@ -126,18 +133,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
-    private bool CanChangeSourceAndEmbedding => !this.IsEditing || !this.LockSourceAndEmbedding;
+    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
-
-    private string SelectedEmbeddingNameText
-    {
-        get
-        {
-            var selectedEmbedding = this.AvailableEmbeddings.FirstOrDefault(x => x.Value == this.dataEmbeddingId);
-            return string.IsNullOrWhiteSpace(selectedEmbedding.Name) ? T("Unknown") : selectedEmbedding.Name;
-        }
-    }
 
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
@@ -162,8 +160,11 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Name = this.dataName,
         Description = this.dataDescription,
         Type = DataSourceType.LOCAL_DIRECTORY,
-        EmbeddingId = this.CanChangeSourceAndEmbedding ? this.dataEmbeddingId : this.DataSource.EmbeddingId,
-        Path = this.CanChangeSourceAndEmbedding ? this.dataPath : this.DataSource.Path,
+        EmbeddingId = this.dataEmbeddingId,
+
+        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
+        // indexed data source somewhere else:
+        Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
