@@ -1012,6 +1012,12 @@ public sealed partial class DataSourceEmbeddingService
     /// another lands on the identical path, while moving the data directory changes every path
     /// without changing a single tokenizer.
     ///
+    /// The chunk settings enter only as what they amount to, never as what somebody typed. A data
+    /// source storing 0 means "follow the embedding provider", and writing that provider's own limit
+    /// into the field changes nothing about how the text is cut. Carrying the typed numbers as well
+    /// made that a different signature, so opening the expert settings of a data source — which
+    /// fills an empty limit with the provider's — threw the whole index away for nothing.
+    ///
     /// The confidence level a data source asks of a provider is deliberately not among them. It
     /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks
     /// it against the participating chat providers and against the embedding provider, and this
@@ -1031,8 +1037,6 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.HFInferenceProvider,
             embeddingProvider.TokenizerFingerprint,
             embeddingProvider.EffectiveTokenLimit,
-            dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
-            dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH,
             chunkingOptions.MaxChunkTokenLength,
             chunkingOptions.OverlapTokenLength);
     }

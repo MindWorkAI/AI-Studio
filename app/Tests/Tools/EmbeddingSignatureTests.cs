@@ -92,15 +92,24 @@ public sealed class EmbeddingSignatureTests
     {
         Assert.That(
             Signature(DataSource(ConfidenceLevel.LOW)),
-            Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100|512|100"),
+            Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100"),
             "Reordering or extending the signature throws away every index anybody has. This test makes that a decision somebody takes rather than something which happens on the way past.");
     }
 
+    /// <summary>
+    /// Builds the signature the way an indexing run does, working the chunking out along the way.
+    /// </summary>
+    /// <remarks>
+    /// Handing in fixed chunking options instead would hide exactly what these tests are here for:
+    /// the signature would then no longer notice a data source being cut differently.
+    /// </remarks>
+    /// <param name="dataSource">The data source to build the signature for.</param>
+    /// <param name="embeddingProvider">The embedding provider, or the test default.</param>
+    /// <returns>The signature of that pairing.</returns>
     private static string Signature(DataSourceLocalDirectory dataSource, EmbeddingProvider? embeddingProvider = null) =>
         DataSourceEmbeddingService.BuildEmbeddingSignature(
             dataSource,
-            embeddingProvider ?? EmbeddingProviderFor("text-embedding-3-small"),
-            new(512, 100));
+            embeddingProvider ?? EmbeddingProviderFor("text-embedding-3-small"));
 
     private static DataSourceLocalDirectory DataSource(ConfidenceLevel confidenceLevel) => new()
     {

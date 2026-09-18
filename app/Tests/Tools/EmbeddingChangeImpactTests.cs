@@ -99,6 +99,54 @@ public sealed class EmbeddingChangeImpactTests
         });
     }
 
+    /// <summary>
+    /// Writing out what a data source already follows must not cost it its index.
+    /// </summary>
+    /// <remarks>
+    /// A token limit of 0 means "follow the embedding provider", and opening the expert settings of a
+    /// data source fills that empty field with exactly the provider's limit. Both are the same cut,
+    /// so nobody may be asked about it -- and above all, nothing may be re-embedded for it. Somebody
+    /// who only wanted to change how many matches an answer may use paid for a full rebuild.
+    /// </remarks>
+    [Test]
+    public void SpellingOutWhatTheProviderAlreadyDictatesKeepsTheStoredIndex()
+    {
+        var embeddingProvider = StoredEmbeddingProvider() with { TokenLimit = 8192 };
+        var followingTheProvider = StoredDataSource() with { MaxChunkTokenLength = 0 };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 8192 }),
+                Is.False,
+                "The provider limit typed into the field is the cut the data source already had.");
+
+            Assert.That(
+                EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, followingTheProvider, followingTheProvider with { MaxChunkTokenLength = 4096 }),
+                Is.True,
+                "Anything below the provider limit really does cut the text elsewhere.");
+        });
+    }
+
+    /// <summary>
+    /// An overlap larger than the chunk is capped, so several of them are the same cut.
+    /// </summary>
+    /// <remarks>
+    /// The same reasoning as for the token limit: what counts is where the text is cut, not what
+    /// somebody typed into the field.
+    /// </remarks>
+    [Test]
+    public void AnOverlapWhichIsCappedAnywayKeepsTheStoredIndex()
+    {
+        var embeddingProvider = StoredEmbeddingProvider();
+        var stored = StoredDataSource() with { MaxChunkTokenLength = 512, ChunkOverlapTokenLength = 600 };
+
+        Assert.That(
+            EmbeddingChangeImpact.AffectsStoredIndex(embeddingProvider, stored, stored with { ChunkOverlapTokenLength = 700 }),
+            Is.False,
+            "Both overlaps are capped to the chunk size, so the text is cut identically.");
+    }
+
     [Test]
     public void HarmlessDataSourceEditsKeepTheStoredIndex()
     {
