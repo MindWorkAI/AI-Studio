@@ -39,6 +39,11 @@ public static class ModelKindCorpus
         // model is for is said by the word which says it, not by the family it was built from.
         new(MISTRAL, "codestral-embed", EMBEDDING),
 
+        // Alibaba names its own by the prefix the provider used to filter the catalog by. The rule
+        // says it now, so the prefix is free to go:
+        new(ALIBABA_CLOUD, "text-embedding-v3", EMBEDDING),
+        new(ALIBABA_CLOUD, "text-embedding-v4", EMBEDDING),
+
         //
         // What a local Ollama installation serves, taken off its models endpoint rather than
         // written from memory. The last two are the ones worth having: neither name carries the
@@ -85,6 +90,8 @@ public static class ModelKindCorpus
         new(GOOGLE, "gemini-3-pro-image", IMAGE_GENERATION),
 
         new(GOOGLE, "imagen-4.0-generate-001", IMAGE_GENERATION, AnsweredTodayAs: CHAT, Reason: "The markers never knew the name; the family ported in the Google step states it. Nobody noticed because the Google provider shows only names beginning with gemini."),
+
+        new(ALIBABA_CLOUD, "qwen-image-edit", IMAGE_GENERATION),
     ];
 
     /// <summary>
@@ -196,6 +203,7 @@ public static class ModelKindCorpus
     private static readonly ModelKindExample[] OCR_ENTRIES =
     [
         new(MISTRAL, "mistral-ocr-latest", OCR),
+        new(ALIBABA_CLOUD, "qwen-vl-ocr", OCR),
     ];
 
     /// <summary>
@@ -246,6 +254,17 @@ public static class ModelKindCorpus
         // Half the chat models of the world carry this word, and one of the embedding names above
         // is one letter longer than it. A name part is what keeps the two apart:
         new(SELF_HOSTED, "mistral-7b-instruct", CHAT),
+
+        //
+        // What somebody actually comes to Alibaba Cloud for, held here because the provider is
+        // about to stop keeping its chat list by the letter every one of these begins with. The
+        // last one translates rather than converses, and it does so through the chat completion
+        // API like the others, so this is where it belongs.
+        //
+        new(ALIBABA_CLOUD, "qwen-max-latest", CHAT),
+        new(ALIBABA_CLOUD, "qwq-plus", CHAT),
+        new(ALIBABA_CLOUD, "qvq-max", CHAT),
+        new(ALIBABA_CLOUD, "qwen-mt-turbo", CHAT),
 
         //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding
