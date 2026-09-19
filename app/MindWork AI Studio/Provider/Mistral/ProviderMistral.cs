@@ -124,13 +124,16 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        // Source: https://docs.mistral.ai/capabilities/audio_transcription
-        return Task.FromResult(ModelLoadResult.FromModels(
-        [
-            new Provider.Model("voxtral-mini-latest", "Voxtral Mini Latest"),
-        ]));
+        var modelResponse = await this.LoadModelList(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+        if (!modelResponse.Success)
+            return modelResponse;
+
+        return modelResponse with
+        {
+            Models = [..modelResponse.Models.Where(n => n.IsTranscriptionModel(this.Provider))]
+        };
     }
     
     #endregion

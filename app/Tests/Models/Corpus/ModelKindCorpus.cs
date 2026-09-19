@@ -122,6 +122,13 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "wav2vec2-large-xlsr-53", TRANSCRIPTION),
         new(MISTRAL, "voxtral-mini-latest", TRANSCRIPTION),
 
+        // The rest of what Mistral actually serves, off its own catalog. The app offered the one
+        // name above alone, because that is the one the documentation names; these three were there
+        // the whole time. Both sizes come as a rolling name and as a dated snapshot.
+        new(MISTRAL, "voxtral-small-latest", TRANSCRIPTION),
+        new(MISTRAL, "voxtral-mini-2602", TRANSCRIPTION),
+        new(MISTRAL, "voxtral-small-2507", TRANSCRIPTION),
+
         // NVIDIA's other speech line, once plain and once as the hub names it. The second one is
         // what makes the rule a segment worth keeping: the organization comes off before any rule
         // sees the name, so what is left has to carry the word on its own.
@@ -154,6 +161,11 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "xtts-v2", SPEECH_SYNTHESIS),
 
         new(ALIBABA_CLOUD, "qwen-tts", SPEECH_SYNTHESIS),
+
+        // The Voxtral which speaks instead of listening. It stands here to hold the other half of
+        // Mistral's transcription list: the catalog is asked now, so what is not a transcription
+        // model has to be kept out by what it is, not by the list having been short.
+        new(MISTRAL, "voxtral-mini-tts-latest", SPEECH_SYNTHESIS),
     ];
 
     /// <summary>
@@ -176,6 +188,12 @@ public static class ModelKindCorpus
         //
         new(ALIBABA_CLOUD, "qwen-tts-realtime", REALTIME),
         new(ALIBABA_CLOUD, "qwen3-asr-flash-realtime", REALTIME),
+
+        // The other two of Mistral's Voxtral line. The second one carries "transcribe" and stays
+        // out of the transcription list all the same: whatever it does, it does over a connection
+        // the app cannot open, and that is what the rank on the realtime rule is for.
+        new(MISTRAL, "voxtral-mini-realtime-latest", REALTIME),
+        new(MISTRAL, "voxtral-mini-transcribe-realtime-2602", REALTIME),
 
         //
         // Google's whole two-way line, taken off its catalog rather than written from memory. It
