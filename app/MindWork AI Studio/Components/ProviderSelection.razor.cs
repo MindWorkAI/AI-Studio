@@ -20,6 +20,17 @@ public partial class ProviderSelection : MSGComponentBase
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
 
     /// <summary>
+    /// What this place calls the thing being picked, when "Provider" is not the word it uses.
+    /// </summary>
+    /// <remarks>
+    /// Some places have the user pick a provider in order to set it up, and there the word is right.
+    /// Others have them pick one to get a job done, and speak of the model throughout. A field
+    /// labelled "Provider" in the middle of such a text reads like a second, different choice.
+    /// </remarks>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
     /// Gets or sets whether provider selection is disabled.
     /// </summary>
     [Parameter]

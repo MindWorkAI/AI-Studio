@@ -29,7 +29,7 @@
                     <MudText Typo="Typo.h6">@this.plugin.Name</MudText>
                     <MudText Typo="Typo.body2" Class="mb-2">@this.plugin.Description</MudText>
                     <MudText Typo="Typo.body2">
-                        @T("Audit provider"): <strong>@this.ProviderLabel</strong>
+                        @T("Audit model"): <strong>@this.ProviderLabel</strong>
                     </MudText>
                     <MudText Typo="Typo.body2">
                         @T("Minimum required safety level"): <strong>@this.MinimumLevelLabel</strong>
@@ -43,7 +43,7 @@
                             @T("No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.")
                         </MudText>
                         <CascadingValue Value="Components.AGENT_ASSISTANT_PLUGIN_AUDIT">
-                            <ProviderSelection @bind-ProviderSettings="@this.auditProviderSelection" ValidateProvider="@this.ValidatingProvider" Disabled="@this.isAuditing" />
+                            <ProviderSelection @bind-ProviderSettings="@this.auditProviderSelection" ValidateProvider="@this.ValidatingProvider" Label="@T("Model")" Disabled="@this.isAuditing" />
                         </CascadingValue>
                     </MudPaper>
                 }

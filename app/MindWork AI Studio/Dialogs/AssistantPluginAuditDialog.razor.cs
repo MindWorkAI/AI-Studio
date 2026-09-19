@@ -63,7 +63,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private bool NeedsProviderSelection => this.CurrentProvider == AIStudio.Settings.Provider.NONE;
 
     private string ProviderLabel => this.EffectiveProvider == AIStudio.Settings.Provider.NONE
-        ? T("No provider configured")
+        ? T("No model configured")
         : $"{this.EffectiveProvider.InstanceName} ({this.EffectiveProvider.UsedLLMProvider.ToName()})";
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
@@ -161,7 +161,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private string? ValidatingProvider(AIStudio.Settings.Provider provider)
     {
         if (provider.UsedLLMProvider == LLMProviders.NONE)
-            return T("Please select a provider.");
+            return T("Please select a model.");
 
         return null;
     }
