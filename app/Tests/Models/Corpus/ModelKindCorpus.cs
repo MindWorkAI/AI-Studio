@@ -82,6 +82,12 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "parakeet-tdt-0.6b-v2", TRANSCRIPTION),
         new(SELF_HOSTED, "wav2vec2-large-xlsr-53", TRANSCRIPTION),
         new(MISTRAL, "voxtral-mini-latest", TRANSCRIPTION),
+
+        // NVIDIA's other speech line, once plain and once as the hub names it. The second one is
+        // what makes the rule a segment worth keeping: the organization comes off before any rule
+        // sees the name, so what is left has to carry the word on its own.
+        new(SELF_HOSTED, "canary-1b-flash", TRANSCRIPTION),
+        new(SELF_HOSTED, "nvidia/canary-180m-flash", TRANSCRIPTION),
     ];
 
     /// <summary>
