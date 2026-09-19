@@ -47,6 +47,41 @@ public sealed class EmbeddingChangeImpactTests
             "Another model means another vector space.");
     }
 
+    /// <summary>
+    /// A model ID which differs only in how it is written is a different model here.
+    /// </summary>
+    /// <remarks>
+    /// This is why the embedding provider dialog adds a configured model to the list it loaded
+    /// instead of matching it against that list. A server which writes the same model slightly
+    /// differently -- with a tag where the user typed none, or in another case -- would otherwise
+    /// have its spelling written into the settings on the next save, and every document of every
+    /// data source behind that provider would be prepared again for a change nobody made.
+    /// </remarks>
+    [Test]
+    public void AModelIdWhichOnlyReadsDifferentlyDropsTheStoredIndexAsWell()
+    {
+        var dataSource = StoredDataSource();
+        var stored = StoredEmbeddingProvider() with { Model = new("nomic-embed-text", null) };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(
+                EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Model = new("nomic-embed-text:latest", null) }),
+                Is.True,
+                "The tag a server appends is part of the ID, and the ID is part of the signature.");
+
+            Assert.That(
+                EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Model = new("NOMIC-EMBED-TEXT", null) }),
+                Is.True,
+                "Compared ordinally, so another case is another model rather than the same one written louder.");
+
+            Assert.That(
+                EmbeddingChangeImpact.AffectsStoredIndex(dataSource, stored, stored with { Model = new("nomic-embed-text", "Nomic Embed Text") }),
+                Is.False,
+                "The display name is decoration and reaches no vector, so loading the list may fill it in.");
+        });
+    }
+
     [Test]
     public void ChangingTheTokenLimitDropsTheStoredIndex()
     {

@@ -136,6 +136,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private bool dataConfiguredModelIsNotOffered;
     private string dataFilePath = string.Empty;
     private string dataTokenizerFingerprint = string.Empty;
     private string dataCustomTokenizerValidationIssue = string.Empty;
@@ -493,6 +494,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.DataModel = default;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataConfiguredModelIsNotOffered = false;
     }
 
     /// <summary>
@@ -509,6 +511,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.DataModel = default;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataConfiguredModelIsNotOffered = false;
     }
 
     private async Task ReloadModels()
@@ -536,8 +539,40 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
             this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
+
+        // Whatever the server answered, and whether it answered at all, the model this provider was
+        // configured with stays on the list:
+        this.PinConfiguredModel();
     }
-    
+
+    /// <summary>
+    /// Keeps the configured model selectable, also when the server does not offer it right now.
+    /// </summary>
+    /// <remarks>
+    /// This is deliberately the opposite of what the chat provider dialog does, which replaces the
+    /// configured model with the one the server reported. An embedding provider carries indexed data
+    /// sources, and its model ID is part of the embedding signature: changing it -- even only in its
+    /// spelling -- means every prepared document is prepared again. So the stored model is added to
+    /// the list here rather than the list being applied to the stored model. A model nobody serves
+    /// any more stays visible and stays chosen, and changing it stays the user's decision, which
+    /// storing then asks about.
+    ///
+    /// Comparing is what Model does, which is by ID and ordinal. Matching a differing spelling would
+    /// mean writing that other spelling into the settings, and that is the very change this avoids.
+    /// </remarks>
+    private void PinConfiguredModel()
+    {
+        if (string.IsNullOrWhiteSpace(this.DataModel.Id))
+        {
+            this.dataConfiguredModelIsNotOffered = false;
+            return;
+        }
+
+        this.dataConfiguredModelIsNotOffered = !this.availableModels.Contains(this.DataModel);
+        if (this.dataConfiguredModelIsNotOffered)
+            this.availableModels.Insert(0, this.DataModel);
+    }
+
     private string APIKeyText => this.DataLLMProvider switch
     {
         LLMProviders.SELF_HOSTED => T("(Optional) API Key"),

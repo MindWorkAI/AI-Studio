@@ -109,6 +109,12 @@
                         </MudSelect>
                     }
                 </MudStack>
+                @if (this.dataConfiguredModelIsNotOffered)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-3">
+                        @T("This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.")
+                    </MudAlert>
+                }
                 @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
                 {
                     <MudAlert Severity="Severity.Error" Class="mt-3">
