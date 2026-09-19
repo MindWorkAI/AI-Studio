@@ -133,7 +133,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
     private bool dataHadStoredAPIKeyOnLoad;
-    private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
@@ -162,7 +161,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost),
             GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
         };
     }
@@ -170,24 +168,13 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private EmbeddingProvider CreateEmbeddingProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
-        Model model = default;
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-        {
-            if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
-                model = new Model(this.dataManuallyModel, null);
-            else if (this.DataHost is Host.LM_STUDIO)
-                model = this.DataModel;
-        }
-        else
-            model = this.DataModel;
-        
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             Name = this.DataName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = model,
+            Model = this.DataModel,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
@@ -224,10 +211,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
                                       || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
                                       || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
-            
-            // When using self-hosted embedding, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-                this.dataManuallyModel = this.DataModel.Id;
             
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
@@ -358,14 +341,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidateManuallyModel(string manuallyModel)
-    {
-        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter an embedding model name.");
-        
-        return null;
-    }
-
     private string? ValidateTokenLimit(int tokenLimit)
     {
         if (tokenLimit < 1)
@@ -516,7 +491,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the host changes, reset the model selection state:
         this.DataHost = selectedHost;
         this.DataModel = default;
-        this.dataManuallyModel = string.Empty;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
     }

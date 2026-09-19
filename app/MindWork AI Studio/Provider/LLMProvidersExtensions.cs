@@ -421,12 +421,6 @@ public static class LLMProvidersExtensions
         _ => false,
     };
     
-    public static bool IsEmbeddingModelProvidedManually(this LLMProviders provider, Host host) => provider switch
-    {
-        LLMProviders.SELF_HOSTED => host is not Host.LM_STUDIO,
-        _ => false,
-    };
-    
     public static bool IsTranscriptionModelProvidedManually(this LLMProviders provider, Host host) => provider switch
     {
         _ => false,
