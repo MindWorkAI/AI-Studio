@@ -38,6 +38,19 @@ public static class ModelKindCorpus
         // completion model on this very provider, and stays an embedding model regardless: what a
         // model is for is said by the word which says it, not by the family it was built from.
         new(MISTRAL, "codestral-embed", EMBEDDING),
+
+        //
+        // What a local Ollama installation serves, taken off its models endpoint rather than
+        // written from memory. The last two are the ones worth having: neither name carries the
+        // word "embed", so both were lost by the phrase the self-hosted provider used to filter
+        // with, and turned up among the chat models instead. Here they are answered by "bge" and
+        // "minilm", which is what those words are written for.
+        //
+        new(SELF_HOSTED, "qwen3-embedding:0.6b", EMBEDDING),
+        new(SELF_HOSTED, "qwen3-embedding:latest", EMBEDDING),
+        new(SELF_HOSTED, "nomic-embed-text:latest", EMBEDDING),
+        new(SELF_HOSTED, "bge-m3:latest", EMBEDDING),
+        new(SELF_HOSTED, "all-minilm:latest", EMBEDDING),
     ];
 
     /// <summary>
@@ -193,6 +206,12 @@ public static class ModelKindCorpus
         // Whoever runs them runs them behind a chat completion API, so here the name means
         // something to talk to -- which is what binding that other rule to Mistral protects.
         new(SELF_HOSTED, "codestral-22b-v0.1", CHAT),
+
+        // The other half of that same Ollama installation, and the pair which makes the point:
+        // qwen3.8 and qwen3-embedding are one family and two answers. A rule written to select
+        // rather than to modify would have to beat the family name to get there.
+        new(SELF_HOSTED, "qwen3.8:latest", CHAT),
+        new(SELF_HOSTED, "gpt-oss:latest", CHAT),
 
         //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding
