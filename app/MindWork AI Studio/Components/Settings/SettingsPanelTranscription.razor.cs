@@ -37,10 +37,6 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
     }
 
-    private string OpusBitrateHelp => T("Higher bitrates can improve transcription accuracy, especially for quiet or noisy recordings, at the cost of a larger upload to the transcription provider. 128 kbps is recommended.");
-
-    private bool IsOpusBitrateLocked() => ManagedConfiguration.TryGet(x => x.App, x => x.OpusBitrate, out var meta) && meta.IsLocked;
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()

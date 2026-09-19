@@ -84,9 +84,5 @@
         }
 
         <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="mt-3" />
-
-        <MudDivider Class="mt-6 mb-3"/>
-
-        <ConfigurationSelect OptionDescription="@T("Transcription audio quality")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.OpusBitrate)" Data="@ConfigurationSelectDataFactory.GetTranscriptionOpusBitrateData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.OpusBitrate = selectedValue)" OptionHelp="@this.OpusBitrateHelp" IsLocked="@this.IsOpusBitrateLocked"/>
     </ExpansionPanel>
 }
