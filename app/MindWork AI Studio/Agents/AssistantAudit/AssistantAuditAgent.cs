@@ -124,12 +124,19 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// Resolves and stores the provider configuration used for assistant plugin audits.
     /// </summary>
     /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
-    /// <returns>The configured provider, or <see cref="AIStudio.Settings.Provider.NONE"/> when no audit provider is configured.</returns>
+    /// <returns>The configured provider, or Provider.NONE when no audit provider is configured.</returns>
+    /// <remarks>
+    /// A fallback is a provider somebody picked for something else: the assistant they were building,
+    /// the revision they asked for, the check they are standing in front of. Whether it may read a
+    /// plugin's source and its Lua files is decided by what this agent requires, not by what it was
+    /// picked under, so it has to clear this agent's confidence bar before it is used. Otherwise a
+    /// provider an organization ruled out for audits would see the very thing it was ruled out for.
+    /// </remarks>
     public AIStudio.Settings.Provider ResolveProvider(AIStudio.Settings.Provider? fallbackProvider = null)
     {
         var provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
-        if (provider == AIStudio.Settings.Provider.NONE && fallbackProvider is not null)
-            provider = fallbackProvider;
+        if (provider == AIStudio.Settings.Provider.NONE && fallbackProvider is { } candidate && this.SettingsManager.IsProviderConfident(candidate, Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT))
+            provider = candidate;
 
         this.ProviderSettings = provider;
         return provider;
@@ -149,12 +156,24 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         var provider = this.ResolveProvider(fallbackProvider);
         if (provider == AIStudio.Settings.Provider.NONE)
         {
-            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for the Security Audit Agent."))));
+            //
+            // There are two ways to end up here, and they send the user to different places: nobody
+            // named a provider, or the one at hand is not trusted enough for an audit. Saying that
+            // none is configured while one sits right there would send them looking in vain.
+            //
+            var wasFallbackRejected = fallbackProvider is { UsedLLMProvider: not LLMProviders.NONE };
+            var message = wasFallbackRejected
+                ? TB("The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.")
+                : TB("No provider is configured for the Security Audit Agent.");
+
+            await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, message));
 
             return new AssistantAuditResult
             {
                 Level = nameof(AssistantAuditLevel.UNKNOWN),
-                Summary = TB("No audit provider is configured."),
+                Summary = wasFallbackRejected
+                    ? TB("The provider is not trusted enough for security checks.")
+                    : TB("No audit provider is configured."),
             };
         }
 
