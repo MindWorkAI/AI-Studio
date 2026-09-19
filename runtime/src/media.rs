@@ -1835,6 +1835,30 @@ mod tests {
         let _ = fs::remove_dir_all(directory);
     }
 
+    /// Verifies the requested bitrate reaches the encoder rather than a fixed one.
+    #[test]
+    fn the_requested_bitrate_reaches_the_opus_encoder() {
+        let directory = std::env::temp_dir().join(format!("ai-studio-media-test-{}", rand::random::<u64>()));
+        fs::create_dir_all(&directory).unwrap();
+        let input = directory.join("input.wav");
+        fs::write(&input, wav_noise(OUTPUT_SAMPLE_RATE, OUTPUT_SAMPLE_RATE)).unwrap();
+
+        let mut sizes = Vec::new();
+        for bitrate in [32_000u32, 256_000] {
+            let output = directory.join(format!("output-{bitrate}.webm"));
+            let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, bitrate, &MediaJob::new()).unwrap();
+            assert!(!result.pass_through);
+            sizes.push(fs::metadata(&output).unwrap().len());
+        }
+
+        // One second of noise cannot be squeezed into a comparable size at both ends of the scale,
+        // so the higher bitrate has to produce a markedly larger file. Two outputs of roughly equal
+        // size would mean the requested bitrate never arrived and the encoder kept its own:
+        assert!(sizes[1] > sizes[0] * 2, "the higher bitrate did not grow the output: {sizes:?}");
+
+        let _ = fs::remove_dir_all(directory);
+    }
+
     /// Verifies cancellation removes both final and partial outputs.
     #[test]
     fn cancellation_does_not_leave_an_output_file() {
@@ -1962,7 +1986,28 @@ mod tests {
 
     /// Constructs a minimal mono 16-bit PCM WAV containing one constant sample value.
     fn wav_constant(sample_rate: u32, samples: u32, sample: i16) -> Vec<u8> {
-        let data_size = samples * 2;
+        wav_samples(sample_rate, &vec![sample; samples as usize])
+    }
+
+    /// Constructs a minimal mono 16-bit PCM WAV filled with deterministic pseudo-random noise.
+    ///
+    /// Noise is what a bitrate can be measured with: it barely compresses, so the encoder has to
+    /// spend whatever it was given on it. A tone would not do -- variable bitrate encodes one at
+    /// nearly the same size no matter which target it was asked for.
+    fn wav_noise(sample_rate: u32, samples: u32) -> Vec<u8> {
+        let mut state = 0x2545_F491_4F6C_DD1Du64;
+        let mut noise = Vec::with_capacity(samples as usize);
+        for _ in 0..samples {
+            state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            noise.push((state >> 48) as i16);
+        }
+
+        wav_samples(sample_rate, &noise)
+    }
+
+    /// Wraps mono 16-bit PCM samples in a minimal WAV container.
+    fn wav_samples(sample_rate: u32, samples: &[i16]) -> Vec<u8> {
+        let data_size = samples.len() as u32 * 2;
         let mut wav = Vec::with_capacity(44 + data_size as usize);
         wav.extend_from_slice(b"RIFF");
         wav.extend_from_slice(&(36 + data_size).to_le_bytes());
@@ -1976,7 +2021,7 @@ mod tests {
         wav.extend_from_slice(&16u16.to_le_bytes());
         wav.extend_from_slice(b"data");
         wav.extend_from_slice(&data_size.to_le_bytes());
-        for _ in 0..samples {
+        for sample in samples {
             wav.extend_from_slice(&sample.to_le_bytes());
         }
         wav
