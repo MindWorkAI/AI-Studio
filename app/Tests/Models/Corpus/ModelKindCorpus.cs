@@ -116,6 +116,16 @@ public static class ModelKindCorpus
         // sees the name, so what is left has to carry the word on its own.
         new(SELF_HOSTED, "canary-1b-flash", TRANSCRIPTION),
         new(SELF_HOSTED, "nvidia/canary-180m-flash", TRANSCRIPTION),
+
+        //
+        // Alibaba's speech line. Every one of these begins with the letter the Alibaba Cloud
+        // provider kept its whole chat list by, so all of them stood among the models somebody
+        // talks to. The last one carries two words at once, and the one which decides is not the
+        // longer one.
+        //
+        new(ALIBABA_CLOUD, "qwen3-asr-flash", TRANSCRIPTION),
+        new(ALIBABA_CLOUD, "qwen3-asr-1.7b", TRANSCRIPTION),
+        new(ALIBABA_CLOUD, "qwen-audio-3.0-asr-flash-streaming", TRANSCRIPTION),
     ];
 
     /// <summary>
@@ -131,6 +141,8 @@ public static class ModelKindCorpus
         // The one name which glues the word to something else, and the reason the three words are
         // not loosened into substrings:
         new(SELF_HOSTED, "xtts-v2", SPEECH_SYNTHESIS),
+
+        new(ALIBABA_CLOUD, "qwen-tts", SPEECH_SYNTHESIS),
     ];
 
     /// <summary>
@@ -145,6 +157,14 @@ public static class ModelKindCorpus
         new(OPEN_AI, "gpt-realtime-whisper", REALTIME),
 
         new(OPEN_AI, "gpt-live-1", REALTIME, AnsweredTodayAs: CHAT, Reason: "Found in the chat list while testing. The line which succeeds the realtime models dropped the word, and it is even less of a chat partner: it listens and speaks at once and leaves the thinking to a text model behind it."),
+
+        //
+        // Alibaba builds the word into both of its speech lines, and both are here to hold the
+        // rank the realtime rule carries: a connection AI Studio cannot open stays out of every
+        // list, whether the model would otherwise have spoken or listened.
+        //
+        new(ALIBABA_CLOUD, "qwen-tts-realtime", REALTIME),
+        new(ALIBABA_CLOUD, "qwen3-asr-flash-realtime", REALTIME),
     ];
 
     /// <summary>
