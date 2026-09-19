@@ -79,6 +79,10 @@ public partial class SettingsPanelApp : SettingsPanelBase
         DisplayUpdate = this.UpdateShortcutVoiceRecordingDisplay,
     };
 
+    private string OpusBitrateHelp => T("Higher bitrates can improve transcription accuracy, especially for quiet or noisy recordings, at the cost of a larger upload to the transcription provider. 128 kbps is recommended.");
+
+    private static bool IsOpusBitrateLocked() => ManagedConfiguration.TryGet(x => x.App, x => x.OpusBitrate, out var meta) && meta.IsLocked;
+
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();

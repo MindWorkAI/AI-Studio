@@ -398,6 +398,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
+        // Config: transcription Opus bitrate?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.OpusBitrate, this.Id, settingsTable, dryRun);
+
         message = string.Empty;
         return true;
     }

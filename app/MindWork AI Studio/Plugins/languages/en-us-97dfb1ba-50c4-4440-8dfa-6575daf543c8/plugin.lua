@@ -4563,6 +4563,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"]
 -- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled."
 
+-- Higher bitrates can improve transcription accuracy, especially for quiet or noisy recordings, at the cost of a larger upload to the transcription provider. 128 kbps is recommended.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1859657826"] = "Higher bitrates can improve transcription accuracy, especially for quiet or noisy recordings, at the cost of a larger upload to the transcription provider. 128 kbps is recommended."
+
 -- Select the language behavior for the app. The default is to use the system language. You might want to choose a language manually?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T186780842"] = "Select the language behavior for the app. The default is to use the system language. You might want to choose a language manually?"
 
@@ -4628,6 +4631,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"]
 
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Save energy?"
+
+-- Transcription audio quality
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3103106744"] = "Transcription audio quality"
 
 -- Development builds do not install updates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3138812562"] = "Development builds do not install updates."
@@ -10490,6 +10496,21 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T4107955313"] 
 
 -- Always use light theme
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T534715610"] = "Always use light theme"
+
+-- 128 kbps (recommended)
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIONS::T2152168180"] = "128 kbps (recommended)"
+
+-- 256 kbps (largest upload, highest accuracy)
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIONS::T3092489829"] = "256 kbps (largest upload, highest accuracy)"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIONS::T3424652889"] = "Unknown"
+
+-- 64 kbps
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIONS::T3501477553"] = "64 kbps"
+
+-- 32 kbps (smallest upload, lowest accuracy)
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::TRANSCRIPTIONOPUSBITRATEEXTENSIONS::T767394292"] = "32 kbps (smallest upload, lowest accuracy)"
 
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Use no profile"
