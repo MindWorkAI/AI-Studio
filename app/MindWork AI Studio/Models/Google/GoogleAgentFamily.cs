@@ -14,11 +14,17 @@ namespace AIStudio.Models.Google;
 /// arrives.
 ///
 /// Deep Research is the reason these rules are bound to Google instead of standing among the kinds.
-/// Perplexity sells something under that name too, and sonar-deep-research is an ordinary chat
-/// model with web search bolted on, stated in its own family. The same two words, two different
-/// things, and only the provider tells them apart. Antigravity needs no such guard -- nobody else
-/// names a model that -- but it is a statement about Google's catalog all the same, so it stands
-/// where the other one stands.
+/// Perplexity and OpenAI both sell something under that name, and both of those answer over the
+/// chat completion API like any other model: sonar-deep-research states it in its own family, and
+/// o3-deep-research is held in the corpus. The same two words, three different things, and only the
+/// provider tells them apart.
+///
+/// Written as a prefix on top of that, because Google puts the words at the front of the name while
+/// the other two hang them onto a model they already had. Either guard alone would do; together
+/// they also cover whatever Google names this way next.
+///
+/// Antigravity needs no such guard -- nobody else names a model that -- but it is a statement about
+/// Google's catalog all the same, so it stands where the other one stands.
 /// </remarks>
 public sealed class GoogleAgentFamily : ModelFamily
 {
@@ -26,7 +32,7 @@ public sealed class GoogleAgentFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.GOOGLE;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://ai.google.dev/gemini-api/docs/deep-research", new DateOnly(2026, 9, 19), "Deep Research runs only through the Interactions API and only in the background, because a single run takes five to twenty minutes. The Antigravity agent is documented at https://ai.google.dev/gemini-api/docs/antigravity-agent and works the same way, on a sandbox Google hosts.");
+    public override ModelSource Source => new("https://ai.google.dev/gemini-api/docs/deep-research", new DateOnly(2026, 9, 19), "The page states it for the two 04-2026 models: Deep Research runs only through the Interactions API, never through generateContent, and only in the background, because a single run takes five to twenty minutes. The catalog also serves deep-research-pro-preview-12-2025, which the page no longer lists; that it works the same way is read off the naming line rather than off a source. The Antigravity agent is documented at https://ai.google.dev/gemini-api/docs/antigravity-agent and runs on a sandbox Google hosts.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
