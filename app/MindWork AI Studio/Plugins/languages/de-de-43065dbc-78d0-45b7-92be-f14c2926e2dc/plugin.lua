@@ -64,7 +64,7 @@ UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "Für den Sicherheitsprüfungs-Agenten ist kein Anbieter konfiguriert."
 
 -- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wählen Sie einen Anbieter aus, der die hier erforderliche Vertrauensstufe erfüllt, oder legen Sie in den App-Einstellungen einen speziellen Anbieter für Sicherheitsprüfungen fest."
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wählen Sie einen Anbieter aus, der das hier erforderliche Vertrauensniveau erfüllt, oder legen Sie in den App-Einstellungen einen speziellen Anbieter für Audits fest."
 
 -- The audit result was empty.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "Das Prüfergebnis war leer."
@@ -4036,7 +4036,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Probleme"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T1319635088"] = "Einige der für diesen Durchlauf ausgewählten Werkzeuge sind nicht vollständig eingerichtet und bleiben daher ungenutzt: \"{0}\". Bitte vervollständigen Sie deren Einstellungen."
 
 -- Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter „{0}“ verwendet werden. Bitte wählen Sie einen Anbieter mit einer höheren Vertrauensstufe, um alle Werkzeuge zu nutzen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter „{0}“ verwendet werden. Bitte wählen Sie einen Anbieter mit einem höheren Vertrauensniveau, um alle Werkzeuge zu nutzen."
 
 -- Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Für diesen Durchlauf wurden Werkzeuge ausgewählt, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Es wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
@@ -4300,10 +4300,10 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867"] = "Bitte w
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
 -- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Inhaltsbereinigers. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Agenten zur Inhaltsbereinigung. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
 
 -- The content cleaner uses the model of this assistant. Please select one below.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Der Inhaltsbereiniger verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Der Agent zur Inhaltsbereinigung verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agents bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
@@ -5545,7 +5545,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T521056824"] = "Das Assistenz-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Sicherheitsstufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung weiterhin, dies kann jedoch unsicher sein. Möchten Sie dieses Plugin wirklich aktivieren?"
 
 -- No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T614645381"] = "Für Sicherheitsprüfungen ist weder für diesen Agenten noch für die App insgesamt ein Modell festgelegt. Wählen Sie hier eines aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T614645381"] = "Für Sicherheitsprüfungen ist weder für diesen Agenten noch appweit ein Modell festgelegt. Wählen Sie hier eines aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
 
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System-Prompt"
@@ -8011,7 +8011,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T378839
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T3825475093"] = "Die Stellenbeschreibung vorauswählen?"
 
 -- Content cleaner agent is preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1013787967"] = "Der Content Cleaner-Agent ist vorausgewählt"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1013787967"] = "Agent zur Inhaltsbereinigung ist vorausgewählt"
 
 -- Web content reader is shown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T1030372436"] = "Web-Content-Reader wird angezeigt"
@@ -8050,7 +8050,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2322771
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T252916114"] = "Rechtsprüfungsoptionen sind vorausgewählt"
 
 -- When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the legal content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2746583995"] = "Wenn aktiviert, ist der Content Cleaner Agent vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2746583995"] = "Wenn aktiviert, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann nützlich sein, wenn Sie den rechtlichen Inhalt bereinigen möchten, bevor Sie ihn übersetzen."
 
 -- Web content reader is hidden
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T2799795311"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist ausgeblendet"
@@ -8062,7 +8062,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3448155
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
 
 -- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428096"] = "Assistent zur Inhaltsbereinigungs vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
 
 -- Assistant: Legal Check Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGLEGALCHECK::T4033382756"] = "Assistent: Optionen für rechtliche Prüfung"
@@ -8368,10 +8368,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T354
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3641773985"] = "Der Web-Content-Reader zum Lesen von Webinhalten ist vorausgewählt"
 
 -- Preselect the content cleaner agent?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3649428096"] = "Den Agenten zur Inhaltsbereinigungs vorauswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3649428096"] = "Agent zur Inhaltsbereinigung vorauswählen?"
 
 -- When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before summarize it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3660434400"] = "Wenn diese Option aktiviert ist, wird der Content Cleaner-Agent automatisch vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3660434400"] = "Wenn diese Option aktiviert ist, wird der Agent zur Inhaltsbereinigung automatisch vorausgewählt. Das kann nützlich sein, wenn Sie den Inhalt bereinigen möchten, bevor Sie ihn zusammenfassen."
 
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTEXTSUMMARIZER::T3705987833"] = "Vorauswahl der Aspekte"
@@ -8464,7 +8464,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T629158
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T884246296"] = "Wie schnell soll die Live-Übersetzung reagieren?"
 
 -- When enabled, the content cleaner agent is preselected. This is might be useful when you prefer to clean up the content before translating it.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T894123480"] = "Wenn aktiviert, ist der Assistent zur Inhaltsbereinigung vorausgewählt. Das kann hilfreich sein, wenn Sie den Inhalt vor der Übersetzung bereinigen möchten."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T894123480"] = "Wenn aktiviert, ist der Agent zur Inhaltsbereinigung vorausgewählt. Das kann hilfreich sein, wenn Sie den Inhalt vor der Übersetzung bereinigen möchten."
 
 -- Preselect live translation?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T918172772"] = "Live-Übersetzung vorauswählen?"
@@ -10135,7 +10135,7 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter h
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3368531176"] = "Kein Anbieter ausgewählt. Bitte wählen Sie einen Anbieter aus, um dessen Vertrauensniveau zu sehen."
 
 -- You or your organization operate this gateway. However, it forwards your data to **whichever providers you configured behind it**, which may be cloud services in any jurisdiction. We cannot know where your data ends up, so **please assign the trust level yourself**.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3370749159"] = "Sie oder Ihre Organisation betreiben dieses Gateway. Es leitet Ihre Daten jedoch an **die Anbieter weiter, die Sie dahinter konfiguriert haben**. Dabei kann es sich um Cloud-Dienste in beliebigen Rechtsräumen handeln. Wir können nicht wissen, wo Ihre Daten letztendlich landen. **Bitte legen Sie die Vertrauensstufe daher selbst fest.**"
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3370749159"] = "Sie oder Ihre Organisation betreiben dieses Gateway. Es leitet Ihre Daten jedoch an **die Anbieter weiter, die Sie dahinter konfiguriert haben**. Dabei kann es sich um Cloud-Dienste in beliebigen Rechtsräumen handeln. Wir können nicht wissen, wo Ihre Daten letztendlich landen. **Bitte legen Sie das Vertrauensniveau daher selbst fest.**"
 
 -- The provider operates its service from the USA and is subject to **US jurisdiction**. In case of suspicion, authorities in the USA can access your data. However, **your data is not used for training** purposes.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3528165925"] = "Der Anbieter betreibt seinen Dienst aus den USA und unterliegt der **US-amerikanischen Gerichtsbarkeit**. Bei Verdacht können US-Behörden auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht für Trainingszwecke** verwendet."
