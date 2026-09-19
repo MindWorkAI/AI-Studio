@@ -267,6 +267,19 @@ public static class ModelKindCorpus
         new(ALIBABA_CLOUD, "qwen-mt-turbo", CHAT),
 
         //
+        // Perplexity's whole catalog, which the app carries as a list because there is no route to
+        // ask. A list somebody picked by hand is not filtered at runtime -- a filter over it could
+        // only ever take a model away, never find one -- so it is held here instead: a rule which
+        // turns one of these into something other than a chat model fails the build rather than
+        // quietly emptying the dropdown.
+        //
+        new(PERPLEXITY, "sonar", CHAT),
+        new(PERPLEXITY, "sonar-pro", CHAT),
+        new(PERPLEXITY, "sonar-reasoning", CHAT),
+        new(PERPLEXITY, "sonar-reasoning-pro", CHAT),
+        new(PERPLEXITY, "sonar-deep-research", CHAT),
+
+        //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding
         // model behind the xAI CLI and answers like any other Grok. The Groq compound systems are
         // models with tools already built in, reached through the ordinary chat completion API. And
