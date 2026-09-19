@@ -39,11 +39,32 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private bool isAuditing;
     private PluginAssistantSecurityState securityState = new();
 
+    /// <summary>
+    /// The provider the user picks inside this dialog when nothing is configured for the audit agent.
+    /// </summary>
+    /// <remarks>
+    /// It lives and dies with this dialog and is never written to the settings: an audit is a one-off
+    /// job, and the choice made here says nothing about which model the next one should use.
+    /// </remarks>
+    private AIStudio.Settings.Provider auditProviderSelection = AIStudio.Settings.Provider.NONE;
+
     private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
 
-    private string ProviderLabel => this.CurrentProvider == AIStudio.Settings.Provider.NONE
-        ? this.T("No provider configured")
-        : $"{this.CurrentProvider.InstanceName} ({this.CurrentProvider.UsedLLMProvider.ToName()})";
+    /// <summary>
+    /// The provider this audit runs with: the configured one, or what the user picked here instead.
+    /// </summary>
+    private AIStudio.Settings.Provider EffectiveProvider => this.CurrentProvider == AIStudio.Settings.Provider.NONE
+        ? this.auditProviderSelection
+        : this.CurrentProvider;
+
+    /// <summary>
+    /// Whether this dialog has to offer a provider, because neither the audit agent nor the app has one.
+    /// </summary>
+    private bool NeedsProviderSelection => this.CurrentProvider == AIStudio.Settings.Provider.NONE;
+
+    private string ProviderLabel => this.EffectiveProvider == AIStudio.Settings.Provider.NONE
+        ? T("No provider configured")
+        : $"{this.EffectiveProvider.InstanceName} ({this.EffectiveProvider.UsedLLMProvider.ToName()})";
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
 
@@ -51,7 +72,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string MinimumLevelLabel => this.MinimumLevel.GetName();
 
-    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
+    private bool CanRunAudit => this.plugin is not null && this.EffectiveProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
 
     private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
 
@@ -97,7 +118,12 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
         try
         {
-            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin);
+            //
+            // The provider picked here is handed over as the fallback: the audit service uses it only
+            // when nothing is configured for the audit agent, so an organization-wide provider keeps
+            // its precedence.
+            //
+            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin, fallbackProvider: this.auditProviderSelection);
             this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
         }
         finally
@@ -106,6 +132,14 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             this.justAudited = true;
             await this.InvokeAsync(this.StateHasChanged);
         }
+    }
+
+    private string? ValidatingProvider(AIStudio.Settings.Provider provider)
+    {
+        if (provider.UsedLLMProvider == LLMProviders.NONE)
+            return T("Please select a provider.");
+
+        return null;
     }
 
     private void CloseWithoutActivation()
