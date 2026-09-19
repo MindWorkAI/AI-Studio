@@ -92,6 +92,10 @@ public static class ModelKindCorpus
         new(GOOGLE, "imagen-4.0-generate-001", IMAGE_GENERATION, AnsweredTodayAs: CHAT, Reason: "The markers never knew the name; the family ported in the Google step states it. Nobody noticed because the Google provider shows only names beginning with gemini."),
 
         new(ALIBABA_CLOUD, "qwen-image-edit", IMAGE_GENERATION),
+
+        // Google ships one image model under a codename instead of a description. Nothing in it
+        // says drawing, and the provider only ever saw it because its catalog was read whole.
+        new(GOOGLE, "nano-banana-pro-preview", IMAGE_GENERATION),
     ];
 
     /// <summary>
@@ -172,6 +176,21 @@ public static class ModelKindCorpus
         //
         new(ALIBABA_CLOUD, "qwen-tts-realtime", REALTIME),
         new(ALIBABA_CLOUD, "qwen3-asr-flash-realtime", REALTIME),
+
+        //
+        // Google's whole two-way line, taken off its catalog rather than written from memory. It
+        // uses the other word for the thing OpenAI calls realtime, so none of these was recognized
+        // and all four stood among the models to talk to -- which none of them can be. The last
+        // one translates between two people speaking, which is as far from a chat as it gets.
+        //
+        new(GOOGLE, "gemini-3.8-live", REALTIME),
+        new(GOOGLE, "gemini-3.8-live-extended-thinking", REALTIME),
+        new(GOOGLE, "gemini-3.1-flash-live-preview", REALTIME),
+        new(GOOGLE, "gemini-3.5-live-translate-preview", REALTIME),
+
+        // Google's experimental music model, which is recognized already: it carries the other
+        // word, and this holds that the two rules do not fall out with each other.
+        new(GOOGLE, "lyria-realtime-exp", REALTIME),
     ];
 
     /// <summary>
@@ -188,6 +207,11 @@ public static class ModelKindCorpus
     private static readonly ModelKindExample[] TEXT_COMPLETION_ENTRIES =
     [
         new(HELMHOLTZ, "text-davinci-003", TEXT_COMPLETION),
+
+        // The model Mistral serves for filling a gap in a file. Its name does not begin with the
+        // word the provider used to sort its list by, so it stood among the chat models -- next to
+        // Codestral, which does the same job and was kept out by that very word.
+        new(MISTRAL, "mistral-code-fim-latest", TEXT_COMPLETION),
         new(OPEN_AI, "babbage-002", TEXT_COMPLETION),
         new(OPEN_AI, "gpt-3.5-turbo-instruct", TEXT_COMPLETION),
 
@@ -278,6 +302,19 @@ public static class ModelKindCorpus
         new(PERPLEXITY, "sonar-reasoning", CHAT),
         new(PERPLEXITY, "sonar-reasoning-pro", CHAT),
         new(PERPLEXITY, "sonar-deep-research", CHAT),
+
+        //
+        // The counter-sample to the three rules above, taken off the same three catalogs. Every
+        // one of these carries a word which now means something -- code, live, image -- without
+        // being what that word says, and every one of them has to stay a chat model.
+        //
+        new(MISTRAL, "mistral-code-latest", CHAT),
+        new(MISTRAL, "mistral-vibe-cli-latest", CHAT),
+        new(MISTRAL, "zai-glm-latest", CHAT),
+        new(GOOGLE, "gemma-4-31b-it", CHAT),
+        new(GOOGLE, "gemini-3.8-flash", CHAT),
+        new(X, "grok-4.6", CHAT),
+        new(X, "grok-build-0.1", CHAT),
 
         //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding

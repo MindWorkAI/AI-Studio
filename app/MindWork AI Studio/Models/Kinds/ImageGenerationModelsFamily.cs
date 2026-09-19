@@ -19,7 +19,7 @@ public sealed class ImageGenerationModelsFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.UNKNOWN;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://huggingface.co/models?pipeline_tag=text-to-image", new DateOnly(2026, 9, 12), "Ported from the image generation markers of Provider/ModelKindExtensions.cs. Imagen and the Gemini image models state it in their own families as well, where the capabilities stand next to it.");
+    public override ModelSource Source => new("https://huggingface.co/models?pipeline_tag=text-to-image", new DateOnly(2026, 9, 12), "Ported from the image generation markers of Provider/ModelKindExtensions.cs. Imagen and the Gemini image models state it in their own families as well, where the capabilities stand next to it. Nano Banana came later, off Google's own catalog at https://generativelanguage.googleapis.com/v1beta/openai/models, read on 2026-09-19.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -38,5 +38,9 @@ public sealed class ImageGenerationModelsFamily : ModelFamily
 
         // The other half of Grok Imagine, which the video rule steps aside for:
         builder.Modifier("grok-imagine").AsSegment().NotContains("video").Inherits();
+
+        // Google's codename for the image model it serves next to Gemini, and the one name in its
+        // catalog which says nothing about drawing: nano-banana-pro-preview.
+        builder.Modifier("nano-banana").AsSegment().Inherits();
     }
 }
