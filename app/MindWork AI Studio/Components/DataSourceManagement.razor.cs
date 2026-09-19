@@ -335,8 +335,8 @@ public partial class DataSourceManagement : MSGComponentBase
             return;
 
         IDataSource? editedDataSource = null;
-        var lockDataSourceIdentity = dataSource is IInternalDataSource
-            && await this.DataSourceEmbeddingService.ShouldLockDataSourceIdentityAsync(dataSource.Id);
+        var lockDataSourceOrigin = dataSource is IInternalDataSource
+            && await this.DataSourceEmbeddingService.ShouldLockDataSourceOriginAsync(dataSource.Id);
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
@@ -344,7 +344,7 @@ public partial class DataSourceManagement : MSGComponentBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
-                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
+                    { x => x.LockSource, lockDataSourceOrigin },
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
@@ -361,7 +361,7 @@ public partial class DataSourceManagement : MSGComponentBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
-                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
+                    { x => x.LockSource, lockDataSourceOrigin },
                     { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 

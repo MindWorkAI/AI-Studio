@@ -85,48 +85,42 @@
 
             <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                 <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                    @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
+                    <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                        @T("Load")
+                    </MudButton>
+                    @if (this.availableModels.Count is 0)
                     {
-                        <MudTextField
-                            T="string"
-                            @bind-Text="@this.dataManuallyModel"
-                            Label="@T("Model")"
-                            Class="mb-3"
-                            Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.Dns"
-                            AdornmentColor="Color.Info"
-                            Disabled="@this.IsEnterpriseConfiguration"
-                            Validation="@this.ValidateManuallyModel"
-                            UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                            HelperText="@T("Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.")"/>
+                        <MudText Typo="Typo.body1">
+                            @T("No models loaded or available.")
+                        </MudText>
                     }
                     else
                     {
-                        <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
-                            @T("Load")
-                        </MudButton>
-                        @if (this.availableModels.Count is 0)
-                        {
-                            <MudText Typo="Typo.body1">
-                                @T("No models loaded or available.")
-                            </MudText>
-                        }
-                        else
-                        {
-                            <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
-                                       OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
-                                       AdornmentColor="Color.Info" Adornment="Adornment.Start"
-                                       Validation="@this.providerValidation.ValidatingModel">
-                                @foreach (var model in this.availableModels)
-                                {
-                                    <MudSelectItem Value="@model">
-                                        @model
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
-                        }
+                        <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
+                                   OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                   AdornmentColor="Color.Info" Adornment="Adornment.Start"
+                                   Validation="@this.providerValidation.ValidatingModel">
+                            @foreach (var model in this.availableModels)
+                            {
+                                <MudSelectItem Value="@model">
+                                    @model
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
                     }
                 </MudStack>
+                @if (this.dataConfiguredModelIsNotOffered)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-3">
+                        @T("This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.")
+                    </MudAlert>
+                }
+                @if (this.ServerNamedNoEmbeddingModel)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-3">
+                        @T("Your server answered, but none of the models it serves is one we know to create embeddings. Either there is none installed, or it runs under a name we do not recognize. In the latter case, your organization can describe the model in a model plugin, and it will show up here.")
+                    </MudAlert>
+                }
                 @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
                 {
                     <MudAlert Severity="Severity.Error" Class="mt-3">

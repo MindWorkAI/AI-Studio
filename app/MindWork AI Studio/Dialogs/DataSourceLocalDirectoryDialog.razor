@@ -45,13 +45,13 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
             </MudJustifiedText>
-            @if (!this.CanChangeSourceAndEmbedding)
+            @if (!this.CanChangeSource)
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("This data source already has indexed embeddings. Delete and recreate it to change the folder path or embedding model.")
+                    @T("The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding method below can be changed.")
                 </MudAlert>
             }
-            @if (this.CanChangeSourceAndEmbedding)
+            @if (this.CanChangeSource)
             {
                 <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
             }
@@ -74,38 +74,21 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            @if (this.CanChangeSourceAndEmbedding)
-            {
-                <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
-                    @foreach (var embedding in this.AvailableEmbeddings)
-                    {
-                        <MudSelectItem Value="@embedding.Value">
-                            @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
-                            {
-                                <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
-                            }
-                            else
-                            {
-                                @embedding.Name
-                            }
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            }
-            else
-            {
-                <MudTextField
-                    T="string"
-                    Text="@this.SelectedEmbeddingNameText"
-                    Label="@T("Embedding")"
-                    Class="mb-3"
-                    ReadOnly="@true"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.DataObject"
-                    AdornmentColor="Color.Info"
-                    Variant="Variant.Outlined"
-                />
-            }
+            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
+                @foreach (var embedding in this.AvailableEmbeddings)
+                {
+                    <MudSelectItem Value="@embedding.Value">
+                        @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
+                        {
+                            <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
+                        }
+                        else
+                        {
+                            @embedding.Name
+                        }
+                    </MudSelectItem>
+                }
+            </MudSelect>
             
             @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {

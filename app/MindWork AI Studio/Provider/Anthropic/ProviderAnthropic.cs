@@ -213,9 +213,14 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
+            //
             // The API is the authority: when it reports a model we also keep as a fallback above,
-            // its entry comes first and the fallback is dropped.
-            Models = [..result.Models.Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
+            // its entry comes first and the fallback is dropped. What it reports is asked about
+            // first, though -- the route says nothing about what a model is made for, and Claude
+            // has not always been only something to talk to. The six above skip that question
+            // because they are not a catalog: every one of them was picked by hand.
+            //
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
         };
     }
 

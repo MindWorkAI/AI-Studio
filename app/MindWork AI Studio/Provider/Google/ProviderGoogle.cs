@@ -172,11 +172,15 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                 // Asking what a model is made for, rather than only ruling out the embedding ones.
                 // Google names everything after the chat model it grew out of, so the catalog is
                 // full of names which look like something to talk to and are not: the image models,
-                // and the computer use model whose API refuses a request without its tool.
+                // the computer use model whose API refuses a request without its tool, and the live
+                // line which wants a connection held open in both directions.
                 //
-                ..result.Models.Where(model =>
-                        model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        model.IsChatModel(this.Provider))
+                // The question used to be asked of names beginning with "gemini" alone, and that
+                // cost the two Gemma models Google serves on this very route. What the prefix kept
+                // out besides them -- Lyria, Imagen, Veo, the research and coding agents, AQA --
+                // is kept out by a rule now, where the reason is written down.
+                //
+                ..result.Models.Where(model => model.IsChatModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };

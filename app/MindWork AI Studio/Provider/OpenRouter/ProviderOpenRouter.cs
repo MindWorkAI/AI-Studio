@@ -137,6 +137,11 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     /// Nothing is reported from here: this route answers with the embedding models alone, and what
     /// is reported replaces everything an instance said before. The windows of the chat models
     /// would go missing the moment somebody opens the embedding settings.
+    ///
+    /// Nothing is filtered either, for the same reason. The route is the statement: OpenRouter
+    /// serves these to embed with, which is more than a name can say. Asking the registry on top
+    /// could only drop a model whose name we do not recognize -- and where the two disagree, the
+    /// answer is a rule in Models/, not a model missing from this list.
     /// </remarks>
     /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
     /// <param name="token">The cancellation token to use.</param>

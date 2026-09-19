@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -47,11 +48,68 @@ public sealed class EmbeddingSignatureTests
             "Another model means another vector space, so nothing stored may be kept.");
     }
 
+    [Test]
+    public void ChangingTheTokenizerContentDropsTheStoredEmbeddings()
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW);
+        var oneTokenizer = TokenizerAt("/data/tokenizers/embeddings/tokenizer.json", "AAAA");
+        var anotherTokenizer = oneTokenizer with { TokenizerFingerprint = "BBBB" };
+
+        Assert.That(
+            Signature(dataSource, anotherTokenizer),
+            Is.Not.EqualTo(Signature(dataSource, oneTokenizer)),
+            "Another tokenizer cuts the text at other places. A tokenizer is stored under the name it came with, almost always tokenizer.json, so the path alone would not notice the swap.");
+    }
+
+    [Test]
+    public void MovingTheTokenizerFileKeepsTheStoredEmbeddings()
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW);
+        var here = TokenizerAt("/data/tokenizers/embeddings/tokenizer.json", "AAAA");
+        var there = here with { TokenizerPath = "/somewhere/else/tokenizers/embeddings/tokenizer.json" };
+
+        Assert.That(
+            Signature(dataSource, there),
+            Is.EqualTo(Signature(dataSource, here)),
+            "It is the same tokenizer and only the data directory moved, so embedding everything again would buy nothing.");
+    }
+
+    [Test]
+    public void ChangingTheHuggingFaceInferenceProviderDropsTheStoredEmbeddings()
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW);
+        var oneBackend = EmbeddingProviderFor("text-embedding-3-small") with { HFInferenceProvider = HFInferenceProvider.GROQ };
+        var anotherBackend = oneBackend with { HFInferenceProvider = HFInferenceProvider.CEREBRAS };
+
+        Assert.That(
+            Signature(dataSource, anotherBackend),
+            Is.Not.EqualTo(Signature(dataSource, oneBackend)),
+            "The same model name served by another backend is another vector source.");
+    }
+
+    [Test]
+    public void TheSignatureOfAKnownConfigurationIsPinned()
+    {
+        Assert.That(
+            Signature(DataSource(ConfidenceLevel.LOW)),
+            Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100"),
+            "Reordering or extending the signature throws away every index anybody has. This test makes that a decision somebody takes rather than something which happens on the way past.");
+    }
+
+    /// <summary>
+    /// Builds the signature the way an indexing run does, working the chunking out along the way.
+    /// </summary>
+    /// <remarks>
+    /// Handing in fixed chunking options instead would hide exactly what these tests are here for:
+    /// the signature would then no longer notice a data source being cut differently.
+    /// </remarks>
+    /// <param name="dataSource">The data source to build the signature for.</param>
+    /// <param name="embeddingProvider">The embedding provider, or the test default.</param>
+    /// <returns>The signature of that pairing.</returns>
     private static string Signature(DataSourceLocalDirectory dataSource, EmbeddingProvider? embeddingProvider = null) =>
         DataSourceEmbeddingService.BuildEmbeddingSignature(
             dataSource,
-            embeddingProvider ?? EmbeddingProviderFor("text-embedding-3-small"),
-            new(512, 100));
+            embeddingProvider ?? EmbeddingProviderFor("text-embedding-3-small"));
 
     private static DataSourceLocalDirectory DataSource(ConfidenceLevel confidenceLevel) => new()
     {
@@ -66,6 +124,9 @@ public sealed class EmbeddingSignatureTests
         ConfidenceLevel = confidenceLevel,
         Path = "/tmp/test-data",
     };
+
+    private static EmbeddingProvider TokenizerAt(string tokenizerPath, string tokenizerFingerprint) =>
+        EmbeddingProviderFor("text-embedding-3-small") with { TokenizerPath = tokenizerPath, TokenizerFingerprint = tokenizerFingerprint };
 
     private static EmbeddingProvider EmbeddingProviderFor(string modelId) =>
         new(1, "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "Test embeddings", LLMProviders.OPEN_AI, new(modelId, modelId));

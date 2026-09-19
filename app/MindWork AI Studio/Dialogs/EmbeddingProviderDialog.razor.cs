@@ -86,6 +86,17 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public string DataTokenizerPath { get; set; } = string.Empty;
 
+    /// <summary>
+    /// The fingerprint of the tokenizer this provider was stored with.
+    /// </summary>
+    /// <remarks>
+    /// Carried through the dialog untouched as long as the user leaves the tokenizer alone. Rebuilding
+    /// it from the path on every open would read a file for nothing, and an unreadable one would look
+    /// like another tokenizer and cost every data source of this provider its index.
+    /// </remarks>
+    [Parameter]
+    public string DataTokenizerFingerprint { get; set; } = string.Empty;
+
     [Parameter]
     public int DataTokenLimit { get; set; } = EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
 
@@ -105,6 +116,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     [Inject]
     private ILogger<EmbeddingProviderDialog> Logger { get; init; } = null!;
 
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -116,11 +133,13 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
     private bool dataHadStoredAPIKeyOnLoad;
-    private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private bool dataConfiguredModelIsNotOffered;
+    private bool dataServerWasAskedForItsModels;
     private string dataFilePath = string.Empty;
+    private string dataTokenizerFingerprint = string.Empty;
     private string dataCustomTokenizerValidationIssue = string.Empty;
     private Task dataTokenizerValidationTask = Task.CompletedTask;
     private bool dataStoreWasAttempted;
@@ -144,7 +163,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost),
             GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
         };
     }
@@ -152,30 +170,20 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private EmbeddingProvider CreateEmbeddingProviderSettings()
     {
         var cleanedHostname = this.DataHostname.Trim();
-        Model model = default;
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-        {
-            if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
-                model = new Model(this.dataManuallyModel, null);
-            else if (this.DataHost is Host.LM_STUDIO)
-                model = this.DataModel;
-        }
-        else
-            model = this.DataModel;
-        
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             Name = this.DataName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = model,
+            Model = this.DataModel,
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
             TokenizerPath = this.dataFilePath,
+            TokenizerFingerprint = this.dataTokenizerFingerprint,
             EmbeddingBatchSize = this.DataEmbeddingBatchSize,
             TokenLimit = this.DataTokenLimit,
             CustomIconDataUrl = this.DataCustomIconDataUrl,
@@ -201,13 +209,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
             this.dataFilePath = this.DataTokenizerPath;
+            this.dataTokenizerFingerprint = this.DataTokenizerFingerprint;
             this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
                                       || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
                                       || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
-            
-            // When using self-hosted embedding, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-                this.dataManuallyModel = this.DataModel.Id;
             
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
@@ -279,7 +284,22 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
-        
+
+        //
+        // Ask before anything is written. Storing a tokenizer deletes the previous one before it
+        // copies, and the API key goes into the OS keyring right after, so asking any later would
+        // leave those changes behind even when the user says no. Saying no also keeps this dialog
+        // open, which is the point: the value which would have cost the index can be corrected
+        // right away.
+        //
+        // Enterprise-managed providers are left out. Every field which reaches the embedding
+        // signature is locked for them, and their data sources are not queued for indexing either.
+        //
+        if (this.IsEditing && !this.IsEnterpriseConfiguration && !await DataSourceReindexWarning.ConfirmEmbeddingProviderChangeAsync(
+                this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService,
+                this.SettingsManager.GetEmbeddingProviderById(this.DataId), this.CreateEmbeddingProviderSettings()))
+            return;
+
         var response = await this.StoreOrDeleteTokenizerAsync();
         if (!response.Success)
         {
@@ -323,14 +343,6 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidateManuallyModel(string manuallyModel)
-    {
-        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter an embedding model name.");
-        
-        return null;
-    }
-
     private string? ValidateTokenLimit(int tokenLimit)
     {
         if (tokenLimit < 1)
@@ -413,8 +425,17 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
         await this.dataTokenizerValidationTask;
 
+        //
+        // The embedding signature carries the tokenizer's content, so it has to be read while we have
+        // the file the user just picked. Reading it here rather than while storing also keeps a large
+        // file off that path, where it would stall the circuit.
+        //
+        var tokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(filePath);
+
         if (validationRevision != this.dataTokenizerValidationRevision)
             return;
+
+        this.dataTokenizerFingerprint = tokenizerFingerprint;
 
         if (this.dataStoreWasAttempted)
             await this.form.Validate();
@@ -472,9 +493,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the host changes, reset the model selection state:
         this.DataHost = selectedHost;
         this.DataModel = default;
-        this.dataManuallyModel = string.Empty;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataConfiguredModelIsNotOffered = false;
     }
 
     /// <summary>
@@ -491,11 +512,13 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.DataModel = default;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataConfiguredModelIsNotOffered = false;
     }
 
     private async Task ReloadModels()
     {
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataServerWasAskedForItsModels = true;
         var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();
         var provider = currentEmbeddingProviderSettings.CreateProvider();
         if (provider is NoProvider)
@@ -518,8 +541,57 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
             this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
+
+        // Whatever the server answered, and whether it answered at all, the model this provider was
+        // configured with stays on the list:
+        this.PinConfiguredModel();
     }
-    
+
+    /// <summary>
+    /// Keeps the configured model selectable, also when the server does not offer it right now.
+    /// </summary>
+    /// <remarks>
+    /// This is deliberately the opposite of what the chat provider dialog does, which replaces the
+    /// configured model with the one the server reported. An embedding provider carries indexed data
+    /// sources, and its model ID is part of the embedding signature: changing it -- even only in its
+    /// spelling -- means every prepared document is prepared again. So the stored model is added to
+    /// the list here rather than the list being applied to the stored model. A model nobody serves
+    /// any more stays visible and stays chosen, and changing it stays the user's decision, which
+    /// storing then asks about.
+    ///
+    /// Comparing is what Model does, which is by ID and ordinal. Matching a differing spelling would
+    /// mean writing that other spelling into the settings, and that is the very change this avoids.
+    /// </remarks>
+    private void PinConfiguredModel()
+    {
+        if (string.IsNullOrWhiteSpace(this.DataModel.Id))
+        {
+            this.dataConfiguredModelIsNotOffered = false;
+            return;
+        }
+
+        this.dataConfiguredModelIsNotOffered = !this.availableModels.Contains(this.DataModel);
+        if (this.dataConfiguredModelIsNotOffered)
+            this.availableModels.Insert(0, this.DataModel);
+    }
+
+    /// <summary>
+    /// Whether the server answered without naming a single embedding model.
+    /// </summary>
+    /// <remarks>
+    /// Two situations end up here, and the user is the only one who can tell them apart: a server
+    /// running no embedding model at all, and one running an embedding model under a name no rule
+    /// covers. Saying so beats the bare "No models loaded or available.", which reads like a
+    /// failure and leaves nobody anywhere to go -- the field for typing a name is gone, on purpose.
+    /// Describing such a model in a model plugin is the way out, and naming it here is what turns
+    /// a dead end into one.
+    /// </remarks>
+    private bool ServerNamedNoEmbeddingModel =>
+        this.DataLLMProvider is LLMProviders.SELF_HOSTED &&
+        this.dataServerWasAskedForItsModels &&
+        string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue) &&
+        this.availableModels.Count is 0;
+
     private string APIKeyText => this.DataLLMProvider switch
     {
         LLMProviders.SELF_HOSTED => T("(Optional) API Key"),

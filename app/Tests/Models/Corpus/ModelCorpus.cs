@@ -134,23 +134,28 @@ public static class ModelCorpus
     ];
 
     /// <summary>
-    /// Alibaba Cloud. Everything below the two dozen models the app carries is one Qwen tier per
-    /// entry, because each tier answers differently about thinking and vision.
+    /// Alibaba Cloud. One Qwen tier per entry, because each tier answers differently about thinking
+    /// and vision.
     /// </summary>
+    /// <remarks>
+    /// The app carried two dozen of these names in a list of its own until the catalog became the
+    /// only source. Three went with it and are not replaced: qwen-max-latest, qwen-plus-latest and
+    /// qwen-turbo-latest are a naming convention Alibaba has left behind -- its rolling names carry
+    /// no suffix now, and the tier once called turbo is called flash. The ones which stayed are
+    /// here for the other reason: no rule spells any of them out, so they say what becomes of a
+    /// name the rules were not written for.
+    /// </remarks>
     private static readonly CorpusEntry[] ALIBABA_ENTRIES =
     [
-        new(ALIBABA_CLOUD, "qwq-plus", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen-max-latest", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen-plus-latest", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen-turbo-latest", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qvq-max", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen-vl-max", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen-mt-plus", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen2.5-72b-instruct", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen2.5-14b-instruct-1m", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen2.5-omni-7b", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "qwen2.5-vl-72b-instruct", BUILT_INTO_THE_APP),
-        new(ALIBABA_CLOUD, "text-embedding-v3", BUILT_INTO_THE_APP),
+        new(ALIBABA_CLOUD, "qwq-plus", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qvq-max", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen-vl-max", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen-mt-plus", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen2.5-72b-instruct", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen2.5-14b-instruct-1m", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen2.5-omni-7b", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "qwen2.5-vl-72b-instruct", NAMED_BY_NO_RULE),
+        new(ALIBABA_CLOUD, "text-embedding-v3", NAMED_BY_NO_RULE),
         new(ALIBABA_CLOUD, "qwen3-omni-flash", NAMED_BY_A_RULE),
         new(ALIBABA_CLOUD, "qwen3-vl-plus", NAMED_BY_A_RULE),
         new(ALIBABA_CLOUD, "qwen3-235b-a22b", NAMED_BY_A_RULE),
