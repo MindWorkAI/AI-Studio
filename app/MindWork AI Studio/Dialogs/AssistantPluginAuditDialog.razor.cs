@@ -83,6 +83,16 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private bool CanEnablePlugin => this.plugin is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
 
     private Color EnableButtonColor => this.RequiresActivationConfirmation ? Color.Warning : Color.Success;
+
+    /// <summary>
+    /// Whether this dialog has produced an audit result, which is why it offers no second run.
+    /// </summary>
+    /// <remarks>
+    /// Set only for a result worth keeping. An audit which ended in UNKNOWN answered nothing about
+    /// the plugin: the model was unreachable, the key was wrong, no provider was trusted enough.
+    /// Locking the button on that would leave the user in front of a plugin they cannot check and
+    /// cannot enable, with closing and reopening the dialog as the only way on.
+    /// </remarks>
     private bool justAudited;
 
     private const ushort BYTES_PER_KILOBYTE = 1024;
@@ -129,7 +139,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         finally
         {
             this.isAuditing = false;
-            this.justAudited = true;
+            this.justAudited = this.audit is { Level: not AssistantAuditLevel.UNKNOWN };
             await this.InvokeAsync(this.StateHasChanged);
         }
     }
