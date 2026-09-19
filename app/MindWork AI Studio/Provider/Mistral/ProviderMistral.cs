@@ -93,12 +93,13 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         {
             Models =
             [
-                // Codestral is a fill-in-the-middle model, which we cannot use for chats. That is
-                // specific to Mistral's catalog, which is why it is not part of the shared model
-                // kind detection:
-                ..modelResponse.Models.Where(n =>
-                    !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    n.IsChatModel(this.Provider))
+                //
+                // Codestral is a fill-in-the-middle model, which we cannot use for chats. Its own
+                // family says so now, bound to this provider, so the word "code" no longer has to
+                // be tested for here -- and testing for it never reached mistral-code-fim-latest,
+                // which does the same job under a name that begins differently.
+                //
+                ..modelResponse.Models.Where(n => n.IsChatModel(this.Provider))
             ]
         };
     }
