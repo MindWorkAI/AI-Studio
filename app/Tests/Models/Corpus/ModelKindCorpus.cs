@@ -33,6 +33,11 @@ public static class ModelKindCorpus
 
         // The one name whose only marker used to be the organization it was published under:
         new(SELF_HOSTED, "sentence-transformers/all-MiniLM-L6-v2", EMBEDDING),
+
+        // Mistral's embedding checkpoint for code. It carries the name of a family which is a text
+        // completion model on this very provider, and stays an embedding model regardless: what a
+        // model is for is said by the word which says it, not by the family it was built from.
+        new(MISTRAL, "codestral-embed", EMBEDDING),
     ];
 
     /// <summary>
@@ -128,13 +133,18 @@ public static class ModelKindCorpus
     ];
 
     /// <summary>
-    /// The models from before chat completions existed.
+    /// The models which continue a text instead of answering in a conversation.
     /// </summary>
     private static readonly ModelKindExample[] TEXT_COMPLETION_ENTRIES =
     [
         new(HELMHOLTZ, "text-davinci-003", TEXT_COMPLETION),
         new(OPEN_AI, "babbage-002", TEXT_COMPLETION),
         new(OPEN_AI, "gpt-3.5-turbo-instruct", TEXT_COMPLETION),
+
+        // The one of these which is not old: Mistral serves Codestral to fill in the middle of a
+        // file. It says so only for Mistral's own catalog, which is why the open weights of the
+        // same name stay a chat model further down.
+        new(MISTRAL, "codestral-latest", TEXT_COMPLETION),
     ];
 
     /// <summary>
@@ -178,6 +188,11 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "llama-2-7b-chat-klingon", CHAT),
         new(SELF_HOSTED, "llama3.3:70b", CHAT),
         new(OPEN_AI, "gpt-5.1", CHAT),
+
+        // The open weights of the model Mistral itself serves to fill in the middle of a file.
+        // Whoever runs them runs them behind a chat completion API, so here the name means
+        // something to talk to -- which is what binding that other rule to Mistral protects.
+        new(SELF_HOSTED, "codestral-22b-v0.1", CHAT),
 
         //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding
