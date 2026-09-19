@@ -106,7 +106,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
     private bool dataHadStoredAPIKeyOnLoad;
-    private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
@@ -127,7 +126,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsTranscriptionModelProvidedManually(this.DataHost),
         };
     }
     
@@ -135,30 +133,9 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         var cleanedHostname = this.DataHostname.Trim();
 
-        // Determine the model based on the provider and host configuration:
-        Model model;
-        if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
-        {
-            // Use system model placeholder for hosts that don't support model selection (e.g., whisper.cpp):
-            model = Model.SYSTEM_MODEL;
-        }
-        else if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-        {
-            switch (this.DataHost)
-            {
-                case Host.OLLAMA:
-                    model = new Model(this.dataManuallyModel, null);
-                    break;
-
-                case Host.VLLM:
-                case Host.LM_STUDIO:
-                default:
-                    model = this.DataModel;
-                    break;
-            }
-        }
-        else
-            model = this.DataModel;
+        // whisper.cpp serves whatever it was started with and names no models, so the placeholder
+        // stands in for the one model there is. Everywhere else the user picked one from the list:
+        var model = this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost) ? Model.SYSTEM_MODEL : this.DataModel;
 
         return new()
         {
@@ -194,10 +171,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
-            
-            // When using self-hosted models, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-                this.dataManuallyModel = this.DataModel.Id;
 
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
@@ -302,14 +275,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidateManuallyModel(string manuallyModel)
-    {
-        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter a transcription model name.");
-
-        return null;
-    }
-
     private void Cancel() => this.MudDialog.Cancel();
 
     private async Task OnAPIKeyChanged(string apiKey)
@@ -327,7 +292,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         // When the host changes, reset the model selection state:
         this.DataHost = selectedHost;
         this.DataModel = default;
-        this.dataManuallyModel = string.Empty;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
     }

@@ -421,11 +421,6 @@ public static class LLMProvidersExtensions
         _ => false,
     };
     
-    public static bool IsTranscriptionModelProvidedManually(this LLMProviders provider, Host host) => provider switch
-    {
-        _ => false,
-    };
-
     /// <summary>
     /// Determines if the model selection should be completely hidden for LLM providers.
     /// This is the case when the host does not support model selection.
