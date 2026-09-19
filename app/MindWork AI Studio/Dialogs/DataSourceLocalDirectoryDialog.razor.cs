@@ -20,12 +20,25 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalDirectory DataSource { get; set; }
 
+    /// <summary>
+    /// Whether the folder this data source reads must stay as it is.
+    /// </summary>
+    /// <remarks>
+    /// Set once the index holds something for this data source. The embedding is not locked along
+    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
+    /// </remarks>
     [Parameter]
-    public bool LockSourceAndEmbedding { get; set; }
+    public bool LockSource { get; set; }
 
     [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-    
+
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private readonly DataSourceValidation dataSourceValidation;
@@ -120,18 +133,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
-    private bool CanChangeSourceAndEmbedding => !this.IsEditing || !this.LockSourceAndEmbedding;
+    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
-
-    private string SelectedEmbeddingNameText
-    {
-        get
-        {
-            var selectedEmbedding = this.AvailableEmbeddings.FirstOrDefault(x => x.Value == this.dataEmbeddingId);
-            return string.IsNullOrWhiteSpace(selectedEmbedding.Name) ? T("Unknown") : selectedEmbedding.Name;
-        }
-    }
 
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
@@ -156,8 +160,11 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Name = this.dataName,
         Description = this.dataDescription,
         Type = DataSourceType.LOCAL_DIRECTORY,
-        EmbeddingId = this.CanChangeSourceAndEmbedding ? this.dataEmbeddingId : this.DataSource.EmbeddingId,
-        Path = this.CanChangeSourceAndEmbedding ? this.dataPath : this.DataSource.Path,
+        EmbeddingId = this.dataEmbeddingId,
+
+        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
+        // indexed data source somewhere else:
+        Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
@@ -171,8 +178,20 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
-        
+
         var addedDataSource = this.CreateDataSource();
+
+        //
+        // Ask while the dialog is still open, so a token limit which would have cost the prepared
+        // documents can be corrected right away. Asking in DataSourceManagement instead would have
+        // to be written once per data source kind, and by then the numbers are out of reach.
+        //
+        // Only when editing: while adding, DataSource is still default -- both local data sources
+        // are record structs -- and nothing has been prepared for a source which does not exist yet.
+        //
+        if (this.IsEditing && !await DataSourceReindexWarning.ConfirmDataSourceChangeAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, this.DataSource, addedDataSource))
+            return;
+
         this.MudDialog.Close(DialogResult.Ok(addedDataSource));
     }
     
