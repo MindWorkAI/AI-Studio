@@ -115,6 +115,12 @@
                         @T("This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.")
                     </MudAlert>
                 }
+                @if (this.ServerNamedNoEmbeddingModel)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mt-3">
+                        @T("Your server answered, but none of the models it serves is one we know to create embeddings. Either there is none installed, or it runs under a name we do not recognize. In the latter case, your organization can describe the model in a model plugin, and it will show up here.")
+                    </MudAlert>
+                }
                 @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
                 {
                     <MudAlert Severity="Severity.Error" Class="mt-3">

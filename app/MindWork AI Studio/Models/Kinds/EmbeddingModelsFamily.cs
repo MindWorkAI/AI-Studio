@@ -27,7 +27,7 @@ public sealed class EmbeddingModelsFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.UNKNOWN;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://huggingface.co/models?pipeline_tag=feature-extraction", new DateOnly(2026, 9, 12), "Ported from the embedding markers of Provider/ModelKindExtensions.cs. The e5 line says it in its own family, so it is not repeated here.");
+    public override ModelSource Source => new("https://huggingface.co/models?pipeline_tag=feature-extraction", new DateOnly(2026, 9, 19), "Ported from the embedding markers of Provider/ModelKindExtensions.cs. The e5 line says it in its own family, so it is not repeated here. The four names at the end came later, from going through the widely used embedding models whose name carries none of the words above.");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -55,5 +55,24 @@ public sealed class EmbeddingModelsFamily : ModelFamily
         // General Text Embeddings, from Alibaba. Written as a name part rather than as a substring,
         // because three letters appear inside far too many unrelated words:
         builder.Modifier("gte").AsSegment().Inherits();
+
+        //
+        // Four that say nothing about embedding in their name, and are embedding models all the
+        // same. Every one of them is widely used, so leaving them out does not cost an exotic case:
+        // it puts them among the chat models, where somebody picks one and waits for an answer it
+        // cannot give. All four are written as name parts rather than as substrings, for the reason
+        // gte above gives -- short words which appear inside unrelated names.
+        //
+        // Note that "instructor" is a different word from the "instruct" which half the chat models
+        // carry, and a name part never matches half of one.
+        //
+        builder.Modifier("stella").AsSegment().Inherits();
+
+        builder.Modifier("labse").AsSegment().Inherits();
+
+        builder.Modifier("instructor").AsSegment().Inherits();
+
+        // Generalizable T5 Retrieval, from Google:
+        builder.Modifier("gtr").AsSegment().Inherits();
     }
 }

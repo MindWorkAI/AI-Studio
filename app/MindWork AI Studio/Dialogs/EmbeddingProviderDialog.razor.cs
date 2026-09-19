@@ -137,6 +137,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
     private bool dataConfiguredModelIsNotOffered;
+    private bool dataServerWasAskedForItsModels;
     private string dataFilePath = string.Empty;
     private string dataTokenizerFingerprint = string.Empty;
     private string dataCustomTokenizerValidationIssue = string.Empty;
@@ -517,6 +518,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private async Task ReloadModels()
     {
         this.dataLoadingModelsIssue = string.Empty;
+        this.dataServerWasAskedForItsModels = true;
         var currentEmbeddingProviderSettings = this.CreateEmbeddingProviderSettings();
         var provider = currentEmbeddingProviderSettings.CreateProvider();
         if (provider is NoProvider)
@@ -572,6 +574,23 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (this.dataConfiguredModelIsNotOffered)
             this.availableModels.Insert(0, this.DataModel);
     }
+
+    /// <summary>
+    /// Whether the server answered without naming a single embedding model.
+    /// </summary>
+    /// <remarks>
+    /// Two situations end up here, and the user is the only one who can tell them apart: a server
+    /// running no embedding model at all, and one running an embedding model under a name no rule
+    /// covers. Saying so beats the bare "No models loaded or available.", which reads like a
+    /// failure and leaves nobody anywhere to go -- the field for typing a name is gone, on purpose.
+    /// Describing such a model in a model plugin is the way out, and naming it here is what turns
+    /// a dead end into one.
+    /// </remarks>
+    private bool ServerNamedNoEmbeddingModel =>
+        this.DataLLMProvider is LLMProviders.SELF_HOSTED &&
+        this.dataServerWasAskedForItsModels &&
+        string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue) &&
+        this.availableModels.Count is 0;
 
     private string APIKeyText => this.DataLLMProvider switch
     {

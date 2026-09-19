@@ -51,6 +51,16 @@ public static class ModelKindCorpus
         new(SELF_HOSTED, "nomic-embed-text:latest", EMBEDDING),
         new(SELF_HOSTED, "bge-m3:latest", EMBEDDING),
         new(SELF_HOSTED, "all-minilm:latest", EMBEDDING),
+
+        //
+        // The four whose names say nothing about embedding at all. They are here because the list
+        // above answers them through a word they happen to carry, and these carry none: without a
+        // rule of their own they would count as chat models, which is where they stood.
+        //
+        new(SELF_HOSTED, "stella_en_400M_v5", EMBEDDING),
+        new(SELF_HOSTED, "LaBSE", EMBEDDING),
+        new(SELF_HOSTED, "instructor-xl", EMBEDDING),
+        new(SELF_HOSTED, "gtr-t5-large", EMBEDDING),
     ];
 
     /// <summary>
@@ -212,6 +222,10 @@ public static class ModelKindCorpus
         // rather than to modify would have to beat the family name to get there.
         new(SELF_HOSTED, "qwen3.8:latest", CHAT),
         new(SELF_HOSTED, "gpt-oss:latest", CHAT),
+
+        // Half the chat models of the world carry this word, and one of the embedding names above
+        // is one letter longer than it. A name part is what keeps the two apart:
+        new(SELF_HOSTED, "mistral-7b-instruct", CHAT),
 
         //
         // Three which were questioned while testing and stay all the same. Grok Build is the coding
