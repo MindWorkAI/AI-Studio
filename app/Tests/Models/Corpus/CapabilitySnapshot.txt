@@ -20,10 +20,7 @@
 # what each of them must answer, but it states capabilities alone.
 #
 ALIBABA_CLOUD | qvq-max | ALWAYS_REASONING, CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
-ALIBABA_CLOUD | qwen-max-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwen-mt-plus | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
-ALIBABA_CLOUD | qwen-plus-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
-ALIBABA_CLOUD | qwen-turbo-latest | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwen-vl-max | CHAT_COMPLETION_API, MULTIPLE_IMAGE_INPUT, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwen2.5-14b-instruct-1m | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)
 ALIBABA_CLOUD | qwen2.5-72b-instruct | CHAT_COMPLETION_API, FUNCTION_CALLING, TEXT_INPUT, TEXT_OUTPUT | CHAT | (unknown) | (unknown) | (unknown)

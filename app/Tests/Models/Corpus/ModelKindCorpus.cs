@@ -261,7 +261,7 @@ public static class ModelKindCorpus
         // last one translates rather than converses, and it does so through the chat completion
         // API like the others, so this is where it belongs.
         //
-        new(ALIBABA_CLOUD, "qwen-max-latest", CHAT),
+        new(ALIBABA_CLOUD, "qwen3.8-max", CHAT),
         new(ALIBABA_CLOUD, "qwq-plus", CHAT),
         new(ALIBABA_CLOUD, "qvq-max", CHAT),
         new(ALIBABA_CLOUD, "qwen-mt-turbo", CHAT),

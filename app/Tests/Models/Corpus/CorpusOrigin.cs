@@ -17,8 +17,8 @@ public enum CorpusOrigin
     NAMED_BY_A_RULE,
 
     /// <summary>
-    /// The app carries this model in a built-in list, such as the one Alibaba Cloud models are
-    /// picked from when the provider serves no catalog.
+    /// The app carries this model in a built-in list, such as the aliases Anthropic answers to but
+    /// does not list, or the transcription model GWDG serves without naming it.
     /// </summary>
     BUILT_INTO_THE_APP,
 
