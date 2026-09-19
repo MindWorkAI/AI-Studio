@@ -194,6 +194,46 @@ public static class ModelKindCorpus
     ];
 
     /// <summary>
+    /// The models which write music.
+    /// </summary>
+    /// <remarks>
+    /// All four off Google's own catalog. They were never seen because the provider showed only
+    /// names beginning with "gemini" -- the same prefix which kept Gemma out, which is why it had
+    /// to go and why these needed a rule of their own before it could.
+    /// </remarks>
+    private static readonly ModelKindExample[] MUSIC_ENTRIES =
+    [
+        new(GOOGLE, "lyria-3.5", MUSIC_GENERATION),
+        new(GOOGLE, "lyria-3-pro-preview", MUSIC_GENERATION),
+        new(GOOGLE, "lyria-3-clip-preview", MUSIC_GENERATION),
+    ];
+
+    /// <summary>
+    /// The models which are handed a job instead of a message.
+    /// </summary>
+    /// <remarks>
+    /// The last two are the point of binding these rules to Google. Perplexity sells deep research
+    /// as well, and what it sells is a chat model -- so the same two words have to mean different
+    /// things at different providers, which is exactly what a binding is for.
+    /// </remarks>
+    private static readonly ModelKindExample[] AGENT_ENTRIES =
+    [
+        new(GOOGLE, "deep-research-preview-04-2026", AGENT),
+        new(GOOGLE, "deep-research-max-preview-04-2026", AGENT),
+        new(GOOGLE, "deep-research-pro-preview-12-2025", AGENT),
+        new(GOOGLE, "antigravity-preview-05-2026", AGENT),
+        new(GOOGLE, "antigravity-preview-09-2026", AGENT),
+    ];
+
+    /// <summary>
+    /// The model which answers out of what it was handed, and says where the answer came from.
+    /// </summary>
+    private static readonly ModelKindExample[] GROUNDED_ANSWERING_ENTRIES =
+    [
+        new(GOOGLE, "aqa", GROUNDED_ANSWERING),
+    ];
+
+    /// <summary>
     /// The models which work a screen.
     /// </summary>
     private static readonly ModelKindExample[] COMPUTER_USE_ENTRIES =
@@ -304,6 +344,15 @@ public static class ModelKindCorpus
         new(PERPLEXITY, "sonar-deep-research", CHAT),
 
         //
+        // The other two deep research models of the world, and the reason Google's rule is bound
+        // to Google and written as a prefix. Perplexity and OpenAI both sell something under that
+        // name which answers over the API the app already speaks, so both stay chat models. Only
+        // Google's own line, whose names start with the words, is handed a job instead.
+        //
+        new(OPEN_AI, "o3-deep-research", CHAT),
+        new(OPEN_AI, "o4-mini-deep-research", CHAT),
+
+        //
         // The counter-sample to the three rules above, taken off the same three catalogs. Every
         // one of these carries a word which now means something -- code, live, image -- without
         // being what that word says, and every one of them has to stay a chat model.
@@ -342,6 +391,9 @@ public static class ModelKindCorpus
         ..TRANSCRIPTION_ENTRIES,
         ..SPEECH_ENTRIES,
         ..REALTIME_ENTRIES,
+        ..MUSIC_ENTRIES,
+        ..AGENT_ENTRIES,
+        ..GROUNDED_ANSWERING_ENTRIES,
         ..COMPUTER_USE_ENTRIES,
         ..TEXT_COMPLETION_ENTRIES,
         ..OCR_ENTRIES,
