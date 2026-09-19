@@ -653,6 +653,14 @@ public sealed class MediaTranscriptionService(
         // re-encoding it could only take quality away, never add any.
         var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
 
+        // Which quality an upload was produced with is the first question to ask when a transcript
+        // comes back missing something, so it has to be in the log of the job it belongs to:
+        logger.LogInformation(
+            "Normalizing media for operation {OperationId}; re-encoding uses the Opus bitrate {OpusBitrate} ({OpusBitrateBps} bps).",
+            operation.Id,
+            settingsManager.ConfigurationData.App.OpusBitrate,
+            opusBitrateBps);
+
         // The quick POST is intentionally not cancelled: losing its response could orphan a job
         // whose ID the client never received. Cancellation is applied immediately after ownership.
         var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, opusBitrateBps, CancellationToken.None);

@@ -632,7 +632,10 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
         && params.sample_rate == Some(OUTPUT_SAMPLE_RATE)
         && channels == 1
         && input_path.metadata().map(|metadata| metadata.len() <= max_pass_through_bytes).unwrap_or(false);
-    log::info!("media normalization decision: track_id={track_id}, pass_through={pass_through}, codec={detected_codec}, channels={channels}");
+    // A pass-through never reaches the encoder, so no bitrate is applied to it. Logging the one we
+    // would have used anyway would send support looking for an encoding which never happened:
+    let applied_opus_bitrate_bps = (!pass_through).then_some(opus_bitrate_bps);
+    log::info!("media normalization decision: track_id={track_id}, pass_through={pass_through}, codec={detected_codec}, channels={channels}, opus_bitrate_bps={applied_opus_bitrate_bps:?}");
 
     let partial_path = partial_path(output_path);
     if let Some(parent) = partial_path.parent() {
