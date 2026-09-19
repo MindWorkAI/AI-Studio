@@ -582,6 +582,9 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: KBPS_32, KBPS_64, KBPS_128, KBPS_256
 -- Higher bitrates improve transcription accuracy on noisy or quiet recordings, at the cost of
 -- a larger upload to the transcription provider. KBPS_128 is recommended.
+-- Please note: this bitrate applies whenever a recording has to be re-encoded. A file which already
+-- is a single mono 48 kHz Opus track in a WebM container and stays below 25 MiB is forwarded to the
+-- transcription provider unchanged, keeping the bitrate it was created with.
 -- CONFIG["SETTINGS"]["DataApp.OpusBitrate"] = "KBPS_32"
 --
 -- Allow the user to change the Opus bitrate even though your organization set a default above:

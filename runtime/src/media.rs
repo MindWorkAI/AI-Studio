@@ -60,6 +60,11 @@ const OPUS_PRE_SKIP: u16 = 312;
 const DEFAULT_MAX_PASS_THROUGH_BYTES: u64 = 25 * 1024 * 1024;
 
 /// Default target bitrate for mono speech-oriented Opus output, used when a request omits it.
+///
+/// AI Studio always states a bitrate, so this default only covers requests which leave it out. It is
+/// 128 kbps because the 32 kbps this encoder used to be fixed at cost transcription models whole
+/// quiet passages: a softly spoken greeting at the start of a recording never reached the transcript,
+/// while the same recording at 128 kbps came back complete.
 const DEFAULT_OPUS_BITRATE_BPS: u32 = 128_000;
 
 /// Bounded input block used for streaming resampling.

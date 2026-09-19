@@ -327,6 +327,8 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<TranscriptionOpusBitrate>> GetTranscriptionOpusBitrateData()
     {
         foreach (var bitrate in Enum.GetValues<TranscriptionOpusBitrate>())
+        {
             yield return new(bitrate.GetName(), bitrate);
+        }
     }
 }

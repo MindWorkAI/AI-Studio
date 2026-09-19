@@ -647,9 +647,14 @@ public sealed class MediaTranscriptionService(
         MediaOperation operation,
         bool updateImportState)
     {
+        // The bitrate governs re-encoding, not every upload: the runtime hands a file through
+        // unchanged when it already is a single mono 48 kHz Opus track in a WebM container and small
+        // enough. Such a file keeps whatever bitrate it was made with, which is the better outcome --
+        // re-encoding it could only take quality away, never add any.
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+
         // The quick POST is intentionally not cancelled: losing its response could orphan a job
         // whose ID the client never received. Cancellation is applied immediately after ownership.
-        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
         var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, opusBitrateBps, CancellationToken.None);
         operation.JobId = jobId;
 

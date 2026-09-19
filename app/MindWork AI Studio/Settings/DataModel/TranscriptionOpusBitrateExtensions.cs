@@ -21,6 +21,9 @@ public static class TranscriptionOpusBitrateExtensions
         TranscriptionOpusBitrate.KBPS_64 => 64_000,
         TranscriptionOpusBitrate.KBPS_128 => 128_000,
         TranscriptionOpusBitrate.KBPS_256 => 256_000,
-        _ => 32_000,
+
+        // A value we do not know must never mean the lowest quality: that is how quiet passages
+        // went missing from transcripts in the first place. Fall back to the recommended bitrate.
+        _ => 128_000,
     };
 }
