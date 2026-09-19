@@ -54,11 +54,17 @@ UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826
 -- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“, bitte versuchen Sie es später erneut."
 
+-- The provider is not trusted enough for security checks.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2861409367"] = "Der Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug."
+
 -- The audit agent did not return a usable response.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "Der Audit-Agent hat keine verwendbare Antwort zurückgegeben."
 
 -- No provider is configured for the Security Audit Agent.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "Für den Sicherheitsprüfungs-Agenten ist kein Anbieter konfiguriert."
+
+-- The selected provider is not trusted enough for security checks. Pick one which meets the confidence required here, or choose a dedicated provider for security checks in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T4104574219"] = "Der ausgewählte Anbieter ist für Sicherheitsprüfungen nicht vertrauenswürdig genug. Wählen Sie einen Anbieter aus, der die hier erforderliche Vertrauensstufe erfüllt, oder legen Sie in den App-Einstellungen einen speziellen Anbieter für Sicherheitsprüfungen fest."
 
 -- The audit result was empty.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "Das Prüfergebnis war leer."
@@ -4293,14 +4299,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867"] = "Bitte w
 -- Attached file '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
+-- The selected model does not meet the confidence requirements of the content cleaner. Please select another model, or configure an eligible one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1028731446"] = "Das ausgewählte Modell erfüllt nicht die Vertrauensanforderungen des Inhaltsbereinigers. Bitte wählen Sie ein anderes Modell aus oder konfigurieren Sie ein geeignetes Modell in den App-Einstellungen."
+
+-- The content cleaner uses the model of this assistant. Please select one below.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1160768613"] = "Der Inhaltsbereiniger verwendet das Modell dieses Assistenten. Bitte wählen Sie unten eines aus."
+
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agents bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
 
 -- Fetch
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1396322691"] = "Abrufen"
-
--- Please select a provider to use the cleanup agent.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2035652317"] = "Bitte wählen Sie einen Anbieter aus, um den Bereinigungsagenten zu verwenden."
 
 -- Please provide a URL to load the content from.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T2235427807"] = "Bitte geben Sie eine URL an, von der der Inhalt geladen werden soll."
@@ -4334,6 +4343,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T3825586228"] = "Bitte ge
 
 -- Show web content options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T4249712357"] = "Optionen für Webinhalte anzeigen"
+
+-- The content was loaded, but not cleaned: no model is available for the content cleaner.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T903778235"] = "Der Inhalt wurde geladen, aber nicht bereinigt: Für die Inhaltsbereinigung ist kein Modell verfügbar."
 
 -- Loading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENTSTEPSEXTENSIONS::T1404011351"] = "Laden"
@@ -5451,6 +5463,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1676241565"] = 
 -- User Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1700917692"] = "Benutzereingabe"
 
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
+
 -- Unknown plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1834795216"] = "Unbekanntes Plugin"
 
@@ -5528,6 +5543,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = 
 
 -- The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T521056824"] = "Das Assistenz-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Sicherheitsstufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung weiterhin, dies kann jedoch unsicher sein. Möchten Sie dieses Plugin wirklich aktivieren?"
+
+-- No model is set for security checks, neither for this agent nor for the app as a whole. Choose one here to check this plugin. Your choice applies to this check only; you can set a permanent one in the app settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T614645381"] = "Für Sicherheitsprüfungen ist weder für diesen Agenten noch für die App insgesamt ein Modell festgelegt. Wählen Sie hier eines aus, um dieses Plugin zu prüfen. Ihre Auswahl gilt nur für diese Prüfung; in den App-Einstellungen können Sie ein dauerhaftes Modell festlegen."
 
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System-Prompt"
