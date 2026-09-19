@@ -6549,9 +6549,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1356621346"] = "Ko
 -- Failed to validate the selected tokenizer. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1384494471"] = "Die Überprüfung des ausgewählten Tokenizers ist fehlgeschlagen. Bitte versuchen Sie es erneut."
 
--- Please enter an embedding model name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1661085403"] = "Bitte geben Sie einen Modellnamen für die Einbettung ein."
-
 -- Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1727440780"] = "Hostname"
 
@@ -6606,9 +6603,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2810182573"] = "Ke
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "Instanzname"
 
--- Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Derzeit können wir die Einbettungs-Modelle für den ausgewählten Anbieter und/oder Host nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
-
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2961294165"] = "Token-Limit"
 
@@ -6617,6 +6611,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3316544737"] = "Bi
 
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3361153305"] = "Experten-Einstellungen anzeigen"
+
+-- This server does not offer the selected model right now. It stays selected, so the documents you already prepared keep working. Choosing another model means every document of the data sources behind this provider is prepared again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3571276758"] = "Dieser Server bietet das ausgewählte Modell derzeit nicht an. Das Modell bleibt ausgewählt, damit die bereits vorbereiteten Dokumente weiterhin funktionieren. Wenn Sie ein anderes Modell wählen, werden alle Dokumente der Datenquellen dieses Anbieters erneut vorbereitet."
 
 -- How many chunks are sent to the embedding provider at once. The default is 1.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3780233303"] = "Wie viele Blöcke gleichzeitig an den Einbettungsanbieter gesendet werden. Der Standardwert ist 1."
@@ -6638,6 +6635,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T808120719"] = "Hos
 
 -- Please enter an embedding batch size greater than 0.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T840259907"] = "Bitte geben Sie eine Batch-Größe für Einbettungen größer als 0 ein."
+
+-- Your server answered, but none of the models it serves is one we know to create embeddings. Either there is none installed, or it runs under a name we do not recognize. In the latter case, your organization can describe the model in a model plugin, and it will show up here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T859645108"] = "Ihr Server hat geantwortet, aber keines der bereitgestellten Modelle ist uns als Modell zur Erstellung von Einbettungen bekannt. Entweder ist kein solches Modell installiert oder es läuft unter einem Namen, den wir nicht erkennen. Im letzteren Fall kann Ihre Organisation das Modell in einem Modell-Plugin beschreiben. Dann wird es hier angezeigt."
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T900237532"] = "Anbieter"
@@ -8718,9 +8718,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1324664716"] =
 -- Create account
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1356621346"] = "Konto erstellen"
 
--- Currently, we cannot query the transcription models for the selected provider and/or host. Therefore, please enter the model name manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1381635232"] = "Derzeit können wir die Modelle für Transkriptionen für den ausgewählten Anbieter und/oder Host nicht abfragen. Bitte geben Sie daher den Modellnamen manuell ein."
-
 -- Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1727440780"] = "Hostname"
 
@@ -8753,9 +8750,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2842060373"] =
 
 -- Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3397943774"] = "Hugging Face transkribiert Audio nur über einige seiner Inferenzanbieter. Deshalb ist diese Liste kürzer als die für den Chat."
-
--- Please enter a transcription model name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] = "Bitte geben Sie den Namen eines Transkriptionsmodells ein."
 
 -- This host uses the model configured at the provider level. No model selection is available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3783329915"] = "Dieser Host verwendet das auf Anbieterebene konfigurierte Modell. Eine Modellauswahl ist nicht verfügbar."

@@ -93,12 +93,13 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         {
             Models =
             [
-                // Codestral is a fill-in-the-middle model, which we cannot use for chats. That is
-                // specific to Mistral's catalog, which is why it is not part of the shared model
-                // kind detection:
-                ..modelResponse.Models.Where(n =>
-                    !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    n.IsChatModel(this.Provider))
+                //
+                // Codestral is a fill-in-the-middle model, which we cannot use for chats. Its own
+                // family says so now, bound to this provider, so the word "code" no longer has to
+                // be tested for here -- and testing for it never reached mistral-code-fim-latest,
+                // which does the same job under a name that begins differently.
+                //
+                ..modelResponse.Models.Where(n => n.IsChatModel(this.Provider))
             ]
         };
     }
@@ -123,13 +124,16 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        // Source: https://docs.mistral.ai/capabilities/audio_transcription
-        return Task.FromResult(ModelLoadResult.FromModels(
-        [
-            new Provider.Model("voxtral-mini-latest", "Voxtral Mini Latest"),
-        ]));
+        var modelResponse = await this.LoadModelList(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+        if (!modelResponse.Success)
+            return modelResponse;
+
+        return modelResponse with
+        {
+            Models = [..modelResponse.Models.Where(n => n.IsTranscriptionModel(this.Provider))]
+        };
     }
     
     #endregion

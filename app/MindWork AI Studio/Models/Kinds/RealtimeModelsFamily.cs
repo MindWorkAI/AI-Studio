@@ -23,7 +23,7 @@ public sealed class RealtimeModelsFamily : ModelFamily
     public override ModelVendor Vendor => ModelVendor.UNKNOWN;
 
     /// <inheritdoc />
-    public override ModelSource Source => new("https://developers.openai.com/api/docs/models/gpt-live-1", new DateOnly(2026, 9, 12), "Ported from the realtime marker of Provider/ModelKindExtensions.cs, where the same precedence was written as the order of two if statements. GPT-Live was added after it turned up in the chat list while testing.");
+    public override ModelSource Source => new("https://developers.openai.com/api/docs/models/gpt-live-1", new DateOnly(2026, 9, 12), "Ported from the realtime marker of Provider/ModelKindExtensions.cs, where the same precedence was written as the order of two if statements. The live rule was added after GPT-Live turned up in the chat list while testing, and widened when Google's catalog turned out to name its whole two-way line that way: https://ai.google.dev/gemini-api/docs/live");
 
     /// <inheritdoc />
     protected override void Declare(ModelFamilyBuilder builder)
@@ -33,10 +33,15 @@ public sealed class RealtimeModelsFamily : ModelFamily
             .Kind(ModelKind.REALTIME);
 
         //
-        // The line which dropped the word. GPT-Live listens and speaks at the same time and leaves
-        // the thinking to a text model behind it, so there is even less of a conversation in it than
-        // in the realtime models it succeeds -- and nothing in the name says so any more.
+        // The other word for the same connection. OpenAI's GPT-Live listens and speaks at once and
+        // leaves the thinking to a text model behind it, and Google names its whole two-way line
+        // this way: gemini-3.8-live, gemini-3.1-flash-live-preview, gemini-3.5-live-translate-preview.
+        // None of them can be talked to the way a chat model can, and all of them stood in the chat
+        // list until this rule was written.
         //
-        builder.Modifier("gpt-live").AsSegment().Inherits();
+        // A name part rather than a substring, because four letters sit inside "delivery",
+        // "olive" and plenty of words which promise no connection at all.
+        //
+        builder.Modifier("live").AsSegment().Inherits();
     }
 }

@@ -146,10 +146,13 @@ MODELS = {}
 --
 --     -- What the model is made for. Optional, defaults to CHAT.
 --     -- Allowed values are: CHAT, TEXT_COMPLETION, EMBEDDING, RERANKING,
---     -- IMAGE_GENERATION, VIDEO_GENERATION, TRANSCRIPTION, SPEECH_SYNTHESIS,
---     -- REALTIME, COMPUTER_USE, OCR, MODERATION, OTHER
+--     -- IMAGE_GENERATION, VIDEO_GENERATION, MUSIC_GENERATION, TRANSCRIPTION,
+--     -- SPEECH_SYNTHESIS, REALTIME, COMPUTER_USE, AGENT, GROUNDED_ANSWERING,
+--     -- OCR, MODERATION, OTHER
 --     -- This decides which lists the model appears in. Use OTHER for entries
---     -- which are no models at all.
+--     -- which are no models at all. Use AGENT for a model which is handed a
+--     -- job and works on it by itself, and GROUNDED_ANSWERING for one which
+--     -- answers out of passages it is given and cites them.
 --     ["KIND"] = "CHAT",
 --
 --     -- Optional: how many tokens the model reads and writes in one

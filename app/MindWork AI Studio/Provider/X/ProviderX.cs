@@ -76,7 +76,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["grok-"], apiKeyProvisional, token);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             //
@@ -108,19 +108,24 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
     
     #endregion
     
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, string? apiKeyProvisional, CancellationToken token)
+    /// <summary>
+    /// Reads the xAI catalog, whole.
+    /// </summary>
+    /// <remarks>
+    /// Every name in it begins with "grok", which is why the prefix this used to filter by never
+    /// took anything away -- and why it said nothing either. What it did carry was Grok 2, appended
+    /// to every answer whether xAI still served it or not. It does not: the catalog has moved on to
+    /// Grok 4, and an entry nobody can talk to is worse than one missing from the list.
+    ///
+    /// What the catalog does hold besides the chat models is five names which draw or film. The
+    /// caller asks the registry about those.
+    /// </remarks>
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture)))
-                .Concat([
-                    new Model
-                    {
-                        Id = "grok-2-latest",
-                        DisplayName = "Grok 2.0 (latest)",
-                    }
-                ]),
+            modelResponse => modelResponse.Data,
             apiKeyProvisional, token: token);
     }
 }

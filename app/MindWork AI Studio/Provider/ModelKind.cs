@@ -53,6 +53,16 @@ public enum ModelKind
     VIDEO_GENERATION,
 
     /// <summary>
+    /// The model composes music.
+    /// </summary>
+    /// <remarks>
+    /// Audio comes out of it, but not speech: instruments, arrangement, and in Lyria's case singing
+    /// with lyrics. Neither the speech synthesis list nor any other one fits, and a chat request to
+    /// such a model gets nothing back that reads like an answer.
+    /// </remarks>
+    MUSIC_GENERATION,
+
+    /// <summary>
     /// The model transcribes audio into text.
     /// </summary>
     TRANSCRIPTION,
@@ -85,6 +95,27 @@ public enum ModelKind
     /// chat list, however much its name looks like the chat model it grew out of.
     /// </remarks>
     COMPUTER_USE,
+
+    /// <summary>
+    /// The model runs an errand of its own instead of answering.
+    /// </summary>
+    /// <remarks>
+    /// One request starts a loop which plans, calls tools, runs code and reads the web, and it can
+    /// take minutes. Google serves its research and coding agents this way, through an API of their
+    /// own which a chat request never reaches. Note that the name alone decides nothing here: what
+    /// Perplexity calls deep research is an ordinary chat model with web search.
+    /// </remarks>
+    AGENT,
+
+    /// <summary>
+    /// The model answers a question out of sources handed to it, and says where the answer came from.
+    /// </summary>
+    /// <remarks>
+    /// Built for retrieval rather than for conversation: it is given passages along with the
+    /// question, and returns the answer, the citations, and an estimate of whether the question
+    /// could be answered from them at all. Reached through a route of its own.
+    /// </remarks>
+    GROUNDED_ANSWERING,
 
     /// <summary>
     /// The model extracts text from images or scanned documents.

@@ -18,6 +18,12 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         new("qwen3-embedding-4b", "Qwen3 Embedding 4B"),
     ];
 
+    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
+    private static readonly Model[] KNOWN_TRANSCRIPTION_MODELS =
+    [
+        new("whisper-large-v2", "Whisper v2 Large"),
+    ];
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -123,13 +129,27 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    /// <remarks>
+    /// Built the same way as the embedding models above, and for the same reason: SAIA answers the
+    /// models endpoint with its chat models only, so this comes back empty and the documented list
+    /// stands in. Asking first costs nothing and means a speech model appearing in that answer one
+    /// day shows up on its own, rather than waiting for somebody to notice and edit this file. A
+    /// failed request is passed on unchanged, so a wrong API key stays visible as such.
+    /// </remarks>
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
-        return Task.FromResult(ModelLoadResult.FromModels(
-        [
-            new Model("whisper-large-v2", "Whisper v2 Large"),
-        ]));
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+        if (!result.Success)
+            return result;
+
+        var transcriptionModels = result.Models.Where(model => model.IsTranscriptionModel(this.Provider)).ToList();
+        if (transcriptionModels.Count is 0)
+            return ModelLoadResult.FromModels(KNOWN_TRANSCRIPTION_MODELS);
+
+        return result with
+        {
+            Models = [..transcriptionModels]
+        };
     }
     
     #endregion
