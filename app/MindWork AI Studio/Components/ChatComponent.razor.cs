@@ -1167,6 +1167,28 @@ public partial class ChatComponent : MSGComponentBase
         //
         if (this.ChatThread is not null && deletePreviousChat)
         {
+            //
+            // A deleted chat cannot be restored. The check above never covers this case, because
+            // this path exists only while chats are stored automatically. So we ask here, with the
+            // same question the chat list asks:
+            //
+            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
+            var deleteDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                {
+                    x => x.Message, (this.ChatThread.WorkspaceId == Guid.Empty) switch
+                    {
+                        true => string.Format(this.T("Are you sure you want to delete the temporary chat '{0}'?"), this.ChatThread.Name),
+                        false => string.Format(this.T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), this.ChatThread.Name, workspaceName),
+                    }
+                },
+            };
+
+            var deleteDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Delete Chat"), deleteDialogParameters, DialogOptions.FULLSCREEN);
+            var deleteDialogResult = await deleteDialogReference.Result;
+            if (deleteDialogResult is null || deleteDialogResult.Canceled)
+                return;
+
             string chatPath;
             if (this.ChatThread.WorkspaceId == Guid.Empty)
                 chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.ChatThread.ChatId.ToString());

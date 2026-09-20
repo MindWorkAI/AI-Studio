@@ -3556,6 +3556,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T4014053962"] = "Add fil
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHANGELOG::T3017574265"] = "Changelog"
 
+-- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1016188706"] = "Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"
+
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1133040906"] = "Move chat"
 
@@ -3589,6 +3592,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
 -- plus {0} image(s), which is more than the {1} this model accepts
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2059172343"] = "plus {0} image(s), which is more than the {1} this model accepts"
 
+-- Delete Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2244038752"] = "Delete Chat"
+
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Italic"
 
@@ -3606,6 +3612,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Bulleted 
 
 -- Delete this chat & start a new one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2991985411"] = "Delete this chat & start a new one."
+
+-- Are you sure you want to delete the temporary chat '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3043761007"] = "Are you sure you want to delete the temporary chat '{0}'?"
 
 -- Move Chat to Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Move Chat to Workspace"
