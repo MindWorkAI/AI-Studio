@@ -3,12 +3,10 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
 using AIStudio.Models;
 using AIStudio.Models.Live;
-using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
@@ -1205,8 +1203,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
-                    (requestDto, requestToken) => this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, requestToken),
-                    this.InstanceName, this.logger);
+                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
+                    this.logger);
 
                 var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
                 var loopContext = new ToolCallingLoopContext
@@ -1277,16 +1275,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         CapabilityOverrides = this.CapabilityOverrides,
     };
 
-    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(ChatCompletionAPIRequest requestDto, string requestPath, RequestedSecret requestedSecret,
-        Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+    /// <summary>
+    /// Runs one round of a tool calling conversation against a Chat Completions endpoint.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the HTTP request is done here. Reading the events is the adapter's business,
+    /// and everything on the way to them -- the retries, the timeouts, the error classification --
+    /// belongs to the shared stream reader, which the tool rounds used to go without.
+    /// </remarks>
+    private IAsyncEnumerable<ServerSentEvent> StreamChatCompletionRequest(ChatCompletionAPIRequest requestDto, string providerName, string requestPath,
+        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, CancellationToken token)
     {
-        var responseData = await this.SendRequest(RequestBuilder, token);
-        if (responseData.IsFailedAfterAllRetries)
-            return null;
-
-        using var response = responseData.Response!;
-        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
-
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
@@ -1297,6 +1296,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
+
+        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, token);
     }
 
     /// <summary>

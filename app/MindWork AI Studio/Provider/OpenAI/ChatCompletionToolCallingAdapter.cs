@@ -18,8 +18,8 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     TextMessage systemPrompt, IDictionary<string, object> apiParameters,
     IList<object> providerTools,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ChatCompletionAPIRequest, CancellationToken, Task<ChatCompletionResponse?>> executeRequestAsync,
-    string providerInstanceName, ILogger logger)
+    Func<ChatCompletionAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
+    ILogger logger)
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
 {
     private readonly List<IMessageBase> internalMessages = [];
@@ -43,7 +43,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         var requestDto = requestDtoBase with
         {
             Messages = [..requestDtoBase.Messages, ..this.internalMessages],
-            Stream = false,
+            Stream = true,
 
             //
             // AI Studio runs tool calls one after another, so asking for parallel calls would
@@ -53,38 +53,28 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
             ParallelToolCalls = requestDtoBase.Tools is null ? null : false,
         };
 
-        var response = await executeRequestAsync(requestDto, token);
-        if (response is null)
-            yield break;
-
-        // The response comes from a provider, so its shape is a promise rather than a guarantee:
-        // a JSON null for the choices field overwrites the initialized property with null.
-        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-        var responseChoice = response.Choices?.FirstOrDefault();
-        if (responseChoice?.Message is null)
+        //
+        // The text goes out while it is being written; the tool calls are put back together
+        // behind it, fragment by fragment.
+        //
+        var accumulator = new ChatCompletionToolCallAccumulator();
+        await foreach (var serverSentEvent in streamRequestAsync(requestDto, token))
         {
-            logger.LogError(
-                "The tool calling response did not contain a usable choice. ProviderInstanceName={ProviderInstanceName}, ChoiceCount={ChoiceCount}",
-                providerInstanceName,
-                response.Choices?.Count ?? 0);
-
-            throw ToolCallingMessages.InvalidToolCallingResponse(providerInstanceName);
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent)
+                yield return ToolCallingStreamEvent.TextDelta(part.TextDelta);
         }
 
-        this.lastResponseMessage = responseChoice.Message;
-        var preparedCalls = this.PrepareToolCalls(responseChoice.Message.ToolCalls ?? []);
+        var message = accumulator.Build();
+        if (message is null)
+            yield break;
+
+        this.lastResponseMessage = message;
+        var preparedCalls = this.PrepareToolCalls(message.ToolCalls ?? []);
         this.lastToolCalls = preparedCalls.Select(x => x.ToolCall).ToList();
 
-        //
-        // The whole round arrives at once for now, so its text goes out as one delta. What the
-        // loop and the UI see is already the streaming shape; only the pieces are still large.
-        //
-        var textOutput = responseChoice.Message.Content ?? string.Empty;
-        if (!string.IsNullOrEmpty(textOutput))
-            yield return ToolCallingStreamEvent.TextDelta(textOutput);
-
         yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
-            textOutput,
+            message.Content ?? string.Empty,
             preparedCalls
                 .Select(x => new ToolCallingRequestedCall(x.ToolCall.Id!, x.ToolCall.Function!.Name!, x.ToolCall.Function!.Arguments!, x.IsValid))
                 .ToList(),
