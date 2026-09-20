@@ -6,10 +6,11 @@ namespace AIStudio.Chat;
 /// Writes a number of tokens the way a person reads it next to their input field.
 /// </summary>
 /// <remarks>
-/// A context window of a million tokens written out in full is eight characters of noise under a
-/// text field, and nobody reads the last five of them. So everything from a thousand on is
-/// shortened, and two decimals keep the resolution a person acts on: the difference between 1.20k
-/// and 1.80k is one they can see, while the last three digits of 1,234 are not.
+/// Written out in full up to a million, because below that the short form saves nothing: "11.86k"
+/// and "11,860" are both six characters, and "999.99k" and "999,990" are both seven. All the
+/// prefix does in that range is ask the reader to know what it stands for, and not every reader
+/// does. From a million on it earns its place -- nine characters of digits become five -- and two
+/// decimals there keep the resolution a person acts on.
 ///
 /// The culture is passed in rather than taken from the thread. AI Studio's language is chosen in
 /// its settings and does not move the thread's culture along with it, so a German who picked German
@@ -20,7 +21,7 @@ public static class TokenAmount
     /// <summary>
     /// Below this, the exact number is shown.
     /// </summary>
-    private const int EXACT_BELOW = 1_000;
+    private const int EXACT_BELOW = 1_000_000;
 
     /// <summary>
     /// Writes a number of tokens.
@@ -32,15 +33,6 @@ public static class TokenAmount
     {
         if (tokens < EXACT_BELOW)
             return tokens.ToString("N0", culture);
-
-        //
-        // Rounded before the unit is chosen, not after. Otherwise the few hundred tokens just below
-        // a million round up inside their own unit and read as "1,000.00k", which is a number
-        // nobody writes.
-        //
-        var thousands = tokens / 1_000d;
-        if (Math.Round(thousands, 2) < 1_000d)
-            return $"{thousands.ToString("N2", culture)}k";
 
         return $"{(tokens / 1_000_000d).ToString("N2", culture)}M";
     }

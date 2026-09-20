@@ -22,14 +22,14 @@ public sealed class TokenAmountTests
     [TestCase(0, "0")]
     [TestCase(7, "7")]
     [TestCase(847, "847")]
-    [TestCase(999, "999", Description = "The last number written out in full.")]
-    [TestCase(1_000, "1.00k")]
-    [TestCase(1_234, "1.23k")]
-    [TestCase(12_347, "12.35k")]
-    [TestCase(128_000, "128.00k")]
-    [TestCase(400_000, "400.00k")]
-    [TestCase(999_499, "999.50k")]
-    [TestCase(999_999, "1.00M", Description = "Rounded before the unit is chosen, so it does not read as 1,000.00k.")]
+    [TestCase(999, "999")]
+    [TestCase(1_000, "1,000")]
+    [TestCase(1_234, "1,234")]
+    [TestCase(12_347, "12,347")]
+    [TestCase(128_000, "128,000")]
+    [TestCase(400_000, "400,000")]
+    [TestCase(999_499, "999,499")]
+    [TestCase(999_999, "999,999", Description = "The last number written out in full.")]
     [TestCase(1_000_000, "1.00M")]
     [TestCase(1_048_576, "1.05M")]
     [TestCase(1_050_000, "1.05M", Description = "Which is how OpenAI writes it themselves.")]
@@ -40,14 +40,15 @@ public sealed class TokenAmountTests
     }
 
     [TestCase(999, "999")]
-    [TestCase(1_234, "1,23k")]
-    [TestCase(400_000, "400,00k")]
+    [TestCase(1_234, "1.234")]
+    [TestCase(400_000, "400.000")]
     [TestCase(1_048_576, "1,05M")]
     public void TheSeparatorsAreTheOnesTheUserKnows(int tokens, string wanted)
     {
         //
-        // A German reads 1,23k where an American reads 1.23k. Writing either of them the other way
-        // around reads as a number a thousand times off.
+        // A German reads 1.234 where an American reads 1,234, and 1,05M where an American reads
+        // 1.05M. Writing either of them the other way around reads as a number a thousand times
+        // off.
         //
         Assert.That(TokenAmount.Format(tokens, GERMAN), Is.EqualTo(wanted));
     }
