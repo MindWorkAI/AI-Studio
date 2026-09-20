@@ -3589,6 +3589,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
 -- plus {0} image(s), which is more than the {1} this model accepts
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2059172343"] = "plus {0} image(s), which is more than the {1} this model accepts"
 
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2301651387"] = "Please enter a chat name."
+
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Italic"
 
@@ -3600,6 +3603,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile u
 
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "The selected provider is not allowed in this chat due to data security or confidence-level requirements."
+
+-- Duplicate Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2762849660"] = "Duplicate Chat"
+
+-- {0} (copy)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2930606011"] = "{0} (copy)"
 
 -- Bulleted List
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Bulleted List"
@@ -3613,11 +3622,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3045856778"] = "Move Chat
 -- {0} tokens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3244065777"] = "{0} tokens"
 
+-- Please enter a name for the copy of your chat '{0}':
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3323676840"] = "Please enter a name for the copy of your chat '{0}':"
+
 -- plus {0} image(s), which cannot be counted
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "plus {0} image(s), which cannot be counted"
 
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a provider first"
+
+-- Chat Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3891063690"] = "Chat Name"
 
 -- Start new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Start new chat in workspace '{0}'"
@@ -3631,8 +3646,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Start tem
 -- Heading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
 
+-- Duplicate
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231201590"] = "Duplicate"
+
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Please select the workspace where you want to move the chat to."
+
+-- Duplicate this chat & continue in the copy.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T568087588"] = "Duplicate this chat & continue in the copy."
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the chat to a workspace, or to another if it is already in one."
@@ -5338,6 +5359,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2446263209"] = "Workspace Na
 -- Move to workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2509305748"] = "Move to workspace"
 
+-- Duplicate Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2762849660"] = "Duplicate Chat"
+
+-- {0} (copy)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2930606011"] = "{0} (copy)"
+
 -- Are you sure you want to delete the temporary chat '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3043761007"] = "Are you sure you want to delete the temporary chat '{0}'?"
 
@@ -5352,6 +5379,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3249036008"] = "There is alr
 
 -- Please enter a workspace name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Please enter a workspace name."
+
+-- Please enter a name for the copy of your chat '{0}':
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3323676840"] = "Please enter a name for the copy of your chat '{0}':"
 
 -- Rename
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Rename"
@@ -5379,6 +5409,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4048389951"] = "Workspaces"
 
 -- Disappearing Chats
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4201703117"] = "Disappearing Chats"
+
+-- Are you sure you want to duplicate this chat? The copy is opened, so everything you wrote since you last saved this chat will be lost.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4222136922"] = "Are you sure you want to duplicate this chat? The copy is opened, so everything you wrote since you last saved this chat will be lost."
+
+-- Duplicate
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T4231201590"] = "Duplicate"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Please select the workspace where you want to move the chat to."

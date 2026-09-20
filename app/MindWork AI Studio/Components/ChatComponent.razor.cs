@@ -1242,6 +1242,49 @@ public partial class ChatComponent : MSGComponentBase
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
 
+    /// <summary>
+    /// Copies the chat which is open into a second one and continues in that one.
+    /// </summary>
+    /// <remarks>
+    /// Copied is the chat as it stands on the screen, not the state which was stored last, so a
+    /// sentence somebody wrote a moment ago is part of the copy. That is also why nothing is asked
+    /// about unsaved changes here, unlike everywhere else which leaves a chat behind: none of them
+    /// are lost, they are what is being copied.
+    /// </remarks>
+    private async Task DuplicateCurrentChat()
+    {
+        if (this.ChatThread is null || this.IsCurrentChatStreaming)
+            return;
+
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.Message, string.Format(T("Please enter a name for the copy of your chat '{0}':"), this.ChatThread.Name) },
+            { x => x.InputHeaderText, T("Chat Name") },
+            { x => x.UserInput, string.Format(T("{0} (copy)"), this.ChatThread.Name) },
+            { x => x.ConfirmText, T("Duplicate") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Duplicate Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var copy = await WorkspaceBehaviour.DuplicateChatAsync(this.ChatThread, (dialogResult.Data as string)!);
+        if (copy is null)
+            return;
+
+        this.ChatThread = copy;
+        this.hasUnsavedChanges = false;
+
+        await this.SyncForegroundChatAsync();
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
     private async Task MoveChatToWorkspace()
     {
         if(this.ChatThread is null)

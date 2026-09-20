@@ -745,6 +745,64 @@ public partial class Workspaces : MSGComponentBase
         }
     }
 
+    /// <summary>
+    /// Copies a chat of the tree into a second one and opens it.
+    /// </summary>
+    /// <remarks>
+    /// Two questions in a row, and only the second one is always asked. The first is the one every
+    /// other way out of a chat asks -- whether unsaved changes may be lost -- because the copy is
+    /// opened once it exists. The second asks what the copy is called, so that two chats of the
+    /// same name do not end up next to each other in the tree.
+    /// </remarks>
+    /// <param name="chatPath">The directory of the chat to copy.</param>
+    private async Task DuplicateChatAsync(string? chatPath)
+    {
+        var chat = await this.LoadChatAsync(chatPath, false);
+        if (chat is null)
+            return;
+
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
+            return;
+
+        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var unsavedDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, T("Are you sure you want to duplicate this chat? The copy is opened, so everything you wrote since you last saved this chat will be lost.") },
+            };
+
+            var unsavedDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Duplicate Chat"), unsavedDialogParameters, DialogOptions.FULLSCREEN);
+            var unsavedDialogResult = await unsavedDialogReference.Result;
+            if (unsavedDialogResult is null || unsavedDialogResult.Canceled)
+                return;
+        }
+
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.Message, string.Format(T("Please enter a name for the copy of your chat '{0}':"), chat.Name) },
+            { x => x.InputHeaderText, T("Chat Name") },
+            { x => x.UserInput, string.Format(T("{0} (copy)"), chat.Name) },
+            { x => x.ConfirmText, T("Duplicate") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, T("Please enter a chat name.") },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Duplicate Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var copy = await WorkspaceBehaviour.DuplicateChatAsync(chat, (dialogResult.Data as string)!);
+        if (copy is null)
+            return;
+
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        this.CurrentChatThread = copy;
+        await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+    }
+
     private async Task RenameChatAsync(string? chatPath)
     {
         var chat = await this.LoadChatAsync(chatPath, false);

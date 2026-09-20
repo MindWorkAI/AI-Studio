@@ -902,6 +902,93 @@ public static class WorkspaceBehaviour
         }
     }
 
+    /// <summary>
+    /// Copies a chat into a second one of its own, in the workspace the first one is in.
+    /// </summary>
+    /// <remarks>
+    /// The copy is made by writing the chat out and reading it back rather than by naming every
+    /// field it has. What survives a restart therefore survives being duplicated, and a field
+    /// somebody adds later comes along without anybody having to remember this method.
+    ///
+    /// The files a chat owns are copied with it. A chat keeps the transcripts of the media
+    /// somebody attached below its own directory, and a copy which pointed at the originals would
+    /// lose them the day the original chat is deleted. What the user attached from elsewhere is
+    /// not touched: those files stay where they are and both chats name the same path, which is
+    /// what a second chat about the same documents should do.
+    /// </remarks>
+    /// <param name="source">The chat to copy. It is not changed.</param>
+    /// <param name="name">The name the copy gets.</param>
+    /// <returns>The copy, or null when the chat was busy or could not be read back.</returns>
+    public static async Task<ChatThread?> DuplicateChatAsync(ChatThread source, string name)
+    {
+        var sourceDirectory = GetChatDirectory(source.WorkspaceId, source.ChatId);
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(source.WorkspaceId, source.ChatId, nameof(DuplicateChatAsync));
+        if (!acquired)
+            return null;
+
+        ChatThread copy;
+        string targetDirectory;
+        try
+        {
+            var readBack = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(source, JSON_OPTIONS), JSON_OPTIONS);
+            if (readBack is null)
+            {
+                LOG.LogError("Could not read back chat '{ChatId}' while duplicating it.", source.ChatId);
+                return null;
+            }
+
+            copy = readBack with { ChatId = Guid.NewGuid(), Name = name };
+            targetDirectory = GetChatDirectory(copy.WorkspaceId, copy.ChatId);
+            CopyOwnedFiles(sourceDirectory, targetDirectory);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+
+        //
+        // Done after the source is released and before the copy is written: the paths of the
+        // files just copied still name the source directory, and storing the chat with those
+        // would tie the copy to a directory somebody may delete tomorrow.
+        //
+        UpdateAttachmentPathsAfterMove(copy, sourceDirectory, targetDirectory);
+
+        await StoreChatAsync(copy);
+        return copy;
+    }
+
+    /// <summary>
+    /// Copies the files a chat owns into another chat's directory.
+    /// </summary>
+    /// <remarks>
+    /// Everything below a chat directory was written by AI Studio, which makes the directory the
+    /// definition of what a chat owns -- except the two files the chat storage writes itself, and
+    /// the half-written ones it leaves behind while saving. Those two are written for the copy
+    /// anyway, and a temporary file belongs to the save it came from.
+    /// </remarks>
+    /// <param name="sourceDirectory">The directory of the chat being copied.</param>
+    /// <param name="targetDirectory">The directory of the copy.</param>
+    private static void CopyOwnedFiles(string sourceDirectory, string targetDirectory)
+    {
+        if (!Directory.Exists(sourceDirectory))
+            return;
+
+        foreach (var filePath in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+        {
+            var fileName = Path.GetFileName(filePath);
+            if (fileName.StartsWith('.') && fileName.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var relativePath = Path.GetRelativePath(sourceDirectory, filePath);
+            if (relativePath.Equals("thread.json", StringComparison.OrdinalIgnoreCase) || relativePath.Equals("name", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var targetPath = Path.Combine(targetDirectory, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            File.Copy(filePath, targetPath, overwrite: false);
+        }
+    }
+
     /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
     private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
     {

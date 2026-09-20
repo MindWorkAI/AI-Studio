@@ -89,6 +89,13 @@
             <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
 
+            @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            {
+                <MudTooltip Text="@T("Duplicate this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)" OnClick="@this.DuplicateCurrentChat"/>
+                </MudTooltip>
+            }
+
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             {
                 <MudTooltip Text="@T("Delete this chat & start a new one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
