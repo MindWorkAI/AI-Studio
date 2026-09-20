@@ -14,7 +14,11 @@ namespace AIStudio.Provider.OpenAI;
 /// No HTTP, no dependency injection, no provider: what happens here are decisions about bytes,
 /// and those are the decisions worth having a test for.
 /// </remarks>
-public sealed class ChatCompletionToolCallAccumulator
+/// <param name="readSources">
+/// Reads the sources out of one line, in whichever shape this provider sends them. Left out, the
+/// round runs without sources, which is what a provider that sends none needs.
+/// </param>
+public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, IList<ISource>>? readSources = null)
 {
     private const string DONE = "[DONE]";
     
@@ -49,9 +53,16 @@ public sealed class ChatCompletionToolCallAccumulator
         // Only the first choice is ever used, here as much as on the plain text path: we never
         // ask for more than one, and a provider which sends more has no say in which one counts.
         //
+        //
+        // Sources are read off the same line, through the provider's own types: they may sit on
+        // a line of their own or right next to the text, and a line without any gives an empty
+        // list either way.
+        //
+        var sources = readSources?.Invoke(serverSentEvent) ?? [];
+        
         var delta = line?.Choices?.FirstOrDefault()?.Delta;
         if (delta is null)
-            return ChatCompletionStreamPart.Nothing;
+            return WithSources(string.Empty, sources);
 
         this.hasReadAnything = true;
         
@@ -68,10 +79,10 @@ public sealed class ChatCompletionToolCallAccumulator
 
         var textDelta = delta.Content;
         if (textDelta.Length is 0)
-            return ChatCompletionStreamPart.Nothing;
+            return WithSources(string.Empty, sources);
 
         this.text.Append(textDelta);
-        return new ChatCompletionStreamPart(textDelta);
+        return new ChatCompletionStreamPart(textDelta, sources);
     }
     
     /// <summary>
@@ -169,6 +180,12 @@ public sealed class ChatCompletionToolCallAccumulator
     }
     
     private static string? Coalesce(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+    
+    /// <summary>
+    /// A part for a line which brought sources but no text, or nothing at all.
+    /// </summary>
+    private static ChatCompletionStreamPart WithSources(string text, IList<ISource> sources)
+        => sources.Count is 0 ? ChatCompletionStreamPart.Nothing : new ChatCompletionStreamPart(text, sources);
 
     /// <summary>
     /// One tool call while its fragments are still arriving.

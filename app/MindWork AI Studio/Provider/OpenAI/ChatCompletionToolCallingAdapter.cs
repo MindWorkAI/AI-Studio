@@ -19,6 +19,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     IList<object> providerTools,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
     Func<ChatCompletionAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
+    Func<ServerSentEvent, IList<ISource>> readSources,
     ILogger logger)
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
 {
@@ -57,12 +58,12 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         // The text goes out while it is being written; the tool calls are put back together
         // behind it, fragment by fragment.
         //
-        var accumulator = new ChatCompletionToolCallAccumulator();
+        var accumulator = new ChatCompletionToolCallAccumulator(readSources);
         await foreach (var serverSentEvent in streamRequestAsync(requestDto, token))
         {
             var part = accumulator.Process(serverSentEvent);
             if (part.HasContent)
-                yield return ToolCallingStreamEvent.TextDelta(part.TextDelta);
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources));
         }
 
         var message = accumulator.Build();

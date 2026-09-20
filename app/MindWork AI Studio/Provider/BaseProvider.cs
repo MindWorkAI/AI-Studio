@@ -1204,6 +1204,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
                     runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
+                    ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
                 var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
