@@ -229,7 +229,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 additionalApiParameters,
                 providerTools,
                 runnableTools,
-                (requestDto, requestToken) => this.ExecuteResponsesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -316,22 +316,25 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield return content;
     }
 
-    private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    /// <summary>
+    /// Runs one round of a tool calling conversation against the Responses API.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the HTTP request is done here. The retries, the timeouts, and the error
+    /// classification come from the shared stream reader, which the tool calling rounds used to
+    /// go without; reading the events is the adapter's business.
+    /// </remarks>
+    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "responses");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
-        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, token);
 
-        using var response = await this.HttpClient.SendAsync(request, token);
-        if (!response.IsSuccessStatusCode)
+        async Task<HttpRequestMessage> RequestBuilder()
         {
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-            LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-            await ToolCallingMessages.SendToolCallingRequestFailedAsync((int)response.StatusCode);
-            return null;
+            var request = new HttpRequestMessage(HttpMethod.Post, "responses");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
         }
-
-        return await response.Content.ReadFromJsonAsync<ResponsesResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
