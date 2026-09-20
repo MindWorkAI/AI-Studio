@@ -1037,6 +1037,20 @@ public abstract class BaseProvider : IProvider, ISecretId
                     continue;
                 }
 
+                //
+                // The line stating what the request cost carries no content of its own: providers
+                // send it as the last line of the stream, with no choices at all. It is handled
+                // before the check below, which would otherwise drop it as an empty response.
+                //
+                if (providerResponse.ContainsUsage())
+                {
+                    yield return providerResponse.ContainsContent()
+                        ? providerResponse.GetContent() with { Usage = providerResponse.GetUsage() }
+                        : new(string.Empty, [], providerResponse.GetUsage());
+
+                    continue;
+                }
+
                 // Skip empty responses:
                 if (!providerResponse.ContainsContent())
                     continue;

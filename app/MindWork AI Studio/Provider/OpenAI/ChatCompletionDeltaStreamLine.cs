@@ -15,11 +15,29 @@ public record ChatCompletionDeltaStreamLine(string Id, string Object, uint Creat
     {
     }
     
+    /// <summary>
+    /// What the provider says the request cost, on the one line which carries it.
+    /// </summary>
+    /// <remarks>
+    /// Not a positional parameter: every provider builds an empty line through the constructor
+    /// above, and a further parameter would change all of those call sites for a value none of
+    /// them has. Providers send this block only when the request asked for it, and then on a final
+    /// line of its own which carries no choices -- which is why the usage is read apart from the
+    /// content rather than next to it.
+    /// </remarks>
+    public ChatCompletionUsage? Usage { get; init; }
+
     /// <inheritdoc />
     public bool ContainsContent() => this.Choices.Count > 0;
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
+
+    /// <inheritdoc />
+    public bool ContainsUsage() => this.GetUsage().IsKnown;
+
+    /// <inheritdoc />
+    public TokenUsage GetUsage() => this.Usage is null ? TokenUsage.UNKNOWN : TokenUsage.OfReported(this.Usage.PromptTokens, this.Usage.CompletionTokens);
 
     #region Implementation of IAnnotationStreamLine
 

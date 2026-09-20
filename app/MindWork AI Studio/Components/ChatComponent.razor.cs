@@ -173,10 +173,21 @@ public partial class ChatComponent : MSGComponentBase
             if (!this.conversationTokens.IsKnown)
                 return string.Empty;
 
-            var used = TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture);
+            //
+            // Three statements, and which of them can be trusted differs. What the conversation
+            // has cost is exact wherever the provider said it; the window is whatever somebody
+            // wrote down about the model; what is being written has never been sent and can only
+            // ever be estimated. So the conversation and the draft are named apart, and the word
+            // which marks a guess sits where the guess is.
+            //
+            var history = TokenAmount.Format(this.conversationTokens.Tokens - this.conversationTokens.DraftTokens, this.currentCulture);
+            var historyIsExact = this.conversationTokens.HistoryIsReported || !this.conversationTokens.IsEstimate;
             var budget = this.conversationTokens.Window.IsKnown
-                ? string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} of {1} tokens") : this.T("{0} of {1} tokens"), used, TokenAmount.Format(this.conversationTokens.Window.DefaultTokens, this.currentCulture))
-                : string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} tokens") : this.T("{0} tokens"), used);
+                ? string.Format(historyIsExact ? this.T("{0} of {1} tokens") : this.T("approx. {0} of {1} tokens"), history, TokenAmount.Format(this.conversationTokens.Window.DefaultTokens, this.currentCulture))
+                : string.Format(historyIsExact ? this.T("{0} tokens") : this.T("approx. {0} tokens"), history);
+
+            if (this.conversationTokens.DraftTokens > 0)
+                budget = string.Format(this.T("{0}, plus approx. {1} for your message"), budget, TokenAmount.Format(this.conversationTokens.DraftTokens, this.currentCulture));
 
             if (this.conversationTokens.UncountedImages is 0)
                 return budget;
@@ -1460,6 +1471,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         var provider = AIStudio.Settings.Provider.NONE;
         var parts = ConversationParts.NOTHING;
+        var reported = TokenUsage.UNKNOWN;
 
         //
         // Collected on the render thread, counted off it. Counting may take an IPC call per text,
@@ -1478,9 +1490,10 @@ public partial class ChatComponent : MSGComponentBase
             var toolDefinitions = this.GetRunnableToolDefinitions();
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
+            reported = LastReportedTokensOf(thread, provider.Model);
         });
 
-        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, token);
+        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, reported, token);
         if (token.IsCancellationRequested)
             return;
 
@@ -1492,6 +1505,45 @@ public partial class ChatComponent : MSGComponentBase
             this.conversationTokens = counted;
             this.StateHasChanged();
         });
+    }
+
+    /// <summary>
+    /// Finds what a provider last said a request of this conversation cost.
+    /// </summary>
+    /// <remarks>
+    /// The last answer which carries such a number decides, and nothing else has to be remembered
+    /// for it: the number lives on the answer, so editing, regenerating, or deleting a message
+    /// takes it along and an earlier answer -- or none at all -- becomes the one which counts.
+    ///
+    /// An answer still being written is passed over. Its number arrives with the last line of the
+    /// stream, and until then it states what the request before it cost, which is a conversation
+    /// shorter than the one on the screen.
+    /// </remarks>
+    /// <param name="thread">The conversation to look through.</param>
+    /// <param name="model">The model the next request would go to.</param>
+    /// <returns>What the provider reported, or unknown when none of them did.</returns>
+    private static TokenUsage LastReportedTokensOf(ChatThread thread, Model model)
+    {
+        for (var index = thread.Blocks.Count - 1; index >= 0; index--)
+        {
+            if (thread.Blocks[index].Content is not ContentText { IsStreaming: false } text)
+                continue;
+
+            if (!text.ReportedTokens.IsKnown)
+                continue;
+
+            //
+            // A number charged for another model says nothing about this one: another model counts
+            // the same conversation with another tokenizer. Reading on would only find older
+            // answers of that same other model, so the search ends here and the estimate takes
+            // over until this model has answered once.
+            //
+            return string.Equals(text.ReportedForModel, model.Id, StringComparison.Ordinal)
+                ? text.ReportedTokens
+                : TokenUsage.UNKNOWN;
+        }
+
+        return TokenUsage.UNKNOWN;
     }
 
     /// <summary>

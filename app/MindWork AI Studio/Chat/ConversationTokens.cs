@@ -46,6 +46,27 @@ public readonly record struct ConversationTokens
     public bool IsEstimate { get; init; }
 
     /// <summary>
+    /// How much of <see cref="Tokens"/> is the message being written right now.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from the rest for the same reason the statements above are kept apart: what the
+    /// conversation has already cost is something a provider can be asked about, while a sentence
+    /// nobody has sent yet can only be estimated. What the conversation costs without it is this
+    /// subtracted from <see cref="Tokens"/>.
+    /// </remarks>
+    public int DraftTokens { get; init; }
+
+    /// <summary>
+    /// Whether the conversation so far was counted by the provider rather than by this app.
+    /// </summary>
+    /// <remarks>
+    /// True once a provider has stated what a request of this conversation cost, which makes
+    /// everything but the draft an exact number. It says nothing about the draft, which stays an
+    /// estimate either way -- nobody has charged for that one yet.
+    /// </remarks>
+    public bool HistoryIsReported { get; init; }
+
+    /// <summary>
     /// How much the model reads, where anybody has stated it.
     /// </summary>
     public ContextWindow Window { get; init; }

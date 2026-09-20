@@ -58,6 +58,21 @@ public sealed record ConversationParts
     public int Images { get; init; }
 
     /// <summary>
+    /// Which of the texts above are the message being written right now.
+    /// </summary>
+    /// <remarks>
+    /// A marker, not a further part: everything named here also stands in <see cref="GrowingTexts"/>,
+    /// and counting the parts counts each of them exactly once. It exists because the two halves of
+    /// the number answer different questions. What the conversation has cost so far can be had
+    /// exactly, from the provider which charged for it; what is about to be added to it can only be
+    /// estimated. Told as one number, nobody can see which half they are looking at.
+    /// </remarks>
+    public IReadOnlyList<string> DraftTexts { get; init; } = [];
+
+    /// <inheritdoc cref="DraftTexts"/>
+    public IReadOnlyList<FileAttachment> DraftDocuments { get; init; } = [];
+
+    /// <summary>
     /// Collects what a conversation would send.
     /// </summary>
     /// <remarks>
@@ -131,11 +146,27 @@ public sealed record ConversationParts
             }
         }
 
+        var draftTexts = new List<string>();
+        var draftDocuments = new List<FileAttachment>();
+
         if (!string.IsNullOrWhiteSpace(draft))
+        {
             growing.Add(draft);
+            draftTexts.Add(draft);
+        }
 
         if (draftAttachments is not null)
+        {
+            var documentsBefore = documents.Count;
             Sort(draftAttachments, documents, ref images);
+
+            //
+            // Whatever sorting just appended is what the composer carries. Read off the list
+            // rather than sorted a second time, so that a change to what counts as a document
+            // cannot start meaning two different things in one method.
+            //
+            draftDocuments.AddRange(documents.Skip(documentsBefore));
+        }
 
         return new()
         {
@@ -143,6 +174,8 @@ public sealed record ConversationParts
             GrowingTexts = growing,
             Documents = documents,
             Images = imagesAreSent ? images : 0,
+            DraftTexts = draftTexts,
+            DraftDocuments = draftDocuments,
         };
     }
 

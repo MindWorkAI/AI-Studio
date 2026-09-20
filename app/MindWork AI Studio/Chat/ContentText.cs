@@ -52,6 +52,44 @@ public sealed class ContentText : IContent
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
+    /// <summary>
+    /// What the provider said everything sent along with this answer cost, where it said anything.
+    /// </summary>
+    /// <remarks>
+    /// Kept on the answer rather than beside the chat, so that it is stored, loaded, and exported
+    /// with the message it belongs to -- and so that it goes away when the message does. An edited
+    /// or regenerated answer removes its block, which removes these numbers with it, and the chat
+    /// falls back to the estimate instead of carrying a figure for a conversation which no longer
+    /// exists. Null for every answer written before this was recorded, and at every provider which
+    /// reports nothing.
+    ///
+    /// Two plain numbers rather than a <see cref="TokenUsage"/>: that type only ever comes out of
+    /// its own factory, which is what keeps an impossible usage from existing, and a stored field
+    /// has to be readable back by the serializer.
+    /// </remarks>
+    public int? ReportedPromptTokens { get; set; }
+
+    /// <inheritdoc cref="ReportedPromptTokens"/>
+    public int? ReportedCompletionTokens { get; set; }
+
+    /// <summary>
+    /// Which model the numbers above were charged for.
+    /// </summary>
+    /// <remarks>
+    /// A token count belongs to the tokenizer which produced it. Switch the model of a chat, and
+    /// the same conversation is worth a different number of tokens -- so the reported one stops
+    /// being an answer about the request which is about to be sent, and the estimate, wrong as it
+    /// is, is at least wrong about the right model.
+    /// </remarks>
+    public string? ReportedForModel { get; set; }
+
+    /// <summary>
+    /// What the provider said this exchange cost, which is what the next request carries as its
+    /// history.
+    /// </summary>
+    [JsonIgnore]
+    public TokenUsage ReportedTokens => TokenUsage.OfReported(this.ReportedPromptTokens, this.ReportedCompletionTokens);
+
     [JsonIgnore]
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
 
@@ -186,6 +224,18 @@ public sealed class ContentText : IContent
 
                         // Merge the sources:
                         this.Sources.MergeSources(contentStreamChunk.Sources);
+
+                        //
+                        // Keep what the provider says the request cost. It arrives on one line of
+                        // the stream, usually the last one, and only where the provider reports it
+                        // at all -- so the previous value is kept rather than cleared:
+                        //
+                        if (contentStreamChunk.Usage.IsKnown)
+                        {
+                            this.ReportedPromptTokens = contentStreamChunk.Usage.PromptTokens;
+                            this.ReportedCompletionTokens = contentStreamChunk.Usage.CompletionTokens;
+                            this.ReportedForModel = chatModel.Id;
+                        }
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:

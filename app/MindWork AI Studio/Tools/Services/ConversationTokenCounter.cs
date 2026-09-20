@@ -68,9 +68,13 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
     /// </summary>
     /// <param name="provider">The configured provider, which decides both the tokenizer and the window.</param>
     /// <param name="parts">What the conversation would send, collected beforehand.</param>
+    /// <param name="reported">
+    /// What a provider said the last request of this conversation cost, where one did. It replaces
+    /// everything the app would otherwise estimate about the conversation so far.
+    /// </param>
     /// <param name="token">Ends the counting when nobody needs the answer anymore.</param>
     /// <returns>What the conversation costs, or that nothing could be counted.</returns>
-    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, CancellationToken token = default)
+    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, TokenUsage reported = default, CancellationToken token = default)
     {
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             return ConversationTokens.UNAVAILABLE;
@@ -115,11 +119,44 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
 
         this.stillGrowing = growing;
 
+        //
+        // What the composer adds, out of what was just counted. Every one of these was measured a
+        // moment ago and is still in the caches, so asking again costs a lookup each -- and asking
+        // separately is what keeps the two halves of the number apart.
+        //
+        var draftTokens = 0;
+        try
+        {
+            foreach (var text in parts.DraftTexts)
+                draftTokens += growing.TryGetValue(Key(provider, text), out var known) ? known : await this.CountTextAsync(provider, text, token);
+
+            foreach (var document in parts.DraftDocuments)
+                draftTokens += await this.CountDocumentAsync(provider, document, token);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            //
+            // The whole number stands even when its draft share does not: a conversation which
+            // was counted is worth showing, and a draft of zero only understates what is being
+            // written.
+            //
+            logger.LogWarning(e, "Could not count what the composer adds to this conversation.");
+            draftTokens = 0;
+        }
+
+        //
+        // Where a provider has said what this conversation cost, that number replaces everything
+        // but the draft. It is the only exact one of the two, and it covers the same ground: the
+        // system prompt, the tools, and every message which has been sent.
+        //
+        var historyIsReported = reported.IsKnown;
         return new()
         {
             IsKnown = true,
-            Tokens = tokens,
+            Tokens = historyIsReported ? reported.TotalTokens + draftTokens : tokens,
             IsEstimate = string.IsNullOrWhiteSpace(provider.TokenizerPath),
+            DraftTokens = draftTokens,
+            HistoryIsReported = historyIsReported,
             Window = profile.Context,
             UncountedImages = parts.Images,
             ImageLimits = profile.Images,

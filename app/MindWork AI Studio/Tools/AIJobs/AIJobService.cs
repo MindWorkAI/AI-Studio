@@ -456,6 +456,18 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             aiText.Text += contentStreamChunk;
             aiText.Sources.MergeSources(contentStreamChunk.Sources);
 
+            //
+            // Keep what the provider says the request cost. It arrives on one line of the stream,
+            // usually the last one, and only where a provider reports it at all -- so a chunk
+            // without it leaves what was reported before alone.
+            //
+            if (contentStreamChunk.Usage.IsKnown)
+            {
+                aiText.ReportedPromptTokens = contentStreamChunk.Usage.PromptTokens;
+                aiText.ReportedCompletionTokens = contentStreamChunk.Usage.CompletionTokens;
+                aiText.ReportedForModel = state.ChatGenerationRequest.ProviderSettings.Model.Id;
+            }
+
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {
                 state.Snapshot = state.Snapshot with
