@@ -18,7 +18,17 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 {
     private const string NO_ANSWER_AFTER_TOOL_CALL = "The model completed the tool call but did not return a final answer.";
     private const string NO_ANSWER_AFTER_LIMIT = "The model did not return a final answer after completing the available tool calls.";
-
+    
+    /// <summary>
+    /// What separates the text of one round from the text of the next one.
+    /// </summary>
+    /// <remarks>
+    /// A model may write before it calls a tool and again after the result came back. Without a
+    /// separator, the last word of one round and the first of the next would run into each other,
+    /// since each round is a text of its own rather than a continuation.
+    /// </remarks>
+    private const string ROUND_TEXT_SEPARATOR = "\n\n";
+    
     /// <inheritdoc />
     public async IAsyncEnumerable<ContentStreamChunk> RunAsync(
         IToolCallingProviderAdapter adapter,
@@ -28,6 +38,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         var toolCallCount = 0;
         var toolResultCharacterCount = 0L;
         var toolSources = new List<Source>();
+        var hasStreamedTextBefore = false;
 
         while (true)
         {
@@ -38,13 +49,52 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
             var finalResponseRequired = finalResponseInstruction is not null;
 
-            var round = await adapter.ExecuteRoundAsync(finalResponseInstruction, !finalResponseRequired, token);
+            ToolCallingRound? round = null;
+            var roundStreamedText = false;
+            
+            //
+            // The model's words go out while the round is still running. That includes what it
+            // writes before a tool call -- "let me look that up" -- which used to be dropped on
+            // the floor because only the round's outcome was ever shown.
+            //
+            await foreach (var streamEvent in adapter.ExecuteRoundAsync(finalResponseInstruction, !finalResponseRequired, token))
+            {
+                if (streamEvent.Kind is ToolCallingStreamEventKind.ROUND_COMPLETED)
+                {
+                    round = streamEvent.Round;
+                    continue;
+                }
+                
+                if (streamEvent.Delta is null)
+                    continue;
+
+                if (!string.IsNullOrWhiteSpace(streamEvent.Delta.Content))
+                {
+                    //
+                    // The separator goes out once the new round actually has something to say:
+                    // otherwise it would trail a round which only called a tool.
+                    //
+                    if (!roundStreamedText && hasStreamedTextBefore)
+                        yield return new ContentStreamChunk(ROUND_TEXT_SEPARATOR, []);
+                    
+                    roundStreamedText = true;
+                    hasStreamedTextBefore = true;
+                }
+                
+                yield return streamEvent.Delta;
+            }
+            
+            //
+            // No outcome means the round failed: the request errored out, or the stream ended
+            // mid-sentence. Either way the adapter has already reported it.
+            //
             if (round is null)
             {
                 await context.ResetToolRuntimeStatusAsync();
                 yield break;
             }
-
+            
+            var roundAnswered = roundStreamedText || !string.IsNullOrWhiteSpace(round.TextOutput);
             toolSources.MergeSources(round.Sources);
 
             //
@@ -65,8 +115,14 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (finalResponseRequired)
             {
                 await context.ResetToolRuntimeStatusAsync();
+                
+                //
+                // The answer itself is out already, so what is left to hand over are the sources
+                // the tools contributed. An empty chunk is how sources travel on their own; the
+                // streaming paths of the providers attach their annotations the same way.
+                //
                 yield return new ContentStreamChunk(
-                    string.IsNullOrWhiteSpace(round.TextOutput) ? NO_ANSWER_AFTER_LIMIT : round.TextOutput,
+                    roundAnswered ? string.Empty : NO_ANSWER_AFTER_LIMIT,
                     [..toolSources]);
 
                 yield break;
@@ -75,9 +131,9 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (round.Calls.Count is 0)
             {
                 await context.ResetToolRuntimeStatusAsync();
-                if (!string.IsNullOrWhiteSpace(round.TextOutput))
+                if (roundAnswered)
                 {
-                    yield return new ContentStreamChunk(round.TextOutput, [..toolSources]);
+                    yield return new ContentStreamChunk(string.Empty, [..toolSources]);
                     yield break;
                 }
 

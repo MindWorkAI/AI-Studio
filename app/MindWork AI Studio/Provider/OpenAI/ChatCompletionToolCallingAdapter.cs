@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Tools.ToolCallingSystem;
@@ -30,7 +31,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         var requestSystemPrompt = finalResponseInstruction is null
             ? systemPrompt : systemPrompt with
@@ -54,7 +55,7 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
 
         var response = await executeRequestAsync(requestDto, token);
         if (response is null)
-            return null;
+            yield break;
 
         // The response comes from a provider, so its shape is a promise rather than a guarantee:
         // a JSON null for the choices field overwrites the initialized property with null.
@@ -74,12 +75,20 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         var preparedCalls = this.PrepareToolCalls(responseChoice.Message.ToolCalls ?? []);
         this.lastToolCalls = preparedCalls.Select(x => x.ToolCall).ToList();
 
-        return new ToolCallingRound(
-            responseChoice.Message.Content ?? string.Empty,
+        //
+        // The whole round arrives at once for now, so its text goes out as one delta. What the
+        // loop and the UI see is already the streaming shape; only the pieces are still large.
+        //
+        var textOutput = responseChoice.Message.Content ?? string.Empty;
+        if (!string.IsNullOrEmpty(textOutput))
+            yield return ToolCallingStreamEvent.TextDelta(textOutput);
+
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
+            textOutput,
             preparedCalls
                 .Select(x => new ToolCallingRequestedCall(x.ToolCall.Id!, x.ToolCall.Function!.Name!, x.ToolCall.Function!.Arguments!, x.IsValid))
                 .ToList(),
-            []);
+            []));
     }
 
     /// <inheritdoc />

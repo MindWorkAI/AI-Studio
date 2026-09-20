@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -32,7 +34,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     private readonly IList<object> effectiveProviderTools = BuildEffectiveProviderTools(providerTools, runnableTools);
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         var requestInput = new List<object>(baseInput);
         if (finalResponseInstruction is not null && requestInput.FirstOrDefault() is TextMessage systemPrompt)
@@ -56,11 +58,20 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
         }, token);
 
         if (response is null)
-            return null;
+            yield break;
 
         this.lastResponse = response;
-        return new ToolCallingRound(
-            response.GetTextOutput(),
+        
+        //
+        // The whole round arrives at once for now, so its text goes out as one delta. What the
+        // loop and the UI see is already the streaming shape; only the pieces are still large.
+        //
+        var textOutput = response.GetTextOutput();
+        if (!string.IsNullOrEmpty(textOutput))
+            yield return ToolCallingStreamEvent.TextDelta(textOutput);
+
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
+            textOutput,
             response.GetFunctionCalls()
                 .Select(call => new ToolCallingRequestedCall(
                     call.CallId ?? string.Empty,
@@ -69,7 +80,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
                     !string.IsNullOrWhiteSpace(call.Name) && ToolExecutor.IsValidArgumentsJson(call.Arguments)))
                 .ToList(),
             
-            response.GetSources());
+            response.GetSources()));
     }
 
     /// <inheritdoc />

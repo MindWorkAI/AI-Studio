@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -27,7 +29,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
     public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         //
         // The results of the previous round are flushed here rather than when they were recorded:
@@ -54,11 +56,20 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
         }, token);
 
         if (response is null)
-            return null;
+            yield break;
 
         this.lastResponse = response;
-        return new ToolCallingRound(
-            response.GetTextOutput(),
+        
+        //
+        // The whole round arrives at once for now, so its text goes out as one delta. What the
+        // loop and the UI see is already the streaming shape; only the pieces are still large.
+        //
+        var textOutput = response.GetTextOutput();
+        if (!string.IsNullOrEmpty(textOutput))
+            yield return ToolCallingStreamEvent.TextDelta(textOutput);
+
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
+            textOutput,
             response.GetToolUses()
                 .Select(toolUse => new ToolCallingRequestedCall(
                     toolUse.Id,
@@ -66,7 +77,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
                     toolUse.Arguments,
                     ToolExecutor.IsValidArgumentsJson(toolUse.Arguments)))
                 .ToList(),
-            []);
+            []));
     }
 
     /// <inheritdoc />
