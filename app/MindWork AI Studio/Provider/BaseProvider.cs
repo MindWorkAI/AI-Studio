@@ -840,19 +840,20 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     /// <summary>
-    /// Streams the chat completion from the provider using the Chat Completion API.
+    /// Reads a server-sent event stream from the provider, line by line.
     /// </summary>
-    /// <param name="providerName">The name of the provider.</param>
+    /// <remarks>
+    /// Everything on the way to a line is here: the retries, the timeouts, the cancellation, and
+    /// the messages the user gets to see when any of it fails. What a line means is not here --
+    /// that differs per wire format, and reading it is the caller's business.
+    /// </remarks>
+    /// <param name="providerName">The name of the provider, for logging and error reporting.</param>
+    /// <param name="operationName">What is being streamed, for logging: a chat completion, say, or a responses call.</param>
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="token">The cancellation token to use.</param>
-    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
-    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
-    /// <returns>The stream of content chunks.</returns>
-    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
+    /// <returns>The events of the stream, in the order they arrived.</returns>
+    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Check if annotations are supported:
-        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
-        
         StreamReader? streamReader = null;
         using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
         var timeoutToken = timeoutTokenSource.Token;
@@ -862,7 +863,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
             if(responseData.IsFailedAfterAllRetries)
             {
-                this.logger.LogError($"The {providerName} chat completion failed: {responseData.ErrorMessage}");
+                this.logger.LogError("The {ProviderName} {OperationName} failed: {ErrorMessage}", providerName, operationName, responseData.ErrorMessage);
                 yield break;
             }
             
@@ -880,108 +881,139 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             if (token.IsCancellationRequested)
             {
-                this.logger.LogWarning("The user canceled the chat completion request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
+                this.logger.LogWarning("The user canceled the {OperationName} request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", operationName, providerName, this.InstanceName);
             }
             else if (this.IsTimeoutException(e, token))
             {
                 await this.SendTimeoutError("opening the chat response stream");
-                this.logger.LogError(e, "Timed out while opening the chat completion stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+                this.logger.LogError(e, "Timed out while opening the {OperationName} stream from {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
             }
             else
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to stream chat completion from {providerName} '{this.InstanceName}': {e.Message}");
+                this.logger.LogError(e, "Failed to stream the {OperationName} from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", operationName, providerName, this.InstanceName, e.Message);
             }
         }
 
         if (streamReader is null)
             yield break;
-        
-        //
-        // Read the stream, line by line:
-        //
-        while (true)
+
+        try
         {
-            try
+            //
+            // Read the stream, line by line:
+            //
+            while (true)
             {
-                if(streamReader.EndOfStream)
+                try
+                {
+                    if(streamReader.EndOfStream)
+                        break;
+                }
+                catch (Exception e)
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                    this.logger.LogWarning(e, "Failed to read the end-of-stream state from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
                     break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
+                }
 
-            // Check if the token is canceled:
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning($"The user canceled the chat completion for {providerName} '{this.InstanceName}'.");
-                streamReader.Close();
-                yield break;
-            }
-
-            //
-            // Read the next line:
-            //
-            string? line;
-            try
-            {
-                line = await streamReader.ReadLineAsync(timeoutToken);
-            }
-            catch (Exception e)
-            {
+                // Check if the token is canceled:
                 if (token.IsCancellationRequested)
                 {
-                    this.logger.LogWarning("The user canceled the chat completion stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
-                }
-                else if (this.IsTimeoutException(e, token))
-                {
-                    await this.SendTimeoutError("reading the chat response stream");
-                    this.logger.LogError(e, "Timed out while reading the chat stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-                }
-                else
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                    this.logger.LogWarning("The user canceled the {OperationName} for {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
+                    yield break;
                 }
 
-                break;
+                //
+                // Read the next line:
+                //
+                string? line;
+                try
+                {
+                    line = await streamReader.ReadLineAsync(timeoutToken);
+                }
+                catch (Exception e)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        this.logger.LogWarning("The user canceled the {OperationName} stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", operationName, providerName, this.InstanceName);
+                    }
+                    else if (this.IsTimeoutException(e, token))
+                    {
+                        await this.SendTimeoutError("reading the chat response stream");
+                        this.logger.LogError(e, "Timed out while reading the {OperationName} stream from {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
+                    }
+                    else
+                    {
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                        this.logger.LogError(e, "Failed to read the stream from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
+                    }
+
+                    break;
+                }
+
+                if (line is null)
+                    break;
+
+                // Skip empty lines:
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+                
+                if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
+                    throw providerRequestException;
+
+                //
+                // Only data lines carry a payload. Every other line goes out as it is, because
+                // some of them still say something the caller has to act on.
+                //
+                TryGetServerSentEventData(line, out var data);
+                yield return new ServerSentEvent(line, data);
             }
+        }
+        finally
+        {
+            streamReader.Dispose();
+        }
+    }
 
-            if (line is null)
-                break;
-
-            // Skip empty lines:
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
-                throw providerRequestException;
-
-            // Skip lines that do not start with "data:". According
-            // to the specification, we only want to read the data lines:
-            if (!TryGetServerSentEventData(line, out var jsonData))
+    /// <summary>
+    /// Streams the chat completion from the provider using the Chat Completion API.
+    /// </summary>
+    /// <param name="providerName">The name of the provider.</param>
+    /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
+    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
+    /// <returns>The stream of content chunks.</returns>
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
+    {
+        // Check if annotations are supported:
+        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
+        
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, token))
+        {
+            // Skip lines without a payload. According to the specification,
+            // we only want to read the data lines:
+            if (serverSentEvent.Data.Length is 0)
                 continue;
 
             // Check if the line is the end of the stream:
-            if (jsonData is "[DONE]")
+            if (serverSentEvent.Data is "[DONE]")
                 yield break;
 
             //
             // Process annotation lines:
             //
-            if (annotationSupported && line.Contains("""
-                                                     "annotations":[
-                                                     """, StringComparison.InvariantCulture))
+            if (annotationSupported && serverSentEvent.Line.Contains("""
+                                                                     "annotations":[
+                                                                     """, StringComparison.InvariantCulture))
             {
                 TAnnotation? providerResponse;
                 
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -1009,7 +1041,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -1028,8 +1060,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 yield return providerResponse.GetContent();
             }
         }
-        
-        streamReader.Dispose();
     }
 
     /// <summary>
@@ -1046,132 +1076,29 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
-        StreamReader? streamReader = null;
-        using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
-        var timeoutToken = timeoutTokenSource.Token;
-        try
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
         {
-            // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
-            if(responseData.IsFailedAfterAllRetries)
-            {
-                this.logger.LogError($"The {providerName} responses call failed: {responseData.ErrorMessage}");
-                yield break;
-            }
-            
-            // Open the response stream:
-            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(timeoutToken);
-
-            // Add a stream reader to read the stream, line by line:
-            streamReader = new StreamReader(providerStream);
-        }
-        catch(ProviderRequestException)
-        {
-            throw;
-        }
-        catch(Exception e)
-        {
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning("The user canceled the responses request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
-            }
-            else if (this.IsTimeoutException(e, token))
-            {
-                await this.SendTimeoutError("opening the chat response stream");
-                this.logger.LogError(e, "Timed out while opening the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-            }
-            else
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to stream responses from {providerName} '{this.InstanceName}': {e.Message}");
-            }
-        }
-
-        if (streamReader is null)
-            yield break;
-        
-        //
-        // Read the stream, line by line:
-        //
-        while (true)
-        {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
-
-            // Check if the token is canceled:
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning($"The user canceled the responses for {providerName} '{this.InstanceName}'.");
-                streamReader.Close();
-                yield break;
-            }
-
-            //
-            // Read the next line:
-            //
-            string? line;
-            try
-            {
-                line = await streamReader.ReadLineAsync(timeoutToken);
-            }
-            catch (Exception e)
-            {
-                if (token.IsCancellationRequested)
-                {
-                    this.logger.LogWarning("The user canceled the responses stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
-                }
-                else if (this.IsTimeoutException(e, token))
-                {
-                    await this.SendTimeoutError("reading the chat response stream");
-                    this.logger.LogError(e, "Timed out while reading the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-                }
-                else
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
-                }
-
-                break;
-            }
-
-            if (line is null)
-                break;
-
-            // Skip empty lines:
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
-                throw providerRequestException;
-
-            // Check if the line is the end of the stream:
-            if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
+            // Check if the line is the end of the stream. This one is read off the raw line
+            // rather than off a payload, because it has none:
+            if (serverSentEvent.Line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
             
-            if (!TryGetServerSentEventData(line, out var jsonData))
+            // Skip lines without a payload:
+            if (serverSentEvent.Data.Length is 0)
                 continue;
 
             //
             // Find delta lines:
             //
-            if (jsonData.StartsWith("""
-                                    {"type":"response.output_text.delta"
-                                    """, StringComparison.InvariantCulture))
+            if (serverSentEvent.Data.StartsWith("""
+                                                {"type":"response.output_text.delta"
+                                                """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -1193,7 +1120,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             // Find annotation added lines:
             //
-            else if (annotationSupported && jsonData.StartsWith(
+            else if (annotationSupported && serverSentEvent.Data.StartsWith(
                          """
                          {"type":"response.output_text.annotation.added"
                          """, StringComparison.InvariantCulture))
@@ -1202,7 +1129,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -1221,8 +1148,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 yield return new(string.Empty, providerResponse.GetSources());
             }
         }
-        
-        streamReader.Dispose();
     }
 
     /// <summary>
