@@ -15,7 +15,7 @@ namespace AIStudio.Provider.OpenAI;
 /// </remarks>
 public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ResponsesAPIRequest, CancellationToken, Task<ResponsesResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
+    Func<ResponsesAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<object> internalItems = [];
     private readonly List<string> recordedRequestTexts = [];
@@ -47,31 +47,35 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
 
         requestInput.AddRange(this.internalItems);
 
-        var response = await executeRequestAsync(new ResponsesAPIRequest
+        var request = new ResponsesAPIRequest
         {
             Model = chatModel.Id,
             Input = requestInput,
-            Stream = false,
+            Stream = true,
             Store = false,
             Tools = includeTools ? this.effectiveProviderTools : [],
             AdditionalApiParameters = apiParameters,
-        }, token);
+        };
 
+        //
+        // The text goes out while it is being written, the round only once the stream closed it.
+        // Sources travel with the text because the API announces them as it cites them.
+        //
+        var accumulator = new ResponsesStreamAccumulator();
+        await foreach (var serverSentEvent in streamRequestAsync(request, token))
+        {
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources));
+        }
+
+        var response = accumulator.Build();
         if (response is null)
             yield break;
 
         this.lastResponse = response;
-        
-        //
-        // The whole round arrives at once for now, so its text goes out as one delta. What the
-        // loop and the UI see is already the streaming shape; only the pieces are still large.
-        //
-        var textOutput = response.GetTextOutput();
-        if (!string.IsNullOrEmpty(textOutput))
-            yield return ToolCallingStreamEvent.TextDelta(textOutput);
-
         yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
-            textOutput,
+            response.GetTextOutput(),
             response.GetFunctionCalls()
                 .Select(call => new ToolCallingRequestedCall(
                     call.CallId ?? string.Empty,

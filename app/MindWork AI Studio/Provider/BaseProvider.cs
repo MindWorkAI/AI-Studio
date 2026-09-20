@@ -39,20 +39,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
-    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters =
-        {
-            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower),
-            new AnnotationConverter(),
-            new MessageBaseConverter(),
-            new SubContentConverter(),
-            new SubContentImageSourceConverter(),
-            new SubContentImageUrlConverter(),
-        },
-        AllowTrailingCommas = false
-    };
+    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = ProviderJsonOptions.OPTIONS;
 
     /// <summary>
     /// Constructor for the base provider.
