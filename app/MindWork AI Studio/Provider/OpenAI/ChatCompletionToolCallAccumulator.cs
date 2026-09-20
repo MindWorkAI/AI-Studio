@@ -21,6 +21,7 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, IList<ISource>>? readSources = null)
 {
     private const string DONE = "[DONE]";
+    private const string EMPTY_ARGUMENTS = "{}";
     
     private readonly StringBuilder text = new();
     private readonly StringBuilder reasoning = new();
@@ -204,9 +205,13 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
         /// Builds the call in the shape a non-streamed answer would have carried it.
         /// </summary>
         /// <remarks>
-        /// Nothing is corrected here. A call without an ID, without a name, or with arguments
-        /// which are not an object stays as it is, so that the adapter sees what the model
-        /// actually sent and can answer it the way an invalid call has to be answered.
+        /// A call without an ID, without a name, or with arguments which are not an object stays
+        /// as it is: the adapter has to see what the model actually sent, so that it can reject
+        /// the call the way an invalid one has to be rejected.<br/><br/>
+        /// Empty arguments are the one exception, and they are not a correction but a
+        /// translation: a tool which takes nothing gets no fragment at all here, while the same
+        /// call arrives as an empty object when it is not streamed. Handing on the empty string
+        /// would have every parameterless tool rejected as invalid.
         /// </remarks>
         public ChatCompletionToolCall Build() => new()
         {
@@ -215,7 +220,7 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
             Function = new ChatCompletionToolFunction
             {
                 Name = this.Name,
-                Arguments = this.Arguments.ToString(),
+                Arguments = this.Arguments.Length is 0 ? EMPTY_ARGUMENTS : this.Arguments.ToString(),
             },
         };
     }
