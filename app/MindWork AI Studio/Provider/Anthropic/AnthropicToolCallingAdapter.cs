@@ -17,7 +17,7 @@ namespace AIStudio.Provider.Anthropic;
 /// </remarks>
 public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageBase> baseMessages, string systemPrompt, int maxTokens,
     IDictionary<string, object> apiParameters, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ChatRequest, CancellationToken, Task<AnthropicResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
+    Func<ChatRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<IMessageBase> internalMessages = [];
     private readonly List<AnthropicToolResultContent> pendingToolResults = [];
@@ -41,7 +41,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
             this.pendingToolResults.Clear();
         }
 
-        var response = await executeRequestAsync(new ChatRequest
+        var request = new ChatRequest
         {
             Model = chatModel.Id,
             Messages = [..baseMessages, ..this.internalMessages],
@@ -50,26 +50,30 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
                 : $"{systemPrompt}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
 
             MaxTokens = maxTokens,
-            Stream = false,
+            Stream = true,
             Tools = includeTools && this.tools.Count > 0 ? this.tools : null,
             AdditionalApiParameters = apiParameters,
-        }, token);
+        };
 
+        //
+        // The text goes out while it is being written; the blocks are put back together behind
+        // it, because they have to return to the provider exactly as they arrived.
+        //
+        var accumulator = new AnthropicMessageStreamAccumulator();
+        await foreach (var serverSentEvent in streamRequestAsync(request, token))
+        {
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent)
+                yield return ToolCallingStreamEvent.TextDelta(part.TextDelta);
+        }
+
+        var response = accumulator.Build();
         if (response is null)
             yield break;
 
         this.lastResponse = response;
-        
-        //
-        // The whole round arrives at once for now, so its text goes out as one delta. What the
-        // loop and the UI see is already the streaming shape; only the pieces are still large.
-        //
-        var textOutput = response.GetTextOutput();
-        if (!string.IsNullOrEmpty(textOutput))
-            yield return ToolCallingStreamEvent.TextDelta(textOutput);
-
         yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
-            textOutput,
+            response.GetTextOutput(),
             response.GetToolUses()
                 .Select(toolUse => new ToolCallingRequestedCall(
                     toolUse.Id,
