@@ -465,6 +465,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private async Task SystemeThemeChanged(bool isDark)
     {
         this.Logger.LogInformation($"The system theme changed to {(isDark ? "dark" : "light")}.");
+
+        if (this.SettingsManager.ConfigurationData.App.PreferredTheme is not Themes.SYSTEM)
+            return;
+
         await this.UpdateThemeConfiguration();
     }
 
