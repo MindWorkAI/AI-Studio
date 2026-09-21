@@ -369,15 +369,24 @@ public record ChatTemplate(
     {
         issue = string.Empty;
         var fileAttachmentsLua = this.BuildFileAttachmentsLua(fileAttachmentPaths);
+
+        //
+        // Both of these may be absent entirely, because saying nothing about tools or data sources
+        // is a statement of its own. They therefore bring their own line break and indentation
+        // instead of sitting on a line of the template:
+        //
+        var toolIdsLua = this.BuildToolIdsLua();
+        var dataSourceOptionsLua = this.BuildDataSourceOptionsLua();
+
         luaCode = $$"""
-                    CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                    {{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(exportId)}}",
                         ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
                         ["SystemPrompt"] = {{LuaTools.ToLuaStringLiteral(this.SystemPrompt)}},
                         ["PredefinedUserPrompt"] = {{LuaTools.ToLuaStringLiteral(this.PredefinedUserPrompt)}},
                         ["AllowProfileUsage"] = {{this.AllowProfileUsage.ToString().ToLowerInvariant()}},
                         ["FileAttachments"] = {{fileAttachmentsLua}},
-                        ["ExampleConversation"] = {{exampleConversationLua}},
+                        ["ExampleConversation"] = {{exampleConversationLua}},{{toolIdsLua}}{{dataSourceOptionsLua}}
                     }
                     """;
         return true;
@@ -485,6 +494,84 @@ public record ChatTemplate(
         builder.Append("    }");
         luaTable = builder.ToString();
         return true;
+    }
+
+    /// <remarks>
+    /// An empty set is written out as an empty table rather than being left out: the two say
+    /// different things, and dropping the line would turn "no tools at all" into "whatever the
+    /// chat default is" on the machine which reads this back.
+    /// </remarks>
+    private string BuildToolIdsLua()
+    {
+        if (this.ToolIds is null)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+        builder.AppendLine();
+        if (this.ToolIds.Count == 0)
+        {
+            builder.Append("""    ["ToolIds"] = {},""");
+            return builder.ToString();
+        }
+
+        builder.AppendLine("""    ["ToolIds"] = {""");
+
+        //
+        // A set has no order of its own, so exporting the same template twice would otherwise
+        // produce two different files. Sorting keeps the plugin diffs readable:
+        //
+        foreach (var toolId in this.ToolIds.Order(StringComparer.Ordinal))
+            builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
+
+        builder.Append("    },");
+        return builder.ToString();
+    }
+
+    private string BuildDataSourceOptionsLua()
+    {
+        if (this.DataSourceOptions is not { } options)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+        builder.AppendLine();
+        builder.AppendLine("""    ["DataSourceOptions"] = {""");
+        builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+
+        if (options.PreselectedDataSourceIds.Count == 0)
+            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");
+        else
+        {
+            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {""");
+            foreach (var dataSourceId in options.PreselectedDataSourceIds)
+                builder.AppendLine($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
+
+            builder.AppendLine("        },");
+        }
+
+        builder.Append("    },");
+        return builder.ToString();
+    }
+
+    /// <remarks>
+    /// The template itself gets a fresh ID on export, but the data source IDs must not: they point
+    /// at the sources of the organization and only work when both sides agree on them. Nobody can
+    /// see that from the exported code alone, hence this note.
+    /// </remarks>
+    private string BuildDataSourceIdNote()
+    {
+        if (this.DataSourceOptions is not { PreselectedDataSourceIds.Count: > 0 })
+            return string.Empty;
+
+        // The empty line before the closing delimiter is what ends the last comment line. Without
+        // it, the assignment would continue that comment and the whole export would be one comment:
+        return """
+               -- The data source IDs below are the ones of the machine this was exported from.
+               -- Please check them against your CONFIG["DATA_SOURCES"]: an ID which resolves to
+               -- nothing is ignored, and a chat with this template then starts without that source.
+
+               """;
     }
 
     private string BuildFileAttachmentsLua(IReadOnlyList<string>? fileAttachmentPaths)
