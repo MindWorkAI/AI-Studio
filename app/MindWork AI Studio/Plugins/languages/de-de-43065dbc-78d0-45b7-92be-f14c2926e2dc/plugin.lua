@@ -2511,6 +2511,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T385
 -- Analysis Options
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3882472641"] = "Analyseoptionen"
 
+-- This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4072390012"] = "Diese SWOT-Analyse kann nicht als vollständige oder belastbare Analyse betrachtet werden, da sie ausschließlich auf Basis der hochgeladenen Dokumente erstellt werden kann. Ohne entsprechende Unterlagen fehlt die Grundlage für eine fundierte strategische Bewertung. Die vorliegende Analyse ist daher als erste Version zu verstehen und wird von uns im weiteren Verlauf noch überarbeitet und verbessert."
+
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysefokus"
 

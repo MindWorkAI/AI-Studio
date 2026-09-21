@@ -1,6 +1,10 @@
 ﻿@attribute [Route(Routes.ASSISTANT_SWOT_ANALYSIS)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSWOTAnalysis>
 
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+    @T("This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.")
+</MudAlert>
+
 @if (!this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)
 {
     <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
