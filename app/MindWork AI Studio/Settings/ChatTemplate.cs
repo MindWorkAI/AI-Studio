@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
 using SharedTools;
@@ -26,6 +27,29 @@ public record ChatTemplate(
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
     {
     }
+
+    /// <summary>
+    /// The tools this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing about tools, so the chat starts with the tools chosen
+    /// as its default in the app settings. An empty set is the opposite statement: this template
+    /// wants no tools at all, whatever that default says.<br/><br/>
+    /// A preselection, not a limit: the user changes the selection in the chat as usual, and a
+    /// tool still has to meet the confidence requirements of the provider in use.
+    /// </remarks>
+    public HashSet<string>? ToolIds { get; init; }
+
+    /// <summary>
+    /// The data source options a chat started with this template begins with.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat starts with the data source defaults from
+    /// the app settings. Anything else is the template's own answer, and it carries more than a
+    /// list of sources: whether data sources are used at all, whether an agent picks them, and
+    /// whether the retrieved data is validated.
+    /// </remarks>
+    public DataSourceOptions? DataSourceOptions { get; init; }
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
@@ -41,6 +65,8 @@ public record ChatTemplate(
         ExampleConversation = [],
         FileAttachments = [],
         AllowProfileUsage = true,
+        ToolIds = null,
+        DataSourceOptions = null,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -121,6 +147,8 @@ public record ChatTemplate(
             ExampleConversation = ParseExampleConversation(idx, table),
             FileAttachments = fileAttachments,
             AllowProfileUsage = allowProfileUsage,
+            ToolIds = ParseToolIds(idx, table),
+            DataSourceOptions = ParseDataSourceOptions(idx, table),
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
@@ -173,6 +201,89 @@ public record ChatTemplate(
         }
 
         return exampleConversation;
+    }
+
+    /// <remarks>
+    /// A missing list and an empty one mean different things here, so an empty one must not fall
+    /// back to null: the template then states that it wants no tools. The assistant plugins reject
+    /// an empty list instead, because there it carries no meaning at all.
+    /// </remarks>
+    private static HashSet<string>? ParseToolIds(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("ToolIds", out var toolIdsValue) || !toolIdsValue.TryRead<LuaTable>(out var toolIdsTable))
+            return null;
+
+        var toolIds = new HashSet<string>(StringComparer.Ordinal);
+        var numToolIds = toolIdsTable.ArrayLength;
+        for (var toolNum = 1; toolNum <= numToolIds; toolNum++)
+        {
+            if (!toolIdsTable[toolNum].TryRead<string>(out var toolId) || string.IsNullOrWhiteSpace(toolId))
+            {
+                LOGGER.LogWarning("The ToolIds entry {ToolNum} in chat template {IdxChatTemplate} is not a valid tool ID and will be ignored.", toolNum, idx);
+                continue;
+            }
+
+            toolIds.Add(toolId.Trim());
+        }
+
+        return toolIds;
+    }
+
+    private static DataSourceOptions? ParseDataSourceOptions(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("DataSourceOptions", out var optionsValue) || !optionsValue.TryRead<LuaTable>(out var optionsTable))
+            return null;
+
+        //
+        // Writing this table at all is already the statement that the template wants data sources,
+        // hence the switch starts enabled here. Everywhere else in the app, data sources start
+        // switched off.
+        //
+        var disableDataSources = false;
+        if (optionsTable.TryGetValue("DisableDataSources", out var disableValue) && disableValue.TryRead<bool>(out var disable))
+            disableDataSources = disable;
+
+        var automaticSelection = false;
+        if (optionsTable.TryGetValue("AutomaticDataSourceSelection", out var automaticSelectionValue) && automaticSelectionValue.TryRead<bool>(out var automaticSelectionFlag))
+            automaticSelection = automaticSelectionFlag;
+
+        var automaticValidation = false;
+        if (optionsTable.TryGetValue("AutomaticValidation", out var automaticValidationValue) && automaticValidationValue.TryRead<bool>(out var automaticValidationFlag))
+            automaticValidation = automaticValidationFlag;
+
+        return new DataSourceOptions
+        {
+            DisableDataSources = disableDataSources,
+            AutomaticDataSourceSelection = automaticSelection,
+            AutomaticValidation = automaticValidation,
+            PreselectedDataSourceIds = ParsePreselectedDataSourceIds(idx, optionsTable),
+        };
+    }
+
+    /// <remarks>
+    /// The IDs stay strings instead of being parsed as GUIDs: a data source of another
+    /// configuration may carry an ID which is none, and rejecting it here would make it
+    /// unreferenceable for no gain.
+    /// </remarks>
+    private static List<string> ParsePreselectedDataSourceIds(int idx, LuaTable optionsTable)
+    {
+        var dataSourceIds = new List<string>();
+        if (!optionsTable.TryGetValue("PreselectedDataSourceIds", out var idsValue) || !idsValue.TryRead<LuaTable>(out var idsTable))
+            return dataSourceIds;
+
+        var numIds = idsTable.ArrayLength;
+        for (var idNum = 1; idNum <= numIds; idNum++)
+        {
+            if (!idsTable[idNum].TryRead<string>(out var dataSourceId) || string.IsNullOrWhiteSpace(dataSourceId))
+            {
+                LOGGER.LogWarning("The PreselectedDataSourceIds entry {IdNum} in chat template {IdxChatTemplate} is not a valid data source ID and will be ignored.", idNum, idx);
+                continue;
+            }
+
+            dataSourceIds.Add(dataSourceId.Trim());
+        }
+
+        return dataSourceIds;
     }
 
     private static List<FileAttachment> ParseFileAttachments(int idx, LuaTable table, string pluginPath)
