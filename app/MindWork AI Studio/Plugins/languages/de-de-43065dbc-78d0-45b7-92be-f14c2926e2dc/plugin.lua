@@ -3264,6 +3264,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347088452"] = "Ergebni
 -- Do you really want to remove this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Möchten Sie diese Nachricht wirklich löschen?"
 
+-- Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347725178"] = "Möchtest du diesen Chat wirklich auf diese KI-Antwort zurücksetzen? Alle späteren Nachrichten und deren Anhänge werden dauerhaft gelöscht."
+
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Ja, entferne die KI-Antwort und bearbeite sie."
 
@@ -3315,11 +3318,17 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "KI-Antw
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Anzahl der Anhänge"
 
+-- Roll back to this response
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Zu dieser Antwort zurücksetzen"
+
 -- Cannot render content of type {0} yet.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Der Inhaltstyp {0} kann noch nicht angezeigt werden."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Bearbeiten"
+
+-- Roll Back Chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3304283125"] = "Chat zurücksetzen"
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3424652889"] = "Unbekannt"
@@ -3332,6 +3341,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blockie
 
 -- Do you really want to regenerate this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3878878761"] = "Möchten Sie diese Nachricht wirklich neu generieren?"
+
+-- Yes, roll back the chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3951371697"] = "Ja, Chat zurücksetzen"
 
 -- Remove Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Nachricht entfernen"
@@ -5283,6 +5295,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Chat verschieben"
 
+-- Copy Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1192756314"] = "Chat kopieren"
+
 -- Loading chats...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1364857726"] = "Chats werden geladen..."
 
@@ -5354,6 +5369,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3249036008"] = "Es gibt bere
 
 -- Please enter a workspace name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Bitte geben Sie einen Namen für diesen Arbeitsbereich ein."
+
+-- Copy chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3337233722"] = "Chat kopieren"
 
 -- Rename
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Umbenennen"
@@ -12893,3 +12911,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Möchten 
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unbenannter Chat"
+
+-- Copy of {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3365678931"] = "Kopie von {0}"
+
+-- Empty chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T4019509364"] = "Leerer Chat"

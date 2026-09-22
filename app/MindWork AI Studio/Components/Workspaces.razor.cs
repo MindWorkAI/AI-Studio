@@ -781,6 +781,37 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
+    private async Task CopyChatAsync(string? chatPath)
+    {
+        var chat = await this.LoadChatAsync(chatPath, false);
+        if (chat is null)
+            return;
+
+        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
+            return;
+
+        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Copy Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+
+        var sourceChat = this.CurrentChatThread is { } currentChat && currentChat.ChatId == chat.ChatId ? currentChat : chat;
+        var copy = await WorkspaceBehaviour.CopyChatAsync(sourceChat);
+
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+        this.CurrentChatThread = copy;
+        await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+    }
+
     private async Task RenameWorkspaceAsync(string? workspacePath)
     {
         if (workspacePath is null)

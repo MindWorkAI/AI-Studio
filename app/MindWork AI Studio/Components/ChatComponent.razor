@@ -26,6 +26,8 @@
                         IsSecondToLastBlock="@isSecondLastBlock"
                         RegenerateFunc="@this.RegenerateBlock"
                         RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
+                        RollbackFunc="@this.RollbackBlock"
+                        RollbackEnabled="@(!this.IsCurrentChatStreaming)"
                         EditLastBlockFunc="@this.EditLastBlock"
                         EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }

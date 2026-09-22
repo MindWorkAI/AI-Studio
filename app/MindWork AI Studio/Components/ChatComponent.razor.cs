@@ -1394,6 +1394,24 @@ public partial class ChatComponent : MSGComponentBase
         
         await this.SendMessage(reuseLastUserPrompt: true);
     }
+
+    private async Task RollbackBlock(IContent aiBlock)
+    {
+        if (this.ChatThread is null || this.IsCurrentChatStreaming)
+            return;
+
+        if (!this.ChatThread.RemoveBlocksAfter(aiBlock))
+            return;
+
+        this.ChatThread.AugmentedData = string.Empty;
+        this.ChatThread.AISelectedDataSources = [];
+        this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+        this.hasUnsavedChanges = true;
+        await this.SaveThread();
+        this.tokenTracker?.Nudge();
+        this.StateHasChanged();
+        await this.inputField.FocusAsync();
+    }
     
     private Task EditLastUserBlock(IContent block)
     {

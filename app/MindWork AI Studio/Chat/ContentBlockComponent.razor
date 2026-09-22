@@ -70,6 +70,12 @@
                         <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
                     </MudTooltip>
                 }
+                @if (!this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null)
+                {
+                    <MudTooltip Text="@T("Roll back to this response")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.RollbackEnabled)" OnClick="@this.RollbackBlock"/>
+                    </MudTooltip>
+                }
                 @if (this.RemoveBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">

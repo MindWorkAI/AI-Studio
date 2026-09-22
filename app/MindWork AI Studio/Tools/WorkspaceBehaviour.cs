@@ -782,6 +782,78 @@ public static class WorkspaceBehaviour
         }
     }
 
+    public static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat)
+    {
+        var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
+        var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
+                         ?? throw new InvalidOperationException("The chat could not be copied.");
+        copiedChat = copiedChat with
+        {
+            ChatId = Guid.NewGuid(),
+            Name = string.Format(TB("Copy of {0}"), string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Empty chat") : sourceChat.Name),
+        };
+
+        var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
+        try
+        {
+            CopyManagedTranscriptAttachments(copiedChat, targetDirectory);
+            await StoreChatAsync(copiedChat);
+            return copiedChat;
+        }
+        catch
+        {
+            if (Directory.Exists(targetDirectory))
+                Directory.Delete(targetDirectory, true);
+
+            InvalidateWorkspaceTreeCache();
+            throw;
+        }
+    }
+
+    private static void CopyManagedTranscriptAttachments(ChatThread chat, string targetChatDirectory)
+    {
+        var targetTranscriptDirectory = Path.Combine(targetChatDirectory, "attachments", "transcripts");
+        var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(pathComparer);
+
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                if (content.FileAttachments[index] is ManagedTranscriptAttachment transcript)
+                    content.FileAttachments[index] = CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths);
+            }
+        }
+
+        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
+            chat.PendingMediaTranscripts[index] = CopyManagedTranscriptAttachment(chat, chat.PendingMediaTranscripts[index], targetTranscriptDirectory, copiedPaths);
+    }
+
+    private static ManagedTranscriptAttachment CopyManagedTranscriptAttachment(
+        ChatThread chat,
+        ManagedTranscriptAttachment source,
+        string targetTranscriptDirectory,
+        Dictionary<string, ManagedTranscriptAttachment> copiedPaths)
+    {
+        var sourcePath = Path.GetFullPath(source.FilePath);
+        if (copiedPaths.TryGetValue(sourcePath, out var existingCopy))
+            return existingCopy;
+
+        Directory.CreateDirectory(targetTranscriptDirectory);
+        var targetPath = NextTranscriptPath(chat, targetTranscriptDirectory, source.OriginalFileName);
+        if (File.Exists(sourcePath))
+            File.Copy(sourcePath, targetPath);
+
+        var copiedAttachment = new ManagedTranscriptAttachment(
+            Path.GetFileName(targetPath),
+            targetPath,
+            File.Exists(targetPath) ? new FileInfo(targetPath).Length : source.FileSizeBytes,
+            source.OriginalFileName,
+            false);
+        copiedPaths[sourcePath] = copiedAttachment;
+        return copiedAttachment;
+    }
+
     /// <summary>Creates a transcript atomically inside an already persisted chat.</summary>
     /// <param name="chat">Persisted chat that owns the transcript counter.</param>
     /// <param name="originalPath">Original media path.</param>

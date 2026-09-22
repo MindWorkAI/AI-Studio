@@ -350,6 +350,27 @@ public sealed record ChatThread
         this.Blocks.Remove(block);
     }
 
+    /// <summary>
+    /// Removes every content block after the selected content in conversation order.
+    /// </summary>
+    /// <param name="content">The content to keep as the last block.</param>
+    /// <returns>True when one or more later blocks were removed.</returns>
+    public bool RemoveBlocksAfter(IContent content)
+    {
+        var sortedBlocks = this.Blocks.OrderBy(x => x.Time).ToList();
+        var blockIndex = sortedBlocks.FindIndex(block => ReferenceEquals(block.Content, content));
+        if (blockIndex < 0 || blockIndex == sortedBlocks.Count - 1)
+            return false;
+
+        foreach (var block in sortedBlocks.Skip(blockIndex + 1))
+        {
+            DeleteManagedAttachments(block);
+            this.Blocks.Remove(block);
+        }
+
+        return true;
+    }
+
     private static void DeleteManagedAttachments(ContentBlock block)
     {
         if (block.Content is not ContentText textContent)
