@@ -651,7 +651,19 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         return propertyElement.GetString();
     }
-    
+
+    /// <summary>
+    /// Builds the message a user gets to see when the chat outgrew what the model reads.
+    /// </summary>
+    /// <remarks>
+    /// Two answers mean this: one provider says so in the body of a bad request, another turns the
+    /// request down with 413 instead. For the user they are the same thing, and saying it in one
+    /// place is also what keeps both on one I18N key.
+    /// </remarks>
+    /// <param name="providerMessage">What the provider itself said about the failure.</param>
+    /// <returns>The message to show.</returns>
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
@@ -749,7 +761,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (string.IsNullOrWhiteSpace(tooLargeMessage))
                     tooLargeMessage = nextResponse.ReasonPhrase;
 
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, tooLargeMessage)));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(tooLargeMessage)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
                 failureAlreadyExplained = true;
@@ -782,7 +794,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(badRequestMessage)));
                 }
                 else
                 {
