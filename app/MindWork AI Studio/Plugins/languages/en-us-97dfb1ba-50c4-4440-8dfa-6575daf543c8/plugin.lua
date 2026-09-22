@@ -2292,6 +2292,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- Use sequential steps
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T487578804"] = "Use sequential steps"
 
+-- Moves the optimized prompt into the prompt field so you can optimize it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T502438377"] = "Moves the optimized prompt into the prompt field so you can optimize it again."
+
 -- Use clear, explicit instructions and directly state quality expectations.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T596557540"] = "Use clear, explicit instructions and directly state quality expectations."
 
