@@ -69,6 +69,8 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.ExampleConversation, chatTemplate.ExampleConversation },
             { x => x.FileAttachments, chatTemplate.FileAttachments },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+            { x => x.ToolIds, chatTemplate.ToolIds },
+            { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -97,6 +99,8 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.ExampleConversation, chatTemplate.ExampleConversation },
             { x => x.FileAttachments, chatTemplate.FileAttachments },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+            { x => x.ToolIds, chatTemplate.ToolIds },
+            { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
         };
 
         await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
