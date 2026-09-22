@@ -61,7 +61,7 @@ public partial class MediaTranscriptionStatus
     private void OnStateChanged(MediaImportOwner owner)
     {
         if (owner == this.Owner)
-            _ = this.InvokeAsync(this.StateHasChanged);
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(MediaTranscriptionStatus)}: rendering an import state transition");
     }
 
     /// <summary>Unsubscribes from singleton import state changes.</summary>

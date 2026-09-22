@@ -7,7 +7,7 @@
     @T("Input")
 </MudText>
 
-<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" Disabled="@this.isProcessingBatch"/>
+<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
     <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
@@ -42,15 +42,20 @@
     }
 </MudSelect>
 
+@* No default target in this assistant on purpose. It is long enough to scroll, so the zone which
+   would catch everything is usually off screen -- and a file disappearing into something the user
+   cannot see is worse than a drop which does nothing. Here, every zone has to be aimed at. *@
 @if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT)
 {
-    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
     <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
     @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
     {
@@ -65,6 +70,8 @@ else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @T("The content of the selected file is used as the instructions for every single document of the batch run.")
     </MudJustifiedText>
+
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else
 {
@@ -99,6 +106,12 @@ else
                 @this.selectedPolicy.PolicyDescription
             </MudJustifiedText>
         }
+
+        @* Read-only: the policy decides its tools, and this run follows the policy. *@
+        @if (this.selectedPolicy is not null)
+        {
+            <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.PolicyToolIds" ReadOnly="@true" Label="@T("Tools of this policy")" Help="@T("These tools are part of the selected policy and cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when the policy permits it.")"/>
+        }
     }
 }
 
@@ -115,10 +128,19 @@ else
     }
 </MudSelect>
 
-@if (this.outputMode is BatchProcessingOutputMode.MARKDOWN_FILES)
+@if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
 {
+    <MudSelect T="FileExportFormat" @bind-Value="@this.resultFileFormat" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Label="@T("File format")" HelperText="@T("Choose the format of the result files. Everything except Markdown is converted by Pandoc, which AI Studio offers to install when it is missing.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        @foreach (var format in FileExportFormatExtensions.ANSWER_FORMATS)
+        {
+            <MudSelectItem Value="@format">
+                @format.ToName()
+            </MudSelectItem>
+        }
+    </MudSelect>
+
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-        @T("Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md.")
+        @(string.Format(T("Each answer is stored as its own file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result{0}."), this.resultFileFormat.ToFileExtension()))
     </MudJustifiedText>
 }
 else
@@ -142,7 +164,7 @@ else
     }
 }
 
-<SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@T("Select the output folder")" @bind-Directory="@this.outputDirectory" Disabled="@this.isProcessingBatch"/>
+<SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@T("Select the output folder")" @bind-Directory="@this.outputDirectory" EnableDragDrop="true" Disabled="@this.isProcessingBatch"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
@@ -174,6 +196,15 @@ else
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.HourglassTop" Dense="true" Class="mb-3">
         @(string.Format(T("Waiting {0} seconds before starting the next file."), this.pauseBeforeNextFileSeconds))
     </MudAlert>
+}
+
+@*
+    Only for a policy run: where the user picks the tools themselves, the selection field already
+    shows what is locked, and they can simply switch a blocked tool off.
+*@
+@if (this.promptSource is BatchProcessingPromptSource.POLICY)
+{
+    <ManagedToolsWarning Component="@this.Component" ToolIds="@this.PolicyToolIds" ProviderSettings="@this.ProviderSettings"/>
 }
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProviderWithBatchState" Disabled="@this.isProcessingBatch" ExplicitMinimumConfidence="@this.GetMinimumConfidenceLevel()"/>

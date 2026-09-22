@@ -22,11 +22,11 @@ public sealed class ContentImage : IContent, IImageSource
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingEvent { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];

@@ -1,4 +1,5 @@
 using System.Text;
+using AIStudio.Models.Registry;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -18,6 +19,15 @@ public static partial class PluginFactory
     {
         LOG.LogInformation("Try to start or restart all plugins.");
         var configObjects = new List<PluginConfigurationObject>();
+
+        //
+        // Dropping the plugins is not enough: each one owns a Lua runtime, which we have to release
+        // ourselves. Otherwise, every restart — above all every hot reload during development —
+        // leaves another set of runtimes behind:
+        //
+        foreach (var runningPlugin in RUNNING_PLUGINS)
+            runningPlugin.Dispose();
+
         RUNNING_PLUGINS.Clear();
 
         //
@@ -83,7 +93,13 @@ public static partial class PluginFactory
 
             try
             {
-                if (availablePlugin.IsInternal || SettingsManagerAccess.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION || availablePlugin.Type == PluginType.ASSISTANT)
+                //
+                // A model plugin runs like a configuration plugin, without anybody switching it on:
+                // it describes models an organization deployed it to describe, and a description
+                // somebody has to enable first would leave half the installations answering
+                // differently from the other half for no reason anyone could see.
+                //
+                if (availablePlugin.IsInternal || SettingsManagerAccess.IsPluginEnabled(availablePlugin) || availablePlugin.Type is PluginType.CONFIGURATION or PluginType.ASSISTANT or PluginType.MODEL)
                     if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
                     {
                         if (plugin is PluginConfiguration configPlugin)
@@ -99,7 +115,15 @@ public static partial class PluginFactory
         }
 
         LogAssistantPluginStartupState();
-        
+
+        //
+        // Hand what the model plugins declare to the registry before anything is told that the
+        // plugins are up. Whoever reacts to that message may ask about a model right away, and the
+        // registry keeps the answers it gives: an answer handed out before the declarations arrived
+        // would be the answer everybody gets until the next reload.
+        //
+        ModelRegistry.Shared.Declare(GetModelDeclarations());
+
         // Inform all components that the plugins have been reloaded or started:
         await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
         return configObjects;
@@ -170,7 +194,7 @@ public static partial class PluginFactory
         }
 
         var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
-        var plugin = await Load(meta.LocalPath, code, cancellationToken);
+        var plugin = await Load(meta.LocalPath, code, cancellationToken: cancellationToken);
         plugin.PluginPath = meta.LocalPath;
         if (plugin is NoPlugin noPlugin)
         {

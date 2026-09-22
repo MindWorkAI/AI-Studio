@@ -58,6 +58,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Whether an alert dialog should be shown when prompt-injection content is blocked.
+    /// </summary>
+    public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
+
+    /// <summary>
     /// Should the built-in introduction be visible on the home page?
     /// </summary>
     public bool ShowIntroduction { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowIntroduction, true);
@@ -108,6 +113,18 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string UseTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UseTranscriptionProvider, string.Empty);
 
     /// <summary>
+    /// The Opus bitrate used when normalizing uploaded audio/video for transcription.
+    /// </summary>
+    /// <remarks>
+    /// Every recording is re-encoded to mono Opus before it goes to the transcription provider. That
+    /// encoding used to be fixed at 32 kbps, which cost the transcription models entire quiet passages:
+    /// a greeting spoken softly at the start of a recording was simply missing from the transcript. The
+    /// same recording compared at 64 and 128 kbps came back complete, which is why 128 kbps is the
+    /// default here. Users trading accuracy for a smaller upload can still pick a lower bitrate.
+    /// </remarks>
+    public TranscriptionOpusBitrate OpusBitrate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.OpusBitrate, TranscriptionOpusBitrate.KBPS_128);
+
+    /// <summary>
     /// The global keyboard shortcut for toggling voice recording.
     /// Uses Tauri's shortcut format, e.g., "CmdOrControl+1" (Cmd+1 on macOS, Ctrl+1 on Windows/Linux).
     /// Set to empty string to disable the global shortcut.
@@ -150,6 +167,21 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
 
     /// <summary>
+    /// Should the user be allowed to add LLM providers?
+    /// </summary>
+    public bool AllowUserToAddLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add embedding providers?
+    /// </summary>
+    public bool AllowUserToAddEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add transcription providers?
+    /// </summary>
+    public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
+
+    /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>
     public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
@@ -173,6 +205,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should administration settings be visible in the UI?
     /// </summary>
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
+
+    /// <summary>
+    /// Settings for indexing local data sources.
+    /// </summary>
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

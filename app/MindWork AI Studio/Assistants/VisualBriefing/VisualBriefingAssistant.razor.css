@@ -1,10 +1,3 @@
-.visual-briefing-shell {
-    height: 100%;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-
 .visual-briefing-main {
     min-width: 0;
     padding-bottom: 1rem;

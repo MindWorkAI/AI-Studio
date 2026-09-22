@@ -9,16 +9,27 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceService
 {
+    //
+    // Trust is recorded for every participating provider, while only the chat provider's trust
+    // decides about external data sources below. The agent which validates retrieval contexts
+    // checks its own provider before it runs, so nothing slips through today. Keeping the value
+    // named here is what makes that asymmetry visible.
+    //
+    // ReSharper disable once NotAccessedPositionalProperty.Local
+    private readonly record struct ParticipatingProvider(string Role, bool IsTrusted, ConfidenceLevel ConfidenceLevel);
+
+    private readonly DataSourceEmbeddingService embeddingService;
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
     private readonly ILogger<DataSourceService> logger;
 
-    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService)
+    public DataSourceService(SettingsManager settingsManager, ILogger<DataSourceService> logger, RustService rustService, DataSourceEmbeddingService embeddingService)
     {
         this.logger = logger;
         this.rustService = rustService;
         this.settingsManager = settingsManager;
-        
+        this.embeddingService = embeddingService;
+
         this.logger.LogInformation("The data source service has been initialized.");
     }
     
@@ -27,9 +38,10 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -39,10 +51,45 @@ public sealed class DataSourceService
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
             this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
-            return new([], []);
+            return new([], [], [], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
+    }
+
+    /// <summary>
+    /// Returns the requested data sources that are allowed for the selected LLM provider.
+    /// Unlike see GetDataSources(AIStudio.Settings.Provider, IReadOnlyCollection{IDataSource}),
+    /// this method checks only the supplied data sources.
+    /// </summary>
+    /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
+    /// <param name="requestedDataSources">The data sources to check.</param>
+    /// <returns>The requested data sources that are allowed for the provider.</returns>
+    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource> requestedDataSources)
+    {
+        if (selectedLLMProvider == Settings.Provider.NONE)
+        {
+            this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
+            return [];
+        }
+
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        var allowedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+
+        //
+        // Whoever asks this way has no list to show, so a data source which cannot be searched is
+        // dropped rather than marked. Handing it back would start a chat with a data source which
+        // finds nothing -- the very thing being greyed out elsewhere is meant to prevent.
+        //
+        var unsearchableIds = (await this.GetDataSourcesAwaitingReindex(allowedDataSources)).Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        unsearchableIds.UnionWith(this.GetDataSourcesNeedingRepair(allowedDataSources).Select(source => source.Id));
+        return allowedDataSources.Where(source => !unsearchableIds.Contains(source.Id)).ToList();
     }
     
     /// <summary>
@@ -50,9 +97,10 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -62,41 +110,175 @@ public sealed class DataSourceService
         if (selectedLLMProvider is NoProvider)
         {
             this.logger.LogWarning("The selected LLM provider is the default provider. We cannot filter the data sources by any means.");
-            return new([], []);
+            return new([], [], [], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.ConfiguredProviderId, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
     
-    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, ParticipatingProvider currentProvider)
+    {
+        var providers = new List<ParticipatingProvider> { currentProvider };
+
+        if (dataSourceOptions.AutomaticDataSourceSelection)
+            this.AddAgentProvider(providers, Components.AGENT_DATA_SOURCE_SELECTION, currentProviderId, "data source selection agent");
+
+        if (dataSourceOptions.AutomaticValidation && this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+            this.AddAgentProvider(providers, Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, currentProviderId, "retrieval context validation agent");
+
+        return providers;
+    }
+
+    private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
+    {
+        var provider = this.settingsManager.GetPreselectedProvider(component, currentProviderId, true);
+        if (provider == Settings.Provider.NONE)
+        {
+            this.logger.LogWarning($"No provider is available for the {role}. Data sources cannot be made available while this agent is enabled.");
+            providers.Add(new(role, false, ConfidenceLevel.NONE));
+            return;
+        }
+
+        providers.Add(new(
+            role,
+            provider.IsTrustedForDataSourceSecurityChecks(this.settingsManager),
+            provider.GetConfidenceLevel(this.settingsManager)));
+    }
+
+    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
-        var filteredDataSources = new List<IDataSource>(allDataSources.Count);
-        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSourceIds.Count);
-        var tasks = new List<Task<IDataSource?>>(allDataSources.Count);
-        
+        var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
+
+        //
+        // Which of the sources that passed every check cannot answer a search right now. They are
+        // held back from both lists below rather than removed altogether: a source whose index is
+        // being rebuilt is usable again in a while, and saying so on its own row beats letting it
+        // disappear from the selection without a word.
+        //
+        // A source whose index cannot be read is asked about first and then kept out of the other
+        // list: both reasons can be true at once, and of the two it is the only one the user can do
+        // anything about. Telling them to wait instead would be telling them to wait forever.
+        //
+        var needingRepair = this.GetDataSourcesNeedingRepair(filteredDataSources);
+        var needingRepairIds = needingRepair.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        var awaitingReindex = (await this.GetDataSourcesAwaitingReindex(filteredDataSources)).Where(source => !needingRepairIds.Contains(source.Id)).ToList();
+
+        var blockedIds = awaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        blockedIds.UnionWith(needingRepairIds);
+
+        var usableDataSources = filteredDataSources.Where(source => !blockedIds.Contains(source.Id)).ToList();
+        var filteredSelectedDataSources = usableDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
+
+        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair);
+    }
+
+    /// <summary>
+    /// Picks out the data sources whose index has to be rebuilt before they can be searched.
+    /// </summary>
+    /// <remarks>
+    /// Asked for every data source at once, the same way the checks above run in parallel. Each
+    /// answer is a single row read from the index database, and anything unclear counts as usable.
+    /// </remarks>
+    /// <param name="dataSources">The data sources which passed every other check.</param>
+    /// <returns>Those of them which are waiting for their index, in the order they came in.</returns>
+    private async Task<IReadOnlyList<IDataSource>> GetDataSourcesAwaitingReindex(IReadOnlyList<IDataSource> dataSources)
+    {
+        var checks = new List<Task<bool>>(dataSources.Count);
+        foreach (var dataSource in dataSources)
+            checks.Add(this.embeddingService.IsAwaitingReindexAsync(dataSource));
+
+        var awaitingReindex = new List<IDataSource>();
+        for (var index = 0; index < dataSources.Count; index++)
+        {
+            if (await checks[index])
+            {
+                this.logger.LogInformation("The data source '{DataSourceName}' ({DataSourceId}) is waiting for its index to be rebuilt. It is shown, but cannot be selected.", dataSources[index].Name, dataSources[index].Id);
+                awaitingReindex.Add(dataSources[index]);
+            }
+        }
+
+        return awaitingReindex;
+    }
+
+    /// <summary>
+    /// Picks out the data sources whose index cannot be read anymore, so that they wait for a repair.
+    /// </summary>
+    /// <remarks>
+    /// Reads nothing from a database, unlike the re-index check above: the state is held in memory
+    /// by the embedding service, which is why this one needs no parallelism and no timeout.
+    /// </remarks>
+    /// <param name="dataSources">The data sources which passed every other check.</param>
+    /// <returns>Those of them which wait for a repair, in the order they came in.</returns>
+    private IReadOnlyList<IDataSource> GetDataSourcesNeedingRepair(IReadOnlyList<IDataSource> dataSources)
+    {
+        var needingRepair = new List<IDataSource>();
+        foreach (var dataSource in dataSources)
+        {
+            if (!this.embeddingService.NeedsIndexRepair(dataSource))
+                continue;
+
+            this.logger.LogInformation("The index of data source '{DataSourceName}' ({DataSourceId}) cannot be read. It is shown, but cannot be selected until it was repaired.", dataSource.Name, dataSource.Id);
+            needingRepair.Add(dataSource);
+        }
+
+        return needingRepair;
+    }
+
+    private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
+    {
+        var filteredDataSources = new List<IDataSource>(requestedDataSources.Count);
+        var tasks = new List<Task<IDataSource?>>(requestedDataSources.Count);
+
         // Start all checks in parallel:
-        foreach (var source in allDataSources)
-            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider));
-        
+        foreach (var source in requestedDataSources)
+            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider, participatingProviders));
+
+
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
         {
             var source = await task;
             if (source is not null)
-            {
                 filteredDataSources.Add(source);
-                if (previousSelectedDataSourceIds.Contains(source.Id))
-                    filteredSelectedDataSources.Add(source);
-            }
         }
-        
-        return new(filteredDataSources, filteredSelectedDataSources);
+
+        return filteredDataSources;
     }
     
-    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider)
+    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders)
     {
+        if (source is IInternalDataSource internalSource)
+        {
+            foreach (var provider in participatingProviders)
+            {
+                if (!provider.ConfidenceLevel.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
+                {
+                    this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. The {provider.Role} only has confidence '{provider.ConfidenceLevel.GetName()}'. We skip this source.");
+                    return null;
+                }
+            }
+
+            if (!DataSourceEmbeddingProviders.TryResolve(this.settingsManager, source, out var embeddingProvider))
+            {
+                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) has no usable embedding provider. We skip this source.");
+                return null;
+            }
+
+            var embeddingProviderConfidence = embeddingProvider.GetConfidenceLevel(this.settingsManager);
+            if (!embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
+            {
+                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. Its embedding provider '{embeddingProvider.Name}' only has confidence '{embeddingProviderConfidence.GetName()}'. We skip this source.");
+                return null;
+            }
+
+            return source;
+        }
+
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
         // Because the ERI server operator might change the security requirements at any time.
@@ -131,8 +313,11 @@ public sealed class DataSourceService
             eriSourceRequirements = securityRequest.Data;
             this.logger.LogInformation($"Security requirements for ERI source '{source.Name}' (id={source.Id}) retrieved successfully.");
         }
-        
-        switch (source.SecurityPolicy)
+
+        if (source is not IExternalDataSource externalSource)
+            return source;
+
+        switch (externalSource.SecurityPolicy)
         {
             case DataSourceSecurity.ALLOW_ANY:
                 

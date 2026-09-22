@@ -1,2 +1,13 @@
 @inherits MSGComponentBase
-<ConfigurationSelect IsLocked="@this.IsLocked" OptionDescription="@T("Preselected provider")" Disabled="@(() => this.Disabled())" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate"/>
+<ConfigurationSelect IsLocked="@this.IsLocked" OptionDescription="@T("Preselected provider")" Disabled="@(() => this.Disabled())" OptionHelp="@this.HelpText()" Data="@this.FilteredData()" SelectedValue="@this.SelectedValue" SelectionUpdate="@this.SelectionUpdate">
+    <ItemTemplate Context="providerData">
+        @if (this.GetProvider(providerData.Value) is { } provider)
+        {
+            <ProviderLabel ProviderSettings="@provider" Text="@providerData.Name" />
+        }
+        else
+        {
+            @providerData.Name
+        }
+    </ItemTemplate>
+</ConfigurationSelect>

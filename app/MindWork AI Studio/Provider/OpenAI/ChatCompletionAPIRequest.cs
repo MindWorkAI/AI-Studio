@@ -17,6 +17,12 @@ public record ChatCompletionAPIRequest(
     public ChatCompletionAPIRequest() : this(string.Empty, [], true)
     {
     }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<object>? Tools { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ParallelToolCalls { get; init; }
     
     // Attention: The "required" modifier is not supported for [JsonExtensionData].
     [JsonExtensionData]

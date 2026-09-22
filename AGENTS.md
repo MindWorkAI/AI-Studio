@@ -80,7 +80,21 @@ Notes:
   troubleshooting, no matter whether it came from the MCP server or from the user.
 
 ### Running Tests
-Currently, no automated test suite exists in the repository.
+The .NET tests live in `app/Tests`, a single NUnit project that holds the tests of every area; each
+area gets its own folder and namespace below it rather than a project of its own. Agents run them
+through the IDE for the same reason they build there:
+
+```
+mcp__rider__execute_terminal_command  command: "cd app/Tests && dotnet test"
+```
+
+An assembly-wide `[SetUpFixture]` in `app/Tests/TestHost.cs` fills the static application state that
+the app itself only fills while starting up, `Program.LOGGER_FACTORY` above all. Types that
+initialize a static logger from it — `Settings.Provider` among them — otherwise die in their type
+initializer before the first assertion. Prefer writing new code so that it does not reach for such
+statics at all.
+
+The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP server.
 
 ## Architecture Details
 
@@ -141,7 +155,8 @@ Key structure:
 Plugins are written in Lua and provide:
 - **Language plugins** - I18N translations (e.g., German language pack)
 - **Configuration plugins** - Enterprise IT configurations for centrally managed providers, settings
-- **Future:** Assistant plugins for custom assistants
+- **Assistant plugins** - custom assistants and direct-chat launchers, subject to approval or a local security audit
+- **Model plugins** - what an organization's own models can do, see `documentation/Models.md`
 
 **Example configuration plugin:** `app/MindWork AI Studio/Plugins/configuration/plugin.lua`
 
@@ -164,6 +179,34 @@ When adding configuration plugin capabilities:
 - For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
 - Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
 
+## Tool Calling System
+
+**Documentation:** `documentation/Tools.md`
+
+When adding, changing, or removing model-driven tools, keep these parts in sync:
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class, which states its own `ToolDefinition` through `GetDefinition()`, written with `ToolSettingsSchemaBuilder` for its settings and `ToolParameterSchemaBuilder` for the arguments the model passes. There are no tool definition files; a tool arriving from elsewhere brings an `IToolDefinitionSource` instead.
+- `app/MindWork AI Studio/Program.cs` for DI registration of the implementation. Registering it as an `IToolImplementation` is enough, because `CodeToolDefinitionSource` collects the definitions of all of them.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when the shared tool-call limits change. A tool's own minimum provider confidence belongs in its definition, not here.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over spelling the values out in the settings schema; it keeps the list in one place and gives the user translated names.
+- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document each setting's field name, meaning, and data type. Tool settings need no code to be centrally manageable: an organization addresses them by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`.
+
+Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
+
+## Model Capabilities
+
+**Documentation:** `documentation/Models.md`
+
+What a model can do is answered in `app/MindWork AI Studio/Models/`, through `provider.GetModelProfile()`. Never ask `ModelRegistry` directly from a component: the extension method is what adds the expert settings and what a provider's model list reported, and the registry alone answers neither.
+
+When adding, changing, or removing model knowledge, keep these parts in sync:
+- `app/MindWork AI Studio/Models/<Vendor>/<Family>.cs` for the family itself. Creating the class is enough — the source generator in `app/SourceGeneratedMappings/` collects every non-abstract `ModelFamily` and `IModelHost` at compile time, so there is no registration list. Do not add reflection here; `PublishTrimmed` is on.
+- `app/Tests/Models/Corpus/` for the model IDs the family covers, marked as either unchanged or expected to change. A porting difference which nobody declared is what the corpus exists to catch.
+- `app/MindWork AI Studio/Models/Kinds/` when the change is about what kind of model something is, rather than what it can do. These are ordinary rules of the same engine.
+- `app/MindWork AI Studio/Models/Hosting/Hosts/` when a provider wraps model names or cannot pass an API through. A host unwraps and trims the transport; it states nothing about the model itself.
+- `app/MindWork AI Studio/Plugins/models/plugin.lua` when a new field can be declared by an organization, and `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when it can be overridden per provider instance.
+
+Rules are never tried in order: specificity is computed from the rule, and two rules of equal specificity on one name fail the test suite. State how a model reasons with `Reasoning(...)` — the three reasoning capabilities are override vocabulary and must never appear in a profile. Every family and every host has to name the page it was read from and the day somebody read it; `dotnet run verify-models` reports the ones which have gone stale.
+
 ## RAG (Retrieval-Augmented Generation)
 
 RAG integration is currently in development (preview feature). Architecture:
@@ -171,8 +214,44 @@ RAG integration is currently in development (preview feature). Architecture:
 - **Data Sources** - Local files and external data via ERI servers
 - **Agents** - AI agents select data sources and validate retrieval quality
 - **Embedding providers** - Support for various embedding models
-- **Vector database** - Planned integration with Qdrant for vector storage
+- **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
+- **Index database** - SQLite, holding the file fingerprints and the chunk texts for full-text search; see "Databases" below
 - **File processing** - Extracts text from PDF, DOCX, XLSX via Rust runtime
+
+## Databases
+
+Local RAG runs on two databases, addressed through `DatabaseRole`:
+
+- **`VECTOR_STORE`** — Qdrant Edge through the `qdrant-edge` crate, running **in-process inside the
+  Rust runtime**. There is no sidecar process, no port 6333 and no Qdrant API key; .NET reaches it
+  over the internal runtime API (`/system/qdrant-edge/*`, see `runtime/src/qdrant_edge_database.rs`),
+  secured by the same TLS and API token as every other runtime call. One store per data source,
+  named `rag_<data source guid>`, holding a single named vector `embedding` per point.
+- **`INDEX_STORE`** — SQLite at `<data directory>/databases/sqlite/rag-index.sqlite3`, reached
+  through EF Core. It holds the data sources, the file fingerprints, the chunk texts and an FTS5
+  index over them, plus the files which permanently failed to index.
+
+`DatabaseClientProvider` is the only way to a client. It caches one per role and guards each role
+with its own semaphore, so never construct a client yourself.
+
+When working on these, keep in mind:
+
+- **`GetDisplayInfo()` feeds the information page.** A new diagnostic value belongs in the client
+  that knows it, not in `Pages/Information.razor.cs`. The page renders whatever label-value pairs it
+  receives and stays free of per-database knowledge.
+- **Let every probe in `GetDisplayInfo()` catch its own failure.** When the method throws, the page
+  replaces the *entire* block with the fallback client, so one unreadable value costs all the others
+  as well.
+- **Raw SQL against SQLite goes through `context.Database.GetDbConnection()`**, not through
+  `SqlQueryRaw<T>`: that one expects a column named `Value` and wraps the statement, so a `PRAGMA`
+  never works with it.
+- **A new EF Core migration needs a `[DynamicDependency]`** in `IndexStoreSchemaMigrator`, because
+  `PublishTrimmed` is on and the migration type would otherwise be trimmed away. The "Schema version"
+  line on the information page shows the applied and pending counts, so a forgotten entry becomes
+  visible there.
+- **Counts in the UI go through `long.CompactCount()` / `int.CompactCount()`** (`Tools/LongExtensions.cs`),
+  which shortens anything above 999 to `1.46k` or `4.51M` and formats it with the culture of the
+  active language plugin. Storage sizes are the exception: they keep using the byte formatters.
 
 ## Enterprise IT Support
 
@@ -202,6 +281,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - keyring - OS keyring integration
 - pdfium-render - PDF text extraction
 - calamine - Excel file parsing
+- qdrant-edge - Embedded vector database
 
 **.NET:**
 - Blazor Server - UI framework
@@ -209,6 +289,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - LuaCSharp - Lua scripting engine
 - HtmlAgilityPack - HTML parsing
 - ReverseMarkdown - HTML to Markdown conversion
+- EF Core Sqlite + SQLitePCLRaw - the local RAG index
 
 ## Security
 
@@ -263,3 +344,12 @@ following words:
 - Upgraded
 
 The entire changelog is sorted by these categories in the order shown above. The language used for the changelog is US English.
+
+**Every entry has to stand on its own.** Never refer back to another entry, neither by wording such
+as "the same question", "that dialog", or "as described above", nor by relying on one read just
+before it. Readers pick out the entries which concern them; an entry which only makes sense after
+reading its neighbors turns the changelog into something nobody reads at all. Name the context
+inside the entry instead, even when that repeats a few words from another one.
+
+**Split a topic into several short entries** rather than growing a single long one, and address the
+reader with "you".

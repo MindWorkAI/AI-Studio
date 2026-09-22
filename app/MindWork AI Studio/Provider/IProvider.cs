@@ -35,6 +35,11 @@ public interface IProvider
     public string AdditionalJsonApiParameters { get; }
 
     /// <summary>
+    /// The tokenizer path associated with this provider configuration.
+    /// </summary>
+    public string TokenizerPath { get; }
+
+    /// <summary>
     /// Whether this provider instance can load available models from the backend/API.
     /// This capability may differ by provider type, host, or modality.
     /// </summary>
@@ -74,10 +79,14 @@ public interface IProvider
     /// <summary>
     /// Embed a text file.
     /// </summary>
+    /// <remarks>
+    /// The cancellation token is not the last parameter, unlike everywhere else in this codebase:
+    /// C# demands that a params parameter comes last, and every implementation inherits that order.
+    /// </remarks>
     /// <param name="embeddingModel">The model to use for embedding.</param>
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="token">The cancellation token.</param>
-    /// /// <param name="texts">A single string or a list of strings to embed.</param>
+    /// <param name="texts">A single string or a list of strings to embed.</param>
     /// <returns>>The embedded text as a single vector or as a list of vectors.</returns>
     public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts);
     

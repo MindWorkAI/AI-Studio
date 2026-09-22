@@ -18,6 +18,16 @@ public readonly record struct ChatRequest(
     string System
 )
 {
+    /// <summary>
+    /// The tools the model may call, or null when it should answer without them.
+    /// </summary>
+    /// <remarks>
+    /// Omitted from the request when null: sending an empty list is not the same as sending no
+    /// tools at all, and the final round of a tool conversation has to offer none.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<AnthropicTool>? Tools { get; init; }
+
     // Attention: The "required" modifier is not supported for [JsonExtensionData].
     [JsonExtensionData]
     public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();

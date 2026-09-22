@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 #if !DEBUG
@@ -27,6 +28,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.PROMPT_OPTIMIZER_ASSISTANT;
 
@@ -97,6 +101,15 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
+        new ButtonData
+        {
+            Text = T("Improve further"),
+            Tooltip = T("Moves the optimized prompt into the prompt field so you can optimize it again."),
+            Icon = Icons.Material.Filled.Input,
+            Color = Color.Default,
+            AsyncAction = this.UseOptimizedPromptAsInput,
+            DisabledActionParam = () => !this.CanImproveFurther,
+        },
         new SendToButton
         {
             Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
@@ -152,7 +165,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.ResetGuidelineSummaryToDefault();
         this.hasUpdatedDefaultRecommendations = false;
 
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputPrompt = deferredContent;
 
@@ -241,6 +254,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private bool ShowUpdatedPromptGuidelinesIndicator => !this.useCustomPromptGuide && this.hasUpdatedDefaultRecommendations;
     private bool CanPreviewCustomPromptGuide => this.useCustomPromptGuide && this.customPromptGuideFiles.Count > 0;
+    private bool CanImproveFurther => !this.IsProcessing && !string.IsNullOrWhiteSpace(this.optimizedPrompt);
     private string CustomPromptGuideFileName => this.customPromptGuideFiles.Count switch
     {
         0 => T("No file selected"),
@@ -460,6 +474,27 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.optimizedPrompt = string.Empty;
     }
 
+    /// <summary>
+    /// Moves the optimized prompt into the input field so the user can optimize it once more.
+    /// </summary>
+    /// <remarks>
+    /// The finished run is dropped along the way. Keeping it would append the next optimization to
+    /// the chat thread of the previous one, and the earlier proposal would stay on screen next to
+    /// the prompt it was already turned into. The recommendations and every selection stay as they
+    /// are, though: they are what the user works with while refining the prompt.
+    /// </remarks>
+    private Task UseOptimizedPromptAsInput()
+    {
+        if (!this.CanImproveFurther)
+            return Task.CompletedTask;
+
+        this.inputPrompt = this.optimizedPrompt;
+        this.ResetOutput();
+        this.ClearConversationState();
+        this.ClearInputIssues();
+        return Task.CompletedTask;
+    }
+
     private void ResetGuidelineSummaryToDefault()
     {
         this.recClarityDirectness = T("Use clear, explicit instructions and directly state quality expectations.");
@@ -581,7 +616,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             this.isLoadingCustomPromptGuide = true;
 
             // A failure was already reported by UserFile.LoadFileData, so we only keep the content:
-            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
+            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.PandocAvailability);
             this.customPromptingGuidelineContent = extraction.HasUsableContent ? extraction.Content : string.Empty;
         }
         catch

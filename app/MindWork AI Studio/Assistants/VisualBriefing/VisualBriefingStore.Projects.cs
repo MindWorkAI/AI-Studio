@@ -22,7 +22,7 @@ public sealed partial class VisualBriefingStore
         try
         {
             this.LastSelectedBriefingId = briefingId;
-            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(briefingId), token);
+            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(briefingId), overwrite: true, token);
         }
         finally
         {
@@ -45,7 +45,7 @@ public sealed partial class VisualBriefingStore
                 return;
 
             this.LastSelectedBriefingId = null;
-            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(null), token);
+            await WriteTextAtomicAsync(this.SelectionPath(), JsonSerializer.Serialize<Guid?>(null), overwrite: true, token);
         }
         finally
         {
@@ -398,6 +398,7 @@ public sealed partial class VisualBriefingStore
         finally
         {
             gate.Release();
+            this.ForgetLock(briefingId);
         }
     }
 
@@ -455,7 +456,7 @@ public sealed partial class VisualBriefingStore
     private async Task StoreManifestAtomicAsync(VisualBriefingManifest manifest, CancellationToken token)
     {
         var json = JsonSerializer.Serialize(manifest, JSON_OPTIONS);
-        await WriteTextAtomicAsync(this.ManifestPath(manifest.BriefingId), json, token);
+        await WriteTextAtomicAsync(this.ManifestPath(manifest.BriefingId), json, overwrite: true, token);
     }
 
     /// <summary>

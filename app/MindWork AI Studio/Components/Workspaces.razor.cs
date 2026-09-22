@@ -63,7 +63,7 @@ public partial class Workspaces : MSGComponentBase
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
-        _ = this.LoadTreeItemsAsync(startPrefetch: true);
+        this.LoadTreeItemsAsync(startPrefetch: true).Observe($"{nameof(Workspaces)}: loading the workspace tree");
     }
 
     #endregion
@@ -445,7 +445,7 @@ public partial class Workspaces : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner.Kind is MediaImportOwnerKind.CHAT)
-            _ = this.SafeStateHasChanged();
+            this.SafeStateHasChanged().Observe($"{nameof(Workspaces)}: rendering a media import change");
     }
 
     private async Task SafeStateHasChanged()
@@ -704,37 +704,35 @@ public partial class Workspaces : MSGComponentBase
         return null;
     }
 
-    public async Task DeleteChatAsync(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
+    /// <summary>Deletes the given chat and updates the tree, asking the user to confirm that beforehand.</summary>
+    /// <param name="chatPath">Path of the chat to delete.</param>
+    /// <param name="askForConfirmation">False skips the question. Only for callers who already asked.</param>
+    /// <param name="unloadChat">Whether to take the chat out of the view when it is the one being shown.</param>
+    /// <returns>True when the chat is gone, which includes it never having been there. False when it is still there.</returns>
+    /// <remarks>
+    /// The question itself comes from the workspace behaviour, so that it is worded in one place only.
+    /// Callers who do more than deleting have to honor the return value: a chat that is busy is not
+    /// deleted either, and then nothing about it may be reset.
+    /// </remarks>
+    public async Task<bool> DeleteChatAsync(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
     {
         var chat = await this.LoadChatAsync(chatPath, false);
+        
+        // There is nothing left to delete, so the caller may go on:
         if (chat is null)
-            return;
+            return true;
 
+        //
+        // Deleting a chat while it is being worked on would pull the ground from under that work.
+        // We check before asking: nobody should confirm something that cannot happen anyway.
+        //
         var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
-            return;
+            return false;
 
-        if (askForConfirmation)
-        {
-            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                {
-                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
-                    {
-                        true => string.Format(T("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
-                        false => string.Format(T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
-                    }
-                },
-            };
+        if (!await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation))
+            return false;
 
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return;
-        }
-
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
         this.MediaTranscriptionService.ClearOwnerState(mediaOwner);
         await this.LoadTreeItemsAsync(startPrefetch: false);
         
@@ -743,6 +741,8 @@ public partial class Workspaces : MSGComponentBase
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
+
+        return true;
     }
 
     private async Task RenameChatAsync(string? chatPath)

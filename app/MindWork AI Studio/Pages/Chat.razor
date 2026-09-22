@@ -2,7 +2,9 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-<div class="inner-scrolling-context">
+@* The chat is a drop area: a file dropped anywhere in it hangs itself on the composer, which is
+   what users are used to. *@
+<PathDropZone IsArea="@true" Class="inner-scrolling-context">
     
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2" StretchItems="StretchItems.Start">
         <MudText Typo="Typo.h3">
@@ -34,7 +36,7 @@
     </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
-        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
+        <MudSplitter Dimension="@this.ReadSplitterPosition" DimensionChanged="this.SplitterChanged" Sensitivity="0.05" EnableSlide="@this.AreWorkspacesVisible" EnableMargin="@false" StartContentStyle="margin-right: 1em;" BarStyle="" EndContentStyle="margin-left: 1em;">
             <StartContent>
                 @if (this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
                 {
@@ -166,4 +168,4 @@
             </MudDrawerContainer>
         </MudDrawer>
     }
-</div>
+</PathDropZone>

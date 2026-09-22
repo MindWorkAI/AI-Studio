@@ -13,6 +13,8 @@ public static class PreviewVisibilityExtensions
         {
             features.Add(PreviewFeatures.PRE_DOCUMENT_ANALYSIS_2025);
             features.Add(PreviewFeatures.PRE_META_ASSISTANT_V1);
+            features.Add(PreviewFeatures.PRE_RAG_2024);
+            features.Add(PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026);
         }
         
         if (visibility >= PreviewVisibility.ALPHA)
@@ -21,8 +23,6 @@ public static class PreviewVisibilityExtensions
         
         if (visibility >= PreviewVisibility.PROTOTYPE)
         {
-            features.Add(PreviewFeatures.PRE_RAG_2024);
-            features.Add(PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026);
         }
         
         if (visibility >= PreviewVisibility.EXPERIMENTAL)

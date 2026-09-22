@@ -33,16 +33,25 @@
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.AuditColor">
                                 @state.AuditLabel
                             </MudChip>
+                            
                             @if (!string.IsNullOrWhiteSpace(state.SourceLabel))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.SourceColor" Icon="@state.SourceIcon">
                                     @state.SourceLabel
                                 </MudChip>
                             }
+                            
                             @if (!string.IsNullOrWhiteSpace(state.AvailabilityLabel))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@state.AvailabilityColor" Icon="@state.AvailabilityIcon">
                                     @state.AvailabilityLabel
+                                </MudChip>
+                            }
+                            
+                            @if (this.PluginToolIds.Count > 0)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Handyman">
+                                    @this.GetToolCountLabel()
                                 </MudChip>
                             }
                         </div>
@@ -65,6 +74,15 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="@state.SourceColor" />
                                 <MudText Typo="Typo.body2">@T("Enterprise approval is active")</MudText>
                             </MudStack>
+
+                            @if (state.IsActivationEnforcedByOrganization)
+                            {
+                                <MudDivider Vertical="@true" FlexItem="@true" />
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Color="Color.Success" />
+                                    <MudText Typo="Typo.body2">@T("Your organization requires this assistant to stay enabled")</MudText>
+                                </MudStack>
+                            }
                         }
                         else
                         {
@@ -126,6 +144,15 @@
                                                 </td>
                                                 <td><MudText Typo="Typo.body2">@state.SourceLabel</MudText></td>
                                             </tr>
+                                            @if (this.PluginToolIds.Count > 0)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Tools")</b></MudText>
+                                                    </td>
+                                                    <td><code style="font-size: 0.8rem;">@string.Join(", ", this.PluginToolIds)</code></td>
+                                                </tr>
+                                            }
                                             <tr>
                                                 <td>
                                                     <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>
@@ -174,6 +201,21 @@
                                                             <MudText Typo="Typo.body2"><b>@T("Approval comment")</b></MudText>
                                                         </td>
                                                         <td><MudText Typo="Typo.body2">@state.EnterpriseApproval.Comment</MudText></td>
+                                                    </tr>
+                                                }
+                                                @if (state.IsActivationEnforcedByOrganization || state.IsActivatedByOrganizationDefault)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2"><b>@T("Activation")</b></MudText>
+                                                        </td>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2">
+                                                                @(state.IsActivationEnforcedByOrganization
+                                                                    ? T("Required by your organization")
+                                                                    : T("Enabled by your organization, you may switch it off"))
+                                                            </MudText>
+                                                        </td>
                                                     </tr>
                                                 }
                                             }

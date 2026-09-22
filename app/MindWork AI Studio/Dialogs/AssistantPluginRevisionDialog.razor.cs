@@ -9,8 +9,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginRevisionDialogResult(Guid PluginId, string PluginName, PluginAssistantAudit? Audit);
-
 public partial class AssistantPluginRevisionDialog : MSGComponentBase
 {
     private const string PLUGIN_FILE_NAME = "plugin.lua";
@@ -200,7 +198,12 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
         await this.InvokeAsync(this.StateHasChanged);
         try
         {
-            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin);
+            //
+            // The provider the user picked for the revision serves as the fallback: it is used only
+            // when nothing is configured for the audit agent, and only when it is trusted enough for
+            // an audit. Without it, a revised plugin could not be checked at all here.
+            //
+            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin, fallbackProvider: this.providerSettings);
             if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 return audit;
 

@@ -32,6 +32,13 @@ public enum FileExtractionErrorCode
     FORMAT_DETECTION_FAILED,
     NOT_A_VALID_PDF,
     NOT_A_VALID_SPREADSHEET,
+
+    /// <summary>
+    /// The package of a Word, OpenDocument, or presentation file is broken, e.g. a damaged
+    /// archive or a missing part inside it.
+    /// </summary>
+    NOT_A_VALID_DOCUMENT,
+
     PDFIUM_UNAVAILABLE,
     PDF_ENCRYPTED,
     PAGE_EXTRACTION_FAILED,
@@ -83,4 +90,11 @@ public enum FileExtractionErrorCode
     /// The extraction finished without reporting a failure, but produced no content at all.
     /// </summary>
     NO_CONTENT,
+
+    /// <summary>
+    /// The caller no longer needs the content, e.g. because the user closed the dialog which
+    /// asked for it. This is not a failure: nobody has to be told about it, which is why there
+    /// is no user-facing message for this code.
+    /// </summary>
+    CANCELLED,
 }

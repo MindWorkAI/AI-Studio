@@ -6,6 +6,7 @@ using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -27,6 +28,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected RustService RustService { get; init; } = null!;
+
+    [Inject]
+    protected ToolRegistry ToolRegistry { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
@@ -127,8 +131,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
+    protected HashSet<string> SelectedToolIds = [];
+
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-    
+
     protected MudForm? Form;
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
@@ -170,16 +176,22 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         
         this.formChangeTimer.AutoReset = false;
-        this.formChangeTimer.Elapsed += async (_, _) =>
+        //
+        // Mind the missing async here: a timer hands its elapsed event to a thread pool thread, where an
+        // async handler has nobody to hand its exception to. Such an exception is not merely unobserved,
+        // it is unhandled, and it takes the app down with it. Observing the task keeps it contained.
+        //
+        this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            await this.OnFormChange();
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
@@ -231,6 +243,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+        if (this.ProviderSettings == Settings.Provider.NONE)
+            return;
+
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
@@ -327,7 +343,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -337,7 +353,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
@@ -352,6 +368,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
     }
 
@@ -368,9 +385,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
         
         return chatId;
+    }
+
+    private Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component, this.ProviderSettings.Id);
+        return Task.CompletedTask;
     }
 
     protected virtual void ResetProviderAndProfileSelection()
@@ -378,6 +402,54 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+    }
+
+    /// <summary>
+    /// The tools this assistant runs with when its own rules name them, instead of asking the user.
+    /// </summary>
+    /// <remarks>
+    /// Null is the normal case: the user picks the tools. An assistant whose configuration already
+    /// says which tools belong to a run — a document analysis policy, for instance — returns them
+    /// here. Its tool selection then disappears from the footer, because there is nothing left to
+    /// choose: whoever wrote the policy has decided, and a user working with a policy rolled out by
+    /// their organization gets it as configured.
+    /// </remarks>
+    protected virtual IReadOnlySet<string>? AssistantManagedToolIds => null;
+
+    /// <summary>
+    /// The tools this assistant may hand to a model with the provider it currently uses.
+    /// </summary>
+    /// <remarks>
+    /// Whether the tools come from the assistant's own rules or from the user, the provider filter
+    /// always has the last word: a tool asking for more confidence than the selected provider has
+    /// never reaches the model, no matter who put it on the list. That filter belongs here rather
+    /// than into the stored selection, because a provider with too little confidence must not cost
+    /// the user a tool for good.
+    /// </remarks>
+    protected HashSet<string> GetRunnableToolIds()
+    {
+        if (this.AssistantManagedToolIds is not null)
+            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds);
+
+        // What the user cannot see, the assistant does not use:
+        if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
+            return [];
+
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds);
+    }
+
+    /// <summary>
+    /// Takes over a changed tool selection, no matter where the user made it.
+    /// </summary>
+    /// <remarks>
+    /// The footer offers one; an assistant may instead put the tools next to the setting they
+    /// belong to, as the batch processing does with its instructions. Both end up here.
+    /// </remarks>
+    protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        return Task.CompletedTask;
     }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
@@ -438,6 +510,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+            this.ChatThread.RuntimeComponent = this.Component;
+            this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
+            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
+            this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
         this.IsProcessing = true;
@@ -478,6 +554,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 this.CancellationTokenSource?.Dispose();
                 this.CancellationTokenSource = null;
             }
+
+            //
+            // The handlers above close over this assistant, and the content stays in the chat
+            // thread. The stream is over by now, so nothing has to listen to it anymore:
+            //
+            aiText.ResetStreamingHandlers();
         }
     }
 
@@ -639,7 +721,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 {
                     var convertedChatThread = this.ConvertToChatThread;
                     convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
-                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
                 }
                 break;
             
@@ -671,9 +753,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
-        this.ChatThread = null;
-        this.LastUserPrompt = null;
-        this.ResultingContentBlock = null;
+        this.ClearConversationState();
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
@@ -727,11 +807,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
@@ -900,6 +980,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(RESULTING_CONTENT_BLOCK_STATE_KEY, this.ResultingContentBlock);
         state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
+        state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -927,6 +1008,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(value));
         this.RestoreCustomAssistantSessionState(reader);
     }
 

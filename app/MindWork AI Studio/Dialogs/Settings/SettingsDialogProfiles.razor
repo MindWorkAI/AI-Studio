@@ -37,7 +37,7 @@
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
                             </MudTooltip>
                             <MudTooltip Text="@T("View")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="() => this.ViewProfile(context)"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewProfile(context))"/>
                             </MudTooltip>
                         </MudStack>
                     }
@@ -45,16 +45,11 @@
                     {
                         <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                             <MudTooltip Text="@T("Edit")">
-                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditProfile(context)"/>
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditProfile(context))"/>
                             </MudTooltip>
-                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
-                            {
-                                <MudTooltip Text="@T("Export configuration")">
-                                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="() => this.ExportProfile(context)"/>
-                                </MudTooltip>
-                            }
+                            <AdminExportButton OnClick="@(() => this.ExportProfile(context))" />
                             <MudTooltip Text="@T("Delete")">
-                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteProfile(context)"/>
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteProfile(context))"/>
                             </MudTooltip>
                         </MudStack>
                     }

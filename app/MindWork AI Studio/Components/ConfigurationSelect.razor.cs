@@ -33,7 +33,13 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public Func<TConfig, Task> SelectionUpdateAsync { get; set; } = _ => Task.CompletedTask;
-    
+
+    /// <summary>
+    /// Optional template used to render an item in the list.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<ConfigurationSelectData<TConfig>>? ItemTemplate { get; set; }
+
     #region Overrides of ConfigurationBase
 
     /// <inheritdoc />

@@ -27,8 +27,11 @@ public sealed class PandocAvailabilityService(RustService rustService, IDialogSe
     /// </summary>
     /// <param name="showSuccessMessage">Whether to show a success message if Pandoc is available.</param>
     /// <param name="showDialog">Whether to show the installation dialog if Pandoc is not available.</param>
+    /// <param name="showErrorMessage">Whether to report a still missing Pandoc to the user. Turn
+    /// this off when you can say it better yourself, for example by naming the file which cannot
+    /// be read; otherwise the user reads two messages about the same thing.</param>
     /// <returns>The Pandoc installation state.</returns>
-    public async Task<PandocInstallation> EnsureAvailabilityAsync(bool showSuccessMessage = false, bool showDialog = true)
+    public async Task<PandocInstallation> EnsureAvailabilityAsync(bool showSuccessMessage = false, bool showDialog = true, bool showErrorMessage = true)
     {
         // Check if Pandoc is available:
         var pandocState = await Pandoc.CheckAvailabilityAsync(this.RustService, showMessages: false, showSuccessMessage: showSuccessMessage);
@@ -54,7 +57,8 @@ public sealed class PandocAvailabilityService(RustService rustService, IDialogSe
             if (!pandocState.IsAvailable)
             {
                 this.Logger.LogError("Pandoc is not available after installation attempt.");
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc may be required for importing files.")));
+                if (showErrorMessage)
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("AI Studio needs Pandoc for this, but it is not available.")));
             }
         }
 

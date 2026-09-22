@@ -21,6 +21,14 @@ public sealed partial class PluginInstallService
         if (plugin.IsInternal)
             return CheckError(TB("Internal assistant plugins cannot be edited."));
 
+        //
+        // An assistant an organization rolled out is theirs to change, not the user's. Editing it
+        // would also change its content hash, which is what an enterprise approval is based on: the
+        // assistant would lose its approval and suddenly demand a security audit.
+        //
+        if (plugin.IsManagedByConfigServer)
+            return CheckError(TB("Only locally managed assistant plugins can be edited."));
+
         if (string.IsNullOrWhiteSpace(plugin.LocalPath))
             return CheckError(TB("The assistant plugin has no local directory."));
 
@@ -76,6 +84,11 @@ public sealed partial class PluginInstallService
         if (plugin.IsInternal)
             return UpdateError(plugin, plugin.LocalPath, TB("Internal assistant plugins cannot be edited."));
 
+        // See CheckInstalledAssistantUpdateAsync: an organization's assistant must keep the content
+        // its enterprise approval was granted for.
+        if (plugin.IsManagedByConfigServer)
+            return UpdateError(plugin, plugin.LocalPath, TB("Only locally managed assistant plugins can be edited."));
+
         if (string.IsNullOrWhiteSpace(plugin.LocalPath))
             return UpdateError(plugin, string.Empty, TB("The assistant plugin has no local directory."));
 
@@ -97,6 +110,9 @@ public sealed partial class PluginInstallService
         var tempFile = string.Empty;
         var backupFile = string.Empty;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin file is being replaced:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             var validation = await this.ValidateInPluginDirectoryAsync(lua, pluginDirectory, token);
@@ -144,6 +160,7 @@ public sealed partial class PluginInstallService
         {
             this.TryDeleteFile(tempFile, "assistant plugin edit temp file");
 
+            PluginFactory.UnlockHotReload();
             this.installSemaphore.Release();
         }
     }

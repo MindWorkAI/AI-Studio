@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -20,6 +18,17 @@ public partial class ProviderSelection : MSGComponentBase
     
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
+
+    /// <summary>
+    /// What this place calls the thing being picked, when "Provider" is not the word it uses.
+    /// </summary>
+    /// <remarks>
+    /// Some places have the user pick a provider in order to set it up, and there the word is right.
+    /// Others have them pick one to get a job done, and speak of the model throughout. A field
+    /// labelled "Provider" in the middle of such a text reads like a second, different choice.
+    /// </remarks>
+    [Parameter]
+    public string? Label { get; set; }
 
     /// <summary>
     /// Gets or sets whether provider selection is disabled.
@@ -55,18 +64,40 @@ public partial class ProviderSelection : MSGComponentBase
             yield return new(provider, this.GetCapabilityIcons(provider));
     }
 
+    /// <summary>
+    /// Says why there is nothing to choose from, or nothing at all when that is not the user's doing.
+    /// </summary>
+    /// <remarks>
+    /// An empty list has two causes the user can act on, and they lead to different places in the
+    /// settings: there is no provider yet, or none of the configured ones reaches the confidence
+    /// this component asks for. Naming the wrong one sends the user looking in the wrong place --
+    /// a first start has nobody to blame for a confidence level it never set. A missing or invalid
+    /// component is a third case and neither of those: it is a defect, it was logged as one, and
+    /// any explanation offered to the user here would be a guess.
+    /// </remarks>
+    private string? GetEmptySelectionHint()
+    {
+        if (this.Component is null or Tools.Components.NONE)
+            return null;
+
+        if (!this.SettingsManager.GetAllProviders().Any(x => x.UsedLLMProvider is not LLMProviders.NONE))
+            return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+
+        return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
+    }
+
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
     {
-        var capabilities = provider.GetModelCapabilities();
+        var profile = provider.GetModelProfile();
         List<CapabilityIcon> capabilityIcons = [];
 
-        if (capabilities.Contains(Capability.AUDIO_INPUT))
+        if (profile.Has(Capability.AUDIO_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
 
-        if (capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT))
+        if (profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
 
-        if (capabilities.Contains(Capability.SPEECH_INPUT))
+        if (profile.Has(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
@@ -83,7 +114,6 @@ public partial class ProviderSelection : MSGComponentBase
         _ => this.T("Uses reasoning (thinking)"),
     };
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()
     {
         switch (this.Component)
@@ -91,37 +121,41 @@ public partial class ProviderSelection : MSGComponentBase
             case null:
                 this.Logger.LogError("Component is null! Cannot filter providers based on component settings. Missed CascadingParameter?");
                 yield break;
-            
+
             case Tools.Components.NONE:
                 this.Logger.LogError("Component is NONE! Cannot filter providers based on component settings. Used wrong component?");
                 yield break;
-            
+
             case { } component:
-                
-                // Get the minimum confidence level for this component, and/or the global minimum if enforced:
-                var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(component);
-                
-                // Override with the explicit minimum level if set and higher:
-                if (this.ExplicitMinimumConfidence is not ConfidenceLevel.UNKNOWN && this.ExplicitMinimumConfidence > minimumLevel)
-                    minimumLevel = this.ExplicitMinimumConfidence;
-                
-                // Filter providers based on the minimum confidence level:
-                foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-                    if (provider.UsedLLMProvider != LLMProviders.NONE)
-                        if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
-                            yield return provider;
+
+                // Filter providers based on the minimum confidence level of this component, the
+                // enforced global minimum, and the explicit minimum level when it is higher:
+                foreach (var provider in this.SettingsManager.GetConfidentProviders(component, this.ExplicitMinimumConfidence))
+                    yield return provider;
                 break;
         }
     }
 
     #region Overrides of MSGComponentBase
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
-            this.StateHasChanged();
+        {
+            //
+            // We hold a copy of the provider record, which is a snapshot taken when it was selected.
+            // Once the user edits that provider, our copy is stale and would keep showing the old
+            // name and the old icon, so we resolve it again and hand the fresh one to our parent:
+            //
+            var updatedProvider = this.SettingsManager.GetProviderById(this.ProviderSettings.Id);
+            if (updatedProvider != AIStudio.Settings.Provider.NONE && updatedProvider != this.ProviderSettings)
+            {
+                this.ProviderSettings = updatedProvider;
+                await this.ProviderSettingsChanged.InvokeAsync(updatedProvider);
+            }
 
-        return Task.CompletedTask;
+            this.StateHasChanged();
+        }
     }
 
     #endregion

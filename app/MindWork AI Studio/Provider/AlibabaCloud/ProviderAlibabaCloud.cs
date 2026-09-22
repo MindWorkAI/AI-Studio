@@ -29,10 +29,10 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -44,6 +44,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -75,38 +76,8 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var additionalModels = new[]
-        {
-            new Model("qwq-plus", "QwQ plus"), // reasoning model 
-            new Model("qwen-max-latest", "Qwen-Max (Latest)"),
-            new Model("qwen-plus-latest", "Qwen-Plus (Latest)"),
-            new Model("qwen-turbo-latest", "Qwen-Turbo (Latest)"),
-            new Model("qvq-max", "QVQ Max"), // visual reasoning model 
-            new Model("qvq-max-latest", "QVQ Max (Latest)"), // visual reasoning model 
-            new Model("qwen-vl-max", "Qwen-VL Max"), // text generation model that can understand and process images
-            new Model("qwen-vl-plus", "Qwen-VL Plus"), // text generation model that can understand and process images
-            new Model("qwen-mt-plus", "Qwen-MT Plus"), // machine translation
-            new Model("qwen-mt-turbo", "Qwen-MT Turbo"), // machine translation
-            
-            //Open source
-            new Model("qwen2.5-14b-instruct-1m", "Qwen2.5 14b 1m context"), 
-            new Model("qwen2.5-7b-instruct-1m", "Qwen2.5 7b 1m context"),
-            new Model("qwen2.5-72b-instruct", "Qwen2.5 72b"),  
-            new Model("qwen2.5-32b-instruct", "Qwen2.5 32b"),  
-            new Model("qwen2.5-14b-instruct", "Qwen2.5 14b"),  
-            new Model("qwen2.5-7b-instruct", "Qwen2.5 7b"),  
-            new Model("qwen2.5-omni-7b", "Qwen2.5-Omni 7b"), // omni-modal understanding and generation model
-            new Model("qwen2.5-vl-72b-instruct", "Qwen2.5-VL 72b"),  
-            new Model("qwen2.5-vl-32b-instruct", "Qwen2.5-VL 32b"),  
-            new Model("qwen2.5-vl-7b-instruct", "Qwen2.5-VL 7b"),  
-            new Model("qwen2.5-vl-3b-instruct", "Qwen2.5-VL 3b"),  
-        };
-        
-        var result = await this.LoadModels(["q"], SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return result with
-        {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
-        };
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
+        return result with { Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).OrderBy(x => x.Id)] };
     }
 
     /// <inheritdoc />
@@ -118,17 +89,8 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        
-        var additionalModels = new[]
-        {
-            new Model("text-embedding-v3", "text-embedding-v3"),
-        };
-        
-        var result = await this.LoadModels(["text-embedding-"], SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return result with
-        {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
-        };
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
+        return result with { Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider)).OrderBy(x => x.Id)] };
     }
 
     #region Overrides of BaseProvider
@@ -143,14 +105,23 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
 
     #endregion
     
-    private Task<ModelLoadResult> LoadModels(string[] prefixes, SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    /// <summary>
+    /// Reads Model Studio's catalog, whole.
+    /// </summary>
+    /// <remarks>
+    /// It used to be read through a prefix per list -- a single "q" for the models to talk to, and
+    /// "text-embedding-" for the ones which answer in vectors. Neither survived what Model Studio
+    /// became: the letter also brings qwen-image, qwen-tts, qwen3-asr and qwen-vl-ocr into the chat
+    /// list, while it locks out DeepSeek, Kimi, GLM and MiniMax, which Alibaba serves through this
+    /// very endpoint. A name has never been a statement about what a model is for; the callers ask
+    /// the registry instead.
+    /// </remarks>
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
-            token,
-            apiKeyProvisional);
+            modelResponse => modelResponse.Data,
+            apiKeyProvisional, token: token);
     }
-    
 }

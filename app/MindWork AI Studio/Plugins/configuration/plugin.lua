@@ -94,20 +94,59 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
---     -- Optional: expert capability overrides.
---     -- Allowed keys are exactly:
---     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
+--     -- Optional: replace the built-in provider logo with a project-specific icon.
+--     -- The path is relative to this plugin.lua and must point to an SVG file inside
+--     -- this plugin directory, for example: assets/project-icon.svg. Absolute paths,
+--     -- parent-directory segments (..), links leaving the plugin directory, files
+--     -- larger than 32 KiB, and files which are not well-formed SVG are rejected.
+--     -- An invalid or missing icon logs a warning while the provider still loads
+--     -- with its built-in logo. AI Studio shows every icon in an isolated image
+--     -- element, so scripts or external references inside an SVG never run; for the
+--     -- same reason, the icon cannot inherit colors from the app and has to bring
+--     -- its own. Provide a single icon with enough contrast on both light and dark
+--     -- surfaces.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
+--     -- Optional: expert overrides for the model behind this provider. Missing keys keep the
+--     -- automatic answer, and each key contradicts only what it names.
+--     --
+--     -- What the model can do. Allowed keys are exactly:
+--     -- AUDIO_INPUT, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
 --     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
 --     -- Allowed values are booleans only.
---     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
+--     -- For default-on reasoning (thinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
 --     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
---     -- Missing keys keep the automatic capability detection result.
+--     --
+--     -- How much the model reads and how many images it takes. Allowed keys are exactly:
+--     -- CONTEXT_WINDOW, MAX_IMAGES_PER_MESSAGE, MAX_IMAGES_PER_REQUEST
+--     -- Allowed values are whole numbers: tokens greater than zero for the window, and images of
+--     -- zero or more for the two limits, where zero means the model is configured to take none.
+--     -- These are the same key names a model plugin uses for the same questions, but they say
+--     -- something narrower here: a model plugin describes a model wherever it is reached, while
+--     -- these describe this one installation of it. State what your deployment actually does --
+--     -- for a self-hosted engine, the window your operator configured rather than the one the
+--     -- model card advertises.
+--     -- CONTEXT_WINDOW feeds the token counter AI Studio shows below the chat input, so a wrong
+--     -- number here misleads users about how much room they have left.
 --     -- ["CapabilityOverrides"] = {
 --     --     ["VIDEO_INPUT"] = false,
+--     --     ["CONTEXT_WINDOW"] = 32768,
+--     --     ["MAX_IMAGES_PER_REQUEST"] = 4,
 --     -- },
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
---     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
+--     -- Allowed values are: BASETEN, CEREBRAS, COHERE, DEEPINFRA, FEATHERLESS_AI, FIREWORKS, GROQ,
+--     -- NOVITA, NSCALE, OVHCLOUD, PUBLIC_AI, SCALEWAY, TOGETHER_AI, ZAI
+--     -- Instead of naming a provider, you may let Hugging Face choose one:
+--     -- AUTOMATIC (the fastest), CHEAPEST, or PREFERRED (the order configured in your
+--     -- Hugging Face account). An automatic choice also fails over to another provider when the
+--     -- selected one is unavailable.
+--     -- Note: Hugging Face stopped routing HYPERBOLIC, SAMBANOVA, and NEBIUS_AI_STUDIO in July
+--     -- 2026, and HF_INFERENCE_API serves no models we can reach. Configurations still naming one
+--     -- of them are treated as if no provider was set, and the user is asked to choose again.
 --     -- ["HFInferenceProvider"] = "NOVITA",
 --
 --     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
@@ -118,6 +157,14 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked provider,
+--     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
+--     -- name, and every other field stay locked; only the API key becomes editable.
+--     -- Mutually exclusive with "APIKey" above: when both are set, the embedded key is
+--     -- ignored and a warning is logged. The user's key is preserved in the OS keyring even
+--     -- if this configuration is later withdrawn.
+--     -- ["AllowUserProvidedAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
@@ -138,8 +185,23 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked transcription
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
+--     -- Hugging Face transcribes audio through some of its inference providers only, so the choice
+--     -- is narrower than for chatting. Allowed values are: DEEPINFRA and TOGETHER_AI. The automatic
+--     -- options are not available here, because a transcription request has to name its provider.
+--     -- ["HFInferenceProvider"] = "TOGETHER_AI",
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
@@ -160,8 +222,32 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 --
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
+--     -- Optional: maximum number of tokens per embedding chunk. If omitted, AI Studio uses its default.
+--     -- ["TokenLimit"] = 8192,
+--
+--     -- Optional: number of chunks sent to the embedding provider in one request. If omitted, AI Studio sends one chunk per request.
+--     -- ["EmbeddingBatchSize"] = 1,
+--
+--     -- Optional: let each user set their own API key for this otherwise locked embedding
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
+--     -- Hugging Face serves embeddings through some of its inference providers only, so the choice
+--     -- is narrower than for chatting. Allowed values are: DEEPINFRA and TOGETHER_AI. The automatic
+--     -- options are not available here, because an embedding request has to name its provider.
+--     -- ["HFInferenceProvider"] = "TOGETHER_AI",
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
@@ -253,6 +339,14 @@ CONFIG["SETTINGS"] = {}
 -- of that, their choice outlives your configuration and stays as it is.
 -- ------
 
+-- Both update settings below only ever apply to installations AI Studio is able to update.
+-- Installations you rolled out yourself, for example, into C:\Program Files or into a location
+-- your users cannot write to, never update themselves, no matter what you configure here. You
+-- can therefore leave automatic updates enabled for everybody: your deployments ignore them,
+-- while installations your colleagues fetched from GitHub keep updating themselves. Place a file
+-- named "managed-installation" next to the program file to mark any other installation as one
+-- you maintain. The Enterprise IT documentation describes this in detail.
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.
@@ -286,8 +380,20 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the vision panel is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
 
--- Configure the user permission to add providers:
+-- Configure whether AI Studio shows a dialog listing suspicious instructions it
+-- removed from external content, together with an explanation of the attack pattern.
+-- A short notification is still shown when this setting is disabled.
+-- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
+
+-- Configure the master permission to add providers. When set to false, the add
+-- buttons stay visible but are disabled regardless of the provider-specific settings.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
+
+-- Fine-tune the permission to add each provider type. These settings only allow
+-- adding providers while DataApp.AllowUserToAddProvider is also true.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
@@ -420,8 +526,15 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId"] = ""
 --
 -- Configure the default output mode.
--- Allowed values are: MARKDOWN_FILES, TABLE_ONLY
--- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "MARKDOWN_FILES"
+-- Allowed values are: INDIVIDUAL_FILES, TABLE_ONLY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "INDIVIDUAL_FILES"
+--
+-- Configure the file format of the individual result files. Used only when the output
+-- mode is INDIVIDUAL_FILES. Everything except MARKDOWN is converted by Pandoc, which
+-- AI Studio installs on demand.
+-- Allowed values are: MICROSOFT_WORD, OPEN_DOCUMENT_TEXT, LATEX, MARKDOWN, HTML
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat"] = "MARKDOWN"
+--
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
 -- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
@@ -451,6 +564,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
@@ -463,6 +577,18 @@ CONFIG["SETTINGS"] = {}
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
 -- Please note: using an empty string ("") will lock the selection and disable dictation/transcription.
 -- CONFIG["SETTINGS"]["DataApp.UseTranscriptionProvider"] = "00000000-0000-0000-0000-000000000000"
+
+-- Configure the Opus bitrate used when normalizing uploaded audio/video for transcription.
+-- Allowed values are: KBPS_32, KBPS_64, KBPS_128, KBPS_256
+-- Higher bitrates improve transcription accuracy on noisy or quiet recordings, at the cost of
+-- a larger upload to the transcription provider. KBPS_128 is recommended.
+-- Please note: this bitrate applies whenever a recording has to be re-encoded. A file which already
+-- is a single mono 48 kHz Opus track in a WebM container and stays below 25 MiB is forwarded to the
+-- transcription provider unchanged, keeping the bitrate it was created with.
+-- CONFIG["SETTINGS"]["DataApp.OpusBitrate"] = "KBPS_32"
+--
+-- Allow the user to change the Opus bitrate even though your organization set a default above:
+-- CONFIG["SETTINGS"]["DataApp.OpusBitrate.AllowUserOverride"] = true
 
 -- Configure which assistants should be hidden from the UI.
 -- Allowed values are:
@@ -558,6 +684,29 @@ CONFIG["SETTINGS"] = {}
 -- department configuration can approve additional assistant plugins without repeating
 -- the approvals of the base configuration. Each configuration keeps its own approvals,
 -- so removing one of them only withdraws the approvals it had granted.
+--
+-- An approval only says that a plugin is safe. Whether it is enabled is a second
+-- decision, and without the optional Activate field it stays with your colleagues: the
+-- assistant is approved, and everybody switches it on themselves. Set Activate to have
+-- AI Studio enable it instead. AllowUserOverride works as it does for every setting:
+-- without it, your colleagues cannot switch the assistant off; with it, you only provide
+-- a default, which AI Studio applies once and then leaves alone.
+--
+--     Activate  AllowUserOverride  Result
+--     ------------------------------------------------------------------------
+--     absent    any                approved, everybody enables it themselves
+--     true      true               enabled for everybody, may be switched off
+--     true      absent             enabled for everybody, cannot be switched off
+--
+-- Activating needs more than the approval: AI Studio only enables an assistant plugin
+-- your organization actually rolled out, i.e. one below .config or .config-tests, or one
+-- marked with DEPLOYED_USING_CONFIG_SERVER. An approval alone is matched by hash and would
+-- otherwise also cover a copy a user placed themselves, which you can neither update nor
+-- withdraw. Such a copy stays approved, but nobody's settings are changed for it.
+--
+-- When two of your configurations approve the same hash, any Activate wins, while the
+-- freedom to switch the assistant off survives only if every configuration asking for the
+-- activation grants it.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 --     {
 --         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
@@ -565,6 +714,8 @@ CONFIG["SETTINGS"] = {}
 --         ["Comment"] = "Optional comment",
 --         ["ApprovedBy"] = "Optional Approver",
 --         ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+--         ["Activate"] = true,
+--         ["AllowUserOverride"] = true,
 --     }
 -- }
 
@@ -577,6 +728,110 @@ CONFIG["SETTINGS"] = {}
 --
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
+
+-- Configure whether tools are available at all. The default is true.
+-- When tools are disabled globally, tool selection is hidden in chats and assistants,
+-- but the global tool settings remain available to administrators.
+-- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
+
+-- Disable individual tools by their stable tool ID. The default is an empty set.
+-- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
+
+-- Configure the minimum provider confidence level required for individual tools.
+-- Tool IDs include: web_search, read_web_page
+-- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW
+-- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
+--     ["web_search"] = "VERY_LOW",
+--     ["read_web_page"] = "VERY_LOW"
+-- }
+
+-- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
+-- always strings. This works for every tool, including tools added by plugins, because nothing
+-- here needs to be known to AI Studio in advance.
+--
+-- Two tables decide how firmly a value applies:
+--   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
+--   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
+--
+-- A tool field marked as secret, such as an API key, can be rolled out as well — but only
+-- encrypted with the enterprise encryption secret, in the same "ENC:v1:<base64>" form the
+-- providers above use, and only through LockedToolSettings. A locked secret leaves whatever
+-- the user entered untouched, so their own key returns when you stop deploying yours. A
+-- plaintext secret is refused with a warning in the log rather than used.
+--
+-- Field names of the Web Search tool. At least one of its search services has to be configured
+-- before the tool can be used; which one you pick is up to you, since all three can be rolled
+-- out from here:
+--   searxng.baseUrl                  SearXNG HTTP(S) root URL or /search endpoint. The instance
+--                                    must have the JSON format enabled, i.e. "json" listed under
+--                                    search.formats in its settings.yml. Public instances usually
+--                                    serve only the web interface and block automated requests,
+--                                    so use an instance your organization operates.
+--   staan.apiKey                     Secret. Staan API key, encrypted as described above and set
+--                                    through LockedToolSettings, or entered by the user in the
+--                                    tool's settings dialog.
+--   staan.market                     Which market Staan searches when the AI model asks for a
+--                                    language Staan does not offer, or for none in particular.
+--                                    Staan searches one market at a time and cannot search
+--                                    without one. Allowed values are: de-de, en-us, fr-fr.
+--   tavily.apiKey                    Secret. Tavily API key, encrypted as described above and set
+--                                    through LockedToolSettings, or entered by the user in the
+--                                    tool's settings dialog.
+--   tavily.searchDepth               How thoroughly Tavily searches. A basic search costs one
+--                                    request of the account's monthly quota, an advanced search
+--                                    costs two. Allowed values are: basic, advanced.
+--   backendStrategy                  What to do when more than one search service is configured.
+--                                    FAILOVER asks them one after another until one returns hits.
+--                                    PARALLEL asks all of them at once and combines their
+--                                    results, which uses one request of every service per search.
+--                                    SPECIFIC asks only the preferred service. The default is
+--                                    FAILOVER. Allowed values are: FAILOVER, PARALLEL, SPECIFIC.
+--   primaryBackend                   Which search service to ask first, and the only one asked
+--                                    with the SPECIFIC strategy. Left empty, the services are
+--                                    asked in a fixed order. Allowed values are: SEARXNG, STAAN,
+--                                    TAVILY.
+--   defaultLanguage                  Required. IETF language tag such as "de-DE", or "all" for no
+--                                    restriction. Without a language many search engines return
+--                                    no results at all, so the tool counts as unconfigured while
+--                                    this is empty.
+--   defaultSafeSearch                How strictly the search services filter explicit results. A
+--                                    service that cannot filter at all is not asked while this is
+--                                    set to MODERATE or STRICT, which currently applies to Staan.
+--                                    Allowed values are: OFF, MODERATE, STRICT.
+--   maxResults                       Result count, as an integer string.
+--   searchTimeoutSeconds             Search request timeout in seconds.
+--   pageTimeoutSeconds               Per-page timeout in seconds.
+--   allPagesRetrievalTimeoutSeconds  Overall page-retrieval timeout in seconds.
+--   maxTotalContentCharacters        Total content-character budget.
+--   minContentCharactersPerResult    Per-result content allocation.
+--
+-- Field names of the Read Web Page tool:
+--   timeoutSeconds        Page-loading timeout in seconds.
+--   maxContentCharacters  Content-character limit.
+--   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
+--                         listed. Wildcards match subdomains only, so add the root domain
+--                         separately. Allowed private hosts require a provider with HIGH
+--                         confidence or one trusted by the organization. AI Studio only tries the
+--                         current user's operating-system sign-in for explicitly allowed HTTPS
+--                         targets when those provider requirements are met, and it never reuses
+--                         browser cookies.
+--
+-- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
+--     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
+--     ["web_search.defaultLanguage"] = "de-DE",
+--     ["web_search.backendStrategy"] = "FAILOVER",
+--     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+-- }
+--
+-- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
+--     ["web_search.maxResults"] = "5",
+--     ["web_search.defaultSafeSearch"] = "MODERATE",
+--     ["web_search.tavily.searchDepth"] = "basic",
+--     ["read_web_page.timeoutSeconds"] = "30"
+-- }
 
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).
@@ -634,7 +889,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure a custom confidence scheme.
 -- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
 -- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
---   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+--   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED,
+--   HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
@@ -651,6 +907,9 @@ CONFIG["SETTINGS"] = {}
 --     ["ALIBABA_CLOUD"] = "LOW",
 --     ["PERPLEXITY"] = "MODERATE",
 --     ["OPEN_ROUTER"] = "MODERATE",
+--     ["HETZNER"] = "HIGH",
+--     ["IONOS"] = "HIGH",
+--     ["LITE_LLM"] = "MODERATE",
 --     ["FIREWORKS"] = "MODERATE",
 --     ["GROQ"] = "MODERATE",
 --     ["HUGGINGFACE"] = "MODERATE",
@@ -665,7 +924,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure provider instances trusted by your organization for data-source security checks.
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
--- only for data-source security checks and related local data warnings.
+-- only for data-source security checks and related local data warnings. Trusted LLM providers
+-- can also use read_web_page for explicitly allowed private or VPN hosts.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely, so providers trusted by the base configuration lose that status. Repeat
@@ -774,6 +1034,56 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     }
 -- }
 
+-- An example chat template which preselects tools and data sources:
+-- Both are optional and independent of each other. Leaving a field out is not the same as
+-- leaving it empty:
+--
+--   ToolIds omitted             -> the chat starts with the tools set as its default
+--   ToolIds = {}                -> the chat starts with no tools at all
+--   DataSourceOptions omitted   -> the chat starts with the data source defaults
+--   DataSourceOptions = { ... } -> the chat starts with exactly what this table says
+--
+-- Both are a preselection, not a limit: users change either of them in the chat as usual.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000002",
+--     ["Name"] = "Intranet Research",
+--     ["SystemPrompt"] = "You are <Company Name>'s research assistant. Answer from our own documents and say where each answer comes from.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the tools a chat with this template starts with, by tool ID.
+--     -- A tool ID unknown to the installation is ignored, and so is a tool your
+--     -- organization switched off. A tool has to meet the confidence requirements of the
+--     -- provider in use, so it may stay unavailable even though this template names it.
+--     -- Tool IDs include: web_search, read_web_page
+--     ["ToolIds"] = {
+--         "read_web_page",
+--     },
+--
+--     -- Optional: the data source options a chat with this template starts with.
+--     -- Every field inside is optional as well. DisableDataSources defaults to false here,
+--     -- because writing this table at all says that the template wants data sources; the
+--     -- other three default to false and an empty list.
+--     ["DataSourceOptions"] = {
+--         -- Set to true to start the chat with data sources switched off.
+--         ["DisableDataSources"] = false,
+--
+--         -- Let an agent choose the fitting data sources for each question. When true,
+--         -- PreselectedDataSourceIds is not used.
+--         ["AutomaticDataSourceSelection"] = false,
+--
+--         -- Let an agent check whether the retrieved data fits the question.
+--         ["AutomaticValidation"] = true,
+--
+--         -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+--         -- IDs from another configuration of your organization work as well: they are
+--         -- resolved against every known data source, not only against the ones defined
+--         -- here. IDs that resolve to nothing are ignored.
+--         ["PreselectedDataSourceIds"] = {
+--             "00000000-0000-0000-0000-000000000000",
+--         },
+--     },
+-- }
+
 -- Introduction texts shown as expansion panels on the welcome page:
 CONFIG["INTRODUCTIONS"] = {}
 
@@ -843,7 +1153,15 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: minimum provider confidence required for this policy.
 --     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --     ["MinimumProviderConfidence"] = "MEDIUM",
--- 
+--
+--     -- Optional: the tools an analysis with this policy may use, by tool ID.
+--     -- This is a limit, not a preselection: a tool which is not listed here cannot be
+--     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
+--     -- A listed tool must still meet the confidence requirements of the provider in
+--     -- use, so a tool may stay unavailable even though this policy permits it.
+--     -- Tool IDs include: web_search, read_web_page
+--     ["AllowedToolIds"] = { "web_search" },
+--
 --     -- Optional: preselect a provider or profile by ID.
 --     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
 --     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",

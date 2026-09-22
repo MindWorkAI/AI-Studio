@@ -44,7 +44,7 @@ public sealed partial class VisualBriefingStore
                     : VisualBriefingBuildStatus.ACTIVE;
                 matching.Failure = null;
                 matching.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                await this.StoreBuildAtomicAsync(matching, token);
+                await this.StoreBuildAtomicAsync(matching, overwrite: true, token);
                 return (matching, true);
             }
 
@@ -56,10 +56,10 @@ public sealed partial class VisualBriefingStore
             {
                 stale.Status = VisualBriefingBuildStatus.SUPERSEDED;
                 stale.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                await this.StoreBuildAtomicAsync(stale, token);
+                await this.StoreBuildAtomicAsync(stale, overwrite: true, token);
             }
 
-            await this.StoreBuildAtomicAsync(candidate, token, overwrite: false);
+            await this.StoreBuildAtomicAsync(candidate, overwrite: false, token);
             return (candidate, false);
         }
         finally
@@ -81,7 +81,7 @@ public sealed partial class VisualBriefingStore
         
         try
         {
-            await this.StoreBuildAtomicAsync(build, token);
+            await this.StoreBuildAtomicAsync(build, overwrite: true, token);
         }
         finally
         {
@@ -372,12 +372,11 @@ public sealed partial class VisualBriefingStore
     /// Writes one build record atomically.
     /// </summary>
     /// <param name="build">The build record.</param>
-    /// <param name="token">The cancellation token.</param>
     /// <param name="overwrite">Whether an existing record may be replaced.</param>
-    private async Task StoreBuildAtomicAsync(
-        VisualBriefingBuildRecord build,
-        CancellationToken token,
-        bool overwrite = true)
+    /// <param name="token">The cancellation token.</param>
+    private async Task StoreBuildAtomicAsync(VisualBriefingBuildRecord build,
+        bool overwrite,
+        CancellationToken token)
     {
         if (build.BuildVersion != VisualBriefingVersions.BUILD ||
             build.BuildId == Guid.Empty ||
@@ -386,7 +385,7 @@ public sealed partial class VisualBriefingStore
             throw new InvalidDataException("The visual briefing build record is invalid.");
 
         var json = JsonSerializer.Serialize(build, JSON_OPTIONS);
-        await WriteTextAtomicAsync(this.BuildPath(build.BriefingId, build.BuildId), json, token, overwrite);
+        await WriteTextAtomicAsync(this.BuildPath(build.BriefingId, build.BuildId), json, overwrite, token);
     }
 
     /// <summary>

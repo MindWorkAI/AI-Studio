@@ -74,7 +74,7 @@ else
             @T("Documents for the analysis")
         </MudText>
 
-        <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+        <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
     </div>
 }
 else
@@ -104,11 +104,13 @@ else
                     @T("Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create.")
                 </MudJustifiedText>
 
-                <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdateAsync="@(async level => await this.PolicyMinimumConfidenceWasChangedAsync(level))" />
+                <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdate="@this.PolicyMinimumConfidenceWasChanged" />
 
-                <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@(providerId => this.PolicyPreselectedProviderWasChanged(providerId))" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
+                <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.policyAllowedToolIds" SelectedToolIdsChanged="@this.PolicyAllowedToolsWasChanged" Disabled="@this.IsNoPolicySelectedOrProtected" Label="@T("Tools this policy permits")" Help="@T("Only the tools selected here can be used by the AI for an analysis with this policy. Every tool still has to meet the confidence requirements of the selected provider, so a tool may remain unavailable even when this policy permits it.")"/>
 
-                <ConfigurationSelect OptionDescription="@T("Preselect a profile")" Disabled="@(() => this.IsNoPolicySelected)" SelectedValue="@(() => this.policyPreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetComponentProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@(async selection => await this.PolicyPreselectedProfileWasChangedAsync(selection))" OptionHelp="@T("Choose whether the policy should use the app default profile, no profile, or a specific profile.")"/>
+                <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@this.PolicyPreselectedProviderWasChanged" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
+
+                <ConfigurationSelect OptionDescription="@T("Preselect a profile")" Disabled="@(() => this.IsNoPolicySelected)" SelectedValue="@(() => this.policyPreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetComponentProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@this.PolicyPreselectedProfileWasChanged" OptionHelp="@T("Choose whether the policy should use the app default profile, no profile, or a specific profile.")"/>
 
                 <MudTextSwitch Disabled="@(this.IsNoPolicySelected || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" Value="@this.policyIsProtected" ValueChanged="async state => await this.PolicyProtectionWasChanged(state)" LabelOn="@T("Yes, protect this policy")" LabelOff="@T("No, the policy can be edited")" />
 
@@ -126,7 +128,9 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyAnalysisRules" Validation="@this.ValidateAnalysisRules" Immediate="@true" Label="@T("Analysis rules")" HelperText="@T("Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
+                @* No default target for the rule zones: while the policy definition is open, three
+                   zones are in play, so each drop has to be aimed at the one it belongs to. *@
+                <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.policyAnalysisRules" EnableDragDrop="true" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 <MudJustifiedText Typo="Typo.body1" Class="mt-3">
                     @T("After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.")
@@ -134,7 +138,7 @@ else
 
                 <MudTextField T="string" Disabled="@this.IsNoPolicySelectedOrProtected" @bind-Text="@this.policyOutputRules" Validation="@this.ValidateOutputRules" Immediate="@true" Label="@T("Output rules")" HelperText="@T("Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
-                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" Disabled="@this.IsNoPolicySelectedOrProtected"/>
+                <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.policyOutputRules" EnableDragDrop="true" Disabled="@this.IsNoPolicySelectedOrProtected"/>
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
                 {
@@ -151,7 +155,7 @@ else
 
         <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6" />
 
-        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@(this.selectedPolicy?.IsProtected ?? false)">
+        <ExpansionPanel HeaderIcon="@Icons.Material.Filled.DocumentScanner" HeaderText="@(T("Document selection - Policy") + $": {this.selectedPolicy?.PolicyName}")" IsExpanded="@this.documentSelectionExpanded" ExpandedChanged="@this.DocumentSelectionExpandedChanged">
             <MudText Typo="Typo.h5" Class="mb-1">
                 @T("Policy Description")
             </MudText>
@@ -164,10 +168,16 @@ else
                 @T("Documents for the analysis")
             </MudText>
 
-            <AttachDocuments Name="Document Analysis Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+            @* The whole assistant catches drops, but only while this panel is the open one. A
+               collapsed panel keeps its content in the DOM with a height of zero, so without this
+               the invisible zone would swallow the drops meant for the policy definition. *@
+            <AttachDocuments Name="Document Analysis Files" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="@this.documentSelectionExpanded" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
         </ExpansionPanel>
     </MudExpansionPanels>
 }
     
+@* The warning sits right at the provider selection, because choosing another provider resolves it: *@
+<ManagedToolsWarning Component="@this.Component" ToolIds="@this.policyAllowedToolIds" ProviderSettings="@this.ProviderSettings"/>
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>

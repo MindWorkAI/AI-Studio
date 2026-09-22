@@ -39,11 +39,32 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private bool isAuditing;
     private PluginAssistantSecurityState securityState = new();
 
+    /// <summary>
+    /// The provider the user picks inside this dialog when nothing is configured for the audit agent.
+    /// </summary>
+    /// <remarks>
+    /// It lives and dies with this dialog and is never written to the settings: an audit is a one-off
+    /// job, and the choice made here says nothing about which model the next one should use.
+    /// </remarks>
+    private AIStudio.Settings.Provider auditProviderSelection = AIStudio.Settings.Provider.NONE;
+
     private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
 
-    private string ProviderLabel => this.CurrentProvider == AIStudio.Settings.Provider.NONE
-        ? this.T("No provider configured")
-        : $"{this.CurrentProvider.InstanceName} ({this.CurrentProvider.UsedLLMProvider.ToName()})";
+    /// <summary>
+    /// The provider this audit runs with: the configured one, or what the user picked here instead.
+    /// </summary>
+    private AIStudio.Settings.Provider EffectiveProvider => this.CurrentProvider == AIStudio.Settings.Provider.NONE
+        ? this.auditProviderSelection
+        : this.CurrentProvider;
+
+    /// <summary>
+    /// Whether this dialog has to offer a provider, because neither the audit agent nor the app has one.
+    /// </summary>
+    private bool NeedsProviderSelection => this.CurrentProvider == AIStudio.Settings.Provider.NONE;
+
+    private string ProviderLabel => this.EffectiveProvider == AIStudio.Settings.Provider.NONE
+        ? T("No model configured")
+        : $"{this.EffectiveProvider.InstanceName} ({this.EffectiveProvider.UsedLLMProvider.ToName()})";
 
     private DataAssistantPluginAudit AuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
 
@@ -51,17 +72,41 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string MinimumLevelLabel => this.MinimumLevel.GetName();
 
-    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
+    private bool CanRunAudit => this.plugin is not null && this.EffectiveProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
 
-    private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
+    /// <summary>
+    /// The audit result this dialog acts on: the one it has, unless that one concluded nothing.
+    /// </summary>
+    /// <remarks>
+    /// UNKNOWN is not a low audit level, it is the absence of a result: the model was unreachable,
+    /// the key was wrong, no provider was trusted enough. Everything which decides something has to
+    /// read it as no audit at all -- whether the plugin may be activated, and what this dialog hands
+    /// back to be stored. Otherwise a check which failed would unlock a plugin nobody has checked,
+    /// and storing it would replace the last result which did say something, because audits are kept
+    /// one per plugin. This is the rule PluginAssistantSecurityResolver already applies to the stored
+    /// audits. What the dialog shows the user still reads the raw result: a failed run is precisely
+    /// what they need to see.
+    /// </remarks>
+    private PluginAssistantAudit? ConclusiveAudit => this.audit is { Level: not AssistantAuditLevel.UNKNOWN } ? this.audit : null;
 
-    private bool IsActivationBlockedBySettings => this.AuditSettings.RequireAuditBeforeActivation && (this.audit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum);
+    private bool IsAuditBelowMinimum => this.ConclusiveAudit is not null && this.ConclusiveAudit.Level < this.MinimumLevel;
 
-    private bool RequiresActivationConfirmation => this.audit is not null && this.IsAuditBelowMinimum && !this.IsActivationBlockedBySettings;
+    private bool IsActivationBlockedBySettings => this.AuditSettings.RequireAuditBeforeActivation && (this.ConclusiveAudit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum);
+
+    private bool RequiresActivationConfirmation => this.ConclusiveAudit is not null && this.IsAuditBelowMinimum && !this.IsActivationBlockedBySettings;
 
     private bool CanEnablePlugin => this.plugin is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
 
     private Color EnableButtonColor => this.RequiresActivationConfirmation ? Color.Warning : Color.Success;
+
+    /// <summary>
+    /// Whether this dialog has produced an audit result, which is why it offers no second run.
+    /// </summary>
+    /// <remarks>
+    /// A run which concluded nothing must not set this. It would leave the user in front of a plugin
+    /// they cannot check and cannot enable, with closing and reopening the dialog as the only way on
+    /// -- and a failed run is the one case where trying again is exactly the right thing to do.
+    /// </remarks>
     private bool justAudited;
 
     private const ushort BYTES_PER_KILOBYTE = 1024;
@@ -97,26 +142,39 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
         try
         {
-            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin);
+            //
+            // The provider picked here is handed over as the fallback: the audit service uses it only
+            // when nothing is configured for the audit agent, so an organization-wide provider keeps
+            // its precedence.
+            //
+            this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin, fallbackProvider: this.auditProviderSelection);
             this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
         }
         finally
         {
             this.isAuditing = false;
-            this.justAudited = true;
+            this.justAudited = this.ConclusiveAudit is not null;
             await this.InvokeAsync(this.StateHasChanged);
         }
     }
 
+    private string? ValidatingProvider(AIStudio.Settings.Provider provider)
+    {
+        if (provider.UsedLLMProvider == LLMProviders.NONE)
+            return T("Please select a model.");
+
+        return null;
+    }
+
     private void CloseWithoutActivation()
     {
-        if (this.audit is null)
+        if (this.ConclusiveAudit is null)
         {
             this.MudDialog.Cancel();
             return;
         }
 
-        this.MudDialog.Close(DialogResult.Ok(new AssistantPluginAuditDialogResult(this.audit, false)));
+        this.MudDialog.Close(DialogResult.Ok(new AssistantPluginAuditDialogResult(this.ConclusiveAudit, false)));
     }
 
     private async Task EnablePlugin()
@@ -130,7 +188,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         if (this.RequiresActivationConfirmation && !await this.ConfirmActivationBelowMinimumAsync())
             return;
 
-        this.MudDialog.Close(DialogResult.Ok(new AssistantPluginAuditDialogResult(this.audit, true)));
+        this.MudDialog.Close(DialogResult.Ok(new AssistantPluginAuditDialogResult(this.ConclusiveAudit, true)));
     }
 
     private async Task<bool> ConfirmActivationBelowMinimumAsync()

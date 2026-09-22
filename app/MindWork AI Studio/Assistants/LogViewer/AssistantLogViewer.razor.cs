@@ -460,7 +460,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     {
         this.StopAutoRefresh();
         this.autoRefreshCancellationTokenSource = new CancellationTokenSource();
-        _ = this.AutoRefreshLoopAsync(this.autoRefreshCancellationTokenSource.Token);
+        this.AutoRefreshLoopAsync(this.autoRefreshCancellationTokenSource.Token).Observe($"{nameof(AssistantLogViewer)}: refreshing the log automatically");
     }
 
     private void StopAutoRefresh()

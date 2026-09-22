@@ -2,7 +2,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Databases.VectorStore;
 
-public sealed class NoVectorStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : DatabaseClient(name, string.Empty), IVectorStoreClient
+public sealed class NoVectorStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : VectorStoreClient(name, string.Empty)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoVectorStoreClient).Namespace, nameof(NoVectorStoreClient));
 
@@ -22,16 +22,22 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
         await Task.CompletedTask;
     }
 
-    public Task EnsureVectorStoreExists(string storeName, int vectorSize, CancellationToken token) =>
+    public override Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
+        Task.FromException<VectorStoreEnsureResult>(this.CreateUnavailableException());
+
+    public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
-    public Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) =>
+        Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
+
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
-    public Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
+    public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
-    public Task DeleteVectorStore(string storeName, CancellationToken token) =>
+    public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
     private InvalidOperationException CreateUnavailableException() =>

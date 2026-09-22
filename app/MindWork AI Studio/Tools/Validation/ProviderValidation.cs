@@ -22,11 +22,17 @@ public sealed class ProviderValidation
 
     public Func<bool> IsModelProvidedManually { get; init; } = () => false;
 
+    public Func<string> GetCustomTokenizerValidationIssue { get; init; } = () => string.Empty;
     public Func<bool> IsModelSelectionHidden { get; init; } = () => false;
 
     public string? ValidatingHostname(string hostname)
     {
-        if(this.GetProvider() != LLMProviders.SELF_HOSTED)
+        //
+        // Every provider for which IsHostnameNeeded is true must be validated here. Otherwise,
+        // the dialog shows a hostname field which nobody checks, and the provider silently ends
+        // up as a NoProvider later on, because its base URI cannot be built:
+        //
+        if(this.GetProvider() is not (LLMProviders.SELF_HOSTED or LLMProviders.LITE_LLM))
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
@@ -43,16 +49,20 @@ public sealed class ProviderValidation
 
     public string? ValidatingAPIKey(string apiKey)
     {
-        if(this.GetProvider() is LLMProviders.SELF_HOSTED)
-            return null;
-        
+        // A key which could not be stored in or removed from the operating system has to reach the
+        // user for every provider. Self-hosted providers are exempt from having to name a key at
+        // all, not from being told that the one they named was lost on the way:
         var apiKeyStorageIssue = this.GetAPIKeyStorageIssue();
         if(!string.IsNullOrWhiteSpace(apiKeyStorageIssue))
             return apiKeyStorageIssue;
 
+        // A self-hosted server may well run without any key, so an empty field is fine for it:
+        if(this.GetProvider() is LLMProviders.SELF_HOSTED)
+            return null;
+
         if(string.IsNullOrWhiteSpace(apiKey))
             return TB("Please enter an API key.");
-        
+
         return null;
     }
 
@@ -121,8 +131,65 @@ public sealed class ProviderValidation
         if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
             return null;
 
+        if (!inferenceProvider.SupportsChat())
+            return TB("Please select an Hugging Face inference provider.");
+
+        return null;
+    }
+
+    public string? ValidatingCustomTokenizer(string _)
+    {
+        var issue = this.GetCustomTokenizerValidationIssue();
+        if (string.IsNullOrWhiteSpace(issue))
+            return null;
+
+        return issue;
+    }
+
+    /// <summary>
+    /// Validates the Hugging Face inference provider chosen for embeddings.
+    /// </summary>
+    /// <remarks>
+    /// Far fewer providers create embeddings for us than serve chat models, so a selection which is
+    /// fine for chatting may not be for embeddings. A provider configured before the choice narrowed
+    /// is no longer among the options, which would leave the user with an empty field and no reason
+    /// given.
+    /// </remarks>
+    /// <param name="inferenceProvider">The inference provider to validate.</param>
+    /// <returns>The message to show, or null when the selection is fine.</returns>
+    public string? ValidatingHFInstanceProviderForEmbeddings(HFInferenceProvider inferenceProvider)
+    {
+        if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
+            return null;
+
         if (inferenceProvider is HFInferenceProvider.NONE)
             return TB("Please select an Hugging Face inference provider.");
+
+        if (!inferenceProvider.SupportsEmbeddings())
+            return TB("This Hugging Face inference provider does not create embeddings. Please select another one.");
+
+        return null;
+    }
+
+    /// <summary>
+    /// Validates the Hugging Face inference provider chosen for transcription.
+    /// </summary>
+    /// <remarks>
+    /// As with embeddings, only some of the inference providers transcribe audio for us, so the
+    /// choice is narrower than it is for chatting.
+    /// </remarks>
+    /// <param name="inferenceProvider">The inference provider to validate.</param>
+    /// <returns>The message to show, or null when the selection is fine.</returns>
+    public string? ValidatingHFInstanceProviderForTranscription(HFInferenceProvider inferenceProvider)
+    {
+        if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
+            return null;
+
+        if (inferenceProvider is HFInferenceProvider.NONE)
+            return TB("Please select an Hugging Face inference provider.");
+
+        if (!inferenceProvider.SupportsTranscription())
+            return TB("This Hugging Face inference provider does not transcribe audio. Please select another one.");
 
         return null;
     }

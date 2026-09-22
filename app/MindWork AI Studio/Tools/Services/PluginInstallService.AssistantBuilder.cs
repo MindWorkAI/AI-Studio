@@ -7,7 +7,7 @@ public sealed partial class PluginInstallService
 {
     /// <summary>
     /// Checks whether generated Lua assistant plugin code can be loaded and installed.
-    /// The plugin is written to a temporary staging directory and validated through the
+    /// The plugin is written to a staging directory and validated through the
     /// normal plugin loader, but it is not moved into the user plugin directory.
     /// </summary>
     /// <param name="lua">The full generated <c>plugin.lua</c> content.</param>
@@ -44,7 +44,7 @@ public sealed partial class PluginInstallService
 
     /// <summary>
     /// Installs generated Lua assistant plugin code into the user plugin directory.
-    /// Writes the plugin into a temporary staging directory first, validates it through the
+    /// Writes the plugin into a staging directory first, validates it through the
     /// normal plugin loader, then moves into <c>data/plugins/assistants</c>.
     /// If plugin with same ID already exists, the existing directory is moved
     /// aside as backup and restored when replacement fails.
@@ -84,11 +84,11 @@ public sealed partial class PluginInstallService
             return PluginValidationResult.Failure(TB("The plugin system is not initialized yet."));
 
         var pluginCode = lua.Trim();
-        var stagingDirectory = Path.Join(Path.GetTempPath(), $"{ASSISTANT_BUILDER_DIRECTORY_PREFIX}.staging-{Guid.NewGuid():N}");
+        if (!this.TryCreateStagingDirectory(ASSISTANT_BUILDER_DIRECTORY_PREFIX, out var stagingDirectory, out var stagingIssue))
+            return PluginValidationResult.Failure(stagingIssue);
 
         try
         {
-            Directory.CreateDirectory(stagingDirectory);
             var stagedPluginFile = Path.Join(stagingDirectory, PLUGIN_FILE_NAME);
             await File.WriteAllTextAsync(stagedPluginFile, pluginCode, Encoding.UTF8, token);
 

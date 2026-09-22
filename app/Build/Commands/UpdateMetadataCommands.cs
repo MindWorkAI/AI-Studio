@@ -87,8 +87,44 @@ public sealed partial class UpdateMetadataCommands
         await new CollectI18NKeysCommand().CollectI18NKeys();
         
         // Build the final release, where Rust knows the updated metadata, the .NET
-        // artifacts are already in place, and .NET knows the updated web assets, etc.:
-        await this.Build(offline);
+        // artifacts are already in place, and .NET knows the updated web assets, etc.
+        // The gate already ran in the first build; running it a second time on the same
+        // sources would only add minutes:
+        await this.Build(offline, skipVerify: true);
+    }
+
+    [Command("update-metainfo", Description = "Update the AppStream metainfo entry of one release from its changelog")]
+    public async Task UpdateMetainfo(
+        [Option("version", ['v'], Description = "The release version, e.g., 26.1.2. Defaults to the version from the metadata")] string? version = null,
+        [Option("date", ['d'], Description = "The release date as yyyy-MM-dd. Defaults to the build time from the metadata")] string? date = null)
+    {
+        const int APP_VERSION_INDEX = 0;
+        const int BUILD_TIME_INDEX = 1;
+
+        if(!Environment.IsWorkingDirectoryValid())
+            return;
+
+        Console.WriteLine("==============================");
+
+        try
+        {
+            var metadataLines = SplitLines(await File.ReadAllTextAsync(Environment.GetMetadataPath(), Encoding.UTF8));
+            var appVersion = string.IsNullOrWhiteSpace(version) ? metadataLines[APP_VERSION_INDEX].Trim() : version.Trim();
+            if (!ExactAppVersionRegex().IsMatch(appVersion))
+                throw new InvalidOperationException($"The version '{appVersion}' is not a valid app version.");
+
+            DateTime releaseTime;
+            if (string.IsNullOrWhiteSpace(date))
+                releaseTime = ParseMetadataBuildTime(metadataLines[BUILD_TIME_INDEX]);
+            else if (!DateTime.TryParseExact(date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out releaseTime))
+                throw new InvalidOperationException($"The release date '{date}' is not a valid date in the yyyy-MM-dd format.");
+
+            await WriteMetainfoRelease(appVersion, releaseTime);
+        }
+        catch (InvalidOperationException exception)
+        {
+            Console.WriteLine($"- Error: {exception.Message}");
+        }
     }
 
     [Command("update-versions", Description = "The command will update the package versions in the metadata file")]
@@ -154,10 +190,20 @@ public sealed partial class UpdateMetadataCommands
         var appVersion = await this.UpdateAppVersion(action, version);
         if (!string.IsNullOrWhiteSpace(appVersion.VersionText))
         {
+            // The changelog is the source for the AppStream description. Check it before we write
+            // any further metadata, so that a missing changelog cannot leave a half-prepared release:
+            var changelogPath = GetChangelogPath(appVersion.VersionText);
+            if (!File.Exists(changelogPath))
+            {
+                Console.WriteLine($"- Error: The changelog file '{Path.GetFileName(changelogPath)}' does not exist.");
+                return;
+            }
+
             var buildNumber = await this.IncreaseBuildNumber();
             var buildTime = await this.UpdateBuildTime();
             await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTime);
             await this.CreateNextChangelog(buildNumber, appVersion);
+            await WriteMetainfoRelease(appVersion.VersionText, ParseMetadataBuildTime(buildTime));
             await this.UpdateProjectCommitHash();
             await this.UpdateReleaseDependenciesAndLicence();
             Console.WriteLine();
@@ -177,11 +223,21 @@ public sealed partial class UpdateMetadataCommands
     
     [Command("build", Description = "Build MindWork AI Studio")]
     public async Task Build(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false,
+        [Option("skip-verify", Description = "Skip the quality gate which otherwise runs before anything is built")] bool skipVerify = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
-        
+
+        //
+        // The gate runs before anything is built, and the build stops when it does not pass. That
+        // way the same command answers both questions a person has -- is it sound, and does it
+        // build -- and answers them in that order, because building something the tests reject
+        // takes minutes to produce an artifact nobody should use.
+        //
+        if (!skipVerify && await new VerifyCommand().Verify() is not 0)
+            throw new CommandExitedException(1);
+
         //
         // Build the .NET project:
         //
@@ -413,9 +469,7 @@ public sealed partial class UpdateMetadataCommands
         if (!ExactAppVersionRegex().IsMatch(appVersion))
             throw new InvalidOperationException($"The metadata version '{appVersion}' is not a valid app version.");
 
-        if (!DateTime.TryParseExact(metadataLines[BUILD_TIME_INDEX].Trim(), "yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var buildTime))
-            throw new InvalidOperationException($"The metadata build time '{metadataLines[BUILD_TIME_INDEX]}' is not a valid UTC build time.");
-
+        var buildTime = ParseMetadataBuildTime(metadataLines[BUILD_TIME_INDEX]);
         if (!int.TryParse(metadataLines[BUILD_NUMBER_INDEX].Trim(), out var buildNumber))
             throw new InvalidOperationException($"The metadata build number '{metadataLines[BUILD_NUMBER_INDEX]}' is not a number.");
 
@@ -455,19 +509,15 @@ public sealed partial class UpdateMetadataCommands
             throw new InvalidOperationException($"Expected exactly one future changelog reserving build {nextChangelogBuildNumber}, but found {nextChangelogCandidates.Count}.");
 
         var nextChangelog = nextChangelogCandidates[0];
-        var metainfoPath = Path.Combine(Environment.GetRustRuntimeDirectory(), "packaging", "linux", "org.mindworkai.AIStudio.metainfo.xml");
+
+        // The release entry itself is written by ApplyRebuildReleaseState, which adds it when it is
+        // missing and moves it to the top otherwise. Here, we only ensure that there is a file to write to:
+        var metainfoPath = GetMetainfoPath();
         if (!File.Exists(metainfoPath))
             throw new InvalidOperationException("The AppStream metainfo file does not exist.");
 
-        var metainfoContent = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
-        var releaseTags = ReleaseTagRegex().Matches(metainfoContent).Cast<Match>().ToList();
-        var matchingReleaseTags = releaseTags.Where(match => ReleaseTagHasVersion(match.Value, appVersion)).ToList();
-        if (matchingReleaseTags.Count != 1 || releaseTags.Count == 0 || matchingReleaseTags[0].Index != releaseTags[0].Index)
-            throw new InvalidOperationException($"The AppStream metainfo must contain v{appVersion} exactly once as its first release.");
-
-        var metainfoReleaseTag = matchingReleaseTags[0].Value;
-        if (!StableReleaseTypeRegex().IsMatch(metainfoReleaseTag) || !ReleaseDateRegex().IsMatch(metainfoReleaseTag))
-            throw new InvalidOperationException($"The AppStream entry for v{appVersion} must be stable and contain a release date.");
+        if (!ReleasesStartRegex().IsMatch(await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8)))
+            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
 
         var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Trim();
         if (!GitCommitHashRegex().IsMatch(headCommitHash))
@@ -489,9 +539,6 @@ public sealed partial class UpdateMetadataCommands
             nextChangelog.Content,
             nextChangelog.Header,
             nextChangelog.Version,
-            metainfoPath,
-            metainfoContent,
-            metainfoReleaseTag,
             headCommitHash[..11]);
     }
 
@@ -530,11 +577,119 @@ public sealed partial class UpdateMetadataCommands
         await File.WriteAllTextAsync(releaseState.NextChangelogPath, updatedNextChangelog, Environment.UTF8_NO_BOM);
         Console.WriteLine($"- Reserved build {buildNumber + 1} for '{Path.GetFileName(releaseState.NextChangelogPath)}'.");
 
-        var releaseDate = buildTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var updatedMetainfoReleaseTag = ReleaseDateRegex().Replace(releaseState.MetainfoReleaseTag, $"date=\"{releaseDate}\"", 1);
-        var updatedMetainfo = ReplaceExactlyOnce(releaseState.MetainfoContent, releaseState.MetainfoReleaseTag, updatedMetainfoReleaseTag);
-        await File.WriteAllTextAsync(releaseState.MetainfoPath, updatedMetainfo, Environment.UTF8_NO_BOM);
-        Console.WriteLine($"- Updated the AppStream release date to '{releaseDate}'.");
+        await WriteMetainfoRelease(releaseState.AppVersion, buildTime);
+    }
+
+    private static string GetMetainfoPath() => Path.Combine(Environment.GetRustRuntimeDirectory(), "packaging", "linux", "org.mindworkai.AIStudio.metainfo.xml");
+
+    private static string GetChangelogPath(string appVersion) => Path.Combine(Environment.GetAIStudioDirectory(), "wwwroot", "changelog", $"v{appVersion}.md");
+
+    /// <summary>
+    /// Writes the AppStream release entry for the given version, using the changelog of that version as its description.
+    /// </summary>
+    /// <remarks>
+    /// The entry always becomes the first release, and any earlier entry of the same version is replaced. This is what
+    /// the Flatpak pipeline validates through 'update-metainfo.py --check' before it syncs a release. The release date
+    /// is derived from the build time, because the pipeline reads it from the second line of the metadata file.
+    /// </remarks>
+    private static async Task WriteMetainfoRelease(string appVersion, DateTime releaseTime)
+    {
+        const string RELEASE_INDENT = "    ";
+
+        var metainfoPath = GetMetainfoPath();
+        if (!File.Exists(metainfoPath))
+            throw new InvalidOperationException("The AppStream metainfo file does not exist.");
+
+        var metainfo = await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8);
+        if (!ReleasesStartRegex().IsMatch(metainfo))
+            throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
+
+        var changelogEntries = await ReadChangelogEntries(appVersion);
+
+        // Drop any earlier entry of this version, so that the version stays unique and moves to the top.
+        // We remove from the back, so that the index of the remaining matches stays valid:
+        foreach (var previousRelease in ReleaseBlockRegex().Matches(metainfo).Where(match => ReleaseTagHasVersion(match.Value, appVersion)).Reverse())
+            metainfo = metainfo.Remove(previousRelease.Index, previousRelease.Length);
+
+        var lineEnding = metainfo.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        var releaseDate = releaseTime.ToUniversalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var releaseBlock = new StringBuilder();
+        releaseBlock.Append($"{RELEASE_INDENT}<release type=\"stable\" version=\"{appVersion}\" date=\"{releaseDate}\">{lineEnding}");
+        releaseBlock.Append($"{RELEASE_INDENT}  <description>{lineEnding}");
+        releaseBlock.Append($"{RELEASE_INDENT}    <ul>{lineEnding}");
+
+        foreach (var changelogEntry in changelogEntries)
+            releaseBlock.Append($"{RELEASE_INDENT}      <li>{changelogEntry}</li>{lineEnding}");
+
+        releaseBlock.Append($"{RELEASE_INDENT}    </ul>{lineEnding}");
+        releaseBlock.Append($"{RELEASE_INDENT}  </description>{lineEnding}");
+        releaseBlock.Append($"{RELEASE_INDENT}</release>{lineEnding}");
+
+        var releasesStart = ReleasesStartRegex().Match(metainfo);
+        var insertionPoint = releasesStart.Index + releasesStart.Length;
+        if (metainfo.AsSpan(insertionPoint).StartsWith(lineEnding))
+            insertionPoint += lineEnding.Length;
+        else
+            releaseBlock.Insert(0, lineEnding);
+
+        metainfo = metainfo.Insert(insertionPoint, releaseBlock.ToString());
+        await File.WriteAllTextAsync(metainfoPath, metainfo, Environment.UTF8_NO_BOM);
+        Console.WriteLine($"- Updated the AppStream metainfo for v{appVersion}, released on {releaseDate}, with {changelogEntries.Count} changelog entries.");
+    }
+
+    private static async Task<IReadOnlyList<string>> ReadChangelogEntries(string appVersion)
+    {
+        var changelogPath = GetChangelogPath(appVersion);
+        if (!File.Exists(changelogPath))
+            throw new InvalidOperationException($"The changelog file '{Path.GetFileName(changelogPath)}' does not exist.");
+
+        // The first line is the changelog header, every other non-empty line must be a changelog entry:
+        var changelogLines = SplitLines(await File.ReadAllTextAsync(changelogPath, Encoding.UTF8));
+        var changelogEntries = new List<string>();
+        foreach (var changelogLine in changelogLines.Skip(1))
+        {
+            var changelogEntry = changelogLine.Trim();
+            if (changelogEntry.Length is 0)
+                continue;
+
+            if (!changelogEntry.StartsWith("- ", StringComparison.Ordinal))
+                throw new InvalidOperationException($"The changelog '{Path.GetFileName(changelogPath)}' contains a line which is no changelog entry: '{changelogEntry}'.");
+
+            changelogEntries.Add(ConvertChangelogEntryToAppStream(changelogEntry[2..].Trim()));
+        }
+
+        if (changelogEntries.Count is 0)
+            throw new InvalidOperationException($"The changelog '{Path.GetFileName(changelogPath)}' does not contain any entry.");
+
+        return changelogEntries;
+    }
+
+    private static string ConvertChangelogEntryToAppStream(string changelogEntry)
+    {
+        var escapedEntry = changelogEntry
+            .Replace("&", "&amp;", StringComparison.Ordinal)
+            .Replace("<", "&lt;", StringComparison.Ordinal)
+            .Replace(">", "&gt;", StringComparison.Ordinal);
+
+        // Markdown code spans become AppStream code elements. Every second segment is inside a code span,
+        // which requires an even number of markers and therefore an odd number of segments:
+        var codeSpans = escapedEntry.Split('`');
+        if (codeSpans.Length % 2 is 0)
+            throw new InvalidOperationException($"The changelog entry contains an unbalanced code marker: '{changelogEntry}'.");
+
+        var convertedEntry = new StringBuilder();
+        for (var index = 0; index < codeSpans.Length; index++)
+            convertedEntry.Append(index % 2 is 0 ? codeSpans[index] : $"<code>{codeSpans[index]}</code>");
+
+        return convertedEntry.ToString();
+    }
+
+    private static DateTime ParseMetadataBuildTime(string buildTime)
+    {
+        if (!DateTime.TryParseExact(buildTime.Trim(), "yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsedBuildTime))
+            throw new InvalidOperationException($"The metadata build time '{buildTime}' is not a valid UTC build time.");
+
+        return parsedBuildTime;
     }
 
     private static string FormatChangelogHeader(string appVersion, int buildNumber, DateTime buildTime)
@@ -983,9 +1138,6 @@ public sealed partial class UpdateMetadataCommands
         string NextChangelogContent,
         string NextChangelogHeader,
         string NextChangelogVersion,
-        string MetainfoPath,
-        string MetainfoContent,
-        string MetainfoReleaseTag,
         string HeadCommitHash);
 
     [GeneratedRegex("""(?ms).?(NET\s+SDK|SDK\s+\.NET)\s*:\s+Version:\s+(?<sdkVersion>[0-9.]+).+Commit:\s+(?<sdkCommit>[a-zA-Z0-9]+).+Host:\s+Version:\s+(?<hostVersion>[0-9.]+).+Commit:\s+(?<hostCommit>[a-zA-Z0-9]+)""")]
@@ -1015,14 +1167,13 @@ public sealed partial class UpdateMetadataCommands
     [GeneratedRegex("""^[0-9]+\.[0-9]+\.[0-9]+$""")]
     private static partial Regex ExactAppVersionRegex();
 
-    [GeneratedRegex("""<release\b[^>]*>""")]
-    private static partial Regex ReleaseTagRegex();
+    [GeneratedRegex("""<releases\b[^>]*>""")]
+    private static partial Regex ReleasesStartRegex();
 
-    [GeneratedRegex("\\btype=\"stable\"")]
-    private static partial Regex StableReleaseTypeRegex();
-
-    [GeneratedRegex("\\bdate=\"[^\"]*\"")]
-    private static partial Regex ReleaseDateRegex();
+    // Matches one entire release element, including its indentation and its trailing line break. The
+    // self-closing form comes first, so that it is never mistaken for the start of a longer element:
+    [GeneratedRegex("""(?ms)^[ \t]*<release\b[^>]*/>[ \t]*\r?\n?|^[ \t]*<release\b[^>]*>.*?</release>[ \t]*\r?\n?""")]
+    private static partial Regex ReleaseBlockRegex();
 
     [GeneratedRegex("^[0-9a-fA-F]{40,64}$")]
     private static partial Regex GitCommitHashRegex();

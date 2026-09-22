@@ -5,13 +5,15 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 
 namespace AIStudio.Provider.Anthropic;
 
 public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, new Uri("https://api.anthropic.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
-
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -39,8 +41,8 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
-            this.Provider, chatModel,
-            
+            this.CreateSettingsProvider(chatModel),
+
             // Anthropic-specific role mapping:
             role => role switch
             {
@@ -70,18 +72,59 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 }
             }
         );
-        
+
+        //
+        // Prepare the tools we want to use. When the model may call one, the conversation runs
+        // through the harness instead of going straight to the streaming path below. It streams
+        // there as well, round by round -- what the harness adds is the tools in between.
+        //
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.BeginToolRun();
+
+        var providerSettings = this.CreateSettingsProvider(chatModel);
+        var runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(providerSettings, chatThread.RuntimeComponent, chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetConfidence(settingsManager).Level, chatThread.MayRunTools(settingsManager));
+
+        var systemPrompt = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition));
+        if (toolExecutor is not null && runnableTools.Count > 0)
+        {
+            var adapter = new AnthropicToolCallingAdapter(chatModel, [..messages], systemPrompt, maxTokens, apiParameters, runnableTools,
+                (requestDto, requestToken) => this.StreamMessagesRequest(requestDto, requestedSecret, requestToken));
+
+            var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+            var loopContext = new ToolCallingLoopContext
+            {
+                ChatThread = chatThread,
+                RunnableTools = runnableTools,
+                ToolExecutor = toolExecutor,
+                Provider = this,
+                CurrentAssistantContent = currentAssistantContent,
+                ProviderInstanceName = this.InstanceName,
+                ProviderType = this.Provider,
+                ModelId = chatModel.Id,
+            };
+
+            await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                yield return content;
+
+            yield break;
+        }
+
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
-            
+
             // Build the messages:
             Messages = [..messages],
-            
-            System = chatThread.PrepareSystemPrompt(settingsManager),
+
+            System = systemPrompt,
             MaxTokens = maxTokens,
-            
+
             // Right now, we only support streaming completions:
             Stream = true,
             AdditionalApiParameters = apiParameters
@@ -107,6 +150,28 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             yield return content;
     }
 
+    /// <summary>
+    /// Runs one round of a tool calling conversation against the messages API.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the HTTP request is done here. The retries, the timeouts, and the error
+    /// classification come from the shared stream reader, which the tool rounds used to go
+    /// without; reading the events is the adapter's business.
+    /// </remarks>
+    private IAsyncEnumerable<ServerSentEvent> StreamMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    {
+        async Task<HttpRequestMessage> RequestBuilder()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, "messages");
+            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Headers.Add("anthropic-version", "2023-06-01");
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
+        }
+
+        return this.ReadServerSentEventsAsync("Anthropic", "messages call", RequestBuilder, token);
+    }
+
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     /// <inheritdoc />
     public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
@@ -124,7 +189,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     /// <inhertidoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        throw this.CreateEmbeddingsNotSupportedException();
     }
 
     /// <inheritdoc />
@@ -140,10 +205,17 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             new Model("claude-3-opus-latest", "Claude 3 Opus (Latest)"),
         };
         
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
+            //
+            // The API is the authority: when it reports a model we also keep as a fallback above,
+            // its entry comes first and the fallback is dropped. What it reports is asked about
+            // first, though -- the route says nothing about what a model is made for, and Claude
+            // has not always been only something to talk to. The six above skip that question
+            // because they are not a catalog: every one of them was picked by hand.
+            //
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider)).Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
         };
     }
 
@@ -164,16 +236,14 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     {
         return Task.FromResult(ModelLoadResult.FromModels([]));
     }
-    
     #endregion
-    
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models?limit=100",
             modelResponse => modelResponse.Data,
-            token,
             apiKeyProvisional,
             failureReasonSelector: (response, _) => response.StatusCode switch
             {
@@ -187,6 +257,6 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 request.Headers.Add("x-api-key", secretKey);
                 request.Headers.Add("anthropic-version", "2023-06-01");
             },
-            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS);
+            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS, token: token);
     }
 }

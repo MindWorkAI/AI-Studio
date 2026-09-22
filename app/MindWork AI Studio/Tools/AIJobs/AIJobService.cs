@@ -8,10 +8,7 @@ using AIStudio.Tools.RAG.RAGProcesses;
 
 namespace AIStudio.Tools.AIJobs;
 
-public sealed class AIJobService(
-    SettingsManager settingsManager,
-    MessageBus messageBus,
-    ILogger<AIJobService> logger)
+public sealed class AIJobService(SettingsManager settingsManager, MessageBus messageBus, ILogger<AIJobService> logger)
 {
     private sealed class AIJobState
     {
@@ -19,11 +16,26 @@ public sealed class AIJobService(
 
         public required CancellationToken CancellationToken { get; init; }
 
-        public required ChatGenerationRequest ChatGenerationRequest { get; init; }
+        /// <summary>
+        /// What the job works on. This is the heavy part of a job: it holds the entire chat thread.
+        /// We release it once the job is done, so a finished job does not keep a chat alive for as
+        /// long as the app runs. Everything a finished job still has to answer lives in the
+        /// snapshot, which is small.
+        /// </summary>
+        public ChatGenerationRequest? ChatGenerationRequest { get; set; }
 
         public required AIJobSnapshot Snapshot { get; set; }
 
         public DateTimeOffset LastCheckpoint { get; set; }
+
+        /// <summary>
+        /// When the chat was last told that something happened which was not a streamed chunk.
+        /// </summary>
+        /// <remarks>
+        /// Kept on the job rather than in the loop which streams, because the tool calling reports
+        /// from outside that loop: it runs inside the provider call the loop is waiting on.
+        /// </remarks>
+        public DateTimeOffset LastActivityNotification { get; set; }
 
         public bool IsCompletionStarted { get; set; }
 
@@ -73,7 +85,45 @@ public sealed class AIJobService(
         if (!this.activeChatJobsByChatId.TryGetValue(chatId, out var jobId))
             return null;
 
-        return this.jobs.TryGetValue(jobId, out var job) ? job.ChatGenerationRequest.ChatThread : null;
+        return this.jobs.TryGetValue(jobId, out var job) ? job.ChatGenerationRequest?.ChatThread : null;
+    }
+
+    /// <summary>
+    /// Says that the answer of a chat has moved without a chunk having arrived.
+    /// </summary>
+    /// <remarks>
+    /// A model which calls tools asks several times before it says anything, and while it does,
+    /// this service sits in the provider call and hands nothing to the screen. But the request is
+    /// growing the whole time -- every tool result travels with the next round -- and the chat is
+    /// what recounts the tokens when it renders. Without this, the only thing which would ever ask
+    /// again is the ten-second heartbeat of the token tracker.
+    ///
+    /// Throttled like the streamed chunks, and by the same setting: a round which calls five tools
+    /// in a row must not turn into five renders of the whole chat when somebody asked us to go easy
+    /// on their battery.
+    ///
+    /// A chat without a running job is not an error. The same tool calling loop runs for the
+    /// assistants, which have no job behind them and no token count to update.
+    /// </remarks>
+    /// <param name="chatId">The chat whose answer moved.</param>
+    public async Task NotifyChatActivityAsync(Guid chatId)
+    {
+        if (!this.activeChatJobsByChatId.TryGetValue(chatId, out var jobId))
+            return;
+
+        if (!this.jobs.TryGetValue(jobId, out var job))
+            return;
+
+        lock (job.SyncRoot)
+        {
+            var now = DateTimeOffset.Now;
+            if (settingsManager.ConfigurationData.App.IsSavingEnergy && now - job.LastActivityNotification < STREAMING_EVENT_MIN_TIME)
+                return;
+
+            job.LastActivityNotification = now;
+        }
+
+        await this.NotifyChangedAsync(job);
     }
 
     public async Task<AIJobSnapshot?> TryStartChatGenerationAsync(ChatGenerationRequest request)
@@ -128,7 +178,12 @@ public sealed class AIJobService(
         await CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
 
-        _ = Task.Factory.StartNew(async () => await this.RunChatGenerationAsync(state), TaskCreationOptions.LongRunning);
+        //
+        // Unwrap matters here: StartNew with an async delegate hands back a task which completes as soon
+        // as the generation started, wrapping the task which does the actual work. Watching the outer one
+        // would tell us nothing about how the generation itself ended.
+        //
+        Task.Factory.StartNew(async () => await this.RunChatGenerationAsync(state), TaskCreationOptions.LongRunning).Unwrap().Observe($"{nameof(AIJobService)}: running a chat generation");
         return state.Snapshot;
     }
 
@@ -188,6 +243,9 @@ public sealed class AIJobService(
     private async Task RunChatGenerationAsync(AIJobState state)
     {
         var request = state.ChatGenerationRequest;
+        if (request is null)
+            return;
+
         var token = state.CancellationToken;
 
         try
@@ -229,6 +287,12 @@ public sealed class AIJobService(
             catch (Exception e)
             {
                 logger.LogError(e, "Skipping the RAG process due to an error.");
+
+                //
+                // The answer is about to be created without the data the user expected it to use.
+                // Without this message, that answer is indistinguishable from one that did use it:
+                //
+                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
             }
 
             token.ThrowIfCancellationRequested();
@@ -284,10 +348,15 @@ public sealed class AIJobService(
             state.IsCompletionStarted = true;
         }
 
-        var aiText = state.ChatGenerationRequest.AIText;
+        var request = state.ChatGenerationRequest;
+        if (request is null)
+            return;
+
+        var aiText = request.AIText;
         aiText.InitialRemoteWait = false;
         aiText.IsStreaming = false;
         aiText.Text = aiText.Text.RemoveThinkTags().Trim();
+        aiText.EndToolRun();
 
         RemoveEmptyAIResponse(state);
 
@@ -301,31 +370,72 @@ public sealed class AIJobService(
             };
         }
 
-        this.activeChatJobsByChatId.TryRemove(state.ChatGenerationRequest.ChatThread.ChatId, out _);
+        this.activeChatJobsByChatId.TryRemove(request.ChatThread.ChatId, out _);
         await CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
         await messageBus.SendMessage(null, Event.AI_JOB_FINISHED, state.Snapshot);
         state.CancellationTokenSource.Dispose();
+
+        //
+        // The chat is stored and everyone was told about it, so nothing needs the request anymore.
+        // Releasing it here is what keeps a finished job from holding an entire chat thread — even
+        // one the user has deleted in the meantime. We do it under the lock, because that is where
+        // every other access to the state happens:
+        //
+        lock (state.SyncRoot)
+        {
+            state.ChatGenerationRequest = null;
+        }
+
+        this.PruneCompletedJobs(state.Snapshot);
+    }
+
+    /// <summary>
+    /// Drops the finished jobs which nothing needs anymore.
+    /// </summary>
+    /// <remarks>
+    /// What the app asks for is the outcome of the last generation of a chat, cf. TryGetChatSnapshot.
+    /// Everything older than that is a history no one reads, and it would grow for as long as the
+    /// app runs. Active jobs are never touched, and neither is the job we just finished.
+    /// </remarks>
+    /// <param name="latest">The snapshot of the job which just finished.</param>
+    private void PruneCompletedJobs(AIJobSnapshot latest)
+    {
+        var supersededJobIds = this.jobs.Values
+            .Select(job => job.Snapshot)
+            .Where(snapshot => snapshot.Kind == latest.Kind)
+            .Where(snapshot => snapshot.SubjectId == latest.SubjectId)
+            .Where(snapshot => snapshot.JobId != latest.JobId)
+            .Where(snapshot => !snapshot.IsActive)
+            .Select(snapshot => snapshot.JobId)
+            .ToList();
+
+        foreach (var jobId in supersededJobIds)
+            this.jobs.TryRemove(jobId, out _);
     }
 
     private static void RemoveEmptyAIResponse(AIJobState state)
     {
-        var aiText = state.ChatGenerationRequest.AIText;
+        var request = state.ChatGenerationRequest;
+        if (request is null)
+            return;
+
+        var aiText = request.AIText;
         if (!string.IsNullOrWhiteSpace(aiText.Text))
             return;
 
-        var aiBlock = state.ChatGenerationRequest.ChatThread.Blocks
+        var aiBlock = request.ChatThread.Blocks
             .LastOrDefault(block => ReferenceEquals(block.Content, aiText));
 
         if (aiBlock is not null)
-            state.ChatGenerationRequest.ChatThread.Blocks.Remove(aiBlock);
+            request.ChatThread.Blocks.Remove(aiBlock);
     }
 
     private static bool TrySetWaitingForRemote(AIJobState state, CancellationToken token)
     {
         lock (state.SyncRoot)
         {
-            if (state.IsCompletionStarted || token.IsCancellationRequested)
+            if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
             state.ChatGenerationRequest.AIText.InitialRemoteWait = true;
@@ -337,7 +447,7 @@ public sealed class AIJobService(
     {
         lock (state.SyncRoot)
         {
-            if (state.IsCompletionStarted || token.IsCancellationRequested)
+            if (state.IsCompletionStarted || token.IsCancellationRequested || state.ChatGenerationRequest is null)
                 return false;
 
             var aiText = state.ChatGenerationRequest.AIText;
@@ -363,9 +473,13 @@ public sealed class AIJobService(
     {
         lock (state.SyncRoot)
         {
+            //
+            // A released request keeps its last known title: the job is done, so there is nothing
+            // left to read a newer one from.
+            //
             state.Snapshot = state.Snapshot with
             {
-                Title = state.ChatGenerationRequest.ChatThread.Name,
+                Title = state.ChatGenerationRequest?.ChatThread.Name ?? state.Snapshot.Title,
                 UpdatedAt = DateTimeOffset.Now,
             };
         }
@@ -379,8 +493,12 @@ public sealed class AIJobService(
         if (!force && now - state.LastCheckpoint < CHECKPOINT_MIN_TIME)
             return;
 
+        var request = state.ChatGenerationRequest;
+        if (request is null)
+            return;
+
         state.LastCheckpoint = now;
-        await WorkspaceBehaviour.StoreChatAsync(state.ChatGenerationRequest.ChatThread);
+        await WorkspaceBehaviour.StoreChatAsync(request.ChatThread);
     }
 
     private static bool ModelsMatch(Model modelA, Model modelB)

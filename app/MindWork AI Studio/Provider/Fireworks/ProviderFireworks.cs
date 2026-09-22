@@ -29,10 +29,10 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -45,6 +45,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -70,7 +71,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
     /// <inhertidoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        throw this.CreateEmbeddingsNotSupportedException();
     }
 
     /// <inheritdoc />
@@ -92,6 +93,16 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
     }
     
     /// <inheritdoc />
+    /// <remarks>
+    /// The one transcription list which stays a plain list, where GWDG and Mistral ask their
+    /// endpoint first. There is nothing to ask here: HasModelLoadingCapability is false and every
+    /// other method above answers with nothing, which is why a chat model at Fireworks has to be
+    /// typed in by hand. A list is all there is.
+    ///
+    /// The commented-out entry is no oversight either. The documentation names Whisper v3 Turbo,
+    /// and trying it does not work -- which is worth keeping written down, so that nobody adds it
+    /// back and finds out the same way again.
+    /// </remarks>
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         // Source: https://docs.fireworks.ai/api-reference/audio-transcriptions#param-model

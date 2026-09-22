@@ -23,8 +23,11 @@ public sealed partial class PluginInstallService
 
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
+    private const string PLUGIN_IMPORT_DIRECTORY_PREFIX = "plugin-import";
     private const string DELETE_BACKUP_DIRECTORY = ".plugin-delete-backups";
     private const string INSTALL_BACKUP_DIRECTORY = ".plugin-install-backups";
+    private const string STAGING_DIRECTORY = ".plugin-staging";
+    private const int STAGING_RETENTION_HOURS = 24;
     private const int DIRECTORY_PREFIX_MAX_LEN = 80;
 
     private readonly ILogger<PluginInstallService> logger;
@@ -34,6 +37,16 @@ public sealed partial class PluginInstallService
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
 
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
+
+    /// <summary>
+    /// Reports a failed installation of a plugin we already know.
+    /// </summary>
+    /// <remarks>
+    /// Prefer this over the variant which only takes an issue: the caller logs the plugin and the
+    /// directory it tried to install into, and both are empty otherwise. Everything that fails
+    /// before we could read the plugin has to use the other variant.
+    /// </remarks>
+    private static AssistantPluginInstallResult Error(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, false, issue);
 
     private static AssistantPluginInstallResult CancelledByUser() => new(false, Guid.Empty, string.Empty, string.Empty, false, string.Empty, true);
 

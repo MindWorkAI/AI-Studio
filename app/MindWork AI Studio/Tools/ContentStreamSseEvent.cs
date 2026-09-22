@@ -12,4 +12,7 @@ public sealed class ContentStreamSseEvent
 
     [JsonPropertyName("metadata")] 
     public ContentStreamSseMetadata? Metadata { get; init; }
+
+    [JsonPropertyName("token_count")]
+    public int? TokenCount { get; init; }
 }

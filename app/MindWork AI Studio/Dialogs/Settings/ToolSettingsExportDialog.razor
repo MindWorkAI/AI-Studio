@@ -1,0 +1,97 @@
+@using AIStudio.Tools.ToolCallingSystem
+@using AIStudio.Tools.PluginSystem
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Dataset" Class="mr-2" />
+            @T("Export tool configuration")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (this.IsAdmin)
+        {
+            @if (!string.IsNullOrWhiteSpace(this.message))
+            {
+                <MudAlert Severity="@this.messageSeverity" Class="mb-4">@this.message</MudAlert>
+            }
+
+            @if (this.isLoading)
+            {
+                <MudProgressCircular Indeterminate="@true" Size="Size.Small" />
+                <MudText>@T("Loading tool configuration...")</MudText>
+            }
+            else if (this.toolDefinition is null || this.implementation is null)
+            {
+                @if (string.IsNullOrWhiteSpace(this.message))
+                {
+                    <MudText>@T("The selected tool could not be loaded.")</MudText>
+                }
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1" Class="mb-2">@this.implementation.GetDisplayName()</MudText>
+                <MudText Typo="Typo.body2" Class="mb-4">
+                    @T("Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it.")
+                </MudText>
+
+                @if (this.areas.Count > 0)
+                {
+                    <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
+                        <MudText Typo="Typo.subtitle2">@T("Settings to include")</MudText>
+                        @if (this.areas.Count > 1)
+                        {
+                            <MudCheckBox T="bool" Label="@T("Select all")" Value="@this.AllAreasSelected" ValueChanged="@this.SelectAllAreas" Disabled="@this.isExporting" />
+                        }
+                        @foreach (var area in this.areas)
+                        {
+                            <MudCheckBox @key="area.Id" T="bool" Label="@area.Label" Value="@this.selectedAreaIds.Contains(area.Id)" ValueChanged="@(selected => this.SelectArea(area.Id, selected))" Disabled="@this.isExporting" />
+                        }
+                        <MudText Typo="Typo.caption">@T("Each area is independent. Select general settings separately if you want to include them.")</MudText>
+                    </MudPaper>
+                }
+
+                <MudSelect T="ToolSettingsExportMode" Label="@T("Export mode")" @bind-Value="this.mode" Variant="Variant.Outlined" Class="mb-4" Disabled="@this.isExporting" HelperText="@T("This choice applies to settings other than secrets and the minimum provider confidence.")">
+                    <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.LOCKED">@T("Locked settings")</MudSelectItem>
+                    <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.DEFAULT">@T("Editable defaults")</MudSelectItem>
+                </MudSelect>
+
+                @if (this.WarnAboutEmptyLockedSettings)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mb-4">
+                        @string.Format(T("{0} of the selected settings are empty and are exported as empty locked values. Users cannot change a locked setting, so an empty required one leaves the tool unusable. Deselect the areas you have not configured, or export them as editable defaults."), this.EmptySelectedFieldCount)
+                    </MudAlert>
+                }
+
+                <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
+                    <MudCheckBox T="bool" Label="@T("Include encrypted API keys and other secrets")" @bind-Value="this.includeSecrets" Disabled="@(this.isExporting || !this.CanIncludeSecrets)" />
+                    @if (PluginFactory.EnterpriseEncryption?.IsAvailable is not true)
+                    {
+                        <MudText Typo="Typo.body2">@T("No enterprise encryption secret is configured. API keys and other secrets cannot be exported.")</MudText>
+                    }
+                    else if (!this.HasSelectedSecrets)
+                    {
+                        <MudText Typo="Typo.body2">@T("The selected areas contain no configured API keys or other secrets.")</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@T("Secrets are always exported as locked settings. Recipients need the same enterprise encryption secret to use them.")</MudText>
+                    }
+                </MudPaper>
+
+                <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
+                    <MudCheckBox T="bool" Label="@T("Include minimum provider confidence")" @bind-Value="this.includeMinimumProviderConfidence" Disabled="@this.isExporting" />
+                    <MudText Typo="Typo.body2" Class="mb-2">@string.Format(T("Current requirement: {0}"), this.GetMinimumProviderConfidenceName())</MudText>
+                    <MudText Typo="Typo.body2">@T("This setting is always locked and applies to the entire tool. The configuration plugin locks minimum provider confidence levels together for all tools in its confidence table.")</MudText>
+                </MudPaper>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Text">@T("Cancel")</MudButton>
+        <MudButton OnClick="@this.Export" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanExport)">
+            @T("Export to clipboard")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

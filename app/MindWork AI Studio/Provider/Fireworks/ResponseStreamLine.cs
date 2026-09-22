@@ -30,16 +30,3 @@ public readonly record struct ResponseStreamLine(string Id, string Object, uint 
 
     #endregion
 }
-
-/// <summary>
-/// Data model for a choice made by the AI.
-/// </summary>
-/// <param name="Index">The index of the choice.</param>
-/// <param name="Delta">The delta text of the choice.</param>
-public readonly record struct Choice(int Index, Delta Delta);
-
-/// <summary>
-/// The delta text of a choice.
-/// </summary>
-/// <param name="Content">The content of the delta text.</param>
-public readonly record struct Delta(string Content);

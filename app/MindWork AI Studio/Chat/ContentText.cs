@@ -6,6 +6,8 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Chat;
 
@@ -36,17 +38,65 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingEvent { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
     
     /// <inheritdoc />
     public List<FileAttachment> FileAttachments { get; set; } = [];
+
+    public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    [JsonIgnore]
+    public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
+
+    /// <summary>
+    /// What the tool conversation of the running request adds to it, as far as it has got.
+    /// </summary>
+    /// <remarks>
+    /// A model which calls tools asks several times before it answers, and every one of those
+    /// requests carries everything the tools returned so far -- up to three hundred thousand
+    /// characters of it. None of that is in this block's text, and none of it is in the traces
+    /// either: those say what happened, not what it costs. So it is kept here, where whoever
+    /// counts the conversation walks past anyway.<br/><br/>
+    /// Replaced as a whole, never appended to: it is written by the thread which runs the tools
+    /// and read by the one which renders, and an exchange leaves the reader with a list which was
+    /// true at some moment rather than with one being rewritten under it.<br/><br/>
+    /// Gone when the answer is there, and never persisted. The accumulated tool conversation lives
+    /// in the provider adapter, which is created for one request and dropped with it -- so the next
+    /// request does not carry it, and a number which still counted it would promise a cost nobody
+    /// is going to pay.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlyList<string> PendingToolConversation { get; set; } = [];
+
+    /// <summary>
+    /// Clears what the previous run of the tools left behind.
+    /// </summary>
+    /// <remarks>
+    /// Both parts at once, because both belong to one request: the traces the user reads and the
+    /// payload the counting needs. They were cleared separately for exactly as long as there was
+    /// only one of them.
+    /// </remarks>
+    public void BeginToolRun()
+    {
+        this.ToolInvocations.Clear();
+        this.PendingToolConversation = [];
+    }
+
+    /// <summary>
+    /// Says that no request is running anymore.
+    /// </summary>
+    /// <remarks>
+    /// The traces stay -- they are what the user reads afterwards to see how the answer came
+    /// about. What goes is the payload, which belonged to a request that is over.
+    /// </remarks>
+    public void EndToolRun() => this.PendingToolConversation = [];
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -59,7 +109,7 @@ public sealed class ContentText : IContent
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
-            LOGGER.LogError("The provider is not allowed for this chat thread due to data security reasons. Skipping the AI process.");
+            LOGGER.LogError("The provider is not allowed for this chat thread due to data security or confidence-level requirements. Skipping the AI process.");
             await this.CompleteWithoutStreaming();
             return chatThread;
         }
@@ -78,9 +128,25 @@ public sealed class ContentText : IContent
                 var rag = new AISrcSelWithRetCtxVal();
                 chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
             }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                //
+                // The user canceled the request. That is not an error, and it must not reach the
+                // user as one. We do not rethrow here: the streaming task below observes the same
+                // token and ends the request itself, which keeps its finally block intact. That
+                // block is what tells the UI that the streaming is over.
+                //
+                LOGGER.LogInformation("The RAG process was canceled before the answer was requested.");
+            }
             catch (Exception e)
             {
                 LOGGER.LogError(e, "Skipping the RAG process due to an error.");
+
+                //
+                // The answer is about to be created without the data the user expected it to use.
+                // Without this message, that answer is indistinguishable from one that did use it:
+                //
+                await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Source, TB("Your data sources could not be used. This answer was created without them.")));
             }
         }
 
@@ -154,7 +220,8 @@ public sealed class ContentText : IContent
         finally
         {
             this.Text = this.Text.RemoveThinkTags().Trim();
-        
+            this.EndToolRun();
+
             // Inform the UI that the streaming is done:
             await this.StreamingDone();
         }
@@ -250,6 +317,20 @@ public sealed class ContentText : IContent
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
         FileAttachments = [..this.FileAttachments],
+        ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
+        {
+            Order = x.Order,
+            ToolId = x.ToolId,
+            ToolName = x.ToolName,
+            ToolIcon = x.ToolIcon,
+            ToolCallId = x.ToolCallId,
+            Status = x.Status,
+            WasExecuted = x.WasExecuted,
+            StatusMessage = x.StatusMessage,
+            Arguments = new Dictionary<string, string>(x.Arguments, StringComparer.Ordinal),
+            Result = x.Result,
+            JsonResult = x.JsonResult?.DeepClone(),
+        })],
     };
 
     #endregion
@@ -299,6 +380,13 @@ public sealed class ContentText : IContent
                     else if (!pandocState.CheckWasSuccessful)
                         LOGGER.LogWarning("File attachments which need Pandoc could not be processed because the Pandoc version check failed.");
                 }
+
+                //
+                // One report for the whole batch: attaching twenty documents must produce one
+                // dialog listing all of them, not twenty dialogs in a row.
+                //
+                var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+                await using var promptInjectionScope = guardService.BeginAction();
 
                 //
                 // The document blocks are collected separately, so we only announce attached

@@ -42,15 +42,33 @@ public readonly record struct Model(string Id, string? DisplayName)
 
     #endregion
 
-    #region Implementation of IEquatable<Model?>
+    #region Implementation of IEquatable<Model>
 
-    public bool Equals(Model? other)
-    {
-        if(other is null)
-            return false;
-        
-        return this.Id == other.Value.Id;
-    }
+    /// <summary>
+    /// Two models are the same model when they carry the same ID.
+    /// </summary>
+    /// <remarks>
+    /// The display name is decoration. A provider may report a model under a display name of its own,
+    /// while we know the very same model as a hardcoded fallback under a different one. Comparing the
+    /// ID alone keeps those two the same model, so that removing duplicates works.
+    ///
+    /// Note that this overload is the one the runtime uses, for example for Distinct(). The overload
+    /// taking a nullable model below is a separate one and never gets called on its behalf, which is
+    /// why the hash code has to follow this one.
+    /// </remarks>
+    /// <param name="other">The model to compare with.</param>
+    /// <returns>True, when both models carry the same ID.</returns>
+    public bool Equals(Model other) => string.Equals(this.Id, other.Id, StringComparison.Ordinal);
+
+    /// <summary>
+    /// Two models are the same model when they carry the same ID.
+    /// </summary>
+    /// <param name="other">The model to compare with, which may be null.</param>
+    /// <returns>True, when the other model exists and carries the same ID.</returns>
+    public bool Equals(Model? other) => other is not null && this.Equals(other.Value);
+
+    /// <inheritdoc />
+    public override int GetHashCode() => this.Id?.GetHashCode(StringComparison.Ordinal) ?? 0;
 
     #endregion
 }

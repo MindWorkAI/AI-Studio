@@ -1,8 +1,13 @@
 @using AIStudio.Chat
+@using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
 <MudDialog>
     <DialogContent>
+        @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
+        @* The name for the drop state is given although nobody uses it: the messages of this dialog
+           are listed in a table, whose rows would otherwise ask for the same name. *@
+        <PathDropZone IsArea="@true" Context="isDropTarget">
         <MudJustifiedText Class="mb-3" Typo="Typo.body1">
             @T("Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.")
         </MudJustifiedText>
@@ -57,7 +62,7 @@
             <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled" Disabled="@this.IsReadOnly">
                 @T("Use the default system prompt")
             </MudButton>
-            <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt" Disabled="@this.IsReadOnly"/>
+            <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Predefined User Input")
@@ -81,6 +86,7 @@
                 HelperText="@T("Tell the AI your predefined user input.")"
                 ReadOnly="@this.IsReadOnly"
             />
+            <ReadFileContent Text="@T("Load predefined user input from file")" @bind-FileContent="@this.PredefinedUserPrompt" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("File Attachments")
@@ -90,10 +96,8 @@
             </MudJustifiedText>
             <AttachDocuments
                 Name="ChatTemplateFileAttachments"
-                Layer="@DropLayers.DIALOGS"
                 @bind-DocumentPaths="@this.fileAttachments"
                 UseSmallForm="false"
-                CatchAllDocuments="true"
                 ValidateMediaFileTypes="false"
                 Disabled="@this.IsReadOnly"
             />
@@ -105,6 +109,35 @@
                 @T("Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.")
             </MudJustifiedText>
             <MudTextSwitch @bind-Value="@this.AllowProfileUsage" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" LabelOn="@T("Yes, allow profiles when using this template")" LabelOff="@T("No, prohibit profile use for this template")" Disabled="@this.IsReadOnly" />
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("Tools")
+            </MudText>
+            <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                @T("A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.")
+            </MudJustifiedText>
+            <MudTextSwitch @bind-Value="@this.preselectTools" Color="Color.Primary" Label="@T("Does this chat template preselect tools?")" LabelOn="@T("Yes, this template decides which tools a chat starts with")" LabelOff="@T("No, chats keep the tools from your chat options")" Disabled="@this.IsReadOnly"/>
+            @if (this.preselectTools)
+            {
+                <MudPaper Class="pa-3 mb-8 mt-3 border-dashed border rounded-lg">
+                    <ToolSelectionField Component="Components.CHAT" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SetSelectedToolIds" ReadOnly="@this.IsReadOnly" Label="@T("Preselected tools")" Help="@T("The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.")"/>
+                </MudPaper>
+            }
+
+            @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+            {
+                <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                    @T("Data Sources")
+                </MudText>
+                <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+                    @T("The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options.")
+                </MudJustifiedText>
+                <MudTextSwitch @bind-Value="@this.preselectDataSources" Color="Color.Primary" Label="@T("Does this chat template preselect data sources?")" LabelOn="@T("Yes, this template decides which data a chat starts with")" LabelOff="@T("No, chats keep the data source options from your chat options")" Disabled="@this.IsReadOnly"/>
+                @if (this.preselectDataSources)
+                {
+                    <DataSourceSelection SelectionMode="DataSourceSelectionMode.CONFIGURATION_MODE" AutoSaveAppSettings="@false" ConfiguresChatDefaults="@false" ReadOnly="@this.IsReadOnly" @bind-DataSourceOptions="@this.templateDataSourceOptions" ConfigurationHeaderMessage="@T("A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.")"/>
+                }
+            }
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Example Conversation")
@@ -202,6 +235,7 @@
         }
 
         <Issues IssuesData="@this.dataIssues"/>
+        </PathDropZone>
     </DialogContent>
     <DialogActions>
         @if (this.IsReadOnly)

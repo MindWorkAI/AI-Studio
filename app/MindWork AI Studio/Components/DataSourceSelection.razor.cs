@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -37,7 +38,28 @@ public partial class DataSourceSelection : MSGComponentBase
     
     [Parameter]
     public bool AutoSaveAppSettings { get; set; }
-    
+
+    /// <summary>
+    /// Shows the options without letting the user change them.
+    /// </summary>
+    /// <remarks>
+    /// For options somebody else decided on, such as those of a chat template an organization
+    /// rolled out. Seeing which data such a chat will search is the point; changing it here is not.
+    /// </remarks>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Whether the options edited here are the data source defaults of the chat.
+    /// </summary>
+    /// <remarks>
+    /// Those defaults can be locked by a configuration plugin, and this component reads the locks
+    /// from the chat settings. Wherever the same options belong to something else — to a chat
+    /// template, say — the locks of the chat defaults have nothing to say about them.
+    /// </remarks>
+    [Parameter]
+    public bool ConfiguresChatDefaults { get; set; } = true;
+
     [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
     
@@ -48,6 +70,10 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool showDataSourceSelection;
     private bool waitingForDataSources = true;
     private IReadOnlyList<IDataSource> availableDataSources = [];
+    private IReadOnlyList<IDataSource> dataSourcesAwaitingReindex = [];
+    private HashSet<string> dataSourceIdsAwaitingReindex = new(StringComparer.Ordinal);
+    private IReadOnlyList<IDataSource> dataSourcesNeedingRepair = [];
+    private HashSet<string> dataSourceIdsNeedingRepair = new(StringComparer.Ordinal);
     private IReadOnlyCollection<IDataSource> selectedDataSources = [];
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
@@ -141,6 +167,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
 
     private string GetAIReasoning(DataSourceAgentSelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
+
+    private string GetConfidenceIconStyle(IInternalDataSource source) => $"{source.ConfidenceLevel.SetColorStyle(this.SettingsManager)} flex-shrink: 0;";
     
     public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAgentSelected>? aiSelectedDataSources = null)
     {
@@ -178,6 +206,22 @@ public partial class DataSourceSelection : MSGComponentBase
         var preselectedDataSourceIds = this.DataSourceOptions.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal);
         return this.GetConfiguredDataSourcesSnapshot().Where(ds => preselectedDataSourceIds.Contains(ds.Id)).ToList();
     }
+
+    /// <summary>
+    /// Collects the preselected data sources which the filters removed.
+    /// </summary>
+    /// <remarks>
+    /// The list of available sources shows what survived the filters, while the preselection keeps
+    /// what the user asked for. Without this, a preselected source which cannot be used right now
+    /// is simply missing from that list, and nothing says so. Preselected ids without a configured
+    /// source are left out: that source is gone, not unavailable.
+    /// </remarks>
+    /// <returns>The unusable preselected data sources, or an empty list when there are none.</returns>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSources()
+    {
+        var availableDataSourceIds = this.availableDataSources.Select(ds => ds.Id).ToHashSet(StringComparer.Ordinal);
+        return this.GetDataSourcesFromConfiguredIds().Where(ds => !availableDataSourceIds.Contains(ds.Id)).ToList();
+    }
     
     private async Task LoadAndApplyFilters()
     {
@@ -197,16 +241,71 @@ public partial class DataSourceSelection : MSGComponentBase
         this.waitingForDataSources = true;
         this.StateHasChanged();
             
-        // Load the data sources:
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.selectedDataSources);
+        //
+        // Load the data sources. We ask with the preselection rather than with the field below:
+        // that field holds what was usable the last time we looked, so a source filtered out once
+        // would never come back, while the RAG process keeps reading it from the preselection.
+        //
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
         this.availableDataSources = sources.AllowedDataSources;
+        this.dataSourcesAwaitingReindex = sources.DataSourcesAwaitingReindex;
+        this.dataSourceIdsAwaitingReindex = sources.DataSourcesAwaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        this.dataSourcesNeedingRepair = sources.DataSourcesNeedingRepair;
+        this.dataSourceIdsNeedingRepair = sources.DataSourcesNeedingRepair.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
         this.selectedDataSources = sources.SelectedDataSources;
         this.waitingForDataSources = false;
         this.StateHasChanged();
     }
+
+    /// <summary>
+    /// Why a data source is listed but cannot be picked, if it cannot.
+    /// </summary>
+    /// <remarks>
+    /// The repair is asked about first. The service hands a data source to one of the two lists
+    /// only, but should that ever change, the reason the user can act on is the one worth showing.
+    /// </remarks>
+    private DataSourceBlockReason GetBlockReason(IDataSource dataSource)
+    {
+        if (this.dataSourceIdsNeedingRepair.Contains(dataSource.Id))
+            return DataSourceBlockReason.NEEDS_REPAIR;
+
+        if (this.dataSourceIdsAwaitingReindex.Contains(dataSource.Id))
+            return DataSourceBlockReason.AWAITING_REINDEX;
+
+        return DataSourceBlockReason.NONE;
+    }
+
+    /// <summary>
+    /// The data sources the list shows: the usable ones, plus the ones which cannot be searched.
+    /// </summary>
+    /// <remarks>
+    /// Kept in the order the data sources were configured in, rather than usable ones first. A row
+    /// which jumps to another place the moment its data source starts being re-indexed is a row the
+    /// user has to find again.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetListedDataSources()
+    {
+        if (this.dataSourcesAwaitingReindex.Count == 0 && this.dataSourcesNeedingRepair.Count == 0)
+            return this.availableDataSources;
+
+        var listedIds = this.availableDataSources.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
+        listedIds.UnionWith(this.dataSourceIdsAwaitingReindex);
+        listedIds.UnionWith(this.dataSourceIdsNeedingRepair);
+        return this.GetConfiguredDataSourcesSnapshot().Where(source => listedIds.Contains(source.Id)).ToList();
+    }
+
+    /// <summary>
+    /// The preselected but unusable data sources the warning box lists.
+    /// </summary>
+    /// <remarks>
+    /// The ones which are only blocked are left out: they have a row of their own in the list
+    /// above, which says the same thing in the place the user is already looking.
+    /// </remarks>
+    private IReadOnlyList<IDataSource> GetUnavailablePreselectedDataSourcesToList() =>
+        this.GetUnavailablePreselectedDataSources().Where(source => this.GetBlockReason(source) is DataSourceBlockReason.NONE).ToList();
     
     private async Task EnabledChanged(bool state)
     {
@@ -222,7 +321,8 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         this.aiBasedSourceSelection = state;
         this.DataSourceOptions.AutomaticDataSourceSelection = this.aiBasedSourceSelection;
-        
+
+        await this.LoadAndApplyFilters();
         await this.OptionsChanged();
     }
     
@@ -230,14 +330,24 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         this.aiBasedValidation = state;
         this.DataSourceOptions.AutomaticValidation = this.aiBasedValidation;
-        
+
+        await this.LoadAndApplyFilters();
         await this.OptionsChanged();
     }
     
     private async Task SelectionChanged(IReadOnlyCollection<IDataSource>? chosenDataSources)
     {
         this.selectedDataSources = chosenDataSources ?? [];
-        this.DataSourceOptions.PreselectedDataSourceIds = this.selectedDataSources.Select(ds => ds.Id).ToList();
+
+        //
+        // The list offers only the data sources which survived the filters, so what the user picks
+        // there says nothing about the preselected ones it could not show. Those are kept: dropping
+        // them would undo a choice the user never revisited, and it is these ids -- not this list --
+        // which the RAG process reads when an answer is created. The query has to run before the
+        // assignment, because it reads what we are about to replace.
+        //
+        var keptDataSourceIds = this.GetUnavailablePreselectedDataSources().Select(ds => ds.Id).ToList();
+        this.DataSourceOptions.PreselectedDataSourceIds = [..keptDataSourceIds, ..this.selectedDataSources.Select(ds => ds.Id)];
 
         await this.OptionsChanged();
     }
@@ -245,6 +355,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesDisabledLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesDisabled, out var meta)
                && meta.IsLocked;
     }
@@ -252,6 +363,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesAutomaticSelectionLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, out var meta)
                && meta.IsLocked;
     }
@@ -259,6 +371,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesAutomaticValidationLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, out var meta)
                && meta.IsLocked;
     }
@@ -266,6 +379,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourceIdsLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourceIds, out var meta)
                && meta.IsLocked;
     }

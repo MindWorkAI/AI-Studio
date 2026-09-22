@@ -72,16 +72,19 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
         try
         {
             token.ThrowIfCancellationRequested();
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 token.ThrowIfCancellationRequested();
 
-                // The save dialog already asked the user about overwriting an existing file.
-                // ZipFile.CreateFromDirectory would fail on an existing file, though:
-                if (File.Exists(archivePath))
-                    File.Delete(archivePath);
-
-                ZipFile.CreateFromDirectory(pluginRoot, archivePath, CompressionLevel.Optimal, false);
+                //
+                // The save dialog already asked the user about overwriting an existing file, so we
+                // write into the file the user picked instead of removing and recreating it. That
+                // matters on Linux: inside a Flatpak, the file dialog hands out one single file
+                // through the desktop portal. We may write that file, but we may not create a new
+                // one next to it, which is what deleting and recreating would come down to.
+                //
+                await using var archiveStream = File.Create(archivePath);
+                ZipFile.CreateFromDirectory(pluginRoot, archiveStream, CompressionLevel.Optimal, false);
             }, token);
 
             logger.LogInformation("Exported plugin '{PluginName}' ({PluginId}) to the archive '{ArchivePath}'.", plugin.Name, plugin.Id, archivePath);

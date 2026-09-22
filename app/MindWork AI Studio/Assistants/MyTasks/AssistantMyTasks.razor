@@ -8,7 +8,7 @@
     @T("You can enter text, attach one or more documents, or use both. At least one input is required.")
 </MudJustifiedText>
 <div class="mb-3">
-    <AttachDocuments Name="My Tasks Documents" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+    <AttachDocuments Name="My Tasks Documents" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 </div>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
