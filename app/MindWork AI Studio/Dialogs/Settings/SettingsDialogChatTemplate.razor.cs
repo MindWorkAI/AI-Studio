@@ -132,6 +132,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
             return;
 
+        if (!await this.ConfirmExportOfLocalDataSources(chatTemplate))
+            return;
+
         await this.CopyChatTemplateLuaToClipboard(chatTemplate);
     }
 
@@ -145,9 +148,13 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
         if (chatTemplate.FileAttachments.Count == 0)
         {
+            // That way asks about the local data sources itself, so we must not ask twice:
             await this.ExportChatTemplateWithSharedAttachmentPaths(chatTemplate);
             return;
         }
+
+        if (!await this.ConfirmExportOfLocalDataSources(chatTemplate))
+            return;
 
         this.isPluginDirectoryDialogOpen = true;
         try
@@ -162,6 +169,35 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         {
             this.isPluginDirectoryDialogOpen = false;
         }
+    }
+
+    /// <summary>
+    /// Asks whether to export a template although it preselects data sources of this machine.
+    /// </summary>
+    /// <remarks>
+    /// The export writes the preselected data source IDs unchanged, which is what makes a template
+    /// usable across an organization — but a local file or folder exists here and nowhere else, so
+    /// its ID points at nothing on the machine reading the plugin. Nothing breaks, the chat simply
+    /// starts without that source, and that is precisely why it has to be said beforehand: nobody
+    /// would notice it afterwards. Exporting anyway is a fair choice, because the rest of the
+    /// template is worth rolling out.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template about to be exported.</param>
+    /// <returns>True when the export may go ahead.</returns>
+    private async Task<bool> ConfirmExportOfLocalDataSources(ChatTemplate chatTemplate)
+    {
+        var localDataSourceNames = ChatTemplate.GetPreselectedLocalDataSourceNames(chatTemplate, this.SettingsManager.ConfigurationData.DataSources);
+        if (localDataSourceNames.Count == 0)
+            return true;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(T("This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"), string.Join(", ", localDataSourceNames)) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
     }
 
     private async Task CopyChatTemplateLuaToClipboard(ChatTemplate chatTemplate)

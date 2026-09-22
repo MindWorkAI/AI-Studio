@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 using Lua;
 using Lua.Standard;
@@ -14,6 +15,8 @@ namespace AIStudio.Tests.Settings;
 /// template says nothing" and "this template says none" survives. Both end up as an empty
 /// selection in the chat on a fresh installation, so a mistake here stays invisible until somebody
 /// sets a default tool for their chats -- and then quietly hands out a tool the template ruled out.
+/// The last tests cover what the export says out loud before it runs, for the same reason: a data
+/// source which cannot be rolled out goes unnoticed on the machine reading the plugin.
 /// </remarks>
 [TestFixture]
 public sealed class ChatTemplateConfigurationTests
@@ -183,6 +186,55 @@ public sealed class ChatTemplateConfigurationTests
         });
     }
 
+    [Test]
+    public void LocalDataSourcesOfATemplateAreNamedBeforeItIsExported()
+    {
+        var template = NewTemplate() with
+        {
+            DataSourceOptions = new()
+            {
+                DisableDataSources = false,
+                PreselectedDataSourceIds = ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"],
+            },
+        };
+
+        var localNames = ChatTemplate.GetPreselectedLocalDataSourceNames(template, ConfiguredDataSources());
+
+        Assert.That(localNames, Is.EqualTo(new[] { "Meeting notes" }), "Only the local source can be named: its ID means nothing on the machine which reads the exported plugin, while the ERI source points at something the whole organization reaches.");
+    }
+
+    [Test]
+    public void ATemplateWithoutLocalDataSourcesIsExportedWithoutAQuestion()
+    {
+        var eriOnly = NewTemplate() with
+        {
+            DataSourceOptions = new() { DisableDataSources = false, PreselectedDataSourceIds = ["22222222-2222-2222-2222-222222222222"] },
+        };
+
+        var agentic = NewTemplate() with
+        {
+            DataSourceOptions = new() { DisableDataSources = false, AutomaticDataSourceSelection = true },
+        };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(eriOnly, ConfiguredDataSources()), Is.Empty);
+            Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(agentic, ConfiguredDataSources()), Is.Empty, "An agent picks the sources per message, so this template names none to begin with.");
+            Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(NewTemplate(), ConfiguredDataSources()), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void AnIdWhichMatchesNoDataSourceIsNotReportedAsALocalOne()
+    {
+        var template = NewTemplate() with
+        {
+            DataSourceOptions = new() { DisableDataSources = false, PreselectedDataSourceIds = ["99999999-9999-9999-9999-999999999999"] },
+        };
+
+        Assert.That(ChatTemplate.GetPreselectedLocalDataSourceNames(template, ConfiguredDataSources()), Is.Empty, "There is no name to warn about, and the note above the exported IDs already tells the admin to check them.");
+    }
+
     /// <summary>
     /// A template with the parts every export needs, and nothing said about tools or data sources.
     /// </summary>
@@ -197,6 +249,15 @@ public sealed class ChatTemplateConfigurationTests
         FileAttachments = [],
         AllowProfileUsage = true,
     };
+
+    /// <summary>
+    /// One data source of each kind: a local one, which cannot be rolled out, and an ERI one, which can.
+    /// </summary>
+    private static IReadOnlyList<IDataSource> ConfiguredDataSources() =>
+    [
+        new DataSourceLocalFile { Id = "11111111-1111-1111-1111-111111111111", Name = "Meeting notes", Type = DataSourceType.LOCAL_FILE },
+        new DataSourceERI_V1 { Id = "22222222-2222-2222-2222-222222222222", Name = "Intranet", Type = DataSourceType.ERI_V1 },
+    ];
 
     private static async Task<ChatTemplate> ExportAndReadBackAsync(ChatTemplate template)
     {

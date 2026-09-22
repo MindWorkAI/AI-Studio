@@ -145,6 +145,32 @@ public record ChatTemplate(
         return (templateOptions.CreateCopy(), launcherOptions is not null);
     }
 
+    /// <summary>
+    /// Names the preselected data sources which exist on this machine only.
+    /// </summary>
+    /// <remarks>
+    /// Such a source is a sensible choice inside a chat and a dead end in an export: its ID travels
+    /// into the plugin unchanged, and on the machine which reads that plugin it points at nothing.
+    /// Only ERI sources describe something the whole organization can reach, which is why they are
+    /// also the only ones the app offers an export for.<br/><br/>
+    /// IDs which match no configured source at all are left out. Those are covered by the note the
+    /// export writes above the data source IDs anyway, and the name to warn about is missing.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template about to be exported.</param>
+    /// <param name="configuredDataSources">The data sources configured on this machine.</param>
+    /// <returns>The names of the preselected local data sources, in the order they are configured in.</returns>
+    public static IReadOnlyList<string> GetPreselectedLocalDataSourceNames(ChatTemplate chatTemplate, IEnumerable<IDataSource> configuredDataSources)
+    {
+        if (chatTemplate.DataSourceOptions is not { PreselectedDataSourceIds.Count: > 0 } options)
+            return [];
+
+        var preselectedIds = options.PreselectedDataSourceIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return configuredDataSources
+            .Where(source => source is IInternalDataSource && preselectedIds.Contains(source.Id))
+            .Select(source => source.Name)
+            .ToList();
+    }
+
     public static bool TryParseChatTemplateTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject template)
     {
         template = NO_CHAT_TEMPLATE;
