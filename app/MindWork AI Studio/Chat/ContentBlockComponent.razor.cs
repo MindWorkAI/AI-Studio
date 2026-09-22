@@ -732,7 +732,13 @@ public partial class ContentBlockComponent : MSGComponentBase
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
+            {
+                if (this.Content.TryGetMarkdownText(out var originalMarkdown) &&
+                    PlainFileExport.TryExtractStandaloneSource(originalMarkdown, format, out var source))
+                    await PlainFileExport.ToSourceFile(this.RustService, this.EffectiveExportTitle, format, source);
+                else
+                    await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
+            }
             else if (this.Content.TryGetExportMarkdown(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
         }
