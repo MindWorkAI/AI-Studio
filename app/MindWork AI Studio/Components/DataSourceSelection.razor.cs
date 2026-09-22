@@ -38,7 +38,28 @@ public partial class DataSourceSelection : MSGComponentBase
     
     [Parameter]
     public bool AutoSaveAppSettings { get; set; }
-    
+
+    /// <summary>
+    /// Shows the options without letting the user change them.
+    /// </summary>
+    /// <remarks>
+    /// For options somebody else decided on, such as those of a chat template an organization
+    /// rolled out. Seeing which data such a chat will search is the point; changing it here is not.
+    /// </remarks>
+    [Parameter]
+    public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Whether the options edited here are the data source defaults of the chat.
+    /// </summary>
+    /// <remarks>
+    /// Those defaults can be locked by a configuration plugin, and this component reads the locks
+    /// from the chat settings. Wherever the same options belong to something else — to a chat
+    /// template, say — the locks of the chat defaults have nothing to say about them.
+    /// </remarks>
+    [Parameter]
+    public bool ConfiguresChatDefaults { get; set; } = true;
+
     [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
     
@@ -334,6 +355,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesDisabledLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesDisabled, out var meta)
                && meta.IsLocked;
     }
@@ -341,6 +363,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesAutomaticSelectionLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, out var meta)
                && meta.IsLocked;
     }
@@ -348,6 +371,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourcesAutomaticValidationLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, out var meta)
                && meta.IsLocked;
     }
@@ -355,6 +379,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool IsPreselectedDataSourceIdsLocked()
     {
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourceIds, out var meta)
                && meta.IsLocked;
     }
