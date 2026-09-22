@@ -596,17 +596,12 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <remarks>
     /// Providers word their errors differently, but they all put a sentence somewhere into the
     /// body. Passing that sentence on is what lets a user act on the problem instead of only
-    /// learning that something went wrong.
+    /// learning that something went wrong. Open to the providers themselves as well, because some
+    /// of them talk to an endpoint of their own rather than through the shared request methods,
+    /// and their users deserve the same explanation.
     /// </remarks>
     /// <param name="responseBody">The body of the failed response.</param>
     /// <returns>The message, or an empty string when the body carries none.</returns>
-    /// <summary>
-    /// Reads what the provider itself said about a failure out of its error response.
-    /// </summary>
-    /// <remarks>
-    /// Available to the providers because some of them talk to an endpoint of their own rather
-    /// than through the shared request methods, and their users deserve the same explanation.
-    /// </remarks>
     protected static string ReadProviderErrorMessage(string responseBody)
     {
         if (string.IsNullOrWhiteSpace(responseBody))
