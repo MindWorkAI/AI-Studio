@@ -145,6 +145,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
         await this.themeProvider.WatchSystemDarkModeAsync(this.SystemThemeChanged);
+        this.CircuitState.ConnectionRestored += this.OnConnectionRestored;
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
         this.LoadEmbeddingItem();
@@ -583,6 +584,23 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.UpdateThemeConfiguration();
     }
 
+    /// <summary>
+    /// Reads the color theme anew once the browser connection of this circuit returned.
+    /// </summary>
+    /// <remarks>
+    /// The browser reports a change of the system theme exactly once. Blazor drops that report while the
+    /// connection is down, which happens when the machine switches its theme during sleep and wakes up
+    /// again. Since the circuit survives the sleep (cf. the retention settings in Program.cs), no reload
+    /// reads the theme anew either, so AI Studio would keep the theme it had before the sleep.
+    /// <br/><br/>
+    /// The update is deliberately not awaited: this handler runs while Blazor is still completing the
+    /// reconnection, and the answer to the JavaScript call inside can only arrive afterward.
+    /// </remarks>
+    private void OnConnectionRestored()
+    {
+        this.InvokeAsync(this.UpdateThemeConfiguration).Observe($"{nameof(MainLayout)}: reading the color theme after the connection returned");
+    }
+
     private async Task UpdateThemeConfiguration()
     {
         if (this.FollowSystemTheme)
@@ -677,6 +695,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
     }
