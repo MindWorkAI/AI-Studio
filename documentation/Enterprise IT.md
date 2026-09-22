@@ -424,6 +424,9 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Any number of ERI data sources for RAG
+- Any number of profiles and chat templates, including the tools and data sources a template brings along
+- Any number of policies for the Document Analysis assistant
 - Enterprise hash approvals for assistant plugins
 - Tool settings, encrypted tool API keys, and minimum provider confidence requirements
 - The update behavior of AI Studio
@@ -589,6 +592,33 @@ A test configuration carries the rights of an organization configuration without
 
 The data directory belongs to the user account, so whoever can write there can approve assistant plugins in the name of your organization until the next restart. Treat write access to the data directory as equivalent to deploying a configuration, and protect it accordingly on managed devices.
 
+## Exporting configurations from the app
+
+You do not have to write your configuration plugin by hand. Set something up in AI Studio, export it, and paste the Lua fragment into your plugin.
+
+Enable **Show administration settings** in the app settings once. It reveals the **Enterprise Administration** section and an **Export configuration** button next to each of these:
+
+| What you can export | Where the button sits | Offered for |
+|---|---|---|
+| LLM providers | the provider list in the app settings | providers you created yourself |
+| Embedding providers | the provider list in the app settings | as above, and only while the RAG preview is enabled |
+| Transcription providers | the provider list in the app settings | as above, and only while the speech-to-text preview is enabled |
+| Profiles | the profile dialog in the app settings | profiles you created yourself |
+| Chat templates | the chat template dialog in the app settings | templates you created yourself |
+| ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
+| Document analysis policies | the Document Analysis assistant itself | the policy you have selected |
+| Tools | **Tool Settings** in the app settings | every tool |
+
+Anything your organization already manages has no export button: it came from a plugin to begin with. Local files and local directories have none either — such a data source exists on one machine only, so there is nothing to hand to your colleagues.
+
+The button copies the fragment to your clipboard. Paste it into your [configuration plugin](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua), after the initialization of the table it extends, such as `CONFIG["LLM_PROVIDERS"] = {}`. One export writes to disk as well: a chat template whose attachments you package copies those files into a folder of your plugin and puts the Lua into your clipboard as usual.
+
+**An export mints a new ID** for the exported object, so exporting the same provider or template twice deploys two of them to your colleagues. Once something is in your plugin, keep its ID and edit the rest around it. Document analysis policies are the exception: they keep the ID they have.
+
+Some exports ask a question first: a provider with an API key offers to include it encrypted (see [Encrypted API Keys](#encrypted-api-keys)), an ERI data source does the same for its token or its credentials, a chat template with file attachments asks whether to keep their paths or copy them into your plugin, and a tool opens a dialog for the areas and the kind of management you want (see [Exporting tool configurations](#exporting-tool-configurations)).
+
+Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
+
 ## Encrypted API Keys
 
 You can include encrypted API keys in your configuration plugins for cloud providers (like OpenAI, Anthropic) or secured on-premise models. This feature provides obfuscation to prevent casual exposure of API keys in configuration files.
@@ -601,7 +631,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
 ### Setting Up Encrypted API Keys
 
 1. **Generate an encryption secret:**
-   In AI Studio, enable the "Show administration settings" toggle in the app settings. Then click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
+   In AI Studio, click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section of the app settings, which [Show administration settings](#exporting-configurations-from-the-app) reveals. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
 
 2. **Deploy the encryption secret:**
    Distribute the secret to all client machines using any supported enterprise source. The secret can be deployed on its own, even when no enterprise configuration IDs or server URLs are defined on that machine:
@@ -612,11 +642,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
 
 3. **Export encrypted API keys from AI Studio:**
-   Once the encryption secret is deployed on your machine:
-   - Configure a provider with an API key in AI Studio's settings
-   - Click the export button for that provider
-   - If an API key is configured, you will be asked if you want to include the encrypted API key in the export
-   - The exported Lua code will contain the encrypted API key in the format `ENC:v1:<base64-encoded data>`
+   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v1:<base64-encoded data>`.
 
 4. **Add encrypted keys to your configuration:**
    Copy the exported configuration (including the encrypted API key) into your configuration plugin.
@@ -643,9 +669,9 @@ The API key will be automatically decrypted when the configuration is loaded and
 
 ## Exporting tool configurations
 
-Start from the [example configuration plugin](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua). The export produces a Lua fragment to insert into that file; it assumes `CONFIG` and `CONFIG["SETTINGS"]` already exist.
+A tool export is the one that asks the most before it writes anything. It assumes `CONFIG` and `CONFIG["SETTINGS"]` already exist in your plugin.
 
-1. Enable **Show administration settings** in the app settings. In **Tool Settings**, configure the tool and save your changes, then click its **Export configuration** button next to the settings button.
+1. In **Tool Settings**, configure the tool and save your changes, then [export it](#exporting-configurations-from-the-app).
 2. Select the areas to export. All areas start selected. For Web Search, SearXNG, Staan, Tavily, and General are independent: selecting only Tavily does not include the search language, strategy, or preferred backend. Select General separately when you need those settings.
 3. Choose **Locked settings** or **Editable defaults**. Locked settings go into `DataTools.LockedToolSettings` and cannot be changed by users. Editable defaults go into `DataTools.DefaultToolSettings`; a user's saved value takes precedence over them.
 4. Optionally select **Include encrypted API keys and other secrets**, which starts off. The option is available only when the selected areas contain configured secrets and this machine has a valid enterprise encryption secret. Deploy the same secret to recipients as described in [Setting Up Encrypted API Keys](#setting-up-encrypted-api-keys). Secrets always go into `LockedToolSettings`, including when you choose editable defaults for the other fields. Managed tool secrets are used from the configuration without replacing the user's own keyring entries; removing the managed secret makes the user's own key available again.
@@ -687,9 +713,7 @@ You can combine both fragments in the same plugin: their table initializations p
 
 ## Chat templates with tools and data sources
 
-A chat template also decides the tools and the data sources a chat started with it begins with. Configure and export the template in the app as usual; its fragment belongs in your plugin after the `CONFIG["CHAT_TEMPLATES"] = {}` initialization.
-
-The data source IDs in that fragment are **carried over unchanged**, unlike the template ID, which is new with every export: they point at the data sources of your organization. Check them against your `CONFIG["DATA_SOURCES"]` -- an ID that resolves to nothing is ignored, and a chat with that template then starts without that source.
+On top of its system prompt and the rest, a chat template decides the tools and the data sources a chat started with it begins with. The data source IDs in an exported template are **carried over unchanged**, unlike the template's own ID: they point at the data sources of your organization. Check them against your `CONFIG["DATA_SOURCES"]` -- an ID that resolves to nothing is ignored, and a chat with that template then starts without that source.
 
 Writing such a template by hand means knowing that saying nothing and saying none are two different statements:
 
