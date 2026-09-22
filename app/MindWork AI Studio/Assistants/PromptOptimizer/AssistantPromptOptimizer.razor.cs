@@ -479,9 +479,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
         this.inputPrompt = this.optimizedPrompt;
         this.ResetOutput();
-        this.ChatThread = null;
-        this.LastUserPrompt = null;
-        this.ResultingContentBlock = null;
+        this.ClearConversationState();
         this.ClearInputIssues();
         return Task.CompletedTask;
     }

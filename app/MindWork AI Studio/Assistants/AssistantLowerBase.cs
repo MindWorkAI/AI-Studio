@@ -34,4 +34,18 @@ public abstract class AssistantLowerBase : MSGComponentBase
     protected ContentBlock? ResultingContentBlock;
     protected string[] InputIssues = [];
     protected bool IsProcessing;
+
+    /// <summary>
+    /// Clears everything one assistant run has produced.
+    /// </summary>
+    /// <remarks>
+    /// Assistants call this whenever the previous run must not carry over: a follow-up run would
+    /// otherwise append to the old chat thread, and the old result would stay on screen.
+    /// </remarks>
+    protected void ClearConversationState()
+    {
+        this.ChatThread = null;
+        this.LastUserPrompt = null;
+        this.ResultingContentBlock = null;
+    }
 }
