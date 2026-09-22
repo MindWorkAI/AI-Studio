@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -80,6 +82,19 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     /// Whether the launcher currently describes a chat without a workspace.
     /// </summary>
     private bool OpensTemporaryChat => string.IsNullOrWhiteSpace(this.WorkspaceName);
+
+    /// <summary>
+    /// The chat template the launcher would open its chat with, as far as it is known here.
+    /// </summary>
+    /// <remarks>
+    /// With "use chat default" chosen, this is whichever template the chat options name right now,
+    /// and that may well be another one by the time somebody opens the launcher. The form therefore
+    /// only says what such a template brings along instead of disabling the fields below it: a field
+    /// which locks itself behind the user's back is worse than a sentence explaining the situation.
+    /// </remarks>
+    private ChatTemplate SelectedChatTemplate => string.IsNullOrWhiteSpace(this.ChatTemplateId)
+        ? this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT)
+        : this.SettingsManager.GetChatTemplateById(this.ChatTemplateId);
 
     private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
 
