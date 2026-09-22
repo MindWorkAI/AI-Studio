@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
 using SharedTools;
@@ -26,6 +27,29 @@ public record ChatTemplate(
     public ChatTemplate() : this(0, Guid.Empty.ToString(), string.Empty, string.Empty, string.Empty, [], [], false)
     {
     }
+
+    /// <summary>
+    /// The tools this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing about tools, so the chat starts with the tools chosen
+    /// as its default in the app settings. An empty set is the opposite statement: this template
+    /// wants no tools at all, whatever that default says.<br/><br/>
+    /// A preselection, not a limit: the user changes the selection in the chat as usual, and a
+    /// tool still has to meet the confidence requirements of the provider in use.
+    /// </remarks>
+    public HashSet<string>? ToolIds { get; init; }
+
+    /// <summary>
+    /// The data source options a chat started with this template begins with.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat starts with the data source defaults from
+    /// the app settings. Anything else is the template's own answer, and it carries more than a
+    /// list of sources: whether data sources are used at all, whether an agent picks them, and
+    /// whether the retrieved data is validated.
+    /// </remarks>
+    public DataSourceOptions? DataSourceOptions { get; init; }
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
@@ -41,6 +65,8 @@ public record ChatTemplate(
         ExampleConversation = [],
         FileAttachments = [],
         AllowProfileUsage = true,
+        ToolIds = null,
+        DataSourceOptions = null,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -76,8 +102,73 @@ public record ChatTemplate(
     {
         if(this.Num == uint.MaxValue)
             return string.Empty;
-        
+
         return this.SystemPrompt;
+    }
+
+    /// <summary>
+    /// Decides whose tools a chat started by a launcher begins with.
+    /// </summary>
+    /// <remarks>
+    /// A launcher may name tools itself and may choose a chat template which names tools as well.
+    /// When both do, the template wins as a whole — the same rule as for the data sources, so that
+    /// nobody has to remember two of them.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
+    /// <param name="launcherToolIds">The tools the launcher names itself, or null when it names none.</param>
+    /// <returns>The tools to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for it.</returns>
+    public static (IReadOnlyCollection<string>? ToolIds, bool LauncherChoiceDropped) ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
+    {
+        if (chatTemplate.ToolIds is not { } templateToolIds)
+            return (launcherToolIds, false);
+
+        return (templateToolIds, launcherToolIds is not null);
+    }
+
+    /// <summary>
+    /// Decides whose data source options a chat started by a launcher begins with.
+    /// </summary>
+    /// <remarks>
+    /// The two sides are not equally expressive: a launcher can only ever say "these sources, picked
+    /// by hand", while a chat template carries the whole options and can also say "let an agent pick
+    /// them for each message". Mixing them field by field would produce something neither of them
+    /// asked for, so the template wins as a whole.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
+    /// <param name="launcherOptions">The options built from the data sources the launcher names, or null when it names none.</param>
+    /// <returns>The options to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for them.</returns>
+    public static (DataSourceOptions? Options, bool LauncherChoiceDropped) ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
+    {
+        if (chatTemplate.DataSourceOptions is not { } templateOptions)
+            return (launcherOptions, false);
+
+        return (templateOptions.CreateCopy(), launcherOptions is not null);
+    }
+
+    /// <summary>
+    /// Names the preselected data sources which exist on this machine only.
+    /// </summary>
+    /// <remarks>
+    /// Such a source is a sensible choice inside a chat and a dead end in an export: its ID travels
+    /// into the plugin unchanged, and on the machine which reads that plugin it points at nothing.
+    /// Only ERI sources describe something the whole organization can reach, which is why they are
+    /// also the only ones the app offers an export for.<br/><br/>
+    /// IDs which match no configured source at all are left out. Those are covered by the note the
+    /// export writes above the data source IDs anyway, and the name to warn about is missing.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template about to be exported.</param>
+    /// <param name="configuredDataSources">The data sources configured on this machine.</param>
+    /// <returns>The names of the preselected local data sources, in the order they are configured in.</returns>
+    public static IReadOnlyList<string> GetPreselectedLocalDataSourceNames(ChatTemplate chatTemplate, IEnumerable<IDataSource> configuredDataSources)
+    {
+        if (chatTemplate.DataSourceOptions is not { PreselectedDataSourceIds.Count: > 0 } options)
+            return [];
+
+        var preselectedIds = options.PreselectedDataSourceIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return configuredDataSources
+            .Where(source => source is IInternalDataSource && preselectedIds.Contains(source.Id))
+            .Select(source => source.Name)
+            .ToList();
     }
 
     public static bool TryParseChatTemplateTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject template)
@@ -121,6 +212,8 @@ public record ChatTemplate(
             ExampleConversation = ParseExampleConversation(idx, table),
             FileAttachments = fileAttachments,
             AllowProfileUsage = allowProfileUsage,
+            ToolIds = ParseToolIds(idx, table),
+            DataSourceOptions = ParseDataSourceOptions(idx, table),
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
@@ -173,6 +266,89 @@ public record ChatTemplate(
         }
 
         return exampleConversation;
+    }
+
+    /// <remarks>
+    /// A missing list and an empty one mean different things here, so an empty one must not fall
+    /// back to null: the template then states that it wants no tools. The assistant plugins reject
+    /// an empty list instead, because there it carries no meaning at all.
+    /// </remarks>
+    private static HashSet<string>? ParseToolIds(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("ToolIds", out var toolIdsValue) || !toolIdsValue.TryRead<LuaTable>(out var toolIdsTable))
+            return null;
+
+        var toolIds = new HashSet<string>(StringComparer.Ordinal);
+        var numToolIds = toolIdsTable.ArrayLength;
+        for (var toolNum = 1; toolNum <= numToolIds; toolNum++)
+        {
+            if (!toolIdsTable[toolNum].TryRead<string>(out var toolId) || string.IsNullOrWhiteSpace(toolId))
+            {
+                LOGGER.LogWarning("The ToolIds entry {ToolNum} in chat template {IdxChatTemplate} is not a valid tool ID and will be ignored.", toolNum, idx);
+                continue;
+            }
+
+            toolIds.Add(toolId.Trim());
+        }
+
+        return toolIds;
+    }
+
+    private static DataSourceOptions? ParseDataSourceOptions(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("DataSourceOptions", out var optionsValue) || !optionsValue.TryRead<LuaTable>(out var optionsTable))
+            return null;
+
+        //
+        // Writing this table at all is already the statement that the template wants data sources,
+        // hence the switch starts enabled here. Everywhere else in the app, data sources start
+        // switched off.
+        //
+        var disableDataSources = false;
+        if (optionsTable.TryGetValue("DisableDataSources", out var disableValue) && disableValue.TryRead<bool>(out var disable))
+            disableDataSources = disable;
+
+        var automaticSelection = false;
+        if (optionsTable.TryGetValue("AutomaticDataSourceSelection", out var automaticSelectionValue) && automaticSelectionValue.TryRead<bool>(out var automaticSelectionFlag))
+            automaticSelection = automaticSelectionFlag;
+
+        var automaticValidation = false;
+        if (optionsTable.TryGetValue("AutomaticValidation", out var automaticValidationValue) && automaticValidationValue.TryRead<bool>(out var automaticValidationFlag))
+            automaticValidation = automaticValidationFlag;
+
+        return new DataSourceOptions
+        {
+            DisableDataSources = disableDataSources,
+            AutomaticDataSourceSelection = automaticSelection,
+            AutomaticValidation = automaticValidation,
+            PreselectedDataSourceIds = ParsePreselectedDataSourceIds(idx, optionsTable),
+        };
+    }
+
+    /// <remarks>
+    /// The IDs stay strings instead of being parsed as GUIDs: a data source of another
+    /// configuration may carry an ID which is none, and rejecting it here would make it
+    /// unreferenceable for no gain.
+    /// </remarks>
+    private static List<string> ParsePreselectedDataSourceIds(int idx, LuaTable optionsTable)
+    {
+        var dataSourceIds = new List<string>();
+        if (!optionsTable.TryGetValue("PreselectedDataSourceIds", out var idsValue) || !idsValue.TryRead<LuaTable>(out var idsTable))
+            return dataSourceIds;
+
+        var numIds = idsTable.ArrayLength;
+        for (var idNum = 1; idNum <= numIds; idNum++)
+        {
+            if (!idsTable[idNum].TryRead<string>(out var dataSourceId) || string.IsNullOrWhiteSpace(dataSourceId))
+            {
+                LOGGER.LogWarning("The PreselectedDataSourceIds entry {IdNum} in chat template {IdxChatTemplate} is not a valid data source ID and will be ignored.", idNum, idx);
+                continue;
+            }
+
+            dataSourceIds.Add(dataSourceId.Trim());
+        }
+
+        return dataSourceIds;
     }
 
     private static List<FileAttachment> ParseFileAttachments(int idx, LuaTable table, string pluginPath)
@@ -258,15 +434,24 @@ public record ChatTemplate(
     {
         issue = string.Empty;
         var fileAttachmentsLua = this.BuildFileAttachmentsLua(fileAttachmentPaths);
+
+        //
+        // Both of these may be absent entirely, because saying nothing about tools or data sources
+        // is a statement of its own. They therefore bring their own line break and indentation
+        // instead of sitting on a line of the template:
+        //
+        var toolIdsLua = this.BuildToolIdsLua();
+        var dataSourceOptionsLua = this.BuildDataSourceOptionsLua();
+
         luaCode = $$"""
-                    CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                    {{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(exportId)}}",
                         ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
                         ["SystemPrompt"] = {{LuaTools.ToLuaStringLiteral(this.SystemPrompt)}},
                         ["PredefinedUserPrompt"] = {{LuaTools.ToLuaStringLiteral(this.PredefinedUserPrompt)}},
                         ["AllowProfileUsage"] = {{this.AllowProfileUsage.ToString().ToLowerInvariant()}},
                         ["FileAttachments"] = {{fileAttachmentsLua}},
-                        ["ExampleConversation"] = {{exampleConversationLua}},
+                        ["ExampleConversation"] = {{exampleConversationLua}},{{toolIdsLua}}{{dataSourceOptionsLua}}
                     }
                     """;
         return true;
@@ -374,6 +559,84 @@ public record ChatTemplate(
         builder.Append("    }");
         luaTable = builder.ToString();
         return true;
+    }
+
+    /// <remarks>
+    /// An empty set is written out as an empty table rather than being left out: the two say
+    /// different things, and dropping the line would turn "no tools at all" into "whatever the
+    /// chat default is" on the machine which reads this back.
+    /// </remarks>
+    private string BuildToolIdsLua()
+    {
+        if (this.ToolIds is null)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+        builder.AppendLine();
+        if (this.ToolIds.Count == 0)
+        {
+            builder.Append("""    ["ToolIds"] = {},""");
+            return builder.ToString();
+        }
+
+        builder.AppendLine("""    ["ToolIds"] = {""");
+
+        //
+        // A set has no order of its own, so exporting the same template twice would otherwise
+        // produce two different files. Sorting keeps the plugin diffs readable:
+        //
+        foreach (var toolId in this.ToolIds.Order(StringComparer.Ordinal))
+            builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
+
+        builder.Append("    },");
+        return builder.ToString();
+    }
+
+    private string BuildDataSourceOptionsLua()
+    {
+        if (this.DataSourceOptions is not { } options)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+        builder.AppendLine();
+        builder.AppendLine("""    ["DataSourceOptions"] = {""");
+        builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+
+        if (options.PreselectedDataSourceIds.Count == 0)
+            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");
+        else
+        {
+            builder.AppendLine("""        ["PreselectedDataSourceIds"] = {""");
+            foreach (var dataSourceId in options.PreselectedDataSourceIds)
+                builder.AppendLine($"            {LuaTools.ToLuaStringLiteral(dataSourceId)},");
+
+            builder.AppendLine("        },");
+        }
+
+        builder.Append("    },");
+        return builder.ToString();
+    }
+
+    /// <remarks>
+    /// The template itself gets a fresh ID on export, but the data source IDs must not: they point
+    /// at the sources of the organization and only work when both sides agree on them. Nobody can
+    /// see that from the exported code alone, hence this note.
+    /// </remarks>
+    private string BuildDataSourceIdNote()
+    {
+        if (this.DataSourceOptions is not { PreselectedDataSourceIds.Count: > 0 })
+            return string.Empty;
+
+        // The empty line before the closing delimiter is what ends the last comment line. Without
+        // it, the assignment would continue that comment and the whole export would be one comment:
+        return """
+               -- The data source IDs below are the ones of the machine this was exported from.
+               -- Please check them against your CONFIG["DATA_SOURCES"]: an ID which resolves to
+               -- nothing is ignored, and a chat with this template then starts without that source.
+
+               """;
     }
 
     private string BuildFileAttachmentsLua(IReadOnlyList<string>? fileAttachmentPaths)

@@ -3993,6 +3993,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2364306588"] = "
 -- Chat profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2412069346"] = "Chat-Profil"
 
+-- The chosen chat template brings data sources of its own, and those win over a selection made here. Only a template can also leave the choice of sources to the AI, which is why it decides this on its own.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2545184598"] = "Die ausgewählte Chat-Vorlage bringt eigene Datenquellen mit; diese haben Vorrang vor einer hier getroffenen Auswahl. Nur eine Vorlage kann die Auswahl der Quellen auch der KI überlassen, weshalb allein die Vorlage darüber entscheidet."
+
 -- {0} data source(s) selected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2777836629"] = "{0} Datenquelle(n) ausgewählt"
 
@@ -4010,6 +4013,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3611496116"] = "
 
 -- Use the normal chat data source defaults
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3898572329"] = "Die Standardwerte der Datenquelle für den normalen Chat verwenden"
+
+-- The chosen chat template brings tools of its own, and those win over a selection made here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T4038774259"] = "Die ausgewählte Chat-Vorlage bringt eigene Werkzeuge mit; diese haben Vorrang vor einer hier getroffenen Auswahl."
 
 -- Use no chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T4258819635"] = "Kein Chat-Template verwenden"
@@ -5670,11 +5676,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Im Bear
 -- Please enter a message for the example conversation.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1362948628"] = "Bitte gib eine Nachricht für die Beispiel-Konversation ein."
 
+-- No, chats keep the tools from your chat options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1363645855"] = "Nein, Chats behalten die Werkzeuge aus Ihren Chat-Optionen"
+
 -- The chat template name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1396308587"] = "Der Name der Chat-Vorlage muss eindeutig sein; der gewählte Name wird bereits verwendet."
 
+-- The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1442266827"] = "Das Gleiche gilt für Ihre Daten. Eine Chat-Vorlage kann eigene Datenquellen-Optionen mitbringen – dazu gehört auch, die Auswahl der Quellen der KI zu überlassen. Ohne solche Optionen starten diese Chats mit den Datenquellen-Optionen aus Ihren Chat-Optionen."
+
 -- Please enter a name for the chat template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Bitte geben Sie einen Namen für die Chat-Vorlage ein."
+
+-- Yes, this template decides which data a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Ja, diese Vorlage legt fest, mit welchen Daten ein Chat startet"
 
 -- Load predefined user input from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Vordefinierte Benutzereingabe aus Datei laden"
@@ -5696,6 +5711,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "Dateian
 
 -- Role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2418769465"] = "Rolle"
+
+-- Yes, this template decides which tools a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2494694135"] = "Ja, diese Vorlage legt fest, mit welchen Werkzeugen ein Chat startet"
+
+-- Tools
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2499909372"] = "Werkzeuge"
 
 -- What predefined user input do you want to use?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2501284417"] = "Welche vordefinierte Benutzereingabe möchten Sie verwenden?"
@@ -5742,6 +5763,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3127437308"] = "Sind Si
 -- Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3227981830"] = "Die gleichzeitige Verwendung einiger Chat-Vorlagen mit Profilen kann zu Problemen führen. Deshalb könnten Sie hier die Nutzung von Profilen untersagen."
 
+-- No, chats keep the data source options from your chat options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "Nein, Chats behalten die Datenquellen-Optionen aus Ihren Chat-Optionen"
+
+-- A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3329415439"] = "Eine Chat-Vorlage kann festlegen, mit welchen Werkzeugen ein Chat startet. Ohne eine solche Festlegung starten diese Chats mit den Werkzeugen, die Sie in den Chat-Optionen als Standard ausgewählt haben. Legen Sie es fest und wählen dann nichts aus, ist das eine andere Aussage: Solche Chats starten ohne jedes Werkzeug, ganz gleich, was Ihr Standard vorsieht."
+
 -- Add a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3372872324"] = "Nachricht hinzufügen"
 
@@ -5760,6 +5787,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3675108201"] = "Ja, Pro
 -- Add a new message below
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3757779731"] = "Neue Nachricht unten hinzufügen"
 
+-- Does this chat template preselect data sources?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3779813414"] = "Wählt diese Chat-Vorlage Datenquellen vorab aus?"
+
 -- Example Conversation
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T380891852"] = "Beispiel-Konversation"
 
@@ -5771,6 +5801,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3883091650"] = "System-
 
 -- Messages per page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3893704289"] = "Nachrichten pro Seite"
+
+-- Does this chat template preselect tools?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T399377711"] = "Wählt diese Chat-Vorlage Werkzeuge vorab aus?"
 
 -- Use the default system prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Verwenden Sie den Standard-System-Prompt"
@@ -5784,14 +5817,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Erstell
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Nachricht eingeben"
 
+-- Data Sources
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T558345131"] = "Datenquellen"
+
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T628396066"] = "System-Prompt"
+
+-- A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T650711085"] = "Ein mit dieser Vorlage gestarteter Chat beginnt mit diesen Datenquellen und Optionen. Alles davon lässt sich im Chat selbst weiterhin ändern."
+
+-- The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T722788866"] = "Die Auswahl lässt sich im Chat weiterhin ändern, und jedes Werkzeug muss die Vertrauensanforderungen des verwendeten Anbieters erfüllen."
 
 -- Allow the use of profiles together with this chat template?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T823785464"] = "Erlauben Sie die Verwendung von Profilen zusammen mit dieser Chat-Vorlage?"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Abbrechen"
+
+-- Preselected tools
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T975962532"] = "Vorausgewählte Werkzeuge"
 
 -- {0} LLM providers
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T121235760"] = "{0} LLM-Anbieter"
@@ -7787,6 +7832,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T20545
 
 -- No chat templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2319860307"] = "Noch keine Chat-Vorlagen konfiguriert."
+
+-- This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2563631533"] = "Diese Chat-Vorlage wählt Datenquellen vorab aus, die es nur auf diesem Rechner gibt: {0}. Solche Quellen lassen sich nicht bereitstellen; ein Chat, der auf einem anderen Rechner mit dieser Vorlage startet, beginnt daher ohne sie. Möchten Sie die Vorlage trotzdem exportieren?"
 
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T275026390"] = "Name der Chat-Vorlage"
@@ -12138,11 +12186,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T93
 -- The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T103791004"] = "Die folgenden vom Chat-Schnellstart-Assistenten ausgewählten Datenquellen sind derzeit nicht verfügbar oder für den ausgewählten Anbieter nicht zugelassen: {0}"
 
+-- The following data sources selected by the chat template '{0}' are currently unavailable or not permitted for the selected provider: {1}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T1164564929"] = "Die folgenden von der Chat-Vorlage „{0}“ ausgewählten Datenquellen sind derzeit nicht verfügbar oder für den ausgewählten Anbieter nicht zugelassen: {1}"
+
+-- The chat template '{0}' references data source '{1}', but that data source does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T1951110186"] = "Die Chat-Vorlage „{0}“ verweist auf die Datenquelle „{1}“, diese Datenquelle existiert jedoch nicht."
+
 -- The assistant chat launcher references profile '{0}', but that profile does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2466659933"] = "Der Chat-Schnellstart-Assistent verweist auf das Profil „{0}“, aber dieses Profil existiert nicht."
 
 -- The assistant chat launcher references data source '{0}', but that data source does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T289191545"] = "Der Chat-Schnellstart-Assistent verweist auf die Datenquelle „{0}“, aber diese Datenquelle existiert nicht."
+
+-- The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3082876173"] = "Die Chat-Vorlage „{0}“ wählt Datenquellen aus, aber für Chats ist kein Anbieter verfügbar. Bitte wählen Sie zuerst einen Standardanbieter für Chats aus. Es wurde kein Chat erstellt."
 
 -- The data sources selected by the assistant chat launcher could not be checked. No chat was created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3232401465"] = "Die vom Chat-Schnellstart-Assistenten ausgewählten Datenquellen konnten nicht geprüft werden. Es wurde kein Chat erstellt."
@@ -12152,6 +12209,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3242713584"] = "
 
 -- The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3491209726"] = "Der vom Chat-Schnellstart-Assistenten ausgewählte Anbieter „{0}“ ist für Chats mit der erforderlichen Zuverlässigkeitsstufe nicht zugelassen."
+
+-- The data sources selected by the chat template '{0}' could not be checked. No chat was created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T361525913"] = "Die von der Chat-Vorlage „{0}“ ausgewählten Datenquellen konnten nicht geprüft werden. Es wurde kein Chat erstellt."
 
 -- The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3780395901"] = "Der Chat-Schnellstart-Assistent wählt Datenquellen aus, aber für Chats ist kein Anbieter verfügbar. Bitte wählen Sie zuerst einen Standardanbieter für Chats aus. Es wurde kein Chat erstellt."
