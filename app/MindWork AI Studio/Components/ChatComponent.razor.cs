@@ -1403,6 +1403,16 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.ChatThread.RemoveBlocksAfter(aiBlock))
             return;
 
+        //
+        // Only the working state of the next turn is reset here: the augmented data and the
+        // AI-selected data sources are rebuilt by the RAG process anyway, so carrying the ones of a
+        // removed message over would just put stale context into the system prompt.
+        //
+        // What stays is everything the thread ratchets for security reasons, namely DataSecurity and
+        // RequiredProviderConfidence. Both only ever tighten, because the data which raised them was
+        // seen by this thread. Removing the message that brought it in does not unsee it, so the
+        // chat keeps demanding the same of every provider which continues it.
+        //
         this.ChatThread.AugmentedData = string.Empty;
         this.ChatThread.AISelectedDataSources = [];
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);

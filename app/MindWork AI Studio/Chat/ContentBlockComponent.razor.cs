@@ -90,7 +90,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
 
     [Parameter]
-    public bool RollbackEnabled { get; set; }
+    public Func<bool> RollbackEnabled { get; set; } = () => false;
 
     /// <summary>
     /// What the export offers, used both as the label of the export button and as the title of
@@ -789,7 +789,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private async Task RollbackBlock()
     {
-        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.RollbackEnabled)
+        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.RollbackEnabled())
             return;
 
         var rollback = await this.DialogService.ShowMessageBox(

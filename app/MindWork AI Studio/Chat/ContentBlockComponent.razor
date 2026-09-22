@@ -73,7 +73,7 @@
                 @if (!this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null)
                 {
                     <MudTooltip Text="@T("Roll back to this response")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.RollbackEnabled)" OnClick="@this.RollbackBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.RollbackEnabled())" OnClick="@this.RollbackBlock"/>
                     </MudTooltip>
                 }
                 @if (this.RemoveBlockFunc is not null)

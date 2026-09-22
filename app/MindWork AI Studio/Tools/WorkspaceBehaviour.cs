@@ -752,11 +752,16 @@ public static class WorkspaceBehaviour
         return Directory.Exists(chatPath);
     }
 
-    public static async Task StoreChatAsync(ChatThread chat)
+    /// <summary>
+    /// Stores a chat, unless another operation holds its lock for longer than the semaphore timeout.
+    /// </summary>
+    /// <param name="chat">The chat to store.</param>
+    /// <returns>True when the chat was written; false when the operation was skipped to avoid a race.</returns>
+    public static async Task<bool> StoreChatAsync(ChatThread chat)
     {
         var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(StoreChatAsync));
         if (!acquired)
-            return;
+            return false;
 
         try
         {
@@ -775,6 +780,7 @@ public static class WorkspaceBehaviour
 
             var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
             await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime);
+            return true;
         }
         finally
         {
@@ -782,6 +788,15 @@ public static class WorkspaceBehaviour
         }
     }
 
+    /// <summary>
+    /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
+    /// </summary>
+    /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
+    /// <returns>The persisted copy.</returns>
+    /// <remarks>
+    /// The copy is written before it is returned, so the caller may open it right away. Runtime-only
+    /// state of the source is not part of the copy: it is rebuilt when the copy gets loaded.
+    /// </remarks>
     public static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat)
     {
         var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
@@ -797,7 +812,15 @@ public static class WorkspaceBehaviour
         try
         {
             CopyManagedTranscriptAttachments(copiedChat, targetDirectory);
-            await StoreChatAsync(copiedChat);
+
+            //
+            // Storing is skipped instead of failing when the chat lock cannot be taken. For a copy
+            // that must not pass as success: the caller would open a chat which is not on disk,
+            // while the transcript files copied above would stay behind as orphans.
+            //
+            if (!await StoreChatAsync(copiedChat))
+                throw new IOException($"The copied chat could not be stored: '{targetDirectory}'.");
+
             return copiedChat;
         }
         catch
@@ -835,7 +858,22 @@ public static class WorkspaceBehaviour
         string targetTranscriptDirectory,
         Dictionary<string, ManagedTranscriptAttachment> copiedPaths)
     {
-        var sourcePath = Path.GetFullPath(source.FilePath);
+        //
+        // A thread which was edited outside the app may name a path which is not a path at all.
+        // Such an attachment keeps pointing at whatever the source named: it is already broken in
+        // the source chat, and letting it take the whole copy down would be worse.
+        //
+        string sourcePath;
+        try
+        {
+            sourcePath = Path.GetFullPath(source.FilePath);
+        }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            LOG.LogWarning(e, "Could not resolve the transcript path '{FilePath}' while copying chat '{ChatId}'. The attachment is kept as it is.", source.FilePath, chat.ChatId);
+            return source;
+        }
+
         if (copiedPaths.TryGetValue(sourcePath, out var existingCopy))
             return existingCopy;
 

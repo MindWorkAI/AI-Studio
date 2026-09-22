@@ -791,11 +791,25 @@ public partial class Workspaces : MSGComponentBase
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
             return;
 
+        //
+        // Copying the chat which is open right now takes its in-memory state, so whatever the user
+        // has not saved yet ends up in the copy while the original keeps the state it was stored
+        // with. Copying any other chat replaces the open one, so its unsaved changes are gone.
+        // Both outcomes are surprising enough to deserve their own wording.
+        //
+        var openChat = this.CurrentChatThread;
+        var isCopyOfOpenChat = openChat is not null && openChat.ChatId == chat.ChatId;
         if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, T("Are you sure you want to load another chat? All unsaved changes will be lost.") },
+                {
+                    x => x.Message, isCopyOfOpenChat switch
+                    {
+                        true => T("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
+                        false => T("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
+                    }
+                },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Copy Chat"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -804,7 +818,7 @@ public partial class Workspaces : MSGComponentBase
                 return;
         }
 
-        var sourceChat = this.CurrentChatThread is { } currentChat && currentChat.ChatId == chat.ChatId ? currentChat : chat;
+        var sourceChat = isCopyOfOpenChat ? openChat! : chat;
         var copy = await WorkspaceBehaviour.CopyChatAsync(sourceChat);
 
         await this.LoadTreeItemsAsync(startPrefetch: false);

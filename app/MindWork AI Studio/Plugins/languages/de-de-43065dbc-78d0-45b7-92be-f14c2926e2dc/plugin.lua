@@ -3265,7 +3265,7 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347088452"] = "Ergebni
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Möchten Sie diese Nachricht wirklich löschen?"
 
 -- Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347725178"] = "Möchtest du diesen Chat wirklich auf diese KI-Antwort zurücksetzen? Alle späteren Nachrichten und deren Anhänge werden dauerhaft gelöscht."
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347725178"] = "Möchten Sie diesen Chat wirklich auf diese KI-Antwort zurücksetzen? Alle späteren Nachrichten und deren Anhänge werden dauerhaft gelöscht."
 
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Ja, entferne die KI-Antwort und bearbeite sie."
@@ -5292,6 +5292,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "Das Ergebn
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie den Chat „{0}“ im Arbeitsbereich „{1}“ wirklich löschen?"
 
+-- Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1047391993"] = "Möchten Sie diesen Chat kopieren? Ihre ungespeicherten Änderungen wandern in die Kopie, und der ursprüngliche Chat behält den zuletzt gespeicherten Stand."
+
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Chat verschieben"
 
@@ -5387,6 +5390,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3555709365"] = "Chat laden"
 
 -- Add Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3672981145"] = "Arbeitsbereich hinzufügen"
+
+-- Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3699436634"] = "Möchten Sie diesen Chat kopieren? Die Kopie wird anschließend geöffnet, daher gehen alle ungespeicherten Änderungen des aktuell geöffneten Chats verloren."
 
 -- Chat Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3891063690"] = "Name des Chat"
