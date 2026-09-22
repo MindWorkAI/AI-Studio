@@ -17,27 +17,19 @@ public static class PlainFileExport
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
 
     /// <summary>
-    /// Reads a complete HTML or LaTeX source file out of a message which consists only of the
-    /// matching fenced code block.
+    /// Reads a complete HTML source file out of a message which consists only of a matching fenced
+    /// code block.
     /// </summary>
     /// <param name="markdown">The Markdown text the model wrote.</param>
-    /// <param name="format">The source format to extract.</param>
+    /// <param name="format">The selected export format.</param>
     /// <param name="source">The contents inside the fence, or an empty string when the message is
     /// not a standalone source file.</param>
-    /// <returns>True, when the message is a complete source file for the selected format.</returns>
+    /// <returns>True, when the message is a complete HTML source file.</returns>
     internal static bool TryExtractStandaloneSource(string markdown, FileExportFormat format, out string source)
     {
         source = string.Empty;
 
-        var languages = format switch
-        {
-            FileExportFormat.HTML => new[] { "html" },
-            FileExportFormat.LATEX => new[] { "latex", "tex" },
-
-            _ => [],
-        };
-
-        if (languages.Length is 0 || string.IsNullOrWhiteSpace(markdown))
+        if (format is not FileExportFormat.HTML || string.IsNullOrWhiteSpace(markdown))
             return false;
 
         var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
@@ -45,7 +37,7 @@ public static class PlainFileExport
             return false;
 
         var language = block.Info?.Trim();
-        if (!languages.Any(candidate => string.Equals(candidate, language, StringComparison.OrdinalIgnoreCase)))
+        if (!string.Equals("html", language, StringComparison.OrdinalIgnoreCase))
             return false;
 
         source = block.Lines.ToString();
@@ -224,16 +216,16 @@ public static class PlainFileExport
     }
 
     /// <summary>
-    /// Writes HTML or LaTeX source authored by the model without converting it.
+    /// Writes HTML source authored by the model without converting it.
     /// </summary>
     /// <param name="rustService">The Rust service, used for the save dialog.</param>
     /// <param name="dialogTitle">The title of the save dialog.</param>
-    /// <param name="format">The matching HTML or LaTeX format.</param>
+    /// <param name="format">The HTML format.</param>
     /// <param name="source">The source text inside the model's code fence.</param>
     /// <returns>True, when the file was written.</returns>
     internal static async Task<bool> ToSourceFile(RustService rustService, string dialogTitle, FileExportFormat format, string source)
     {
-        if (format is not (FileExportFormat.HTML or FileExportFormat.LATEX) || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (format is not FileExportFormat.HTML || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format as an authored source file.");
 
         return await WriteFile(rustService, dialogTitle, format, source, fileTypeFilter);
