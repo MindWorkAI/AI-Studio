@@ -2193,6 +2193,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- View
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582017048"] = "View"
 
+-- Improve further
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582753277"] = "Improve further"
+
 -- Separate context, task, constraints, and output format with headings or markers.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1626024580"] = "Separate context, task, constraints, and output format with headings or markers."
 
@@ -2288,6 +2291,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 
 -- Use sequential steps
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T487578804"] = "Use sequential steps"
+
+-- Moves the optimized prompt into the prompt field so you can optimize it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T502438377"] = "Moves the optimized prompt into the prompt field so you can optimize it again."
 
 -- Use clear, explicit instructions and directly state quality expectations.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T596557540"] = "Use clear, explicit instructions and directly state quality expectations."

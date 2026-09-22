@@ -2193,6 +2193,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 -- View
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582017048"] = "Anzeigen"
 
+-- Improve further
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582753277"] = "Weiter verbessern"
+
 -- Separate context, task, constraints, and output format with headings or markers.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1626024580"] = "Trennen Sie Kontext, Aufgabe, Einschränkungen und Ausgabeformat mit Überschriften oder Markierungen."
 
@@ -2288,6 +2291,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER
 
 -- Use sequential steps
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T487578804"] = "Schrittweise vorgehen"
+
+-- Moves the optimized prompt into the prompt field so you can optimize it again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T502438377"] = "Übernimmt den optimierten Prompt als neue Eingabe, damit Sie ihn erneut optimieren können."
 
 -- Use clear, explicit instructions and directly state quality expectations.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T596557540"] = "Verwenden Sie klare, explizite Anweisungen und geben Sie direkt die Qualitätsmerkmale an."

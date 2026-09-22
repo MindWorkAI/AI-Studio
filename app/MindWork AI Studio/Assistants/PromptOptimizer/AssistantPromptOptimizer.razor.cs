@@ -101,6 +101,15 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
+        new ButtonData
+        {
+            Text = T("Improve further"),
+            Tooltip = T("Moves the optimized prompt into the prompt field so you can optimize it again."),
+            Icon = Icons.Material.Filled.Input,
+            Color = Color.Default,
+            AsyncAction = this.UseOptimizedPromptAsInput,
+            DisabledActionParam = () => !this.CanImproveFurther,
+        },
         new SendToButton
         {
             Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
@@ -245,6 +254,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private bool ShowUpdatedPromptGuidelinesIndicator => !this.useCustomPromptGuide && this.hasUpdatedDefaultRecommendations;
     private bool CanPreviewCustomPromptGuide => this.useCustomPromptGuide && this.customPromptGuideFiles.Count > 0;
+    private bool CanImproveFurther => !this.IsProcessing && !string.IsNullOrWhiteSpace(this.optimizedPrompt);
     private string CustomPromptGuideFileName => this.customPromptGuideFiles.Count switch
     {
         0 => T("No file selected"),
@@ -462,6 +472,27 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private void ResetOutput()
     {
         this.optimizedPrompt = string.Empty;
+    }
+
+    /// <summary>
+    /// Moves the optimized prompt into the input field so the user can optimize it once more.
+    /// </summary>
+    /// <remarks>
+    /// The finished run is dropped along the way. Keeping it would append the next optimization to
+    /// the chat thread of the previous one, and the earlier proposal would stay on screen next to
+    /// the prompt it was already turned into. The recommendations and every selection stay as they
+    /// are, though: they are what the user works with while refining the prompt.
+    /// </remarks>
+    private Task UseOptimizedPromptAsInput()
+    {
+        if (!this.CanImproveFurther)
+            return Task.CompletedTask;
+
+        this.inputPrompt = this.optimizedPrompt;
+        this.ResetOutput();
+        this.ClearConversationState();
+        this.ClearInputIssues();
+        return Task.CompletedTask;
     }
 
     private void ResetGuidelineSummaryToDefault()
