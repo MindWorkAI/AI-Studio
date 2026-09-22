@@ -101,6 +101,14 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
+        new ButtonData
+        {
+            Text = T("Improve further"),
+            Icon = Icons.Material.Filled.Input,
+            Color = Color.Default,
+            AsyncAction = this.UseOptimizedPromptAsInput,
+            DisabledActionParam = () => string.IsNullOrWhiteSpace(this.optimizedPrompt),
+        },
         new SendToButton
         {
             Self = Tools.Components.PROMPT_OPTIMIZER_ASSISTANT,
@@ -462,6 +470,20 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private void ResetOutput()
     {
         this.optimizedPrompt = string.Empty;
+    }
+
+    private Task UseOptimizedPromptAsInput()
+    {
+        if (string.IsNullOrWhiteSpace(this.optimizedPrompt))
+            return Task.CompletedTask;
+
+        this.inputPrompt = this.optimizedPrompt;
+        this.ResetOutput();
+        this.ChatThread = null;
+        this.LastUserPrompt = null;
+        this.ResultingContentBlock = null;
+        this.ClearInputIssues();
+        return Task.CompletedTask;
     }
 
     private void ResetGuidelineSummaryToDefault()
