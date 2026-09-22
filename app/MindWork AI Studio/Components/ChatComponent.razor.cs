@@ -1204,10 +1204,10 @@ public partial class ChatComponent : MSGComponentBase
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
-                { x => x.Message, "Are you sure you want to start a new chat? All unsaved changes will be lost." },
+                { x => x.Message, T("Are you sure you want to start a new chat? All unsaved changes will be lost.") },
             };
         
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Delete Chat", dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Start New Chat"), dialogParameters, DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
                 return;
@@ -1218,16 +1218,27 @@ public partial class ChatComponent : MSGComponentBase
         //
         if (this.ChatThread is not null && deletePreviousChat)
         {
-            string chatPath;
-            if (this.ChatThread.WorkspaceId == Guid.Empty)
-                chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.ChatThread.ChatId.ToString());
+            //
+            // A deleted chat cannot be restored, and the check above never covers this path: it
+            // exists only while chats are stored automatically, while that check runs only while
+            // they are stored manually. So we let the deletion itself ask, with the question the
+            // chat list asks. When it reports the chat is still there, the user declined or the
+            // chat is busy, and we stop before the reset below takes it out of view:
+            //
+            bool chatIsGone;
+            if (this.Workspaces is null)
+                chatIsGone = await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId);
             else
-                chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.ChatThread.WorkspaceId.ToString(), this.ChatThread.ChatId.ToString());
+            {
+                var chatPath = this.ChatThread.WorkspaceId == Guid.Empty
+                    ? Path.Join(SettingsManager.DataDirectory, "tempChats", this.ChatThread.ChatId.ToString())
+                    : Path.Join(SettingsManager.DataDirectory, "workspaces", this.ChatThread.WorkspaceId.ToString(), this.ChatThread.ChatId.ToString());
 
-            if(this.Workspaces is null)
-                await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
-            else
-                await this.Workspaces.DeleteChatAsync(chatPath, askForConfirmation: false, unloadChat: true);
+                chatIsGone = await this.Workspaces.DeleteChatAsync(chatPath, unloadChat: true);
+            }
+
+            if (!chatIsGone)
+                return;
         }
 
         //
@@ -1306,7 +1317,7 @@ public partial class ChatComponent : MSGComponentBase
                 { x => x.Message, T("Are you sure you want to move this chat? All unsaved changes will be lost.") },
             };
         
-            var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>("Unsaved Changes", confirmationDialogParameters, DialogOptions.FULLSCREEN);
+            var confirmationDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Unsaved Changes"), confirmationDialogParameters, DialogOptions.FULLSCREEN);
             var confirmationDialogResult = await confirmationDialogReference.Result;
             if (confirmationDialogResult is null || confirmationDialogResult.Canceled)
                 return;
