@@ -872,7 +872,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             await Task.Delay(TimeSpan.FromSeconds(timeSeconds), effectiveCancellationToken);
         }
         
-        if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
+        //
+        // Whether this request got an answer at all. The response is set in the success branch and
+        // nowhere else, so its absence is what "we have nothing to hand on" means. Going by the
+        // error message instead was wrong in both directions: a provider which sends no reason
+        // phrase left that message empty, and this method then reported success without a response
+        // for the caller to read; and an attempt which succeeded as the last one the loop allows
+        // was reported as a failure although its answer was right there.
+        //
+        if(response is null)
         {
             if (lastProviderRequestFailure is not ProviderRequestFailureReason.NONE)
             {
