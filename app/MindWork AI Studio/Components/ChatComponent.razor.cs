@@ -1219,37 +1219,26 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is not null && deletePreviousChat)
         {
             //
-            // A deleted chat cannot be restored. The check above never covers this case, because
-            // this path exists only while chats are stored automatically. So we ask here, with the
-            // same question the chat list asks:
+            // A deleted chat cannot be restored, and the check above never covers this path: it
+            // exists only while chats are stored automatically, while that check runs only while
+            // they are stored manually. So we let the deletion itself ask, with the question the
+            // chat list asks. When it reports the chat is still there, the user declined or the
+            // chat is busy, and we stop before the reset below takes it out of view:
             //
-            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-            var deleteDialogParameters = new DialogParameters<ConfirmDialog>
+            bool chatIsGone;
+            if (this.Workspaces is null)
+                chatIsGone = await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId);
+            else
             {
-                {
-                    x => x.Message, (this.ChatThread.WorkspaceId == Guid.Empty) switch
-                    {
-                        true => string.Format(this.T("Are you sure you want to delete the temporary chat '{0}'?"), this.ChatThread.Name),
-                        false => string.Format(this.T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), this.ChatThread.Name, workspaceName),
-                    }
-                },
-            };
+                var chatPath = this.ChatThread.WorkspaceId == Guid.Empty
+                    ? Path.Join(SettingsManager.DataDirectory, "tempChats", this.ChatThread.ChatId.ToString())
+                    : Path.Join(SettingsManager.DataDirectory, "workspaces", this.ChatThread.WorkspaceId.ToString(), this.ChatThread.ChatId.ToString());
 
-            var deleteDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Delete Chat"), deleteDialogParameters, DialogOptions.FULLSCREEN);
-            var deleteDialogResult = await deleteDialogReference.Result;
-            if (deleteDialogResult is null || deleteDialogResult.Canceled)
+                chatIsGone = await this.Workspaces.DeleteChatAsync(chatPath, unloadChat: true);
+            }
+
+            if (!chatIsGone)
                 return;
-
-            string chatPath;
-            if (this.ChatThread.WorkspaceId == Guid.Empty)
-                chatPath = Path.Join(SettingsManager.DataDirectory, "tempChats", this.ChatThread.ChatId.ToString());
-            else
-                chatPath = Path.Join(SettingsManager.DataDirectory, "workspaces", this.ChatThread.WorkspaceId.ToString(), this.ChatThread.ChatId.ToString());
-
-            if(this.Workspaces is null)
-                await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
-            else
-                await this.Workspaces.DeleteChatAsync(chatPath, askForConfirmation: false, unloadChat: true);
         }
 
         //
