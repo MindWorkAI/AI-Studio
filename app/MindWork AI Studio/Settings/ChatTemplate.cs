@@ -102,8 +102,47 @@ public record ChatTemplate(
     {
         if(this.Num == uint.MaxValue)
             return string.Empty;
-        
+
         return this.SystemPrompt;
+    }
+
+    /// <summary>
+    /// Decides whose tools a chat started by a launcher begins with.
+    /// </summary>
+    /// <remarks>
+    /// A launcher may name tools itself and may choose a chat template which names tools as well.
+    /// When both do, the template wins as a whole — the same rule as for the data sources, so that
+    /// nobody has to remember two of them.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
+    /// <param name="launcherToolIds">The tools the launcher names itself, or null when it names none.</param>
+    /// <returns>The tools to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for it.</returns>
+    public static (IReadOnlyCollection<string>? ToolIds, bool LauncherChoiceDropped) ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
+    {
+        if (chatTemplate.ToolIds is not { } templateToolIds)
+            return (launcherToolIds, false);
+
+        return (templateToolIds, launcherToolIds is not null);
+    }
+
+    /// <summary>
+    /// Decides whose data source options a chat started by a launcher begins with.
+    /// </summary>
+    /// <remarks>
+    /// The two sides are not equally expressive: a launcher can only ever say "these sources, picked
+    /// by hand", while a chat template carries the whole options and can also say "let an agent pick
+    /// them for each message". Mixing them field by field would produce something neither of them
+    /// asked for, so the template wins as a whole.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
+    /// <param name="launcherOptions">The options built from the data sources the launcher names, or null when it names none.</param>
+    /// <returns>The options to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for them.</returns>
+    public static (DataSourceOptions? Options, bool LauncherChoiceDropped) ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
+    {
+        if (chatTemplate.DataSourceOptions is not { } templateOptions)
+            return (launcherOptions, false);
+
+        return (templateOptions.CreateCopy(), launcherOptions is not null);
     }
 
     public static bool TryParseChatTemplateTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject template)

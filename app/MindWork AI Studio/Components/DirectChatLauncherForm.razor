@@ -51,4 +51,20 @@
     }
 </MudSelect>
 
+@* A chat template wins over what is chosen here, so the form says so before somebody picks
+   something which would never take effect: *@
+@if (this.SelectedChatTemplate.DataSourceOptions is not null)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+        @T("The chosen chat template brings data sources of its own, and those win over a selection made here. Only a template can also leave the choice of sources to the AI, which is why it decides this on its own.")
+    </MudText>
+}
+
 <ToolSelectionField Component="Components.CHAT" SelectedToolIds="@this.ToolIds" SelectedToolIdsChanged="@this.SetToolIds" Label="@T("Tools (Optional)")" Help="@T("These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use.")"/>
+
+@if (this.SelectedChatTemplate.ToolIds is not null)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">
+        @T("The chosen chat template brings tools of its own, and those win over a selection made here.")
+    </MudText>
+}
