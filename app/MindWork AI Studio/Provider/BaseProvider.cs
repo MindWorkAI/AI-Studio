@@ -831,6 +831,31 @@ public abstract class BaseProvider : IProvider, ISecretId
                 break;
             }
 
+            //
+            // Everything else the provider answers in the 400 range is about this request itself,
+            // and sending the very same request again cannot change that answer. Only 408 and 429
+            // say "later" rather than "no", and waiting them out is what the delay below exists
+            // for. This branch comes last on purpose: every status code we have a better sentence
+            // for is handled above, and only what is left over ends up with this general wording.
+            //
+            if(nextResponse.StatusCode is not (HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests) && (int)nextResponse.StatusCode is >= 400 and < 500)
+            {
+                //
+                // What the provider said about it, falling back to the reason phrase. The status
+                // code is named as well: this is the branch for refusals we have no wording of our
+                // own for, and then the number is what the user can ask the provider about.
+                //
+                var refusalMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(refusalMessage))
+                    refusalMessage = nextResponse.ReasonPhrase;
+
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
+                break;
+            }
+
             errorMessage = nextResponse.ReasonPhrase;
             var timeSeconds = Math.Pow(RETRY_DELAY_SECONDS, retry + 1);
             if(timeSeconds > 90)
