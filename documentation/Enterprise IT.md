@@ -685,6 +685,25 @@ This does not change the SearXNG or Staan settings, the general Web Search setti
 
 You can combine both fragments in the same plugin: their table initializations preserve earlier entries, and only a later assignment to an identical key replaces its value. A later whole-table assignment such as `CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = { ... }` replaces those entries, so place exports after it or merge them manually. This behavior applies within one plugin; across separate configuration plugins, the winning plugin replaces the whole managed table as described in [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
 
+## Chat templates with tools and data sources
+
+A chat template also decides the tools and the data sources a chat started with it begins with. Configure and export the template in the app as usual; its fragment belongs in your plugin after the `CONFIG["CHAT_TEMPLATES"] = {}` initialization.
+
+The data source IDs in that fragment are **carried over unchanged**, unlike the template ID, which is new with every export: they point at the data sources of your organization. Check them against your `CONFIG["DATA_SOURCES"]` -- an ID that resolves to nothing is ignored, and a chat with that template then starts without that source.
+
+Writing such a template by hand means knowing that saying nothing and saying none are two different statements:
+
+| What the template says | What a chat started with it does |
+|---|---|
+| no `ToolIds` at all | starts with the tools the user has set as their chat default |
+| `ToolIds` present but empty | starts with no tool at all, whatever that default says |
+| no `DataSourceOptions` at all | starts with the data source options the user has set as their chat default |
+| `DataSourceOptions` present | starts with exactly those, including the choice to let an agent pick the sources |
+
+Writing the `DataSourceOptions` table at all is already the statement that this template wants data sources, so `DisableDataSources` starts at `false` inside it, unlike everywhere else in the app.
+
+When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
 ## Letting users provide their own API key
 
 Sometimes you want to hand out a preconfigured provider -- a fixed host, model, and instance name
