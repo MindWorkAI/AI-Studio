@@ -160,10 +160,9 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Port == candidateUrl.Port &&
         !IsBlockedHostName(candidateUrl.Host) &&
+        options.IsPrivateHostAllowed?.Invoke(candidateUrl.Host) is true &&
         addresses.Count > 0 &&
-        (addresses.All(IsNonPublicAddress)
-            ? options.IsPrivateHostAllowed?.Invoke(candidateUrl.Host) is true
-            : options.IsOsSsoAllowedForPublicHost?.Invoke(candidateUrl.Host) is true);
+        addresses.All(IsNonPublicAddress);
 
     private static IPAddress NormalizeAddress(IPAddress address) => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 

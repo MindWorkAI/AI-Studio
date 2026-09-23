@@ -139,10 +139,6 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 UseOsSso = true,
                 IsPrivateHostAllowed = host => IsWikiHost(baseUrl!, host),
 
-                // The wiki address comes from the user or the organization, never from the model,
-                // so the sign-in may also go to a wiki with public addresses:
-                IsOsSsoAllowedForPublicHost = host => IsWikiHost(baseUrl!, host),
-
                 // Checked before every redirect is followed, so the query never reaches a host
                 // outside the wiki:
                 IsTargetAllowed = target => IsWithinWiki(baseUrl!, target),
@@ -162,7 +158,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             throw new InvalidOperationException(TB("Confluence redirected the search outside the configured wiki."));
 
         if (IsLoginPage(page.FinalUrl))
-            throw new InvalidOperationException(TB("Confluence asked for a sign-in instead of showing search results. Your operating system's sign-in was not accepted by the wiki; open it in your browser to check your access."));
+            throw new InvalidOperationException(TB("Confluence asked for a sign-in instead of showing search results. AI Studio signs in with your operating system account only when your wiki has a private or VPN address, and either the wiki did not accept that sign-in or its address is public. Open the wiki in your browser to check your access."));
 
         var markdown = retrievedPage.ExtractedPage.Markdown;
         if (string.IsNullOrWhiteSpace(markdown))

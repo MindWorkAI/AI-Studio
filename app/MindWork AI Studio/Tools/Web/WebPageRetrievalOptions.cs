@@ -34,14 +34,5 @@ public sealed class WebPageRetrievalOptions
     /// </summary>
     public Func<Uri, bool>? IsTargetAllowed { get; init; }
 
-    /// <summary>
-    /// Allows the operating system's sign-in for a host which resolves to public addresses.
-    /// </summary>
-    /// <remarks>
-    /// Without it, the sign-in is only sent to allowed private hosts. Use it only for a host
-    /// which the user or the organization configured, never for one a model named.
-    /// </remarks>
-    public Func<string, bool>? IsOsSsoAllowedForPublicHost { get; init; }
-
     public Func<Uri, ConfidenceLevel, Task>? OnPrivateHostProviderBlockAsync { get; init; }
 }
