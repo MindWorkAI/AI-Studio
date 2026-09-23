@@ -821,11 +821,11 @@ CONFIG["SETTINGS"] = {}
 --
 -- Field names of the Search Confluence tool:
 --   baseUrl          Required HTTPS root URL of the Confluence site, including its context path
---                    if present, for example https://wiki.example.org/confluence/. Search uses
+--                    if present, for example https://wiki.example.org/confluence/. Search loads
+--                    dosearchsite.action with the same web-page reader as read_web_page and uses
 --                    the current user's operating-system sign-in. A provider must have HIGH
 --                    confidence or be trusted by the organization to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
---   maxResults       Maximum matching pages returned, at most 20. Default: 8.
 -- To read a found page, also configure read_web_page.allowedPrivateHosts if your wiki has a
 -- private or VPN address, and select both tools for the chat or assistant.
 --
@@ -843,7 +843,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
 --     ["read_web_page.timeoutSeconds"] = "30",
---     ["search_confluence.maxResults"] = "8"
+--     ["search_confluence.timeoutSeconds"] = "30"
 -- }
 
 -- Configure the HTTP timeout for external requests, in seconds.
