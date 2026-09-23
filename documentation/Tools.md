@@ -92,6 +92,8 @@ What differs between callers is which targets are acceptable, and that follows f
 
 `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
+`search_confluence` searches the configured HTTPS Confluence Data Center site through `/rest/api/search` using CQL. It uses the current user's operating-system sign-in, refuses redirects, and returns only results whose URLs stay inside the configured site. The model supplies a search phrase, not a URL or CQL expression. Search results require a High-confidence or organization-trusted provider and raise the chat's continuing confidence requirement to High. Select `read_web_page` as well to load a result's full content; its private-host allowlist still applies to that page.
+
 Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
 
 ## Checklist

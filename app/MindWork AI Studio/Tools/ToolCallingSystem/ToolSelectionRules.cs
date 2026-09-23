@@ -8,6 +8,7 @@ public static class ToolSelectionRules
     public const int MAX_TOOL_RESULT_CHARACTERS = 300_000;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
+    public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
 
     public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
         => selectedToolIds.ToHashSet(StringComparer.Ordinal);

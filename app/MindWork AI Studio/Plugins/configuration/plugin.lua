@@ -739,12 +739,13 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page
+-- Tool IDs include: web_search, read_web_page, search_confluence
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = VERY_LOW
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
---     ["read_web_page"] = "VERY_LOW"
+--     ["read_web_page"] = "VERY_LOW",
+--     ["search_confluence"] = "VERY_LOW"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -818,19 +819,31 @@ CONFIG["SETTINGS"] = {}
 --                         targets when those provider requirements are met, and it never reuses
 --                         browser cookies.
 --
+-- Field names of the Search Confluence tool:
+--   baseUrl          Required HTTPS root URL of the Confluence site, including its context path
+--                    if present, for example https://wiki.example.org/confluence/. Search uses
+--                    the current user's operating-system sign-in. A provider must have HIGH
+--                    confidence or be trusted by the organization to receive search results.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   maxResults       Maximum matching pages returned, at most 20. Default: 8.
+-- To read a found page, also configure read_web_page.allowedPrivateHosts if your wiki has a
+-- private or VPN address, and select both tools for the chat or assistant.
+--
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
---     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+--     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
+--     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
 --     ["web_search.maxResults"] = "5",
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
---     ["read_web_page.timeoutSeconds"] = "30"
+--     ["read_web_page.timeoutSeconds"] = "30",
+--     ["search_confluence.maxResults"] = "8"
 -- }
 
 -- Configure the HTTP timeout for external requests, in seconds.
@@ -1054,7 +1067,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- A tool ID unknown to the installation is ignored, and so is a tool your
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
---     -- Tool IDs include: web_search, read_web_page
+--     -- Tool IDs include: web_search, read_web_page, search_confluence
 --     ["ToolIds"] = {
 --         "read_web_page",
 --     },
@@ -1159,7 +1172,7 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
---     -- Tool IDs include: web_search, read_web_page
+--     -- Tool IDs include: web_search, read_web_page, search_confluence
 --     ["AllowedToolIds"] = { "web_search" },
 --
 --     -- Optional: preselect a provider or profile by ID.
