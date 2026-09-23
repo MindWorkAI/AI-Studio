@@ -821,16 +821,17 @@ CONFIG["SETTINGS"] = {}
 --                         targets when those provider requirements are met, and it never reuses
 --                         browser cookies.
 --
--- Field names of the Search Confluence tool:
---   baseUrl          Required HTTPS root URL of the Confluence site, including its context path
---                    if present, for example https://wiki.example.org/confluence/. Search loads
---                    dosearchsite.action with the same web-page reader as read_web_page and uses
---                    the current user's operating-system sign-in when the wiki has a private or
---                    VPN address. Redirects outside this URL are refused. A provider must have
---                    HIGH confidence to receive search results.
+-- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
+-- Cloud is not supported yet.
+--   baseUrl          Required HTTPS root URL of the Confluence Data Center wiki, including its
+--                    context path if present, for example https://wiki.example.org/confluence/.
+--                    Search loads dosearchsite.action with the same web-page reader as
+--                    read_web_page and uses the current user's operating-system sign-in when the
+--                    wiki has a private or VPN address. Redirects outside this URL are refused. A
+--                    provider must have HIGH confidence to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
--- To read a found page, also configure read_web_page.allowedPrivateHosts if your wiki has a
--- private or VPN address, and select both tools for the chat or assistant.
+-- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
+-- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",

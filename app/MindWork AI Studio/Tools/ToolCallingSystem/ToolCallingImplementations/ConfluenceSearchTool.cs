@@ -93,7 +93,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        BASE_URL_SETTING => TB("The HTTPS address of your Confluence site, including its path if present, such as https://wiki.example.org/confluence/. AI Studio searches through the same page reader used by Read Web Page."),
+        BASE_URL_SETTING => TB("The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found."),
         TIMEOUT_SECONDS_SETTING => TB("(Optional) Search request timeout in seconds."),
         _ => TB(fieldDefinition.Description),
     };
