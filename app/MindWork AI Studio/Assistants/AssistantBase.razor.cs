@@ -67,6 +67,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         _ => string.Empty,
     };
 
+    /// <summary>
+    /// What an export of the result is named after, which the save dialog suggests as file name.
+    /// An assistant whose result is about something more specific than the assistant itself names that.
+    /// </summary>
+    protected virtual string ExportFileName => this.Title;
+
     protected abstract void ResetForm();
 
     protected abstract bool MightPreselectValues();
