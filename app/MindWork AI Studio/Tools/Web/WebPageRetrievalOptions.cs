@@ -24,8 +24,6 @@ public sealed class WebPageRetrievalOptions
 
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
-    public bool ProviderIsTrustedByConfiguration { get; init; }
-
     public bool UseOsSso { get; init; }
 
     public Func<string, bool>? IsPrivateHostAllowed { get; init; }

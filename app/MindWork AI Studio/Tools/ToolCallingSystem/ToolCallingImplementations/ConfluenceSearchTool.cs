@@ -28,9 +28,9 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     {
         Id = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
-        // Kept low so that providers trusted by the organization below HIGH are offered the tool.
-        // The runtime check in ExecuteAsync requires HIGH confidence or that trust.
-        MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
+        // Every search result is internal to the organization and raises the chat's required
+        // confidence to HIGH, so only providers which may continue the chat are offered the tool:
+        MinimumProviderConfidence = ConfidenceLevel.HIGH,
         SettingsSchema = ToolSettingsSchemaBuilder.Create()
             .Required(BASE_URL_SETTING)
             .Optional(TIMEOUT_SECONDS_SETTING)
@@ -96,12 +96,12 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
         //
-        // A provider trusted by the organization's configuration counts as much as a High-confidence
-        // one. The chat thread's own check does the same, so such a provider may also continue the
-        // chat after the result raised its required confidence to HIGH.
+        // The tool settings may lower the level at which the tool is offered, but what the wiki
+        // returns stays internal to the organization. The search itself therefore always needs
+        // a High-confidence provider.
         //
-        if (context.ProviderConfidence < ConfidenceLevel.HIGH && !context.ProviderIsTrustedByConfiguration)
-            throw new ToolExecutionBlockedException(TB("Searching the company wiki requires a High-confidence provider or one trusted by your organization's configuration."));
+        if (context.ProviderConfidence < ConfidenceLevel.HIGH)
+            throw new ToolExecutionBlockedException(TB("Searching your company's wiki requires a High-confidence provider."));
 
         if (!TryParseBaseUrl(context.SettingsValues.GetValueOrDefault(BASE_URL_SETTING), out var baseUrl))
             throw new InvalidOperationException(TB("The Confluence base URL is not configured correctly."));
@@ -136,7 +136,6 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             {
                 TimeoutSeconds = timeoutSeconds,
                 ProviderConfidence = context.ProviderConfidence,
-                ProviderIsTrustedByConfiguration = context.ProviderIsTrustedByConfiguration,
                 UseOsSso = true,
                 IsPrivateHostAllowed = host => IsWikiHost(baseUrl!, host),
 

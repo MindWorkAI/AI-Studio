@@ -741,13 +741,13 @@ CONFIG["SETTINGS"] = {}
 -- Configure the minimum provider confidence level required for individual tools.
 -- Tool IDs include: web_search, read_web_page, search_confluence
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = VERY_LOW
--- search_confluence also always requires a HIGH-confidence provider or one trusted by the
--- organization, whatever value is set here.
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH
+-- search_confluence always searches with a HIGH-confidence provider only, whatever value is
+-- set here.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
---     ["search_confluence"] = "VERY_LOW"
+--     ["search_confluence"] = "HIGH"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -827,7 +827,7 @@ CONFIG["SETTINGS"] = {}
 --                    dosearchsite.action with the same web-page reader as read_web_page and uses
 --                    the current user's operating-system sign-in, also when the wiki has public
 --                    addresses. Redirects outside this URL are refused. A provider must have HIGH
---                    confidence or be trusted by the organization to receive search results.
+--                    confidence to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 -- To read a found page, also configure read_web_page.allowedPrivateHosts if your wiki has a
 -- private or VPN address, and select both tools for the chat or assistant.
@@ -940,8 +940,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure provider instances trusted by your organization for data-source security checks.
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
--- only for data-source security checks and related local data warnings. Trusted LLM providers
--- can also use read_web_page for explicitly allowed private or VPN hosts.
+-- only for data-source security checks and related local data warnings. This trust does not
+-- meet a required confidence level, for example of a local data source or a private web page;
+-- raise the provider's level in the custom confidence scheme above for that.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely, so providers trusted by the base configuration lose that status. Repeat
