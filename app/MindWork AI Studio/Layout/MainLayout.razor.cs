@@ -482,9 +482,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
             // icon does not draw attention while there is nothing to attend to:
-            _ => (Icons.Material.Filled.CloudDone, palette.DarkLighten, palette.GrayLight),
+            _ => (Icons.Material.Filled.LibraryAddCheck, palette.DarkLighten, palette.GrayLight),
         };
-        this.embeddingItem = new NavBarItem(T("Embeddings"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
+        this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }
     
     private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
