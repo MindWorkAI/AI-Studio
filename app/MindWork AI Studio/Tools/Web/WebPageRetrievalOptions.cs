@@ -14,7 +14,7 @@ public sealed class WebPageRetrievalOptions
     /// hosts named localhost — because those exist to keep a model from reaching into the user's
     /// network, and the user is not a model. The network-level protections stay: the connection
     /// is still bound to validated addresses, redirects are still checked, the response size is
-    /// still capped, and only HTML is still accepted.<br/><br/>
+    /// still capped, and only HTML and text content are still accepted.<br/><br/>
     /// Never set this for a URL that reached AI Studio through a model, however plausible it
     /// looks.
     /// </remarks>

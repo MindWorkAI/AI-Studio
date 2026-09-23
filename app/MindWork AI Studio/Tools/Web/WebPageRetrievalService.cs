@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using AIStudio.Provider;
+using HtmlAgilityPack;
 
 namespace AIStudio.Tools.Web;
 
@@ -15,6 +16,10 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
     {
         var triedOsSso = false;
         var requiredProviderConfidence = ConfidenceLevel.NONE;
+
+        // Always overwritten: the media type is validated before the body is read, so no page
+        // arrives without the check having decided what it is.
+        var contentKind = WebContentKind.HTML_PAGE;
         HTMLParserWebPage page;
         try
         {
@@ -37,6 +42,8 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                     triedOsSso |= shouldTryOsSso;
                     return shouldTryOsSso;
                 },
+                validateMediaType: mediaType => contentKind = WebContentTypeClassifier.Classify(mediaType) ??
+                    throw new InvalidOperationException($"Unsupported content type '{mediaType}'. Only HTML pages and text formats such as plain text, JSON, XML, or CSV are supported."),
                 token: token);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
@@ -58,16 +65,25 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
         }
 
-        if (!IsSupportedHtmlContentType(page.ContentType))
-            throw new InvalidOperationException($"Unsupported content type '{page.ContentType}'. Only HTML pages are supported.");
-
         return new RetrievedWebPage
         {
             Page = page,
-            ExtractedPage = WebPageContentExtractor.Extract(page.Document, page.FinalUrl),
+            ContentKind = contentKind,
+            ExtractedPage = contentKind switch
+            {
+                WebContentKind.TEXT_DOCUMENT => WebTextContentExtractor.Extract(page.Body, page.ContentType, page.FinalUrl),
+                _ => WebPageContentExtractor.Extract(ParseHtml(page.Body), page.FinalUrl),
+            },
             RetrievedAtUtc = DateTimeOffset.UtcNow,
             RequiredProviderConfidence = requiredProviderConfidence,
         };
+    }
+
+    private static HtmlDocument ParseHtml(string html)
+    {
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+        return document;
     }
 
     private static WebPageAccessBlockedException? FindBlockedException(Exception exception)
@@ -270,9 +286,4 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
 
         return null;
     }
-
-    private static bool IsSupportedHtmlContentType(string? contentType) =>
-        string.IsNullOrWhiteSpace(contentType) ||
-        contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) ||
-        contentType.StartsWith("application/xhtml+xml", StringComparison.OrdinalIgnoreCase);
 }
