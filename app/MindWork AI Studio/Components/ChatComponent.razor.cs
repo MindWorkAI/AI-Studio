@@ -1656,6 +1656,46 @@ public partial class ChatComponent : MSGComponentBase
     private string BuildSystemPromptFor(ChatThread thread, IReadOnlyList<ToolDefinition> toolDefinitions) => thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions).Text;
 
     /// <summary>
+    /// Shows the system prompt the next request would send, and what it was assembled from.
+    /// </summary>
+    /// <remarks>
+    /// Built the same way the token count builds it, so the dialog shows what is counted and sent.
+    /// Before the first message there is no thread yet, and the one a new chat would start with
+    /// stands in for it, as it does for the count.
+    ///
+    /// The parts are read from the same values the prompt is built from, but the decisions are the
+    /// ones <see cref="ChatThread.BuildSystemPrompt"/> makes: should it ever weigh them differently,
+    /// the list has to follow, while the text is always right.
+    /// </remarks>
+    private async Task ShowSystemPrompt()
+    {
+        var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
+        var toolDefinitions = this.GetRunnableToolDefinitions();
+        var prepared = thread.BuildSystemPrompt(this.SettingsManager, toolDefinitions);
+
+        var chatTemplate = this.SettingsManager.GetChatTemplateById(thread.SelectedChatTemplate);
+        var profile = this.SettingsManager.GetProfileById(thread.SelectedProfile);
+        var toolNames = toolDefinitions
+            .Where(definition => !string.IsNullOrWhiteSpace(definition.SystemPromptInstructions))
+            .Select(definition => this.ToolRegistry.GetImplementation(definition.ImplementationKey)?.GetDisplayName() ?? definition.Function.Name)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var dialogParameters = new DialogParameters<SystemPromptDialog>
+        {
+            { x => x.SystemPrompt, prepared.Text },
+            { x => x.ChatTemplateName, chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? string.Empty : chatTemplate.Name },
+            { x => x.ProfileName, !prepared.ProfileIsAllowed || profile == Profile.NO_PROFILE ? string.Empty : profile.Name },
+            { x => x.IsProfileForbiddenByChatTemplate, !prepared.ProfileIsAllowed },
+            { x => x.HasRetrievedData, !string.IsNullOrWhiteSpace(thread.AugmentedData) },
+            { x => x.ToolNames, toolNames },
+            { x => x.IncludesDateTime, thread.IncludeDateTime },
+        };
+
+        await this.DialogService.ShowAsync<SystemPromptDialog>(T("Complete system prompt of this chat"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
+    /// <summary>
     /// The tools the next request would offer the model.
     /// </summary>
     /// <remarks>
