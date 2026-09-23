@@ -41,7 +41,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .Optional(TIMEOUT_SECONDS_SETTING)
             .Optional(MAX_CONTENT_CHARACTERS_SETTING)
             .Optional(ALLOWED_PRIVATE_HOSTS_SETTING)
-            .OptionalEnum(BRAVE_MODE_SETTING, BRAVE_MODE_OFF, BRAVE_MODE_ON)
+            .OptionalEnumWithDefault(BRAVE_MODE_SETTING, BRAVE_MODE_OFF, BRAVE_MODE_OFF, BRAVE_MODE_ON)
             .Build(),
 
         SystemPromptInstructions = BuildSystemPromptInstructions(BRAVE_MODE_OFF),
