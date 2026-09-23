@@ -810,6 +810,10 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds.
 --   maxContentCharacters  Content-character limit.
+--   braveMode             OFF (default): instruct the model to use only URLs in the system prompt,
+--                         user prompt (including loaded documents and RAG content), or tool results.
+--                         ON: allow the model to choose a URL. This is prompt guidance, not a
+--                         technical block on URL requests.
 --   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
 --                         listed. Wildcards match subdomains only, so add the root domain
 --                         separately. Allowed private hosts require a provider with HIGH
@@ -823,6 +827,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["read_web_page.braveMode"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
 -- }
 --

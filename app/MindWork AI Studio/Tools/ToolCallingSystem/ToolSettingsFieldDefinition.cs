@@ -14,6 +14,12 @@ public sealed class ToolSettingsFieldDefinition
     public List<string> EnumValues { get; init; } = [];
 
     /// <summary>
+    /// Value shown and saved for an optional choice when no value has been stored yet.
+    /// A choice with a default does not offer a separate "Not set" option.
+    /// </summary>
+    public string DefaultValue { get; init; } = string.Empty;
+
+    /// <summary>
     /// Name of a list of options the app maintains, as an alternative to spelling them out in
     /// the enum field. See the tool settings option sources for the available names.
     /// </summary>

@@ -61,6 +61,9 @@ public sealed class ToolSettingsSchemaBuilder
     /// </remarks>
     public ToolSettingsSchemaBuilder OptionalEnum(string name, params string[] values) => this.Add(name, isRequired: false, enumValues: values);
 
+    public ToolSettingsSchemaBuilder OptionalEnumWithDefault(string name, string defaultValue, params string[] values) =>
+        this.Add(name, isRequired: false, enumValues: values, defaultValue: defaultValue);
+
     /// <summary>
     /// A field kept in the operating system's keyring rather than in the settings file.
     /// </summary>
@@ -74,12 +77,13 @@ public sealed class ToolSettingsSchemaBuilder
         Required = [..this.requiredNames],
     };
 
-    private ToolSettingsSchemaBuilder Add(string name, bool isRequired, string optionSource = "", bool isSecret = false, IReadOnlyList<string>? enumValues = null)
+    private ToolSettingsSchemaBuilder Add(string name, bool isRequired, string optionSource = "", bool isSecret = false, IReadOnlyList<string>? enumValues = null, string defaultValue = "")
     {
         this.properties[name] = new ToolSettingsFieldDefinition
         {
             OptionSource = optionSource,
             EnumValues = enumValues?.ToList() ?? [],
+            DefaultValue = defaultValue,
             Secret = isSecret,
             Group = this.currentGroup,
         };

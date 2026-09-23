@@ -29,6 +29,11 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         {
             this.implementation = this.ToolRegistry.GetImplementation(this.toolDefinition.ImplementationKey);
             this.values = await this.ToolSettingsService.GetSettingsAsync(this.toolDefinition);
+            foreach (var (fieldName, field) in this.toolDefinition.SettingsSchema.Properties)
+            {
+                if (!string.IsNullOrEmpty(field.DefaultValue) && string.IsNullOrEmpty(this.GetValue(fieldName)))
+                    this.values[fieldName] = field.DefaultValue;
+            }
             this.fieldGroups = BuildFieldGroups(this.toolDefinition);
         }
     }

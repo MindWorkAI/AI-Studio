@@ -58,7 +58,7 @@
                     if (fieldOptions.Count > 0)
                     {
                         <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(fieldName)">
-                            @if (!this.toolDefinition.SettingsSchema.Required.Contains(fieldName))
+                            @if (!this.toolDefinition.SettingsSchema.Required.Contains(fieldName) && string.IsNullOrEmpty(field.DefaultValue))
                             {
                                 <MudSelectItem T="string" Value="@string.Empty">@T("Not set")</MudSelectItem>
                             }
