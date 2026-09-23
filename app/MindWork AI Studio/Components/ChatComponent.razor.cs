@@ -649,7 +649,9 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Any(b => !b.HideFromUser);
-    
+
+    private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
@@ -1344,7 +1346,48 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
-    
+
+    /// <summary>
+    /// Copies the open chat and continues in the copy.
+    /// </summary>
+    /// <remarks>
+    /// Copied is the chat as it stands on the screen, not the state which was stored last. That is
+    /// why nothing is asked about unsaved changes here, unlike everywhere else a chat is left
+    /// behind: none of them are lost, they move into the copy, while the original keeps what was
+    /// stored.<br/><br/>
+    ///
+    /// The same holds for the message being written. The copy is marked as loaded right away,
+    /// because the parameter update which follows would otherwise take it for another chat being
+    /// opened and clear the composer. Only the transcripts attached to that message are exchanged:
+    /// those of the original live in its directory, and the copy got copies of its own.
+    /// </remarks>
+    private async Task CopyCurrentChat()
+    {
+        if (this.ChatThread is null || !this.CanThreadBeCopied)
+            return;
+
+        var sourceChat = this.ChatThread;
+        var copy = this.Workspaces is null
+            ? await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat)
+            : await this.Workspaces.CopyChatAsync(sourceChat);
+
+        if (copy is null)
+            return;
+
+        var transcriptsOfTheOriginal = sourceChat.PendingMediaTranscripts.Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
+        this.ComposerState.FileAttachments.RemoveWhere(attachment => transcriptsOfTheOriginal.Contains(attachment.FilePath));
+        foreach (var transcript in copy.PendingMediaTranscripts)
+            this.ComposerState.FileAttachments.Add(transcript);
+
+        this.ChatThread = copy;
+        this.hasUnsavedChanges = false;
+
+        await this.SyncForegroundChatAsync();
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
     private async Task LoadedChatChanged(bool notifyParent = true)
     {
         this.hasUnsavedChanges = false;

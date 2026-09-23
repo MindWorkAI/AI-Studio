@@ -660,6 +660,24 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
+    /// <summary>
+    /// Copies the given chat, after asking the user for the name of the copy, and shows the copy in the tree.
+    /// </summary>
+    /// <param name="sourceChat">The chat to copy, as it stands in memory.</param>
+    /// <returns>The persisted copy. Null when the user canceled the question, in which case nothing was copied.</returns>
+    /// <remarks>
+    /// Neither asks about unsaved changes nor opens the copy: which of both a caller needs depends
+    /// on where the copy was asked for.
+    /// </remarks>
+    public async Task<ChatThread?> CopyChatAsync(ChatThread sourceChat)
+    {
+        var copy = await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat);
+        if (copy is not null)
+            await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        return copy;
+    }
+
     private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
         if (string.IsNullOrWhiteSpace(chatPath))
@@ -819,11 +837,10 @@ public partial class Workspaces : MSGComponentBase
         }
 
         var sourceChat = isCopyOfOpenChat ? openChat! : chat;
-        var copy = await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat);
+        var copy = await this.CopyChatAsync(sourceChat);
         if (copy is null)
             return;
 
-        await this.LoadTreeItemsAsync(startPrefetch: false);
         this.CurrentChatThread = copy;
         await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
