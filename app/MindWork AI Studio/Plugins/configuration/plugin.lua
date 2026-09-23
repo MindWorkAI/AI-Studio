@@ -1071,6 +1071,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Selecting search_confluence also selects read_web_page.
 --     ["ToolIds"] = {
 --         "read_web_page",
 --     },
@@ -1176,6 +1177,7 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
 --     -- Optional: preselect a provider or profile by ID.

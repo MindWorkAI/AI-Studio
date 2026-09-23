@@ -11,7 +11,13 @@ public static class ToolSelectionRules
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
 
     public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
-        => selectedToolIds.ToHashSet(StringComparer.Ordinal);
+    {
+        var normalized = selectedToolIds.ToHashSet(StringComparer.Ordinal);
+        if (normalized.Contains(SEARCH_CONFLUENCE_TOOL_ID))
+            normalized.Add(READ_WEB_PAGE_TOOL_ID);
+
+        return normalized;
+    }
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
 
