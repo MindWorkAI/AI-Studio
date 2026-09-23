@@ -351,11 +351,30 @@ public sealed record ChatThread
     }
 
     /// <summary>
-    /// Removes every content block after the selected content in conversation order.
+    /// Rolls this chat thread back, so that the given content becomes the last block of the conversation.
     /// </summary>
+    /// <remarks>
+    /// Every later block is removed in conversation order, which is the order of the time stamps and
+    /// the order in which the chat shows the blocks. That includes the blocks hidden from the user,
+    /// such as the prompts an assistant sends into a chat: the user can neither see nor remove them,
+    /// so leaving them behind would continue the chat with messages nobody knows about. Hidden blocks
+    /// before the content stay, e.g. the example conversation of a chat template. The managed
+    /// transcripts of the removed blocks are deleted with them.<br/><br/>
+    ///
+    /// The augmented data and the AI-selected data sources are reset, too. Both describe the last
+    /// retrieval, not a certain message, so after a rollback nobody knows whether they belong to a
+    /// kept or to a removed one. The next message with active data sources retrieves anew; without
+    /// active data sources, the chat continues without this context. The data source options stay,
+    /// because they are the user's choice rather than the result of a message.<br/><br/>
+    ///
+    /// What stays as well is everything the thread ratchets for security reasons, namely the data
+    /// security and the required provider confidence. Both only ever tighten, because the data which
+    /// raised them was seen by this thread. Removing the message that brought it in does not unsee
+    /// it, so the chat keeps demanding the same of every provider which continues it.
+    /// </remarks>
     /// <param name="content">The content to keep as the last block.</param>
-    /// <returns>True when one or more later blocks were removed.</returns>
-    public bool RemoveBlocksAfter(IContent content)
+    /// <returns>True when one or more later blocks were removed. False when the content is unknown or already the last block; the thread stays unchanged then.</returns>
+    public bool RollBackTo(IContent content)
     {
         var sortedBlocks = this.Blocks.OrderBy(x => x.Time).ToList();
         var blockIndex = sortedBlocks.FindIndex(block => ReferenceEquals(block.Content, content));
@@ -368,6 +387,8 @@ public sealed record ChatThread
             this.Blocks.Remove(block);
         }
 
+        this.AugmentedData = string.Empty;
+        this.AISelectedDataSources = [];
         return true;
     }
 
