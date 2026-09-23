@@ -134,6 +134,13 @@ public static class FileExportFormatExtensions
     }
 
     /// <summary>
+    /// Determines whether the format holds a table rather than a text.
+    /// </summary>
+    /// <param name="format">The format.</param>
+    /// <returns>True for the formats a spreadsheet opens.</returns>
+    public static bool IsTabular(this FileExportFormat format) => format is FileExportFormat.CSV or FileExportFormat.TSV;
+
+    /// <summary>
     /// Returns the file name the save dialog starts with.
     /// </summary>
     /// <remarks>

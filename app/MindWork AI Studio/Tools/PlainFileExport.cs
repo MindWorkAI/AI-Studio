@@ -16,17 +16,20 @@ public static class PlainFileExport
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
 
     /// <summary>
-    /// Reads every table a message holds, in the order they appear in it.
+    /// Reads every file a message holds, in the order they appear in it.
     /// </summary>
     /// <remarks>
-    /// Two kinds of tables end up in an answer. Almost always it is a Markdown table written with
-    /// pipes, which is what a model produces on its own; we turn its cells into a file. Rarely a
-    /// model answers with a fenced code block marked as csv or tsv, which already is the finished
-    /// file: we hand that through untouched rather than taking it apart and reassembling it.
+    /// Two kinds of files end up in an answer. Almost always it is a Markdown table written with
+    /// pipes, which is what a model produces on its own; we turn its cells into a file. Besides,
+    /// a model answers with a fenced code block marked as a format we write, such as html, latex,
+    /// markdown, or csv, whenever it was asked for a web page, a document, or data. Such a block
+    /// already is the finished file: we hand it through untouched rather than taking it apart and
+    /// reassembling it. We do not judge what the block holds, either. A browser shows a fragment of
+    /// HTML just as well as an entire page, and a LaTeX fragment is still what the user asked for.
     /// </remarks>
     /// <param name="markdown">The Markdown text of the message.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
-    /// <returns>The tables, or an empty list when the message holds none.</returns>
+    /// <returns>The files, or an empty list when the message holds none.</returns>
     public static IReadOnlyList<MessageFile> ExtractFiles(string markdown, char separator)
     {
         if (string.IsNullOrWhiteSpace(markdown))
@@ -40,9 +43,10 @@ public static class PlainFileExport
         var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
 
         //
-        // What a table is about stands above it, not in it: models introduce their tables with a
-        // heading. We remember every heading with its line so that each table can take the last
-        // one before it, and fall back to its own first column heading when there is none.
+        // What a file is about stands above it, not in it: models introduce their tables and code
+        // blocks with a heading. We remember every heading with its line so that each file can take
+        // the last one before it. A table falls back to its own first column heading when there is
+        // none; a code block has nothing comparable and stays without a caption.
         //
         var headings = document.Descendants<HeadingBlock>()
             .Select(heading => (heading.Line, Text: ToPlainText(heading)))
@@ -56,11 +60,18 @@ public static class PlainFileExport
         var codeBlocks = document.Descendants<FencedCodeBlock>()
             .Select(block => (block.Line, Content: ToContent(block)));
 
+        //
+        // Tables and code blocks are counted apart. The menu falls back to that number when a
+        // heading cannot tell two files apart, and "Table 2" has to be the second table of the
+        // answer, not the second entry of the menu.
+        //
+        var numberOfTables = 0;
+        var numberOfCodeBlocks = 0;
         return tables.Concat(codeBlocks)
             .Where(entry => entry.Content is not null)
             .OrderBy(entry => entry.Line)
-            .Select((entry, index) => new MessageFile(
-                index + 1,
+            .Select(entry => new MessageFile(
+                entry.Content!.Value.Format.IsTabular() ? ++numberOfTables : ++numberOfCodeBlocks,
                 Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.Content!.Value.Fallback,
                 entry.Content!.Value.Format,
                 entry.Content.Value.Text))
@@ -90,14 +101,22 @@ public static class PlainFileExport
     }
 
     /// <summary>
-    /// Turns a fenced code block into a file, when the model marked it as tabular data.
+    /// Turns a fenced code block into a file, when the model marked it as a format we write.
     /// </summary>
+    /// <remarks>
+    /// A block the model never closed is left out. That happens when an answer broke off, at the
+    /// output limit of the model for example, and the file would end wherever the answer did: half
+    /// a web page or half a table is nothing anybody wants to save.
+    /// </remarks>
     private static (string Fallback, FileExportFormat Format, string Text)? ToContent(FencedCodeBlock block)
     {
-        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format) || format is not (FileExportFormat.CSV or FileExportFormat.TSV))
+        if (block.ClosingFencedCharCount is 0 || !FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format))
             return null;
 
         var content = block.Lines.ToString();
+        if (!format.IsTabular())
+            return (string.Empty, format, content);
+
         var blockSeparator = format is FileExportFormat.TSV ? '\t' : ',';
         var firstLine = content.AsSpan();
         var lineEnd = firstLine.IndexOf('\n');
