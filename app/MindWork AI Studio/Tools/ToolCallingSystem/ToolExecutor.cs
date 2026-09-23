@@ -60,7 +60,8 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         try
         {
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
-            formattedArguments = FormatArguments(document.RootElement, runnableTool.Implementation?.SensitiveTraceArgumentNames ?? EmptySensitiveTraceArgumentNames.INSTANCE);
+            formattedArguments = FormatArguments(document.RootElement, runnableTool.Implementation?.SensitiveTraceArgumentNames ??
+                (toolName == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID ? OutlookMailSensitiveArguments.INSTANCE : EmptySensitiveTraceArgumentNames.INSTANCE));
         }
         catch (JsonException)
         {
@@ -125,8 +126,8 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 WasExecuted = true,
                 Arguments = FormatArguments(document.RootElement,
                     implementation.SensitiveTraceArgumentNames),
-                Result = result.TextContent ?? string.Empty,
-                JsonResult = result.JsonContent,
+                Result = implementation.SensitiveTraceResult ? "Tool result redacted." : result.TextContent ?? string.Empty,
+                JsonResult = implementation.SensitiveTraceResult ? null : result.JsonContent,
             };
 
             return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence, result.Sources);
@@ -180,6 +181,11 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
     private static class EmptySensitiveTraceArgumentNames
     {
         public static readonly IReadOnlySet<string> INSTANCE = new HashSet<string>(StringComparer.Ordinal);
+    }
+
+    private static class OutlookMailSensitiveArguments
+    {
+        public static readonly IReadOnlySet<string> INSTANCE = new HashSet<string>(StringComparer.Ordinal) { "terms", "id" };
     }
 
     private string CreateError(string toolName) => $"Tool '{toolName}' is not available.";

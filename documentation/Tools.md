@@ -54,7 +54,7 @@ Keep `Function.DescriptionForLLM` focused on what the tool does. This value is m
 
 A setting offering a fixed choice takes it from an option source — `RequiredChoice` and `OptionalChoice` name a list the app maintains, see `ToolSettingsOptionSources` — or spells its values out in the field's `enum` list, which is how a definition arriving as data offers a choice of its own. The two are mutually exclusive, and `ToolRegistry` rejects a definition that uses both or names an unknown source. Check a stored value in `ValidateConfigurationAsync` either way: it can predate the current list or arrive from an organization's configuration.
 
-When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks. Provider instances listed in `DataSourceSecuritySettings.TrustedProviderIds` may also continue chats containing data protected this way.
+When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks. Organization trust does not override the persisted confidence threshold.
 
 ## Security
 
@@ -93,6 +93,12 @@ What differs between callers is which targets are acceptable, and that follows f
 `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
 Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
+
+## Outlook Mail
+
+`outlook_mail` is a Windows-only tool for the signed-in employee's primary Exchange mailbox. It requires an HTTPS EWS endpoint ending in `/EWS/Exchange.asmx` and uses Windows integrated authentication. The optional Outlook Web URL is only used to build links when Exchange supplies a message path. Search enumerates folders below `msgfolderroot` and searches each with `FindItem`; read uses `GetItem` and checks the returned parent folder against that enumeration. Folder and result limits can make a search partial. No mailbox address, password, or attachment content is accepted or fetched.
+
+The tool accepts a High-confidence or organization-trusted provider for a call, independently of the adjustable tool confidence setting. Search terms and message IDs are redacted from traces, and mail results are omitted from the trace while still returned to the model. Every mail field returned to the model goes through `PromptInjectionGuardService`. A successful call marks the chat as requiring High confidence; a configuration-trusted provider below High therefore cannot continue that chat under the current chat confidence rule.
 
 ## Checklist
 

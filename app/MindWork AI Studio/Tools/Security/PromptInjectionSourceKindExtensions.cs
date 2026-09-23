@@ -12,6 +12,7 @@ public static class PromptInjectionSourceKindExtensions
         PromptInjectionSourceKind.FILE_CONTENT => TB("File content"),
         PromptInjectionSourceKind.CHAT_ATTACHMENT => TB("Chat attachment"),
         PromptInjectionSourceKind.RETRIEVAL_CONTEXT => TB("Retrieved context"),
+        PromptInjectionSourceKind.MAIL_CONTENT => TB("Outlook Mail"),
         _ => TB("Unknown"),
     };
 }

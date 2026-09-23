@@ -23,6 +23,9 @@ public interface IToolImplementation
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
 
+    /// <summary>Keep sensitive result content out of the persisted tool trace.</summary>
+    public bool SensitiveTraceResult => false;
+
     /// <summary>
     /// Whether this tool returns content it fetched from outside AI Studio, such as a web page.
     /// </summary>
