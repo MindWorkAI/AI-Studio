@@ -141,6 +141,20 @@ public static class FileExportFormatExtensions
     public static bool IsTabular(this FileExportFormat format) => format is FileExportFormat.CSV or FileExportFormat.TSV;
 
     /// <summary>
+    /// Determines whether a file of the format is plain text, which AI Studio writes as it is.
+    /// </summary>
+    /// <remarks>
+    /// That holds for a web page and a LaTeX document as well, even though an entire answer needs
+    /// Pandoc to become one: the answer is Markdown, whereas a page the model wrote is a finished
+    /// file already. A Word or an OpenDocument file is an archive, and only Pandoc produces one. The
+    /// list is spelled out on purpose, so a format added later counts as plain text only once
+    /// somebody says so.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
+    public static bool IsPlainText(this FileExportFormat format) => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV;
+
+    /// <summary>
     /// Returns the file name the save dialog starts with.
     /// </summary>
     /// <remarks>

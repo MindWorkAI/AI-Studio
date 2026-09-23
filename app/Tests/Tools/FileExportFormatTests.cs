@@ -54,6 +54,24 @@ public sealed class FileExportFormatTests
         {
             Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.True);
             Assert.That(format, Is.EqualTo(expectedFormat));
+            Assert.That(format.IsPlainText(), Is.True, "A code block holds text, so the export writes it as it is.");
+        });
+    }
+
+    [Test]
+    public void OnlyTheTwoOfficeFormatsAreNoPlainText()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.MICROSOFT_WORD.IsPlainText(), Is.False, "A Word file is an archive, and writing text into one breaks it.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.IsPlainText(), Is.False);
+            Assert.That(FileExportFormat.NONE.IsPlainText(), Is.False, "No format means no file.");
+            Assert.That(FileExportFormat.UNKNOWN.IsPlainText(), Is.False);
+            Assert.That(FileExportFormat.HTML.IsPlainText(), Is.True, "A page the model wrote is a finished file, even though an entire answer needs Pandoc to become one.");
+            Assert.That(FileExportFormat.LATEX.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.MARKDOWN.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.CSV.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.TSV.IsPlainText(), Is.True);
         });
     }
 

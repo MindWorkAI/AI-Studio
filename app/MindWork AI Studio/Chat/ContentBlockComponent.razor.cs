@@ -147,10 +147,10 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
-    /// The tables this block holds so that the export menu can offer each of them.
+    /// The files this block holds, tables and code blocks, so that the export menu can offer each of them.
     /// </summary>
     /// <remarks>
-    /// Cached the same way the Markdown render plan is: reading the tables means parsing the whole
+    /// Cached the same way the Markdown render plan is: reading the files means parsing the whole
     /// message, and a block re-renders for reasons which have nothing to do with its text, such as
     /// switching the theme, which would parse every message of a long chat again.
     /// </remarks>
@@ -171,30 +171,38 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Names one table in the export menu.
+    /// Names one file in the export menu.
     /// </summary>
     /// <remarks>
-    /// With a single table the format alone says everything. As soon as an answer holds more than
-    /// one, the user has to be able to tell them apart: the heading above a table does that, unless
-    /// it is missing or two tables share one, and then we count them.
+    /// Tables and code blocks are named apart, just as they are counted apart. With a single file of
+    /// its kind the format alone says everything. As soon as an answer holds more than one, the user
+    /// has to be able to tell them apart: the heading above a file does that, unless it is missing
+    /// or two files of the kind share one, and then we count them. A code block always says that it
+    /// is one, because the menu offers the entire answer as a web page or a LaTeX document right
+    /// below, and the two entries must not read alike.
     /// </remarks>
-    private string ExportLabel(MessageFile table)
+    private string ExportLabel(MessageFile file)
     {
-        var tables = this.MessageFiles;
-        if (tables.Count < 2)
-            return table.Format.ToName();
-
-        var captionIsTelling = !string.IsNullOrWhiteSpace(table.Caption)
-                               && tables.Where(entry => entry.Ordinal != table.Ordinal).All(entry => !string.Equals(entry.Caption, table.Caption, StringComparison.Ordinal));
+        var isTable = file.Format.IsTabular();
+        var filesOfItsKind = this.MessageFiles.Where(entry => entry.Format.IsTabular() == isTable).ToList();
+        var extension = file.Format.ToFileExtension();
 
         //
         // The caption is the heading the model wrote, so it already carries the language of the
         // answer and needs no translation of ours. Only the fallback, where we have to count the
-        // tables ourselves, is our own wording.
+        // files ourselves, is our own wording.
         //
-        return captionIsTelling
-            ? $"{table.Caption} ({table.Format.ToFileExtension()})"
-            : string.Format(this.T("Table {0} ({1})"), table.Ordinal, table.Format.ToFileExtension());
+        string name;
+        if (filesOfItsKind.Count < 2)
+            name = file.Format.ToName();
+        else if (!string.IsNullOrWhiteSpace(file.Caption) && filesOfItsKind.Count(entry => string.Equals(entry.Caption, file.Caption, StringComparison.Ordinal)) is 1)
+            name = $"{file.Caption} ({extension})";
+        else
+            return isTable
+                ? string.Format(T("Table {0} ({1})"), file.Ordinal, extension)
+                : string.Format(T("Code block {0} ({1})"), file.Ordinal, extension);
+
+        return isTable ? name : string.Format(T("Code block: {0}"), name);
     }
 
     /// <summary>
@@ -749,13 +757,14 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Exports one file out of the message, exactly as the menu offered it.
+    /// Exports one file out of the message, along with the sources the answer rests on wherever its
+    /// format has room for them.
     /// </summary>
     private async Task ExportFile(MessageFile file)
     {
         try
         {
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, file.Content, file.Caption);
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, this.Content.ToExportContent(file), file.Caption);
         }
         catch (ArgumentOutOfRangeException e)
         {

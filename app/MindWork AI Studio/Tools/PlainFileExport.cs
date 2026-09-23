@@ -178,20 +178,26 @@ public static class PlainFileExport
     }
 
     /// <summary>
-    /// Writes the given text to a plain text file and lets the user save it.
+    /// Writes the given text to a plain text file as it is and lets the user save it.
     /// </summary>
+    /// <remarks>
+    /// Nothing is converted here, which is what sets this apart from PandocExport.ToDocument. A web
+    /// page or a LaTeX document the model wrote is a finished file already and comes through here;
+    /// an entire answer in one of these formats is Markdown and goes to Pandoc instead.
+    /// </remarks>
     /// <param name="rustService">The Rust service, used for the save dialog.</param>
     /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
-    /// <param name="format">The format to write. Must be a format which does not use Pandoc.</param>
-    /// <param name="fileContent">What to write. The caller decides whether that is the entire
-    /// message or one table out of it.</param>
+    /// <param name="format">The format to write. Must be a plain text format, see
+    /// FileExportFormatExtensions.IsPlainText.</param>
+    /// <param name="fileContent">The finished file. The caller decides whether that is the entire
+    /// message or one file out of it.</param>
     /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
     /// Null falls back to a generic name.</param>
     /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, string? fileName = null)
     {
-        if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+        if (!format.IsPlainText() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
         var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
