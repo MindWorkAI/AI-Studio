@@ -1650,10 +1650,11 @@ public partial class ChatComponent : MSGComponentBase
     {
         for (var index = thread.Blocks.Count - 1; index >= 0; index--)
         {
-            if (thread.Blocks[index].Content is not ContentText { IsStreaming: false } text)
+            if (thread.Blocks[index].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported })
                 continue;
 
-            if (!text.ReportedTokens.IsKnown)
+            var usage = reported.ToTokenUsage();
+            if (!usage.IsKnown)
                 continue;
 
             //
@@ -1662,8 +1663,8 @@ public partial class ChatComponent : MSGComponentBase
             // answers of that same other model, so the search ends here and the estimate takes
             // over until this model has answered once.
             //
-            return string.Equals(text.ReportedForModel, model.Id, StringComparison.Ordinal)
-                ? text.ReportedTokens
+            return string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal)
+                ? usage
                 : TokenUsage.UNKNOWN;
         }
 

@@ -62,38 +62,8 @@ public sealed class ContentText : IContent
     /// falls back to the estimate instead of carrying a figure for a conversation which no longer
     /// exists. Null for every answer written before this was recorded, and at every provider which
     /// reports nothing.
-    ///
-    /// Two plain numbers rather than a TokenUsage: that type only ever comes out of its own
-    /// factory, which is what keeps an impossible usage from existing, and a stored field has to be
-    /// readable back by the serializer.
     /// </remarks>
-    public int? ReportedPromptTokens { get; set; }
-
-    /// <summary>
-    /// What the provider said the answer itself cost, where it said anything.
-    /// </summary>
-    /// <remarks>
-    /// Stored, kept, and dropped together with ReportedPromptTokens, for the reasons given there.
-    /// </remarks>
-    public int? ReportedCompletionTokens { get; set; }
-
-    /// <summary>
-    /// Which model the numbers above were charged for.
-    /// </summary>
-    /// <remarks>
-    /// A token count belongs to the tokenizer which produced it. Switch the model of a chat, and
-    /// the same conversation is worth a different number of tokens -- so the reported one stops
-    /// being an answer about the request which is about to be sent, and the estimate, wrong as it
-    /// is, is at least wrong about the right model.
-    /// </remarks>
-    public string? ReportedForModel { get; set; }
-
-    /// <summary>
-    /// What the provider said this exchange cost, which is what the next request carries as its
-    /// history.
-    /// </summary>
-    [JsonIgnore]
-    public TokenUsage ReportedTokens => TokenUsage.OfReported(this.ReportedPromptTokens, this.ReportedCompletionTokens);
+    public ReportedTokenUsage? ReportedUsage { get; set; }
 
     [JsonIgnore]
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
@@ -140,6 +110,29 @@ public sealed class ContentText : IContent
     /// about. What goes is the payload, which belonged to a request that is over.
     /// </remarks>
     public void EndToolRun() => this.PendingToolConversation = [];
+
+    /// <summary>
+    /// Keeps what the provider says the request behind this answer cost.
+    /// </summary>
+    /// <remarks>
+    /// The one place where a stream's usage becomes part of the answer, for every path which writes
+    /// one. It arrives on one line of the stream, usually the last one, and only where the provider
+    /// reports it at all -- so a usage which states nothing leaves what was reported before alone.
+    /// </remarks>
+    /// <param name="usage">What the current chunk of the stream says, which is mostly nothing.</param>
+    /// <param name="modelId">The model the request went to.</param>
+    public void RecordReportedUsage(TokenUsage usage, string modelId)
+    {
+        if (!usage.IsKnown)
+            return;
+
+        this.ReportedUsage = new()
+        {
+            PromptTokens = usage.PromptTokens,
+            CompletionTokens = usage.CompletionTokens,
+            ModelId = modelId,
+        };
+    }
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -230,17 +223,8 @@ public sealed class ContentText : IContent
                         // Merge the sources:
                         this.Sources.MergeSources(contentStreamChunk.Sources);
 
-                        //
-                        // Keep what the provider says the request cost. It arrives on one line of
-                        // the stream, usually the last one, and only where the provider reports it
-                        // at all -- so the previous value is kept rather than cleared:
-                        //
-                        if (contentStreamChunk.Usage.IsKnown)
-                        {
-                            this.ReportedPromptTokens = contentStreamChunk.Usage.PromptTokens;
-                            this.ReportedCompletionTokens = contentStreamChunk.Usage.CompletionTokens;
-                            this.ReportedForModel = chatModel.Id;
-                        }
+                        // Keep what the provider says the request cost:
+                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
