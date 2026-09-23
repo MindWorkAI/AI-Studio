@@ -158,9 +158,11 @@ public partial class ChatComponent : MSGComponentBase
     /// What the helper text under the input field says about the token budget.
     /// </summary>
     /// <remarks>
-    /// Four sentences rather than one built from pieces, because a translator needs to see the
-    /// whole thing: which of the two numbers is the limit, and where the word for "about" belongs,
-    /// are decisions no language makes the same way.
+    /// The number of the conversation and the window stand in four whole sentences, because a
+    /// translator needs to see the whole thing: which of the two numbers is the limit, and where the
+    /// word for "about" belongs, are decisions no language makes the same way. What follows -- the
+    /// tools' share, the draft, the pictures -- is added as clauses which are whole phrases in turn,
+    /// each with the one number it is about.
     ///
     /// The images are named rather than counted. Every vendor charges a picture differently, and
     /// none of those rules can be applied without decoding the file, so the honest answer is to say
@@ -173,24 +175,43 @@ public partial class ChatComponent : MSGComponentBase
             if (!this.conversationTokens.IsKnown)
                 return string.Empty;
 
-            var used = TokenAmount.Format(this.conversationTokens.Tokens, this.currentCulture);
+            //
+            // Several statements, and which of them can be trusted differs. What the conversation
+            // has cost is exact wherever the provider said it; the window is whatever somebody
+            // wrote down about the model; what the tools add is only there while they work;
+            // what is being written has never been sent and can only ever be estimated. So they
+            // are named apart, and the word which marks a guess sits where the guess is.
+            //
+            var history = TokenAmount.Format(this.conversationTokens.HistoryTokens, this.currentCulture);
+            var historyIsExact = this.conversationTokens.HistoryIsReported || !this.conversationTokens.IsEstimate;
             var budget = this.conversationTokens.Window.IsKnown
-                ? string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} of {1} tokens") : this.T("{0} of {1} tokens"), used, TokenAmount.Format(this.conversationTokens.Window.DefaultTokens, this.currentCulture))
-                : string.Format(this.conversationTokens.IsEstimate ? this.T("approx. {0} tokens") : this.T("{0} tokens"), used);
+                ? string.Format(historyIsExact ? this.T("{0} of {1} tokens") : this.T("approx. {0} of {1} tokens"), history, TokenAmount.Format(this.conversationTokens.Window.DefaultTokens, this.currentCulture))
+                : string.Format(historyIsExact ? this.T("{0} tokens") : this.T("approx. {0} tokens"), history);
 
-            if (this.conversationTokens.UncountedImages is 0)
-                return budget;
+            //
+            // Said while the tools work, so that the number does not climb and fall back without a
+            // reason anybody could see: all of it is sent with every round of this request, and none
+            // of it with the next message.
+            //
+            if (this.conversationTokens.ToolTokens > 0)
+                budget = string.Format(this.T("{0}, of which approx. {1} from tools"), budget, TokenAmount.Format(this.conversationTokens.ToolTokens, this.currentCulture));
+
+            if (this.conversationTokens.DraftTokens > 0)
+                budget = string.Format(this.T("{0}, plus approx. {1} for your message"), budget, TokenAmount.Format(this.conversationTokens.DraftTokens, this.currentCulture));
 
             //
             // The pictures of the whole conversation, not of the message being written: every one
             // of them is sent again with every further message, so a chat runs past the model's
-            // limit long after anybody last thought about images.
+            // limit long after anybody last thought about images. That is worth saying even when the
+            // provider counted all of them.
             //
-            var images = this.conversationTokens.TooManyImages
-                ? string.Format(this.T("plus {0} image(s), which is more than the {1} this model accepts"), this.conversationTokens.UncountedImages, this.conversationTokens.ImageLimits.MaxInOneMessage)
-                : string.Format(this.T("plus {0} image(s), which cannot be counted"), this.conversationTokens.UncountedImages);
+            if (this.conversationTokens.TooManyImages)
+                return $"{budget} {string.Format(this.T("plus {0} image(s), which is more than the {1} this model accepts"), this.conversationTokens.Images, this.conversationTokens.ImageLimits.MaxInOneMessage)}";
 
-            return $"{budget} {images}";
+            if (this.conversationTokens.UncountedImages is 0)
+                return budget;
+
+            return $"{budget} {string.Format(this.T("plus {0} image(s), which cannot be counted"), this.conversationTokens.UncountedImages)}";
         }
     }
 
@@ -1584,6 +1605,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         var provider = AIStudio.Settings.Provider.NONE;
         var parts = ConversationParts.NOTHING;
+        var reported = ReportedHistory.UNKNOWN;
 
         //
         // Collected on the render thread, counted off it. Counting may take an IPC call per text,
@@ -1602,9 +1624,10 @@ public partial class ChatComponent : MSGComponentBase
             var toolDefinitions = this.GetRunnableToolDefinitions();
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
+            reported = thread.ReportedHistoryFor(provider.Model);
         });
 
-        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, token);
+        var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, reported, token);
         if (token.IsCancellationRequested)
             return;
 

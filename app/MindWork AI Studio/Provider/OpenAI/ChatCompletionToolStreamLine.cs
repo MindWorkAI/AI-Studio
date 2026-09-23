@@ -11,4 +11,15 @@ namespace AIStudio.Provider.OpenAI;
 /// </remarks>
 /// <param name="Id">The ID of the answer.</param>
 /// <param name="Choices">The choices this line adds to.</param>
-public sealed record ChatCompletionToolStreamLine(string? Id, IList<ChatCompletionToolStreamChoice?>? Choices);
+public sealed record ChatCompletionToolStreamLine(string? Id, IList<ChatCompletionToolStreamChoice?>? Choices)
+{
+    /// <summary>
+    /// What the provider says the request cost, on the one line which carries it.
+    /// </summary>
+    /// <remarks>
+    /// The same block the plain text path reads, and asked for the same way: every streamed
+    /// ChatCompletionAPIRequest asks for it, the requests of the tool rounds included. Not a
+    /// positional parameter, because nobody but the serializer ever builds this line.
+    /// </remarks>
+    public ChatCompletionUsage? Usage { get; init; }
+}

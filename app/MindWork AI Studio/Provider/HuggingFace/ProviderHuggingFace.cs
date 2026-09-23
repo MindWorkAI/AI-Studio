@@ -184,6 +184,15 @@ public sealed class ProviderHuggingFace : BaseProvider
                                    AdditionalApiParameters = apiParameters
                                };
                            },
+
+                           //
+                           // Hugging Face answers parallel_tool_calls=false with a bad request, "feature
+                           // not currently supported", and its specification of the chat completion does
+                           // not list the parameter at all -- read on 2026-09-23 at
+                           // https://huggingface.co/docs/inference-providers/tasks/chat-completion. Asking
+                           // for it would cost every chat which offers tools its answer:
+                           //
+                           mayAskForSequentialToolCalls: false,
                            token: token))
             yield return content;
     }

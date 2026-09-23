@@ -52,6 +52,21 @@ public sealed class ContentText : IContent
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
+    /// <summary>
+    /// What the provider said everything sent along with this answer cost, where it said anything.
+    /// </summary>
+    /// <remarks>
+    /// Kept on the answer rather than beside the chat, so that it is stored, loaded, and exported
+    /// with the message it belongs to -- and so that it goes away when the message does. An edited
+    /// or regenerated answer removes its block, which removes these numbers with it. Null for every
+    /// answer written before this was recorded, and at every provider which reports nothing.
+    ///
+    /// Having a report is not the same as the report still being true. Whether it still describes
+    /// the conversation is decided by ChatThread.ReportedHistoryFor, which looks at the thread around
+    /// the answer, not just at the answer.
+    /// </remarks>
+    public ReportedTokenUsage? ReportedUsage { get; set; }
+
     [JsonIgnore]
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
 
@@ -97,6 +112,30 @@ public sealed class ContentText : IContent
     /// about. What goes is the payload, which belonged to a request that is over.
     /// </remarks>
     public void EndToolRun() => this.PendingToolConversation = [];
+
+    /// <summary>
+    /// Keeps what the provider says the request behind this answer cost.
+    /// </summary>
+    /// <remarks>
+    /// The one place where a stream's usage becomes part of the answer, for every path which writes
+    /// one. It arrives on one line of the stream, usually the last one, and only where the provider
+    /// reports it at all -- so a usage which states nothing leaves what was reported before alone.
+    /// </remarks>
+    /// <param name="usage">What the current chunk of the stream says, which is mostly nothing.</param>
+    /// <param name="modelId">The model the request went to.</param>
+    /// <param name="blockCount">How many blocks the conversation had when the request went out, this answer included.</param>
+    public void RecordReportedUsage(TokenUsage usage, string modelId, int blockCount)
+    {
+        if (!usage.IsKnown)
+            return;
+
+        this.ReportedUsage = new()
+        {
+            PromptTokens = usage.PromptTokens,
+            ModelId = modelId,
+            BlockCount = blockCount,
+        };
+    }
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -158,7 +197,10 @@ public sealed class ContentText : IContent
 
         // Get the settings manager:
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
-        
+
+        // What the request carries, for telling later whether a report still describes this chat:
+        var blocksSent = chatThread.Blocks.Count;
+
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         try
@@ -186,6 +228,9 @@ public sealed class ContentText : IContent
 
                         // Merge the sources:
                         this.Sources.MergeSources(contentStreamChunk.Sources);
+
+                        // Keep what the provider says the request cost:
+                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id, blocksSent);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
@@ -310,6 +355,12 @@ public sealed class ContentText : IContent
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The reported usage stays behind on purpose. A clone continues somewhere else -- as the
+    /// example conversation of a chat template, or as an assistant's conversation carried over into
+    /// a chat -- with another system prompt around it, and what the provider stated was for the
+    /// request this answer came out of.
+    /// </remarks>
     public IContent DeepClone() => new ContentText
     {
         Text = this.Text,

@@ -300,11 +300,14 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             var lastStreamingEvent = DateTimeOffset.MinValue;
             if (!TrySetWaitingForRemote(state, token))
                 return;
-            
+
+            // What the request carries, for telling later whether a report still describes this chat:
+            var blocksSent = chatThread.Blocks.Count;
+
             await this.NotifyChangedAsync(state);
             await foreach (var contentStreamChunk in provider.StreamChatCompletion(request.ProviderSettings.Model, chatThread, settingsManager, token))
             {
-                if (!TryApplyStreamChunk(state, contentStreamChunk, token))
+                if (!TryApplyStreamChunk(state, contentStreamChunk, blocksSent, token))
                     break;
 
                 var now = DateTimeOffset.Now;
@@ -443,7 +446,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         }
     }
 
-    private static bool TryApplyStreamChunk(AIJobState state, ContentStreamChunk contentStreamChunk, CancellationToken token)
+    private static bool TryApplyStreamChunk(AIJobState state, ContentStreamChunk contentStreamChunk, int blocksSent, CancellationToken token)
     {
         lock (state.SyncRoot)
         {
@@ -455,6 +458,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
             aiText.IsStreaming = true;
             aiText.Text += contentStreamChunk;
             aiText.Sources.MergeSources(contentStreamChunk.Sources);
+            aiText.RecordReportedUsage(contentStreamChunk.Usage, state.ChatGenerationRequest.ProviderSettings.Model.Id, blocksSent);
 
             if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {
