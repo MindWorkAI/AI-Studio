@@ -62,7 +62,7 @@ public sealed class ContentText : IContent
     /// answer written before this was recorded, and at every provider which reports nothing.
     ///
     /// Having a report is not the same as the report still being true. Whether it still describes
-    /// the conversation is decided by ChatThread.ReportedUsageFor, which looks at the thread around
+    /// the conversation is decided by ChatThread.ReportedHistoryFor, which looks at the thread around
     /// the answer, not just at the answer.
     /// </remarks>
     public ReportedTokenUsage? ReportedUsage { get; set; }
@@ -132,7 +132,6 @@ public sealed class ContentText : IContent
         this.ReportedUsage = new()
         {
             PromptTokens = usage.PromptTokens,
-            CompletionTokens = usage.CompletionTokens,
             ModelId = modelId,
             BlockCount = blockCount,
         };

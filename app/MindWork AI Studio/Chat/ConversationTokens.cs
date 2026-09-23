@@ -61,8 +61,11 @@ public readonly record struct ConversationTokens
     /// </summary>
     /// <remarks>
     /// True once a provider has stated what a request of this conversation cost, which makes
-    /// everything but the draft an exact number. It says nothing about the draft, which stays an
-    /// estimate either way -- nobody has charged for that one yet.
+    /// everything up to the last answer an exact number. That answer is counted by this app, since
+    /// the provider's number for it includes reasoning which no request carries; next to the rest
+    /// of the conversation, its share of the error is small enough to still call the history exact.
+    /// It says nothing about the draft, which stays an estimate either way -- nobody has charged
+    /// for that one yet.
     /// </remarks>
     public bool HistoryIsReported { get; init; }
 

@@ -69,12 +69,13 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
     /// <param name="provider">The configured provider, which decides both the tokenizer and the window.</param>
     /// <param name="parts">What the conversation would send, collected beforehand.</param>
     /// <param name="reported">
-    /// What a provider said the last request of this conversation cost, where one did. It replaces
-    /// everything the app would otherwise estimate about the conversation so far.
+    /// What a provider counted for the request behind the last answer, where its report still
+    /// describes this conversation. Together with that answer, it replaces everything the app would
+    /// otherwise estimate about the conversation so far.
     /// </param>
     /// <param name="token">Ends the counting when nobody needs the answer anymore.</param>
     /// <returns>What the conversation costs, or that nothing could be counted.</returns>
-    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, TokenUsage reported = default, CancellationToken token = default)
+    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, ReportedHistory reported, CancellationToken token = default)
     {
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             return ConversationTokens.UNAVAILABLE;
@@ -83,6 +84,7 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
         var previouslyGrowing = this.stillGrowing;
         var growing = new Dictionary<string, int>(StringComparer.Ordinal);
         var tokens = 0;
+        var reportedTokens = 0;
 
         try
         {
@@ -106,6 +108,14 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
 
             foreach (var document in parts.Documents)
                 tokens += await this.CountDocumentAsync(provider, document, token);
+
+            //
+            // The last answer is counted as the text it is sent as, not taken from the report:
+            // ReportedHistory says why the provider's number for it is the wrong one. It is a
+            // finished text of the conversation, so the cache has it already.
+            //
+            if (reported.IsKnown)
+                reportedTokens = reported.PromptTokens + await this.CountTextAsync(provider, reported.LastAnswer, token);
         }
         catch (OperationCanceledException)
         {
@@ -146,14 +156,14 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
 
         //
         // Where a provider has said what this conversation cost, that number replaces everything
-        // but the draft. It is the only exact one of the two, and it covers the same ground: the
-        // system prompt, the tools, and every message which has been sent.
+        // but the last answer and the draft. It is the only exact one of the two, and it covers
+        // the same ground: the system prompt, the tools, and every message which has been sent.
         //
         var historyIsReported = reported.IsKnown;
         return new()
         {
             IsKnown = true,
-            Tokens = historyIsReported ? reported.TotalTokens + draftTokens : tokens,
+            Tokens = historyIsReported ? reportedTokens + draftTokens : tokens,
             IsEstimate = string.IsNullOrWhiteSpace(provider.TokenizerPath),
             DraftTokens = draftTokens,
             HistoryIsReported = historyIsReported,

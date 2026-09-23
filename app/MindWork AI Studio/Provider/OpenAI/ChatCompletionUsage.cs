@@ -5,9 +5,12 @@ namespace AIStudio.Provider.OpenAI;
 /// What an OpenAI-compatible provider reports a chat completion cost.
 /// </summary>
 /// <remarks>
-/// Every number is optional because this is somebody else's JSON: the block arrives only when the
+/// The number is optional because this is somebody else's JSON: the block arrives only when the
 /// request asked for it, and the providers which follow the shape loosely leave fields out. Reading
 /// it is one thing, believing it another -- TokenUsage.OfReported decides that.
+///
+/// The block states more than this, the completion and its reasoning share among it. Those are left
+/// unread on purpose, for the reason given at TokenUsage: no later request carries them.
 /// </remarks>
 public sealed record ChatCompletionUsage
 {
@@ -17,11 +20,6 @@ public sealed record ChatCompletionUsage
     public int? PromptTokens { get; init; }
 
     /// <summary>
-    /// What the model wrote in answer.
-    /// </summary>
-    public int? CompletionTokens { get; init; }
-
-    /// <summary>
     /// States what this block reports, as far as it can be believed.
     /// </summary>
     /// <remarks>
@@ -29,5 +27,5 @@ public sealed record ChatCompletionUsage
     /// so that what counts as believable is decided in a single place.
     /// </remarks>
     /// <returns>The usage, or TokenUsage.UNKNOWN when the block states nothing usable.</returns>
-    public TokenUsage ToTokenUsage() => TokenUsage.OfReported(this.PromptTokens, this.CompletionTokens);
+    public TokenUsage ToTokenUsage() => TokenUsage.OfReported(this.PromptTokens);
 }

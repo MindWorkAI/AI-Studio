@@ -13,7 +13,7 @@ namespace AIStudio.Tests.Chat;
 /// exactly the state the report was taken in, and the report counts again.
 /// </remarks>
 [TestFixture]
-public sealed class ChatThreadReportedUsageTests
+public sealed class ChatThreadReportedHistoryTests
 {
     private static readonly DateTimeOffset START = new(2026, 9, 23, 10, 0, 0, TimeSpan.Zero);
 
@@ -26,12 +26,39 @@ public sealed class ChatThreadReportedUsageTests
     {
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2));
 
-        var usage = thread.ReportedUsageFor(MODEL);
+        var history = thread.ReportedHistoryFor(MODEL);
 
         Assert.Multiple(() =>
         {
-            Assert.That(usage.IsKnown, Is.True);
-            Assert.That(usage.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.IsKnown, Is.True);
+            Assert.That(history.PromptTokens, Is.EqualTo(1200));
+
+            //
+            // The answer comes along as text rather than as the provider's number for it, which
+            // would include the reasoning the next request never carries:
+            //
+            Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
+        });
+    }
+
+    [Test]
+    public void AnAnswerWithoutTextAddsNothingToThePrompt()
+    {
+        //
+        // An answer which consists of reasoning only. It may be kept to be read, but without any
+        // text it is never sent, so what the provider counted is all the next request carries of
+        // the conversation so far.
+        //
+        var reasoningOnly = new ContentText { Text = string.Empty };
+        reasoningOnly.RecordReportedUsage(TokenUsage.Of(1200), MODEL.Id, 2);
+        var thread = Thread(Question(1), Block(ChatRole.AI, reasoningOnly, 2));
+
+        var history = thread.ReportedHistoryFor(MODEL);
+        Assert.Multiple(() =>
+        {
+            Assert.That(history.IsKnown, Is.True);
+            Assert.That(history.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.LastAnswer, Is.Empty);
         });
     }
 
@@ -45,7 +72,7 @@ public sealed class ChatThreadReportedUsageTests
         //
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2), Question(3));
 
-        Assert.That(thread.ReportedUsageFor(MODEL).IsKnown, Is.False);
+        Assert.That(thread.ReportedHistoryFor(MODEL).IsKnown, Is.False);
     }
 
     [Test]
@@ -54,7 +81,7 @@ public sealed class ChatThreadReportedUsageTests
         var streaming = Block(ChatRole.AI, new ContentText { Text = "Half an ans", IsStreaming = true }, 4);
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2), Question(3), streaming);
 
-        Assert.That(thread.ReportedUsageFor(MODEL).IsKnown, Is.False);
+        Assert.That(thread.ReportedHistoryFor(MODEL).IsKnown, Is.False);
     }
 
     [Test]
@@ -67,7 +94,7 @@ public sealed class ChatThreadReportedUsageTests
         var withoutReport = Block(ChatRole.AI, new ContentText { Text = "Second answer" }, 4);
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2), Question(3), withoutReport);
 
-        Assert.That(thread.ReportedUsageFor(MODEL).IsKnown, Is.False);
+        Assert.That(thread.ReportedHistoryFor(MODEL).IsKnown, Is.False);
     }
 
     [Test]
@@ -82,7 +109,7 @@ public sealed class ChatThreadReportedUsageTests
 
         thread.Remove(firstQuestion.Content!);
 
-        Assert.That(thread.ReportedUsageFor(MODEL).IsKnown, Is.False);
+        Assert.That(thread.ReportedHistoryFor(MODEL).IsKnown, Is.False);
     }
 
     [Test]
@@ -90,7 +117,7 @@ public sealed class ChatThreadReportedUsageTests
     {
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2));
 
-        Assert.That(thread.ReportedUsageFor(OTHER_MODEL).IsKnown, Is.False);
+        Assert.That(thread.ReportedHistoryFor(OTHER_MODEL).IsKnown, Is.False);
     }
 
     [Test]
@@ -107,11 +134,12 @@ public sealed class ChatThreadReportedUsageTests
         thread.Remove(lastQuestion.Content!);
         thread.Remove(lastAnswer.Content!);
 
-        var usage = thread.ReportedUsageFor(MODEL);
+        var history = thread.ReportedHistoryFor(MODEL);
         Assert.Multiple(() =>
         {
-            Assert.That(usage.IsKnown, Is.True, "The first answer is the last block again, with exactly the blocks it was reported for.");
-            Assert.That(usage.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.IsKnown, Is.True, "The first answer is the last block again, with exactly the blocks it was reported for.");
+            Assert.That(history.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
         });
     }
 
@@ -123,11 +151,12 @@ public sealed class ChatThreadReportedUsageTests
 
         thread.RollBackTo(firstAnswer.Content!);
 
-        var usage = thread.ReportedUsageFor(MODEL);
+        var history = thread.ReportedHistoryFor(MODEL);
         Assert.Multiple(() =>
         {
-            Assert.That(usage.IsKnown, Is.True);
-            Assert.That(usage.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.IsKnown, Is.True);
+            Assert.That(history.PromptTokens, Is.EqualTo(1200));
+            Assert.That(history.LastAnswer, Is.EqualTo("Answer 2"));
         });
     }
 
@@ -141,7 +170,7 @@ public sealed class ChatThreadReportedUsageTests
     private static ContentBlock Answer(int minute, int promptTokens, int blockCount)
     {
         var answer = new ContentText { Text = $"Answer {minute}" };
-        answer.RecordReportedUsage(TokenUsage.Of(promptTokens, 100), MODEL.Id, blockCount);
+        answer.RecordReportedUsage(TokenUsage.Of(promptTokens), MODEL.Id, blockCount);
         return Block(ChatRole.AI, answer, minute);
     }
 

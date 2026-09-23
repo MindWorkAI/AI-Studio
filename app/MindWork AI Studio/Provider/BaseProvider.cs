@@ -1128,7 +1128,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 {
                     yield return providerResponse.ContainsContent()
                         ? providerResponse.GetContent() with { Usage = usage }
-                        : new(string.Empty, [], usage);
+                        : new(string.Empty, [], Usage: usage);
 
                     continue;
                 }

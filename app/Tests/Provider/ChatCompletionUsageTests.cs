@@ -43,8 +43,6 @@ public sealed class ChatCompletionUsageTests
         {
             Assert.That(line!.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(1200));
-            Assert.That(line.GetUsage().CompletionTokens, Is.EqualTo(345));
-            Assert.That(line.GetUsage().TotalTokens, Is.EqualTo(1545));
 
             //
             // The line which carries the usage carries no answer, which is why it has to be read
@@ -109,9 +107,10 @@ public sealed class ChatCompletionUsageTests
     /// The line a real LM Studio server sends, taken off the wire.
     /// </summary>
     /// <remarks>
-    /// It carries fields the shape above does not name -- the reasoning share of the completion,
-    /// among them -- and a server which sends more than we read must not stop us from reading what
-    /// we came for.
+    /// It carries far more than we read, and it shows why the prompt is all we take: 102 of the 116
+    /// completion tokens are the model's reasoning, which the next request never carries. Counting
+    /// the completion would have put the history at 133 tokens, when what travels on is the prompt
+    /// and an answer of a handful of tokens.
     /// </remarks>
     [Test]
     public void ARealServerLineIsRead()
@@ -124,22 +123,7 @@ public sealed class ChatCompletionUsageTests
         Assert.Multiple(() =>
         {
             Assert.That(line!.GetUsage().IsKnown, Is.True);
-            Assert.That(line.GetUsage().TotalTokens, Is.EqualTo(133));
-        });
-    }
-
-    /// <summary>
-    /// An answer cut off before it wrote anything still cost its prompt.
-    /// </summary>
-    [Test]
-    public void AnAnswerOfNoTokensIsStillACost()
-    {
-        var usage = TokenUsage.OfReported(900, 0);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(usage.IsKnown, Is.True);
-            Assert.That(usage.TotalTokens, Is.EqualTo(900));
+            Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(17));
         });
     }
 }

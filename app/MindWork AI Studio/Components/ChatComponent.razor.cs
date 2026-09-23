@@ -1595,7 +1595,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         var provider = AIStudio.Settings.Provider.NONE;
         var parts = ConversationParts.NOTHING;
-        var reported = TokenUsage.UNKNOWN;
+        var reported = ReportedHistory.UNKNOWN;
 
         //
         // Collected on the render thread, counted off it. Counting may take an IPC call per text,
@@ -1614,7 +1614,7 @@ public partial class ChatComponent : MSGComponentBase
             var toolDefinitions = this.GetRunnableToolDefinitions();
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
-            reported = thread.ReportedUsageFor(provider.Model);
+            reported = thread.ReportedHistoryFor(provider.Model);
         });
 
         var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, reported, token);

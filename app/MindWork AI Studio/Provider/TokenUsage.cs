@@ -1,12 +1,17 @@
 namespace AIStudio.Provider;
 
 /// <summary>
-/// What a provider said one request actually cost, in tokens.
+/// What a provider said one request actually carried, in tokens.
 /// </summary>
 /// <remarks>
 /// The counterpart to what the app counts for itself: the app estimates what the next request will
-/// cost, while this is what the provider charged for the last one. Two different statements, and
+/// cost, while this is what the provider counted for the last one. Two different statements, and
 /// this one is the only exact one of the two.
+///
+/// Only the prompt is kept. Providers state what the answer cost as well, but that number includes
+/// the model's reasoning and whatever the model wrote between think tags, and neither of them ever
+/// becomes part of the answer's text. No later request carries them, so the number has no place in
+/// a statement about those requests.
 ///
 /// Nothing here says "unknown" with a zero. The default value of this type is unknown, which is the
 /// right answer for every provider which reports nothing, and a counted request can never cost zero
@@ -20,7 +25,7 @@ public readonly record struct TokenUsage
     public static readonly TokenUsage UNKNOWN = new();
 
     /// <summary>
-    /// Whether a provider reported anything at all. When false, the numbers are meaningless.
+    /// Whether a provider reported anything at all. When false, the number is meaningless.
     /// </summary>
     public bool IsKnown { get; private init; }
 
@@ -31,36 +36,22 @@ public readonly record struct TokenUsage
     public int PromptTokens { get; private init; }
 
     /// <summary>
-    /// What the model wrote in answer.
-    /// </summary>
-    public int CompletionTokens { get; private init; }
-
-    /// <summary>
-    /// What the whole exchange cost, which is what the next request carries as its history.
-    /// </summary>
-    public int TotalTokens => this.PromptTokens + this.CompletionTokens;
-
-    /// <summary>
     /// States what a provider reported.
     /// </summary>
     /// <remarks>
-    /// A completion of zero tokens is a real answer: a model which was cut off before writing
-    /// anything still cost its prompt. A prompt of zero is not, because there is no request
-    /// without one, and a provider sending it means we read the wrong field.
+    /// A prompt of zero is not a report, because there is no request without one, and a provider
+    /// sending it means we read the wrong field.
     /// </remarks>
     /// <param name="promptTokens">What the request carried. Has to be greater than zero.</param>
-    /// <param name="completionTokens">What the answer cost. Zero or more.</param>
     /// <returns>The usage.</returns>
-    public static TokenUsage Of(int promptTokens, int completionTokens)
+    public static TokenUsage Of(int promptTokens)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(promptTokens);
-        ArgumentOutOfRangeException.ThrowIfNegative(completionTokens);
 
         return new()
         {
             IsKnown = true,
             PromptTokens = promptTokens,
-            CompletionTokens = completionTokens,
         };
     }
 
@@ -68,14 +59,10 @@ public readonly record struct TokenUsage
     /// States what a provider reported, or unknown when it reported nothing usable.
     /// </summary>
     /// <remarks>
-    /// For the reading side, where the numbers come out of somebody else's JSON: a missing field, a
-    /// null, or a zero prompt all mean the same thing there, and none of them is worth an exception.
+    /// For the reading side, where the number comes out of somebody else's JSON: a missing field, a
+    /// null, or a zero all mean the same thing there, and none of them is worth an exception.
     /// </remarks>
     /// <param name="promptTokens">What the request carried, as the provider stated it.</param>
-    /// <param name="completionTokens">What the answer cost, as the provider stated it.</param>
     /// <returns>The usage, or UNKNOWN.</returns>
-    public static TokenUsage OfReported(int? promptTokens, int? completionTokens) =>
-        promptTokens is > 0
-            ? Of(promptTokens.Value, completionTokens is > 0 ? completionTokens.Value : 0)
-            : UNKNOWN;
+    public static TokenUsage OfReported(int? promptTokens) => promptTokens is > 0 ? Of(promptTokens.Value) : UNKNOWN;
 }

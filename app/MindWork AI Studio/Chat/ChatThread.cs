@@ -416,22 +416,25 @@ public sealed record ChatThread
     /// is a lot of machinery for a number which corrects itself one answer later.
     /// </remarks>
     /// <param name="model">The model the next request would go to.</param>
-    /// <returns>What the provider reported, or unknown when no report describes this conversation.</returns>
-    public TokenUsage ReportedUsageFor(Model model)
+    /// <returns>
+    /// What the provider reported, together with the answer which followed it, or
+    /// ReportedHistory.UNKNOWN when no report describes this conversation.
+    /// </returns>
+    public ReportedHistory ReportedHistoryFor(Model model)
     {
         if (this.Blocks.Count is 0)
-            return TokenUsage.UNKNOWN;
+            return ReportedHistory.UNKNOWN;
 
-        if (this.Blocks[^1].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported })
-            return TokenUsage.UNKNOWN;
+        if (this.Blocks[^1].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported } answer)
+            return ReportedHistory.UNKNOWN;
 
         if (reported.BlockCount != this.Blocks.Count)
-            return TokenUsage.UNKNOWN;
+            return ReportedHistory.UNKNOWN;
 
         if (!string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal))
-            return TokenUsage.UNKNOWN;
+            return ReportedHistory.UNKNOWN;
 
-        return reported.ToTokenUsage();
+        return ReportedHistory.Of(reported.ToTokenUsage(), answer.Text);
     }
 
     private static void DeleteManagedAttachments(ContentBlock block)
