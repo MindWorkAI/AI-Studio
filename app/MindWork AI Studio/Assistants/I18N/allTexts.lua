@@ -3268,6 +3268,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347088452"] = "Result"
 -- Do you really want to remove this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Do you really want to remove this message?"
 
+-- Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347725178"] = "Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."
+
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Yes, remove the AI response and edit it"
 
@@ -3291,6 +3294,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1820166585"] = "Yes, re
 
 -- Number of sources
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1848978959"] = "Number of sources"
+
+-- Code block {0} ({1})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1934297017"] = "Code block {0} ({1})"
 
 -- Show {0} tool calls
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1981771421"] = "Show {0} tool calls"
@@ -3319,11 +3325,17 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "Export 
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Number of attachments"
 
+-- Roll back to this response
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3132525321"] = "Roll back to this response"
+
 -- Cannot render content of type {0} yet.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Cannot render content of type {0} yet."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Edit"
+
+-- Roll Back Chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3304283125"] = "Roll Back Chat"
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3424652889"] = "Unknown"
@@ -3334,8 +3346,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Regener
 -- Blocked
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blocked"
 
+-- Code block: {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3840086915"] = "Code block: {0}"
+
 -- Do you really want to regenerate this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3878878761"] = "Do you really want to regenerate this message?"
+
+-- Yes, roll back the chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3951371697"] = "Yes, roll back the chat"
 
 -- Remove Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Remove Message"
@@ -3609,6 +3627,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Italic"
 
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T241403726"] = "The media transcription was canceled."
+
+-- Copy this chat & continue in the copy.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2634509198"] = "Copy this chat & continue in the copy."
 
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile usage is disabled according to your chat template settings."
@@ -5296,8 +5317,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T588743762"] = "An error o
 -- The transcription result is empty.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "The transcription result is empty."
 
+-- Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1047391993"] = "Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."
+
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Move chat"
+
+-- Copy Chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1192756314"] = "Copy Chat"
 
 -- Loading chats...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1364857726"] = "Loading chats..."
@@ -5365,6 +5392,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3249036008"] = "There is alr
 -- Please enter a workspace name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Please enter a workspace name."
 
+-- Copy chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3337233722"] = "Copy chat"
+
 -- Rename
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Rename"
 
@@ -5379,6 +5409,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3555709365"] = "Load Chat"
 
 -- Add Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3672981145"] = "Add Workspace"
+
+-- Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3699436634"] = "Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."
 
 -- Chat Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3891063690"] = "Chat Name"
@@ -13000,14 +13033,32 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] =
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1016188706"] = "Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"
 
+-- Copy Chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1192756314"] = "Copy Chat"
+
 -- Unnamed workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unnamed workspace"
 
+-- Copy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1703884388"] = "Copy"
+
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Delete Chat"
+
+-- Please enter a chat name.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2301651387"] = "Please enter a chat name."
 
 -- Are you sure you want to delete the temporary chat '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Are you sure you want to delete the temporary chat '{0}'?"
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unnamed chat"
+
+-- Please enter a name for the copy of your chat '{0}':
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3323676840"] = "Please enter a name for the copy of your chat '{0}':"
+
+-- Copy of {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3365678931"] = "Copy of {0}"
+
+-- Chat Name
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3891063690"] = "Chat Name"

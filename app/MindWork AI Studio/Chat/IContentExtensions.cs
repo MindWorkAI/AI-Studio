@@ -67,26 +67,65 @@ public static class IContentExtensions
             return false;
         }
 
-        var answer = text.Text.Trim();
-        var sources = text.Sources.ToExportMarkdown(keepPageAnchors);
-        if (sources.Length == 0)
-        {
-            markdown = answer;
-            return true;
-        }
+        markdown = AppendSources(text.Text.Trim(), text.Sources.ToExportMarkdown(keepPageAnchors));
+        return true;
+    }
 
-        if (answer.Length == 0)
-        {
-            markdown = sources;
-            return true;
-        }
+    /// <summary>
+    /// Reads one file out of this content the way it leaves AI Studio, together with the sources
+    /// the answer rests on.
+    /// </summary>
+    /// <remarks>
+    /// A code block saved on its own came out of the same answer, so it rests on the same sources
+    /// and takes them along. How depends on the format. Markdown is what the source list is written
+    /// in, so a Markdown text gets it just as the entire answer does. A web page or a LaTeX document
+    /// gets it as a comment at its end: anything visible would have to be woven into markup the
+    /// model wrote. A fragment has no body to put it in, a page may hide whatever lies outside its
+    /// layout, and one underscore in a title is enough to stop a LaTeX run. A comment breaks
+    /// neither, and whoever opens the file finds it. A table gets no sources at all, since it has
+    /// no column a link list would fit into.
+    ///
+    /// Apart from that, the file is what the model wrote, scripts of a web page included. Saving it
+    /// is what the user chose to do; the chat still never renders it.
+    /// </remarks>
+    /// <param name="content">The content the file was found in.</param>
+    /// <param name="file">The file, as PlainFileExport.ExtractFiles read it out of this content.</param>
+    /// <returns>The content of the file to write.</returns>
+    public static string ToExportContent(this IContent content, MessageFile file)
+    {
+        if (file.Format.IsTabular())
+            return file.Content;
+
+        var sources = content.Sources.ToExportMarkdown(file.Format.FollowsPageAnchors());
+        if (file.Format is FileExportFormat.MARKDOWN)
+            return AppendSources(file.Content, sources);
+
+        if (sources.Length is 0 || !file.Format.TryToComment(sources, out var comment))
+            return file.Content;
+
+        return $"{file.Content}{Environment.NewLine}{Environment.NewLine}{comment}";
+    }
+
+    /// <summary>
+    /// Puts the source list below a Markdown text.
+    /// </summary>
+    /// <param name="markdown">The Markdown text.</param>
+    /// <param name="sources">The source list as SourceExtensions.ToExportMarkdown writes it, or an
+    /// empty string when there are no sources.</param>
+    /// <returns>The text followed by its sources.</returns>
+    private static string AppendSources(string markdown, string sources)
+    {
+        if (sources.Length == 0)
+            return markdown;
+
+        if (markdown.Length == 0)
+            return sources;
 
         //
         // The blank line is not cosmetic: it ends a paragraph, a list, a table, or a block quote, so
         // that the heading of the source list stands on its own instead of being pulled into the
         // last block of the answer.
         //
-        markdown = $"{Markdown.CloseOpenCodeFence(answer)}{Environment.NewLine}{Environment.NewLine}{sources}";
-        return true;
+        return $"{Markdown.CloseOpenCodeFence(markdown)}{Environment.NewLine}{Environment.NewLine}{sources}";
     }
 }

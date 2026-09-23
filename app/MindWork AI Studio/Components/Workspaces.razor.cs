@@ -660,6 +660,24 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
+    /// <summary>
+    /// Copies the given chat, after asking the user for the name of the copy, and shows the copy in the tree.
+    /// </summary>
+    /// <param name="sourceChat">The chat to copy, as it stands in memory.</param>
+    /// <returns>The persisted copy. Null when the user canceled the question, in which case nothing was copied.</returns>
+    /// <remarks>
+    /// Neither asks about unsaved changes nor opens the copy: which of both a caller needs depends
+    /// on where the copy was asked for.
+    /// </remarks>
+    public async Task<ChatThread?> CopyChatAsync(ChatThread sourceChat)
+    {
+        var copy = await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat);
+        if (copy is not null)
+            await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        return copy;
+    }
+
     private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
         if (string.IsNullOrWhiteSpace(chatPath))
@@ -779,6 +797,62 @@ public partial class Workspaces : MSGComponentBase
         
         await WorkspaceBehaviour.StoreChatAsync(chat);
         await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    /// <summary>
+    /// Copies the chat behind the copy button of a tree item and opens the copy.
+    /// </summary>
+    /// <param name="chatPath">The directory of the chat to copy.</param>
+    /// <remarks>
+    /// The copy itself is done by CopyChatAsync, which the chat toolbar uses as well. What this
+    /// handler adds is what only the tree needs: it finds the chat by its directory, and because it
+    /// opens the copy afterward, it asks first when the chat open right now has unsaved changes.
+    /// The chat toolbar asks nothing, since it copies the chat on the screen and keeps working in it.
+    /// </remarks>
+    private async Task CopyChatFromTreeAsync(string? chatPath)
+    {
+        var chat = await this.LoadChatAsync(chatPath, false);
+        if (chat is null)
+            return;
+
+        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
+            return;
+
+        //
+        // Copying the chat which is open right now takes its in-memory state, so whatever the user
+        // has not saved yet ends up in the copy while the original keeps the state it was stored
+        // with. Copying any other chat replaces the open one, so its unsaved changes are gone.
+        // Both outcomes are surprising enough to deserve their own wording.
+        //
+        var openChat = this.CurrentChatThread;
+        var isCopyOfOpenChat = openChat is not null && openChat.ChatId == chat.ChatId;
+        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                {
+                    x => x.Message, isCopyOfOpenChat switch
+                    {
+                        true => T("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
+                        false => T("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
+                    }
+                },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Copy Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+
+        var sourceChat = isCopyOfOpenChat ? openChat! : chat;
+        var copy = await this.CopyChatAsync(sourceChat);
+        if (copy is null)
+            return;
+
+        this.CurrentChatThread = copy;
+        await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
 
     private async Task RenameWorkspaceAsync(string? workspacePath)
