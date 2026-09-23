@@ -16,7 +16,7 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
     TextMessage systemPrompt, IDictionary<string, object> apiParameters,
-    IList<object> providerTools,
+    IList<object> providerTools, bool mayAskForSequentialToolCalls,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
     Func<ChatCompletionAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
     Func<ServerSentEvent, IList<ISource>> readSources,
@@ -49,9 +49,11 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
             //
             // AI Studio runs tool calls one after another, so asking for parallel calls would
             // only produce work it then has to serialize anyway. Requests without tools omit the
-            // parameter because some providers reject it then.
+            // parameter because some providers reject it then. So does every request to a provider
+            // which rejects the parameter altogether: its models may then ask for several calls at
+            // once, and the loop works through them one by one, checking the limits per call.
             //
-            ParallelToolCalls = requestDtoBase.Tools is null ? null : false,
+            ParallelToolCalls = requestDtoBase.Tools is null || !mayAskForSequentialToolCalls ? null : false,
         };
 
         //

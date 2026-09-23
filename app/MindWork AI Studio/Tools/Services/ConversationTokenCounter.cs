@@ -86,7 +86,7 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
         var growing = new Dictionary<string, int>(StringComparer.Ordinal);
         var historyTokens = 0;
         var toolTokens = 0;
-        var draftTokens = 0;
+        int draftTokens;
 
         try
         {

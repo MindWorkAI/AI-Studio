@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Provider.OpenAI;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AIStudio.Tests.Provider.ToolCalling;
 
 /// <summary>
-/// Checks which round of a tool calling conversation passes on what its request cost.
+/// Checks what a round of a tool calling conversation asks for, and what it passes on.
 /// </summary>
 /// <remarks>
 /// Every round of a tool conversation is a request of its own, and every one of them reports what
@@ -17,6 +18,9 @@ namespace AIStudio.Tests.Provider.ToolCalling;
 /// answer stands. Passing on the last report instead would put the chat at the size of everything
 /// the tools returned, which is the one number a person watching their context window must not
 /// see as exact.
+///
+/// What a round asks for is one tool call at a time, wherever the provider lets it ask: a provider
+/// which rejects the question fails the whole request, so it is not asked at all.
 /// </remarks>
 [TestFixture]
 public sealed class ChatCompletionToolCallingAdapterTests
@@ -75,6 +79,42 @@ public sealed class ChatCompletionToolCallingAdapterTests
         Assert.That(await Usages(adapter), Is.EqualTo(new[] { 1200 }));
     }
 
+    [Test]
+    public async Task ARoundWhichOffersToolsAsksForOneCallAtATime()
+    {
+        Assert.That(await SentRequest(mayAskForSequentialToolCalls: true, includeTools: true), Does.Contain("\"parallel_tool_calls\":false"));
+    }
+
+    [Test]
+    public async Task AProviderWhichRejectsTheQuestionIsNotAskedIt()
+    {
+        //
+        // Hugging Face answers the question with a bad request. Its models may then ask for several
+        // calls at once, which the loop works through one by one anyway.
+        //
+        Assert.That(await SentRequest(mayAskForSequentialToolCalls: false, includeTools: true), Does.Not.Contain("parallel_tool_calls"));
+    }
+
+    [Test]
+    public async Task ARoundWithoutToolsDoesNotAskAboutToolCalls()
+    {
+        Assert.That(await SentRequest(mayAskForSequentialToolCalls: true, includeTools: false), Does.Not.Contain("parallel_tool_calls"));
+    }
+
+    /// <summary>
+    /// Runs one round and returns the request it sent, as it goes over the wire.
+    /// </summary>
+    private static async Task<string> SentRequest(bool mayAskForSequentialToolCalls, bool includeTools)
+    {
+        ChatCompletionAPIRequest? sent = null;
+        var adapter = Adapter(mayAskForSequentialToolCalls, request => sent = request, ["[DONE]"]);
+        await foreach (var _ in adapter.ExecuteRoundAsync(null, includeTools))
+        {
+        }
+
+        return JsonSerializer.Serialize(sent, ProviderJsonOptions.OPTIONS);
+    }
+
     /// <summary>
     /// Runs the next round and returns the prompt of every usage it passed on.
     /// </summary>
@@ -91,16 +131,27 @@ public sealed class ChatCompletionToolCallingAdapterTests
     /// <summary>
     /// Builds an adapter whose requests are answered by the given rounds, one after another.
     /// </summary>
-    private static ChatCompletionToolCallingAdapter<ChatCompletionAPIRequest> Adapter(params string[][] rounds)
+    private static ChatCompletionToolCallingAdapter<ChatCompletionAPIRequest> Adapter(params string[][] rounds) => Adapter(true, _ => { }, rounds);
+
+    /// <summary>
+    /// Builds an adapter whose requests are answered by the given rounds, and which hands every
+    /// request it sends to the given observer.
+    /// </summary>
+    private static ChatCompletionToolCallingAdapter<ChatCompletionAPIRequest> Adapter(bool mayAskForSequentialToolCalls, Action<ChatCompletionAPIRequest> sent, params string[][] rounds)
     {
         var nextRound = 0;
         return new(
-            (_, _, _) => Task.FromResult(new ChatCompletionAPIRequest("model-a", [], true)),
+            (_, _, tools) => Task.FromResult(new ChatCompletionAPIRequest("model-a", [], true) { Tools = tools }),
             new TextMessage("You are a helpful assistant.", "system"),
             new Dictionary<string, object>(),
             [],
+            mayAskForSequentialToolCalls,
             [],
-            (_, token) => Lines(rounds[nextRound++], token),
+            (request, token) =>
+            {
+                sent(request);
+                return Lines(rounds[nextRound++], token);
+            },
             _ => [],
             NullLogger.Instance);
     }
