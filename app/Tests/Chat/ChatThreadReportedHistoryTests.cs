@@ -88,8 +88,8 @@ public sealed class ChatThreadReportedHistoryTests
     public void AnAnswerWithoutAReportDoesNotBorrowTheReportBeforeIt()
     {
         //
-        // What an answer written while tools were offered looks like today: finished, but without
-        // a report of its own.
+        // What an answer looks like whose provider reports nothing, or whose API is not read for a
+        // report yet: finished, but without a report of its own.
         //
         var withoutReport = Block(ChatRole.AI, new ContentText { Text = "Second answer" }, 4);
         var thread = Thread(Question(1), Answer(2, promptTokens: 1200, blockCount: 2), Question(3), withoutReport);

@@ -401,8 +401,7 @@ public sealed record ChatThread
     /// asked, and no earlier answer ever stands in for it. Whatever came after an older report -- a
     /// message whose request was turned down, an answer which is still being written, an answer
     /// without a report of its own -- is missing from that report's number, and the estimate is
-    /// closer to the truth than a figure which leaves it out. Answers written while tools were
-    /// offered carry no report yet, so for them the estimate always takes over.<br/><br/>
+    /// closer to the truth than a figure which leaves it out.<br/><br/>
     ///
     /// A report also stops counting when the thread holds a different number of blocks than the
     /// request did, which means an earlier message was deleted, and when the next request goes to
