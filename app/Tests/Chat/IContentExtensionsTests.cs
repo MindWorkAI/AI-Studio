@@ -163,7 +163,7 @@ public sealed class IContentExtensionsTests
             "| Q1 | 100 |"), TOOL_SOURCE);
 
         content.TryGetMarkdownText(out var markdown);
-        var tables = PlainFileExport.ExtractTables(markdown, ',');
+        var tables = PlainFileExport.ExtractFiles(markdown, ',');
 
         Assert.Multiple(() =>
         {

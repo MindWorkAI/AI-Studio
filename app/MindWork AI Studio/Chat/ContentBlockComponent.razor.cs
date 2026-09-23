@@ -125,8 +125,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
-    private string cachedMessageTablesInput = string.Empty;
-    private IReadOnlyList<MessageTable> cachedMessageTables = [];
+    private string cachedMessageFilesInput = string.Empty;
+    private IReadOnlyList<MessageFile> cachedMessageFiles = [];
     private char csvSeparator = ',';
     private ElementReference mathContentContainer;
     private SourcesList? sourcesList;
@@ -154,19 +154,19 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// message, and a block re-renders for reasons which have nothing to do with its text, such as
     /// switching the theme, which would parse every message of a long chat again.
     /// </remarks>
-    private IReadOnlyList<MessageTable> MessageTables
+    private IReadOnlyList<MessageFile> MessageFiles
     {
         get
         {
             if (!this.Content.TryGetMarkdownText(out var markdown))
                 return [];
 
-            if (ReferenceEquals(this.cachedMessageTablesInput, markdown) || string.Equals(this.cachedMessageTablesInput, markdown, StringComparison.Ordinal))
-                return this.cachedMessageTables;
+            if (ReferenceEquals(this.cachedMessageFilesInput, markdown) || string.Equals(this.cachedMessageFilesInput, markdown, StringComparison.Ordinal))
+                return this.cachedMessageFiles;
 
-            this.cachedMessageTablesInput = markdown;
-            this.cachedMessageTables = PlainFileExport.ExtractTables(markdown, this.csvSeparator);
-            return this.cachedMessageTables;
+            this.cachedMessageFilesInput = markdown;
+            this.cachedMessageFiles = PlainFileExport.ExtractFiles(markdown, this.csvSeparator);
+            return this.cachedMessageFiles;
         }
     }
 
@@ -178,9 +178,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// one, the user has to be able to tell them apart: the heading above a table does that, unless
     /// it is missing or two tables share one, and then we count them.
     /// </remarks>
-    private string ExportLabel(MessageTable table)
+    private string ExportLabel(MessageFile table)
     {
-        var tables = this.MessageTables;
+        var tables = this.MessageFiles;
         if (tables.Count < 2)
             return table.Format.ToName();
 
@@ -221,8 +221,8 @@ public partial class ContentBlockComponent : MSGComponentBase
             return;
 
         this.csvSeparator = separator;
-        this.cachedMessageTablesInput = string.Empty;
-        this.cachedMessageTables = [];
+        this.cachedMessageFilesInput = string.Empty;
+        this.cachedMessageFiles = [];
         await this.InvokeAsync(this.StateHasChanged);
     }
 
@@ -749,17 +749,17 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// Exports one table out of the message, exactly as the menu offered it.
+    /// Exports one file out of the message, exactly as the menu offered it.
     /// </summary>
-    private async Task ExportTable(MessageTable table)
+    private async Task ExportFile(MessageFile file)
     {
         try
         {
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, table.Format, table.Content, table.Caption);
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, file.Content, file.Caption);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            await this.ReportUnknownExportFormat(e, table.Format);
+            await this.ReportUnknownExportFormat(e, file.Format);
         }
     }
 

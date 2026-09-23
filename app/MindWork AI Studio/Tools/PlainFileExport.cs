@@ -27,7 +27,7 @@ public static class PlainFileExport
     /// <param name="markdown">The Markdown text of the message.</param>
     /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
     /// <returns>The tables, or an empty list when the message holds none.</returns>
-    public static IReadOnlyList<MessageTable> ExtractTables(string markdown, char separator)
+    public static IReadOnlyList<MessageFile> ExtractFiles(string markdown, char separator)
     {
         if (string.IsNullOrWhiteSpace(markdown))
             return [];
@@ -59,7 +59,7 @@ public static class PlainFileExport
         return tables.Concat(codeBlocks)
             .Where(entry => entry.Content is not null)
             .OrderBy(entry => entry.Line)
-            .Select((entry, index) => new MessageTable(
+            .Select((entry, index) => new MessageFile(
                 index + 1,
                 Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.Content!.Value.Fallback,
                 entry.Content!.Value.Format,
