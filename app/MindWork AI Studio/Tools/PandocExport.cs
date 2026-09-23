@@ -43,14 +43,23 @@ public static class PandocExport
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText, new UTF8Encoding(false), token);
 
             // Call Pandoc to create the document:
-            var pandoc = await PandocProcessBuilder
+            var pandocBuilder = PandocProcessBuilder
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
                 .WithOutputFormat(format.ToPandocOutputFormat())
                 .WithOutputFile(targetFilePath)
-                .WithInputFile(tempMarkdownFilePath)
-                .BuildAsync(rustService);
+                .WithInputFile(tempMarkdownFilePath);
+
+            //
+            // The document is named after the file it is written to. Set as metadata, the name
+            // reaches the page as a string which Pandoc escapes; only a file named true or false
+            // is read as a switch and keeps the temporary name.
+            //
+            if (format.NeedsPageTitle())
+                pandocBuilder.AddArgument("-M").AddArgument($"pagetitle={Path.GetFileNameWithoutExtension(targetFilePath)}");
+
+            var pandoc = await pandocBuilder.BuildAsync(rustService);
 
             using var process = Process.Start(pandoc.StartInfo);
             if (process is null)

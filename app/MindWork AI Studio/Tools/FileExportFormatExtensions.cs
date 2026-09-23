@@ -312,6 +312,19 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Determines whether Pandoc has to be told the title of a document in the format.
+    /// </summary>
+    /// <remarks>
+    /// A web page shows its title in the browser tab. Without one, Pandoc names the page after its
+    /// input file, which is a temporary file of ours with a random name. Word and OpenDocument show
+    /// no such title, and handed one anyway, they keep it as a document property nobody asked for;
+    /// verified with Pandoc 3.8.3 on 2026-09-23. LaTeX ignores it.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a document of this format needs a title besides its content.</returns>
+    public static bool NeedsPageTitle(this FileExportFormat format) => format is FileExportFormat.HTML;
+
+    /// <summary>
     /// Returns the name Pandoc knows the format by.
     /// </summary>
     /// <param name="format">The format.</param>

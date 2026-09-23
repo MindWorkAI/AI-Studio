@@ -37,6 +37,18 @@ public sealed class FileExportFormatTests
         }), "A format was added to or removed from the export menu: say in FollowsPageAnchors whether its reader follows a page in a local link, then name it here.");
     }
 
+    [Test]
+    public void OnlyAWebPageNeedsAPageTitle()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.HTML.NeedsPageTitle(), Is.True, "Without one, the browser tab shows the random name of the temporary file Pandoc read.");
+            Assert.That(FileExportFormat.MICROSOFT_WORD.NeedsPageTitle(), Is.False, "Word would keep it as a document property nobody asked for.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.NeedsPageTitle(), Is.False, "The same goes for an OpenDocument file.");
+            Assert.That(FileExportFormat.LATEX.NeedsPageTitle(), Is.False);
+        });
+    }
+
     [TestCase("html", FileExportFormat.HTML)]
     [TestCase("latex", FileExportFormat.LATEX)]
     [TestCase("tex", FileExportFormat.LATEX)]
