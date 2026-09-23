@@ -96,6 +96,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string assistantName = string.Empty;
     private string typicalInput = string.Empty;
     private string expectedOutput = string.Empty;
+    private string expectedDataSourceContent = string.Empty;
     private bool createChatLauncher;
     private string descriptionSuggestion = string.Empty;
     private string launcherWorkspaceName = string.Empty;
@@ -134,6 +135,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> ASSISTANT_NAME_STATE_KEY = new(nameof(assistantName));
     private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
     private static readonly AssistantSessionStateKey<string> EXPECTED_OUTPUT_STATE_KEY = new(nameof(expectedOutput));
+    private static readonly AssistantSessionStateKey<string> EXPECTED_DATA_SOURCE_CONTENT_STATE_KEY = new(nameof(expectedDataSourceContent));
     private static readonly AssistantSessionStateKey<bool> CREATE_CHAT_LAUNCHER_STATE_KEY = new(nameof(createChatLauncher));
     private static readonly AssistantSessionStateKey<string> DESCRIPTION_SUGGESTION_STATE_KEY = new(nameof(descriptionSuggestion));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_WORKSPACE_NAME_STATE_KEY = new(nameof(launcherWorkspaceName));
@@ -240,6 +242,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.assistantName = string.Empty;
         this.typicalInput = string.Empty;
         this.expectedOutput = string.Empty;
+        this.expectedDataSourceContent = string.Empty;
         this.createChatLauncher = false;
         this.descriptionSuggestion = string.Empty;
         this.launcherWorkspaceName = string.Empty;
@@ -277,6 +280,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Set(ASSISTANT_NAME_STATE_KEY, this.assistantName);
         state.Set(TYPICAL_INPUT_STATE_KEY, this.typicalInput);
         state.Set(EXPECTED_OUTPUT_STATE_KEY, this.expectedOutput);
+        state.Set(EXPECTED_DATA_SOURCE_CONTENT_STATE_KEY, this.expectedDataSourceContent);
         state.Set(CREATE_CHAT_LAUNCHER_STATE_KEY, this.createChatLauncher);
         state.Set(DESCRIPTION_SUGGESTION_STATE_KEY, this.descriptionSuggestion);
         state.Set(LAUNCHER_WORKSPACE_NAME_STATE_KEY, this.launcherWorkspaceName);
@@ -319,6 +323,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Restore(ASSISTANT_NAME_STATE_KEY, value => this.assistantName = value);
         state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
         state.Restore(EXPECTED_OUTPUT_STATE_KEY, value => this.expectedOutput = value);
+        state.Restore(EXPECTED_DATA_SOURCE_CONTENT_STATE_KEY, value => this.expectedDataSourceContent = value);
         state.Restore(CREATE_CHAT_LAUNCHER_STATE_KEY, value => this.createChatLauncher = value);
         state.Restore(DESCRIPTION_SUGGESTION_STATE_KEY, value => this.descriptionSuggestion = value);
         state.Restore(LAUNCHER_WORKSPACE_NAME_STATE_KEY, value => this.launcherWorkspaceName = value);
@@ -391,6 +396,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
                     this.assistantName,
                     this.createChatLauncher ? string.Empty : this.typicalInput,
                     this.createChatLauncher ? string.Empty : this.expectedOutput,
+                    this.createChatLauncher ? string.Empty : this.expectedDataSourceContent,
                     this.createChatLauncher ? string.Empty : this.GetSelectedAssistantComponentTypes(),
                     this.createChatLauncher ? string.Empty : this.GetSelectedOutputLanguageName(),
                     !this.createChatLauncher && this.allowGeneratedAssistantProfiles,
