@@ -1706,6 +1706,7 @@ public partial class ChatComponent : MSGComponentBase
             case Event.PLUGINS_RELOADED:
                 await this.RefreshCulture();
                 await this.RefreshChatSelectionsAfterConfigurationChange();
+                this.tokenTracker?.Nudge();
                 this.StateHasChanged();
                 break;
             

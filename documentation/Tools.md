@@ -92,6 +92,8 @@ What differs between callers is which targets are acceptable, and that follows f
 
 `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
+The global `read_web_page.braveMode` setting is `OFF` by default. With `OFF`, the per-request tool instruction tells the model to use only URLs explicitly present in the system prompt, user prompt, or a tool result. URLs in documents and RAG content loaded into the user prompt qualify, as do URLs returned by `web_search` and links returned by an earlier page read. If there is no URL and `read_web_page` is the only web tool, the model is told to ask the user for one. With `ON`, the model may choose a URL itself. Both instructions treat retrieved content as untrusted. This is prompt guidance, not a technical URL provenance check; the application still applies its network target restrictions. The setting uses the usual locked organization value, saved user value, then organization default precedence.
+
 Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
 
 ## Checklist

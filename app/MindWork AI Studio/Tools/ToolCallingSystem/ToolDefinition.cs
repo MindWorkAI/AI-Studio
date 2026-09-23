@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using AIStudio.Provider;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -15,6 +16,14 @@ public sealed class ToolDefinition
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 
     public string SystemPromptInstructions { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Resolves instructions that depend on a current global setting when a request is built.
+    /// </summary>
+    [JsonIgnore]
+    public Func<string>? SystemPromptInstructionsFactory { get; init; }
+
+    public string GetSystemPromptInstructions() => this.SystemPromptInstructionsFactory?.Invoke() ?? this.SystemPromptInstructions;
 
     /// <summary>
     /// The lowest provider confidence this tool may be used with, unless an administrator or the
