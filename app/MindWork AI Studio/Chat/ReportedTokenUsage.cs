@@ -38,6 +38,20 @@ public sealed record ReportedTokenUsage
     public string ModelId { get; init; } = string.Empty;
 
     /// <summary>
+    /// How many blocks the conversation had when the request went out, this answer included.
+    /// </summary>
+    /// <remarks>
+    /// What tells an outdated report apart without anybody having to remember anything about it.
+    /// Blocks are only ever added at the end, so while this answer is the last block, a thread with
+    /// the same count is the thread the provider saw. A lower count means an earlier message was
+    /// deleted, and that message is still inside the reported number.
+    ///
+    /// Taken when the request is sent rather than when the report arrives: whatever is deleted
+    /// while the answer streams in was still part of what the provider counted.
+    /// </remarks>
+    public int BlockCount { get; init; }
+
+    /// <summary>
     /// States the stored numbers as a usage again.
     /// </summary>
     /// <returns>The usage, or TokenUsage.UNKNOWN when the stored numbers state nothing usable.</returns>

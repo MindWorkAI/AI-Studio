@@ -392,6 +392,48 @@ public sealed record ChatThread
         return true;
     }
 
+    /// <summary>
+    /// Finds what a provider reported for this conversation, as long as the report still describes it.
+    /// </summary>
+    /// <remarks>
+    /// A report describes one request: the conversation up to the answer which carries it. It is
+    /// worth something only while the thread still is that conversation, so only the last block is
+    /// asked, and no earlier answer ever stands in for it. Whatever came after an older report -- a
+    /// message whose request was turned down, an answer which is still being written, an answer
+    /// without a report of its own -- is missing from that report's number, and the estimate is
+    /// closer to the truth than a figure which leaves it out. Answers written while tools were
+    /// offered carry no report yet, so for them the estimate always takes over.<br/><br/>
+    ///
+    /// A report also stops counting when the thread holds a different number of blocks than the
+    /// request did, which means an earlier message was deleted, and when the next request goes to
+    /// another model, which counts the same conversation with another tokenizer. Editing the last
+    /// message or rolling the chat back makes an earlier answer the last block again, with exactly
+    /// the blocks it was reported for, so its report counts once more.<br/><br/>
+    ///
+    /// What goes unnoticed is a change beside the messages: another system prompt, profile, or
+    /// selection of tools. That shows only with the next answer. Noticing it would take a
+    /// fingerprint of the system prompt as it was sent, after the data sources added to it, which
+    /// is a lot of machinery for a number which corrects itself one answer later.
+    /// </remarks>
+    /// <param name="model">The model the next request would go to.</param>
+    /// <returns>What the provider reported, or unknown when no report describes this conversation.</returns>
+    public TokenUsage ReportedUsageFor(Model model)
+    {
+        if (this.Blocks.Count is 0)
+            return TokenUsage.UNKNOWN;
+
+        if (this.Blocks[^1].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported })
+            return TokenUsage.UNKNOWN;
+
+        if (reported.BlockCount != this.Blocks.Count)
+            return TokenUsage.UNKNOWN;
+
+        if (!string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal))
+            return TokenUsage.UNKNOWN;
+
+        return reported.ToTokenUsage();
+    }
+
     private static void DeleteManagedAttachments(ContentBlock block)
     {
         if (block.Content is not ContentText textContent)

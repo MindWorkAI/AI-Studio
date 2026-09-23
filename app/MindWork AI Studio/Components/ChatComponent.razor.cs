@@ -1614,7 +1614,7 @@ public partial class ChatComponent : MSGComponentBase
             var toolDefinitions = this.GetRunnableToolDefinitions();
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
-            reported = LastReportedTokensOf(thread, provider.Model);
+            reported = thread.ReportedUsageFor(provider.Model);
         });
 
         var counted = await this.ConversationTokenCounter.CountAsync(provider, parts, reported, token);
@@ -1629,46 +1629,6 @@ public partial class ChatComponent : MSGComponentBase
             this.conversationTokens = counted;
             this.StateHasChanged();
         });
-    }
-
-    /// <summary>
-    /// Finds what a provider last said a request of this conversation cost.
-    /// </summary>
-    /// <remarks>
-    /// The last answer which carries such a number decides, and nothing else has to be remembered
-    /// for it: the number lives on the answer, so editing, regenerating, or deleting a message
-    /// takes it along and an earlier answer -- or none at all -- becomes the one which counts.
-    ///
-    /// An answer still being written is passed over. Its number arrives with the last line of the
-    /// stream, and until then it states what the request before it cost, which is a conversation
-    /// shorter than the one on the screen.
-    /// </remarks>
-    /// <param name="thread">The conversation to look through.</param>
-    /// <param name="model">The model the next request would go to.</param>
-    /// <returns>What the provider reported, or unknown when none of them did.</returns>
-    private static TokenUsage LastReportedTokensOf(ChatThread thread, Model model)
-    {
-        for (var index = thread.Blocks.Count - 1; index >= 0; index--)
-        {
-            if (thread.Blocks[index].Content is not ContentText { IsStreaming: false, ReportedUsage: { } reported })
-                continue;
-
-            var usage = reported.ToTokenUsage();
-            if (!usage.IsKnown)
-                continue;
-
-            //
-            // A number charged for another model says nothing about this one: another model counts
-            // the same conversation with another tokenizer. Reading on would only find older
-            // answers of that same other model, so the search ends here and the estimate takes
-            // over until this model has answered once.
-            //
-            return string.Equals(reported.ModelId, model.Id, StringComparison.Ordinal)
-                ? usage
-                : TokenUsage.UNKNOWN;
-        }
-
-        return TokenUsage.UNKNOWN;
     }
 
     /// <summary>

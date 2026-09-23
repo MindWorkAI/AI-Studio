@@ -58,10 +58,12 @@ public sealed class ContentText : IContent
     /// <remarks>
     /// Kept on the answer rather than beside the chat, so that it is stored, loaded, and exported
     /// with the message it belongs to -- and so that it goes away when the message does. An edited
-    /// or regenerated answer removes its block, which removes these numbers with it, and the chat
-    /// falls back to the estimate instead of carrying a figure for a conversation which no longer
-    /// exists. Null for every answer written before this was recorded, and at every provider which
-    /// reports nothing.
+    /// or regenerated answer removes its block, which removes these numbers with it. Null for every
+    /// answer written before this was recorded, and at every provider which reports nothing.
+    ///
+    /// Having a report is not the same as the report still being true. Whether it still describes
+    /// the conversation is decided by ChatThread.ReportedUsageFor, which looks at the thread around
+    /// the answer, not just at the answer.
     /// </remarks>
     public ReportedTokenUsage? ReportedUsage { get; set; }
 
@@ -121,7 +123,8 @@ public sealed class ContentText : IContent
     /// </remarks>
     /// <param name="usage">What the current chunk of the stream says, which is mostly nothing.</param>
     /// <param name="modelId">The model the request went to.</param>
-    public void RecordReportedUsage(TokenUsage usage, string modelId)
+    /// <param name="blockCount">How many blocks the conversation had when the request went out, this answer included.</param>
+    public void RecordReportedUsage(TokenUsage usage, string modelId, int blockCount)
     {
         if (!usage.IsKnown)
             return;
@@ -131,6 +134,7 @@ public sealed class ContentText : IContent
             PromptTokens = usage.PromptTokens,
             CompletionTokens = usage.CompletionTokens,
             ModelId = modelId,
+            BlockCount = blockCount,
         };
     }
 
@@ -194,7 +198,10 @@ public sealed class ContentText : IContent
 
         // Get the settings manager:
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
-        
+
+        // What the request carries, for telling later whether a report still describes this chat:
+        var blocksSent = chatThread.Blocks.Count;
+
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         try
@@ -224,7 +231,7 @@ public sealed class ContentText : IContent
                         this.Sources.MergeSources(contentStreamChunk.Sources);
 
                         // Keep what the provider says the request cost:
-                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id);
+                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id, blocksSent);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
@@ -349,6 +356,12 @@ public sealed class ContentText : IContent
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The reported usage stays behind on purpose. A clone continues somewhere else -- as the
+    /// example conversation of a chat template, or as an assistant's conversation carried over into
+    /// a chat -- with another system prompt around it, and what the provider stated was for the
+    /// request this answer came out of.
+    /// </remarks>
     public IContent DeepClone() => new ContentText
     {
         Text = this.Text,
