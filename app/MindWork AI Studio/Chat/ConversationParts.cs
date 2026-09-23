@@ -19,6 +19,11 @@ namespace AIStudio.Chat;
 /// which is not about the next request but about the one in flight: it is what the model is
 /// reading at this moment, it is what fills the window while somebody watches, and it is gone
 /// again once the answer stands.
+///
+/// The three are kept apart, and nothing stands in two of them. The conversation so far is what a
+/// provider may already have counted exactly; the draft is what nobody has counted yet; and the
+/// tool conversation is what the number will lose again once the answer is there. Each of them is
+/// counted once and named on its own, so that a person can tell which part they are looking at.
 /// </remarks>
 public sealed record ConversationParts
 {
@@ -28,54 +33,61 @@ public sealed record ConversationParts
     public static readonly ConversationParts NOTHING = new();
 
     /// <summary>
-    /// The texts which go into the request as they are.
+    /// The texts of the conversation which go into the request as they are.
     /// </summary>
     public IReadOnlyList<string> Texts { get; init; } = [];
 
     /// <summary>
-    /// The texts which belong to this moment alone.
+    /// The texts of the conversation which are still being written.
     /// </summary>
     /// <remarks>
     /// They cost exactly what the others cost; what sets them apart is that they will never be seen
-    /// again in this shape. The sentence somebody is typing changes with the next pause, and an
-    /// answer being streamed is a different text three seconds later -- so remembering what they
-    /// cost fills memory with answers nobody will ask for again.
-    ///
-    /// What a model's tools have returned so far belongs here for the same reason, although nobody
-    /// is writing it: it travels with every further round of one request and with nothing after
-    /// that, so it is measured while it matters and forgotten when the answer is there.
+    /// again in this shape. An answer being streamed is a different text three seconds later -- so
+    /// remembering what it cost fills memory with answers nobody will ask for again.
     /// </remarks>
     public IReadOnlyList<string> GrowingTexts { get; init; } = [];
 
     /// <summary>
-    /// The documents whose content is put into the request.
+    /// What the tools of the running request have returned so far, along with the calls to them.
+    /// </summary>
+    /// <remarks>
+    /// Growing in the same way as the answer being streamed, and measured the same way. It travels
+    /// with every further round of one request and with nothing after that, so it is measured while
+    /// it matters and forgotten when the answer is there.
+    /// </remarks>
+    public IReadOnlyList<string> ToolConversation { get; init; } = [];
+
+    /// <summary>
+    /// The documents of the conversation whose content is put into the request.
     /// </summary>
     public IReadOnlyList<FileAttachment> Documents { get; init; } = [];
 
     /// <summary>
-    /// How many images travel along.
+    /// How many images of the conversation travel along.
     /// </summary>
     public int Images { get; init; }
 
     /// <summary>
-    /// Which of the texts above are the message being written right now.
+    /// What stands in the composer, or an empty string when nothing does.
     /// </summary>
     /// <remarks>
-    /// A marker, not a further part: everything named here also stands in GrowingTexts, and
-    /// counting the parts counts each of them exactly once. It exists because the two halves of
-    /// the number answer different questions. What the conversation has cost so far can be had
-    /// exactly, from the provider which charged for it; what is about to be added to it can only be
-    /// estimated. Told as one number, nobody can see which half they are looking at.
+    /// Changes with the next pause, so it is measured like the texts which are still being written.
     /// </remarks>
-    public IReadOnlyList<string> DraftTexts { get; init; } = [];
+    public string DraftText { get; init; } = string.Empty;
 
     /// <summary>
-    /// Which of the documents above are attached to the message being written right now.
+    /// The documents attached to the composer.
+    /// </summary>
+    public IReadOnlyList<FileAttachment> DraftDocuments { get; init; } = [];
+
+    /// <summary>
+    /// How many images attached to the composer travel along.
     /// </summary>
     /// <remarks>
-    /// A marker in the same way as DraftTexts: everything named here also stands in Documents.
+    /// Apart from the images of the conversation, because only those can be part of what a
+    /// provider has already counted.
     /// </remarks>
-    public IReadOnlyList<FileAttachment> DraftDocuments { get; init; } = [];
+    public int DraftImages { get; init; }
 
     /// <summary>
     /// Collects what a conversation would send.
@@ -104,6 +116,7 @@ public sealed record ConversationParts
     {
         var texts = new List<string>();
         var growing = new List<string>();
+        var toolConversation = new List<string>();
         var documents = new List<FileAttachment>();
         var images = 0;
 
@@ -137,7 +150,7 @@ public sealed record ConversationParts
                 // the tool conversation. A block skipped for having nothing to say is exactly the
                 // block whose request is growing the fastest.
                 //
-                growing.AddRange(text.PendingToolConversation);
+                toolConversation.AddRange(text.PendingToolConversation);
 
                 if (string.IsNullOrWhiteSpace(text.Text))
                     continue;
@@ -151,36 +164,24 @@ public sealed record ConversationParts
             }
         }
 
-        var draftTexts = new List<string>();
+        //
+        // Sorted the same way as the attachments of the conversation, into lists of their own.
+        //
         var draftDocuments = new List<FileAttachment>();
-
-        if (!string.IsNullOrWhiteSpace(draft))
-        {
-            growing.Add(draft);
-            draftTexts.Add(draft);
-        }
-
+        var draftImages = 0;
         if (draftAttachments is not null)
-        {
-            var documentsBefore = documents.Count;
-            Sort(draftAttachments, documents, ref images);
-
-            //
-            // Whatever sorting just appended is what the composer carries. Read off the list
-            // rather than sorted a second time, so that a change to what counts as a document
-            // cannot start meaning two different things in one method.
-            //
-            draftDocuments.AddRange(documents.Skip(documentsBefore));
-        }
+            Sort(draftAttachments, draftDocuments, ref draftImages);
 
         return new()
         {
             Texts = texts,
             GrowingTexts = growing,
+            ToolConversation = toolConversation,
             Documents = documents,
             Images = imagesAreSent ? images : 0,
-            DraftTexts = draftTexts,
+            DraftText = string.IsNullOrWhiteSpace(draft) ? string.Empty : draft,
             DraftDocuments = draftDocuments,
+            DraftImages = imagesAreSent ? draftImages : 0,
         };
     }
 

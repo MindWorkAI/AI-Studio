@@ -29,9 +29,25 @@ public readonly record struct ConversationTokens
     public bool IsKnown { get; init; }
 
     /// <summary>
-    /// How many tokens the counted parts of the conversation take.
+    /// How many tokens the counted parts of the conversation take, the draft included.
     /// </summary>
-    public int Tokens { get; init; }
+    public int Tokens => this.HistoryTokens + this.DraftTokens;
+
+    /// <summary>
+    /// How many tokens the conversation takes without the message being written right now.
+    /// </summary>
+    public int HistoryTokens { get; init; }
+
+    /// <summary>
+    /// How much of HistoryTokens is what the tools of the running request returned so far.
+    /// </summary>
+    /// <remarks>
+    /// Named on its own because it is the one share which goes away again. The model reads it in
+    /// every round of the request, so it fills the window while the tools work -- and none of it is
+    /// sent with the next message. Without saying so, the number would climb by tens of thousands
+    /// and then drop back once the answer stands, and nobody could tell why.
+    /// </remarks>
+    public int ToolTokens { get; init; }
 
     /// <summary>
     /// Whether the number is an estimate rather than the model's own count.
@@ -46,13 +62,12 @@ public readonly record struct ConversationTokens
     public bool IsEstimate { get; init; }
 
     /// <summary>
-    /// How much of Tokens is the message being written right now.
+    /// How many tokens the message being written right now takes.
     /// </summary>
     /// <remarks>
     /// Kept apart from the rest for the same reason the statements above are kept apart: what the
     /// conversation has already cost is something a provider can be asked about, while a sentence
-    /// nobody has sent yet can only be estimated. What the conversation costs without it is this
-    /// subtracted from Tokens.
+    /// nobody has sent yet can only be estimated.
     /// </remarks>
     public int DraftTokens { get; init; }
 
@@ -75,7 +90,17 @@ public readonly record struct ConversationTokens
     public ContextWindow Window { get; init; }
 
     /// <summary>
-    /// How many images travel along which nobody can count.
+    /// How many images travel along, those of the conversation and those of the draft.
+    /// </summary>
+    public int Images { get; init; }
+
+    /// <summary>
+    /// How many of those images are attached to the message being written right now.
+    /// </summary>
+    public int DraftImages { get; init; }
+
+    /// <summary>
+    /// How many images travel along which nobody has counted.
     /// </summary>
     /// <remarks>
     /// Every vendor charges images differently -- OpenAI by tiles of the scaled image, Anthropic by
@@ -83,8 +108,11 @@ public readonly record struct ConversationTokens
     /// file without decoding it first. So they are reported as a number of images instead of being
     /// guessed at, or worse, counted as the base64 text they are sent as: that text is two to three
     /// orders of magnitude longer than what any vendor charges for the picture.
+    ///
+    /// Where the provider reported the conversation so far, it counted the pictures in it as well,
+    /// however it charges them. Then only those of the draft are left uncounted.
     /// </remarks>
-    public int UncountedImages { get; init; }
+    public int UncountedImages => this.HistoryIsReported ? this.DraftImages : this.Images;
 
     /// <summary>
     /// How many images the model takes, where its vendor stated a number.
@@ -101,7 +129,8 @@ public readonly record struct ConversationTokens
     /// the person who crosses it has usually forgotten that the pictures are still there.
     ///
     /// False whenever nobody stated a limit, which is most models. An invented ceiling would refuse
-    /// something that works.
+    /// something that works. Whether anybody counted the pictures plays no part: the limit is on
+    /// how many travel, not on what they cost.
     /// </remarks>
-    public bool TooManyImages => this.ImageLimits.MaxInOneMessage is { } allowed && this.UncountedImages > allowed;
+    public bool TooManyImages => this.ImageLimits.MaxInOneMessage is { } allowed && this.Images > allowed;
 }
