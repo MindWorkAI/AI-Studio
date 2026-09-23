@@ -36,4 +36,37 @@ public sealed class FileExportFormatTests
             FileExportFormat.HTML,
         }), "A format was added to or removed from the export menu: say in FollowsPageAnchors whether its reader follows a page in a local link, then name it here.");
     }
+
+    [TestCase("html", FileExportFormat.HTML)]
+    [TestCase("latex", FileExportFormat.LATEX)]
+    [TestCase("tex", FileExportFormat.LATEX)]
+    [TestCase("markdown", FileExportFormat.MARKDOWN)]
+    [TestCase("md", FileExportFormat.MARKDOWN)]
+    [TestCase("csv", FileExportFormat.CSV)]
+    [TestCase("tsv", FileExportFormat.TSV)]
+    [TestCase("HTML", FileExportFormat.HTML, Description = "Models do not agree on the case.")]
+    [TestCase("LaTeX", FileExportFormat.LATEX)]
+    [TestCase("CSV", FileExportFormat.CSV)]
+    [TestCase(" md ", FileExportFormat.MARKDOWN, Description = "Space around the name is no part of it.")]
+    public void AFenceLanguageNamesItsFormat(string language, FileExportFormat expectedFormat)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.True);
+            Assert.That(format, Is.EqualTo(expectedFormat));
+        });
+    }
+
+    [TestCase("css", TestName = "A language AI Studio writes no file for")]
+    [TestCase("docx", TestName = "A format no code block can hold")]
+    [TestCase("", TestName = "A fence without a language")]
+    [TestCase(null, TestName = "A fence Markdig read no language for")]
+    public void AnyOtherFenceLanguageNamesNoFormat(string? language)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.False);
+            Assert.That(format, Is.EqualTo(FileExportFormat.NONE));
+        });
+    }
 }

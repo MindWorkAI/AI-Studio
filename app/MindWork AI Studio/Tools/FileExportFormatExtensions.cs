@@ -104,6 +104,36 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Reads which format a model means when it names a language behind the opening fence of a
+    /// code block.
+    /// </summary>
+    /// <remarks>
+    /// A model which answers with a finished file puts it into a code block and names its language,
+    /// as in ```html. Models do not agree on the spelling, so we accept the usual names of a format
+    /// in any case. Only formats which are plain text appear here: a code block holds text, never
+    /// a Word document.
+    /// </remarks>
+    /// <param name="language">The language behind the opening fence, as Markdig reads it into
+    /// FencedCodeBlock.Info.</param>
+    /// <param name="format">The format the language names, or NONE when it names none of ours.</param>
+    /// <returns>True, when the language names a format AI Studio writes.</returns>
+    public static bool TryFromCodeFenceLanguage(string? language, out FileExportFormat format)
+    {
+        format = language?.Trim().ToLowerInvariant() switch
+        {
+            "html" => FileExportFormat.HTML,
+            "latex" or "tex" => FileExportFormat.LATEX,
+            "markdown" or "md" => FileExportFormat.MARKDOWN,
+            "csv" => FileExportFormat.CSV,
+            "tsv" => FileExportFormat.TSV,
+
+            _ => FileExportFormat.NONE,
+        };
+
+        return format is not FileExportFormat.NONE;
+    }
+
+    /// <summary>
     /// Returns the file name the save dialog starts with.
     /// </summary>
     /// <remarks>

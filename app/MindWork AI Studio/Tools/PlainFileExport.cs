@@ -94,15 +94,7 @@ public static class PlainFileExport
     /// </summary>
     private static (string Fallback, FileExportFormat Format, string Text)? ToContent(FencedCodeBlock block)
     {
-        var format = block.Info?.Trim() switch
-        {
-            "csv" => FileExportFormat.CSV,
-            "tsv" => FileExportFormat.TSV,
-
-            _ => FileExportFormat.NONE,
-        };
-
-        if (format is FileExportFormat.NONE)
+        if (!FileExportFormatExtensions.TryFromCodeFenceLanguage(block.Info, out var format) || format is not (FileExportFormat.CSV or FileExportFormat.TSV))
             return null;
 
         var content = block.Lines.ToString();
