@@ -799,7 +799,17 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
-    private async Task CopyChatAsync(string? chatPath)
+    /// <summary>
+    /// Copies the chat behind the copy button of a tree item and opens the copy.
+    /// </summary>
+    /// <param name="chatPath">The directory of the chat to copy.</param>
+    /// <remarks>
+    /// The copy itself is done by CopyChatAsync, which the chat toolbar uses as well. What this
+    /// handler adds is what only the tree needs: it finds the chat by its directory, and because it
+    /// opens the copy afterward, it asks first when the chat open right now has unsaved changes.
+    /// The chat toolbar asks nothing, since it copies the chat on the screen and keeps working in it.
+    /// </remarks>
+    private async Task CopyChatFromTreeAsync(string? chatPath)
     {
         var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
