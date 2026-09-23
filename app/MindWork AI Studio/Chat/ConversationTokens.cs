@@ -46,13 +46,13 @@ public readonly record struct ConversationTokens
     public bool IsEstimate { get; init; }
 
     /// <summary>
-    /// How much of <see cref="Tokens"/> is the message being written right now.
+    /// How much of Tokens is the message being written right now.
     /// </summary>
     /// <remarks>
     /// Kept apart from the rest for the same reason the statements above are kept apart: what the
     /// conversation has already cost is something a provider can be asked about, while a sentence
     /// nobody has sent yet can only be estimated. What the conversation costs without it is this
-    /// subtracted from <see cref="Tokens"/>.
+    /// subtracted from Tokens.
     /// </remarks>
     public int DraftTokens { get; init; }
 

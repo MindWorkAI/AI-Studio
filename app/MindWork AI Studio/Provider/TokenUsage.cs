@@ -73,7 +73,7 @@ public readonly record struct TokenUsage
     /// </remarks>
     /// <param name="promptTokens">What the request carried, as the provider stated it.</param>
     /// <param name="completionTokens">What the answer cost, as the provider stated it.</param>
-    /// <returns>The usage, or <see cref="UNKNOWN"/>.</returns>
+    /// <returns>The usage, or UNKNOWN.</returns>
     public static TokenUsage OfReported(int? promptTokens, int? completionTokens) =>
         promptTokens is > 0
             ? Of(promptTokens.Value, completionTokens is > 0 ? completionTokens.Value : 0)

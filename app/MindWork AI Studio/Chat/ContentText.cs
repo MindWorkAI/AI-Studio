@@ -63,13 +63,18 @@ public sealed class ContentText : IContent
     /// exists. Null for every answer written before this was recorded, and at every provider which
     /// reports nothing.
     ///
-    /// Two plain numbers rather than a <see cref="TokenUsage"/>: that type only ever comes out of
-    /// its own factory, which is what keeps an impossible usage from existing, and a stored field
-    /// has to be readable back by the serializer.
+    /// Two plain numbers rather than a TokenUsage: that type only ever comes out of its own
+    /// factory, which is what keeps an impossible usage from existing, and a stored field has to be
+    /// readable back by the serializer.
     /// </remarks>
     public int? ReportedPromptTokens { get; set; }
 
-    /// <inheritdoc cref="ReportedPromptTokens"/>
+    /// <summary>
+    /// What the provider said the answer itself cost, where it said anything.
+    /// </summary>
+    /// <remarks>
+    /// Stored, kept, and dropped together with ReportedPromptTokens, for the reasons given there.
+    /// </remarks>
     public int? ReportedCompletionTokens { get; set; }
 
     /// <summary>

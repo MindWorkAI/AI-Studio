@@ -61,15 +61,20 @@ public sealed record ConversationParts
     /// Which of the texts above are the message being written right now.
     /// </summary>
     /// <remarks>
-    /// A marker, not a further part: everything named here also stands in <see cref="GrowingTexts"/>,
-    /// and counting the parts counts each of them exactly once. It exists because the two halves of
+    /// A marker, not a further part: everything named here also stands in GrowingTexts, and
+    /// counting the parts counts each of them exactly once. It exists because the two halves of
     /// the number answer different questions. What the conversation has cost so far can be had
     /// exactly, from the provider which charged for it; what is about to be added to it can only be
     /// estimated. Told as one number, nobody can see which half they are looking at.
     /// </remarks>
     public IReadOnlyList<string> DraftTexts { get; init; } = [];
 
-    /// <inheritdoc cref="DraftTexts"/>
+    /// <summary>
+    /// Which of the documents above are attached to the message being written right now.
+    /// </summary>
+    /// <remarks>
+    /// A marker in the same way as DraftTexts: everything named here also stands in Documents.
+    /// </remarks>
     public IReadOnlyList<FileAttachment> DraftDocuments { get; init; } = [];
 
     /// <summary>

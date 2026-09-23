@@ -30,6 +30,6 @@ public interface IResponseStreamLine : IAnnotationStreamLine
     /// <summary>
     /// Gets what the provider said the request cost.
     /// </summary>
-    /// <returns>The usage, or <see cref="TokenUsage.UNKNOWN"/> when the line carries none.</returns>
+    /// <returns>The usage, or TokenUsage.UNKNOWN when the line carries none.</returns>
     public TokenUsage GetUsage() => TokenUsage.UNKNOWN;
 }

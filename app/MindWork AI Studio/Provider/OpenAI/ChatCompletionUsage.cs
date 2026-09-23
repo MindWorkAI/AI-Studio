@@ -7,7 +7,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <remarks>
 /// Every number is optional because this is somebody else's JSON: the block arrives only when the
 /// request asked for it, and the providers which follow the shape loosely leave fields out. Reading
-/// it is one thing, believing it another -- <see cref="TokenUsage.OfReported"/> decides that.
+/// it is one thing, believing it another -- TokenUsage.OfReported decides that.
 /// </remarks>
 public sealed record ChatCompletionUsage
 {
