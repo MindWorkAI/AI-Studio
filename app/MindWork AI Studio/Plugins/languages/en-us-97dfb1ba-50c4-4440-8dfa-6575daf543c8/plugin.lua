@@ -3645,6 +3645,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile u
 -- The selected provider is not allowed in this chat due to data security or confidence-level requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2672162875"] = "The selected provider is not allowed in this chat due to data security or confidence-level requirements."
 
+-- Show the complete system prompt the AI receives
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2931983492"] = "Show the complete system prompt the AI receives"
+
 -- Bulleted List
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2957125464"] = "Bulleted List"
 
@@ -3677,6 +3680,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
 
 -- Please select the workspace where you want to move the chat to.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T474393241"] = "Please select the workspace where you want to move the chat to."
+
+-- Complete system prompt of this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T544159998"] = "Complete system prompt of this chat"
 
 -- Move the chat to a workspace, or to another if it is already in one.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T636393754"] = "Move the chat to a workspace, or to another if it is already in one."
@@ -8825,6 +8831,48 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Your Inp
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Cancel"
+
+-- Included, retrieved for an earlier message
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1359693360"] = "Included, retrieved for an earlier message"
+
+-- Data from your data sources
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T1629973648"] = "Data from your data sources"
+
+-- Date and time
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T2054731205"] = "Date and time"
+
+-- Included
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3098410457"] = "Included"
+
+-- This is the complete system prompt the AI receives with your next message. AI Studio assembles it from the parts listed here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3315883870"] = "This is the complete system prompt the AI receives with your next message. AI Studio assembles it from the parts listed here."
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3440849550"] = "Profile"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3448155331"] = "Close"
+
+-- Complete system prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3725933563"] = "Complete system prompt"
+
+-- Switched off by the chat template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T3728646729"] = "Switched off by the chat template"
+
+-- Tool instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T4067010756"] = "Tool instructions"
+
+-- the complete system prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T471427542"] = "the complete system prompt"
+
+-- None
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T810547195"] = "None"
+
+-- Not included
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T885651534"] = "Not included"
+
+-- Chat template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SYSTEMPROMPTDIALOG::T923285303"] = "Chat template"
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
