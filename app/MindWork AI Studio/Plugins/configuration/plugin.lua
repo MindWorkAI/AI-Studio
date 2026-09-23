@@ -742,6 +742,8 @@ CONFIG["SETTINGS"] = {}
 -- Tool IDs include: web_search, read_web_page, search_confluence
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = VERY_LOW
+-- search_confluence also always requires a HIGH-confidence provider or one trusted by the
+-- organization, whatever value is set here.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
@@ -823,7 +825,8 @@ CONFIG["SETTINGS"] = {}
 --   baseUrl          Required HTTPS root URL of the Confluence site, including its context path
 --                    if present, for example https://wiki.example.org/confluence/. Search loads
 --                    dosearchsite.action with the same web-page reader as read_web_page and uses
---                    the current user's operating-system sign-in. A provider must have HIGH
+--                    the current user's operating-system sign-in, also when the wiki has public
+--                    addresses. Redirects outside this URL are refused. A provider must have HIGH
 --                    confidence or be trusted by the organization to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 -- To read a found page, also configure read_web_page.allowedPrivateHosts if your wiki has a

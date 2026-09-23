@@ -28,7 +28,8 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     {
         Id = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
-        // The runtime check also permits organization-trusted providers below HIGH.
+        // Kept low so that providers trusted by the organization below HIGH are offered the tool.
+        // The runtime check in ExecuteAsync requires HIGH confidence or that trust.
         MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
         SettingsSchema = ToolSettingsSchemaBuilder.Create()
             .Required(BASE_URL_SETTING)
@@ -94,6 +95,11 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
+        //
+        // A provider trusted by the organization's configuration counts as much as a High-confidence
+        // one. The chat thread's own check does the same, so such a provider may also continue the
+        // chat after the result raised its required confidence to HIGH.
+        //
         if (context.ProviderConfidence < ConfidenceLevel.HIGH && !context.ProviderIsTrustedByConfiguration)
             throw new ToolExecutionBlockedException(TB("Searching the company wiki requires a High-confidence provider or one trusted by your organization's configuration."));
 
@@ -132,8 +138,20 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 ProviderConfidence = context.ProviderConfidence,
                 ProviderIsTrustedByConfiguration = context.ProviderIsTrustedByConfiguration,
                 UseOsSso = true,
-                IsPrivateHostAllowed = host => host.Equals(baseUrl!.Host, StringComparison.OrdinalIgnoreCase),
+                IsPrivateHostAllowed = host => IsWikiHost(baseUrl!, host),
+
+                // The wiki address comes from the user or the organization, never from the model,
+                // so the sign-in may also go to a wiki with public addresses:
+                IsOsSsoAllowedForPublicHost = host => IsWikiHost(baseUrl!, host),
+
+                // Checked before every redirect is followed, so the query never reaches a host
+                // outside the wiki:
+                IsTargetAllowed = target => IsWithinWiki(baseUrl!, target),
             }, token);
+        }
+        catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.TARGET_NOT_ALLOWED)
+        {
+            throw new ToolExecutionBlockedException(TB("Confluence redirected the search outside the configured wiki."));
         }
         catch (WebPageAccessBlockedException exception)
         {
@@ -141,9 +159,11 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         }
 
         var page = retrievedPage.Page;
-        if (page.FinalUrl.Scheme != baseUrl!.Scheme || page.FinalUrl.Host != baseUrl.Host || page.FinalUrl.Port != baseUrl.Port ||
-            !page.FinalUrl.AbsolutePath.StartsWith(baseUrl.AbsolutePath, StringComparison.Ordinal))
+        if (!IsWithinWiki(baseUrl!, page.FinalUrl))
             throw new InvalidOperationException(TB("Confluence redirected the search outside the configured wiki."));
+
+        if (IsLoginPage(page.FinalUrl))
+            throw new InvalidOperationException(TB("Confluence asked for a sign-in instead of showing search results. Your operating system's sign-in was not accepted by the wiki; open it in your browser to check your access."));
 
         var markdown = retrievedPage.ExtractedPage.Markdown;
         if (string.IsNullOrWhiteSpace(markdown))
@@ -165,9 +185,27 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 ["title"] = modelContent.Title,
                 ["text_content"] = modelContent.Markdown,
             },
+
+            // The search page is what AI Studio actually read. Pages found on it become sources
+            // once read_web_page loads them:
+            Sources = [new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL)],
             RequiredProviderConfidence = ConfidenceLevel.HIGH,
         };
     }
+
+    private static bool IsWikiHost(Uri baseUrl, string host) => WebHostHelper.Normalize(host) == WebHostHelper.Normalize(baseUrl.Host);
+
+    internal static bool IsWithinWiki(Uri baseUrl, Uri url) =>
+        url.Scheme == baseUrl.Scheme &&
+        IsWikiHost(baseUrl, url.Host) &&
+        url.Port == baseUrl.Port &&
+        url.AbsolutePath.StartsWith(baseUrl.AbsolutePath, StringComparison.Ordinal);
+
+    // Confluence answers a request without a valid session with its login page, which would
+    // otherwise reach the model as a search without results:
+    internal static bool IsLoginPage(Uri url) =>
+        url.AbsolutePath.EndsWith("/login.action", StringComparison.OrdinalIgnoreCase) ||
+        url.Query.Contains("os_destination=", StringComparison.OrdinalIgnoreCase);
 
     internal static bool TryParseBaseUrl(string? value, out Uri? baseUrl)
     {

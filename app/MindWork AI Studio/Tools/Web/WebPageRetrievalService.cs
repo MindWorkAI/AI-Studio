@@ -92,6 +92,9 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (url is not { Scheme: "http" or "https" })
             throw new WebPageAccessBlockedException("Only HTTP and HTTPS URLs are supported.", WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
 
+        if (options.IsTargetAllowed?.Invoke(url) is false)
+            throw new WebPageAccessBlockedException($"The web page '{url.GetLeftPart(UriPartial.Path)}' is outside the targets this request may reach.", WebPageAccessBlockReason.TARGET_NOT_ALLOWED);
+
         if (!options.TargetChosenByUser && IsBlockedHostName(url.Host))
             throw new WebPageAccessBlockedException("Local web page URLs are not supported.", WebPageAccessBlockReason.LOCAL_HOST_NAME);
 
@@ -158,9 +161,10 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Port == candidateUrl.Port &&
         !IsBlockedHostName(candidateUrl.Host) &&
-        options.IsPrivateHostAllowed?.Invoke(candidateUrl.Host) is true &&
         addresses.Count > 0 &&
-        addresses.All(IsNonPublicAddress);
+        (addresses.All(IsNonPublicAddress)
+            ? options.IsPrivateHostAllowed?.Invoke(candidateUrl.Host) is true
+            : options.IsOsSsoAllowedForPublicHost?.Invoke(candidateUrl.Host) is true);
 
     private static IPAddress NormalizeAddress(IPAddress address) => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 
