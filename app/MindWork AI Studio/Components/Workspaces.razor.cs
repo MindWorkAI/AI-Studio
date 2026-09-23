@@ -819,7 +819,9 @@ public partial class Workspaces : MSGComponentBase
         }
 
         var sourceChat = isCopyOfOpenChat ? openChat! : chat;
-        var copy = await WorkspaceBehaviour.CopyChatAsync(sourceChat);
+        var copy = await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat);
+        if (copy is null)
+            return;
 
         await this.LoadTreeItemsAsync(startPrefetch: false);
         this.CurrentChatThread = copy;

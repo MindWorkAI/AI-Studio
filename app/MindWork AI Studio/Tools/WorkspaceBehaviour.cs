@@ -789,23 +789,46 @@ public static class WorkspaceBehaviour
     }
 
     /// <summary>
-    /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
+    /// Copies a chat into a new chat of the same workspace, including its managed transcript files,
+    /// after asking the user for the name of the copy.
     /// </summary>
+    /// <param name="dialogService">Used to ask for the name.</param>
     /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
-    /// <returns>The persisted copy.</returns>
+    /// <returns>The persisted copy. Null when the user canceled the question, in which case nothing was copied.</returns>
     /// <remarks>
+    /// This is the one place that asks for the name of a copy, so every way of copying a chat
+    /// suggests the same name and words the question the same way.<br/><br/>
+    ///
     /// The copy is written before it is returned, so the caller may open it right away. Runtime-only
-    /// state of the source is not part of the copy: it is rebuilt when the copy gets loaded.
+    /// state of the source is not part of the copy: it is rebuilt when the copy gets loaded. When
+    /// the copy cannot be written, nothing of it stays behind and the error reaches the caller.
     /// </remarks>
-    public static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat)
+    public static async Task<ChatThread?> CopyChatAsync(IDialogService dialogService, ChatThread sourceChat)
     {
+        var sourceName = string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Unnamed chat") : sourceChat.Name;
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.Message, string.Format(TB("Please enter a name for the copy of your chat '{0}':"), sourceName) },
+            { x => x.InputHeaderText, TB("Chat Name") },
+            { x => x.UserInput, string.Format(TB("Copy of {0}"), sourceName) },
+            { x => x.ConfirmText, TB("Copy") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, TB("Please enter a chat name.") },
+        };
+
+        var dialogReference = await dialogService.ShowAsync<SingleInputDialog>(TB("Copy Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return null;
+
         var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
         var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
                          ?? throw new InvalidOperationException("The chat could not be copied.");
         copiedChat = copiedChat with
         {
             ChatId = Guid.NewGuid(),
-            Name = string.Format(TB("Copy of {0}"), string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Empty chat") : sourceChat.Name),
+            Name = (dialogResult.Data as string)!,
         };
 
         var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
