@@ -827,7 +827,8 @@ CONFIG["SETTINGS"] = {}
 --                       The URL cannot contain credentials, a query, or a fragment.
 -- Outlook Mail searches only the employee's primary mailbox. It requires a HIGH-confidence
 -- provider or one trusted by the organization, even if a user lowers the tool's generic
--- minimum-confidence setting. Reading mail marks the chat as requiring HIGH confidence.
+-- minimum-confidence setting. Reading mail marks the chat as requiring HIGH confidence; a
+-- provider trusted by the organization may still continue such a chat.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",

@@ -74,8 +74,12 @@ public partial class SettingsPanelTools : SettingsPanelBase
         ? this.T("No minimum confidence level chosen")
         : confidenceLevel.GetName();
 
-    private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
-        $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+    private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item)
+    {
+        // Outlook Mail always enforces High, whatever level is stored for it:
+        var confidenceLevel = item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID ? ConfidenceLevel.HIGH : GetMinimumProviderConfidence(item);
+        return $"background-color: {confidenceLevel.GetColor(this.SettingsManager)};";
+    }
 
     private bool IsToolConfidenceManaged(ToolCatalogItem item) =>
         item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID ||

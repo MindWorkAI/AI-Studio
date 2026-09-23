@@ -40,7 +40,7 @@ public sealed class OutlookMailTool(PromptInjectionGuardService promptInjectionG
         Function = new()
         {
             Name = ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID,
-            DescriptionForLLM = "Search the signed-in employee's primary Outlook mailbox or read one message from a previous search. Works through company Exchange without opening Outlook.",
+            DescriptionForLLM = "Search the signed-in employee's primary Outlook mailbox or read one message from a previous search. Search results are the newest matches first. Works through company Exchange without opening Outlook.",
             Parameters = ToolParameterSchemaBuilder.Create()
                 .RequiredEnum(OPERATION_ARGUMENT, "Search mail or read a message from a previous result.", "search", "read")
                 .OptionalString(TERMS_ARGUMENT, "Plain search terms, required for search.")
@@ -179,8 +179,10 @@ public sealed class OutlookMailTool(PromptInjectionGuardService promptInjectionG
         {
             foreach (var key in this.cachedIds.Where(entry => entry.Value.ExpiresAt <= DateTimeOffset.UtcNow).Select(entry => entry.Key).ToList())
                 this.cachedIds.Remove(key);
+            // Every ID lives equally long, so the earliest expiry is the oldest one. The order of
+            // the dictionary's keys says nothing about that once entries were removed.
             if (this.cachedIds.Count >= MAX_CACHED_IDS)
-                this.cachedIds.Remove(this.cachedIds.Keys.First());
+                this.cachedIds.Remove(this.cachedIds.MinBy(entry => entry.Value.ExpiresAt).Key);
             var id = Guid.NewGuid().ToString("N");
             this.cachedIds[id] = new CachedId(ewsId, endpoint.AbsoluteUri, DateTimeOffset.UtcNow.AddMinutes(15));
             return id;
