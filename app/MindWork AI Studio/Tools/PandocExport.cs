@@ -117,8 +117,10 @@ public static class PandocExport
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
     /// <param name="markdownContent">The content to export.</param>
+    /// <param name="fileName">What the document is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
     /// <returns>True, when the document was written.</returns>
-    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, string dialogTitle, FileExportFormat format, IContent markdownContent)
+    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
     {
         if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
@@ -134,7 +136,7 @@ public static class PandocExport
             return false;
         }
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");

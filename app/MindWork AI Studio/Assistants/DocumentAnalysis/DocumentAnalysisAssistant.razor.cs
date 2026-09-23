@@ -36,7 +36,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     protected override IReadOnlySet<string> AssistantManagedToolIds => this.policyAllowedToolIds;
 
     protected override string Title => T("Document Analysis Assistant");
-    
+
+    /// <summary>
+    /// An analysis is named after its policy, which says far more than the name of the assistant.
+    /// </summary>
+    protected override string ExportFileName => string.IsNullOrWhiteSpace(this.analyzedPolicyName) ? this.Title : this.analyzedPolicyName;
+
     protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
 
     protected override string SystemPrompt =>
@@ -368,6 +373,15 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string policyPreselectedProviderId = string.Empty;
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
+
+    /// <summary>
+    /// The name of the policy the result on screen was produced with.
+    /// </summary>
+    /// <remarks>
+    /// Switching to another policy keeps the result, so the selected policy may no longer be the
+    /// one behind it. An export has to be named after the analysis it holds.
+    /// </remarks>
+    private string analyzedPolicyName = string.Empty;
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
     private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
@@ -381,6 +395,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private static readonly AssistantSessionStateKey<string> POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY = new(nameof(policyPreselectedProviderId));
     private static readonly AssistantSessionStateKey<ProfilePreselection> POLICY_PRESELECTED_PROFILE_STATE_KEY = new(nameof(policyPreselectedProfile));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
+    private static readonly AssistantSessionStateKey<string> ANALYZED_POLICY_NAME_STATE_KEY = new(nameof(analyzedPolicyName));
     private static readonly AssistantSessionStateKey<List<ConfigurationSelectData<string>>> AVAILABLE_LLM_PROVIDERS_STATE_KEY = new(nameof(availableLLMProviders));
 
     /// <inheritdoc />
@@ -398,6 +413,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Set(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, this.policyPreselectedProviderId);
         state.Set(POLICY_PRESELECTED_PROFILE_STATE_KEY, this.policyPreselectedProfile);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Set(ANALYZED_POLICY_NAME_STATE_KEY, this.analyzedPolicyName);
         state.SetList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
     }
 
@@ -420,6 +436,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Restore(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, value => this.policyPreselectedProviderId = value);
         state.Restore(POLICY_PRESELECTED_PROFILE_STATE_KEY, value => this.policyPreselectedProfile = value);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Restore(ANALYZED_POLICY_NAME_STATE_KEY, value => this.analyzedPolicyName = value);
         state.RestoreList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
     }
     
@@ -926,7 +943,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         
         this.CreateChatThread();
         this.ChatThread!.IncludeDateTime = true;
-        
+        this.analyzedPolicyName = this.selectedPolicy?.PolicyName ?? string.Empty;
+
         var userRequest = this.AddUserRequest(
             await this.PromptLoadDocumentsContent(),
             hideContentFromUser: true,

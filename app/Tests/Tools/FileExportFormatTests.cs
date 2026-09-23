@@ -37,6 +37,23 @@ public sealed class FileExportFormatTests
         }), "A format was added to or removed from the export menu: say in FollowsPageAnchors whether its reader follows a page in a local link, then name it here.");
     }
 
+    [TestCase("Q3: Umsatz/Planung?", FileExportFormat.HTML, "Q3 Umsatz Planung.html", Description = "A chat is named after the first words of its question, and those may hold anything.")]
+    [TestCase("Notes for the meeting.", FileExportFormat.MARKDOWN, "Notes for the meeting.md", Description = "Windows drops a trailing dot anyway.")]
+    [TestCase(null, FileExportFormat.MICROSOFT_WORD, "export.docx")]
+    [TestCase("  ", FileExportFormat.LATEX, "export.tex", Description = "A name made of nothing is no name.")]
+    public void TheSaveDialogSuggestsAUsableFileName(string? name, FileExportFormat format, string expectedFileName)
+    {
+        Assert.That(format.ToSuggestedFileName(name), Is.EqualTo(expectedFileName));
+    }
+
+    [Test]
+    public void AnOverlongFileNameIsShortened()
+    {
+        var fileName = FileExportFormat.HTML.ToSuggestedFileName(new string('a', 100));
+
+        Assert.That(fileName, Is.EqualTo($"{new string('a', 60)}.html"), "The first ten words of a question easily outgrow what a dialog shows.");
+    }
+
     [Test]
     public void OnlyAWebPageNeedsAPageTitle()
     {

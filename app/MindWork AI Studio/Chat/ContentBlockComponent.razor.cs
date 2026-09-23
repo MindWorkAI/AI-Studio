@@ -104,6 +104,18 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     [Parameter]
     public string? ExportTitle { get; set; }
+
+    /// <summary>
+    /// What an export of this block is named after, which the save dialog suggests as file name.
+    /// </summary>
+    /// <remarks>
+    /// In the chat that is the name of the chat, in an assistant whatever the assistant says its
+    /// result is about. Whoever renders this block knows which of the two it is. A table or a code
+    /// block with a heading above it is named after that heading instead. Null falls back to a
+    /// generic name.
+    /// </remarks>
+    [Parameter]
+    public string? ExportFileName { get; set; }
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -746,9 +758,9 @@ public partial class ContentBlockComponent : MSGComponentBase
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
-                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown, this.ExportFileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -764,7 +776,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         try
         {
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, this.Content.ToExportContent(file), file.Caption);
+            var fileName = string.IsNullOrWhiteSpace(file.Caption) ? this.ExportFileName : file.Caption;
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, file.Format, this.Content.ToExportContent(file), fileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
