@@ -28,7 +28,7 @@ public sealed class WebTextContentExtractorTests
     [Test]
     public void TheByteOrderMarkAndLineEndingsAreNormalized()
     {
-        var page = WebTextContentExtractor.Extract("﻿first\r\nsecond\rthird\n", "text/plain", URL);
+        var page = WebTextContentExtractor.Extract("\uFEFFfirst\r\nsecond\rthird\n", "text/plain", URL);
         Assert.That(page.Markdown, Is.EqualTo("first\nsecond\nthird"), "The byte order mark is not part of the text, and the line endings are unified just as they are for an extracted page.");
     }
 

@@ -14,7 +14,7 @@ namespace AIStudio.Tools.Web;
 /// </remarks>
 internal static class WebTextContentExtractor
 {
-    private const char BYTE_ORDER_MARK = '﻿';
+    private const char BYTE_ORDER_MARK = '\uFEFF';
 
     /// <summary>
     /// Takes the text of a document. Throws an InvalidOperationException when the body is not

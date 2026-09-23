@@ -170,10 +170,10 @@ const NAMED_REFERENCES: [(&str, char); 6] = [
 /// with a few leading zeros, while a run of digits of any length is not searched to its end.
 const MAX_REFERENCE_DIGITS: usize = 10;
 
-/// Decodes the character escapes of JSON, JavaScript, XML, and HTML: `I`, `\n`, `&#73;`,
+/// Decodes the character escapes of JSON, JavaScript, XML, and HTML: `\u0049`, `\n`, `&#73;`,
 /// `&#x49;`, `&lt;`.
 ///
-/// A model reads `Ignore all previous instructions` inside a JSON string as the sentence it
+/// A model reads `\u0049gnore all previous instructions` inside a JSON string as the sentence it
 /// spells, while the scans see a backslash, a `u`, and four digits. Web pages do not need this,
 /// because converting them to Markdown resolves their references before they are scanned. A JSON
 /// document, an XML feed, or a source file is scanned as it stands, though.
@@ -224,7 +224,7 @@ fn decode_escape(text: &str) -> Option<(char, usize)> {
     (character != '\0').then_some((character, length))
 }
 
-/// Decodes a JSON or JavaScript escape such as `\n` or `I`.
+/// Decodes a JSON or JavaScript escape such as `\n` or `\u0049`.
 fn decode_backslash_escape(bytes: &[u8]) -> Option<(char, usize)> {
     let character = match *bytes.get(1)? {
         b'u' => return decode_unicode_escape(bytes),

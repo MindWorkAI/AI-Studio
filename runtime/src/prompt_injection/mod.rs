@@ -331,7 +331,7 @@ impl Sanitizer {
     /// Matches the rules against the text with its character escapes decoded, and redacts the
     /// escapes behind a hit.
     ///
-    /// `Ignore all previous instructions` in a JSON string or `&#73;gnore` in an XML feed
+    /// `\u0049gnore all previous instructions` in a JSON string or `&#73;gnore` in an XML feed
     /// is plain text to a model, but not to the patterns. Web pages are converted to Markdown
     /// before they are scanned, which resolves their references; JSON, XML, and source files
     /// reach the scan as they stand, whether they come from the web or from the user's disk.
