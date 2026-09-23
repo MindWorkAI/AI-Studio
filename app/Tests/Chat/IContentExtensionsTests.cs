@@ -162,14 +162,83 @@ public sealed class IContentExtensionsTests
             "|---|---|",
             "| Q1 | 100 |"), TOOL_SOURCE);
 
-        content.TryGetMarkdownText(out var markdown);
-        var tables = PlainFileExport.ExtractFiles(markdown, ',');
+        var tables = FilesOf(content);
 
         Assert.Multiple(() =>
         {
             Assert.That(tables, Has.Count.EqualTo(1), "One table in the message, one table offered for it.");
-            Assert.That(tables[0].Content, Does.Not.Contain("example.org"), "A data table has no column a link list would fit into.");
+            Assert.That(content.ToExportContent(tables[0]), Is.EqualTo(tables[0].Content), "A data table has no column a link list would fit into.");
         });
+    }
+
+    [Test]
+    public void AMarkdownBlockCarriesTheSourcesVisibly()
+    {
+        var content = TextWith(Lines(
+            "Here are your notes:",
+            string.Empty,
+            "```markdown",
+            "# Notes",
+            string.Empty,
+            "The notes.",
+            "```"), TOOL_SOURCE);
+
+        var exported = content.ToExportContent(FilesOf(content).Single());
+
+        Assert.That(TopLevelBlocksOf(exported), Is.EqualTo(new[] { "h1", "ParagraphBlock", "h1", "h2", "ListBlock" }), "The notes without the text around them, followed by the source list just as the entire answer carries it.");
+    }
+
+    [Test]
+    public void AWebPageCarriesTheSourcesInAComment()
+    {
+        var content = TextWith(Lines(
+            "```html",
+            "<!DOCTYPE html>",
+            "<html><body><p>Hello</p></body></html>",
+            "```"), TOOL_SOURCE);
+
+        var file = FilesOf(content).Single();
+        var exported = content.ToExportContent(file);
+        var appended = exported[file.Content.Length..].Trim();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exported, Does.StartWith(file.Content), "The page stays as the model wrote it.");
+            Assert.That(appended, Does.StartWith("<!--").And.EndWith("-->"), "Below the page stands one comment and nothing a browser would show.");
+            Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
+        });
+    }
+
+    [Test]
+    public void ALatexBlockCarriesTheSourcesInComments()
+    {
+        var content = TextWith(Lines(
+            "```latex",
+            @"\section{Results}",
+            "```"), TOOL_SOURCE);
+
+        var file = FilesOf(content).Single();
+        var exported = content.ToExportContent(file);
+        var appended = exported[file.Content.Length..].Trim();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exported, Does.StartWith(file.Content), "The document stays as the model wrote it.");
+            Assert.That(appended.Split(Environment.NewLine), Has.All.StartWith("%"), "A line LaTeX would read could stop the whole run.");
+            Assert.That(appended, Does.Contain(TOOL_SOURCE.URL));
+        });
+    }
+
+    [TestCase("markdown")]
+    [TestCase("html")]
+    [TestCase("latex")]
+    public void WithoutSourcesACodeBlockStaysAsTheModelWroteIt(string language)
+    {
+        var content = TextWith(Lines($"```{language}", "The content.", "```"));
+
+        var file = FilesOf(content).Single();
+
+        Assert.That(content.ToExportContent(file), Is.EqualTo(file.Content), "No comment, no heading, no empty line.");
     }
 
     /// <summary>
@@ -183,6 +252,17 @@ public sealed class IContentExtensionsTests
         Text = text,
         Sources = [..sources],
     };
+
+    /// <summary>
+    /// Reads the files of a message the way the export menu does.
+    /// </summary>
+    /// <param name="content">The content to read.</param>
+    /// <returns>The files the export menu offers for it.</returns>
+    private static IReadOnlyList<MessageFile> FilesOf(IContent content)
+    {
+        content.TryGetMarkdownText(out var markdown);
+        return PlainFileExport.ExtractFiles(markdown, ',');
+    }
 
     /// <summary>
     /// Names the blocks a Markdown text is made of, headings by their level.

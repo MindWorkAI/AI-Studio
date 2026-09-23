@@ -69,4 +69,54 @@ public sealed class FileExportFormatTests
             Assert.That(format, Is.EqualTo(FileExportFormat.NONE));
         });
     }
+
+    [TestCase(FileExportFormat.HTML)]
+    [TestCase(FileExportFormat.MARKDOWN)]
+    public void AnHtmlCommentEndsWhereItShouldAndNowhereElse(FileExportFormat format)
+    {
+        var found = format.TryToComment("A page titled --> Start, and one titled --!> Next", out var comment);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(comment, Does.StartWith("<!--"));
+            Assert.That(comment.IndexOf("-->", StringComparison.Ordinal), Is.EqualTo(comment.Length - 3), "Only the end of the comment may end it; the title would spill onto the page otherwise.");
+            Assert.That(comment, Does.Not.Contain("--!>"), "A browser ends a comment there as well.");
+            Assert.That(comment, Does.Contain("Start").And.Contain("Next"), "The title stays readable.");
+        });
+    }
+
+    [Test]
+    public void AnHtmlCommentKeepsTheDashesOfAnAddress()
+    {
+        FileExportFormat.HTML.TryToComment("https://xn--mnchen-3ya.de/", out var comment);
+
+        Assert.That(comment, Does.Contain("https://xn--mnchen-3ya.de/"), "A domain with an umlaut is written with two dashes, and the link has to keep working.");
+    }
+
+    [Test]
+    public void EveryLineOfALatexCommentIsOne()
+    {
+        var found = FileExportFormat.LATEX.TryToComment(Lines("# Sources", string.Empty, "- [1] A title with 100 % and a_b"), out var comment);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(comment.Split(Environment.NewLine), Is.EqualTo(new[] { "% # Sources", "%", "% - [1] A title with 100 % and a_b" }), "LaTeX has no end of a comment, only the end of a line.");
+        });
+    }
+
+    [TestCase(FileExportFormat.CSV)]
+    [TestCase(FileExportFormat.TSV)]
+    [TestCase(FileExportFormat.MICROSOFT_WORD)]
+    public void AFormatWithoutCommentsSaysSo(FileExportFormat format)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(format.TryToComment("A text.", out var comment), Is.False);
+            Assert.That(comment, Is.Empty);
+        });
+    }
+
+    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
 }

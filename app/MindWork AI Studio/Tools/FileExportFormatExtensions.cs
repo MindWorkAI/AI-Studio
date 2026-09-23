@@ -242,6 +242,42 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Wraps a text into a comment of the format: whoever opens the file in an editor reads it,
+    /// while a browser or a LaTeX run skips it.
+    /// </summary>
+    /// <remarks>
+    /// A comment in HTML, and so in Markdown, ends at the first --> it holds, and a browser takes
+    /// --!> for the same; the rest of the text would spill onto the page from there. The title of
+    /// a web page may hold either, so a space goes in before the bracket, which keeps the text
+    /// readable and ends nothing. Every other pair of dashes stays, because a web address may carry
+    /// one, as in the xn-- of a domain with an umlaut. A LaTeX comment has no end to watch for: it
+    /// runs to the end of its line, so every line starts one.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <param name="text">The text to put into the comment.</param>
+    /// <param name="comment">The comment, or an empty string when the format has none.</param>
+    /// <returns>True, when the format knows comments.</returns>
+    public static bool TryToComment(this FileExportFormat format, string text, out string comment)
+    {
+        var lines = text.TrimEnd().ReplaceLineEndings("\n").Split('\n');
+        switch (format)
+        {
+            case FileExportFormat.HTML or FileExportFormat.MARKDOWN:
+                var commentText = string.Join(Environment.NewLine, lines).Replace("-->", "-- >").Replace("--!>", "--! >");
+                comment = $"<!--{Environment.NewLine}{commentText}{Environment.NewLine}-->";
+                return true;
+
+            case FileExportFormat.LATEX:
+                comment = string.Join(Environment.NewLine, lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
+                return true;
+
+            default:
+                comment = string.Empty;
+                return false;
+        }
+    }
+
+    /// <summary>
     /// Determines whether a link into a local file may name the page it points at.
     /// </summary>
     /// <remarks>
