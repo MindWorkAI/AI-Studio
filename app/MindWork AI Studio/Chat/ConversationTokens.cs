@@ -39,7 +39,8 @@ public readonly record struct ConversationTokens
     public int HistoryTokens { get; init; }
 
     /// <summary>
-    /// How much of HistoryTokens is what the tools of the running request returned so far.
+    /// How much of HistoryTokens the tools of the running request add: the calls to them and what
+    /// they returned so far.
     /// </summary>
     /// <remarks>
     /// Named on its own because it is the one share which goes away again. The model reads it in

@@ -178,7 +178,7 @@ public partial class ChatComponent : MSGComponentBase
             //
             // Several statements, and which of them can be trusted differs. What the conversation
             // has cost is exact wherever the provider said it; the window is whatever somebody
-            // wrote down about the model; what the tools returned is only there while they work;
+            // wrote down about the model; what the tools add is only there while they work;
             // what is being written has never been sent and can only ever be estimated. So they
             // are named apart, and the word which marks a guess sits where the guess is.
             //
@@ -194,7 +194,7 @@ public partial class ChatComponent : MSGComponentBase
             // of it with the next message.
             //
             if (this.conversationTokens.ToolTokens > 0)
-                budget = string.Format(this.T("{0}, of which approx. {1} from tool results"), budget, TokenAmount.Format(this.conversationTokens.ToolTokens, this.currentCulture));
+                budget = string.Format(this.T("{0}, of which approx. {1} from tools"), budget, TokenAmount.Format(this.conversationTokens.ToolTokens, this.currentCulture));
 
             if (this.conversationTokens.DraftTokens > 0)
                 budget = string.Format(this.T("{0}, plus approx. {1} for your message"), budget, TokenAmount.Format(this.conversationTokens.DraftTokens, this.currentCulture));
