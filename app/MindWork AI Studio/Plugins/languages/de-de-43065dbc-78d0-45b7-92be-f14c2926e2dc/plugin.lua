@@ -5025,6 +5025,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T266367750"
 -- No minimum confidence level chosen
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2828607242"] = "Kein Mindestvertrauensniveau ausgewählt"
 
+-- High or organization-trusted
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3318910571"] = "Hoch oder organisationsintern vertrauenswürdig"
+
 -- Minimum provider confidence
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3461070436"] = "Minimales Vertrauensniveau für Anbieter"
 
@@ -5192,6 +5195,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "Keine Wer
 
 -- This tool requires provider confidence {0}. The selected provider has {1}.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "Dieses Werkzeug erfordert Anbieter-Vertrauen {0}. Der ausgewählte Anbieter hat {1}."
+
+-- Outlook Mail requires a High-confidence provider or one trusted by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T465659783"] = "Outlook Mail benötigt einen Anbieter mit hoher Vertrauenswürdigkeit oder einen von Ihrer Organisation als vertrauenswürdig eingestuften Anbieter."
 
 -- Tool Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Werkzeugauswahl"
@@ -11955,6 +11961,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS:
 -- Web content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T2626468388"] = "Webinhalte"
 
+-- Outlook Mail
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3288748275"] = "Outlook-Mail"
+
 -- Retrieved context
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3347144620"] = "Abgerufener Kontext"
 
@@ -12569,6 +12578,45 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTE
 
 -- Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
+
+-- Optional HTTPS address of Outlook on the web, used to open a message when Exchange provides a link.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T1500574380"] = "Optionale HTTPS-Adresse von Outlook im Web zum Öffnen einer Nachricht, wenn Exchange einen Link bereitstellt."
+
+-- Enter a valid HTTPS Exchange Web Services URL ending in /EWS/Exchange.asmx.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T1583050130"] = "Geben Sie eine gültige HTTPS-URL für Exchange Web Services ein, die mit /EWS/Exchange.asmx endet."
+
+-- Exchange Web Services URL
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T1639891443"] = "Exchange-Web-Services-URL"
+
+-- Search for the message again before reading it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T2416349156"] = "Suche erneut nach der Nachricht, bevor du sie liest."
+
+-- Enter a valid HTTPS Outlook Web URL without credentials, query, or fragment.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3055020538"] = "Geben Sie eine gültige HTTPS-URL für Outlook im Web ohne Zugangsdaten, Abfrageparameter oder Fragment ein."
+
+-- HTTPS address of your company's Exchange Web Services endpoint. AI Studio signs in as your Windows user; no password is stored.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3167007137"] = "HTTPS-Adresse des Exchange-Web-Services-Endpunkts Ihres Unternehmens. AI Studio meldet sich mit Ihrem Windows-Benutzerkonto an; es wird kein Kennwort gespeichert."
+
+-- Outlook Web URL
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3294737903"] = "Outlook-Web-URL"
+
+-- Outlook Mail needs a valid HTTPS Exchange Web Services URL.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3573420984"] = "Outlook Mail benötigt eine gültige HTTPS-URL für Exchange Web Services."
+
+-- Search and read mail in your primary Microsoft Outlook mailbox. Cannot send mail or access your calendar.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3993741876"] = "E-Mails in Ihrem primären Microsoft-Outlook-Postfach durchsuchen und lesen. E-Mail-Versand und Kalenderzugriff nicht möglich."
+
+-- Outlook Mail requires a High-confidence provider or one trusted by your organization.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T465659783"] = "Outlook Mail benötigt einen Anbieter mit hohem Vertrauensgrad oder einen von Ihrer Organisation als vertrauenswürdig eingestuften Anbieter."
+
+-- Search Mails in Outlook
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T549876451"] = "E-Mails in Outlook durchsuchen"
+
+-- Outlook Mail currently requires Windows.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T759756712"] = "Outlook Mail benötigt derzeit Windows."
+
+-- Exchange did not respond before the timeout. Check the VPN connection.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T845246871"] = "Exchange hat vor dem Timeout keine Antwort gesendet. Prüfen Sie die VPN-Verbindung."
 
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Zulässige private Hosts dürfen nur Hostnamen enthalten, ohne Schema oder Pfad."

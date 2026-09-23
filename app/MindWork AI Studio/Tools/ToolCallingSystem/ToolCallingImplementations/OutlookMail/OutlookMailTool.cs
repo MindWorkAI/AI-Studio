@@ -40,7 +40,7 @@ public sealed class OutlookMailTool(PromptInjectionGuardService promptInjectionG
         Function = new()
         {
             Name = ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID,
-            DescriptionForLLM = "Search the signed-in employee's primary Outlook mailbox or read one message from a previous search. Search results are the newest matches first. Works through company Exchange without opening Outlook.",
+            DescriptionForLLM = "Search the signed-in employee's primary Microsoft Outlook mailbox or read one message from a previous search. Cannot send mail or access calendar events. Search results are the newest matches first. Works through company Exchange without opening Outlook.",
             Parameters = ToolParameterSchemaBuilder.Create()
                 .RequiredEnum(OPERATION_ARGUMENT, "Search mail or read a message from a previous result.", "search", "read")
                 .OptionalString(TERMS_ARGUMENT, "Plain search terms, required for search.")
@@ -49,8 +49,8 @@ public sealed class OutlookMailTool(PromptInjectionGuardService promptInjectionG
         },
     };
 
-    public string GetDisplayName() => TB("Outlook Mail");
-    public string GetDescription() => TB("Search and read your primary company mailbox through Exchange.");
+    public string GetDisplayName() => TB("Search Mails in Outlook");
+    public string GetDescription() => TB("Search and read mail in your primary Microsoft Outlook mailbox. Cannot send mail or access your calendar.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {

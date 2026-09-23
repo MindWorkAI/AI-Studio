@@ -12589,17 +12589,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Search for the message again before reading it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T2416349156"] = "Search for the message again before reading it."
 
--- Search and read your primary company mailbox through Exchange.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T2814790694"] = "Search and read your primary company mailbox through Exchange."
-
 -- Enter a valid HTTPS Outlook Web URL without credentials, query, or fragment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3055020538"] = "Enter a valid HTTPS Outlook Web URL without credentials, query, or fragment."
 
 -- HTTPS address of your company's Exchange Web Services endpoint. AI Studio signs in as your Windows user; no password is stored.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3167007137"] = "HTTPS address of your company's Exchange Web Services endpoint. AI Studio signs in as your Windows user; no password is stored."
-
--- Outlook Mail
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3288748275"] = "Outlook Mail"
 
 -- Outlook Web URL
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3294737903"] = "Outlook Web URL"
@@ -12607,8 +12601,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Outlook Mail needs a valid HTTPS Exchange Web Services URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3573420984"] = "Outlook Mail needs a valid HTTPS Exchange Web Services URL."
 
+-- Search and read mail in your primary Microsoft Outlook mailbox. Cannot send mail or access your calendar.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T3993741876"] = "Search and read mail in your primary Microsoft Outlook mailbox. Cannot send mail or access your calendar."
+
 -- Outlook Mail requires a High-confidence provider or one trusted by your organization.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T465659783"] = "Outlook Mail requires a High-confidence provider or one trusted by your organization."
+
+-- Search Mails in Outlook
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T549876451"] = "Search Mails in Outlook"
 
 -- Outlook Mail currently requires Windows.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::OUTLOOKMAIL::OUTLOOKMAILTOOL::T759756712"] = "Outlook Mail currently requires Windows."
