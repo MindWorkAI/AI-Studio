@@ -24,11 +24,15 @@ public sealed class WebPageRetrievalOptions
 
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
-    public bool ProviderIsTrustedByConfiguration { get; init; }
-
     public bool UseOsSso { get; init; }
 
     public Func<string, bool>? IsPrivateHostAllowed { get; init; }
+
+    /// <summary>
+    /// Decides for every URL, the first one as well as each redirect target, whether it may be
+    /// requested at all. It runs before anything is sent, so a refused target never sees the URL.
+    /// </summary>
+    public Func<Uri, bool>? IsTargetAllowed { get; init; }
 
     public Func<Uri, ConfidenceLevel, Task>? OnPrivateHostProviderBlockAsync { get; init; }
 }

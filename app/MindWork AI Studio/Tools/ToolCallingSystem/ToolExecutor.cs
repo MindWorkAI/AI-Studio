@@ -109,7 +109,6 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 SettingsManager = settingsManager,
                 SettingsValues = settingsValues,
                 ProviderConfidence = provider.Provider.GetConfidence(settingsManager).Level,
-                ProviderIsTrustedByConfiguration = provider.IsTrustedByConfiguration(settingsManager),
             }, token);
             logger.LogInformation("Completed tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.SUCCESS);
 

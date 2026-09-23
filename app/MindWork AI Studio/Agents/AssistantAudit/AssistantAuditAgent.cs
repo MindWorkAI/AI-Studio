@@ -348,12 +348,12 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// </remarks>
     private string FormatRequestedTools(PluginAssistants plugin)
     {
-        var toolIds = plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? [];
+        var toolIds = ToolSelectionRules.NormalizeSelection(plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? []);
         if (toolIds.Count == 0)
             return "None. This plugin does not request any tools.";
 
         var builder = new StringBuilder();
-        foreach (var toolId in toolIds)
+        foreach (var toolId in toolIds.OrderBy(x => x, StringComparer.Ordinal))
         {
             var definition = toolRegistry.GetDefinition(toolId);
             if (definition is null)

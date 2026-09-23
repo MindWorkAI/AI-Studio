@@ -9501,6 +9501,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
 
+-- The Confluence logo by Atlassian identifies the Search Confluence tool.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2043537691"] = "Das Confluence-Logo von Atlassian kennzeichnet das Werkzeug „Confluence durchsuchen“."
+
 -- AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit Sie auf einen Blick sehen können, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient hier ausschließlich der Kennzeichnung kompatibler Dienste und bedeutet keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
 
@@ -12576,11 +12579,56 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTE
 -- Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
 
+-- The setting '{0}' must be less than or equal to {1}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1391527409"] = "Die Einstellung „{0}“ muss kleiner oder gleich {1} sein."
+
+-- The Confluence base URL is not configured correctly.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1459998186"] = "Die Confluence-Basis-URL ist nicht korrekt konfiguriert."
+
+-- Confluence asked for a sign-in instead of showing search results. AI Studio signs in with your operating system account only when your wiki has a private or VPN address, and either the wiki did not accept that sign-in or its address is public. Open the wiki in your browser to check your access.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2220129199"] = "Confluence hat eine Anmeldung verlangt, statt Suchergebnisse anzuzeigen. AI Studio meldet sich nur dann über Ihr Betriebssystem an, wenn Ihr Wiki eine private oder VPN-Adresse hat. Entweder hat das Wiki diese Anmeldung nicht akzeptiert, oder seine Adresse ist öffentlich. Öffnen Sie das Wiki in Ihrem Browser, um Ihren Zugang zu prüfen."
+
+-- Find pages in your company's Confluence wiki.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2450314571"] = "Finden Sie Seiten im Confluence-Wiki Ihres Unternehmens."
+
+-- Confluence returned a search page without readable results.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2900295830"] = "Confluence hat eine Suchseite ohne lesbare Ergebnisse zurückgegeben."
+
+-- Confluence redirected the search outside the configured wiki.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3023598641"] = "Confluence hat die Suche auf eine Adresse außerhalb des konfigurierten Wikis umgeleitet."
+
+-- Confluence Base URL
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3278636117"] = "Confluence-Basis-URL"
+
+-- Enter a valid HTTPS Confluence base URL without a query or fragment.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3364049139"] = "Geben Sie eine gültige HTTPS-Basis-URL von Confluence ohne Abfrageparameter oder Fragment ein."
+
+-- Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3567699845"] = "Zeitlimit in Sekunden"
+
+-- (Optional) Search request timeout in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3778965668"] = "(Optional) Zeitlimit der Suchanfrage in Sekunden."
+
+-- The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T4076619075"] = "Die HTTPS-Adresse Ihres Confluence-Data-Center-Wikis, gegebenenfalls einschließlich ihres Pfads, z. B. https://wiki.example.org/confluence/. Confluence Cloud wird noch nicht unterstützt. Hat Ihr Wiki eine private oder VPN-Adresse, fügen Sie seinen Host auch zu den zulässigen privaten Hosts von „Webseite lesen“ hinzu, damit sich die gefundenen Seiten öffnen lassen."
+
+-- The setting '{0}' must be a positive integer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T4199432074"] = "Die Einstellung „{0}“ muss eine positive ganze Zahl sein."
+
+-- Search Confluence
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T665149329"] = "Confluence durchsuchen"
+
+-- Confluence search for “{0}”
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T718586991"] = "Confluence-Suche nach „{0}“"
+
+-- Searching your company's wiki requires a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T882060522"] = "Für die Suche im Wiki Ihres Unternehmens ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich."
+
+-- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1105887195"] = "(Optional) Allowlist für Hosts von privaten oder VPN-Webseiten. Aus Sicherheitsgründen ist der Zugriff auf private oder VPN-Webseiten standardmäßig nicht erlaubt. Trennen Sie Host-Muster durch Kommas, z. B. example.de, *.example.de. Für erlaubte private Hosts ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich. Bei erlaubten internen HTTPS-Hosts versucht AI Studio automatisch die Standardanmeldung des Betriebssystems, wenn der Server mit integrierter Authentifizierung antwortet."
+
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Zulässige private Hosts dürfen nur Hostnamen enthalten, ohne Schema oder Pfad."
-
--- The web page was not loaded because private or VPN web pages require a High-confidence provider or a provider trusted by your organization's configuration.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2563437007"] = "Die Webseite wurde nicht geladen, da private oder VPN-Webseiten einen Anbieter mit hoher Vertrauenswürdigkeit oder einen von der Organisationskonfiguration vertrauten Anbieter erfordern."
 
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximale Inhaltszeichen"
@@ -12600,8 +12648,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Load a web page and extract its readable content, links, and page details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Laden Sie eine Webseite und extrahieren Sie deren lesbaren Inhalt, Links und Seitendetails."
 
--- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider or a provider trusted by your organization's configuration. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3802894016"] = "(Optional) Allowlist für Hosts von privaten oder VPN-Webseiten. Aus Sicherheitsgründen ist der Zugriff auf private oder VPN-Webseiten standardmäßig nicht erlaubt. Trennen Sie Host-Muster durch Kommas, z. B. example.de, *.example.de. Für erlaubte private Hosts ist ein Anbieter mit hohem Vertrauenslevel oder ein von Ihrer Organisation freigegebener Anbieter erforderlich. Bei erlaubten internen HTTPS-Hosts versucht AI Studio automatisch die Standardanmeldung des Betriebssystems, wenn der Server mit integrierter Authentifizierung antwortet."
+-- The web page was not loaded because private or VPN web pages require a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "Die Webseite wurde nicht geladen, da private oder VPN-Webseiten einen Anbieter mit dem Vertrauensniveau „Hoch“ erfordern."
 
 -- (Optional) HTTP timeout for loading a web page in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4126164830"] = "(Optional) HTTP-Timeout zum Laden einer Webseite in Sekunden."
