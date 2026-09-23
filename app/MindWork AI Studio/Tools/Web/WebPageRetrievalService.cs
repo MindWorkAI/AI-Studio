@@ -92,6 +92,9 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (url is not { Scheme: "http" or "https" })
             throw new WebPageAccessBlockedException("Only HTTP and HTTPS URLs are supported.", WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
 
+        if (options.IsTargetAllowed?.Invoke(url) is false)
+            throw new WebPageAccessBlockedException($"The web page '{url.GetLeftPart(UriPartial.Path)}' is outside the targets this request may reach.", WebPageAccessBlockReason.TARGET_NOT_ALLOWED);
+
         if (!options.TargetChosenByUser && IsBlockedHostName(url.Host))
             throw new WebPageAccessBlockedException("Local web page URLs are not supported.", WebPageAccessBlockReason.LOCAL_HOST_NAME);
 
@@ -121,12 +124,12 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (options.PublicTargetsOnly || options.IsPrivateHostAllowed?.Invoke(url.Host) is not true)
             throw new WebPageAccessBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.", WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
 
-        if (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration)
+        if (options.ProviderConfidence >= ConfidenceLevel.HIGH)
             return addresses;
 
         if (options.OnPrivateHostProviderBlockAsync is not null)
             await options.OnPrivateHostProviderBlockAsync(url, options.ProviderConfidence);
-        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider or a provider trusted by configuration.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
+        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
     }
 
     private static async Task<IReadOnlyList<IPAddress>> ResolveHostAddressesAsync(Uri url, CancellationToken token)
@@ -151,8 +154,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         Uri candidateUrl,
         IReadOnlyList<IPAddress> addresses,
         WebPageRetrievalOptions options) =>
-        options.UseOsSso &&
-        (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration) &&
+        options is { UseOsSso: true, ProviderConfidence: >= ConfidenceLevel.HIGH } &&
         candidateUrl.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Scheme.Equals(candidateUrl.Scheme, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&

@@ -8,9 +8,29 @@ public static class ToolSelectionRules
     public const int MAX_TOOL_RESULT_CHARACTERS = 300_000;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
+    public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
 
+    /// <summary>
+    /// Turns a set of selected tool IDs into the set which actually runs.
+    /// </summary>
+    /// <remarks>
+    /// Removes duplicates and adds the tools another one depends on: Search Confluence only finds
+    /// pages, so it brings Read Web Page along to open them. An added tool keeps its own rules.
+    /// ToolRegistry still drops it when it is switched off or the provider's confidence is too
+    /// low, and Read Web Page reaches a wiki on a private or VPN address only when its host is
+    /// allowed there.<br/><br/>
+    /// Every place which shows or stores a selection normalizes it, the tool selection fields
+    /// included. That way a chat, a template, a policy, or an assistant plugin shows the tools
+    /// which will actually run, and the audit of a plugin judges exactly those.
+    /// </remarks>
     public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
-        => selectedToolIds.ToHashSet(StringComparer.Ordinal);
+    {
+        var normalized = selectedToolIds.ToHashSet(StringComparer.Ordinal);
+        if (normalized.Contains(SEARCH_CONFLUENCE_TOOL_ID))
+            normalized.Add(READ_WEB_PAGE_TOOL_ID);
+
+        return normalized;
+    }
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
 

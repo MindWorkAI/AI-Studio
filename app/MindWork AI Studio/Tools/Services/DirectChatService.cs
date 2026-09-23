@@ -45,7 +45,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             profile = Profile.NO_PROFILE;
         }
 
-        var dataSourceOptionsResult = await this.ResolveDataSourceOptionsAsync(providerResult.Provider, launchConfiguration.DataSourceIds);
+        var dataSourceOptionsResult = await this.ResolveDataSourceOptionsAsync(assistantPlugin, providerResult.Provider, chatTemplate, launchConfiguration.DataSourceIds);
         var dataSourceOptions = dataSourceOptionsResult.Options;
         if (dataSourceOptions is null)
             return new(null, dataSourceOptionsResult.ErrorMessage);
@@ -75,15 +75,21 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             }
         }
 
+        var toolChoice = ChatTemplate.ChooseToolIds(chatTemplate, launchConfiguration.ToolIds);
+        if (toolChoice.LauncherChoiceDropped)
+            logger.LogWarning(
+                "Assistant plugin '{PluginName}' selects the tools '{LauncherToolIds}', but its chat template '{ChatTemplateName}' names tools of its own. The chat starts with the tools of that template.",
+                assistantPlugin.Name, string.Join(", ", launchConfiguration.ToolIds!), chatTemplate.GetSafeName());
+
         //
-        // Only the tools the user could have switched on themselves. A launcher may name one whose
+        // Only the tools the user could have switched on themselves. Either side may name one whose
         // settings are incomplete — an unconfigured web search, say — and starting the chat with it
         // enabled would show a state the user cannot produce by hand and cannot fix from the chat.
         // Null keeps the chat's own defaults, which is what a launcher without tools wants.
         //
-        var selectedToolIds = launchConfiguration.ToolIds is null
+        var selectedToolIds = toolChoice.ToolIds is null
             ? null
-            : await toolRegistry.FilterSelectableToolIdsAsync(Components.CHAT, launchConfiguration.ToolIds);
+            : await toolRegistry.FilterSelectableToolIdsAsync(Components.CHAT, toolChoice.ToolIds);
 
         var chatThread = new ChatThread
         {
@@ -101,7 +107,12 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             Blocks = chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : chatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
         };
 
-        return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: launchConfiguration.DataSourceIds is not null), string.Empty);
+        //
+        // Whoever decided these options — the chat template or the launcher — decided them for this
+        // chat. Without saying so, the chat page would replace them with the chat defaults again:
+        //
+        var dataSourcesWereChosen = chatTemplate.DataSourceOptions is not null || launchConfiguration.DataSourceIds is not null;
+        return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: dataSourcesWereChosen), string.Empty);
     }
 
     private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(Guid? providerId)
@@ -167,10 +178,61 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             : new(chatTemplate, string.Empty);
     }
 
-    private async Task<(DataSourceOptions? Options, string ErrorMessage)> ResolveDataSourceOptionsAsync(ProviderSettings provider, IReadOnlyList<Guid>? dataSourceIds)
+    private async Task<(DataSourceOptions? Options, string ErrorMessage)> ResolveDataSourceOptionsAsync(PluginAssistants assistantPlugin, ProviderSettings provider, ChatTemplate chatTemplate, IReadOnlyList<Guid>? launcherDataSourceIds)
     {
-        if (dataSourceIds is null)
+        //
+        // The launcher names data sources as plain IDs, and the options around them are always the
+        // same ones. Building them here turns its choice into the same kind of thing the chat
+        // template carries, which is what lets one rule decide between the two.
+        //
+        DataSourceOptions? launcherOptions = null;
+        if (launcherDataSourceIds is not null)
+        {
+            var standardOptions = settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions;
+            launcherOptions = new DataSourceOptions
+            {
+                DisableDataSources = false,
+                AutomaticDataSourceSelection = false,
+                AutomaticValidation = standardOptions.AutomaticValidation,
+                PreselectedDataSourceIds = launcherDataSourceIds.Select(dataSourceId => dataSourceId.ToString()).ToList(),
+            };
+        }
+
+        var optionsChoice = ChatTemplate.ChooseDataSourceOptions(chatTemplate, launcherOptions);
+        if (optionsChoice.LauncherChoiceDropped)
+            logger.LogWarning(
+                "Assistant plugin '{PluginName}' selects the data sources '{LauncherDataSourceIds}', but its chat template '{ChatTemplateName}' brings data source options of its own. The chat starts with the data sources of that template.",
+                assistantPlugin.Name, string.Join(", ", launcherDataSourceIds!), chatTemplate.GetSafeName());
+
+        // Neither side says anything, so the chat starts the way it would start on its own:
+        if (optionsChoice.Options is not { } chosenOptions)
             return new(settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy(), string.Empty);
+
+        return await this.CheckChosenDataSourcesAsync(provider, chosenOptions, chatTemplate.DataSourceOptions is null ? null : chatTemplate);
+    }
+
+    /// <summary>
+    /// Checks that the chosen data sources exist and may be used with the provider of the chat.
+    /// </summary>
+    /// <remarks>
+    /// Opening a launcher is one click, so a source which is gone or not permitted has to be said
+    /// out loud instead of being dropped quietly: nobody would see what the chat is missing. Which
+    /// of the two sides chose the sources changes nothing but the wording — and that wording is the
+    /// only place where the user learns which of them to go and fix.
+    /// </remarks>
+    /// <param name="provider">The provider the launched chat runs with.</param>
+    /// <param name="chosenOptions">The options the chat is about to start with.</param>
+    /// <param name="originChatTemplate">The chat template the options came from, or null when the launcher named the sources itself.</param>
+    /// <returns>The checked options, or null and a message saying why no chat was created.</returns>
+    private async Task<(DataSourceOptions? Options, string ErrorMessage)> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
+    {
+        //
+        // There is nothing to check when data sources are switched off, and nothing to check either
+        // when an agent picks them: that choice is made per message in the chat, exactly as it is
+        // for a chat template the user picks by hand.
+        //
+        if (chosenOptions.DisableDataSources || chosenOptions.AutomaticDataSourceSelection || chosenOptions.PreselectedDataSourceIds.Count == 0)
+            return new(chosenOptions, string.Empty);
 
         //
         // Deciding which data sources are permitted needs an effective provider. Without one,
@@ -178,53 +240,57 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         // the actual cause from the user:
         //
         if (provider == ProviderSettings.NONE)
-            return new(null, TB("The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."));
+            return new(null, originChatTemplate is null
+                ? TB("The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.")
+                : string.Format(TB("The chat template '{0}' selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."), originChatTemplate.GetSafeName()));
 
-        var requestedDataSources = new List<IDataSource>(dataSourceIds.Count);
-        foreach (var dataSourceId in dataSourceIds)
+        var requestedDataSources = new List<IDataSource>(chosenOptions.PreselectedDataSourceIds.Count);
+        foreach (var dataSourceId in chosenOptions.PreselectedDataSourceIds)
         {
             // Data sources have no lookup helper in the settings manager, so we match their ids
             // the same way the rest of the app does:
-            var dataSourceIdText = dataSourceId.ToString();
             var dataSource = settingsManager.ConfigurationData.DataSources.FirstOrDefault(candidate =>
-                string.Equals(candidate.Id, dataSourceIdText, StringComparison.OrdinalIgnoreCase));
+                string.Equals(candidate.Id, dataSourceId, StringComparison.OrdinalIgnoreCase));
 
             if (dataSource is null)
-                return new(null, string.Format(TB("The assistant chat launcher references data source '{0}', but that data source does not exist."), dataSourceId));
+                return new(null, originChatTemplate is null
+                    ? string.Format(TB("The assistant chat launcher references data source '{0}', but that data source does not exist."), dataSourceId)
+                    : string.Format(TB("The chat template '{0}' references data source '{1}', but that data source does not exist."), originChatTemplate.GetSafeName(), dataSourceId));
 
             requestedDataSources.Add(dataSource);
         }
 
         //
-        // The options the launched chat will run under. We build them here already, because the
-        // data-source check depends on them: they decide which agent providers take part, and an
-        // agent with too little confidence makes a data source unavailable.
+        // The IDs are written back from the sources they resolved to: one of them may be spelled in
+        // another case than the source itself, and the chat matches its preselection literally.
         //
-        var standardOptions = settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions;
-        var launchedDataSourceOptions = new DataSourceOptions
-        {
-            DisableDataSources = false,
-            AutomaticDataSourceSelection = false,
-            AutomaticValidation = standardOptions.AutomaticValidation,
-            PreselectedDataSourceIds = requestedDataSources.Select(source => source.Id).ToList(),
-        };
+        chosenOptions.PreselectedDataSourceIds = requestedDataSources.Select(source => source.Id).ToList();
 
         IReadOnlyList<IDataSource> availableDataSources;
         try
         {
-            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, launchedDataSourceOptions, requestedDataSources);
+            //
+            // The options the launched chat will run under are what this check runs against: they
+            // decide which agent providers take part, and an agent with too little confidence makes
+            // a data source unavailable.
+            //
+            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, chosenOptions, requestedDataSources);
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "The data sources configured by an assistant chat launcher could not be checked.");
-            return new(null, TB("The data sources selected by the assistant chat launcher could not be checked. No chat was created."));
+            logger.LogError(exception, "The data sources an assistant chat launcher would start its chat with could not be checked.");
+            return new(null, originChatTemplate is null
+                ? TB("The data sources selected by the assistant chat launcher could not be checked. No chat was created.")
+                : string.Format(TB("The data sources selected by the chat template '{0}' could not be checked. No chat was created."), originChatTemplate.GetSafeName()));
         }
 
         var availableSelectedIds = availableDataSources.Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var unavailableDataSources = requestedDataSources.Where(source => !availableSelectedIds.Contains(source.Id)).Select(source => source.Name).ToList();
         if (unavailableDataSources.Count > 0)
-            return new(null, string.Format(TB("The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"), string.Join(", ", unavailableDataSources)));
+            return new(null, originChatTemplate is null
+                ? string.Format(TB("The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"), string.Join(", ", unavailableDataSources))
+                : string.Format(TB("The following data sources selected by the chat template '{0}' are currently unavailable or not permitted for the selected provider: {1}"), originChatTemplate.GetSafeName(), string.Join(", ", unavailableDataSources)));
 
-        return new(launchedDataSourceOptions, string.Empty);
+        return new(chosenOptions, string.Empty);
     }
 }

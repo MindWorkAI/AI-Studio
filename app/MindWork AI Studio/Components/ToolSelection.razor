@@ -44,8 +44,7 @@
                         @foreach (var item in this.catalog)
                         {
                             var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
-                            var isConfigured = item.ConfigurationState.IsConfigured;
-                            var providerConfidenceHint = this.GetProviderConfidenceHint(item);
+                            var warningText = this.GetWarningText(item);
                             <div class="tool-selection-row">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
                                     @*
@@ -81,17 +80,13 @@
                                     </MudButton>
                                     <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
                                 </MudStack>
-                                @if (!isConfigured)
+                                @if (!string.IsNullOrWhiteSpace(warningText))
                                 {
-                                    <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-2">@(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message)</MudText>
-                                }
-                                @if (!item.IsActive)
-                                {
-                                    <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-2">@T("This tool has been disabled by your organization.")</MudText>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
-                                {
-                                    <MudText Typo="Typo.caption" Color="Color.Warning" Class="ml-2">@providerConfidenceHint</MudText>
+                                    @*
+                                        A caption renders as an inline span by default, and an inline element
+                                        cannot be justified. The div makes it a block of its own.
+                                    *@
+                                    <MudJustifiedText Typo="Typo.caption" HtmlTag="div" Color="Color.Warning" Class="ml-2">@warningText</MudJustifiedText>
                                 }
                             </div>
                         }

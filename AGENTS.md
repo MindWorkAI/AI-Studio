@@ -308,12 +308,28 @@ Multi-level confidence scheme allows users to control which providers see which 
 6. GitHub Actions builds release binaries for all platforms
 7. Binaries uploaded to GitHub Releases
 
+## Localization
+
+The app's texts are localized in two steps, and the developer always does the first one.
+
+1. The developer starts the app, which runs the I18N collector, and runs the localization assistant
+   in the app for German and US English. Agents never write these initial translations themselves:
+   they neither add nor regenerate entries in `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`,
+   `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`,
+   or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`.
+   When new or changed texts are waiting for translation, remind the developer to start the app and
+   run the localization.
+2. Afterward, agents always review the German translation. Compare the new and changed values of the
+   de-de `plugin.lua` with `main`, check them against the wording already established there, and
+   correct or improve them directly in that file. `allTexts.lua` and the en-us `plugin.lua` stay as
+   the assistant wrote them.
+
 ## Important Development Notes
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **End of file formatting** - Do not append an extra empty line at the end of files.
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
-- **I18N resources are generated** - Do not manually edit `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`, `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`, or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`. These files are updated automatically by the I18N process.
+- **I18N resources are generated** - The developer produces the translations by running the localization assistant in the app; agents only review and correct the German values afterward. See "Localization" above.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Agent-run builds** - Never start `.NET` or Rust builds in the agent's own shell; it is sandboxed. Use the `rider` and `rustrover` MCP servers instead, which build in the IDE outside that sandbox. See "Running builds from an agent" above.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
