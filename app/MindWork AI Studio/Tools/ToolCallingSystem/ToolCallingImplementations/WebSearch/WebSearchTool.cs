@@ -57,7 +57,9 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     /// <remarks>
     /// A page whose readable content amounts to a few sentences was most likely not extracted
     /// in full, whatever the reason, and saying so keeps the model from treating it as the
-    /// whole story.
+    /// whole story.<br/><br/>
+    /// A text document such as a JSON response is exempt: nothing was extracted from it, it
+    /// arrives whole, and a short one is simply short.
     /// </remarks>
     private const int MIN_COMPLETE_PAGE_CHARACTERS = 500;
 
@@ -746,7 +748,8 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             return "snippet only";
 
         var originalContentCharacters = result.RetrievedPage.ExtractedPage.Markdown.Length;
-        return result.ContentTruncated || originalContentCharacters < MIN_COMPLETE_PAGE_CHARACTERS ? "partial or truncated" : "complete";
+        var mayBeIncompletelyExtracted = result.RetrievedPage.ContentKind is WebContentKind.HTML_PAGE && originalContentCharacters < MIN_COMPLETE_PAGE_CHARACTERS;
+        return result.ContentTruncated || mayBeIncompletelyExtracted ? "partial or truncated" : "complete";
     }
 
     /// <summary>

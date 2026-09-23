@@ -17,6 +17,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
 
+    /// <summary>
+    /// Below how many characters the content of an HTML page is reported as partial.
+    /// </summary>
+    /// <remarks>
+    /// A page yielding a few sentences was most likely not extracted in full: its layout was
+    /// not understood, or JavaScript assembles it in the browser. A text document such as a
+    /// JSON response is exempt, because it arrives whole and a short one is simply short.
+    /// </remarks>
+    private const int MIN_COMPLETE_PAGE_CHARACTERS = 500;
+
     private const string TIMEOUT_SECONDS_SETTING = "timeoutSeconds";
     private const string MAX_CONTENT_CHARACTERS_SETTING = "maxContentCharacters";
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
@@ -44,7 +54,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         Function = new()
         {
             Name = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
-            DescriptionForLLM = "Load a single HTTP or HTTPS page and return its metadata and main content as Markdown. Static HTML is supported; JavaScript is not executed.",
+            DescriptionForLLM = "Load a single HTTP or HTTPS URL. HTML pages return their metadata and main content as Markdown; plain text, JSON, XML, CSV, and other text formats return their text unchanged. JavaScript is not executed, and binary files such as PDFs or images are not supported.",
             Parameters = ToolParameterSchemaBuilder.Create()
                 .RequiredString(URL_ARGUMENT, "The full HTTP or HTTPS URL of the web page to read.")
                 .Build(),
@@ -158,11 +168,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var extractedPage = retrievedPage.ExtractedPage;
         var markdown = extractedPage.Markdown;
         var originalContentCharacters = markdown.Length;
+        var isTextDocument = retrievedPage.ContentKind is WebContentKind.TEXT_DOCUMENT;
         List<string> warnings = [];
 
         if (string.IsNullOrWhiteSpace(markdown))
-            warnings.Add("No readable static page content was extracted. The page may require JavaScript, authentication, or browser cookies.");
-        else if (markdown.Length < 500)
+            warnings.Add(isTextDocument ? "The response was empty." : "No readable static page content was extracted. The page may require JavaScript, authentication, or browser cookies.");
+        else if (!isTextDocument && markdown.Length < MIN_COMPLETE_PAGE_CHARACTERS)
             warnings.Add("Only a small amount of readable page content was extracted; the result may be incomplete.");
 
         var contentTruncated = false;
@@ -198,7 +209,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildModelContent(page, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
+            JsonContent = BuildModelContent(page, retrievedPage.ContentKind, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
             Sources = string.IsNullOrWhiteSpace(modelContent.Markdown)
                 ? []
                 : [new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
@@ -206,15 +217,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         };
     }
 
-    private static JsonNode BuildModelContent(HTMLParserWebPage page, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
+    private static JsonNode BuildModelContent(HTMLParserWebPage page, WebContentKind contentKind, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
         bool contentTruncated, IReadOnlyList<string> warnings)
     {
         var websiteContentAsMarkdown = modelContent.Markdown;
         var metadata = new JsonObject();
 
+        var mayBeIncompletelyExtracted = contentKind is WebContentKind.HTML_PAGE && originalContentCharacters < MIN_COMPLETE_PAGE_CHARACTERS;
         var status = string.IsNullOrWhiteSpace(websiteContentAsMarkdown)
             ? "empty response"
-            : contentTruncated || originalContentCharacters < 500
+            : contentTruncated || mayBeIncompletelyExtracted
                 ? "partial"
                 : "complete";
         
