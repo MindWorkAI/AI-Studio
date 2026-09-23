@@ -61,6 +61,23 @@ impl Builder {
         self.text.push_str(value);
     }
 
+    /// Appends `value` as it stands in the source, beginning at `source_start` there.
+    ///
+    /// Unlike `push`, every character keeps a position of its own. A match starting in the
+    /// middle of an unchanged passage has to map back onto that middle, not onto its start.
+    fn push_verbatim(&mut self, value: &str, source_start: usize) {
+        for (offset, character) in value.char_indices() {
+            let start = source_start + offset;
+            let end = start + character.len_utf8();
+            for _ in 0..character.len_utf8() {
+                self.starts.push(start);
+                self.ends.push(end);
+            }
+        }
+
+        self.text.push_str(value);
+    }
+
     /// Appends a character in lowercase. Lowercasing can change the byte length, which is
     /// exactly why every derived byte records where its source character began and ended.
     fn push_lowercase(&mut self, character: char, source_start: usize) {
@@ -136,6 +153,158 @@ pub fn extract_spaced_letters(text: &str) -> MappedText {
     }
 
     builder.finish()
+}
+
+/// The named character references decoded by `decode_escapes`: the five XML defines, plus the
+/// non-breaking space, which HTML uses to glue words together.
+const NAMED_REFERENCES: [(&str, char); 6] = [
+    ("&lt;", '<'),
+    ("&gt;", '>'),
+    ("&amp;", '&'),
+    ("&quot;", '"'),
+    ("&apos;", '\''),
+    ("&nbsp;", '\u{A0}'),
+];
+
+/// The most digits a numeric character reference may have. Enough for the largest code point
+/// with a few leading zeros, while a run of digits of any length is not searched to its end.
+const MAX_REFERENCE_DIGITS: usize = 10;
+
+/// Decodes the character escapes of JSON, JavaScript, XML, and HTML: `I`, `\n`, `&#73;`,
+/// `&#x49;`, `&lt;`.
+///
+/// A model reads `Ignore all previous instructions` inside a JSON string as the sentence it
+/// spells, while the scans see a backslash, a `u`, and four digits. Web pages do not need this,
+/// because converting them to Markdown resolves their references before they are scanned. A JSON
+/// document, an XML feed, or a source file is scanned as it stands, though.
+///
+/// Decodes in a single pass from left to right, so `\\u0049` is an escaped backslash followed by
+/// `u0049`, just as a JSON parser reads it. An escape that is incomplete or unknown stays as it is.
+///
+/// Returns `None` when there was nothing to decode, which is the case for almost every text. The
+/// derived view would equal the text itself, and the scans of it would find nothing new.
+pub fn decode_escapes(text: &str) -> Option<MappedText> {
+    let mut builder: Option<Builder> = None;
+    let mut copied = 0;
+    let mut search = 0;
+
+    while let Some(offset) = text[search..].find(['\\', '&']) {
+        let position = search + offset;
+        let Some((character, length)) = decode_escape(&text[position..]) else {
+            // Both characters are ASCII, so the next one begins right after it:
+            search = position + 1;
+            continue;
+        };
+
+        let builder = builder.get_or_insert_with(|| Builder::with_capacity(text.len()));
+        builder.push_verbatim(&text[copied..position], copied);
+
+        let mut buffer = [0u8; 4];
+        builder.push(character.encode_utf8(&mut buffer), position, position + length);
+
+        copied = position + length;
+        search = copied;
+    }
+
+    let mut builder = builder?;
+    builder.push_verbatim(&text[copied..], copied);
+    Some(builder.finish())
+}
+
+/// Decodes the escape at the start of `text` into the character it stands for, together with
+/// how many bytes it takes up.
+fn decode_escape(text: &str) -> Option<(char, usize)> {
+    let (character, length) = match text.as_bytes().first()? {
+        b'\\' => decode_backslash_escape(text.as_bytes())?,
+        b'&' => decode_character_reference(text)?,
+        _ => return None,
+    };
+
+    // A NUL is nothing a model reads as a letter, and XML does not allow it to begin with:
+    (character != '\0').then_some((character, length))
+}
+
+/// Decodes a JSON or JavaScript escape such as `\n` or `I`.
+fn decode_backslash_escape(bytes: &[u8]) -> Option<(char, usize)> {
+    let character = match *bytes.get(1)? {
+        b'u' => return decode_unicode_escape(bytes),
+        b'n' => '\n',
+        b'r' => '\r',
+        b't' => '\t',
+        b'b' => '\u{8}',
+        b'f' => '\u{C}',
+        b'/' => '/',
+        b'\\' => '\\',
+        b'"' => '"',
+        _ => return None,
+    };
+
+    Some((character, 2))
+}
+
+/// Decodes `\uXXXX`, and a surrogate pair written as two of them into the one character they
+/// stand for together. A surrogate without its partner stands for nothing and stays as it is.
+fn decode_unicode_escape(bytes: &[u8]) -> Option<(char, usize)> {
+    let unit = read_hex_unit(bytes.get(2..6)?)?;
+    if let Some(character) = char::from_u32(unit) {
+        return Some((character, 6));
+    }
+
+    if !(0xD800..0xDC00).contains(&unit) || bytes.get(6..8)? != b"\\u" {
+        return None;
+    }
+
+    let low = read_hex_unit(bytes.get(8..12)?)?;
+    if !(0xDC00..0xE000).contains(&low) {
+        return None;
+    }
+
+    let combined = 0x10000 + ((unit - 0xD800) << 10) + (low - 0xDC00);
+    char::from_u32(combined).map(|character| (character, 12))
+}
+
+/// Reads four hex digits. They are checked one by one, because `from_str_radix` would also
+/// accept a leading `+`.
+fn read_hex_unit(digits: &[u8]) -> Option<u32> {
+    if !digits.iter().all(u8::is_ascii_hexdigit) {
+        return None;
+    }
+
+    u32::from_str_radix(std::str::from_utf8(digits).ok()?, 16).ok()
+}
+
+/// Decodes an XML or HTML character reference such as `&#73;`, `&#x49;`, or `&lt;`.
+///
+/// A numeric reference is decoded without its closing semicolon as well, because HTML reads
+/// `&#73gnore` as `Ignore`, and so does a model.
+fn decode_character_reference(text: &str) -> Option<(char, usize)> {
+    let Some(reference) = text.strip_prefix("&#") else {
+        return NAMED_REFERENCES
+            .iter()
+            .find(|(name, _)| text.starts_with(name))
+            .map(|(name, character)| (*character, name.len()));
+    };
+
+    let (radix, digits, prefix_length) = match reference.strip_prefix(['x', 'X']) {
+        Some(hex_digits) => (16, hex_digits, 3),
+        None => (10, reference, 2),
+    };
+
+    let digit_count = digits
+        .bytes()
+        .take(MAX_REFERENCE_DIGITS + 1)
+        .take_while(|byte| byte.is_ascii_digit() || (radix == 16 && byte.is_ascii_hexdigit()))
+        .count();
+
+    if digit_count == 0 || digit_count > MAX_REFERENCE_DIGITS {
+        return None;
+    }
+
+    let value = u32::from_str_radix(&digits[..digit_count], radix).ok()?;
+    let character = char::from_u32(value)?;
+    let semicolon_length = usize::from(digits.as_bytes().get(digit_count) == Some(&b';'));
+
+    Some((character, prefix_length + digit_count + semicolon_length))
 }
 
 #[cfg(test)]
@@ -216,5 +385,76 @@ mod tests {
     fn separate_spaced_passages_do_not_merge() {
         let mapped = extract_spaced_letters("a b c and later d e f");
         assert!(mapped.text.contains('\n'), "got: {}", mapped.text);
+    }
+
+    #[test]
+    fn decodes_json_escapes() {
+        let mapped = decode_escapes(r#"say \u0049gnore,\tthen \"quote\" and a\/b"#).expect("there are escapes to decode");
+        assert_eq!(mapped.text, "say Ignore,\tthen \"quote\" and a/b");
+    }
+
+    #[test]
+    fn maps_a_decoded_match_back_onto_the_whole_escape() {
+        let source = r"say \u0049gnore now";
+        let mapped = decode_escapes(source).expect("there are escapes to decode");
+
+        let start = mapped.text.find("Ignore").expect("the word should be decoded");
+        let (source_start, source_end) = mapped.to_source_range(start, start + "Ignore".len());
+
+        // Redacting only the `I` would leave `\u004` behind, or cut the escape in half:
+        assert_eq!(&source[source_start..source_end], r"\u0049gnore");
+    }
+
+    #[test]
+    fn decodes_a_surrogate_pair_into_one_character() {
+        let source = r"smile \ud83d\ude00 please";
+        let mapped = decode_escapes(source).expect("there are escapes to decode");
+        assert_eq!(mapped.text, "smile 😀 please");
+
+        let start = mapped.text.find('😀').expect("the pair should be decoded");
+        let (source_start, source_end) = mapped.to_source_range(start, start + '😀'.len_utf8());
+        assert_eq!(&source[source_start..source_end], r"\ud83d\ude00");
+    }
+
+    #[test]
+    fn leaves_a_lone_surrogate_and_incomplete_escapes_alone() {
+        assert!(decode_escapes(r"broken \ud83d here").is_none());
+        assert!(decode_escapes(r"broken \ude00 here").is_none());
+        assert!(decode_escapes(r"cut off \u00").is_none());
+        assert!(decode_escapes(r"not hex \u00zz").is_none());
+    }
+
+    #[test]
+    fn reads_an_escaped_backslash_before_what_follows_it() {
+        // A JSON parser reads `\\u0049` as a backslash followed by `u0049`, and so must we:
+        let mapped = decode_escapes(r"\\u0049").expect("the backslash is an escape");
+        assert_eq!(mapped.text, r"\u0049");
+    }
+
+    #[test]
+    fn decodes_character_references() {
+        let mapped = decode_escapes("&#73;&#x67;nore &lt;b&gt; Tom &amp; Jerry&nbsp;&quot;x&apos;")
+            .expect("there are references to decode");
+
+        assert_eq!(mapped.text, "Ignore <b> Tom & Jerry\u{A0}\"x'");
+    }
+
+    #[test]
+    fn decodes_a_numeric_reference_without_its_semicolon() {
+        let mapped = decode_escapes("&#73gnore").expect("HTML reads this reference as well");
+        assert_eq!(mapped.text, "Ignore");
+    }
+
+    #[test]
+    fn leaves_unknown_references_and_nul_alone() {
+        assert!(decode_escapes("&copy; 2026 and &#; and &#x;").is_none());
+        assert!(decode_escapes(r"&#0; and \u0000").is_none());
+        assert!(decode_escapes("&#99999999999;").is_none());
+    }
+
+    #[test]
+    fn text_without_escapes_yields_no_view() {
+        // Markdown escapes and a bare ampersand are ordinary text:
+        assert!(decode_escapes(r"Fish & chips, \*not\* bold, C:\Program Files").is_none());
     }
 }
