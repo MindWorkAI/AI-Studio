@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -116,12 +117,16 @@ public partial class ToolSelection : MSGComponentBase
     // The catalog already carries the resolved level, so there is nothing to look up again:
     private static ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => item.MinimumProviderConfidence;
 
-    private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
+    private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderAllowedForTool(
+        item.Definition.Id, this.ProviderConfidence, GetMinimumProviderConfidence(item), this.LLMProvider.IsTrustedByConfiguration(this.SettingsManager));
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
         if (!this.IsBlockedByProviderConfidence(item))
             return null;
+
+        if (item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID)
+            return this.T("Outlook Mail requires a High-confidence provider or one trusted by your organization.");
 
         return string.Format(
             this.T("This tool requires provider confidence {0}. The selected provider has {1}."),

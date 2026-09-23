@@ -1,4 +1,4 @@
-# Provider icon assets
+# Icon assets
 
 All provider icons are shipped with AI Studio and loaded locally. No icon triggers an external image request.
 
@@ -13,4 +13,10 @@ All provider icons are shipped with AI Studio and loaded locally. No icon trigge
 - `provider*.svg` and `self-hosted*.svg` are neutral project-owned fallback graphics.
 - `gwdg.svg`, `openrouter.svg`, `google.svg` and `helmholtz.svg` were created by taking the official logo from their respective websites as images and creating a svg from them.
 
-The `-dark` files are contrast variants for dark surfaces. All product names, logos, and trademarks remain the property of their respective owners. Their inclusion identifies compatible services and does not imply endorsement. Sources were retrieved on 2026-08-24.
+The `-dark` files are contrast variants for dark surfaces. Provider icon sources were retrieved on 2026-08-24.
+
+## Tool icons
+
+- `AppIcons.OUTLOOK` in `Tools/AppIcons.cs` is the Microsoft Outlook mark used by the `outlook_mail` tool. Its path and `#0078D4` color come from [Simple Icons 5.0.0](https://app.unpkg.com/simple-icons@5.0.0/files/icons/microsoftoutlook.js), released under [CC0-1.0](https://github.com/simple-icons/simple-icons/blob/5.0.0/LICENSE.md). The mark is embedded in the UI icon string and loaded locally. Retrieved on 2026-09-23.
+
+All product names, logos, and trademarks remain the property of their respective owners. Their inclusion identifies compatible services and does not imply endorsement.
