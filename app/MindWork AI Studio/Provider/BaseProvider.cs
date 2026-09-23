@@ -596,17 +596,12 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <remarks>
     /// Providers word their errors differently, but they all put a sentence somewhere into the
     /// body. Passing that sentence on is what lets a user act on the problem instead of only
-    /// learning that something went wrong.
+    /// learning that something went wrong. Open to the providers themselves as well, because some
+    /// of them talk to an endpoint of their own rather than through the shared request methods,
+    /// and their users deserve the same explanation.
     /// </remarks>
     /// <param name="responseBody">The body of the failed response.</param>
     /// <returns>The message, or an empty string when the body carries none.</returns>
-    /// <summary>
-    /// Reads what the provider itself said about a failure out of its error response.
-    /// </summary>
-    /// <remarks>
-    /// Available to the providers because some of them talk to an endpoint of their own rather
-    /// than through the shared request methods, and their users deserve the same explanation.
-    /// </remarks>
     protected static string ReadProviderErrorMessage(string responseBody)
     {
         if (string.IsNullOrWhiteSpace(responseBody))
@@ -651,7 +646,19 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         return propertyElement.GetString();
     }
-    
+
+    /// <summary>
+    /// Builds the message a user gets to see when the chat outgrew what the model reads.
+    /// </summary>
+    /// <remarks>
+    /// Two answers mean this: one provider says so in the body of a bad request, another turns the
+    /// request down with 413 instead. For the user they are the same thing, and saying it in one
+    /// place is also what keeps both on one I18N key.
+    /// </remarks>
+    /// <param name="providerMessage">What the provider itself said about the failure.</param>
+    /// <returns>The message to show.</returns>
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
@@ -672,6 +679,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var retry = 0;
         var response = default(HttpResponseMessage);
         var errorMessage = string.Empty;
+        var failureAlreadyExplained = false;
         var lastProviderRequestFailure = ProviderRequestFailureReason.NONE;
         HttpStatusCode? lastResponseStatusCode = null;
         var lastResponseReasonPhrase = string.Empty;
@@ -726,9 +734,35 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
+            //
+            // Some providers answer an oversized request with 413 instead of describing the
+            // problem in a 400 body. Handled here rather than below, because this is the one
+            // failure in this loop which cannot get better by being sent again: without its own
+            // branch it falls through to the retry delays, which resend the very same oversized
+            // request for several minutes before the user learns anything at all.
+            //
+            if(nextResponse.StatusCode is HttpStatusCode.RequestEntityTooLarge)
+            {
+                //
+                // The reason phrase of a 413 says no more than "Request Entity Too Large", and a
+                // proxy which refuses the request before the provider sees it sends no body worth
+                // reading. So we show what the body carries and fall back to the phrase:
+                //
+                var tooLargeMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(tooLargeMessage))
+                    tooLargeMessage = nextResponse.ReasonPhrase;
+
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(tooLargeMessage)));
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
+                break;
+            }
+
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
                 //
@@ -755,7 +789,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(badRequestMessage)));
                 }
                 else
                 {
@@ -764,6 +798,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -772,6 +807,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -780,6 +816,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -788,6 +825,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -796,6 +834,32 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
+                break;
+            }
+
+            //
+            // Everything else the provider answers in the 400 range is about this request itself,
+            // and sending the very same request again cannot change that answer. Only 408 and 429
+            // say "later" rather than "no", and waiting them out is what the delay below exists
+            // for. This branch comes last on purpose: every status code we have a better sentence
+            // for is handled above, and only what is left over ends up with this general wording.
+            //
+            if(nextResponse.StatusCode is not (HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests) && (int)nextResponse.StatusCode is >= 400 and < 500)
+            {
+                //
+                // What the provider said about it, falling back to the reason phrase. The status
+                // code is named as well: this is the branch for refusals we have no wording of our
+                // own for, and then the number is what the user can ask the provider about.
+                //
+                var refusalMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(refusalMessage))
+                    refusalMessage = nextResponse.ReasonPhrase;
+
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
 
@@ -808,7 +872,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             await Task.Delay(TimeSpan.FromSeconds(timeSeconds), effectiveCancellationToken);
         }
         
-        if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
+        //
+        // Whether this request got an answer at all. The response is set in the success branch and
+        // nowhere else, so its absence is what "we have nothing to hand on" means. Going by the
+        // error message instead was wrong in both directions: a provider which sends no reason
+        // phrase left that message empty, and this method then reported success without a response
+        // for the caller to read; and an attempt which succeeded as the last one the loop allows
+        // was reported as a failure although its answer was right there.
+        //
+        if(response is null)
         {
             if (lastProviderRequestFailure is not ProviderRequestFailureReason.NONE)
             {
@@ -817,7 +889,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                 throw new ProviderRequestException(lastProviderRequestFailure, userMessage, lastResponseStatusCode, lastResponseReasonPhrase, lastErrorBody);
             }
 
-            await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+            //
+            // This is the message for a failure nobody was able to explain. Where one of the
+            // branches above named the cause, it has to stay silent: it speaks of all retries
+            // having been spent, while those branches stop after the very first answer. Sending
+            // both leaves the user with two messages which contradict each other, and the one
+            // which explains nothing is the one arriving last.
+            //
+            if(!failureAlreadyExplained)
+                await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
 

@@ -144,7 +144,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Send a message to start the plugin system:
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
-        await this.themeProvider.WatchSystemDarkModeAsync(this.SystemeThemeChanged);
+        await this.themeProvider.WatchSystemDarkModeAsync(this.SystemThemeChanged);
+        this.CircuitState.ConnectionRestored += this.OnConnectionRestored;
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
         this.LoadEmbeddingItem();
@@ -564,15 +565,45 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         }
     }
     
-    private async Task SystemeThemeChanged(bool isDark)
+    /// <summary>
+    /// True, when the user wants AI Studio to follow the light or dark mode of the operating system.
+    /// </summary>
+    /// <remarks>
+    /// This also decides whether the MudThemeProvider watches the operating system at all. On a system
+    /// change, the provider takes the new mode into its own state first and calls our handler only
+    /// afterward, so the handler cannot prevent it. Nor can a new render of this layout undo it: the
+    /// provider takes over its IsDarkMode parameter only when that value changes, and with a fixed theme,
+    /// it never does. Were the provider watching while the user chose a fixed theme, MudBlazor would show
+    /// the colors of the system from the next render on, while the rest of the app kept the chosen ones.
+    /// </remarks>
+    private bool FollowSystemTheme => this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM;
+
+    private async Task SystemThemeChanged(bool isDark)
     {
         this.Logger.LogInformation($"The system theme changed to {(isDark ? "dark" : "light")}.");
         await this.UpdateThemeConfiguration();
     }
 
+    /// <summary>
+    /// Reads the color theme anew once the browser connection of this circuit returned.
+    /// </summary>
+    /// <remarks>
+    /// The browser reports a change of the system theme exactly once. Blazor drops that report while the
+    /// connection is down, which happens when the machine switches its theme during sleep and wakes up
+    /// again. Since the circuit survives the sleep (cf. the retention settings in Program.cs), no reload
+    /// reads the theme anew either, so AI Studio would keep the theme it had before the sleep.
+    /// <br/><br/>
+    /// The update is deliberately not awaited: this handler runs while Blazor is still completing the
+    /// reconnection, and the answer to the JavaScript call inside can only arrive afterward.
+    /// </remarks>
+    private void OnConnectionRestored()
+    {
+        this.InvokeAsync(this.UpdateThemeConfiguration).Observe($"{nameof(MainLayout)}: reading the color theme after the connection returned");
+    }
+
     private async Task UpdateThemeConfiguration()
     {
-        if (this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM)
+        if (this.FollowSystemTheme)
             this.useDarkMode = await this.themeProvider.GetSystemDarkModeAsync();
         else
             this.useDarkMode = this.SettingsManager.ConfigurationData.App.PreferredTheme == Themes.DARK;
@@ -664,6 +695,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
     }

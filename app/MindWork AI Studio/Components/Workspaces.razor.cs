@@ -660,6 +660,24 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
+    /// <summary>
+    /// Copies the given chat, after asking the user for the name of the copy, and shows the copy in the tree.
+    /// </summary>
+    /// <param name="sourceChat">The chat to copy, as it stands in memory.</param>
+    /// <returns>The persisted copy. Null when the user canceled the question, in which case nothing was copied.</returns>
+    /// <remarks>
+    /// Neither asks about unsaved changes nor opens the copy: which of both a caller needs depends
+    /// on where the copy was asked for.
+    /// </remarks>
+    public async Task<ChatThread?> CopyChatAsync(ChatThread sourceChat)
+    {
+        var copy = await WorkspaceBehaviour.CopyChatAsync(this.DialogService, sourceChat);
+        if (copy is not null)
+            await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        return copy;
+    }
+
     private async Task<ChatThread?> LoadChatAsync(string? chatPath, bool switchToChat)
     {
         if (string.IsNullOrWhiteSpace(chatPath))
@@ -704,37 +722,35 @@ public partial class Workspaces : MSGComponentBase
         return null;
     }
 
-    public async Task DeleteChatAsync(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
+    /// <summary>Deletes the given chat and updates the tree, asking the user to confirm that beforehand.</summary>
+    /// <param name="chatPath">Path of the chat to delete.</param>
+    /// <param name="askForConfirmation">False skips the question. Only for callers who already asked.</param>
+    /// <param name="unloadChat">Whether to take the chat out of the view when it is the one being shown.</param>
+    /// <returns>True when the chat is gone, which includes it never having been there. False when it is still there.</returns>
+    /// <remarks>
+    /// The question itself comes from the workspace behaviour, so that it is worded in one place only.
+    /// Callers who do more than deleting have to honor the return value: a chat that is busy is not
+    /// deleted either, and then nothing about it may be reset.
+    /// </remarks>
+    public async Task<bool> DeleteChatAsync(string? chatPath, bool askForConfirmation = true, bool unloadChat = true)
     {
         var chat = await this.LoadChatAsync(chatPath, false);
+        
+        // There is nothing left to delete, so the caller may go on:
         if (chat is null)
-            return;
+            return true;
 
+        //
+        // Deleting a chat while it is being worked on would pull the ground from under that work.
+        // We check before asking: nobody should confirm something that cannot happen anyway.
+        //
         var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
-            return;
+            return false;
 
-        if (askForConfirmation)
-        {
-            var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(chat.WorkspaceId);
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                {
-                    x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
-                    {
-                        true => string.Format(T("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
-                        false => string.Format(T("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
-                    }
-                },
-            };
+        if (!await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation))
+            return false;
 
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return;
-        }
-
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
         this.MediaTranscriptionService.ClearOwnerState(mediaOwner);
         await this.LoadTreeItemsAsync(startPrefetch: false);
         
@@ -743,6 +759,8 @@ public partial class Workspaces : MSGComponentBase
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
+
+        return true;
     }
 
     private async Task RenameChatAsync(string? chatPath)
@@ -779,6 +797,62 @@ public partial class Workspaces : MSGComponentBase
         
         await WorkspaceBehaviour.StoreChatAsync(chat);
         await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    /// <summary>
+    /// Copies the chat behind the copy button of a tree item and opens the copy.
+    /// </summary>
+    /// <param name="chatPath">The directory of the chat to copy.</param>
+    /// <remarks>
+    /// The copy itself is done by CopyChatAsync, which the chat toolbar uses as well. What this
+    /// handler adds is what only the tree needs: it finds the chat by its directory, and because it
+    /// opens the copy afterward, it asks first when the chat open right now has unsaved changes.
+    /// The chat toolbar asks nothing, since it copies the chat on the screen and keeps working in it.
+    /// </remarks>
+    private async Task CopyChatFromTreeAsync(string? chatPath)
+    {
+        var chat = await this.LoadChatAsync(chatPath, false);
+        if (chat is null)
+            return;
+
+        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
+            return;
+
+        //
+        // Copying the chat which is open right now takes its in-memory state, so whatever the user
+        // has not saved yet ends up in the copy while the original keeps the state it was stored
+        // with. Copying any other chat replaces the open one, so its unsaved changes are gone.
+        // Both outcomes are surprising enough to deserve their own wording.
+        //
+        var openChat = this.CurrentChatThread;
+        var isCopyOfOpenChat = openChat is not null && openChat.ChatId == chat.ChatId;
+        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
+        {
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                {
+                    x => x.Message, isCopyOfOpenChat switch
+                    {
+                        true => T("Do you want to copy this chat? Your unsaved changes move into the copy, and the original chat keeps the state it was last saved with."),
+                        false => T("Do you want to copy this chat? The copy is opened afterwards, so all unsaved changes of the chat you have open right now will be lost."),
+                    }
+                },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Copy Chat"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+
+        var sourceChat = isCopyOfOpenChat ? openChat! : chat;
+        var copy = await this.CopyChatAsync(sourceChat);
+        if (copy is null)
+            return;
+
+        this.CurrentChatThread = copy;
+        await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
 
     private async Task RenameWorkspaceAsync(string? workspacePath)

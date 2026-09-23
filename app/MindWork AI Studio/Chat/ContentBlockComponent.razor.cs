@@ -76,6 +76,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     [Parameter]
     public Func<IContent, Task>? RegenerateFunc { get; set; }
+
+    [Parameter]
+    public Func<IContent, Task>? RollbackFunc { get; set; }
     
     [Parameter]
     public Func<IContent, Task>? EditLastBlockFunc { get; set; }
@@ -85,6 +88,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     [Parameter]
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
+
+    [Parameter]
+    public Func<bool> RollbackEnabled { get; set; } = () => false;
 
     /// <summary>
     /// What the export offers, used both as the label of the export button and as the title of
@@ -785,6 +791,21 @@ public partial class ContentBlockComponent : MSGComponentBase
         
         if (regenerate.HasValue && regenerate.Value)
             await this.RegenerateFunc(this.Content);
+    }
+
+    private async Task RollbackBlock()
+    {
+        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.RollbackEnabled())
+            return;
+
+        var rollback = await this.DialogService.ShowMessageBox(
+            T("Roll Back Chat"),
+            T("Do you really want to roll back this chat to this AI response? All later messages and their attachments will be permanently removed."),
+            T("Yes, roll back the chat"),
+            T("No, keep it"));
+
+        if (rollback.HasValue && rollback.Value)
+            await this.RollbackFunc(this.Content);
     }
     
     private async Task EditLastBlock()
