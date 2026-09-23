@@ -10,6 +10,19 @@ public static class ToolSelectionRules
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
 
+    /// <summary>
+    /// Turns a set of selected tool IDs into the set which actually runs.
+    /// </summary>
+    /// <remarks>
+    /// Removes duplicates and adds the tools another one depends on: Search Confluence only finds
+    /// pages, so it brings Read Web Page along to open them. An added tool keeps its own rules.
+    /// ToolRegistry still drops it when it is switched off or the provider's confidence is too
+    /// low, and Read Web Page reaches a wiki on a private or VPN address only when its host is
+    /// allowed there.<br/><br/>
+    /// Every place which shows or stores a selection normalizes it, the tool selection fields
+    /// included. That way a chat, a template, a policy, or an assistant plugin shows the tools
+    /// which will actually run, and the audit of a plugin judges exactly those.
+    /// </remarks>
     public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
     {
         var normalized = selectedToolIds.ToHashSet(StringComparer.Ordinal);

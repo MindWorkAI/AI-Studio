@@ -8,6 +8,24 @@ using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
+/// <summary>
+/// Searches the organization's Confluence Data Center wiki and returns the search page with
+/// its result links.
+/// </summary>
+/// <remarks>
+/// The tool loads the wiki's own search page, dosearchsite.action, through the same page reader
+/// as Read Web Page. That way it needs no API token: Confluence Data Center accepts the operating
+/// system's sign-in, and the reader already brings the protections against a request leading
+/// somewhere else. The price is a dependency on the HTML of that page, and Confluence Cloud stays
+/// out, because it offers neither that page nor that sign-in. Both change once the tool uses
+/// Confluence's REST API. The model only passes words and a space key; the tool builds the CQL
+/// itself, so a model cannot turn the search into another query.<br/><br/>
+/// The search page shows excerpts only. To read a result, the model opens it with Read Web Page,
+/// which is why selecting this tool also selects that one, see ToolSelectionRules.NormalizeSelection.<br/><br/>
+/// Whatever the wiki returns is internal to the organization. The tool is therefore offered to
+/// High-confidence providers only, checks that again before each search, and raises the chat's
+/// required confidence to High, so the results never reach a less trusted provider later on.
+/// </remarks>
 public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfluenceSearchTool).Namespace, nameof(ConfluenceSearchTool));

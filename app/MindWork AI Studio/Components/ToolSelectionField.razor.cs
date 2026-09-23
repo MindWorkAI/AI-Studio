@@ -51,6 +51,8 @@ public partial class ToolSelectionField : MSGComponentBase
 
     protected override void OnParametersSet()
     {
+        // Like ToolSelection, the field shows the tools which will actually run, also when the
+        // selection is read-only. See ToolSelectionRules.NormalizeSelection:
         this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
         base.OnParametersSet();
     }
