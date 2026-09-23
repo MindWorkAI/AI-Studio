@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
@@ -87,7 +88,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             });
 
         if (!ToolSettingsValueParser.TryReadBoundedOptionalPositiveInt(settingsValues, TIMEOUT_SECONDS_SETTING, MAX_TIMEOUT_SECONDS,
-                TB("The setting '{0}' must be a positive integer."), TB("The setting '{0}' must not exceed {1}."), out _, out var timeoutError))
+                TB("The setting '{0}' must be a positive integer."), TB("The setting '{0}' must be less than or equal to {1}."), out _, out var timeoutError))
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState { IsConfigured = false, Message = timeoutError });
 
         return Task.FromResult<ToolConfigurationState?>(null);
@@ -124,11 +125,8 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 throw new ArgumentException($"Argument 'spaceKey' must not exceed {MAX_SPACE_KEY_CHARACTERS} characters or contain control characters.");
         }
 
-        var timeoutSeconds = ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS;
-        if (timeoutSeconds > MAX_TIMEOUT_SECONDS)
-            throw new InvalidOperationException(TB("The Confluence search timeout exceeds its allowed limit."));
-
-        var searchUrl = BuildSearchUrl(baseUrl!, query, spaceKey);
+        var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        var searchUrl = BuildSearchUrl(baseUrl, query, spaceKey);
         RetrievedWebPage retrievedPage;
         try
         {
@@ -137,11 +135,11 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 TimeoutSeconds = timeoutSeconds,
                 ProviderConfidence = context.ProviderConfidence,
                 UseOsSso = true,
-                IsPrivateHostAllowed = host => IsWikiHost(baseUrl!, host),
+                IsPrivateHostAllowed = host => IsWikiHost(baseUrl, host),
 
                 // Checked before every redirect is followed, so the query never reaches a host
                 // outside the wiki:
-                IsTargetAllowed = target => IsWithinWiki(baseUrl!, target),
+                IsTargetAllowed = target => IsWithinWiki(baseUrl, target),
             }, token);
         }
         catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.TARGET_NOT_ALLOWED)
@@ -154,7 +152,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         }
 
         var page = retrievedPage.Page;
-        if (!IsWithinWiki(baseUrl!, page.FinalUrl))
+        if (!IsWithinWiki(baseUrl, page.FinalUrl))
             throw new InvalidOperationException(TB("Confluence redirected the search outside the configured wiki."));
 
         if (IsLoginPage(page.FinalUrl))
@@ -202,14 +200,14 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         url.AbsolutePath.EndsWith("/login.action", StringComparison.OrdinalIgnoreCase) ||
         url.Query.Contains("os_destination=", StringComparison.OrdinalIgnoreCase);
 
-    internal static bool TryParseBaseUrl(string? value, out Uri? baseUrl)
+    internal static bool TryParseBaseUrl(string? value, [NotNullWhen(true)] out Uri? baseUrl)
     {
         baseUrl = null;
         if (!Uri.TryCreate(value?.Trim(), UriKind.Absolute, out var uri) ||
             uri.Scheme is not "https" ||
-            !string.IsNullOrEmpty(uri.UserInfo) ||
-            !string.IsNullOrEmpty(uri.Query) ||
-            !string.IsNullOrEmpty(uri.Fragment))
+            !string.IsNullOrWhiteSpace(uri.UserInfo) ||
+            !string.IsNullOrWhiteSpace(uri.Query) ||
+            !string.IsNullOrWhiteSpace(uri.Fragment))
             return false;
 
         baseUrl = new Uri(uri.AbsoluteUri.TrimEnd('/') + '/');
