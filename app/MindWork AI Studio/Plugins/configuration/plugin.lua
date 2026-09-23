@@ -1034,6 +1034,56 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     }
 -- }
 
+-- An example chat template which preselects tools and data sources:
+-- Both are optional and independent of each other. Leaving a field out is not the same as
+-- leaving it empty:
+--
+--   ToolIds omitted             -> the chat starts with the tools set as its default
+--   ToolIds = {}                -> the chat starts with no tools at all
+--   DataSourceOptions omitted   -> the chat starts with the data source defaults
+--   DataSourceOptions = { ... } -> the chat starts with exactly what this table says
+--
+-- Both are a preselection, not a limit: users change either of them in the chat as usual.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000002",
+--     ["Name"] = "Intranet Research",
+--     ["SystemPrompt"] = "You are <Company Name>'s research assistant. Answer from our own documents and say where each answer comes from.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the tools a chat with this template starts with, by tool ID.
+--     -- A tool ID unknown to the installation is ignored, and so is a tool your
+--     -- organization switched off. A tool has to meet the confidence requirements of the
+--     -- provider in use, so it may stay unavailable even though this template names it.
+--     -- Tool IDs include: web_search, read_web_page
+--     ["ToolIds"] = {
+--         "read_web_page",
+--     },
+--
+--     -- Optional: the data source options a chat with this template starts with.
+--     -- Every field inside is optional as well. DisableDataSources defaults to false here,
+--     -- because writing this table at all says that the template wants data sources; the
+--     -- other three default to false and an empty list.
+--     ["DataSourceOptions"] = {
+--         -- Set to true to start the chat with data sources switched off.
+--         ["DisableDataSources"] = false,
+--
+--         -- Let an agent choose the fitting data sources for each question. When true,
+--         -- PreselectedDataSourceIds is not used.
+--         ["AutomaticDataSourceSelection"] = false,
+--
+--         -- Let an agent check whether the retrieved data fits the question.
+--         ["AutomaticValidation"] = true,
+--
+--         -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+--         -- IDs from another configuration of your organization work as well: they are
+--         -- resolved against every known data source, not only against the ones defined
+--         -- here. IDs that resolve to nothing are ignored.
+--         ["PreselectedDataSourceIds"] = {
+--             "00000000-0000-0000-0000-000000000000",
+--         },
+--     },
+-- }
+
 -- Introduction texts shown as expansion panels on the welcome page:
 CONFIG["INTRODUCTIONS"] = {}
 

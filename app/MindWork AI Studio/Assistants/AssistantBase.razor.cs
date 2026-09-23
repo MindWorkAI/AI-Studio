@@ -753,9 +753,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
-        this.ChatThread = null;
-        this.LastUserPrompt = null;
-        this.ResultingContentBlock = null;
+        this.ClearConversationState();
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);

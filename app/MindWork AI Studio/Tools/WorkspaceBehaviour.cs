@@ -1192,11 +1192,24 @@ public static class WorkspaceBehaviour
         }
     }
     
-    public static async Task DeleteChatAsync(IDialogService dialogService, Guid workspaceId, Guid chatId, bool askForConfirmation = true)
+    /// <summary>Deletes the given chat, asking the user to confirm that beforehand.</summary>
+    /// <param name="dialogService">Used to show the confirmation.</param>
+    /// <param name="workspaceId">Workspace that owns the chat; an empty id means a temporary chat.</param>
+    /// <param name="chatId">Chat to delete.</param>
+    /// <param name="askForConfirmation">False skips the question. Only for callers who already asked.</param>
+    /// <returns>True when the chat is gone, which includes it never having been there. False when it is still there.</returns>
+    /// <remarks>
+    /// This is the one place that asks whether a chat may be deleted, because a deleted chat cannot
+    /// be restored: there is no trash. Callers who do more than deleting have to honor the return
+    /// value, or a declined question would still take the rest of their work with it.
+    /// </remarks>
+    public static async Task<bool> DeleteChatAsync(IDialogService dialogService, Guid workspaceId, Guid chatId, bool askForConfirmation = true)
     {
         var chat = await LoadChatAsync(new(workspaceId, chatId));
+        
+        // There is nothing left to delete, so the caller may go on:
         if (chat is null)
-            return;
+            return true;
 
         if (askForConfirmation)
         {
@@ -1215,7 +1228,7 @@ public static class WorkspaceBehaviour
             var dialogReference = await dialogService.ShowAsync<ConfirmDialog>(TB("Delete Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
             var dialogResult = await dialogReference.Result;
             if (dialogResult is null || dialogResult.Canceled)
-                return;
+                return false;
         }
 
         var chatDirectory = chat.WorkspaceId == Guid.Empty
@@ -1223,8 +1236,10 @@ public static class WorkspaceBehaviour
             : Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
 
         var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(workspaceId, chatId, nameof(DeleteChatAsync));
+        
+        // Another operation holds the chat, so it stays where it is:
         if (!acquired)
-            return;
+            return false;
 
         try
         {
@@ -1238,6 +1253,8 @@ public static class WorkspaceBehaviour
             semaphore.Release();
             ForgetChatSemaphore(workspaceId, chatId);
         }
+
+        return true;
     }
 
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
