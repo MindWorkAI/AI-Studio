@@ -1,7 +1,6 @@
 using System.Text;
 
 using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Markdig.Extensions.Tables;
@@ -15,34 +14,6 @@ public static class PlainFileExport
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PlainFileExport));
 
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
-
-    /// <summary>
-    /// Reads a complete HTML source file out of a message which consists only of a matching fenced
-    /// code block.
-    /// </summary>
-    /// <param name="markdown">The Markdown text the model wrote.</param>
-    /// <param name="format">The selected export format.</param>
-    /// <param name="source">The contents inside the fence, or an empty string when the message is
-    /// not a standalone source file.</param>
-    /// <returns>True, when the message is a complete HTML source file.</returns>
-    internal static bool TryExtractStandaloneSource(string markdown, FileExportFormat format, out string source)
-    {
-        source = string.Empty;
-
-        if (format is not FileExportFormat.HTML || string.IsNullOrWhiteSpace(markdown))
-            return false;
-
-        var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
-        if (document.Count is not 1 || document[0] is not FencedCodeBlock block || block.ClosingFencedCharCount is 0)
-            return false;
-
-        var language = block.Info?.Trim();
-        if (!string.Equals("html", language, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        source = block.Lines.ToString();
-        return true;
-    }
 
     /// <summary>
     /// Reads every table a message holds, in the order they appear in it.
@@ -212,30 +183,6 @@ public static class PlainFileExport
         if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        return await WriteFile(rustService, dialogTitle, format, fileContent, fileTypeFilter, fileName);
-    }
-
-    /// <summary>
-    /// Writes HTML source authored by the model without converting it.
-    /// </summary>
-    /// <param name="rustService">The Rust service, used for the save dialog.</param>
-    /// <param name="dialogTitle">The title of the save dialog.</param>
-    /// <param name="format">The HTML format.</param>
-    /// <param name="source">The source text inside the model's code fence.</param>
-    /// <returns>True, when the file was written.</returns>
-    internal static async Task<bool> ToSourceFile(RustService rustService, string dialogTitle, FileExportFormat format, string source)
-    {
-        if (format is not FileExportFormat.HTML || format.ToFileTypeFilter() is not { } fileTypeFilter)
-            throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format as an authored source file.");
-
-        return await WriteFile(rustService, dialogTitle, format, source, fileTypeFilter);
-    }
-
-    /// <summary>
-    /// Lets the user choose a path and writes text with the encoding of its format.
-    /// </summary>
-    private static async Task<bool> WriteFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, FileTypeFilter fileTypeFilter, string? fileName = null)
-    {
         var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)
         {
