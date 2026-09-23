@@ -34,10 +34,7 @@ public record ChatCompletionDeltaStreamLine(string Id, string Object, uint Creat
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
 
     /// <inheritdoc />
-    public bool ContainsUsage() => this.GetUsage().IsKnown;
-
-    /// <inheritdoc />
-    public TokenUsage GetUsage() => this.Usage is null ? TokenUsage.UNKNOWN : TokenUsage.OfReported(this.Usage.PromptTokens, this.Usage.CompletionTokens);
+    public TokenUsage GetUsage() => this.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
 
     #region Implementation of IAnnotationStreamLine
 

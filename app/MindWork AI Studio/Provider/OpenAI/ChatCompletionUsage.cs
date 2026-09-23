@@ -22,9 +22,12 @@ public sealed record ChatCompletionUsage
     public int? CompletionTokens { get; init; }
 
     /// <summary>
-    /// What the provider says both of them add up to. Read but not relied upon: it is the sum of
-    /// the other two wherever a provider fills all three, and this way a provider which sends only
-    /// this one is not a reason to throw the other numbers away.
+    /// States what this block reports, as far as it can be believed.
     /// </summary>
-    public int? TotalTokens { get; init; }
+    /// <remarks>
+    /// The one way from the wire to a usage, shared by every stream line which carries this block,
+    /// so that what counts as believable is decided in a single place.
+    /// </remarks>
+    /// <returns>The usage, or TokenUsage.UNKNOWN when the block states nothing usable.</returns>
+    public TokenUsage ToTokenUsage() => TokenUsage.OfReported(this.PromptTokens, this.CompletionTokens);
 }

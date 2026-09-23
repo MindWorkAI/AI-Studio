@@ -41,7 +41,7 @@ public sealed class ChatCompletionUsageTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(line!.ContainsUsage(), Is.True);
+            Assert.That(line!.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().PromptTokens, Is.EqualTo(1200));
             Assert.That(line.GetUsage().CompletionTokens, Is.EqualTo(345));
             Assert.That(line.GetUsage().TotalTokens, Is.EqualTo(1545));
@@ -61,8 +61,7 @@ public sealed class ChatCompletionUsageTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(line!.ContainsUsage(), Is.False);
-            Assert.That(line.GetUsage().IsKnown, Is.False);
+            Assert.That(line!.GetUsage().IsKnown, Is.False);
             Assert.That(line.ContainsContent(), Is.True);
         });
     }
@@ -103,7 +102,7 @@ public sealed class ChatCompletionUsageTests
             {"id":"chatcmpl-1","object":"chat.completion.chunk","created":1,"model":"gpt-5","choices":[],"usage":{"prompt_tokens":0,"completion_tokens":0}}
             """, ProviderJsonOptions.OPTIONS);
 
-        Assert.That(line!.ContainsUsage(), Is.False);
+        Assert.That(line!.GetUsage().IsKnown, Is.False);
     }
 
     /// <summary>
@@ -124,7 +123,7 @@ public sealed class ChatCompletionUsageTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(line!.ContainsUsage(), Is.True);
+            Assert.That(line!.GetUsage().IsKnown, Is.True);
             Assert.That(line.GetUsage().TotalTokens, Is.EqualTo(133));
         });
     }

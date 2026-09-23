@@ -30,10 +30,7 @@ public readonly record struct ResponseStreamLine(string Id, string Object, uint 
     public ChatCompletionUsage? Usage { get; init; }
 
     /// <inheritdoc />
-    public bool ContainsUsage() => this.GetUsage().IsKnown;
-
-    /// <inheritdoc />
-    public TokenUsage GetUsage() => this.Usage is null ? TokenUsage.UNKNOWN : TokenUsage.OfReported(this.Usage.PromptTokens, this.Usage.CompletionTokens);
+    public TokenUsage GetUsage() => this.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
     
     /// <inheritdoc />
     public bool ContainsSources() => this != default && this.SearchResults.Count > 0;
