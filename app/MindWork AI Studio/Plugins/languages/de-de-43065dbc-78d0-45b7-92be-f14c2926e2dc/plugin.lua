@@ -8931,6 +8931,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1093747001"] = "Begründung"
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Einstellungen"
 
+-- Data sources
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1374820939"] = "Datenquellen"
+
 -- Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1378304679"] = "Ihre Einstellungsdatei enthält keine Versionsangabe des Einstellungsformats. Änderungen in dieser Sitzung werden nicht gespeichert, um ein Überschreiben Ihrer Einstellungen zu vermeiden. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
 
@@ -8951,9 +8954,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Aktualisieren"
 
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1890416390"] = "Nach Updates suchen"
-
--- Data sync
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1903948824"] = "Datensynchronisierung"
 
 -- Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1988273622"] = "Ihre Einstellungen wurden mit einer neueren Version von AI Studio erstellt. Änderungen in dieser Sitzung werden nicht gespeichert. Bitte installieren oder starten Sie das neueste verfügbare Update."
@@ -9011,9 +9011,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T714077986"] = "Einbettungen werd
 
 -- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio erkennt die Version Ihres Einstellungsformats nicht. Änderungen in dieser Sitzung werden nicht gespeichert, um zu verhindern, dass Ihre Einstellungen überschrieben werden. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
-
--- Embeddings
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T951463987"] = "Einbettungen"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Erhalten Sie Unterstützung beim Programmieren und Debuggen durch ein KI-Modell."

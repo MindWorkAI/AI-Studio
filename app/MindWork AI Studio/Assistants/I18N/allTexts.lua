@@ -8929,6 +8929,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1093747001"] = "Reason"
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Settings"
 
+-- Data sources
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1374820939"] = "Data sources"
+
 -- Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1378304679"] = "Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
 
@@ -8949,9 +8952,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Update"
 
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1890416390"] = "Check for updates"
-
--- Data sync
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1903948824"] = "Data sync"
 
 -- Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1988273622"] = "Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."
@@ -9009,9 +9009,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T714077986"] = "Embeddings are ru
 
 -- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
-
--- Embeddings
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T951463987"] = "Embeddings"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
