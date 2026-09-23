@@ -25,7 +25,7 @@
                 <MudText Typo="Typo.body2">@context.Implementation.GetDescription()</MudText>
             </MudTd>
             <MudTd>
-                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
+                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged(context)">
                     @foreach (var confidenceLevel in this.GetSelectableConfidenceLevels())
                     {
                         <MudMenuItem OnClick="@(async () => await this.ChangeMinimumProviderConfidence(context, confidenceLevel))">

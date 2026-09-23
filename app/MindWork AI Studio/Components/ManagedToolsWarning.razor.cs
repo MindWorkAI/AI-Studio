@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -84,7 +85,8 @@ public partial class ManagedToolsWarning : MSGComponentBase
 
             return this.availableTools
                 .Where(x => this.ToolIds.Contains(x.Definition.Id) && x.IsActive)
-                .Where(x => !ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, x.MinimumProviderConfidence))
+                .Where(x => !ToolSelectionRules.IsProviderAllowedForTool(x.Definition.Id, providerConfidence, x.MinimumProviderConfidence,
+                    this.ProviderSettings.IsTrustedByConfiguration(this.SettingsManager)))
                 .Select(x => x.Implementation.GetDisplayName())
                 .ToList();
         }

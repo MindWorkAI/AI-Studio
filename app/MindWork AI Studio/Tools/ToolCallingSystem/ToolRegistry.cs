@@ -262,7 +262,7 @@ public sealed class ToolRegistry
                 continue;
             }
 
-            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, this.GetMinimumProviderConfidence(toolId)))
+            if (!ToolSelectionRules.IsProviderAllowedForTool(toolId, providerConfidence, this.GetMinimumProviderConfidence(toolId), provider.IsTrustedByConfiguration(this.settingsManager)))
                 filtered.Remove(toolId);
         }
 
@@ -383,7 +383,7 @@ public sealed class ToolRegistry
             var minimumToolConfidence = resolution.ConfidenceLevel;
             this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
 
-            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
+            if (!ToolSelectionRules.IsProviderAllowedForTool(definition.Id, providerConfidence, minimumToolConfidence, provider.IsTrustedByConfiguration(this.settingsManager)))
             {
                 this.logger.LogInformation("Skipping tool '{ToolId}' because provider confidence '{ProviderConfidence}' is below the required minimum '{MinimumConfidence}'.", definition.Id, providerConfidence, minimumToolConfidence);
                 continue;

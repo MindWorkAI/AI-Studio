@@ -37,13 +37,20 @@ public static class ChatThreadExtensions
         };
 
         //
-        // The confidence axis is checked on its own: a provider trusted by configuration counts as
-        // self-hosted for data-source security, which is the check further down, but that trust
-        // says nothing about how confidential the provider is. An organization which wants its
-        // contractually covered cloud provider to pass here raises its level through the custom
-        // confidence scheme instead.
+        // A provider trusted by the organization's configuration may continue the thread whatever
+        // confidence it requires, the same as the tools which put that data into the thread treat
+        // it as equal to a High-confidence provider. Otherwise such a provider could run a tool
+        // and then be locked out of its own chat by the result.
         //
-        if (providerConfidence < chatThread.RequiredProviderConfidence)
+        var isTrustedByConfiguration = provider switch
+        {
+            IProvider p => p.IsTrustedByConfiguration(settingsManager),
+            AIStudio.Settings.Provider p => p.IsTrustedByConfiguration(settingsManager),
+
+            _ => false,
+        };
+
+        if (providerConfidence < chatThread.RequiredProviderConfidence && !isTrustedByConfiguration)
             return false;
 
         // The chat thread is available, but the data security is not specified.

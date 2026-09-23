@@ -818,12 +818,25 @@ CONFIG["SETTINGS"] = {}
 --                         targets when those provider requirements are met, and it never reuses
 --                         browser cookies.
 --
+-- Field names of the Outlook Mail tool (Windows only):
+--   ewsUrl              Required HTTPS Exchange Web Services endpoint ending in
+--                       /EWS/Exchange.asmx. AI Studio uses the signed-in Windows user's
+--                       integrated authentication. No password or mailbox address is stored.
+--   outlookWebUrl       Optional HTTPS Outlook on the web base URL. When Exchange provides
+--                       a message link, the tool can include a link to the original mail.
+--                       The URL cannot contain credentials, a query, or a fragment.
+-- Outlook Mail searches only the employee's primary mailbox. It requires a HIGH-confidence
+-- provider or one trusted by the organization, even if a user lowers the tool's generic
+-- minimum-confidence setting. Reading mail marks the chat as requiring HIGH confidence; a
+-- provider trusted by the organization may still continue such a chat.
+--
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+--     ["outlook_mail.ewsUrl"] = "https://exchange.example.org/EWS/Exchange.asmx"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {

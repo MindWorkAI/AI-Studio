@@ -66,16 +66,23 @@ public partial class SettingsPanelTools : SettingsPanelBase
     private IEnumerable<ConfidenceLevel> GetSelectableConfidenceLevels() =>
         Enum.GetValues<ConfidenceLevel>().OrderBy(x => x).Where(x => x is not ConfidenceLevel.UNKNOWN);
 
-    private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => this.GetConfidenceLevelName(GetMinimumProviderConfidence(item));
+    private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID
+        ? this.T("High or organization-trusted")
+        : this.GetConfidenceLevelName(GetMinimumProviderConfidence(item));
 
     private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
         ? this.T("No minimum confidence level chosen")
         : confidenceLevel.GetName();
 
-    private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
-        $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+    private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item)
+    {
+        // Outlook Mail always enforces High, whatever level is stored for it:
+        var confidenceLevel = item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID ? ConfidenceLevel.HIGH : GetMinimumProviderConfidence(item);
+        return $"background-color: {confidenceLevel.GetColor(this.SettingsManager)};";
+    }
 
-    private bool IsToolConfidenceManaged() =>
+    private bool IsToolConfidenceManaged(ToolCatalogItem item) =>
+        item.Definition.Id == ToolSelectionRules.OUTLOOK_MAIL_TOOL_ID ||
         ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var meta) && meta.IsLocked;
 
     // The catalog already carries the resolved level, so there is nothing to look up again:

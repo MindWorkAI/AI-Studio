@@ -8,6 +8,7 @@ public static class ToolSelectionRules
     public const int MAX_TOOL_RESULT_CHARACTERS = 300_000;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
+    public const string OUTLOOK_MAIL_TOOL_ID = "outlook_mail";
 
     public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
         => selectedToolIds.ToHashSet(StringComparer.Ordinal);
@@ -49,4 +50,9 @@ public static class ToolSelectionRules
 
     public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>
         minimumToolConfidence is ConfidenceLevel.NONE || providerConfidence >= minimumToolConfidence;
+
+    public static bool IsProviderAllowedForTool(string toolId, ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence, bool trustedByOrganization) =>
+        toolId == OUTLOOK_MAIL_TOOL_ID
+            ? providerConfidence >= ConfidenceLevel.HIGH || trustedByOrganization
+            : IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence);
 }
