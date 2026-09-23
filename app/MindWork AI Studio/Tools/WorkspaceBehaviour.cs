@@ -752,11 +752,16 @@ public static class WorkspaceBehaviour
         return Directory.Exists(chatPath);
     }
 
-    public static async Task StoreChatAsync(ChatThread chat)
+    /// <summary>
+    /// Stores a chat, unless another operation holds its lock for longer than the semaphore timeout.
+    /// </summary>
+    /// <param name="chat">The chat to store.</param>
+    /// <returns>True when the chat was written; false when the operation was skipped to avoid a race.</returns>
+    public static async Task<bool> StoreChatAsync(ChatThread chat)
     {
         var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(StoreChatAsync));
         if (!acquired)
-            return;
+            return false;
 
         try
         {
@@ -775,11 +780,139 @@ public static class WorkspaceBehaviour
 
             var lastEditTime = File.GetLastWriteTimeUtc(chatPath);
             await UpdateCacheAfterChatStored(chat.WorkspaceId, chat.ChatId, chatDirectory, chat.Name, lastEditTime);
+            return true;
         }
         finally
         {
             semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Copies a chat into a new chat of the same workspace, including its managed transcript files,
+    /// after asking the user for the name of the copy.
+    /// </summary>
+    /// <param name="dialogService">Used to ask for the name.</param>
+    /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
+    /// <returns>The persisted copy. Null when the user canceled the question, in which case nothing was copied.</returns>
+    /// <remarks>
+    /// This is the one place that asks for the name of a copy, so every way of copying a chat
+    /// suggests the same name and words the question the same way.<br/><br/>
+    ///
+    /// The copy is written before it is returned, so the caller may open it right away. Runtime-only
+    /// state of the source is not part of the copy: it is rebuilt when the copy gets loaded. When
+    /// the copy cannot be written, nothing of it stays behind and the error reaches the caller.
+    /// </remarks>
+    public static async Task<ChatThread?> CopyChatAsync(IDialogService dialogService, ChatThread sourceChat)
+    {
+        var sourceName = string.IsNullOrWhiteSpace(sourceChat.Name) ? TB("Unnamed chat") : sourceChat.Name;
+        var dialogParameters = new DialogParameters<SingleInputDialog>
+        {
+            { x => x.Message, string.Format(TB("Please enter a name for the copy of your chat '{0}':"), sourceName) },
+            { x => x.InputHeaderText, TB("Chat Name") },
+            { x => x.UserInput, string.Format(TB("Copy of {0}"), sourceName) },
+            { x => x.ConfirmText, TB("Copy") },
+            { x => x.ConfirmColor, Color.Info },
+            { x => x.AllowEmptyInput, false },
+            { x => x.EmptyInputErrorMessage, TB("Please enter a chat name.") },
+        };
+
+        var dialogReference = await dialogService.ShowAsync<SingleInputDialog>(TB("Copy Chat"), dialogParameters, Dialogs.DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return null;
+
+        var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
+        var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
+                         ?? throw new InvalidOperationException("The chat could not be copied.");
+        copiedChat = copiedChat with
+        {
+            ChatId = Guid.NewGuid(),
+            Name = (dialogResult.Data as string)!,
+        };
+
+        var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
+        try
+        {
+            CopyManagedTranscriptAttachments(copiedChat, targetDirectory);
+
+            //
+            // Storing is skipped instead of failing when the chat lock cannot be taken. For a copy
+            // that must not pass as success: the caller would open a chat which is not on disk,
+            // while the transcript files copied above would stay behind as orphans.
+            //
+            if (!await StoreChatAsync(copiedChat))
+                throw new IOException($"The copied chat could not be stored: '{targetDirectory}'.");
+
+            return copiedChat;
+        }
+        catch
+        {
+            if (Directory.Exists(targetDirectory))
+                Directory.Delete(targetDirectory, true);
+
+            InvalidateWorkspaceTreeCache();
+            throw;
+        }
+    }
+
+    private static void CopyManagedTranscriptAttachments(ChatThread chat, string targetChatDirectory)
+    {
+        var targetTranscriptDirectory = Path.Combine(targetChatDirectory, "attachments", "transcripts");
+        var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(pathComparer);
+
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                if (content.FileAttachments[index] is ManagedTranscriptAttachment transcript)
+                    content.FileAttachments[index] = CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths);
+            }
+        }
+
+        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
+            chat.PendingMediaTranscripts[index] = CopyManagedTranscriptAttachment(chat, chat.PendingMediaTranscripts[index], targetTranscriptDirectory, copiedPaths);
+    }
+
+    private static ManagedTranscriptAttachment CopyManagedTranscriptAttachment(
+        ChatThread chat,
+        ManagedTranscriptAttachment source,
+        string targetTranscriptDirectory,
+        Dictionary<string, ManagedTranscriptAttachment> copiedPaths)
+    {
+        //
+        // A thread which was edited outside the app may name a path which is not a path at all.
+        // Such an attachment keeps pointing at whatever the source named: it is already broken in
+        // the source chat, and letting it take the whole copy down would be worse.
+        //
+        string sourcePath;
+        try
+        {
+            sourcePath = Path.GetFullPath(source.FilePath);
+        }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            LOG.LogWarning(e, "Could not resolve the transcript path '{FilePath}' while copying chat '{ChatId}'. The attachment is kept as it is.", source.FilePath, chat.ChatId);
+            return source;
+        }
+
+        if (copiedPaths.TryGetValue(sourcePath, out var existingCopy))
+            return existingCopy;
+
+        Directory.CreateDirectory(targetTranscriptDirectory);
+        var targetPath = NextTranscriptPath(chat, targetTranscriptDirectory, source.OriginalFileName);
+        if (File.Exists(sourcePath))
+            File.Copy(sourcePath, targetPath);
+
+        var copiedAttachment = new ManagedTranscriptAttachment(
+            Path.GetFileName(targetPath),
+            targetPath,
+            File.Exists(targetPath) ? new FileInfo(targetPath).Length : source.FileSizeBytes,
+            source.OriginalFileName,
+            false);
+        copiedPaths[sourcePath] = copiedAttachment;
+        return copiedAttachment;
     }
 
     /// <summary>Creates a transcript atomically inside an already persisted chat.</summary>
