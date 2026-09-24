@@ -269,9 +269,19 @@ public sealed class ToolRegistry
         return filtered;
     }
 
+    /// <summary>
+    /// The tools somebody can select in this component.
+    /// </summary>
+    /// <remarks>
+    /// Every selection in the app is built from this list: the one below the message field, the
+    /// defaults, the templates, and the tools the AI picks for a new assistant. A tool which offers
+    /// itself from the context of a chat is left out, because selecting it would change nothing.
+    /// The tool list of the app settings asks for all definitions instead, so an organization can
+    /// still switch such a tool off or set the trust it requires.
+    /// </remarks>
     public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(Components component)
     {
-        var definitions = this.GetDefinitionsForComponent(component);
+        var definitions = this.GetDefinitionsForComponent(component).Where(x => x.Activation is ToolActivation.SELECTION);
         return await this.GetCatalogAsync(definitions);
     }
 

@@ -12,6 +12,11 @@ public sealed class ToolDefinition
 
     public ToolVisibilityDefinition VisibleIn { get; init; } = new();
 
+    /// <summary>
+    /// Whether the tool waits to be selected, or offers itself whenever the chat calls for it.
+    /// </summary>
+    public ToolActivation Activation { get; init; } = ToolActivation.SELECTION;
+
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 
     public string SystemPromptInstructions { get; init; } = string.Empty;

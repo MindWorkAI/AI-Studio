@@ -9,6 +9,7 @@ public static class ToolSelectionRules
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
+    public const string SEMANTIC_SEARCH_TOOL_ID = "semantic_search";
 
     /// <summary>
     /// Turns a set of selected tool IDs into the set which actually runs.
@@ -19,6 +20,10 @@ public static class ToolSelectionRules
     /// ToolRegistry still drops it when it is switched off or the provider's confidence is too
     /// low, and Read Web Page reaches a wiki on a private or VPN address only when its host is
     /// allowed there.<br/><br/>
+    /// It also removes the tools nobody selects. Semantic Search offers itself whenever the data
+    /// sources of a chat call for it, see ToolActivation.CONTEXT; kept in a selection, it would
+    /// appear on the security card of a plugin and in its audit without the selection having any
+    /// say in whether it runs.<br/><br/>
     /// Every place which shows or stores a selection normalizes it, the tool selection fields
     /// included. That way a chat, a template, a policy, or an assistant plugin shows the tools
     /// which will actually run, and the audit of a plugin judges exactly those.
@@ -29,6 +34,7 @@ public static class ToolSelectionRules
         if (normalized.Contains(SEARCH_CONFLUENCE_TOOL_ID))
             normalized.Add(READ_WEB_PAGE_TOOL_ID);
 
+        normalized.Remove(SEMANTIC_SEARCH_TOOL_ID);
         return normalized;
     }
 
