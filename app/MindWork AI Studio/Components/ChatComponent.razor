@@ -132,6 +132,10 @@
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
+            <MudTooltip Text="@T("Show the complete system prompt the AI receives")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" OnClick="@this.ShowSystemPrompt"/>
+            </MudTooltip>
+            
             <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
 
             @if (this.SettingsManager.AreToolsEnabled())
