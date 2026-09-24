@@ -1245,6 +1245,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="requestPath">The request path, relative to the provider base URL.</param>
     /// <param name="headersAction">Optional additional headers to add.</param>
     /// <param name="mayAskForSequentialToolCalls">Whether a request which offers tools may ask for one call at a time. False for a provider which rejects the parallel_tool_calls parameter.</param>
+    /// <param name="enforcesStrictToolSchemas">Whether the provider binds the model's tool calls to a strict schema. Only then are tools offered in strict mode; everywhere else a strict schema would only tell the model that every argument is required.</param>
     /// <param name="token">The cancellation token.</param>
     /// <typeparam name="TRequest">The request DTO type.</typeparam>
     /// <typeparam name="TDelta">The delta stream line type.</typeparam>
@@ -1262,6 +1263,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
         bool mayAskForSequentialToolCalls = true,
+        bool enforcesStrictToolSchemas = false,
         [EnumeratorCancellation] CancellationToken token = default)
         where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
@@ -1300,7 +1302,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
                     (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
