@@ -67,10 +67,13 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// </summary>
     /// <remarks>
     /// Passages are returned whole or not at all, so nothing has to be filtered again after
-    /// cutting it. The limit leaves room for several searches within the budget of all tool
-    /// results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS.
+    /// cutting it. A chunk is as long as the embedding model takes at once, by default 8,192
+    /// tokens, so a single passage may already fill tens of thousands of characters. The limit is
+    /// the one a web search has by default, and it leaves room for about three searches within the
+    /// budget of all tool results of an answer, see ToolSelectionRules.MAX_TOOL_RESULT_CHARACTERS:
+    /// a question with several aspects gets one search per aspect.
     /// </remarks>
-    private const int MAX_RESULT_CHARACTERS = 40_000;
+    private const int MAX_RESULT_CHARACTERS = 100_000;
 
     public string ImplementationKey => ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID;
 
@@ -288,47 +291,53 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         var textContent = new StringBuilder();
         var sources = new List<Source>();
-        var dataSourceResults = new JsonArray();
-        var contributingDataSources = new List<IDataSource>(request.DataSources.Count);
+        var resultCounts = new int[pages.Length];
+        var leftOutCounts = new int[pages.Length];
         var passageCount = 0;
-        var leftOutCount = 0;
 
         //
         // Every passage goes through the same filter for prompt injections and into the same shape
         // as with the classic RAG process. The user hears about what was filtered once for the
-        // whole search, not once per passage:
+        // whole search, not once per passage.
+        //
+        // The data sources take turns: first the best passage of each, then the second best of
+        // each, and so on. Otherwise, the data source offered first would take the budget, and the
+        // others would get what it left over.
         //
         await using (guardService.BeginAction())
         {
-            for (var index = 0; index < request.DataSources.Count; index++)
+            var mostPassages = pages.Select(page => page.Contexts.Count).DefaultIfEmpty(0).Max();
+            for (var rank = 0; rank < mostPassages; rank++)
             {
-                var dataSource = request.DataSources[index];
-                var page = pages[index];
-                var resultCount = 0;
-                var leftOutOfDataSource = 0;
-                foreach (var retrievalContext in page.Contexts)
+                for (var index = 0; index < pages.Length; index++)
                 {
+                    if (rank >= pages[index].Contexts.Count)
+                        continue;
+
+                    var retrievalContext = pages[index].Contexts[rank];
                     var passage = await retrievalContext.AsMarkdown(index: passageCount + 1, token: token);
+
+                    // A passage too long for what is left makes room for shorter ones after it:
                     if (textContent.Length + passage.Length > MAX_RESULT_CHARACTERS)
                     {
-                        leftOutOfDataSource++;
+                        leftOutCounts[index]++;
                         continue;
                     }
 
                     passageCount++;
-                    resultCount++;
+                    resultCounts[index]++;
                     textContent.Append(passage);
                     sources.AddRange(retrievalContext.ToSources());
                 }
-
-                if (resultCount > 0)
-                    contributingDataSources.Add(dataSource);
-
-                leftOutCount += leftOutOfDataSource;
-                dataSourceResults.Add(DescribeResult(dataSource, page, resultCount, leftOutOfDataSource));
             }
         }
 
+        var dataSourceResults = new JsonArray();
+        for (var index = 0; index < pages.Length; index++)
+            dataSourceResults.Add(DescribeResult(request.DataSources[index], pages[index], resultCounts[index], leftOutCounts[index]));
+
+        var contributingDataSources = request.DataSources.Where((_, index) => resultCounts[index] > 0).ToList();
+        var leftOutCount = leftOutCounts.Sum();
         logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, request.Page, passageCount, leftOutCount);
 
         //
