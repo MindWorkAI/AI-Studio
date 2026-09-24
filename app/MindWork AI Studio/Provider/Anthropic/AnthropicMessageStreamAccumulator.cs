@@ -14,6 +14,7 @@ namespace AIStudio.Provider.Anthropic;
 /// </remarks>
 public sealed class AnthropicMessageStreamAccumulator
 {
+    private const string EVENT_MESSAGE_START = "message_start";
     private const string EVENT_BLOCK_START = "content_block_start";
     private const string EVENT_BLOCK_DELTA = "content_block_delta";
     private const string EVENT_BLOCK_STOP = "content_block_stop";
@@ -32,7 +33,7 @@ public sealed class AnthropicMessageStreamAccumulator
     /// Takes the next event of the stream and returns what it has to show.
     /// </summary>
     /// <param name="serverSentEvent">The event to read.</param>
-    /// <returns>The text of this event, empty when it carried none.</returns>
+    /// <returns>The text of this event, empty when it carried none, and the usage of the message start.</returns>
     public AnthropicStreamPart Process(ServerSentEvent serverSentEvent)
     {
         if (serverSentEvent.Data.Length is 0)
@@ -51,6 +52,14 @@ public sealed class AnthropicMessageStreamAccumulator
 
         switch (line.Type)
         {
+            case EVENT_MESSAGE_START:
+                //
+                // What the request carried, read the same way as on the plain text path and for
+                // the same reason: the start states this request alone, cf. ResponseStreamLine.
+                //
+                var usage = line.Message?.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
+                return usage.IsKnown ? new AnthropicStreamPart(string.Empty, usage) : AnthropicStreamPart.Nothing;
+
             case EVENT_BLOCK_START:
                 this.openBlocks[line.Index] = new AnthropicContentBlockBuilder(line.ContentBlock);
                 return AnthropicStreamPart.Nothing;
