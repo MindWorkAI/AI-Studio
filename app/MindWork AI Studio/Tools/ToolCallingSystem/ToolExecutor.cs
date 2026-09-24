@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Text.Json;
 
+using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -46,12 +48,13 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         }
     }
 
-    public async Task<(string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence, IReadOnlyList<Source> Sources)> ExecuteAsync(
+    public async Task<(string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence, DataSourceSecurity RequiredDataSecurity, IReadOnlyList<Source> Sources)> ExecuteAsync(
         string toolCallId,
         string toolName,
         string argumentsJson,
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
         IProvider provider,
+        ChatThread chatThread,
         int order,
         CancellationToken token = default)
     {
@@ -92,7 +95,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 StatusMessage = "Tool is not available in the current context.",
                 Arguments = formattedArguments,
                 Result = error,
-            }, ConfidenceLevel.NONE, []);
+            }, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
         }
 
         var definition = runnableTool.Definition;
@@ -105,6 +108,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
             var result = await implementation.ExecuteAsync(document.RootElement, new ToolExecutionContext
             {
                 Definition = definition,
+                ChatThread = chatThread,
                 ToolCallId = toolCallId,
                 SettingsManager = settingsManager,
                 SettingsValues = settingsValues,
@@ -128,7 +132,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 JsonResult = result.JsonContent,
             };
 
-            return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence, result.Sources);
+            return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence, result.RequiredDataSecurity, result.Sources);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -152,7 +156,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = exception.Message,
             };
 
-            return (exception.Message, toolInvocationTrace, ConfidenceLevel.NONE, []);
+            return (exception.Message, toolInvocationTrace, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
         }
         catch (Exception exception)
         {
@@ -172,7 +176,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = error,
             };
 
-            return (error, toolInvocationTrace, ConfidenceLevel.NONE, []);
+            return (error, toolInvocationTrace, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
         }
     }
 

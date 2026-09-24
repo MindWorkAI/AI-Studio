@@ -60,11 +60,9 @@ public abstract class ToolRegistryTestBase
         this.rustService.Dispose();
     }
 
-    protected ToolRegistry CreateRegistry(params TestTool[] tools)
-    {
-        var toolSettingsService = new ToolSettingsService(this.SettingsManager, this.rustService, NullLogger<ToolSettingsService>.Instance);
-        return new ToolRegistry(tools, [new CodeToolDefinitionSource(tools)], this.SettingsManager, toolSettingsService, NullLogger<ToolRegistry>.Instance);
-    }
+    protected ToolRegistry CreateRegistry(params TestTool[] tools) => new(tools, [new CodeToolDefinitionSource(tools)], this.SettingsManager, this.CreateToolSettingsService(), NullLogger<ToolRegistry>.Instance);
+
+    protected ToolSettingsService CreateToolSettingsService() => new(this.SettingsManager, this.rustService, NullLogger<ToolSettingsService>.Instance);
 
     protected ToolResolutionContext ContextFor(AIStudio.Settings.Provider provider) => new()
     {
@@ -104,11 +102,12 @@ public abstract class ToolRegistryTestBase
     };
 
     /// <summary>
-    /// A tool which does nothing, and offers what it is told to.
+    /// A tool which offers and returns what it is told to.
     /// </summary>
     /// <param name="definition">What the tool is.</param>
     /// <param name="resolve">What it offers per request; when left out, its function as defined.</param>
-    protected sealed class TestTool(ToolDefinition definition, Func<ToolDefinition, ToolFunctionDefinition?>? resolve = null) : IToolImplementation
+    /// <param name="execute">What a call returns; when left out, an empty result.</param>
+    protected sealed class TestTool(ToolDefinition definition, Func<ToolDefinition, ToolFunctionDefinition?>? resolve = null, Func<ToolExecutionContext, ToolExecutionResult>? execute = null) : IToolImplementation
     {
         public int ResolveCount { get; private set; }
 
@@ -124,6 +123,6 @@ public abstract class ToolRegistryTestBase
 
         public IReadOnlySet<string> SensitiveTraceArgumentNames { get; } = new HashSet<string>(StringComparer.Ordinal);
 
-        public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default) => Task.FromResult(new ToolExecutionResult());
+        public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default) => Task.FromResult(execute is null ? new ToolExecutionResult() : execute(context));
     }
 }

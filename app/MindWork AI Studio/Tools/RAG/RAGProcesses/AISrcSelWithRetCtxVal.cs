@@ -136,48 +136,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
-                // of the chat thread and the data security of the selected data sources:
+                // of the chat thread and the data security of the selected data sources: at least
+                // one data source with a SELF_HOSTED policy restricts the chat to self-hosted
+                // providers. A restriction set earlier stays either way, because the thread might
+                // already contain data from a data source with a SELF_HOSTED policy:
                 //
                 var dataSecurityRestrictedToSelfHosted = selectedDataSources
                     .OfType<IExternalDataSource>()
                     .Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
-                chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
-                {
-                    //
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of SELF_HOSTED (at least one data source).
-                    //
-                    // When the policy was already set to ALLOW_ANY, we restrict it
-                    // to SELF_HOSTED.
-                    //
-                    true => DataSourceSecurity.SELF_HOSTED,
-                    
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of ALLOW_ANY (none of the data sources has a SELF_HOSTED policy).
-                    //
-                    // When the policy was already set to SELF_HOSTED, we must keep that.
-                    //
-                    false => chatThread.DataSecurity switch
-                    {
-                        //
-                        // When the policy was not specified yet, we set it to ALLOW_ANY.
-                        //
-                        DataSourceSecurity.NOT_SPECIFIED => DataSourceSecurity.ALLOW_ANY,
-                        DataSourceSecurity.ALLOW_ANY => DataSourceSecurity.ALLOW_ANY,
-                        
-                        //
-                        // When the policy was already set to SELF_HOSTED, we must keep that.
-                        // This is important since the thread might already contain data
-                        // from a data source with a SELF_HOSTED policy.
-                        //
-                        DataSourceSecurity.SELF_HOSTED => DataSourceSecurity.SELF_HOSTED,
-                        
-                        // Default case: we use the current data security of the chat thread.
-                        _ => chatThread.DataSecurity,
-                    }
-                };
+                chatThread.RequireDataSecurity(dataSecurityRestrictedToSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY);
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
