@@ -39,9 +39,10 @@ public sealed class DataSourceService
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
     /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -55,7 +56,7 @@ public sealed class DataSourceService
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
-        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions, retrievalMode,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
         return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
@@ -67,9 +68,10 @@ public sealed class DataSourceService
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
     /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
     /// <param name="requestedDataSources">The data sources to check.</param>
     /// <returns>The requested data sources that are allowed for the provider.</returns>
-    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource> requestedDataSources)
+    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource> requestedDataSources)
     {
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
@@ -78,7 +80,7 @@ public sealed class DataSourceService
         }
 
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
-        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions, retrievalMode,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
         var allowedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
 
@@ -98,9 +100,10 @@ public sealed class DataSourceService
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
     /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect, which decides whether any agent participates at all.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -114,22 +117,47 @@ public sealed class DataSourceService
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
-        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.ConfiguredProviderId, dataSourceOptions,
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.ConfiguredProviderId, dataSourceOptions, retrievalMode,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
         return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
     
-    private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, ParticipatingProvider currentProvider)
+    private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, ParticipatingProvider currentProvider)
     {
         var providers = new List<ParticipatingProvider> { currentProvider };
-
-        if (dataSourceOptions.AutomaticDataSourceSelection)
-            this.AddAgentProvider(providers, Components.AGENT_DATA_SOURCE_SELECTION, currentProviderId, "data source selection agent");
-
-        if (dataSourceOptions.AutomaticValidation && this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
-            this.AddAgentProvider(providers, Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, currentProviderId, "retrieval context validation agent");
+        var retrievalContextValidationEnabled = this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation;
+        foreach (var (component, role) in GetParticipatingAgents(dataSourceOptions, retrievalMode, retrievalContextValidationEnabled))
+            this.AddAgentProvider(providers, component, currentProviderId, role);
 
         return providers;
+    }
+
+    /// <summary>
+    /// Which agents get to see the data of the data sources, besides the chat provider.
+    /// </summary>
+    /// <remarks>
+    /// Only the classic RAG process runs agents. With Semantic Search, the chat model picks the
+    /// data sources and judges what it found itself, so the data reaches no other provider.
+    /// Counting the providers of the agents there would hold back data sources which the chat
+    /// provider alone may use.
+    /// </remarks>
+    /// <param name="dataSourceOptions">The active data source options.</param>
+    /// <param name="retrievalMode">How the data sources are searched in effect.</param>
+    /// <param name="retrievalContextValidationEnabled">Whether the validation of retrieval contexts is enabled in the settings.</param>
+    /// <returns>The component of each participating agent, together with its role for the log.</returns>
+    internal static IReadOnlyList<(Components Component, string Role)> GetParticipatingAgents(DataSourceOptions dataSourceOptions, DataSourceRetrievalMode retrievalMode, bool retrievalContextValidationEnabled)
+    {
+        if (retrievalMode is DataSourceRetrievalMode.SEMANTIC_SEARCH)
+            return [];
+
+        var agents = new List<(Components Component, string Role)>(2);
+        if (dataSourceOptions.AutomaticDataSourceSelection)
+            agents.Add((Components.AGENT_DATA_SOURCE_SELECTION, "data source selection agent"));
+
+        if (dataSourceOptions.AutomaticValidation && retrievalContextValidationEnabled)
+            agents.Add((Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, "retrieval context validation agent"));
+
+        return agents;
     }
 
     private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
