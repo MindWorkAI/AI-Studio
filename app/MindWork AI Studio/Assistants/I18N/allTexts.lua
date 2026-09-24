@@ -3670,6 +3670,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3996190985"] = "{0} of {1
 -- Start temporary chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4113970938"] = "Start temporary chat"
 
+-- Show all files attached to this chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4183453875"] = "Show all files attached to this chat"
+
 -- Heading
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T4231005109"] = "Heading"
 
@@ -7431,6 +7434,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2111340711"] = "Th
 
 -- You can drag more files into this window to attach them right away.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2653077974"] = "You can drag more files into this window to attach them right away."
+
+-- Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T2713115684"] = "Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name."
 
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::REVIEWATTACHMENTSDIALOG::T285154968"] = "Document Preview"
