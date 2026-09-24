@@ -17,8 +17,8 @@ public readonly record struct ChatCompletionStreamPart(string TextDelta, IList<I
     /// Whether this part has anything to show at all.
     /// </summary>
     /// <remarks>
-    /// The usage is not part of that: it is nothing to show, and whether it is passed on at all is
-    /// the adapter's decision, which knows which round this is.
+    /// The usage is not part of that: it is nothing to show, and whether it reaches the answer at
+    /// all is the tool calling loop's decision, which knows which round this is.
     /// </remarks>
     public bool HasContent => this.TextDelta.Length > 0 || this.Sources.Count > 0;
 }

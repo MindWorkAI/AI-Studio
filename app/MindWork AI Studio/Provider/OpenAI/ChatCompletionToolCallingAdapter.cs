@@ -57,26 +57,16 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         };
 
         //
-        // Only the first round passes on what its request cost. Its prompt is the conversation up
-        // to the question, which is exactly what the next question will be sent after. Every later
-        // round carries the tool calls and their results on top, and none of that is sent again
-        // once the answer stands -- a report of such a round would count a chat far larger than
-        // the one the next request carries. What the answer adds, all rounds of text together, is
-        // counted from its text afterwards, cf. ReportedHistory.
-        //
-        var passesOnUsage = this.internalMessages.Count is 0;
-
-        //
         // The text goes out while it is being written; the tool calls are put back together
-        // behind it, fragment by fragment.
+        // behind it, fragment by fragment. The usage goes out with every round: which of them
+        // describes the conversation is the loop's decision, which knows which round this is.
         //
         var accumulator = new ChatCompletionToolCallAccumulator(readSources);
         await foreach (var serverSentEvent in streamRequestAsync(requestDto, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            var usage = passesOnUsage ? part.Usage : TokenUsage.UNKNOWN;
-            if (part.HasContent || usage.IsKnown)
-                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: usage));
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
         }
 
         var message = accumulator.Build();

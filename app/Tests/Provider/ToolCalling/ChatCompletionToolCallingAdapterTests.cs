@@ -13,11 +13,9 @@ namespace AIStudio.Tests.Provider.ToolCalling;
 /// </summary>
 /// <remarks>
 /// Every round of a tool conversation is a request of its own, and every one of them reports what
-/// it cost. Only the first one describes what the next question will be sent after: every later
-/// round carries the tool calls and their results on top, none of which is sent again once the
-/// answer stands. Passing on the last report instead would put the chat at the size of everything
-/// the tools returned, which is the one number a person watching their context window must not
-/// see as exact.
+/// it cost. The adapter passes on each report as it arrives, the line without choices included.
+/// Which of them describes the conversation is not its decision: that is the tool calling loop's,
+/// which knows which round this is, and is checked in ToolCallingLoopTests.
 ///
 /// What a round asks for is one tool call at a time, wherever the provider lets it ask: a provider
 /// which rejects the question fails the whole request, so it is not asked at all.
@@ -30,7 +28,7 @@ public sealed class ChatCompletionToolCallingAdapterTests
     private const string SECOND_ROUND_USAGE = """{"choices":[],"usage":{"prompt_tokens":9800,"completion_tokens":150}}""";
 
     [Test]
-    public async Task OnlyTheFirstRoundPassesOnWhatItsRequestCost()
+    public async Task EveryRoundPassesOnWhatItsRequestCost()
     {
         var adapter = Adapter(
         [
@@ -57,8 +55,8 @@ public sealed class ChatCompletionToolCallingAdapterTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(firstRound, Is.EqualTo(new[] { 1200 }), "The first round's prompt is the conversation up to the question.");
-            Assert.That(secondRound, Is.Empty, "The second round's prompt holds the tool result as well, which the next question is not sent with.");
+            Assert.That(firstRound, Is.EqualTo(new[] { 1200 }), "The first round reports the conversation up to the question.");
+            Assert.That(secondRound, Is.EqualTo(new[] { 9800 }), "The second round reports its own request, tool result included, and leaves it to the loop to drop.");
         });
     }
 
