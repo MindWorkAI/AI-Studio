@@ -33,6 +33,20 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
         
         //
+        // What an earlier message retrieved must not travel along with this one. The augmented
+        // data and the AI-selected data sources describe the last retrieval, not a certain
+        // message, and only the steps below ever write them. Without starting from empty, every
+        // message which retrieves nothing -- because the data sources were switched off, none of
+        // them can be used right now, or the search found nothing -- would still send the
+        // passages of the last message which did, cf. ChatThread.RollBackTo.
+        //
+        // The data security and the required provider confidence stay as they are: both only
+        // ever tighten, because the data which raised them was seen by this thread.
+        //
+        chatThread.AugmentedData = string.Empty;
+        chatThread.AISelectedDataSources = [];
+
+        //
         // 1. Check if the user wants to bind any data sources to the chat:
         //
         //
