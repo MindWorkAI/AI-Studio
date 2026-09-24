@@ -22,6 +22,14 @@ public sealed class ToolRegistry
     private readonly Dictionary<string, ToolDefinition> definitionsById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IToolImplementation> implementationsByKey = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// What the checks of a single tool found.
+    /// </summary>
+    /// <param name="BlockReason">What keeps the tool from being offered, or none.</param>
+    /// <param name="Implementation">The tool's implementation, once it was found.</param>
+    /// <param name="MinimumConfidence">The confidence the tool requires and where that requirement came from, once it was read.</param>
+    private readonly record struct ToolCheck(ToolOfferBlockReason BlockReason, IToolImplementation? Implementation, SettingsManager.ToolMinimumProviderConfidenceResolution? MinimumConfidence);
+
     public ToolRegistry(
         IEnumerable<IToolImplementation> implementations,
         IEnumerable<IToolDefinitionSource> definitionSources,
@@ -370,41 +378,96 @@ public sealed class ToolRegistry
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
-            if (!this.settingsManager.IsToolActive(definition.Id))
+            var check = await this.CheckToolAsync(definition, providerConfidence);
+            if (check.MinimumConfidence is { } minimumConfidence)
+                this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumConfidence.ConfidenceLevel, minimumConfidence.Source);
+
+            switch (check)
             {
-                this.logger.LogDebug("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
-                continue;
+                case { BlockReason: ToolOfferBlockReason.NONE, Implementation: { } implementation }:
+                    result.Add((definition, implementation));
+                    break;
+
+                case { BlockReason: ToolOfferBlockReason.TOOL_SWITCHED_OFF }:
+                    this.logger.LogDebug("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
+                    break;
+
+                case { BlockReason: ToolOfferBlockReason.NOT_CONFIGURED }:
+                    this.logger.LogDebug("Skipping tool '{ToolId}' because it is not configured.", definition.Id);
+                    break;
+
+                case { BlockReason: ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW }:
+                    this.logger.LogInformation("Skipping tool '{ToolId}' because provider confidence '{ProviderConfidence}' is below the required minimum '{MinimumConfidence}'.", definition.Id, providerConfidence, check.MinimumConfidence?.ConfidenceLevel);
+                    break;
+
+                case { BlockReason: ToolOfferBlockReason.NOT_AVAILABLE_HERE }:
+                    this.logger.LogWarning("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
+                    break;
             }
-
-            if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
-            {
-                this.logger.LogWarning("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
-                continue;
-            }
-
-            var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
-            if (!configurationState.IsConfigured)
-            {
-                this.logger.LogDebug("Skipping tool '{ToolId}' because it is not configured.", definition.Id);
-                continue;
-            }
-
-            var resolution = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id, definition.MinimumProviderConfidence);
-            var minimumToolConfidence = resolution.ConfidenceLevel;
-            this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
-
-            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
-            {
-                this.logger.LogInformation("Skipping tool '{ToolId}' because provider confidence '{ProviderConfidence}' is below the required minimum '{MinimumConfidence}'.", definition.Id, providerConfidence, minimumToolConfidence);
-                continue;
-            }
-
-            result.Add((definition, implementation));
         }
 
         foreach (var selectedToolId in selectedToolIdSet.Where(selectedToolId => definitions.All(definition => !definition.Id.Equals(selectedToolId, StringComparison.Ordinal))))
             this.logger.LogDebug("Skipping tool '{ToolId}' because it is not selected in this component or not available in this context.", selectedToolId);
 
         return result;
+    }
+
+    /// <summary>
+    /// Whether a tool can be offered to a provider in this component, and if not, what is in the way.
+    /// </summary>
+    /// <remarks>
+    /// Asks the same questions, in the same order, as the preparation of a request does, because
+    /// whoever decides something on the tool's behalf must not come to another answer than the
+    /// request will. The RAG process, for instance, leaves the searching of the data sources to
+    /// Semantic Search only when this says it can be offered; checks of its own which forgot one
+    /// of these would leave a chat without its data sources.<br/><br/>
+    /// Two questions stay out. Whether the tool is selected is the caller's business, and whether
+    /// the tool has anything to offer right now depends on the chat, so only the preparation of a
+    /// request can answer it.
+    /// </remarks>
+    /// <param name="toolId">The tool to check.</param>
+    /// <param name="provider">The provider the request would go to.</param>
+    /// <param name="component">Where the request would come from.</param>
+    /// <returns>ToolOfferBlockReason.NONE when nothing is in the way, otherwise the first obstacle found.</returns>
+    public async Task<ToolOfferBlockReason> GetOfferBlockReasonAsync(string toolId, AIStudio.Settings.Provider provider, Components component)
+    {
+        if (!this.settingsManager.AreToolsEnabled())
+            return ToolOfferBlockReason.TOOLS_SWITCHED_OFF;
+
+        if (!provider.GetToolCallingAvailability().IsAvailable)
+            return ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS;
+
+        if (this.GetDefinition(toolId) is not { } definition || !definition.VisibleIn.IsVisibleIn(component))
+            return ToolOfferBlockReason.NOT_AVAILABLE_HERE;
+
+        var providerConfidence = provider.UsedLLMProvider.GetConfidence(this.settingsManager).Level;
+        return (await this.CheckToolAsync(definition, providerConfidence)).BlockReason;
+    }
+
+    /// <summary>
+    /// Checks one tool on its own, apart from what applies to all tools of a request.
+    /// </summary>
+    /// <remarks>
+    /// Shared by the preparation of a request and by GetOfferBlockReasonAsync, so the two cannot
+    /// drift apart. It reports rather than logs: the preparation of a request writes down why a
+    /// tool was left out, while a question asked by the user interface on every render must not.
+    /// </remarks>
+    private async Task<ToolCheck> CheckToolAsync(ToolDefinition definition, ConfidenceLevel providerConfidence)
+    {
+        if (!this.settingsManager.IsToolActive(definition.Id))
+            return new(ToolOfferBlockReason.TOOL_SWITCHED_OFF, null, null);
+
+        if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+            return new(ToolOfferBlockReason.NOT_AVAILABLE_HERE, null, null);
+
+        var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
+        if (!configurationState.IsConfigured)
+            return new(ToolOfferBlockReason.NOT_CONFIGURED, implementation, null);
+
+        var minimumConfidence = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id, definition.MinimumProviderConfidence);
+        if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumConfidence.ConfidenceLevel))
+            return new(ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, implementation, minimumConfidence);
+
+        return new(ToolOfferBlockReason.NONE, implementation, minimumConfidence);
     }
 }
