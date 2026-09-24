@@ -76,6 +76,39 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
+        var latestUserPrompt = lastUserPrompt switch
+        {
+            ContentText text => text.Text,
+            ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                ? base64Image
+                : string.Empty,
+            _ => string.Empty
+        };
+
+        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token);
+    }
+
+    /// <inheritdoc />
+    public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
+    {
+        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        if (this.MaxMatches == 0)
+            return RetrievalPage.EMPTY;
+
+        //
+        // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
+        // thread still tells the server what the conversation is about. Nor does it know an offset:
+        // the server returns the whole window, and the page is cut from it here. Hence, the pages
+        // are only as stable as the order in which the server returns its matches. A server which
+        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        //
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
+        return new RetrievalPage(pageContexts, hasMore);
+    }
+
+    private async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
+    {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
         var logger = Program.SERVICE_PROVIDER.GetRequiredService<ILogger<DataSourceERI_V1>>();
@@ -86,18 +119,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             var retrievalRequest = new RetrievalRequest
             {
-                LatestUserPromptType = lastUserPrompt.ToERIContentType,
-                LatestUserPrompt = lastUserPrompt switch
-                {
-                    ContentText text => text.Text,
-                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image 
-                        : string.Empty,
-                    _ => string.Empty
-                },
+                LatestUserPromptType = latestUserPromptType,
+                LatestUserPrompt = latestUserPrompt,
                 
                 Thread = await thread.ToERIChatThread(token),
-                MaxMatches = this.MaxMatches,
+                MaxMatches = maxMatches,
                 RetrievalProcessId = this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };

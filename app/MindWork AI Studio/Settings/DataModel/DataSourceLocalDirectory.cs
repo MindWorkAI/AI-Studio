@@ -57,6 +57,10 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         Program.SERVICE_PROVIDER.GetRequiredService<DataSourceLocalRetrievalService>().RetrieveDataAsync(this, lastUserPrompt, thread, token);
     
+    /// <inheritdoc />
+    public Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default) =>
+        Program.SERVICE_PROVIDER.GetRequiredService<DataSourceLocalRetrievalService>().RetrieveDataAsync(this, query, page, thread, token);
+    
     /// <summary>
     /// The path to the directory.
     /// </summary>

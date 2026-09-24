@@ -60,18 +60,31 @@ public sealed class DataSourceLocalRetrievalService(
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalDirectory dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         this.RetrieveDataAsync(dataSource, lastUserPrompt, token);
 
+    public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalFile dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
+        this.RetrievePageAsync(dataSource, query, page, token);
+
+    public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalDirectory dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
+        this.RetrievePageAsync(dataSource, query, page, token);
+
     private async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IInternalDataSource dataSource, IContent lastUserPrompt, CancellationToken token)
     {
-        var query = GetQueryText(lastUserPrompt);
+        // The first page is what this retrieval has always returned:
+        var firstPage = await this.RetrievePageAsync(dataSource, GetQueryText(lastUserPrompt), 1, token);
+        return firstPage.Contexts;
+    }
+
+    private async Task<RetrievalPage> RetrievePageAsync(IInternalDataSource dataSource, string query, int page, CancellationToken token)
+    {
+        var pageSize = (int)dataSource.MaxMatches;
+        var window = RetrievalPaging.GetWindowSize(page, pageSize);
         if (string.IsNullOrWhiteSpace(query))
         {
-            logger.LogDebug("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt does not contain text.", dataSource.Name, dataSource.Id);
-            return [];
+            logger.LogDebug("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because there is no text to search for.", dataSource.Name, dataSource.Id);
+            return RetrievalPage.EMPTY;
         }
 
-        var maxMatches = (int)dataSource.MaxMatches;
-        if (maxMatches == 0)
-            return [];
+        if (pageSize == 0)
+            return RetrievalPage.EMPTY;
 
         //
         // A data source waiting for its index is kept out of the selection before the RAG process
@@ -87,30 +100,40 @@ public sealed class DataSourceLocalRetrievalService(
         {
             logger.LogWarning("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because its index has to be built anew.", dataSource.Name, dataSource.Id);
             await this.ReportRetrievalGapAsync(dataSource, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
-            return [];
+            return RetrievalPage.EMPTY;
         }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
-        var bm25Task = this.SearchBm25Async(dataSource, query, maxMatches, token);
+        var vectorTask = this.SearchVectorAsync(dataSource, query, window, collectionName, token);
+        var bm25Task = this.SearchBm25Async(dataSource, query, window, token);
 
         await Task.WhenAll(vectorTask, bm25Task);
         token.ThrowIfCancellationRequested();
 
-        var hits = MergeResults(vectorTask.Result, bm25Task.Result, maxMatches);
+        var (hits, hasMore) = RetrievalPaging.Merge(
+            vectorTask.Result.Select((result, index) => FromVectorResult(result, index + 1)).ToList(),
+            bm25Task.Result.Select((result, index) => FromBm25Result(result, index + 1)).ToList(),
+            hit => hit.ChunkId,
+            page,
+            pageSize);
+
         logger.LogInformation(
-            "Retrieved {MergedHits} local RAG hits for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}.",
+            "Retrieved {MergedHits} local RAG hits on page {Page} for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}, HasMore={HasMore}.",
             hits.Count,
+            page,
             dataSource.Name,
             dataSource.Id,
             vectorTask.Result.Count,
             bm25Task.Result.Count,
-            maxMatches);
+            window,
+            hasMore);
 
-        return hits
+        var contexts = hits
             .Where(hit => !string.IsNullOrWhiteSpace(hit.Text))
             .Select(hit => ToRetrievalContext(hit, dataSource))
             .ToList();
+
+        return new RetrievalPage(contexts, hasMore);
     }
 
     private async Task<IReadOnlyList<VectorSearchResult>> SearchVectorAsync(
@@ -312,7 +335,7 @@ public sealed class DataSourceLocalRetrievalService(
             return results;
 
         logger.LogWarning(
-            "Local RAG {SearchName} search returned {ReturnedHits} chunks for data source '{DataSourceName}' ({DataSourceId}), which exceeds the configured maximum {MaxMatches}. Truncating to the datasource limit.",
+            "Local RAG {SearchName} search returned {ReturnedHits} chunks for data source '{DataSourceName}' ({DataSourceId}), which exceeds the requested maximum {MaxMatches}. Truncating to it.",
             searchName,
             results.Count,
             dataSource.Name,
@@ -320,47 +343,6 @@ public sealed class DataSourceLocalRetrievalService(
             maxMatches);
 
         return results.Take(maxMatches).ToList();
-    }
-
-    private static IReadOnlyList<LocalRetrievalHit> MergeResults(
-        IReadOnlyList<VectorSearchResult> vectorResults,
-        IReadOnlyList<IndexStoreSearchResult> bm25Results,
-        int maxMatches)
-    {
-        // Future reranking should replace this deterministic channel merge.
-        var merged = new List<LocalRetrievalHit>(maxMatches * 2);
-        var seenChunkIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        AppendHits(
-            merged,
-            seenChunkIds,
-            vectorResults
-                .Select((result, index) => FromVectorResult(result, index + 1)),
-            maxMatches);
-
-        AppendHits(
-            merged,
-            seenChunkIds,
-            bm25Results
-                .Select((result, index) => FromBm25Result(result, index + 1)),
-            maxMatches);
-
-        return merged;
-    }
-
-    private static void AppendHits(List<LocalRetrievalHit> merged, HashSet<string> seenChunkIds, IEnumerable<LocalRetrievalHit> hits, int maxNewHits)
-    {
-        var added = 0;
-        foreach (var hit in hits)
-        {
-            if (!string.IsNullOrWhiteSpace(hit.ChunkId) && !seenChunkIds.Add(hit.ChunkId))
-                continue;
-
-            merged.Add(hit);
-            added++;
-            if (added >= maxNewHits)
-                return;
-        }
     }
 
     private static LocalRetrievalHit FromVectorResult(VectorSearchResult result, int rank) =>
