@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIStudio.Provider;
@@ -7,6 +9,18 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolExecutionResult
 {
+    /// <summary>
+    /// How a JSON result is written for the model.
+    /// </summary>
+    /// <remarks>
+    /// The result goes into the request as a string, and the request is serialized once more on its
+    /// way to the provider, so the model reads whatever this escapes as the escape itself. The
+    /// default encoder escapes every character outside ASCII and those HTML treats specially, for
+    /// JSON embedded in a web page, which this never is: a German document would reach the model
+    /// with every umlaut as six characters. The relaxed encoder escapes only what JSON requires.
+    /// </remarks>
+    private static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
     public string? TextContent { get; init; }
 
     public JsonNode? JsonContent { get; init; }
@@ -29,7 +43,7 @@ public sealed class ToolExecutionResult
     public string ToModelContent()
     {
         if (this.JsonContent is not null)
-            return this.JsonContent.ToJsonString();
+            return this.JsonContent.ToJsonString(MODEL_CONTENT_OPTIONS);
 
         return this.TextContent ?? string.Empty;
     }
