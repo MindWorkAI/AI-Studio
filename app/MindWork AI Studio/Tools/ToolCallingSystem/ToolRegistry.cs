@@ -339,14 +339,27 @@ public sealed class ToolRegistry
         return items;
     }
 
+    /// <summary>
+    /// The tools a request offers the model, each with the function it offers in this request.
+    /// </summary>
     /// <remarks>
     /// Model capabilities are not a parameter on purpose: they are read from the given provider,
     /// which carries the user's expert capability overrides. Passing them in separately allowed a
-    /// caller to gate tools on capabilities that differed from the ones the availability check saw.
+    /// caller to gate tools on capabilities that differed from the ones the availability check saw.<br/><br/>
+    /// The candidates are the selected tools and every tool which offers itself from the context of
+    /// the chat, see ToolActivation. Each one passes the same checks, and only then is it asked what
+    /// it offers in this request, see IToolImplementation.ResolveFunctionAsync.
     /// </remarks>
-    public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(AIStudio.Settings.Provider provider,
-        Components component, IEnumerable<string> selectedToolIds, ConfidenceLevel providerConfidence, bool mayRunTools)
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="selectedToolIds">The tools selected for the request.</param>
+    /// <param name="mayRunTools">Whether the request may run tools at all, as its caller decides.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The runnable tools, with their definitions as offered in this request.</returns>
+    public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(ToolResolutionContext context, IEnumerable<string> selectedToolIds, bool mayRunTools, CancellationToken token = default)
     {
+        var provider = context.Provider;
+        var component = context.Component;
+        var providerConfidence = context.ProviderConfidence;
         if (!this.settingsManager.AreToolsEnabled())
         {
             this.logger.LogDebug("Tool calling is skipped because tools are disabled by managed configuration.");
@@ -374,7 +387,10 @@ public sealed class ToolRegistry
         var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
         this.logger.LogDebug("Resolving runnable tools for provider '{Provider}' with model '{ModelId}'. Selected tool IDs: [{ToolIds}].", provider.InstanceName, provider.Model.Id, string.Join(", ", selectedToolIdSet.OrderBy(x => x, StringComparer.Ordinal)));
 
-        var definitions = this.GetDefinitionsForComponent(component).Where(x => selectedToolIdSet.Contains(x.Id)).ToList();
+        var definitions = this.GetDefinitionsForComponent(component)
+            .Where(x => x.Activation is ToolActivation.CONTEXT || selectedToolIdSet.Contains(x.Id))
+            .ToList();
+
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
@@ -385,7 +401,9 @@ public sealed class ToolRegistry
             switch (check)
             {
                 case { BlockReason: ToolOfferBlockReason.NONE, Implementation: { } implementation }:
-                    result.Add((definition, implementation));
+                    if (await this.ResolveAsync(definition, implementation, context, token) is { } offeredDefinition)
+                        result.Add((offeredDefinition, implementation));
+
                     break;
 
                 case { BlockReason: ToolOfferBlockReason.TOOL_SWITCHED_OFF }:
@@ -469,5 +487,59 @@ public sealed class ToolRegistry
             return new(ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, implementation, minimumConfidence);
 
         return new(ToolOfferBlockReason.NONE, implementation, minimumConfidence);
+    }
+
+    /// <summary>
+    /// Asks a tool which passed every check what it offers in this request.
+    /// </summary>
+    /// <remarks>
+    /// Only the description and the parameters of the answer are taken. The name and the strict
+    /// mode stay as registered, because the model's calls find their tool by that name, and the
+    /// rest of the definition was checked a moment ago and must not change after that.
+    /// </remarks>
+    /// <returns>The definition as offered in this request, or null when the tool has nothing to offer or could not say what.</returns>
+    private async Task<ToolDefinition?> ResolveAsync(ToolDefinition definition, IToolImplementation implementation, ToolResolutionContext context, CancellationToken token)
+    {
+        ToolFunctionDefinition? function;
+        try
+        {
+            function = await implementation.ResolveFunctionAsync(definition, context, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            this.logger.LogError(exception, "Skipping tool '{ToolId}' because it could not say what it offers in this request.", definition.Id);
+            return null;
+        }
+
+        if (function is null)
+        {
+            this.logger.LogDebug("Skipping tool '{ToolId}' because it has nothing to offer in this request.", definition.Id);
+            return null;
+        }
+
+        if (ReferenceEquals(function, definition.Function))
+            return definition;
+
+        if (function.Parameters.ValueKind is not JsonValueKind.Object)
+        {
+            this.logger.LogWarning("Tool '{ToolId}' offered parameters which are not a JSON object schema. It is offered as registered instead.", definition.Id);
+            return definition;
+        }
+
+        if (!string.Equals(function.Name, definition.Function.Name, StringComparison.Ordinal) || function.Strict != definition.Function.Strict)
+            this.logger.LogWarning("Tool '{ToolId}' changed the name or the strict mode of its function for a request. Both stay as registered.", definition.Id);
+
+        return definition with
+        {
+            Function = function with
+            {
+                Name = definition.Function.Name,
+                Strict = definition.Function.Strict,
+            },
+        };
     }
 }

@@ -2,7 +2,14 @@ using AIStudio.Provider;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
-public sealed class ToolDefinition
+/// <summary>
+/// What a tool is: what the model may call, which settings it needs, and where it may be used.
+/// </summary>
+/// <remarks>
+/// A record, so that the registry can hand out a definition whose function a tool tailored to one
+/// request while everything else stays as registered, see IToolImplementation.ResolveFunctionAsync.
+/// </remarks>
+public sealed record ToolDefinition
 {
     public int SchemaVersion { get; init; } = 1;
 
