@@ -94,8 +94,27 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private const string LIMIT_ARGUMENT = "limit";
 
     private const string TIME_RANGE_DAY = "day";
+    private const string TIME_RANGE_WEEK = "week";
     private const string TIME_RANGE_MONTH = "month";
     private const string TIME_RANGE_YEAR = "year";
+
+    /// <summary>
+    /// The time ranges a search can be restricted to.
+    /// </summary>
+    /// <remarks>
+    /// Those which both services with a time filter, SearXNG and Tavily, understand and take as
+    /// they are. Tavily documents all four. SearXNG's API documentation names no week, but its code accepts
+    /// one -- read on 2026-09-24 in parse_time_range of searx/webadapter.py. A model asked about
+    /// "this week" wants exactly that, and without it, it asks for a week again and again.<br/><br/>
+    /// The schema offers exactly these and the reader checks against them, so the two cannot drift
+    /// apart.
+    /// </remarks>
+    private static readonly string[] TIME_RANGES = [TIME_RANGE_DAY, TIME_RANGE_WEEK, TIME_RANGE_MONTH, TIME_RANGE_YEAR];
+
+    /// <summary>
+    /// How much of a wrongly passed argument an error message repeats back to the model.
+    /// </summary>
+    private const int MAX_ARGUMENT_ECHO_LENGTH = 40;
 
     public string ImplementationKey => ToolSelectionRules.WEB_SEARCH_TOOL_ID;
 
@@ -118,7 +137,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             Parameters = ToolParameterSchemaBuilder.Create()
                 .RequiredString(QUERY_ARGUMENT, "The search query.")
                 .OptionalString(LANGUAGE_ARGUMENT, "Optional IETF language tag restricting the search to one language, such as 'de-DE', 'en-US', or 'all' for no restriction. Leave it out to search in the language configured for this tool. Do not pass a language name such as 'German': search engines expect the tag and silently return nothing for anything else.")
-                .OptionalEnum(TIME_RANGE_ARGUMENT, "Optional time range filter for the search.", TIME_RANGE_DAY, TIME_RANGE_MONTH, TIME_RANGE_YEAR)
+                .OptionalEnum(TIME_RANGE_ARGUMENT, "Optional time range filter for the search.", TIME_RANGES)
                 .OptionalInteger(PAGE_ARGUMENT, "Optional search result page number starting at 1.")
                 .OptionalInteger(LIMIT_ARGUMENT, $"Optional maximum number of ranked result pages to retrieve and return. The hard maximum is {MAX_RESULTS}.")
                 .Build(),
@@ -482,14 +501,11 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
-        var query = ReadRequiredString(arguments, QUERY_ARGUMENT);
-        var language = ReadOptionalString(arguments, LANGUAGE_ARGUMENT);
-        var timeRange = ReadOptionalString(arguments, TIME_RANGE_ARGUMENT);
-        var page = ReadOptionalPositiveInt(arguments, PAGE_ARGUMENT);
-        var requestedLimit = ReadOptionalPositiveInt(arguments, LIMIT_ARGUMENT);
-
-        if (timeRange is not null && timeRange is not (TIME_RANGE_DAY or TIME_RANGE_MONTH or TIME_RANGE_YEAR))
-            throw new ArgumentException($"Invalid time_range '{timeRange}'.");
+        var query = ReadQuery(arguments);
+        var language = ReadLanguage(arguments);
+        var timeRange = ReadTimeRange(arguments);
+        var page = ReadPage(arguments);
+        var requestedLimit = ReadLimit(arguments);
 
         language = string.IsNullOrWhiteSpace(language) ? context.SettingsValues.GetValueOrDefault(DEFAULT_LANGUAGE_SETTING) : language;
         var safeSearch = ReadSafeSearchPolicy(context.SettingsValues);
@@ -807,40 +823,97 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         return result;
     }
 
-    private static string ReadRequiredString(JsonElement arguments, string propertyName)
+    /// <summary>
+    /// Reads the search query, the one argument the model always has to pass.
+    /// </summary>
+    internal static string ReadQuery(JsonElement arguments)
     {
-        var value = ReadOptionalString(arguments, propertyName);
-        if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException($"Missing required argument '{propertyName}'.");
+        var query = ReadOptionalString(arguments, QUERY_ARGUMENT, whenLeftOut: null);
+        if (string.IsNullOrWhiteSpace(query))
+            throw new ArgumentException($"Missing required argument '{QUERY_ARGUMENT}'.");
 
-        return value;
+        return query;
     }
 
-    private static string? ReadOptionalString(JsonElement arguments, string propertyName)
+    /// <summary>
+    /// Reads the language tag the model asked for, or null for the configured language.
+    /// </summary>
+    internal static string? ReadLanguage(JsonElement arguments) => ReadOptionalString(arguments, LANGUAGE_ARGUMENT, "to use the configured language");
+
+    /// <summary>
+    /// Reads the time range the model asked for, or null for no restriction.
+    /// </summary>
+    internal static string? ReadTimeRange(JsonElement arguments)
     {
-        if (!arguments.TryGetProperty(propertyName, out var value))
+        if (!TryGetArgument(arguments, TIME_RANGE_ARGUMENT, out var value))
             return null;
 
-        return value.ValueKind switch
-        {
-            JsonValueKind.Null => null,
-            JsonValueKind.String => value.GetString()?.Trim(),
-            _ => throw new ArgumentException($"Argument '{propertyName}' must be a string."),
-        };
+        var timeRange = value.ValueKind is JsonValueKind.String ? value.GetString()?.Trim() : null;
+        if (timeRange is null || !TIME_RANGES.Contains(timeRange, StringComparer.Ordinal))
+            throw InvalidArgument(TIME_RANGE_ARGUMENT, value, $"one of {string.Join(", ", TIME_RANGES)}", "to search without a time restriction");
+
+        return timeRange;
     }
 
-    private static int? ReadOptionalPositiveInt(JsonElement arguments, string propertyName)
+    /// <summary>
+    /// Reads the result page the model asked for, or null for the first one.
+    /// </summary>
+    internal static int? ReadPage(JsonElement arguments) => ReadOptionalPositiveInt(arguments, PAGE_ARGUMENT, "to get the first page");
+
+    /// <summary>
+    /// Reads how many results the model asked for, or null for the configured number.
+    /// </summary>
+    internal static int? ReadLimit(JsonElement arguments) => ReadOptionalPositiveInt(arguments, LIMIT_ARGUMENT, "to get as many results as configured");
+
+    /// <summary>
+    /// Looks up an argument, treating null the same as leaving it out.
+    /// </summary>
+    private static bool TryGetArgument(JsonElement arguments, string propertyName, out JsonElement value) =>
+        arguments.TryGetProperty(propertyName, out value) && value.ValueKind is not JsonValueKind.Null;
+
+    private static string? ReadOptionalString(JsonElement arguments, string propertyName, string? whenLeftOut)
     {
-        if (!arguments.TryGetProperty(propertyName, out var value))
+        if (!TryGetArgument(arguments, propertyName, out var value))
             return null;
 
-        if (value.ValueKind is JsonValueKind.Null)
+        if (value.ValueKind is not JsonValueKind.String)
+            throw InvalidArgument(propertyName, value, "a string", whenLeftOut);
+
+        return value.GetString()?.Trim();
+    }
+
+    private static int? ReadOptionalPositiveInt(JsonElement arguments, string propertyName, string whenLeftOut)
+    {
+        if (!TryGetArgument(arguments, propertyName, out var value))
             return null;
 
         if (value.ValueKind is not JsonValueKind.Number || !value.TryGetInt32(out var intValue) || intValue <= 0)
-            throw new ArgumentException($"Argument '{propertyName}' must be a positive integer.");
+            throw InvalidArgument(propertyName, value, "a positive integer", whenLeftOut);
 
         return intValue;
+    }
+
+    /// <summary>
+    /// Builds the error a model gets for an argument it passed wrongly.
+    /// </summary>
+    /// <remarks>
+    /// The model reads this and tries again, so it says what arrived, what would have been right,
+    /// and, for an optional argument, that leaving it out is always an option. A model which
+    /// believes the argument has to be there otherwise keeps trying placeholders, and every attempt
+    /// costs one of the tool calls an answer may make.
+    /// </remarks>
+    /// <param name="propertyName">The argument.</param>
+    /// <param name="value">What the model passed, as it arrived.</param>
+    /// <param name="expectation">What the argument must be, completing "must be ...".</param>
+    /// <param name="whenLeftOut">What happens without the argument, completing "Leave it out ...", or null for a required one.</param>
+    private static ArgumentException InvalidArgument(string propertyName, JsonElement value, string expectation, string? whenLeftOut)
+    {
+        var receivedValue = value.GetRawText();
+        if (receivedValue.Length > MAX_ARGUMENT_ECHO_LENGTH)
+            receivedValue = $"{receivedValue[..MAX_ARGUMENT_ECHO_LENGTH]}...";
+
+        var message = $"Argument '{propertyName}' must be {expectation}, but was {receivedValue}.";
+        return new ArgumentException(whenLeftOut is null ? message : $"{message} Leave it out {whenLeftOut}.");
     }
 
     private static string FormatQueryForLog(string query)

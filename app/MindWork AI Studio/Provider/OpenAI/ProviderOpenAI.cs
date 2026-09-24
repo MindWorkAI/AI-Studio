@@ -168,6 +168,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                },
                                systemPromptRole: systemPromptRole,
                                requestPath: "chat/completions",
+
+                               //
+                               // OpenAI binds a strict function's arguments to its schema -- read on
+                               // 2026-09-24 at https://developers.openai.com/api/docs/guides/function-calling.
+                               // Most other hosts of this API do not: Groq applies strict mode to
+                               // response formats only (https://console.groq.com/docs/structured-outputs,
+                               // same day) and merely validates a tool call afterward, so it rejects
+                               // every call that leaves out an argument the strict schema requires:
+                               //
+                               enforcesStrictToolSchemas: true,
                                token: token))
                 yield return content;
 

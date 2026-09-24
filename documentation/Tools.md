@@ -24,7 +24,9 @@ Adding a provider API means writing an `IToolCallingProviderAdapter`, not anothe
 
 `Function.Parameters` is plain JSON Schema: an optional argument is simply absent from `required`. That is what `ToolParameterSchemaBuilder` writes, and Anthropic reads it as written.
 
-OpenAI's strict mode wants it differently. It insists that **every** property appear in `required`, so an argument that may be left out has to say so by allowing null instead — `"type": ["string", "null"]`, plus `null` among its enum values where it has any. `OpenAIStrictToolSchema.FromToolParameters` therefore converts on the way out, for both OpenAI shapes and only where `Strict` is set. Nothing is lost, because a tool treats an absent argument and a null one the same way.
+OpenAI's strict mode wants it differently. It insists that **every** property appear in `required`, so an argument that may be left out has to say so by allowing null instead — `"type": ["string", "null"]`, plus `null` among its enum values where it has any. `OpenAIStrictToolSchema.FromToolParameters` therefore converts on the way out, but only where strict mode is kept. Nothing is lost there, because a tool treats an absent argument and a null one the same way.
+
+Strict mode is a promise of the host, not of the definition: only a host which binds the model's output to the schema keeps it. OpenAI does so in both of its APIs, and Anthropic does so without needing any conversion. Anywhere else, the converted schema would only tell the model that every argument is required. Groq, which validates a tool call against the schema without binding the model to it, then rejects each call that leaves an optional argument out, and other models fill the gap with placeholders such as `0` that the tool has to refuse. Every other Chat Completions host therefore gets the schema as written, with `strict: false`. A host which does bind tool calls says so by passing `enforcesStrictToolSchemas: true` to `StreamOpenAICompatibleChatCompletion`, as `ProviderOpenAI` does, next to the page that documents it. `ToolFunctionDefinition.Strict` works the other way round: set to false, it keeps a tool out of strict mode everywhere, for a schema strict mode cannot express.
 
 So the canonical schema is provider-neutral, and the provider that wants something else translates away from it in its own adapter. That is where the next such conversion belongs too — not in the definition.
 
@@ -34,7 +36,9 @@ Tool result handling also differs by API, and this is what the adapters exist fo
 - **Responses** returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`. There the ID comes from the provider, so a call without one cannot be answered at all and ends the conversation. The whole output of a round has to be sent back for the next one, reasoning items included.
 - **Anthropic** works in content blocks: the model's turn is one assistant message whose blocks may mix `text`, `thinking`, and `tool_use`, and it has to be returned unchanged — thinking blocks in particular. All results of a round belong in a **single** user message as `tool_result` blocks; splitting them across several messages teaches the model to stop asking for more than one tool at a time. It is also the only one of the three with an error flag on a result (`is_error`), which the harness sets for failed and blocked calls.
 
-AI Studio currently executes local tool calls sequentially. Therefore, Chat Completions requests with tools always set `parallel_tool_calls` to `false`, limiting each model response to at most one tool call. Requests without tools omit the parameter, and additional API parameters cannot override this behavior. Models can still request additional tools across subsequent responses.
+AI Studio currently executes local tool calls sequentially. Therefore, Chat Completions requests with tools set `parallel_tool_calls` to `false`, limiting each model response to at most one tool call. Requests without tools omit the parameter, and additional API parameters cannot override this behavior. Models can still request additional tools across subsequent responses.
+
+The exception is a provider which rejects the parameter. Hugging Face answers it with a bad request, so its provider passes `mayAskForSequentialToolCalls: false` to `StreamOpenAICompatibleChatCompletion`, and its requests omit the parameter even when they offer tools. Its models may then ask for several calls in one response, which the loop works through one by one, checking the limits per call. Not every provider honors the parameter either — OpenRouter let Qwen ask for two calls at once — and such a response is handled the same way.
 
 The OpenAI Responses API may continue to return multiple function calls in one response. AI Studio processes those calls sequentially as well; concurrent execution of separate local tool calls is not currently implemented. This does not restrict concurrency used internally by an individual tool.
 
@@ -58,7 +62,7 @@ When a tool returns data that future messages must only send to providers at or 
 
 ## Security
 
-Treat model-provided tool arguments as untrusted input.
+Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `WebSearchTool` shows the pattern.
 
 For tools that perform network requests:
 
@@ -107,7 +111,7 @@ Every successfully retrieved page with readable content is also returned as a st
 - Put every argument and setting name in a constant that the schema and the reading code share.
 - Set `MinimumProviderConfidence` to what the tool actually exposes.
 - Mark a setting the tool cannot work without as `Required`, rather than saying so in its description.
-- Validate settings and model arguments.
+- Validate settings and model arguments, and refuse a wrong argument with a message the model can correct itself from.
 - Filter content fetched from outside AI Studio for prompt injections, and declare `ReturnsUntrustedExternalContent`.
 - Protect secrets and sensitive trace arguments.
 - Add provider-confidence checks when tool output may contain sensitive data.
