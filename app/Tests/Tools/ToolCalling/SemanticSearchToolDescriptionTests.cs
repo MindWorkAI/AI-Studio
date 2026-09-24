@@ -89,7 +89,7 @@ public sealed class SemanticSearchToolDescriptionTests
     private static ToolFunctionDefinition Describe(params (IDataSource DataSource, string Description)[] dataSources)
     {
         // Stating its definition needs none of the services the tool searches with:
-        var registered = new SemanticSearchTool(null!, null!, null!).GetDefinition().Function;
+        var registered = new SemanticSearchTool(null!, null!, null!, null!, null!).GetDefinition().Function;
         return SemanticSearchTool.DescribeDataSources(registered, dataSources);
     }
 

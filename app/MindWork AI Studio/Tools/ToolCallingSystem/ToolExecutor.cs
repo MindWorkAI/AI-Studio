@@ -109,6 +109,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
             {
                 Definition = definition,
                 ChatThread = chatThread,
+                Provider = provider,
                 ToolCallId = toolCallId,
                 SettingsManager = settingsManager,
                 SettingsValues = settingsValues,

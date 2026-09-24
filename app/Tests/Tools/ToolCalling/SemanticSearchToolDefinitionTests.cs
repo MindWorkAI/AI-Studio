@@ -48,5 +48,5 @@ public sealed class SemanticSearchToolDefinitionTests : ToolRegistryTestBase
 
     // Stating its definition needs none of the services the tool searches with. The test tool
     // around it offers the function as registered, since resolving it asks those services:
-    private static SemanticSearchTool Tool() => new(null!, null!, null!);
+    private static SemanticSearchTool Tool() => new(null!, null!, null!, null!, null!);
 }

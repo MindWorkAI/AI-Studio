@@ -18,6 +18,16 @@ public sealed class ToolExecutionContext
     /// </remarks>
     public required ChatThread ChatThread { get; init; }
 
+    /// <summary>
+    /// The provider the call came from.
+    /// </summary>
+    /// <remarks>
+    /// For a tool which checks more than the confidence of the provider, such as Semantic Search:
+    /// before it searches, it asks again which data sources this provider may search, because
+    /// rounds may have passed since they were offered.
+    /// </remarks>
+    public required IProvider Provider { get; init; }
+
     public string ToolCallId { get; init; } = string.Empty;
 
     public required SettingsManager SettingsManager { get; init; }
