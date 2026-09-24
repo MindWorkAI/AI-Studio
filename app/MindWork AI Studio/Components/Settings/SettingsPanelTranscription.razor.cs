@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
+using Lua;
+
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelTranscription : SettingsPanelProviderBase
@@ -47,16 +49,33 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 
     #endregion
     
-    private async Task AddTranscriptionProvider()
+    private Task AddTranscriptionProvider() => this.AddTranscriptionProvider(null);
+
+    private async Task ImportTranscriptionProvider()
     {
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "TRANSCRIPTION_PROVIDERS", T("Import Transcription Provider"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+            await this.AddTranscriptionProvider(table);
+    }
+
+    private async Task AddTranscriptionProvider(LuaTable? importedConfiguration)
+    {
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+            return;
+
         var dialogParameters = new DialogParameters<TranscriptionProviderDialog>
         {
             { x => x.IsEditing, false },
         };
+        if (importedConfiguration is not null)
+            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
         
         var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Add Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS")))
             return;
         
         var addedTranscription = (TranscriptionProvider)dialogResult.Data!;

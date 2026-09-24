@@ -1,5 +1,8 @@
 using AIStudio.Components;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
+
+using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -7,6 +10,9 @@ namespace AIStudio.Dialogs;
 
 public partial class ProfileDialog : MSGComponentBase
 {
+    [Parameter]
+    public LuaTable? ImportedConfiguration { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -78,6 +84,19 @@ public partial class ProfileDialog : MSGComponentBase
         IsEnterpriseConfiguration = false,
     };
 
+    private Task ImportConfiguration(LuaTable table)
+    {
+        ConfigurationImportFields.ValidateExportId(table);
+        var name = ConfigurationImportFields.String(table, "Name");
+        var needToKnow = ConfigurationImportFields.String(table, "NeedToKnow");
+        var actions = ConfigurationImportFields.String(table, "Actions");
+        this.DataName = name;
+        this.DataNeedToKnow = needToKnow;
+        this.DataActions = actions;
+        this.form.ResetValidation();
+        return Task.CompletedTask;
+    }
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -104,6 +123,15 @@ public partial class ProfileDialog : MSGComponentBase
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
 
+        if (firstRender && this.ImportedConfiguration is not null)
+        {
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+                this.MudDialog.Cancel();
+            else
+                await this.ImportConfiguration(this.ImportedConfiguration);
+            this.StateHasChanged();
+        }
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -111,6 +139,9 @@ public partial class ProfileDialog : MSGComponentBase
 
     private async Task Store()
     {
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+            return;
+
         if (this.IsReadOnly)
             return;
 

@@ -2,6 +2,10 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.ToolCallingSystem;
+
+using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -9,6 +13,9 @@ namespace AIStudio.Dialogs;
 
 public partial class ChatTemplateDialog : MSGComponentBase
 {
+    [Parameter]
+    public LuaTable? ImportedConfiguration { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -81,6 +88,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Inject]
     private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
 
+    [Inject]
+    private ToolRegistry ToolRegistry { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -91,6 +101,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool dataIsValid;
     private List<ContentBlock> dataExampleConversation = [];
     private HashSet<FileAttachment> fileAttachments = [];
+    private List<(string OriginalPath, string ReplacementPath)> attachmentsToRelink = [];
+    private string relinkIssue = string.Empty;
+    private string importReferenceIssue = string.Empty;
     private bool preselectTools;
     private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
     private bool preselectDataSources;
@@ -153,6 +166,15 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
 
+        if (firstRender && this.ImportedConfiguration is not null)
+        {
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+                this.MudDialog.Cancel();
+            else
+                await this.ImportConfiguration(this.ImportedConfiguration);
+            this.StateHasChanged();
+        }
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -175,6 +197,72 @@ public partial class ChatTemplateDialog : MSGComponentBase
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
+
+    private async Task ImportConfiguration(LuaTable table)
+    {
+        ConfigurationImportFields.ValidateExportId(table);
+        ConfigurationImportFields.String(table, "Name");
+        ConfigurationImportFields.String(table, "SystemPrompt");
+        ConfigurationImportFields.String(table, "PredefinedUserPrompt", required: false);
+        ConfigurationImportFields.Bool(table, "AllowProfileUsage");
+        var messages = ConfigurationImportFields.Table(table, "ExampleConversation");
+        for (var index = 1; index <= messages.ArrayLength; index++)
+        {
+            if (messages[index].Type is not LuaValueType.Table || !messages[index].TryRead<LuaTable>(out var message))
+                throw new FormatException("An example conversation entry is not a table.");
+            ConfigurationImportFields.Enum<ChatRole>(message, "Role");
+            if (string.IsNullOrWhiteSpace(ConfigurationImportFields.String(message, "Content")))
+                throw new FormatException("An example conversation message is empty.");
+        }
+        if (table.TryGetValue("ToolIds", out _))
+            ConfigurationImportFields.Strings(table, "ToolIds");
+        if (table.TryGetValue("DataSourceOptions", out _))
+        {
+            var options = ConfigurationImportFields.Table(table, "DataSourceOptions");
+            ConfigurationImportFields.Bool(options, "DisableDataSources");
+            ConfigurationImportFields.Bool(options, "AutomaticDataSourceSelection");
+            ConfigurationImportFields.Bool(options, "AutomaticValidation");
+            if (options.TryGetValue("PreselectedDataSourceIds", out _))
+                ConfigurationImportFields.Strings(options, "PreselectedDataSourceIds");
+        }
+        if (!ChatTemplate.TryParseChatTemplateTable(0, table, Guid.Empty, string.Empty, out var parsed) || parsed is not ChatTemplate template)
+            throw new FormatException("The chat template fields are malformed.");
+        var paths = ConfigurationImportFields.Strings(table, "FileAttachments");
+        var validAttachments = new HashSet<FileAttachment>();
+        var toRelink = new List<(string OriginalPath, string ReplacementPath)>();
+        foreach (var path in paths)
+        {
+            if (ConfigurationImportFields.IsExistingLocalFile(path))
+                validAttachments.Add(FileAttachment.FromPath(path));
+            else
+                toRelink.Add((path, string.Empty));
+        }
+
+        this.DataName = template.Name;
+        this.DataSystemPrompt = template.SystemPrompt;
+        this.PredefinedUserPrompt = template.PredefinedUserPrompt;
+        this.AllowProfileUsage = template.AllowProfileUsage;
+        this.dataExampleConversation = template.ExampleConversation.Select(block => block.DeepClone()).ToList();
+        this.fileAttachments = validAttachments;
+        this.attachmentsToRelink = toRelink;
+        this.preselectTools = template.ToolIds is not null;
+        this.selectedToolIds = template.ToolIds is null ? new(StringComparer.Ordinal) : new(template.ToolIds, StringComparer.Ordinal);
+        this.preselectDataSources = template.DataSourceOptions is not null;
+        this.templateDataSourceOptions = template.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
+        this.importReferenceIssue = await this.BuildImportReferenceIssue();
+        this.form.ResetValidation();
+    }
+
+    private async Task<string> BuildImportReferenceIssue()
+    {
+        var missingSources = this.templateDataSourceOptions.PreselectedDataSourceIds
+            .Where(id => this.SettingsManager.ConfigurationData.DataSources.All(source => source.Id != id)).ToList();
+        var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.CHAT))
+            .Select(item => item.Definition.Id).ToHashSet(StringComparer.Ordinal);
+        var missingTools = this.selectedToolIds.Where(id => !availableToolIds.Contains(id)).ToList();
+        var missing = missingSources.Select(id => $"data source {id}").Concat(missingTools.Select(id => $"tool {id}")).ToList();
+        return missing.Count == 0 ? string.Empty : $"Unavailable references: {string.Join(", ", missing)}. Review the selection before saving.";
+    }
 
     private void SetSelectedToolIds(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
 
@@ -271,8 +359,22 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private async Task Store()
     {
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            return;
+
         if (this.IsReadOnly)
             return;
+
+        this.relinkIssue = string.Empty;
+        foreach (var (originalPath, replacementPath) in this.attachmentsToRelink)
+        {
+            if (!ConfigurationImportFields.IsExistingLocalFile(replacementPath))
+            {
+                this.relinkIssue = string.Format(T("Relink the missing attachment '{0}' to an existing local file before saving."), originalPath);
+                return;
+            }
+            this.fileAttachments.Add(FileAttachment.FromPath(replacementPath));
+        }
 
         await this.form.Validate();
 

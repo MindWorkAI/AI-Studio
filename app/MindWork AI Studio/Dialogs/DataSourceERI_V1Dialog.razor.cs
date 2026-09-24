@@ -4,7 +4,10 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Validation;
+
+using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,6 +18,9 @@ namespace AIStudio.Dialogs;
 
 public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 {
+    [Parameter]
+    public LuaTable? ImportedConfiguration { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
@@ -43,6 +49,8 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataSecretStorageIssue = string.Empty;
+    private string importCredentialIssue = string.Empty;
+    private string importRetrievalIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
@@ -143,6 +151,15 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
+
+        if (firstRender && this.ImportedConfiguration is not null)
+        {
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+                this.MudDialog.Cancel();
+            else
+                await this.ImportConfiguration(this.ImportedConfiguration);
+            this.StateHasChanged();
+        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -175,6 +192,53 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
             MaxMatches = this.dataMaxMatches,
         };
+    }
+
+    private Task ImportConfiguration(LuaTable table)
+    {
+        ConfigurationImportFields.ValidateExportId(table);
+        if (ConfigurationImportFields.String(table, "Type") != "ERI_V1")
+            throw new FormatException("This data source is not an ERI v1 data source.");
+        var name = ConfigurationImportFields.String(table, "Name");
+        var hostname = ConfigurationImportFields.String(table, "Hostname");
+        var port = ConfigurationImportFields.Int(table, "Port");
+        if (port is < 1 or > 65535)
+            throw new FormatException("The 'Port' field must be between 1 and 65535.");
+        var authMethod = ConfigurationImportFields.Enum<AuthMethod>(table, "AuthMethod");
+        if (authMethod is AuthMethod.KERBEROS)
+            throw new FormatException("Kerberos data sources cannot be imported from configuration snippets.");
+        var securityPolicy = ConfigurationImportFields.Enum<DataSourceSecurity>(table, "SecurityPolicy");
+        var retrievalId = ConfigurationImportFields.String(table, "SelectedRetrievalId");
+        var maxMatches = ConfigurationImportFields.Int(table, "MaxMatches", 10);
+        if (maxMatches is < 1 or > ushort.MaxValue)
+            throw new FormatException("The 'MaxMatches' field is outside the allowed range.");
+        var secretName = authMethod switch
+        {
+            AuthMethod.TOKEN => "Token",
+            AuthMethod.USERNAME_PASSWORD => "Password",
+            _ => string.Empty,
+        };
+        var secret = string.Empty;
+        var credentialIssue = string.Empty;
+        if (!string.IsNullOrEmpty(secretName))
+            secret = ConfigurationImportFields.Credential(table, secretName, out credentialIssue);
+        var username = ConfigurationImportFields.String(table, "Username", required: false);
+
+        this.dataName = name;
+        this.dataHostname = hostname;
+        this.dataPort = port;
+        this.dataAuthMethod = authMethod;
+        this.dataUsername = username;
+        this.dataSecurityPolicy = securityPolicy;
+        this.dataSelectedRetrievalProcess = this.dataSelectedRetrievalProcess with { Id = retrievalId };
+        this.dataMaxMatches = (ushort)maxMatches;
+        this.dataSecret = secret;
+        this.importCredentialIssue = credentialIssue;
+        this.importRetrievalIssue = string.Empty;
+        this.connectionTested = false;
+        this.connectionSuccessfulTested = false;
+        this.form.ResetValidation();
+        return Task.CompletedTask;
     }
     
     private bool IsConnectionEncrypted() => this.dataHostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
@@ -251,6 +315,17 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             }
             
             this.availableRetrievalProcesses = retrievalInfoRequest.Data ?? [];
+            if (!string.IsNullOrWhiteSpace(this.dataSelectedRetrievalProcess.Id))
+            {
+                var importedRetrieval = this.availableRetrievalProcesses.FirstOrDefault(item => item.Id == this.dataSelectedRetrievalProcess.Id);
+                if (importedRetrieval != default)
+                    this.dataSelectedRetrievalProcess = importedRetrieval;
+                else
+                {
+                    this.importRetrievalIssue = string.Format(T("The imported retrieval process '{0}' is unavailable. Select another process before saving."), this.dataSelectedRetrievalProcess.Id);
+                    this.dataSelectedRetrievalProcess = default;
+                }
+            }
             
             this.connectionTested = true;
             this.connectionSuccessfulTested = true;
@@ -304,6 +379,9 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+            return;
+
         await this.form.Validate();
         
         var testConnectionValidation = this.dataSourceValidation.ValidateTestedConnection();

@@ -9,6 +9,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
 
 using Microsoft.AspNetCore.Components;
+using LuaTable = Lua.LuaTable;
 
 using SharedTools;
 
@@ -244,7 +245,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.FirstOrDefault();
         if(this.selectedPolicy is null)
         {
-            await this.AddPolicy();
+            await this.AddInitialPolicy();
             this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.First();
         }
 
@@ -483,7 +484,44 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         return Task.CompletedTask;
     }
     
-    private async Task AddPolicy()
+    private Task AddPolicy() => this.AddPolicy(null);
+
+    private async Task ImportPolicy()
+    {
+        if (this.ArePolicyControlsDisabled || !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "DOCUMENT_ANALYSIS_POLICIES", T("Import document analysis policy"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))
+            await this.AddPolicy(table);
+    }
+
+    private async Task AddPolicy(LuaTable? importedConfiguration)
+    {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))
+            return;
+
+        var parameters = new DialogParameters<DocumentAnalysisPolicyDialog>();
+        if (importedConfiguration is not null)
+            parameters.Add(x => x.ImportedConfiguration, importedConfiguration);
+        var dialogReference = await this.DialogService.ShowAsync<DocumentAnalysisPolicyDialog>(T("Add policy"), parameters, DialogOptions.FULLSCREEN);
+        var result = await dialogReference.Result;
+        if (result is null || result.Canceled || result.Data is not DataDocumentAnalysisPolicy policy ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES")))
+            return;
+
+        var addedPolicy = policy with
+        {
+            Num = this.SettingsManager.ConfigurationData.NextDocumentAnalysisPolicyNum++,
+        };
+        this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(addedPolicy);
+        await this.SettingsManager.StoreSettings();
+        this.SelectedPolicyChanged(addedPolicy);
+    }
+
+    private async Task AddInitialPolicy()
     {
         if (this.ArePolicyControlsDisabled)
             return;

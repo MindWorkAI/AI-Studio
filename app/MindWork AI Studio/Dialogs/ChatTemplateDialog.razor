@@ -4,6 +4,25 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!this.IsEditing && !this.IsReadOnly)
+        {
+            @if (!string.IsNullOrWhiteSpace(this.importReferenceIssue))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importReferenceIssue</MudAlert>
+            }
+            @if (!string.IsNullOrWhiteSpace(this.relinkIssue))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-2">@this.relinkIssue</MudAlert>
+            }
+            @for (var index = 0; index < this.attachmentsToRelink.Count; index++)
+            {
+                var currentIndex = index;
+                <MudTextField T="string" Value="@this.attachmentsToRelink[index].ReplacementPath"
+                              ValueChanged="@(value => this.attachmentsToRelink[currentIndex] = (this.attachmentsToRelink[currentIndex].OriginalPath, value))"
+                              Label="@string.Format(T("Relink attachment: {0}"), this.attachmentsToRelink[index].OriginalPath)"
+                              HelperText="@T("Enter an absolute path to an existing local file before saving.")" Variant="Variant.Outlined" Class="mb-2" />
+            }
+        }
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         @* The name for the drop state is given although nobody uses it: the messages of this dialog
            are listed in a table, whose rows would otherwise ask for the same name. *@

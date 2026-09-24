@@ -1,0 +1,45 @@
+@using AIStudio.Provider
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        @if (!string.IsNullOrWhiteSpace(this.referenceIssue))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-2">@this.referenceIssue</MudAlert>
+        }
+        <MudForm @ref="@this.form" @bind-IsValid="@this.isValid" @bind-Errors="@this.issues">
+            <MudTextField T="string" @bind-Text="@this.name" Validation="@this.ValidateName" Immediate="true" Label="@T("Policy name")" Counter="60" MaxLength="60" Variant="Variant.Outlined" Class="mb-3" />
+            <MudTextField T="string" @bind-Text="@this.description" Validation="@this.ValidateDescription" Immediate="true" Label="@T("Policy description")" Counter="512" MaxLength="512" Lines="3" AutoGrow="true" Variant="Variant.Outlined" Class="mb-3" />
+            <MudTextSwitch @bind-Value="@this.hideDefinition" Label="@T("Hide the policy definition when distributed via configuration plugin?")" />
+            <ConfigurationMinConfidenceSelection RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.minimumConfidence)" SelectionUpdate="@(value => this.minimumConfidence = value)" />
+            <ToolSelectionField Component="@AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT" SelectedToolIds="@this.allowedToolIds" SelectedToolIdsChanged="@(value => this.allowedToolIds = value)" Label="@T("Tools this policy permits")" />
+            <MudSelect T="string" @bind-Value="@this.providerId" Label="@T("Preselect a provider")" Variant="Variant.Outlined" Class="mb-3">
+                <MudSelectItem T="string" Value="@string.Empty">@T("No provider")</MudSelectItem>
+                @foreach (var provider in this.SettingsManager.GetAllProviders())
+                {
+                    <MudSelectItem T="string" Value="@provider.Id">@provider.InstanceName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string" @bind-Value="@this.profileId" Label="@T("Preselect a profile")" Variant="Variant.Outlined" Class="mb-3">
+                <MudSelectItem T="string" Value="@string.Empty">@T("Use app default profile")</MudSelectItem>
+                <MudSelectItem T="string" Value="@Profile.NO_PROFILE.Id">@T("No profile")</MudSelectItem>
+                @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
+                {
+                    <MudSelectItem T="string" Value="@profile.Id">@profile.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextSwitch @bind-Value="@this.isProtected" Label="@T("Would you like to protect this policy so that you cannot accidentally edit or delete it?")" />
+            <MudTextField T="string" @bind-Text="@this.analysisRules" Validation="@this.ValidateAnalysisRules" Immediate="true" Label="@T("Analysis rules")" Lines="5" AutoGrow="true" MaxLines="26" Variant="Variant.Outlined" Class="mb-3" />
+            <ReadFileContent Text="@T("Load analysis rules from document")" @bind-FileContent="@this.analysisRules" EnableDragDrop="true" />
+            <MudTextField T="string" @bind-Text="@this.outputRules" Validation="@this.ValidateOutputRules" Immediate="true" Label="@T("Output rules")" Lines="5" AutoGrow="true" MaxLines="26" Variant="Variant.Outlined" Class="mb-3" />
+            <ReadFileContent Text="@T("Load output rules from document")" @bind-FileContent="@this.outputRules" EnableDragDrop="true" />
+        </MudForm>
+        <Issues IssuesData="@this.issues" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">@T("Cancel")</MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">@T("Add")</MudButton>
+    </DialogActions>
+</MudDialog>

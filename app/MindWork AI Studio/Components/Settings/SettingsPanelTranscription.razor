@@ -83,6 +83,9 @@
             </MudText>
         }
 
-        <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="mt-3" />
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" NoMargin="true" />
+            <LockableButton Text="@T("Import Transcription Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportTranscriptionProvider" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
     </ExpansionPanel>
 }

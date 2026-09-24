@@ -47,6 +47,7 @@ else
     <MudButton OnClick="@this.AddPolicy" Disabled="@this.ArePolicyControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
         @T("Add policy")
     </MudButton>
+    <LockableButton Text="@T("Import document analysis policy")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))" Disabled="@(() => this.ArePolicyControlsDisabled)" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportPolicy" ButtonVariant="Variant.Outlined" NoMargin="true" />
     <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.ArePolicyControlsDisabled || (this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
         @T("Delete this policy")
     </MudButton>

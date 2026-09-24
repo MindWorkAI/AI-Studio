@@ -81,9 +81,12 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddChatTemplate">
-            @T("Add Chat Template")
-        </MudButton>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddChatTemplate">
+                @T("Add Chat Template")
+            </MudButton>
+            <LockableButton Text="@T("Import Chat Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportChatTemplate" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

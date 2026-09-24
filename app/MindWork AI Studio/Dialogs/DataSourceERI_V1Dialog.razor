@@ -5,6 +5,17 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!this.IsEditing)
+        {
+            @if (!string.IsNullOrWhiteSpace(this.importCredentialIssue))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importCredentialIssue</MudAlert>
+            }
+            @if (!string.IsNullOrWhiteSpace(this.importRetrievalIssue))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importRetrievalIssue</MudAlert>
+            }
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField

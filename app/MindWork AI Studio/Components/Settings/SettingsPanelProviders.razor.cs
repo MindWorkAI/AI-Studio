@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
+using Lua;
+
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelProviders : SettingsPanelProviderBase
@@ -39,17 +41,34 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     #endregion
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
-    private async Task AddLLMProvider()
+    private Task AddLLMProvider() => this.AddLLMProvider(null);
+
+    private async Task ImportProvider()
     {
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "LLM_PROVIDERS", T("Import LLM Provider"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))
+            await this.AddLLMProvider(table);
+    }
+
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
+    private async Task AddLLMProvider(LuaTable? importedConfiguration)
+    {
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))
+            return;
+
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.IsEditing, false },
         };
+        if (importedConfiguration is not null)
+            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
         
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Add LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS")))
             return;
 
         var addedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;

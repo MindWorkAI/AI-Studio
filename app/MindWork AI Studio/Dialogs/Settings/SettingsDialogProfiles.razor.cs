@@ -1,19 +1,38 @@
 using AIStudio.Settings;
 
+using Lua;
+
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogProfiles : SettingsDialogBase
 {
-    private async Task AddProfile()
+    private Task AddProfile() => this.AddProfile(null);
+
+    private async Task ImportProfile()
     {
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "PROFILES", T("Import Profile"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+            await this.AddProfile(table);
+    }
+
+    private async Task AddProfile(LuaTable? importedConfiguration)
+    {
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+            return;
+
         var dialogParameters = new DialogParameters<ProfileDialog>
         {
             { x => x.IsEditing, false },
         };
+        if (importedConfiguration is not null)
+            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
 
         var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Add Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES")))
             return;
 
         var addedProfile = (Profile)dialogResult.Data!;
