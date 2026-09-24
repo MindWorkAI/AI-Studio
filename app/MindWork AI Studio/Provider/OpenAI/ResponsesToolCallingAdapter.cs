@@ -59,14 +59,16 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
 
         //
         // The text goes out while it is being written, the round only once the stream closed it.
-        // Sources travel with the text because the API announces them as it cites them.
+        // Sources travel with the text because the API announces them as it cites them. The usage
+        // goes out with every round: which of them describes the conversation is the loop's
+        // decision, which knows which round this is.
         //
         var accumulator = new ResponsesStreamAccumulator();
         await foreach (var serverSentEvent in streamRequestAsync(request, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            if (part.HasContent)
-                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources));
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
         }
 
         var response = accumulator.Build();

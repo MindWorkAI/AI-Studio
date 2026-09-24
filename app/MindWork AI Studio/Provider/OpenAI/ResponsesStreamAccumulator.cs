@@ -27,7 +27,7 @@ public sealed class ResponsesStreamAccumulator
     /// Takes the next event of the stream and returns what it has to show.
     /// </summary>
     /// <param name="serverSentEvent">The event to read.</param>
-    /// <returns>The text and sources of this event, both empty when it carried neither.</returns>
+    /// <returns>The text and sources of this event, both empty when it carried neither, and the usage of the completed event.</returns>
     public ResponsesStreamPart Process(ServerSentEvent serverSentEvent)
     {
         if (serverSentEvent.Data.Length is 0)
@@ -61,8 +61,15 @@ public sealed class ResponsesStreamAccumulator
         switch (eventType)
         {
             case EVENT_COMPLETED:
-                this.completedResponse = TryDeserialize<ResponsesCompletedStreamLine>(serverSentEvent.Data)?.Response ?? this.completedResponse;
-                return ResponsesStreamPart.Nothing;
+                var completedLine = TryDeserialize<ResponsesCompletedStreamLine>(serverSentEvent.Data);
+                this.completedResponse = completedLine?.Response ?? this.completedResponse;
+
+                //
+                // What the request carried, read the same way as on the plain text path and with
+                // the same exception, a response which ran a hosted tool, cf. ResponsesResponse.
+                //
+                var usage = completedLine?.GetUsage() ?? TokenUsage.UNKNOWN;
+                return usage.IsKnown ? new ResponsesStreamPart(string.Empty, [], usage) : ResponsesStreamPart.Nothing;
             
             case EVENT_TEXT_DELTA:
                 var deltaLine = TryDeserialize<ResponsesDeltaStreamLine>(serverSentEvent.Data);

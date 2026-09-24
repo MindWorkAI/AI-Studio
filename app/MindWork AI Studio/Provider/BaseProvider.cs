@@ -1157,16 +1157,43 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
+        var isCompleted = false;
         await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
         {
-            // Check if the line is the end of the stream. This one is read off the raw line
-            // rather than off a payload, because it has none:
+            // Check if the line announces the end of the stream. This one is read off the raw
+            // line rather than off a payload, because it has none:
             if (serverSentEvent.Line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
-                yield break;
+            {
+                isCompleted = true;
+                continue;
+            }
             
             // Skip lines without a payload:
             if (serverSentEvent.Data.Length is 0)
                 continue;
+
+            //
+            // The payload after the announcement is the whole response, and the only line which
+            // states what the request cost. The stream ends here whether that can be read or not,
+            // which keeps the end independent of how a gateway orders the fields of the payload.
+            //
+            if (isCompleted)
+            {
+                var usage = TokenUsage.UNKNOWN;
+                try
+                {
+                    usage = JsonSerializer.Deserialize<ResponsesCompletedStreamLine>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS)?.GetUsage() ?? TokenUsage.UNKNOWN;
+                }
+                catch
+                {
+                    // Invalid JSON data states nothing, and the answer is complete either way.
+                }
+
+                if (usage.IsKnown)
+                    yield return new(string.Empty, [], Usage: usage);
+
+                yield break;
+            }
 
             //
             // Find delta lines:
