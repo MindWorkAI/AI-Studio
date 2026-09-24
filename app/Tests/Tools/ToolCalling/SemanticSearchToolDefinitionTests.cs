@@ -21,7 +21,7 @@ public sealed class SemanticSearchToolDefinitionTests : ToolRegistryTestBase
     [Test]
     public async Task AChatIsOfferedTheToolWithoutSelectingIt()
     {
-        var registry = this.CreateRegistry(new TestTool(new SemanticSearchTool().GetDefinition()));
+        var registry = this.CreateRegistry(new TestTool(Tool().GetDefinition()));
 
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), [], mayRunTools: true);
 
@@ -31,7 +31,7 @@ public sealed class SemanticSearchToolDefinitionTests : ToolRegistryTestBase
     [Test]
     public async Task AnAssistantIsNeverOfferedTheTool()
     {
-        var registry = this.CreateRegistry(new TestTool(new SemanticSearchTool().GetDefinition()));
+        var registry = this.CreateRegistry(new TestTool(Tool().GetDefinition()));
         var provider = ToolCapableProvider();
         var context = new ToolResolutionContext
         {
@@ -45,4 +45,8 @@ public sealed class SemanticSearchToolDefinitionTests : ToolRegistryTestBase
 
         Assert.That(runnableTools, Is.Empty, "An assistant has no data sources to search, even when something names the tool.");
     }
+
+    // Stating its definition needs none of the services the tool searches with. The test tool
+    // around it offers the function as registered, since resolving it asks those services:
+    private static SemanticSearchTool Tool() => new(null!, null!, null!);
 }
