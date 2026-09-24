@@ -85,7 +85,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             _ => string.Empty
         };
 
-        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token);
+        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token) ?? [];
     }
 
     /// <inheritdoc />
@@ -103,11 +103,15 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         // returns fewer matches than asked for ends the paging early, which errs on the safe side.
         //
         var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        if (contexts is null)
+            return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
+
         var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
         return new RetrievalPage(pageContexts, hasMore);
     }
 
-    private async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
+    /// <returns>What the ERI server found, or null when it could not be searched.</returns>
+    private async Task<IReadOnlyList<IRetrievalContext>?> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
     {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
@@ -175,11 +179,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             }
 
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
-            return [];
+            return null;
         }
 
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
-        return [];
+        return null;
     }
 
     public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)

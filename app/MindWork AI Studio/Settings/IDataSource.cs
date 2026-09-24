@@ -43,12 +43,16 @@ public interface IDataSource : IConfigurationObject
     /// lets the model work it out from the conversation, and search as often as it takes. The first
     /// page holds what the retrieval above finds for the same text. How the pages are cut is
     /// described in RetrievalPaging.
+    ///
+    /// Since the user did not write the query, the user is not told about problems with it. They
+    /// arrive in RetrievalPage.Gaps instead, together with everything else which kept the search
+    /// from covering the whole data source.
     /// </remarks>
     /// <param name="query">What to search for.</param>
     /// <param name="page">The page to retrieve, from 1 up to RetrievalPaging.GetLastPage for MaxMatches.</param>
     /// <param name="thread">The chat thread.</param>
     /// <param name="token">The cancellation token.</param>
-    /// <returns>The retrieved data contexts of this page, and whether the next page is worth asking for.</returns>
+    /// <returns>The retrieved data contexts of this page, whether the next page is worth asking for, and what the search could not cover.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
     public Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default);
 }

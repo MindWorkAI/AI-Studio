@@ -54,6 +54,31 @@ public sealed class DataSourceLocalRetrievalService(
         int Rank);
     // ReSharper restore NotAccessedPositionalProperty.Local
 
+    /// <summary>
+    /// What kept one retrieval from covering the whole data source.
+    /// </summary>
+    /// <param name="queryWrittenByUser">Whether the query is the user's own message, which decides who hears about its problems.</param>
+    private sealed class RetrievalRun(bool queryWrittenByUser)
+    {
+        // Both channels search at the same time:
+        private readonly Lock gapLock = new();
+        private readonly HashSet<RetrievalGap> gaps = [];
+
+        public bool QueryWrittenByUser => queryWrittenByUser;
+
+        public void Add(RetrievalGap gap)
+        {
+            lock (this.gapLock)
+                this.gaps.Add(gap);
+        }
+
+        public IReadOnlyList<RetrievalGap> GetGaps()
+        {
+            lock (this.gapLock)
+                return this.gaps.Order().ToList();
+        }
+    }
+
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalFile dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         this.RetrieveDataAsync(dataSource, lastUserPrompt, token);
 
@@ -61,19 +86,19 @@ public sealed class DataSourceLocalRetrievalService(
         this.RetrieveDataAsync(dataSource, lastUserPrompt, token);
 
     public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalFile dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
-        this.RetrievePageAsync(dataSource, query, page, token);
+        this.RetrievePageAsync(dataSource, query, page, new RetrievalRun(queryWrittenByUser: false), token);
 
     public Task<RetrievalPage> RetrieveDataAsync(DataSourceLocalDirectory dataSource, string query, int page, ChatThread thread, CancellationToken token = default) =>
-        this.RetrievePageAsync(dataSource, query, page, token);
+        this.RetrievePageAsync(dataSource, query, page, new RetrievalRun(queryWrittenByUser: false), token);
 
     private async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IInternalDataSource dataSource, IContent lastUserPrompt, CancellationToken token)
     {
         // The first page is what this retrieval has always returned:
-        var firstPage = await this.RetrievePageAsync(dataSource, GetQueryText(lastUserPrompt), 1, token);
+        var firstPage = await this.RetrievePageAsync(dataSource, GetQueryText(lastUserPrompt), 1, new RetrievalRun(queryWrittenByUser: true), token);
         return firstPage.Contexts;
     }
 
-    private async Task<RetrievalPage> RetrievePageAsync(IInternalDataSource dataSource, string query, int page, CancellationToken token)
+    private async Task<RetrievalPage> RetrievePageAsync(IInternalDataSource dataSource, string query, int page, RetrievalRun run, CancellationToken token)
     {
         var pageSize = (int)dataSource.MaxMatches;
         var window = RetrievalPaging.GetWindowSize(page, pageSize);
@@ -99,13 +124,13 @@ public sealed class DataSourceLocalRetrievalService(
         if (await embeddingService.IsAwaitingReindexAsync(dataSource, token))
         {
             logger.LogWarning("Skipping local retrieval for data source '{DataSourceName}' ({DataSourceId}) because its index has to be built anew.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
-            return RetrievalPage.EMPTY;
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.NOT_SEARCHED, "index-rebuilding", string.Format(TB("The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."), dataSource.Name));
+            return RetrievalPage.EMPTY with { Gaps = run.GetGaps() };
         }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var vectorTask = this.SearchVectorAsync(dataSource, query, window, collectionName, token);
-        var bm25Task = this.SearchBm25Async(dataSource, query, window, token);
+        var vectorTask = this.SearchVectorAsync(dataSource, query, window, collectionName, run, token);
+        var bm25Task = this.SearchBm25Async(dataSource, query, window, run, token);
 
         await Task.WhenAll(vectorTask, bm25Task);
         token.ThrowIfCancellationRequested();
@@ -117,8 +142,9 @@ public sealed class DataSourceLocalRetrievalService(
             page,
             pageSize);
 
+        var gaps = run.GetGaps();
         logger.LogInformation(
-            "Retrieved {MergedHits} local RAG hits on page {Page} for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}, HasMore={HasMore}.",
+            "Retrieved {MergedHits} local RAG hits on page {Page} for data source '{DataSourceName}' ({DataSourceId}). VectorCandidates={VectorHits}, BM25Candidates={BM25Hits}, RequestedPerChannel={RequestedPerChannel}, HasMore={HasMore}, Gaps=[{Gaps}].",
             hits.Count,
             page,
             dataSource.Name,
@@ -126,14 +152,15 @@ public sealed class DataSourceLocalRetrievalService(
             vectorTask.Result.Count,
             bm25Task.Result.Count,
             window,
-            hasMore);
+            hasMore,
+            string.Join(", ", gaps));
 
         var contexts = hits
             .Where(hit => !string.IsNullOrWhiteSpace(hit.Text))
             .Select(hit => ToRetrievalContext(hit, dataSource))
             .ToList();
 
-        return new RetrievalPage(contexts, hasMore);
+        return new RetrievalPage(contexts, hasMore) { Gaps = gaps };
     }
 
     private async Task<IReadOnlyList<VectorSearchResult>> SearchVectorAsync(
@@ -141,6 +168,7 @@ public sealed class DataSourceLocalRetrievalService(
         string query,
         int maxMatches,
         string collectionName,
+        RetrievalRun run,
         CancellationToken token)
     {
         try
@@ -153,18 +181,18 @@ public sealed class DataSourceLocalRetrievalService(
                     dataSource.Name,
                     dataSource.Id,
                     vectorStore.Name);
-                await this.ReportRetrievalGapAsync(dataSource, "no-vector-store", string.Format(TB("The data source '{0}' was left out of the answer: its local index is not available."), dataSource.Name));
+                await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-vector-store", string.Format(TB("The data source '{0}' was left out of the answer: its local index is not available."), dataSource.Name));
                 return [];
             }
 
             if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out var embeddingProvider))
             {
                 logger.LogWarning("Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the selected embedding provider is not available.", dataSource.Name, dataSource.Id);
-                await this.ReportRetrievalGapAsync(dataSource, "no-embedding-provider", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."), dataSource.Name));
+                await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-embedding-provider", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."), dataSource.Name));
                 return [];
             }
 
-            if (!await this.QueryFitsEmbeddingProviderAsync(dataSource, embeddingProvider, query, token))
+            if (!await this.QueryFitsEmbeddingProviderAsync(dataSource, embeddingProvider, query, run, token))
                 return [];
 
             var provider = embeddingProvider.CreateProvider();
@@ -174,7 +202,7 @@ public sealed class DataSourceLocalRetrievalService(
             if (vector is null || vector.Count == 0)
             {
                 logger.LogWarning("Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because query embedding returned no vector.", dataSource.Name, dataSource.Id);
-                await this.ReportRetrievalGapAsync(dataSource, "no-query-vector", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector for your message."), dataSource.Name, embeddingProvider.Name));
+                await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-query-vector", string.Format(TB("The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector to search with."), dataSource.Name, embeddingProvider.Name));
                 return [];
             }
 
@@ -200,7 +228,7 @@ public sealed class DataSourceLocalRetrievalService(
                 exception,
                 "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because the embedding provider failed. FailureReason={FailureReason}, StatusCode={StatusCode}.",
                 dataSource.Name, dataSource.Id, exception.FailureReason, exception.StatusCode);
-            await this.ReportRetrievalGapAsync(dataSource, $"provider-{exception.FailureReason}", string.Format(TB("The data source '{0}' was left out of the answer. {1}"), dataSource.Name, exception.UserMessage));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, $"provider-{exception.FailureReason}", string.Format(TB("The data source '{0}' was left out of the answer. {1}"), dataSource.Name, exception.UserMessage));
             return [];
         }
         catch (VectorStoreUnreadableException exception)
@@ -211,31 +239,40 @@ public sealed class DataSourceLocalRetrievalService(
             // answer into one the user can do something about.
             //
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}) because its vector store cannot be read.", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "vector-store-unreadable", string.Format(TB("The data source '{0}' was left out of the answer: its index cannot be read anymore. You can repair it in your data source settings."), dataSource.Name));
             return [];
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-            await this.ReportRetrievalGapAsync(dataSource, "vector-search-failed", string.Format(TB("The data source '{0}' was left out of the answer because searching it failed."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "vector-search-failed", string.Format(TB("The data source '{0}' was left out of the answer because searching it failed."), dataSource.Name));
             return [];
         }
     }
 
     /// <summary>
-    /// Tells the user once that a data source cannot take part in answering.
+    /// Records that a data source cannot fully take part in answering, and tells the user once.
     /// </summary>
     /// <remarks>
     /// A failed search is not an error of the chat: the model still answers, only without what
     /// this data source knows. Saying so once is what keeps somebody from trusting an answer
     /// which was put together without half of its sources. Saying it with every prompt would be
     /// worse than saying nothing, which is why every gap is reported once per session.
+    ///
+    /// The retrieval records every gap regardless, cf. RetrievalPage.Gaps: whoever asked for the
+    /// page has to know each time, not once per session.
     /// </remarks>
     /// <param name="dataSource">The data source which could not be searched.</param>
+    /// <param name="run">The retrieval this gap belongs to.</param>
+    /// <param name="gap">What the gap means for the search.</param>
     /// <param name="gapKey">What kind of gap this is, so a different problem is reported again.</param>
     /// <param name="userMessage">What to tell the user.</param>
-    private async Task ReportRetrievalGapAsync(IInternalDataSource dataSource, string gapKey, string userMessage)
+    private async Task ReportRetrievalGapAsync(IInternalDataSource dataSource, RetrievalRun run, RetrievalGap gap, string gapKey, string userMessage)
     {
+        run.Add(gap);
+        if (!IsForTheUser(gap, run.QueryWrittenByUser))
+            return;
+
         lock (this.retrievalGapLock)
         {
             if (!this.reportedRetrievalGaps.Add($"{dataSource.Id}::{gapKey}"))
@@ -245,23 +282,38 @@ public sealed class DataSourceLocalRetrievalService(
         await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.SearchOff, userMessage));
     }
 
+    /// <summary>
+    /// Whether the user has to hear about a gap.
+    /// </summary>
+    /// <remarks>
+    /// Problems of the data source are for the user, since only the user can fix them. Problems of
+    /// the query are for whoever wrote it. When the model worked the query out, telling the user
+    /// their message was too long would be wrong, and the model learns about it from the page and
+    /// can search with a shorter one.
+    /// </remarks>
+    /// <param name="gap">What the gap means for the search.</param>
+    /// <param name="queryWrittenByUser">Whether the query is the user's own message.</param>
+    /// <returns>True when the user has to be told.</returns>
+    internal static bool IsForTheUser(RetrievalGap gap, bool queryWrittenByUser) => gap is not RetrievalGap.QUERY_NOT_SEARCHABLE || queryWrittenByUser;
+
     private async Task<bool> QueryFitsEmbeddingProviderAsync(
         IInternalDataSource dataSource,
         EmbeddingProvider embeddingProvider,
         string query,
+        RetrievalRun run,
         CancellationToken token)
     {
         var providerTokenLimit = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
         if (query.Length > RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH)
         {
             logger.LogWarning(
-                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {CharacterCount} characters and exceeds the safe tokenizer request length of {MaxCharacterCount}. ProviderTokenLimit={ProviderTokenLimit}.",
+                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the query has {CharacterCount} characters and exceeds the safe tokenizer request length of {MaxCharacterCount}. ProviderTokenLimit={ProviderTokenLimit}.",
                 dataSource.Name,
                 dataSource.Id,
                 query.Length,
                 RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH,
                 providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, "query-too-long", string.Format(TB("The data source '{0}' was left out of the answer because your message is too long to search with."), dataSource.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-too-long", string.Format(TB("The data source '{0}' was left out of the answer because your message is too long to search with."), dataSource.Name));
             return false;
         }
 
@@ -274,7 +326,7 @@ public sealed class DataSourceLocalRetrievalService(
                 dataSource.Id,
                 embeddingProvider.Name,
                 tokenCountResponse?.Message ?? "No response was returned by the tokenizer service.");
-            await this.ReportRetrievalGapAsync(dataSource, "no-token-count", string.Format(TB("The data source '{0}' was left out of the answer: the tokenizer of its embedding provider '{1}' is not available."), dataSource.Name, embeddingProvider.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.PARTLY_SEARCHED, "no-token-count", string.Format(TB("The data source '{0}' was left out of the answer: the tokenizer of its embedding provider '{1}' is not available."), dataSource.Name, embeddingProvider.Name));
             return false;
         }
 
@@ -282,20 +334,20 @@ public sealed class DataSourceLocalRetrievalService(
         if (queryTokenCount > providerTokenLimit)
         {
             logger.LogWarning(
-                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {QueryTokenCount} tokens, exceeding embedding provider '{EmbeddingProviderName}' limit of {ProviderTokenLimit} tokens.",
+                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the query has {QueryTokenCount} tokens, exceeding embedding provider '{EmbeddingProviderName}' limit of {ProviderTokenLimit} tokens.",
                 dataSource.Name,
                 dataSource.Id,
                 queryTokenCount,
                 embeddingProvider.Name,
                 providerTokenLimit);
-            await this.ReportRetrievalGapAsync(dataSource, "query-over-token-limit", string.Format(TB("The data source '{0}' was left out of the answer because your message is longer than its embedding provider '{1}' accepts."), dataSource.Name, embeddingProvider.Name));
+            await this.ReportRetrievalGapAsync(dataSource, run, RetrievalGap.QUERY_NOT_SEARCHABLE, "query-over-token-limit", string.Format(TB("The data source '{0}' was left out of the answer because your message is longer than its embedding provider '{1}' accepts."), dataSource.Name, embeddingProvider.Name));
             return false;
         }
 
         return true;
     }
 
-    private async Task<IReadOnlyList<IndexStoreSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, CancellationToken token)
+    private async Task<IReadOnlyList<IndexStoreSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, RetrievalRun run, CancellationToken token)
     {
         try
         {
@@ -307,6 +359,7 @@ public sealed class DataSourceLocalRetrievalService(
                     dataSource.Name,
                     dataSource.Id,
                     indexStore.Name);
+                run.Add(RetrievalGap.PARTLY_SEARCHED);
                 return [];
             }
 
@@ -325,6 +378,7 @@ public sealed class DataSourceLocalRetrievalService(
         catch (Exception exception)
         {
             logger.LogWarning(exception, "BM25 retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+            run.Add(RetrievalGap.PARTLY_SEARCHED);
             return [];
         }
     }

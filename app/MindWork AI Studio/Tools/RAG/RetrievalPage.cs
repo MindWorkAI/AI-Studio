@@ -19,4 +19,16 @@ public sealed record RetrievalPage(IReadOnlyList<IRetrievalContext> Contexts, bo
     /// A page without any matches and nothing after it.
     /// </summary>
     public static readonly RetrievalPage EMPTY = new([], false);
+
+    /// <summary>
+    /// What kept the search from covering the whole data source. Empty when nothing did.
+    /// </summary>
+    /// <remarks>
+    /// Without this, a data source which could not be searched would look like one which found
+    /// nothing, and the model would tell the user their documents do not mention what they might
+    /// well mention. A local data source tells the user about its own problems as well, since only
+    /// the user can fix those. Not so about problems of the query: it was written by whoever asked
+    /// for this page, and so is a better one.
+    /// </remarks>
+    public IReadOnlyList<RetrievalGap> Gaps { get; init; } = [];
 }
