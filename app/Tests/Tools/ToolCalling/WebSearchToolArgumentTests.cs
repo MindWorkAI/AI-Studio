@@ -93,9 +93,22 @@ public sealed class WebSearchToolArgumentTests
         });
     }
 
+    [TestCase("day")]
+    [TestCase("week")]
+    [TestCase("month")]
+    [TestCase("year")]
+    public void EveryOfferedTimeRangeIsAccepted(string timeRange)
+    {
+        //
+        // The week is the one a model asks for when the user says "this week". Both services with
+        // a time filter understand it, and refusing it only made the model try it again and again.
+        //
+        Assert.That(WebSearchTool.ReadTimeRange(Arguments($$"""{"query":"weather","time_range":"{{timeRange}}"}""")), Is.EqualTo(timeRange));
+    }
+
     [TestCase("\"\"")]
     [TestCase("\"Day\"")]
-    [TestCase("\"week\"")]
+    [TestCase("\"decade\"")]
     [TestCase("5")]
     public void AWrongTimeRangeIsRefusedWithTheValuesThatWouldDo(string value)
     {
@@ -103,7 +116,7 @@ public sealed class WebSearchToolArgumentTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(message, Does.Contain("'time_range'").And.Contain("one of day, month, year"));
+            Assert.That(message, Does.Contain("'time_range'").And.Contain("one of day, week, month, year"));
             Assert.That(message, Does.Contain($"but was {value}."));
             Assert.That(message, Does.Contain("Leave it out"));
         });

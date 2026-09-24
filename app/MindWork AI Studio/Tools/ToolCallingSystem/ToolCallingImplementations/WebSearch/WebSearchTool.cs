@@ -94,6 +94,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private const string LIMIT_ARGUMENT = "limit";
 
     private const string TIME_RANGE_DAY = "day";
+    private const string TIME_RANGE_WEEK = "week";
     private const string TIME_RANGE_MONTH = "month";
     private const string TIME_RANGE_YEAR = "year";
 
@@ -101,11 +102,14 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     /// The time ranges a search can be restricted to.
     /// </summary>
     /// <remarks>
-    /// Only those which every service with a time filter understands: SearXNG documents day, month,
-    /// and year, while Tavily knows a week as well. The schema offers exactly these and the reader
-    /// checks against them, so the two cannot drift apart.
+    /// Those which both services with a time filter, SearXNG and Tavily, understand and take as
+    /// they are. Tavily documents all four. SearXNG's API documentation names no week, but its code accepts
+    /// one -- read on 2026-09-24 in parse_time_range of searx/webadapter.py. A model asked about
+    /// "this week" wants exactly that, and without it, it asks for a week again and again.<br/><br/>
+    /// The schema offers exactly these and the reader checks against them, so the two cannot drift
+    /// apart.
     /// </remarks>
-    private static readonly string[] TIME_RANGES = [TIME_RANGE_DAY, TIME_RANGE_MONTH, TIME_RANGE_YEAR];
+    private static readonly string[] TIME_RANGES = [TIME_RANGE_DAY, TIME_RANGE_WEEK, TIME_RANGE_MONTH, TIME_RANGE_YEAR];
 
     /// <summary>
     /// How much of a wrongly passed argument an error message repeats back to the model.
