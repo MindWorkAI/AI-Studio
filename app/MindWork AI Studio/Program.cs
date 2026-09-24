@@ -201,6 +201,7 @@ internal sealed class Program
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
