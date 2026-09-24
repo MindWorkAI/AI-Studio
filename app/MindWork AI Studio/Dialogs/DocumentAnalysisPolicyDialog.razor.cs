@@ -75,13 +75,13 @@ public partial class DocumentAnalysisPolicyDialog : MSGComponentBase
 
         var missing = new List<string>();
         if (!string.IsNullOrWhiteSpace(this.providerId) && this.SettingsManager.GetAllProviders().All(provider => provider.Id != this.providerId))
-            missing.Add($"provider {this.providerId}");
+            missing.Add(ConfigurationImportFields.MissingProviderReference(this.providerId));
         if (!string.IsNullOrWhiteSpace(this.profileId) && this.profileId != Profile.NO_PROFILE.Id && this.SettingsManager.ConfigurationData.Profiles.All(profile => profile.Id != this.profileId))
-            missing.Add($"profile {this.profileId}");
+            missing.Add(ConfigurationImportFields.MissingProfileReference(this.profileId));
         var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT))
             .Select(item => item.Definition.Id).ToHashSet(StringComparer.Ordinal);
-        missing.AddRange(this.allowedToolIds.Where(id => !availableToolIds.Contains(id)).Select(id => $"tool {id}"));
-        this.referenceIssue = missing.Count == 0 ? string.Empty : $"Unavailable references: {string.Join(", ", missing)}. Review the selections before saving.";
+        missing.AddRange(this.allowedToolIds.Where(id => !availableToolIds.Contains(id)).Select(ConfigurationImportFields.MissingToolReference));
+        this.referenceIssue = ConfigurationImportFields.UnavailableReferencesIssue(missing);
         this.form.ResetValidation();
     }
 

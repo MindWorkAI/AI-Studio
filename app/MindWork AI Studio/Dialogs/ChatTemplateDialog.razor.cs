@@ -200,33 +200,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private async Task ImportConfiguration(LuaTable table)
     {
-        ConfigurationImportFields.ValidateExportId(table);
-        ConfigurationImportFields.String(table, "Name");
-        ConfigurationImportFields.String(table, "SystemPrompt");
-        ConfigurationImportFields.String(table, "PredefinedUserPrompt", required: false);
-        ConfigurationImportFields.Bool(table, "AllowProfileUsage");
-        var messages = ConfigurationImportFields.Table(table, "ExampleConversation");
-        for (var index = 1; index <= messages.ArrayLength; index++)
-        {
-            if (messages[index].Type is not LuaValueType.Table || !messages[index].TryRead<LuaTable>(out var message))
-                throw new FormatException("An example conversation entry is not a table.");
-            ConfigurationImportFields.Enum<ChatRole>(message, "Role");
-            if (string.IsNullOrWhiteSpace(ConfigurationImportFields.String(message, "Content")))
-                throw new FormatException("An example conversation message is empty.");
-        }
-        if (table.TryGetValue("ToolIds", out _))
-            ConfigurationImportFields.Strings(table, "ToolIds");
-        if (table.TryGetValue("DataSourceOptions", out _))
-        {
-            var options = ConfigurationImportFields.Table(table, "DataSourceOptions");
-            ConfigurationImportFields.Bool(options, "DisableDataSources");
-            ConfigurationImportFields.Bool(options, "AutomaticDataSourceSelection");
-            ConfigurationImportFields.Bool(options, "AutomaticValidation");
-            if (options.TryGetValue("PreselectedDataSourceIds", out _))
-                ConfigurationImportFields.Strings(options, "PreselectedDataSourceIds");
-        }
+        ConfigurationSnippetImportValidation.Validate("CHAT_TEMPLATES", table);
         if (!ChatTemplate.TryParseChatTemplateTable(0, table, Guid.Empty, string.Empty, out var parsed) || parsed is not ChatTemplate template)
-            throw new FormatException("The chat template fields are malformed.");
+            throw new FormatException(T("The chat template fields are malformed."));
         var paths = ConfigurationImportFields.Strings(table, "FileAttachments");
         var validAttachments = new HashSet<FileAttachment>();
         var toRelink = new List<(string OriginalPath, string ReplacementPath)>();
@@ -260,8 +236,18 @@ public partial class ChatTemplateDialog : MSGComponentBase
         var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.CHAT))
             .Select(item => item.Definition.Id).ToHashSet(StringComparer.Ordinal);
         var missingTools = this.selectedToolIds.Where(id => !availableToolIds.Contains(id)).ToList();
-        var missing = missingSources.Select(id => $"data source {id}").Concat(missingTools.Select(id => $"tool {id}")).ToList();
-        return missing.Count == 0 ? string.Empty : $"Unavailable references: {string.Join(", ", missing)}. Review the selection before saving.";
+        var missing = missingSources.Select(ConfigurationImportFields.MissingDataSourceReference)
+            .Concat(missingTools.Select(ConfigurationImportFields.MissingToolReference)).ToList();
+        return ConfigurationImportFields.UnavailableReferencesIssue(missing);
+    }
+
+    private void UpdateRelinkPath(int index, string path) => this.attachmentsToRelink[index] = (this.attachmentsToRelink[index].OriginalPath, path);
+
+    private void RemoveAttachmentToRelink(int index)
+    {
+        this.attachmentsToRelink.RemoveAt(index);
+        if (this.attachmentsToRelink.Count == 0)
+            this.relinkIssue = string.Empty;
     }
 
     private void SetSelectedToolIds(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
@@ -365,15 +351,16 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if (this.IsReadOnly)
             return;
 
+        // Only check the relinked attachments here. They are added right before closing, so that a
+        // failed save does not leave a path behind which the user changes afterward:
         this.relinkIssue = string.Empty;
         foreach (var (originalPath, replacementPath) in this.attachmentsToRelink)
         {
             if (!ConfigurationImportFields.IsExistingLocalFile(replacementPath))
             {
-                this.relinkIssue = string.Format(T("Relink the missing attachment '{0}' to an existing local file before saving."), originalPath);
+                this.relinkIssue = string.Format(T("Relink the missing attachment '{0}' to an existing local file or remove it before saving."), originalPath);
                 return;
             }
-            this.fileAttachments.Add(FileAttachment.FromPath(replacementPath));
         }
 
         await this.form.Validate();
@@ -385,6 +372,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // When an inline edit is ongoing, we cannot store the data:
         if (this.isInlineEditOnGoing)
             return;
+
+        foreach (var (_, replacementPath) in this.attachmentsToRelink)
+            this.fileAttachments.Add(FileAttachment.FromPath(replacementPath));
+        this.attachmentsToRelink.Clear();
 
         // Use the data model to store the chat template.
         // We just return this data to the parent component:

@@ -14,6 +14,8 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>Checks the fields used by the creation forms before leaving the paste dialog.</summary>
 public static class ConfigurationSnippetImportValidation
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSnippetImportValidation).Namespace, nameof(ConfigurationSnippetImportValidation));
+
     public static void Validate(string section, LuaTable table)
     {
         ConfigurationImportFields.ValidateExportId(table);
@@ -47,7 +49,7 @@ public static class ConfigurationSnippetImportValidation
                 ConfigurationImportFields.Bool(table, "HidePolicyDefinition");
                 break;
             default:
-                throw new FormatException("This configuration section cannot be imported here.");
+                throw new FormatException(TB("This configuration section cannot be imported here."));
         }
     }
 
@@ -84,10 +86,10 @@ public static class ConfigurationSnippetImportValidation
         for (var index = 1; index <= messages.ArrayLength; index++)
         {
             if (messages[index].Type is not LuaValueType.Table || !messages[index].TryRead<LuaTable>(out var message))
-                throw new FormatException("An example conversation entry is not a table.");
+                throw new FormatException(TB("An example conversation entry is not a table."));
             ConfigurationImportFields.Enum<ChatRole>(message, "Role");
             if (string.IsNullOrWhiteSpace(ConfigurationImportFields.String(message, "Content")))
-                throw new FormatException("An example conversation message is empty.");
+                throw new FormatException(TB("An example conversation message is empty."));
         }
         if (table.TryGetValue("ToolIds", out _))
             ConfigurationImportFields.Strings(table, "ToolIds");
@@ -101,27 +103,27 @@ public static class ConfigurationSnippetImportValidation
                 ConfigurationImportFields.Strings(options, "PreselectedDataSourceIds");
         }
         if (!ChatTemplate.TryParseChatTemplateTable(0, table, Guid.Empty, string.Empty, out _))
-            throw new FormatException("The chat template fields are malformed.");
+            throw new FormatException(TB("The chat template fields are malformed."));
         ConfigurationImportFields.Strings(table, "FileAttachments");
     }
 
     private static void ValidateERIDataSource(LuaTable table)
     {
         if (ConfigurationImportFields.String(table, "Type") != "ERI_V1")
-            throw new FormatException("This data source is not an ERI v1 data source.");
+            throw new FormatException(TB("This data source is not an ERI v1 data source."));
         ConfigurationImportFields.String(table, "Name");
         ConfigurationImportFields.String(table, "Hostname");
         var port = ConfigurationImportFields.Int(table, "Port");
         if (port is < 1 or > 65535)
-            throw new FormatException("The 'Port' field must be between 1 and 65535.");
+            throw new FormatException(TB("The 'Port' field must be between 1 and 65535."));
         var authMethod = ConfigurationImportFields.Enum<AuthMethod>(table, "AuthMethod");
         if (authMethod is AuthMethod.KERBEROS)
-            throw new FormatException("Kerberos data sources cannot be imported from configuration snippets.");
+            throw new FormatException(TB("Kerberos data sources cannot be imported from configuration snippets."));
         ConfigurationImportFields.Enum<DataSourceSecurity>(table, "SecurityPolicy");
         ConfigurationImportFields.String(table, "SelectedRetrievalId");
         var maxMatches = ConfigurationImportFields.Int(table, "MaxMatches", 10);
         if (maxMatches is < 1 or > ushort.MaxValue)
-            throw new FormatException("The 'MaxMatches' field is outside the allowed range.");
+            throw new FormatException(TB("The 'MaxMatches' field is outside the allowed range."));
         var secretName = authMethod switch
         {
             AuthMethod.TOKEN => "Token",

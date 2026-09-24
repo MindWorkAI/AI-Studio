@@ -196,22 +196,14 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private Task ImportConfiguration(LuaTable table)
     {
-        ConfigurationImportFields.ValidateExportId(table);
-        if (ConfigurationImportFields.String(table, "Type") != "ERI_V1")
-            throw new FormatException("This data source is not an ERI v1 data source.");
+        ConfigurationSnippetImportValidation.Validate("DATA_SOURCES", table);
         var name = ConfigurationImportFields.String(table, "Name");
         var hostname = ConfigurationImportFields.String(table, "Hostname");
         var port = ConfigurationImportFields.Int(table, "Port");
-        if (port is < 1 or > 65535)
-            throw new FormatException("The 'Port' field must be between 1 and 65535.");
         var authMethod = ConfigurationImportFields.Enum<AuthMethod>(table, "AuthMethod");
-        if (authMethod is AuthMethod.KERBEROS)
-            throw new FormatException("Kerberos data sources cannot be imported from configuration snippets.");
         var securityPolicy = ConfigurationImportFields.Enum<DataSourceSecurity>(table, "SecurityPolicy");
         var retrievalId = ConfigurationImportFields.String(table, "SelectedRetrievalId");
         var maxMatches = ConfigurationImportFields.Int(table, "MaxMatches", 10);
-        if (maxMatches is < 1 or > ushort.MaxValue)
-            throw new FormatException("The 'MaxMatches' field is outside the allowed range.");
         var secretName = authMethod switch
         {
             AuthMethod.TOKEN => "Token",

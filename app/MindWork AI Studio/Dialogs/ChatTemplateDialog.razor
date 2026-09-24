@@ -17,10 +17,15 @@
             @for (var index = 0; index < this.attachmentsToRelink.Count; index++)
             {
                 var currentIndex = index;
-                <MudTextField T="string" Value="@this.attachmentsToRelink[index].ReplacementPath"
-                              ValueChanged="@(value => this.attachmentsToRelink[currentIndex] = (this.attachmentsToRelink[currentIndex].OriginalPath, value))"
-                              Label="@string.Format(T("Relink attachment: {0}"), this.attachmentsToRelink[index].OriginalPath)"
-                              HelperText="@T("Enter an absolute path to an existing local file before saving.")" Variant="Variant.Outlined" Class="mb-2" />
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudTextField T="string" Value="@this.attachmentsToRelink[index].ReplacementPath"
+                                  ValueChanged="@(value => this.UpdateRelinkPath(currentIndex, value))"
+                                  Label="@string.Format(T("Relink attachment: {0}"), this.attachmentsToRelink[index].OriginalPath)"
+                                  HelperText="@T("Enter an absolute path to an existing local file, or remove this attachment.")" Variant="Variant.Outlined" />
+                    <MudTooltip Text="@T("Remove this attachment")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => this.RemoveAttachmentToRelink(currentIndex))" />
+                    </MudTooltip>
+                </MudStack>
             }
         }
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
