@@ -14,6 +14,7 @@ using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.OpenRouter;
 using AIStudio.Provider.Perplexity;
+using AIStudio.Provider.Requesty;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Provider.X;
 using AIStudio.Settings;
@@ -62,6 +63,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HETZNER => "Hetzner (Experimental)",
         LLMProviders.IONOS => "IONOS",
         LLMProviders.LITE_LLM => "LiteLLM",
+        LLMProviders.REQUESTY => "Requesty",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -100,6 +102,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HETZNER => "Hetzner",
         LLMProviders.IONOS => "IONOS",
         LLMProviders.LITE_LLM => "LiteLLM",
+        LLMProviders.REQUESTY => "Requesty",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -170,6 +173,8 @@ public static class LLMProvidersExtensions
         // of a self-hosted model here and let the user assign the level themselves.
         LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        LLMProviders.REQUESTY => Confidence.UNKNOWN.WithSources("https://www.requesty.ai/privacy", "https://www.requesty.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -208,6 +213,7 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.HETZNER => false,
+        LLMProviders.REQUESTY => false,
 
         //
         // Hugging Face serves embeddings, but not through the router endpoint we chat with: that
@@ -254,6 +260,7 @@ public static class LLMProvidersExtensions
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.PERPLEXITY => false,
+        LLMProviders.REQUESTY => false,
 
         //
         // Hugging Face transcribes audio, but like embeddings, not through the router endpoint we
@@ -319,6 +326,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.REQUESTY => new ProviderRequesty { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, TokenizerPath = tokenizerPath, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -357,6 +365,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
         LLMProviders.HETZNER => "https://experiments.hetzner.com",
         LLMProviders.IONOS => "https://cloud.ionos.com/compute/sign-up",
+        LLMProviders.REQUESTY => "https://app.requesty.ai/api-keys",
 
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -384,6 +393,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
         LLMProviders.HETZNER => "https://experiments.hetzner.com",
         LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
+        LLMProviders.REQUESTY => "https://app.requesty.ai/",
 
         _ => string.Empty,
     };
@@ -404,6 +414,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => true,
         LLMProviders.HETZNER => true,
         LLMProviders.IONOS => true,
+        LLMProviders.REQUESTY => true,
 
         _ => false,
     };
@@ -473,6 +484,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HETZNER => true,
         LLMProviders.IONOS => true,
         LLMProviders.LITE_LLM => true,
+        LLMProviders.REQUESTY => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -502,6 +514,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => true,
         LLMProviders.IONOS => true,
+        LLMProviders.REQUESTY => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,

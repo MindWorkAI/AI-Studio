@@ -19,6 +19,7 @@ public enum LLMProviders
     HETZNER = 16,
     IONOS = 17,
     LITE_LLM = 18,
+    REQUESTY = 19,
 
     FIREWORKS = 5,
     GROQ = 6,

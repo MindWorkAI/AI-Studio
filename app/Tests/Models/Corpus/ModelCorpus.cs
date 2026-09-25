@@ -237,6 +237,8 @@ public static class ModelCorpus
         new(LITE_LLM, "azure/gpt-5.6", QUOTED_AS_A_NAME_SHAPE),
         new(LITE_LLM, "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0", NAMED_BY_NO_RULE),
         new(LITE_LLM, "the-fast-one", NAMED_BY_NO_RULE),
+        new(REQUESTY, "anthropic/claude-opus-5", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "google/gemma-4-31b-it", NAMED_BY_A_RULE),
     ];
 
     /// <summary>
