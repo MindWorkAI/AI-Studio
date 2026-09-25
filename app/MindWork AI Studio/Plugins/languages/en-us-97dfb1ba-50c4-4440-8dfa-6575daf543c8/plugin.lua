@@ -6582,8 +6582,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T854110894
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T900713019"] = "Cancel"
 
+-- No, the policy can be edited
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1286595725"] = "No, the policy can be edited"
+
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1291179736"] = "Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents."
+
+-- Yes, protect this policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1762380857"] = "Yes, protect this policy"
 
 -- Hide the policy definition when distributed via configuration plugin?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1875622568"] = "Hide the policy definition when distributed via configuration plugin?"
@@ -6614,6 +6620,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3108719748"] 
 
 -- Tools this policy permits
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T31356122"] = "Tools this policy permits"
+
+-- No, show the policy definition
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3166091879"] = "No, show the policy definition"
 
 -- The description of your policy must be between 32 and 512 characters long.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3285636934"] = "The description of your policy must be between 32 and 512 characters long."
@@ -6647,6 +6656,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T80597472"] = 
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T900713019"] = "Cancel"
+
+-- Yes, hide the policy definition
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T940701960"] = "Yes, hide the policy definition"
 
 -- Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1205126512"] = "Please wait while we load the content of your file. Depending on the file type and size, this may take a moment."
