@@ -108,6 +108,7 @@ public static class ReasoningDispatcher
             LLMProviders.HETZNER or
             LLMProviders.IONOS or
             LLMProviders.LITE_LLM or
+            LLMProviders.REQUESTY or
             LLMProviders.X or
             LLMProviders.DEEP_SEEK or
             LLMProviders.GROQ or

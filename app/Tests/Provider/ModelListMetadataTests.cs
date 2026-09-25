@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.OpenRouter;
+using AIStudio.Provider.Requesty;
 
 using MistralModelsResponse = AIStudio.Provider.Mistral.ModelsResponse;
 using SelfHostedModelsResponse = AIStudio.Provider.SelfHosted.ModelsResponse;
@@ -103,6 +104,19 @@ public sealed class ModelListMetadataTests
                                                                      """, AS_THE_PROVIDERS_READ_IT);
 
         Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(131_072));
+    }
+
+    [Test]
+    public void RequestyStatesTheWindowAsTheContextWindow()
+    {
+        var response = JsonSerializer.Deserialize<RequestyModelsResponse>("""
+                                                                         {
+                                                                             "object": "list",
+                                                                             "data": [ { "id": "openai/gpt-4o-mini", "object": "model", "api": "chat", "context_window": 128000, "max_output_tokens": 16384 } ]
+                                                                         }
+                                                                         """, AS_THE_PROVIDERS_READ_IT);
+
+        Assert.That(response.Data[0].ContextWindowTokens, Is.EqualTo(128_000));
     }
 
     [Test]

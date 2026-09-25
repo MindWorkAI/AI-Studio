@@ -109,7 +109,7 @@ MODELS = {}
 --     -- the same name means different things depending on who serves it.
 --     -- Allowed values are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK,
 --     -- ALIBABA_CLOUD, PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM,
---     -- FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+--     -- REQUESTY, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
 --     ["ONLY_ON"] = "SELF_HOSTED",
 --
 --     -- Optional: restrict this entry to models of one vendor. Only gateways
