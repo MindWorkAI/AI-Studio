@@ -79,7 +79,7 @@
     }
     
     <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
-        <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddLLMProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" NoMargin="true" />
-        <LockableButton Text="@T("Import LLM Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProvider" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        <LockableButton Text="@T("Add Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddLLMProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddLLMProvider" Class="flex-grow-0" NoMargin="true" />
+        <LockableButton Text="@T("Import LLM Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProvider" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
     </MudStack>
 </ExpansionPanel>

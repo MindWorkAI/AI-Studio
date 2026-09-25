@@ -103,6 +103,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private HashSet<FileAttachment> fileAttachments = [];
     private List<(string OriginalPath, string ReplacementPath)> attachmentsToRelink = [];
     private string relinkIssue = string.Empty;
+    private bool HasUnresolvedAttachments => this.attachmentsToRelink.Any(attachment => !ConfigurationImportFields.IsExistingLocalFile(attachment.ReplacementPath));
     private string importReferenceIssue = string.Empty;
     private bool preselectTools;
     private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
@@ -156,6 +157,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.DataName = this.ExistingChatThread.Name;
         }
 
+        if (this.ImportedConfiguration is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            await this.ImportConfiguration(this.ImportedConfiguration);
+
         await base.OnInitializedAsync();
     }
 
@@ -166,14 +170,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
 
-        if (firstRender && this.ImportedConfiguration is not null)
-        {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
-                this.MudDialog.Cancel();
-            else
-                await this.ImportConfiguration(this.ImportedConfiguration);
-            this.StateHasChanged();
-        }
+        if (firstRender && this.ImportedConfiguration is not null &&
+            !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            this.MudDialog.Cancel();
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -226,7 +225,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.preselectDataSources = template.DataSourceOptions is not null;
         this.templateDataSourceOptions = template.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
         this.importReferenceIssue = await this.BuildImportReferenceIssue();
-        this.form.ResetValidation();
     }
 
     private async Task<string> BuildImportReferenceIssue()
@@ -241,12 +239,17 @@ public partial class ChatTemplateDialog : MSGComponentBase
         return ConfigurationImportFields.UnavailableReferencesIssue(missing);
     }
 
-    private void UpdateRelinkPath(int index, string path) => this.attachmentsToRelink[index] = (this.attachmentsToRelink[index].OriginalPath, path);
+    private void UpdateRelinkPath(int index, string? path)
+    {
+        this.attachmentsToRelink[index] = (this.attachmentsToRelink[index].OriginalPath, path ?? string.Empty);
+        if (!this.HasUnresolvedAttachments)
+            this.relinkIssue = string.Empty;
+    }
 
     private void RemoveAttachmentToRelink(int index)
     {
         this.attachmentsToRelink.RemoveAt(index);
-        if (this.attachmentsToRelink.Count == 0)
+        if (!this.HasUnresolvedAttachments)
             this.relinkIssue = string.Empty;
     }
 

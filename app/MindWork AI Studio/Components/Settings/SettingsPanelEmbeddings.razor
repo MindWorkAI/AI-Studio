@@ -94,8 +94,8 @@
         }
 
         <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
-            <LockableButton Text="@T("Add Embedding")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddEmbeddingProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddEmbeddingProvider" NoMargin="true" />
-            <LockableButton Text="@T("Import Embedding Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportEmbeddingProvider" ButtonVariant="Variant.Outlined" NoMargin="true" />
+            <LockableButton Text="@T("Add Embedding")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddEmbeddingProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddEmbeddingProvider" Class="flex-grow-0" NoMargin="true" />
+            <LockableButton Text="@T("Import Embedding Provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportEmbeddingProvider" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
         </MudStack>
     </ExpansionPanel>
 }
