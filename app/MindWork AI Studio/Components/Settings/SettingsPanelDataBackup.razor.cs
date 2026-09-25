@@ -53,7 +53,18 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
     private int SelectedChatCount => this.workspaceSelections.Where(selection => selection.IsSelected).Sum(selection => selection.ChatCount) + (this.includeTemporaryChats ? this.temporaryChatCount : 0);
 
-    private bool CanImport => this.importPreview is { Success: true, Manifest.TotalChatCount: > 0 };
+    private bool AllowChatExport => this.SettingsManager.ConfigurationData.App.AllowUserToExportChats;
+
+    private bool AllowChatImport => this.SettingsManager.ConfigurationData.App.AllowUserToImportChats;
+
+    /// <summary>
+    /// Whether the chosen archive can be imported now.
+    /// </summary>
+    /// <remarks>
+    /// The permission is asked here again and not only when choosing the archive: a
+    /// configuration plugin may take it away while a chosen archive waits to be imported.
+    /// </remarks>
+    private bool CanImport => this.importPreview is { Success: true, Manifest.TotalChatCount: > 0 } && this.AllowChatImport;
 
     private double ProgressPercentage => this.progress.TotalChats is 0 ? 0d : this.progress.ProcessedChats * 100d / this.progress.TotalChats;
 
@@ -159,7 +170,7 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
     private async Task StartExportAsync()
     {
-        if (this.isBusy || !this.IsAnythingSelected)
+        if (this.isBusy || !this.IsAnythingSelected || !this.AllowChatExport)
             return;
 
         this.isBusy = true;
@@ -184,6 +195,9 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
             this.progress = new(0, this.SelectedChatCount);
             this.cancellationTokenSource = new();
 
+            // Show the progress and the cancel button before the first chat is written:
+            await this.InvokeAsync(this.StateHasChanged);
+
             // Compressing on the UI thread would keep the progress bar and the cancel
             // button from updating for the whole run:
             var token = this.cancellationTokenSource.Token;
@@ -199,6 +213,10 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
             this.isProcessing = false;
             this.DisposeCancellation();
             this.isBusy = false;
+
+            // The lockable button calls this as a plain function, not as an event of this
+            // component, so nothing renders the result unless we do:
+            await this.InvokeAsync(this.StateHasChanged);
         }
     }
 
@@ -243,7 +261,7 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
     private async Task ChooseArchiveAsync()
     {
-        if (this.isBusy)
+        if (this.isBusy || !this.AllowChatImport)
             return;
 
         this.isBusy = true;
@@ -260,6 +278,10 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
         finally
         {
             this.isBusy = false;
+
+            // The lockable button calls this as a plain function, not as an event of this
+            // component, so nothing renders the preview unless we do:
+            await this.InvokeAsync(this.StateHasChanged);
         }
     }
 

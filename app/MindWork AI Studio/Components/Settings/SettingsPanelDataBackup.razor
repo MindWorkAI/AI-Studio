@@ -81,9 +81,7 @@
                 }
                 else
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="@this.StartExportAsync" Disabled="@(this.isBusy || !this.IsAnythingSelected)">
-                        @string.Format(T("Export {0} chats"), this.SelectedChatCount)
-                    </MudButton>
+                    <LockableButton Text="@string.Format(T("Export {0} chats"), this.SelectedChatCount)" Icon="@Icons.Material.Filled.Save" OnClickAsync="@this.StartExportAsync" Disabled="@(() => this.isBusy || !this.IsAnythingSelected)" IsLocked="@(() => !this.AllowChatExport)" NoMargin="@true"/>
                 }
                 }
 
@@ -133,9 +131,7 @@
             </MudText>
 
             <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@this.ChooseArchiveAsync" Disabled="@this.isBusy">
-                    @T("Choose archive")
-                </MudButton>
+                <LockableButton Text="@T("Choose archive")" Icon="@Icons.Material.Filled.FolderOpen" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowChatImport)" NoMargin="@true"/>
                 @if (!string.IsNullOrWhiteSpace(this.selectedArchivePath))
                 {
                     <MudText Typo="Typo.body2">
