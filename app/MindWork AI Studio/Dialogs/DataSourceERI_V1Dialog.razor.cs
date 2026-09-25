@@ -51,6 +51,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private string dataSecretStorageIssue = string.Empty;
     private string importCredentialIssue = string.Empty;
     private string importRetrievalIssue = string.Empty;
+    private string importedRetrievalId = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
@@ -227,12 +228,15 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         this.dataSecret = secret;
         this.importCredentialIssue = credentialIssue;
         this.importRetrievalIssue = string.Empty;
+        this.importedRetrievalId = retrievalId;
         this.connectionTested = false;
         this.connectionSuccessfulTested = false;
         this.form.ResetValidation();
         return Task.CompletedTask;
     }
     
+    private void ClearImportRetrievalIssue() => this.importRetrievalIssue = string.Empty;
+
     private bool IsConnectionEncrypted() => this.dataHostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
 
     private bool IsConnectionPossible()
@@ -307,16 +311,23 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             }
             
             this.availableRetrievalProcesses = retrievalInfoRequest.Data ?? [];
-            if (!string.IsNullOrWhiteSpace(this.dataSelectedRetrievalProcess.Id))
+            // Only the first successful test after an import resolves the imported retrieval ID;
+            // afterward, the selection belongs to the user:
+            if (!string.IsNullOrWhiteSpace(this.importedRetrievalId))
             {
-                var importedRetrieval = this.availableRetrievalProcesses.FirstOrDefault(item => item.Id == this.dataSelectedRetrievalProcess.Id);
+                var importedRetrieval = this.availableRetrievalProcesses.FirstOrDefault(item => item.Id == this.importedRetrievalId);
                 if (importedRetrieval != default)
+                {
                     this.dataSelectedRetrievalProcess = importedRetrieval;
+                    this.importRetrievalIssue = string.Empty;
+                }
                 else
                 {
-                    this.importRetrievalIssue = string.Format(T("The imported retrieval process '{0}' is unavailable. Select another process before saving."), this.dataSelectedRetrievalProcess.Id);
+                    this.importRetrievalIssue = string.Format(T("The imported retrieval process '{0}' is unavailable. Select another process before saving."), this.importedRetrievalId);
                     this.dataSelectedRetrievalProcess = default;
                 }
+
+                this.importedRetrievalId = string.Empty;
             }
             
             this.connectionTested = true;

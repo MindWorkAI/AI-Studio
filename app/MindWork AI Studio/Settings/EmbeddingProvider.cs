@@ -256,7 +256,7 @@ public sealed record EmbeddingProvider(
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    ["TokenizerPath"] = "{{LuaTools.EscapeLuaString(this.TokenizerPath)}}",
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 

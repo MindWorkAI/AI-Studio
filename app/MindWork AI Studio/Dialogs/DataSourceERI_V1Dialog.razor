@@ -113,7 +113,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
