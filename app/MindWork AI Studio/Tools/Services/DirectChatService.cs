@@ -274,7 +274,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             // decide which agent providers take part, and an agent with too little confidence makes
             // a data source unavailable.
             //
-            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, chosenOptions, requestedDataSources);
+            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, chosenOptions, DataSourceRetrievalMode.EVERY_MESSAGE, requestedDataSources);
         }
         catch (Exception exception)
         {

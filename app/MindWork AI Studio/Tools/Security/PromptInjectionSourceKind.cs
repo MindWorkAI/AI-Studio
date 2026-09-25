@@ -7,4 +7,5 @@ public enum PromptInjectionSourceKind
     FILE_CONTENT,
     CHAT_ATTACHMENT,
     RETRIEVAL_CONTEXT,
+    DATA_SOURCE_DESCRIPTION,
 }

@@ -13,4 +13,6 @@ public readonly record struct PromptInjectionSource(PromptInjectionSourceKind Ki
     public static PromptInjectionSource ChatAttachment(string filePath) => new(PromptInjectionSourceKind.CHAT_ATTACHMENT, filePath);
 
     public static PromptInjectionSource RetrievalContext(string dataSourceName, string path) => new(PromptInjectionSourceKind.RETRIEVAL_CONTEXT, $"{dataSourceName}: {path}");
+
+    public static PromptInjectionSource DataSourceDescription(string dataSourceName) => new(PromptInjectionSourceKind.DATA_SOURCE_DESCRIPTION, dataSourceName);
 }

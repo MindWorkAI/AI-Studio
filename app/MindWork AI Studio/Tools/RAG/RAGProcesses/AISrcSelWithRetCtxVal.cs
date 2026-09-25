@@ -33,6 +33,20 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
         
         //
+        // What an earlier message retrieved must not travel along with this one. The augmented
+        // data and the AI-selected data sources describe the last retrieval, not a certain
+        // message, and only the steps below ever write them. Without starting from empty, every
+        // message which retrieves nothing -- because the data sources were switched off, none of
+        // them can be used right now, or the search found nothing -- would still send the
+        // passages of the last message which did, cf. ChatThread.RollBackTo.
+        //
+        // The data security and the required provider confidence stay as they are: both only
+        // ever tighten, because the data which raised them was seen by this thread.
+        //
+        chatThread.AugmentedData = string.Empty;
+        chatThread.AISelectedDataSources = [];
+
+        //
         // 1. Check if the user wants to bind any data sources to the chat:
         //
         //
@@ -80,7 +94,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             // data sources changed its security requirements.
             //
             List<IDataSource> preselectedDataSources = chatThread.DataSourceOptions.PreselectedDataSourceIds.Select(id => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == id)).Where(ds => ds is not null).ToList()!;
-            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, preselectedDataSources);
+            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, DataSourceRetrievalMode.EVERY_MESSAGE, preselectedDataSources);
             var selectedDataSources = dataSources.SelectedDataSources;
             
             //
@@ -122,48 +136,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
-                // of the chat thread and the data security of the selected data sources:
+                // of the chat thread and the data security of the selected data sources: at least
+                // one data source with a SELF_HOSTED policy restricts the chat to self-hosted
+                // providers. A restriction set earlier stays either way, because the thread might
+                // already contain data from a data source with a SELF_HOSTED policy:
                 //
                 var dataSecurityRestrictedToSelfHosted = selectedDataSources
                     .OfType<IExternalDataSource>()
                     .Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
-                chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
-                {
-                    //
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of SELF_HOSTED (at least one data source).
-                    //
-                    // When the policy was already set to ALLOW_ANY, we restrict it
-                    // to SELF_HOSTED.
-                    //
-                    true => DataSourceSecurity.SELF_HOSTED,
-                    
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of ALLOW_ANY (none of the data sources has a SELF_HOSTED policy).
-                    //
-                    // When the policy was already set to SELF_HOSTED, we must keep that.
-                    //
-                    false => chatThread.DataSecurity switch
-                    {
-                        //
-                        // When the policy was not specified yet, we set it to ALLOW_ANY.
-                        //
-                        DataSourceSecurity.NOT_SPECIFIED => DataSourceSecurity.ALLOW_ANY,
-                        DataSourceSecurity.ALLOW_ANY => DataSourceSecurity.ALLOW_ANY,
-                        
-                        //
-                        // When the policy was already set to SELF_HOSTED, we must keep that.
-                        // This is important since the thread might already contain data
-                        // from a data source with a SELF_HOSTED policy.
-                        //
-                        DataSourceSecurity.SELF_HOSTED => DataSourceSecurity.SELF_HOSTED,
-                        
-                        // Default case: we use the current data security of the chat thread.
-                        _ => chatThread.DataSecurity,
-                    }
-                };
+                chatThread.RequireDataSecurity(dataSecurityRestrictedToSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY);
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
@@ -228,7 +209,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             
             var ragSources = new List<ISource>();
             foreach (var retrievalContext in dataContexts)
-                ragSources.AddRange(CreateSources(retrievalContext));
+                ragSources.AddRange(retrievalContext.ToSources());
 
             // Merge the sources, avoiding duplicates:
             aiAnswerSources.MergeSources(ragSources);
@@ -238,63 +219,4 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
-
-    private static IReadOnlyList<ISource> CreateSources(IRetrievalContext retrievalContext)
-    {
-        var sources = new List<ISource>();
-        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
-        foreach (var link in retrievalContext.Links)
-            AddSource(sources, retrievalContext.DataSourceName, link);
-
-        return sources;
-    }
-
-    private static void AddSource(ICollection<ISource> sources, string title, string link)
-    {
-        if (string.IsNullOrWhiteSpace(title) || !TryNormalizeSourceLink(link, out var normalizedLink))
-            return;
-
-        sources.Add(new Source(title, normalizedLink, SourceOrigin.RAG));
-    }
-
-    private static string GetReferenceTitle(IRetrievalContext retrievalContext) =>
-        retrievalContext is RetrievalTextContext { ReferenceTitle: { Length: > 0 } referenceTitle }
-            ? referenceTitle
-            : retrievalContext.DataSourceName;
-
-    private static string GetReferenceLink(IRetrievalContext retrievalContext) =>
-        retrievalContext is RetrievalTextContext { ReferenceLink: { Length: > 0 } referenceLink }
-            ? referenceLink
-            : retrievalContext.Path;
-
-    private static bool TryNormalizeSourceLink(string link, out string normalizedLink)
-    {
-        normalizedLink = string.Empty;
-        if (string.IsNullOrWhiteSpace(link))
-            return false;
-
-        if (Uri.TryCreate(link, UriKind.Absolute, out var absoluteUri) && IsSupportedSourceUri(absoluteUri))
-        {
-            normalizedLink = absoluteUri.AbsoluteUri;
-            return true;
-        }
-
-        try
-        {
-            if (!Path.IsPathRooted(link))
-                return false;
-
-            normalizedLink = new Uri(Path.GetFullPath(link)).AbsoluteUri;
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool IsSupportedSourceUri(Uri uri) =>
-        string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(uri.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase);
 }

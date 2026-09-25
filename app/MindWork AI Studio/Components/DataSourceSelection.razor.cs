@@ -246,7 +246,7 @@ public partial class DataSourceSelection : MSGComponentBase
         // that field holds what was usable the last time we looked, so a source filtered out once
         // would never come back, while the RAG process keeps reading it from the preselection.
         //
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.GetDataSourcesFromConfiguredIds());
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, DataSourceRetrievalMode.EVERY_MESSAGE, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 

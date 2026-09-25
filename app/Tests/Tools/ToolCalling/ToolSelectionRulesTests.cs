@@ -16,6 +16,7 @@ public sealed class ToolSelectionRulesTests
     private const string SEARCH_CONFLUENCE = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID;
     private const string READ_WEB_PAGE = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
     private const string WEB_SEARCH = ToolSelectionRules.WEB_SEARCH_TOOL_ID;
+    private const string SEMANTIC_SEARCH = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID;
 
     [Test]
     public void SearchConfluenceBringsReadWebPageAlong()
@@ -28,6 +29,12 @@ public sealed class ToolSelectionRulesTests
     public void OtherToolsBringNothingAlong(string toolId)
     {
         Assert.That(ToolSelectionRules.NormalizeSelection([toolId]), Is.EquivalentTo(new[] { toolId }), "Only Search Confluence depends on another tool. Read Web Page in particular does not pull the search in.");
+    }
+
+    [Test]
+    public void SemanticSearchIsNeverPartOfASelection()
+    {
+        Assert.That(ToolSelectionRules.NormalizeSelection([SEMANTIC_SEARCH, WEB_SEARCH]), Is.EquivalentTo(new[] { WEB_SEARCH }), "Semantic Search offers itself from the data sources of a chat. A template or a plugin naming it would put a tool on the security card that the selection has no say over.");
     }
 
     [Test]

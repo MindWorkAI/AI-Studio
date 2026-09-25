@@ -86,8 +86,13 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         var providerSettings = this.CreateSettingsProvider(chatModel);
         var runnableTools = toolRegistry is null
             ? []
-            : await toolRegistry.GetRunnableToolsAsync(providerSettings, chatThread.RuntimeComponent, chatThread.RuntimeSelectedToolIds,
-                this.Provider.GetConfidence(settingsManager).Level, chatThread.MayRunTools(settingsManager));
+            : await toolRegistry.GetRunnableToolsAsync(new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = this.Provider.GetConfidence(settingsManager).Level,
+                    ChatThread = chatThread,
+                }, chatThread.RuntimeSelectedToolIds, chatThread.MayRunTools(settingsManager), token);
 
         var systemPrompt = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition));
         if (toolExecutor is not null && runnableTools.Count > 0)

@@ -736,18 +736,27 @@ CONFIG["SETTINGS"] = {}
 
 -- Disable individual tools by their stable tool ID. The default is an empty set.
 -- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- semantic_search lets the model search the data sources of a chat itself. Nobody selects it:
+-- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
+-- search the data sources with every message instead, the way it does for models without
+-- tool usage.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page, search_confluence
+-- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
+-- semantic_search = NONE
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
+-- semantic_search offers a provider only the data sources whose own confidence level it meets,
+-- so it needs no minimum of its own. A provider below a minimum set here has the data sources
+-- searched with every message instead.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
---     ["search_confluence"] = "HIGH"
+--     ["search_confluence"] = "HIGH",
+--     ["semantic_search"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -1073,7 +1082,8 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Selecting search_confluence also selects read_web_page.
+--     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
 --         "read_web_page",
 --     },

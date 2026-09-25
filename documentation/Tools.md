@@ -62,7 +62,7 @@ When a tool returns data that future messages must only send to providers at or 
 
 ## Security
 
-Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `WebSearchTool` shows the pattern.
+Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `ToolArgumentReader` reads strings, positive integers, and values out of a fixed choice, alone or as a list, and words the refusals so; `WebSearchTool` shows how a tool uses it.
 
 For tools that perform network requests:
 

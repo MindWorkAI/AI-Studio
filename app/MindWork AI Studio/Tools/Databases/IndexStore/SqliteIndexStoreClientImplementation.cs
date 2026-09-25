@@ -310,6 +310,11 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         if (string.IsNullOrWhiteSpace(ftsQuery))
             return [];
 
+        //
+        // Chunks of the same score keep the order of their rows. The results are cut into pages by
+        // asking for more of them each time, cf. RetrievalPaging. If ties could fall differently
+        // with every limit, a page might show a chunk again or skip one.
+        //
         await using var context = this.CreateContext();
         var results = await context.SearchResults
             .FromSqlInterpolated($"""
@@ -338,7 +343,7 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
                                   JOIN data_sources ds ON ds.data_source_id = f.data_source_id
                                   WHERE ds.data_source_id = {dataSourceId}
                                     AND embedding_chunks_fts MATCH {ftsQuery}
-                                  ORDER BY Score
+                                  ORDER BY Score, c.id
                                   LIMIT {maxMatches}
                                   """)
             .AsNoTracking()
