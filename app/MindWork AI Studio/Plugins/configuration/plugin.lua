@@ -395,6 +395,20 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
+-- Control whether users may paste exported configuration snippets to create local items.
+-- The master setting and the matching item setting must both be true. Provider imports
+-- also require DataApp.AllowUserToAddProvider and the matching provider Add setting.
+-- Blocked Import buttons remain visible with a lock. These settings do not affect
+-- plugin archive imports or exports.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationSnippets"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportProfile"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportTranscriptionProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false

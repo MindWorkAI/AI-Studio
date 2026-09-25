@@ -279,7 +279,7 @@ public sealed record Provider(
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
                     
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    ["TokenizerPath"] = "{{LuaTools.EscapeLuaString(this.TokenizerPath)}}",
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

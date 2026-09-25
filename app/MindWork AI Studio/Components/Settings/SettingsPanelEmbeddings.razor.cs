@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
+using Lua;
+
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
@@ -53,16 +55,33 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     #endregion
 
-    private async Task AddEmbeddingProvider()
+    private Task AddEmbeddingProvider() => this.AddEmbeddingProvider(null);
+
+    private async Task ImportEmbeddingProvider()
     {
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "EMBEDDING_PROVIDERS", T("Import Embedding Provider"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+            await this.AddEmbeddingProvider(table);
+    }
+
+    private async Task AddEmbeddingProvider(LuaTable? importedConfiguration)
+    {
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
         {
             { x => x.IsEditing, false },
         };
+        if (importedConfiguration is not null)
+            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
         
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS")))
             return;
 
         var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;

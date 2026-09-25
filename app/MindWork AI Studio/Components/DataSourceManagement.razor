@@ -105,14 +105,17 @@
     </MudText>
 }
 
-<MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft" Class="mt-3 mb-6">
-    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
-        @T("External Data (ERI-Server v1)")
-    </MudMenuItem>
-    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))">
-        @T("Local Directory")
-    </MudMenuItem>
-    <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))">
-        @T("Local File")
-    </MudMenuItem>
-</MudMenu>
+<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+    <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
+        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
+            @T("External Data (ERI-Server v1)")
+        </MudMenuItem>
+        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))">
+            @T("Local Directory")
+        </MudMenuItem>
+        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))">
+            @T("Local File")
+        </MudMenuItem>
+    </MudMenu>
+    <LockableButton Text="@T("Import ERI v1 Data Source")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportERIDataSource" ButtonVariant="Variant.Outlined" NoMargin="true" />
+</MudStack>

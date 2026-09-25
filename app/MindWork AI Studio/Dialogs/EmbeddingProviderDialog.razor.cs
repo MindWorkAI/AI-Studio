@@ -4,7 +4,10 @@ using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Validation;
+
+using Lua;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,6 +17,9 @@ namespace AIStudio.Dialogs;
 
 public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 {
+    [Parameter]
+    public LuaTable? ImportedConfiguration { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -134,6 +140,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKey = string.Empty;
     private bool dataHadStoredAPIKeyOnLoad;
     private string dataAPIKeyStorageIssue = string.Empty;
+    private string importCredentialIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
     private bool dataConfiguredModelIsNotOffered;
@@ -189,6 +196,40 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             CustomIconDataUrl = this.DataCustomIconDataUrl,
             HFInferenceProvider = this.HFInferenceProviderId,
         };
+    }
+
+    private Task ImportConfiguration(LuaTable table)
+    {
+        ConfigurationImportFields.ValidateExportId(table);
+        var modelTable = ConfigurationImportFields.Table(table, "Model");
+        var model = new Model(ConfigurationImportFields.String(modelTable, "Id"), ConfigurationImportFields.String(modelTable, "DisplayName"));
+        var name = ConfigurationImportFields.String(table, "Name");
+        var provider = ConfigurationImportFields.Enum<LLMProviders>(table, "UsedLLMProvider");
+        var host = ConfigurationImportFields.Enum<Host>(table, "Host");
+        var hostname = ConfigurationImportFields.String(table, "Hostname");
+        var hfProvider = table.TryGetValue("HFInferenceProvider", out _)
+            ? ConfigurationImportFields.Enum<HFInferenceProvider>(table, "HFInferenceProvider") : HFInferenceProvider.NONE;
+        var tokenizerPath = ConfigurationImportFields.String(table, "TokenizerPath", required: false);
+        var tokenLimit = ConfigurationImportFields.Int(table, "TokenLimit", EmbeddingProvider.DEFAULT_TOKEN_LIMIT);
+        var batchSize = ConfigurationImportFields.Int(table, "EmbeddingBatchSize", EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE);
+        var credential = ConfigurationImportFields.Credential(table, "APIKey", out var credentialIssue);
+
+        this.DataName = name;
+        this.DataLLMProvider = provider;
+        this.DataHost = host;
+        this.DataHostname = hostname;
+        this.HFInferenceProviderId = hfProvider;
+        this.DataModel = model;
+        this.dataFilePath = tokenizerPath;
+        this.DataTokenLimit = tokenLimit;
+        this.DataEmbeddingBatchSize = batchSize;
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(tokenizerPath) || tokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT || batchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
+        this.dataAPIKey = credential;
+        this.importCredentialIssue = credentialIssue;
+        if (this.availableModels.All(candidate => candidate.Id != model.Id))
+            this.availableModels.Add(model);
+        this.form.ResetValidation();
+        return Task.CompletedTask;
     }
     
     #region Overrides of ComponentBase
@@ -247,6 +288,15 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
+
+        if (firstRender && this.ImportedConfiguration is not null)
+        {
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+                this.MudDialog.Cancel();
+            else
+                await this.ImportConfiguration(this.ImportedConfiguration);
+            this.StateHasChanged();
+        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -267,6 +317,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+            return;
+
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
         await this.form.Validate();

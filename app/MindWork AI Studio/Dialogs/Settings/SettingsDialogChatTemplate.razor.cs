@@ -2,6 +2,8 @@ using AIStudio.Chat;
 using AIStudio.Settings;
 using Microsoft.AspNetCore.Components;
 
+using Lua;
+
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
@@ -26,14 +28,30 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     #endregion
 
-    private async Task AddChatTemplate()
+    private Task AddChatTemplate() => this.AddChatTemplate(null);
+
+    private async Task ImportChatTemplate()
     {
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            return;
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "CHAT_TEMPLATES", T("Import Chat Template"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            await this.AddChatTemplate(table);
+    }
+
+    private async Task AddChatTemplate(LuaTable? importedConfiguration)
+    {
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            return;
+
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.IsEditing, false },
         };
+        if (importedConfiguration is not null)
+            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
 
-        if (this.CreateTemplateFromExistingChatThread)
+        if (this.CreateTemplateFromExistingChatThread && importedConfiguration is null)
         {
             dialogParameters.Add(x => x.CreateFromExistingChatThread, this.CreateTemplateFromExistingChatThread);
             dialogParameters.Add(x => x.ExistingChatThread, this.ExistingChatThread);
@@ -41,7 +59,8 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (dialogResult is null || dialogResult.Canceled ||
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES")))
             return;
 
         var addedChatTemplate = (ChatTemplate)dialogResult.Data!;

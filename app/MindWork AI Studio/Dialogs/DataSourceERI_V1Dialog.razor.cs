@@ -4,7 +4,10 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Validation;
+
+using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,6 +18,9 @@ namespace AIStudio.Dialogs;
 
 public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 {
+    [Parameter]
+    public LuaTable? ImportedConfiguration { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     
@@ -43,6 +49,9 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataSecretStorageIssue = string.Empty;
+    private string importCredentialIssue = string.Empty;
+    private string importRetrievalIssue = string.Empty;
+    private string importedRetrievalId = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
@@ -143,6 +152,15 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
+
+        if (firstRender && this.ImportedConfiguration is not null)
+        {
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+                this.MudDialog.Cancel();
+            else
+                await this.ImportConfiguration(this.ImportedConfiguration);
+            this.StateHasChanged();
+        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -176,7 +194,49 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             MaxMatches = this.dataMaxMatches,
         };
     }
+
+    private Task ImportConfiguration(LuaTable table)
+    {
+        ConfigurationSnippetImportValidation.Validate("DATA_SOURCES", table);
+        var name = ConfigurationImportFields.String(table, "Name");
+        var hostname = ConfigurationImportFields.String(table, "Hostname");
+        var port = ConfigurationImportFields.Int(table, "Port");
+        var authMethod = ConfigurationImportFields.Enum<AuthMethod>(table, "AuthMethod");
+        var securityPolicy = ConfigurationImportFields.Enum<DataSourceSecurity>(table, "SecurityPolicy");
+        var retrievalId = ConfigurationImportFields.String(table, "SelectedRetrievalId");
+        var maxMatches = ConfigurationImportFields.Int(table, "MaxMatches", 10);
+        var secretName = authMethod switch
+        {
+            AuthMethod.TOKEN => "Token",
+            AuthMethod.USERNAME_PASSWORD => "Password",
+            _ => string.Empty,
+        };
+        var secret = string.Empty;
+        var credentialIssue = string.Empty;
+        if (!string.IsNullOrEmpty(secretName))
+            secret = ConfigurationImportFields.Credential(table, secretName, out credentialIssue);
+        var username = ConfigurationImportFields.String(table, "Username", required: false);
+
+        this.dataName = name;
+        this.dataHostname = hostname;
+        this.dataPort = port;
+        this.dataAuthMethod = authMethod;
+        this.dataUsername = username;
+        this.dataSecurityPolicy = securityPolicy;
+        this.dataSelectedRetrievalProcess = this.dataSelectedRetrievalProcess with { Id = retrievalId };
+        this.dataMaxMatches = (ushort)maxMatches;
+        this.dataSecret = secret;
+        this.importCredentialIssue = credentialIssue;
+        this.importRetrievalIssue = string.Empty;
+        this.importedRetrievalId = retrievalId;
+        this.connectionTested = false;
+        this.connectionSuccessfulTested = false;
+        this.form.ResetValidation();
+        return Task.CompletedTask;
+    }
     
+    private void ClearImportRetrievalIssue() => this.importRetrievalIssue = string.Empty;
+
     private bool IsConnectionEncrypted() => this.dataHostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
 
     private bool IsConnectionPossible()
@@ -251,6 +311,24 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             }
             
             this.availableRetrievalProcesses = retrievalInfoRequest.Data ?? [];
+            // Only the first successful test after an import resolves the imported retrieval ID;
+            // afterward, the selection belongs to the user:
+            if (!string.IsNullOrWhiteSpace(this.importedRetrievalId))
+            {
+                var importedRetrieval = this.availableRetrievalProcesses.FirstOrDefault(item => item.Id == this.importedRetrievalId);
+                if (importedRetrieval != default)
+                {
+                    this.dataSelectedRetrievalProcess = importedRetrieval;
+                    this.importRetrievalIssue = string.Empty;
+                }
+                else
+                {
+                    this.importRetrievalIssue = string.Format(T("The imported retrieval process '{0}' is unavailable. Select another process before saving."), this.importedRetrievalId);
+                    this.dataSelectedRetrievalProcess = default;
+                }
+
+                this.importedRetrievalId = string.Empty;
+            }
             
             this.connectionTested = true;
             this.connectionSuccessfulTested = true;
@@ -304,6 +382,9 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+            return;
+
         await this.form.Validate();
         
         var testConnectionValidation = this.dataSourceValidation.ValidateTestedConnection();

@@ -64,9 +64,12 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddProfile">
-            @T("Add Profile")
-        </MudButton>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddProfile">
+                @T("Add Profile")
+            </MudButton>
+            <LockableButton Text="@T("Import Profile")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProfile" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

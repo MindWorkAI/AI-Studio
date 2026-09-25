@@ -5,6 +5,13 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!this.IsEditing)
+        {
+            @if (!string.IsNullOrWhiteSpace(this.importCredentialIssue))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importCredentialIssue</MudAlert>
+            }
+        }
         @if (this.IsEnterpriseConfiguration)
         {
             <MudAlert Severity="Severity.Info" Class="mb-4">

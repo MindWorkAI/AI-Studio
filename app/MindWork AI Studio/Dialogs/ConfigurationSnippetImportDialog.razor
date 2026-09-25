@@ -1,0 +1,18 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Copy one exported configuration snippet from the item's Export configuration control and paste it below. You can review and change the filled form before saving a new local item.")
+        </MudJustifiedText>
+        <MudTextField T="string" @bind-Text="@this.snippet" Immediate="true" Label="@T("Configuration snippet")" Lines="6" AutoGrow="true" MaxLines="14" Variant="Variant.Outlined" />
+        @if (!string.IsNullOrWhiteSpace(this.issue))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">@this.issue</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel">@T("Cancel")</MudButton>
+        <MudButton OnClick="@this.Import" Disabled="@string.IsNullOrWhiteSpace(this.snippet)" Color="Color.Primary" Variant="Variant.Filled">@this.ImportLabel</MudButton>
+    </DialogActions>
+</MudDialog>

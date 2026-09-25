@@ -181,6 +181,29 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// </summary>
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
 
+    /// <summary>Should the user be allowed to import exported configuration snippets?</summary>
+    public bool AllowUserToImportConfigurationSnippets { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationSnippets, true);
+
+    public bool AllowUserToImportProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportProfile, true);
+    public bool AllowUserToImportLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportLLMProvider, true);
+    public bool AllowUserToImportEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportEmbeddingProvider, true);
+    public bool AllowUserToImportTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportTranscriptionProvider, true);
+    public bool AllowUserToImportChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChatTemplate, true);
+    public bool AllowUserToImportERIDataSource { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportERIDataSource, true);
+    public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
+
+    public bool CanImportConfigurationSnippet(string section) => this.AllowUserToImportConfigurationSnippets && (section switch
+    {
+        "PROFILES" => this.AllowUserToImportProfile,
+        "LLM_PROVIDERS" => this.AllowUserToImportLLMProvider && this.AllowUserToAddProvider && this.AllowUserToAddLLMProvider,
+        "EMBEDDING_PROVIDERS" => this.AllowUserToImportEmbeddingProvider && this.AllowUserToAddProvider && this.AllowUserToAddEmbeddingProvider,
+        "TRANSCRIPTION_PROVIDERS" => this.AllowUserToImportTranscriptionProvider && this.AllowUserToAddProvider && this.AllowUserToAddTranscriptionProvider,
+        "CHAT_TEMPLATES" => this.AllowUserToImportChatTemplate,
+        "DATA_SOURCES" => this.AllowUserToImportERIDataSource,
+        "DOCUMENT_ANALYSIS_POLICIES" => this.AllowUserToImportDocumentAnalysisPolicy,
+        _ => false,
+    });
+
     /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>

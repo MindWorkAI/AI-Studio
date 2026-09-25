@@ -4,6 +4,13 @@
 
 <MudDialog>
     <DialogContent>
+        @if (!this.IsEditing && !this.IsReadOnly)
+        {
+            @if (!string.IsNullOrWhiteSpace(this.importReferenceIssue))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importReferenceIssue</MudAlert>
+            }
+        }
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         @* The name for the drop state is given although nobody uses it: the messages of this dialog
            are listed in a table, whose rows would otherwise ask for the same name. *@
@@ -94,6 +101,33 @@
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
                 @T("You can attach files that will be automatically included when using this chat template. These files will be added to the first message sent in any chat using this template.")
             </MudJustifiedText>
+            @if (!this.IsEditing && !this.IsReadOnly)
+            {
+                @if (this.HasUnresolvedAttachments)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.WarningAmber" Class="mb-3">
+                        @T("Some attachments in this chat template are missing. Relink or remove them before adding the template.")
+                    </MudAlert>
+                }
+                @if (!string.IsNullOrWhiteSpace(this.relinkIssue))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-2">@this.relinkIssue</MudAlert>
+                }
+                @for (var index = 0; index < this.attachmentsToRelink.Count; index++)
+                {
+                    var currentIndex = index;
+                    var attachment = this.attachmentsToRelink[index];
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudTextField T="string" Value="@attachment.ReplacementPath"
+                                      ValueChanged="@(value => this.UpdateRelinkPath(currentIndex, value))"
+                                      Label="@string.Format(T("Relink attachment: {0}"), attachment.OriginalPath)"
+                                      HelperText="@T("Enter an absolute path to an existing local file, or remove this attachment.")" Variant="Variant.Outlined" Immediate="@true" />
+                        <MudTooltip Text="@T("Remove this attachment")">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => this.RemoveAttachmentToRelink(currentIndex))" />
+                        </MudTooltip>
+                    </MudStack>
+                }
+            }
             <AttachDocuments
                 Name="ChatTemplateFileAttachments"
                 @bind-DocumentPaths="@this.fileAttachments"
@@ -252,7 +286,7 @@
 
             @if (!this.isInlineEditOnGoing)
             {
-                <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.HasUnresolvedAttachments">
                     @if (this.IsEditing)
                     {
                         @T("Update")

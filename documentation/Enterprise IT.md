@@ -619,6 +619,16 @@ Some exports ask a question first: a provider with an API key offers to include 
 
 Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
 
+### Importing one exported item for personal use
+
+Each parent screen has a button naming the item to import beside **Add** for profiles, LLM providers, embedding providers, transcription providers, chat templates, and document analysis policies. The data source screen has **Import ERI v1 Data Source** beside **Add Data Source**. Copy an exported snippet from the item's **Export configuration** control, paste one snippet of the matching type into the import dialog, and choose its item-specific import button. AI Studio reads the table as data; it does not run Lua code. The existing creation form then opens with its fields filled in. Review them and choose **Add** to create the item. Canceling either dialog leaves nothing saved. Tool Settings snippets cannot be imported this way.
+
+The imported item receives a new ID and the next local number. It belongs to you, even if the snippet came from an organization configuration. Existing provider, profile, tool, and data source references are kept; unavailable references are flagged so you can review them. Chat template attachments must point to existing local files. Relink or remove any missing or relative paths in the creation dialog before saving.
+
+If an exported provider or ERI source contains an `ENC:v1` credential, AI Studio can fill it only on a device with the matching enterprise encryption secret. Otherwise, enter your own key, token, or password. A credential is stored in the local operating system secret store only when you save the item. Exporting still requires **Show administration settings**.
+
+All eight snippet import settings default to `true`. `DataApp.AllowUserToImportConfigurationSnippets` is the master switch; `DataApp.AllowUserToImportProfile`, `DataApp.AllowUserToImportLLMProvider`, `DataApp.AllowUserToImportEmbeddingProvider`, `DataApp.AllowUserToImportTranscriptionProvider`, `DataApp.AllowUserToImportChatTemplate`, `DataApp.AllowUserToImportERIDataSource`, and `DataApp.AllowUserToImportDocumentAnalysisPolicy` control the seven item types. The master and matching item setting must both allow the import. Provider imports also require `DataApp.AllowUserToAddProvider` and the matching provider Add permission. A blocked Import button stays visible with a lock. AI Studio checks these permissions when opening the import dialog and again before saving. Plugin archive import permissions are independent.
+
 ## Encrypted API Keys
 
 You can include encrypted API keys in your configuration plugins for cloud providers (like OpenAI, Anthropic) or secured on-premise models. This feature provides obfuscation to prevent casual exposure of API keys in configuration files.
