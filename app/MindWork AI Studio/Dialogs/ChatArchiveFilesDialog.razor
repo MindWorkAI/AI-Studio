@@ -1,0 +1,22 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Some of the selected chats have files which AI Studio created itself, such as transcripts of audio and video files. These files exist nowhere else, so without them those chats lose content.")
+        </MudJustifiedText>
+        <MudJustifiedText Typo="Typo.body1">
+            @T("Documents you attached yourself, such as PDF or Word files, are never part of the archive. The chats keep the location where each document is stored.")
+        </MudJustifiedText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Text">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.ExcludeFiles" Variant="Variant.Filled">
+            @T("Chats only")
+        </MudButton>
+        <MudButton OnClick="@this.IncludeFiles" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Include these files")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

@@ -202,6 +202,24 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
 
     /// <summary>
+    /// Should the user be allowed to export chats into an archive file?
+    /// </summary>
+    /// <remarks>
+    /// Chats often hold confidential content, and an archive is a single file which can leave
+    /// the computer on any stick or cloud drive.
+    /// </remarks>
+    public bool AllowUserToExportChats { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToExportChats, true);
+
+    /// <summary>
+    /// Should the user be allowed to import chats from an archive file?
+    /// </summary>
+    /// <remarks>
+    /// An archive brings along everything its chats name, including the locations of attached
+    /// documents, which are read again when such a chat continues.
+    /// </remarks>
+    public bool AllowUserToImportChats { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChats, true);
+
+    /// <summary>
     /// Should administration settings be visible in the UI?
     /// </summary>
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
