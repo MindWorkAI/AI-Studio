@@ -837,13 +837,18 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds.
 --   maxContentCharacters  Content-character limit.
+--   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
+--                           OFF -> the AI reads only addresses which appear in the chat, such as in
+--                                  a message, an attached document, or a data source, or which a
+--                                  tool returned, such as a search hit. This is the default.
+--                           ON  -> the AI may also choose addresses itself.
+--                         Both are instructions to the AI, not a technical block of any address.
 --   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
 --                         listed. Wildcards match subdomains only, so add the root domain
 --                         separately. Allowed private hosts require a provider with HIGH
---                         confidence or one trusted by the organization. AI Studio only tries the
---                         current user's operating-system sign-in for explicitly allowed HTTPS
---                         targets when those provider requirements are met, and it never reuses
---                         browser cookies.
+--                         confidence. AI Studio only tries the current user's operating-system
+--                         sign-in for explicitly allowed HTTPS targets when that provider
+--                         requirement is met, and it never reuses browser cookies.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -862,6 +867,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }

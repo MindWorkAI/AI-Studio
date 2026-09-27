@@ -68,8 +68,10 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
     private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => this.GetConfidenceLevelName(GetMinimumProviderConfidence(item));
 
+    // Short, because it labels the button in a narrow column whose heading already names the
+    // minimum confidence; the long wording wraps into a tall block there:
     private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
-        ? this.T("No minimum confidence level chosen")
+        ? this.T("No minimum")
         : confidenceLevel.GetName();
 
     private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>

@@ -349,7 +349,8 @@ public sealed class ToolRegistry
     /// caller to gate tools on capabilities that differed from the ones the availability check saw.<br/><br/>
     /// The candidates are the selected tools and every tool which offers itself from the context of
     /// the chat, see ToolActivation. Each one passes the same checks, and only then is it asked what
-    /// it offers in this request, see IToolImplementation.ResolveFunctionAsync.
+    /// it offers in this request, see IToolImplementation.ResolveFunctionAsync and
+    /// IToolImplementation.ResolveSystemPromptInstructionsAsync.
     /// </remarks>
     /// <param name="context">The request being prepared.</param>
     /// <param name="selectedToolIds">The tools selected for the request.</param>
@@ -520,17 +521,28 @@ public sealed class ToolRegistry
     /// Asks a tool which passed every check what it offers in this request.
     /// </summary>
     /// <remarks>
-    /// Only the description and the parameters of the answer are taken. The name and the strict
-    /// mode stay as registered, because the model's calls find their tool by that name, and the
-    /// rest of the definition was checked a moment ago and must not change after that.
+    /// Two answers are taken: the function, of which only the description and the parameters count,
+    /// and the instructions for the system prompt. The name and the strict mode stay as registered,
+    /// because the model's calls find their tool by that name, and the rest of the definition was
+    /// checked a moment ago and must not change after that. The instructions are asked for only once
+    /// the tool has a function to offer, since they would otherwise describe a tool the model never
+    /// gets to see.
     /// </remarks>
     /// <returns>The definition as offered in this request, or null when the tool has nothing to offer or could not say what.</returns>
     private async Task<ToolDefinition?> ResolveAsync(ToolDefinition definition, IToolImplementation implementation, ToolResolutionContext context, CancellationToken token)
     {
         ToolFunctionDefinition? function;
+        string instructions;
         try
         {
             function = await implementation.ResolveFunctionAsync(definition, context, token);
+            if (function is null)
+            {
+                this.logger.LogDebug("Skipping tool '{ToolId}' because it has nothing to offer in this request.", definition.Id);
+                return null;
+            }
+
+            instructions = await implementation.ResolveSystemPromptInstructionsAsync(definition, context, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -542,31 +554,39 @@ public sealed class ToolRegistry
             return null;
         }
 
-        if (function is null)
-        {
-            this.logger.LogDebug("Skipping tool '{ToolId}' because it has nothing to offer in this request.", definition.Id);
-            return null;
-        }
-
-        if (ReferenceEquals(function, definition.Function))
+        var offeredFunction = this.GetOfferedFunction(definition, function);
+        if (ReferenceEquals(offeredFunction, definition.Function) && string.Equals(instructions, definition.SystemPromptInstructions, StringComparison.Ordinal))
             return definition;
+
+        return definition with
+        {
+            Function = offeredFunction,
+            SystemPromptInstructions = instructions,
+        };
+    }
+
+    /// <summary>
+    /// The function a tool offers in this request, made of what it answered and what it registered.
+    /// </summary>
+    /// <returns>The registered function when the tool offers it unchanged or offers something unusable, otherwise the tailored one with the registered name and strict mode.</returns>
+    private ToolFunctionDefinition GetOfferedFunction(ToolDefinition definition, ToolFunctionDefinition function)
+    {
+        if (ReferenceEquals(function, definition.Function))
+            return definition.Function;
 
         if (function.Parameters.ValueKind is not JsonValueKind.Object)
         {
-            this.logger.LogWarning("Tool '{ToolId}' offered parameters which are not a JSON object schema. It is offered as registered instead.", definition.Id);
-            return definition;
+            this.logger.LogWarning("Tool '{ToolId}' offered parameters which are not a JSON object schema. Its function is offered as registered instead.", definition.Id);
+            return definition.Function;
         }
 
         if (!string.Equals(function.Name, definition.Function.Name, StringComparison.Ordinal) || function.Strict != definition.Function.Strict)
             this.logger.LogWarning("Tool '{ToolId}' changed the name or the strict mode of its function for a request. Both stay as registered.", definition.Id);
 
-        return definition with
+        return function with
         {
-            Function = function with
-            {
-                Name = definition.Function.Name,
-                Strict = definition.Function.Strict,
-            },
+            Name = definition.Function.Name,
+            Strict = definition.Function.Strict,
         };
     }
 }

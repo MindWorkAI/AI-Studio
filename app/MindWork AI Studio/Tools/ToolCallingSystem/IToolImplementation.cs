@@ -44,6 +44,27 @@ public interface IToolImplementation
     public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
         ValueTask.FromResult<ToolFunctionDefinition?>(definition.Function);
 
+    /// <summary>
+    /// The instructions this tool adds to the system prompt of the request being prepared.
+    /// </summary>
+    /// <remarks>
+    /// Most tools always say the same, which is what this returns unless a tool says otherwise. A
+    /// tool whose rules follow one of its settings words them here instead: Read Web Page tells the
+    /// model whether it may choose web addresses itself, depending on its free address choice.
+    /// Everything outside a request keeps reading the registered instructions, the token count
+    /// below the message field among them, so those should describe the tool's default.<br/><br/>
+    /// Asked the way ResolveFunctionAsync is: for every request, after every check of ToolRegistry
+    /// has passed, and only when the tool has a function to offer. A tool which throws is left out
+    /// of the request. Keep the result stable while the chat and the settings stay the same: the
+    /// providers cache a request from its beginning, and the system prompt is that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The instructions to add to the system prompt, or an empty text for none.</returns>
+    public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult(definition.SystemPromptInstructions);
+
     public string Icon => Icons.Material.Filled.Build;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }

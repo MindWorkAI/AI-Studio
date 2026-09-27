@@ -107,7 +107,8 @@ public abstract class ToolRegistryTestBase
     /// <param name="definition">What the tool is.</param>
     /// <param name="resolve">What it offers per request; when left out, its function as defined.</param>
     /// <param name="execute">What a call returns; when left out, an empty result.</param>
-    protected sealed class TestTool(ToolDefinition definition, Func<ToolDefinition, ToolFunctionDefinition?>? resolve = null, Func<ToolExecutionContext, ToolExecutionResult>? execute = null) : IToolImplementation
+    /// <param name="resolveInstructions">What it adds to the system prompt per request; when left out, its instructions as defined.</param>
+    protected sealed class TestTool(ToolDefinition definition, Func<ToolDefinition, ToolFunctionDefinition?>? resolve = null, Func<ToolExecutionContext, ToolExecutionResult>? execute = null, Func<ToolDefinition, string>? resolveInstructions = null) : IToolImplementation
     {
         public int ResolveCount { get; private set; }
 
@@ -120,6 +121,9 @@ public abstract class ToolRegistryTestBase
             this.ResolveCount++;
             return ValueTask.FromResult(resolve is null ? registeredDefinition.Function : resolve(registeredDefinition));
         }
+
+        public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition registeredDefinition, ToolResolutionContext context, CancellationToken token = default) =>
+            ValueTask.FromResult(resolveInstructions is null ? registeredDefinition.SystemPromptInstructions : resolveInstructions(registeredDefinition));
 
         public IReadOnlySet<string> SensitiveTraceArgumentNames { get; } = new HashSet<string>(StringComparer.Ordinal);
 
