@@ -82,6 +82,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
     private bool areDataSourcesEnabled;
+    private DataSourceRetrievalMode retrievalMode;
+    private EffectiveRetrievalMode effectiveRetrievalMode;
     private uint loadAndApplyFiltersGeneration;
     
     #region Overrides of ComponentBase
@@ -96,6 +98,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+        this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.waitingForDataSources = this.areDataSourcesEnabled && this.SelectionMode is not DataSourceSelectionMode.CONFIGURATION_MODE;
 
         //
@@ -117,6 +120,7 @@ public partial class DataSourceSelection : MSGComponentBase
             this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
             this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
             this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+            this.retrievalMode = this.DataSourceOptions.RetrievalMode;
             this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         }
 
@@ -182,6 +186,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+        this.retrievalMode = this.DataSourceOptions.RetrievalMode;
         this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         this.waitingForDataSources = false;
 
@@ -254,11 +259,12 @@ public partial class DataSourceSelection : MSGComponentBase
         // with that which data sources the provider of the chat may use at all. This component
         // only ever selects for a chat:
         //
-        var retrievalMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, this.LLMProvider, Tools.Components.CHAT);
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, retrievalMode.Mode, this.GetDataSourcesFromConfiguredIds());
+        var effectiveMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, this.LLMProvider, Tools.Components.CHAT);
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, effectiveMode.Mode, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
+        this.effectiveRetrievalMode = effectiveMode;
         this.availableDataSources = sources.AllowedDataSources;
         this.dataSourcesAwaitingReindex = sources.DataSourcesAwaitingReindex;
         this.dataSourceIdsAwaitingReindex = sources.DataSourcesAwaitingReindex.Select(source => source.Id).ToHashSet(StringComparer.Ordinal);
@@ -335,6 +341,39 @@ public partial class DataSourceSelection : MSGComponentBase
         await this.OptionsChanged();
     }
     
+    private async Task SemanticSearchChanged(bool state)
+    {
+        this.retrievalMode = state ? DataSourceRetrievalMode.SEMANTIC_SEARCH : DataSourceRetrievalMode.EVERY_MESSAGE;
+        this.DataSourceOptions.RetrievalMode = this.retrievalMode;
+
+        // Which data sources the provider may use depends on it, see LoadAndApplyFilters:
+        await this.LoadAndApplyFilters();
+        await this.OptionsChanged();
+    }
+
+    private bool IsSemanticSearchPreferred => this.retrievalMode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    /// <summary>
+    /// Whether the model of the chat searches the data sources itself.
+    /// </summary>
+    /// <remarks>
+    /// Only the selection mode can tell, since only it knows the provider of a chat. The effective
+    /// mode is found out while loading the data sources; asking the preference as well keeps a
+    /// switch to every message from showing the other way until that loading is done.
+    /// </remarks>
+    private bool IsSemanticSearchEffective => this.IsSemanticSearchPreferred && this.effectiveRetrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+    private bool IsSemanticSearchFallingBack => this.IsSemanticSearchPreferred && this.effectiveRetrievalMode.FallbackReason is not ToolOfferBlockReason.NONE;
+
+    private string GetSemanticSearchFallbackMessage() => this.effectiveRetrievalMode.FallbackReason switch
+    {
+        ToolOfferBlockReason.TOOLS_SWITCHED_OFF => T("Your organization has switched tools off, so AI Studio searches your data sources with every message instead."),
+        ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => T("The selected model cannot use tools, so AI Studio searches your data sources with every message instead."),
+        ToolOfferBlockReason.TOOL_SWITCHED_OFF => T("Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead."),
+        ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW => T("The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead."),
+        _ => T("Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead."),
+    };
+
     private async Task ValidationModeChanged(bool state)
     {
         this.aiBasedValidation = state;
@@ -366,6 +405,14 @@ public partial class DataSourceSelection : MSGComponentBase
         return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
                && this.ConfiguresChatDefaults
                && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesDisabled, out var meta)
+               && meta.IsLocked;
+    }
+
+    private bool IsPreselectedDataSourcesRetrievalModeLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && this.ConfiguresChatDefaults
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, out var meta)
                && meta.IsLocked;
     }
 
