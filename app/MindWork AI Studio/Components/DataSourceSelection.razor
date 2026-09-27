@@ -84,12 +84,6 @@
                                     </MudText>
                                     break; 
                                     
-                                case true when this.DataSourcesAISelected.Count == 0 && !this.IsSemanticSearchEffective:
-                                    <MudText Typo="Typo.body2" Class="mb-2">
-                                        @T("The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.")
-                                    </MudText>
-                                    break;
-                                    
                                 case false when this.GetListedDataSources().Count == 0:
                                     <MudText Typo="Typo.body2" Class="mb-2">
                                         @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
@@ -114,6 +108,12 @@
                                             @T("Whenever a question calls for it, the AI picks the fitting ones among these data sources itself.")
                                         </MudText>
                                     }
+                                    else if (this.DataSourcesAISelected.Count == 0)
+                                    {
+                                        <MudText Typo="Typo.body2" Class="mb-2">
+                                            @T("The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.")
+                                        </MudText>
+                                    }
 
                                     <MudExpansionPanels MultiExpansion="@false" Class="mt-3" Style="max-height: 14em;">
                                         <ExpansionPanel HeaderIcon="@Icons.Material.Filled.TouchApp" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("Available Data Sources")">
@@ -124,8 +124,12 @@
                                                 }
                                             </MudList>
                                         </ExpansionPanel>
-                                        @* With Semantic Search, no agent selects: the chat model picks with each search, and its searches show in the answer. *@
-                                        @if (!this.IsSemanticSearchEffective)
+                                        @*
+                                            With Semantic Search, no agent selects: the chat model picks with each search, and its
+                                            searches show in the answer. With classic RAG, there is something to show once the agent
+                                            picked for a message.
+                                        *@
+                                        @if (!this.IsSemanticSearchEffective && this.DataSourcesAISelected.Count > 0)
                                         {
                                             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Filter" IconSize="Size.Small" HeaderTypo="Typo.subtitle1" HeaderClass="expansion-panel-header-compact" HeaderText="@T("AI-Selected Data Sources")">
                                                 <MudList T="DataSourceAgentSelected" Dense="@true" Class="data-source-rows" SelectionMode="MudBlazor.SelectionMode.MultiSelection" ReadOnly="@true" SelectedValues="@this.GetSelectedDataSourcesWithAI()" Style="max-height: 14em;">
