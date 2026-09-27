@@ -53,7 +53,7 @@ public static partial class ManagedConfiguration
             if(configuredEnumValue.TryRead<string>(out var configuredEnumText))
             {
                 // Step 3 -- try to parse the string as the enum type:
-                if (Enum.TryParse(typeof(TValue), configuredEnumText, true, out var configuredEnum))
+                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum))
                 {
                     configuredValue = (TValue)configuredEnum;
                     successful = true;
@@ -364,7 +364,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         list.Add((TValue)configuredEnum);
                 }
             }
@@ -579,7 +579,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
                 }
             }
@@ -646,7 +646,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
                 }
             }
@@ -877,8 +877,8 @@ public static partial class ManagedConfiguration
                 // If both key and value were read successfully, parse and add them to the dictionary:
                 if (hadKey
                     && hadValue
-                    && Enum.TryParse<TKey>(keyText, true, out var key)
-                    && Enum.TryParse<TValue>(valueText, true, out var value))
+                    && EnumNames.TryParse<TKey>(keyText, out var key)
+                    && EnumNames.TryParse<TValue>(valueText, out var value))
                     configuredValue[key] = value;
             }
 

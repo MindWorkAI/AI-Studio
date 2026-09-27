@@ -328,20 +328,15 @@ public record ChatTemplate(
 
     /// <remarks>
     /// Like the other options, a template which leaves this out does not take it from the chat
-    /// defaults: it gets semantic search, the default everywhere. Only a name counts, since
-    /// parsing alone would also accept a number, or several names at once.
+    /// defaults: it gets semantic search, the default everywhere. Only a name counts, see EnumNames.
     /// </remarks>
     private static DataSourceRetrievalMode ParseRetrievalMode(int idx, LuaTable optionsTable)
     {
         if (!optionsTable.TryGetValue("RetrievalMode", out var retrievalModeValue))
             return DataSourceRetrievalMode.SEMANTIC_SEARCH;
 
-        if (retrievalModeValue.TryRead<string>(out var retrievalModeText))
-        {
-            var retrievalModeName = Enum.GetNames<DataSourceRetrievalMode>().FirstOrDefault(name => name.Equals(retrievalModeText.Trim(), StringComparison.OrdinalIgnoreCase));
-            if (retrievalModeName is not null)
-                return Enum.Parse<DataSourceRetrievalMode>(retrievalModeName);
-        }
+        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && EnumNames.TryParse<DataSourceRetrievalMode>(retrievalModeText, out var retrievalMode))
+            return retrievalMode;
 
         LOGGER.LogWarning("The RetrievalMode of chat template {IdxChatTemplate} is not one of {RetrievalModes}. The template uses semantic search instead.", idx, string.Join(", ", Enum.GetNames<DataSourceRetrievalMode>()));
         return DataSourceRetrievalMode.SEMANTIC_SEARCH;
