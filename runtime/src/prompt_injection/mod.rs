@@ -14,6 +14,12 @@
 //! what precedes that tail is handed on. A phrase split across two PDF pages is therefore
 //! still intact by the time it is scanned and can still be redacted, because nothing
 //! containing it has left the sanitizer yet.
+//!
+//! The rules are not only matched against the text as it stands. An injection can be spelled
+//! in a way a model reads fluently but a pattern does not: written one letter at a time, base64
+//! encoded, hidden behind the character escapes of JSON and XML, or broken up by characters
+//! nobody sees. Each of these gets a view of its own in which the spelling is undone, and a hit
+//! in a view is redacted where it came from in the text.
 
 pub mod api;
 
@@ -268,6 +274,7 @@ impl Sanitizer {
 
         self.collect_phrase_matches(text, is_final, &mut redactions);
         self.collect_structural_matches(text, is_final, &mut redactions);
+        self.collect_readable_matches(text, is_final, &mut redactions);
         self.collect_encoded_matches(text, is_final, &mut redactions);
         self.collect_spaced_and_shuffled_matches(text, is_final, &mut redactions);
 
@@ -317,6 +324,65 @@ impl Sanitizer {
                     end: matched.end(),
                     redaction: rule.redaction,
                 });
+            }
+        }
+    }
+
+    /// Matches the rules against the text as a model reads it, and redacts the part of the text
+    /// behind a hit, escapes and invisible characters included.
+    ///
+    /// `\u0049gnore all previous instructions` in a JSON string or `&#73;gnore` in an XML feed
+    /// is plain text to a model, but not to the patterns. Web pages are converted to Markdown
+    /// before they are scanned, which resolves their references; JSON, XML, and source files
+    /// reach the scan as they stand, whether they come from the web or from the user's disk.
+    ///
+    /// Invisible characters are what the silent rule removes before the model gets the text, so
+    /// the scan must not see them either: a zero-width space in the middle of `ignore` stops
+    /// every pattern, and removing it afterwards hands the model the word in one piece. The
+    /// view leaves them out, and a hit across one takes it along into the redaction.
+    ///
+    /// Only the phrase list and the rules redacting with a marker take part. The silent rules
+    /// remove carriers that are invisible in the text itself. The invisible characters are gone
+    /// from this view already, and an escaped carrier is text a reader sees. What such a carrier
+    /// is meant to smuggle is still found by the rules taking part.
+    ///
+    /// A hit is quoted the way it stands in the text, not decoded. That is what the user finds
+    /// in their document, and it is the same quote the plain scans produce for a hit without
+    /// any escape in it, so a passage both of them find is counted once.
+    fn collect_readable_matches(&mut self, text: &str, is_final: bool, redactions: &mut Vec<Redactable>) {
+        let Some(readable) = normalize::readable_view(text) else {
+            return;
+        };
+
+        let collapsed = normalize::collapse_whitespace(&readable.text);
+        let rules = &*PHRASE_RULES;
+        for matched in rules.automaton().find_iter(&collapsed.text) {
+            let (rule_id, category) = rules.rule_for(matched.pattern().as_usize());
+
+            // Two views deep: collapsing maps onto the readable view, and that one onto the text.
+            let (readable_start, readable_end) = collapsed.to_source_range(matched.start(), matched.end());
+            let (start, end) = readable.to_source_range(readable_start, readable_end);
+            if !Self::is_settled(text, end, is_final) {
+                continue;
+            }
+
+            self.record(text, start, end, rule_id, category);
+            redactions.push(Redactable { start, end, redaction: Redaction::Marker });
+        }
+
+        for (rule, pattern) in STRUCTURAL.rules() {
+            if rule.redaction != Redaction::Marker {
+                continue;
+            }
+
+            for matched in pattern.find_iter(&readable.text) {
+                let (start, end) = readable.to_source_range(matched.start(), matched.end());
+                if !Self::is_settled(text, end, is_final) {
+                    continue;
+                }
+
+                self.record(text, start, end, rule.id, rule.category);
+                redactions.push(Redactable { start, end, redaction: Redaction::Marker });
             }
         }
     }

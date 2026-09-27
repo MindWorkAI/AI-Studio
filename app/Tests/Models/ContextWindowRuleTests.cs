@@ -27,6 +27,8 @@ public sealed class ContextWindowRuleTests
     [TestCase(LLMProviders.OPEN_AI, "gpt-5.5", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "gpt-5.6", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "gpt-6-astra", 1_050_000)]
+    [TestCase(LLMProviders.OPEN_AI, "gpt-6-sol", 1_050_000)]
+    [TestCase(LLMProviders.OPEN_AI, "gpt-6-luna", 1_050_000)]
     [TestCase(LLMProviders.OPEN_AI, "o1", 200_000)]
     [TestCase(LLMProviders.OPEN_AI, "o3", 200_000)]
     [TestCase(LLMProviders.OPEN_AI, "o4-mini", 200_000, Description = "The o3 generation under another number, window included.")]

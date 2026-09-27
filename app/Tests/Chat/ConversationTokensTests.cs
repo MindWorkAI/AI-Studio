@@ -25,7 +25,7 @@ public sealed class ConversationTokensTests
         var counted = new ConversationTokens
         {
             IsKnown = true,
-            UncountedImages = images,
+            Images = images,
             ImageLimits = new ImageLimits(null, allowed),
         };
 
@@ -42,7 +42,7 @@ public sealed class ConversationTokensTests
         var counted = new ConversationTokens
         {
             IsKnown = true,
-            UncountedImages = 500,
+            Images = 500,
             ImageLimits = ImageLimits.UNKNOWN,
         };
 
@@ -60,7 +60,7 @@ public sealed class ConversationTokensTests
         var counted = new ConversationTokens
         {
             IsKnown = true,
-            UncountedImages = 20,
+            Images = 20,
             ImageLimits = new ImageLimits(8, 100),
         };
 
@@ -77,7 +77,7 @@ public sealed class ConversationTokensTests
         var counted = new ConversationTokens
         {
             IsKnown = true,
-            UncountedImages = 0,
+            Images = 0,
             ImageLimits = new ImageLimits(null, 0),
         };
 
@@ -92,5 +92,65 @@ public sealed class ConversationTokensTests
         // warning built on that would be made up.
         //
         Assert.That(ConversationTokens.UNAVAILABLE.TooManyImages, Is.False);
+    }
+
+    [Test]
+    public void PicturesAProviderCountedAreNotCalledUncounted()
+    {
+        //
+        // What the provider reported for the conversation so far includes its pictures, however
+        // it charges them. Only those still waiting in the composer are left for nobody to count.
+        //
+        var reported = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryIsReported = true,
+            Images = 3,
+            DraftImages = 1,
+        };
+
+        var estimated = reported with { HistoryIsReported = false };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reported.UncountedImages, Is.EqualTo(1), "The provider counted the two which were sent.");
+            Assert.That(estimated.UncountedImages, Is.EqualTo(3), "Without a report, nobody counted any of them.");
+        });
+    }
+
+    [Test]
+    public void TooManyPicturesStaysTooManyWhenTheProviderCountedThem()
+    {
+        //
+        // The limit is on how many pictures travel, not on what they cost. A provider which has
+        // counted them still refuses the request which carries one too many.
+        //
+        var counted = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryIsReported = true,
+            Images = 10,
+            ImageLimits = new ImageLimits(8, null),
+        };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(counted.UncountedImages, Is.Zero);
+            Assert.That(counted.TooManyImages, Is.True);
+        });
+    }
+
+    [Test]
+    public void TheWholeNumberIsTheConversationAndTheDraft()
+    {
+        var counted = new ConversationTokens
+        {
+            IsKnown = true,
+            HistoryTokens = 12_400,
+            ToolTokens = 9_000,
+            DraftTokens = 340,
+        };
+
+        Assert.That(counted.Tokens, Is.EqualTo(12_740), "The tools' share is part of the conversation, not added on top of it.");
     }
 }

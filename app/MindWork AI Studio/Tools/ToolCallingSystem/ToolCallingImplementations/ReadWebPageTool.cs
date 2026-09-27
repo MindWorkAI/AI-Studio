@@ -17,6 +17,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
 
+    /// <summary>
+    /// Below how many characters the content of an HTML page is reported as partial.
+    /// </summary>
+    /// <remarks>
+    /// A page yielding a few sentences was most likely not extracted in full: its layout was
+    /// not understood, or JavaScript assembles it in the browser. A text document such as a
+    /// JSON response is exempt, because it arrives whole and a short one is simply short.
+    /// </remarks>
+    private const int MIN_COMPLETE_PAGE_CHARACTERS = 500;
+
     private const string TIMEOUT_SECONDS_SETTING = "timeoutSeconds";
     private const string MAX_CONTENT_CHARACTERS_SETTING = "maxContentCharacters";
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
@@ -49,7 +59,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         Function = new()
         {
             Name = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
-            DescriptionForLLM = "Load a single HTTP or HTTPS page and return its metadata and main content as Markdown. Static HTML is supported; JavaScript is not executed.",
+            DescriptionForLLM = "Load a single HTTP or HTTPS URL. HTML pages return their metadata and main content as Markdown; plain text, JSON, XML, CSV, and other text formats return their text unchanged. JavaScript is not executed, and binary files such as PDFs or images are not supported.",
             Parameters = ToolParameterSchemaBuilder.Create()
                 .RequiredString(URL_ARGUMENT, "The full HTTP or HTTPS URL of the web page to read.")
                 .Build(),
@@ -79,7 +89,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         TIMEOUT_SECONDS_SETTING => TB("(Optional) HTTP timeout for loading a web page in seconds."),
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider or a provider trusted by your organization's configuration. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         BRAVE_MODE_SETTING => TB("Off: the model is instructed to read only URLs supplied in the system prompt, your message (including loaded documents and retrieved data), or tool results. On: the model may choose a URL itself. This instruction guides the model; it does not technically block URL requests."),
         _ => TB(fieldDefinition.Description),
     };
@@ -145,7 +155,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
-        var urlText = ReadRequiredString(arguments, URL_ARGUMENT);
+        var urlText = ToolArgumentReader.ReadRequiredString(arguments, URL_ARGUMENT);
         if (!Uri.TryCreate(urlText, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
             throw new ArgumentException("Argument 'url' must be a valid HTTP or HTTPS URL.");
 
@@ -170,7 +180,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                 {
                     TimeoutSeconds = timeoutSeconds,
                     ProviderConfidence = context.ProviderConfidence,
-                    ProviderIsTrustedByConfiguration = context.ProviderIsTrustedByConfiguration,
                     UseOsSso = true,
                     IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
                     OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
@@ -185,11 +194,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var extractedPage = retrievedPage.ExtractedPage;
         var markdown = extractedPage.Markdown;
         var originalContentCharacters = markdown.Length;
+        var isTextDocument = retrievedPage.ContentKind is WebContentKind.TEXT_DOCUMENT;
         List<string> warnings = [];
 
         if (string.IsNullOrWhiteSpace(markdown))
-            warnings.Add("No readable static page content was extracted. The page may require JavaScript, authentication, or browser cookies.");
-        else if (markdown.Length < 500)
+            warnings.Add(isTextDocument ? "The response was empty." : "No readable static page content was extracted. The page may require JavaScript, authentication, or browser cookies.");
+        else if (!isTextDocument && markdown.Length < MIN_COMPLETE_PAGE_CHARACTERS)
             warnings.Add("Only a small amount of readable page content was extracted; the result may be incomplete.");
 
         var contentTruncated = false;
@@ -225,7 +235,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildModelContent(page, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
+            JsonContent = BuildModelContent(page, retrievedPage.ContentKind, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
             Sources = string.IsNullOrWhiteSpace(modelContent.Markdown)
                 ? []
                 : [new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
@@ -233,15 +243,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         };
     }
 
-    private static JsonNode BuildModelContent(HTMLParserWebPage page, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
+    private static JsonNode BuildModelContent(HTMLParserWebPage page, WebContentKind contentKind, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
         bool contentTruncated, IReadOnlyList<string> warnings)
     {
         var websiteContentAsMarkdown = modelContent.Markdown;
         var metadata = new JsonObject();
 
+        var mayBeIncompletelyExtracted = contentKind is WebContentKind.HTML_PAGE && originalContentCharacters < MIN_COMPLETE_PAGE_CHARACTERS;
         var status = string.IsNullOrWhiteSpace(websiteContentAsMarkdown)
             ? "empty response"
-            : contentTruncated || originalContentCharacters < 500
+            : contentTruncated || mayBeIncompletelyExtracted
                 ? "partial"
                 : "complete";
         
@@ -301,13 +312,13 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private async Task ReportPrivateHostProviderBlockAsync(Uri url, ConfidenceLevel providerConfidence)
     {
         logger.LogWarning(
-            "Blocked read_web_page access to allowed private host '{Host}' because provider confidence '{ProviderConfidence}' is below HIGH and the provider is not trusted by configuration.",
+            "Blocked read_web_page access to allowed private host '{Host}' because provider confidence '{ProviderConfidence}' is below HIGH.",
             url.Host,
             providerConfidence);
 
         await MessageBus.INSTANCE.SendError(new DataErrorMessage(
             Icons.Material.Filled.Security,
-            TB("The web page was not loaded because private or VPN web pages require a High-confidence provider or a provider trusted by your organization's configuration.")));
+            TB("The web page was not loaded because private or VPN web pages require a High-confidence provider.")));
     }
 
     private static bool IsAllowedPrivateHost(string host, IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts)
@@ -351,18 +362,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private static IEnumerable<string> SplitAllowedPrivateHostPatterns(string? rawValue) => rawValue?
         .Split(['\r', '\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Where(x => !string.IsNullOrWhiteSpace(x)) ?? [];
-
-    private static string ReadRequiredString(JsonElement arguments, string propertyName)
-    {
-        if (!arguments.TryGetProperty(propertyName, out var value) || value.ValueKind is not JsonValueKind.String)
-            throw new ArgumentException($"Missing required argument '{propertyName}'.");
-
-        var text = value.GetString()?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException($"Missing required argument '{propertyName}'.");
-
-        return text;
-    }
 
     private static string FormatUrlForLog(Uri url)
     {

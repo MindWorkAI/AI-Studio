@@ -183,7 +183,38 @@ public sealed class ChatCompletionToolCallAccumulatorTests
         
         Assert.That(part.Sources.Select(x => x.URL), Is.EqualTo(new[] { "https://example.org/" }), "Whatever the provider announced on that line reaches the user with it.");
     }
-    
+
+    [Test]
+    public void TheLineWithoutChoicesStatesWhatTheRequestCost()
+    {
+        var accumulator = new ChatCompletionToolCallAccumulator();
+        var part = accumulator.Process(Event("""{"choices":[],"usage":{"prompt_tokens":1200,"completion_tokens":345,"total_tokens":1545}}"""));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(part.Usage.IsKnown, Is.True, "The last line of the stream has no choices, and it must not be dropped for that.");
+            Assert.That(part.Usage.PromptTokens, Is.EqualTo(1200));
+            Assert.That(part.HasContent, Is.False, "It has nothing to show, though.");
+        });
+    }
+
+    [Test]
+    public void AUsageNextToTheLastTextIsReadAsWell()
+    {
+        //
+        // Some providers put the usage on the line which carries the last piece of the answer
+        // rather than on a line of its own.
+        //
+        var accumulator = new ChatCompletionToolCallAccumulator();
+        var part = accumulator.Process(Event("""{"choices":[{"index":0,"delta":{"content":"Bye"}}],"usage":{"prompt_tokens":1200,"completion_tokens":2}}"""));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(part.TextDelta, Is.EqualTo("Bye"));
+            Assert.That(part.Usage.PromptTokens, Is.EqualTo(1200));
+        });
+    }
+
     private static ChatCompletionResponseMessage? Read(params string[] data)
     {
         var accumulator = new ChatCompletionToolCallAccumulator();

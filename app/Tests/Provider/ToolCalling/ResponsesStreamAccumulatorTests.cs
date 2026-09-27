@@ -106,6 +106,33 @@ public sealed class ResponsesStreamAccumulatorTests
     }
     
     [Test]
+    public void TheCompletedEventStatesWhatTheRequestCost()
+    {
+        var accumulator = new ResponsesStreamAccumulator();
+        var part = accumulator.Process(Event(COMPLETED_PREFIX + REASONING_ITEM + """],"usage":{"input_tokens":2679,"input_tokens_details":{"cached_tokens":0},"output_tokens":510}}}"""));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(part.Usage.IsKnown, Is.True, "The closing event is the one line which states what the request cost.");
+            Assert.That(part.Usage.PromptTokens, Is.EqualTo(2679));
+            Assert.That(part.HasContent, Is.False, "And there is nothing on it to show.");
+            Assert.That(accumulator.Build()!.Output, Has.Count.EqualTo(1), "Reading the usage leaves the round as it was.");
+        });
+    }
+
+    [Test]
+    public void ARoundPutBackTogetherFromItsItemsStatesNoCost()
+    {
+        //
+        // The gateway which never sends the closing event never sends the usage either, which
+        // leaves the round to the estimate.
+        //
+        var response = Read("""{"type":"response.output_item.done","output_index":0,"item":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Partial"}]}}""");
+
+        Assert.That(response!.GetUsage().IsKnown, Is.False);
+    }
+
+    [Test]
     public void AStreamWhichSaidNothingIsAFailedRound()
     {
         var response = Read("""{"type":"response.created","response":{"id":"resp_1"}}""");

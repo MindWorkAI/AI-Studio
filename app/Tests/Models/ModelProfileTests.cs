@@ -19,6 +19,7 @@ public sealed class ModelProfileTests
             Assert.That(untouched.Capabilities, Is.EqualTo(Capability.NONE));
             Assert.That(untouched.Reasoning, Is.EqualTo(ReasoningSupport.NONE));
             Assert.That(untouched.Context.IsKnown, Is.False);
+            Assert.That(untouched.SystemPromptRole, Is.EqualTo(SystemPromptRole.UNKNOWN), "The provider decides, rather than a role nobody stated.");
 
             //
             // A model we fail to recognize has to stay visible to the user rather than disappear
@@ -63,6 +64,7 @@ public sealed class ModelProfileTests
             Capabilities = Capability.TEXT_INPUT | Capability.WEB_SEARCH,
             Reasoning = ReasoningSupport.OPTIONAL,
             Context = ContextWindow.Of(128_000),
+            SystemPromptRole = SystemPromptRole.DEVELOPER,
         };
 
         var after = new ModelProfileChange { Removes = Capability.WEB_SEARCH }.ApplyTo(before);
@@ -72,6 +74,7 @@ public sealed class ModelProfileTests
             Assert.That(after.Capabilities, Is.EqualTo(Capability.TEXT_INPUT));
             Assert.That(after.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL), "A change saying nothing about reasoning must not reset it.");
             Assert.That(after.Context, Is.EqualTo(before.Context), "A change saying nothing about the context window must not reset it.");
+            Assert.That(after.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER), "A change saying nothing about the system prompt role must not reset it.");
         });
     }
 

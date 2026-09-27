@@ -91,12 +91,12 @@
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
                             }
-                            @if (this.MessageTables.Count > 0)
+                            @if (this.MessageFiles.Count > 0)
                             {
                                 <MudDivider/>
-                                @foreach (var messageTable in this.MessageTables)
+                                @foreach (var messageFile in this.MessageFiles)
                                 {
-                                    <MudMenuItem OnClick="@(() => this.ExportTable(messageTable))" Icon="@messageTable.Format.ToIcon()" Label="@this.ExportLabel(messageTable)"/>
+                                    <MudMenuItem OnClick="@(() => this.ExportFile(messageFile))" Icon="@messageFile.Format.ToIcon()" Label="@this.ExportLabel(messageFile)"/>
                                 }
                             }
                             <MudDivider/>

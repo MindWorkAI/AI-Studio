@@ -19,6 +19,31 @@ public interface IToolImplementation
     /// </remarks>
     public ToolDefinition GetDefinition();
 
+    /// <summary>
+    /// The function this tool offers the model in the request being prepared, or null when it has
+    /// nothing to offer there.
+    /// </summary>
+    /// <remarks>
+    /// A definition is registered once, but some tools cannot say what they offer until they know
+    /// the request. Semantic Search describes the data sources of the chat, and only those the
+    /// provider may search; without any of them, it has nothing to offer, and the model should not
+    /// learn about a tool which can only come back empty. Most tools offer the same function every
+    /// time, which is what this returns unless a tool says otherwise.<br/><br/>
+    /// Asked for every request, after every check of ToolRegistry has passed, so it only decides
+    /// what an allowed tool offers, never whether it is allowed. For the same reason, only the
+    /// description and the parameters of what comes back are used: the function keeps the name and
+    /// the strict mode it was registered with, and the definition everything else. A tool which
+    /// throws is left out of the request.<br/><br/>
+    /// Keep the result stable while the chat stays the same, down to the order of what it lists:
+    /// the providers cache a request from its beginning, and the tools are part of that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The function to offer, or null to leave the tool out of this request.</returns>
+    public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult<ToolFunctionDefinition?>(definition.Function);
+
     public string Icon => Icons.Material.Filled.Build;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
