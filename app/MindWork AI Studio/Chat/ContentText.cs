@@ -165,7 +165,7 @@ public sealed class ContentText : IContent
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, token);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {

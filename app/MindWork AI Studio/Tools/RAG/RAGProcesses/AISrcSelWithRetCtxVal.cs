@@ -6,6 +6,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tools.RAG.RAGProcesses;
 
@@ -27,7 +28,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     public string Description => TB("This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.");
 
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, Model chatModel, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
     {
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
@@ -58,7 +59,17 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         if (PreviewFeatures.PRE_RAG_2024.IsEnabled(settings) && chatThread.DataSourceOptions.IsEnabled())
         {
             LOGGER.LogInformation("Data sources are enabled for this chat.");
-            
+
+            //
+            // When the model searches the data sources itself, AI Studio does not search them as
+            // well. The reset above already dropped whatever an earlier message retrieved:
+            //
+            if (await IsSearchedByTheModelAsync(Program.SERVICE_PROVIDER.GetService<ToolRegistry>(), settings, provider, chatModel, chatThread))
+            {
+                LOGGER.LogInformation("The model searches the data sources of this chat itself, aka Semantic Search. Skipping the RAG process.");
+                return chatThread;
+            }
+
             // Across the different code-branches, we keep track of whether it
             // makes sense to proceed with the RAG process:
             var proceedWithRAG = true;
@@ -219,4 +230,28 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// Whether the model searches the data sources of this chat itself, through the tool semantic_search.
+    /// </summary>
+    /// <remarks>
+    /// The registry decides with the same checks, the same provider settings, and the same part of
+    /// the app as the request does before it offers the tool, see BaseProvider. A wrong true would
+    /// leave the chat searching nothing at all, since the RAG process stands back and the request
+    /// offers no tool; a chat whose model cannot search itself therefore always gets false here.
+    /// </remarks>
+    /// <param name="toolRegistry">The tool registry, when there is one. Without it, the request offers no tools either.</param>
+    /// <param name="settings">The settings.</param>
+    /// <param name="provider">The LLM provider which answers.</param>
+    /// <param name="chatModel">The model which answers.</param>
+    /// <param name="chatThread">The chat thread.</param>
+    /// <returns>True when AI Studio must leave the searching to the model.</returns>
+    internal static async Task<bool> IsSearchedByTheModelAsync(ToolRegistry? toolRegistry, SettingsManager settings, IProvider provider, Model chatModel, ChatThread chatThread)
+    {
+        if (toolRegistry is null || !chatThread.MayRunTools(settings))
+            return false;
+
+        var retrievalMode = await toolRegistry.GetEffectiveRetrievalModeAsync(chatThread.DataSourceOptions, provider.CreateSettingsProvider(chatModel), chatThread.RuntimeComponent);
+        return retrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+    }
 }
