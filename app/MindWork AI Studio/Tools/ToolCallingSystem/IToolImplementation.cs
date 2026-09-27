@@ -50,9 +50,9 @@ public interface IToolImplementation
     /// <remarks>
     /// Most tools always say the same, which is what this returns unless a tool says otherwise. A
     /// tool whose rules follow one of its settings words them here instead: Read Web Page tells the
-    /// model whether it may choose web addresses itself, depending on its Brave Mode. Everything
-    /// outside a request keeps reading the registered instructions, the token count below the
-    /// message field among them, so those should describe the tool's default.<br/><br/>
+    /// model whether it may choose web addresses itself, depending on its free address choice.
+    /// Everything outside a request keeps reading the registered instructions, the token count
+    /// below the message field among them, so those should describe the tool's default.<br/><br/>
     /// Asked the way ResolveFunctionAsync is: for every request, after every check of ToolRegistry
     /// has passed, and only when the tool has a function to offer. A tool which throws is left out
     /// of the request. Keep the result stable while the chat and the settings stay the same: the

@@ -11,9 +11,10 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// <remarks>
 /// A tool may describe itself differently per request, as Semantic Search does with the data
 /// sources of a chat, or word its instructions after one of its settings, as Read Web Page does
-/// with its Brave Mode. What it must never do on the way is become another tool, or decide whether it
-/// is allowed: the name is what the model's calls are matched by, and the checks ran before it was
-/// asked. A tool which fails to answer must cost the request that tool, not the whole request.
+/// with its free address choice. What it must never do on the way is become another tool, or
+/// decide whether it is allowed: the name is what the model's calls are matched by, and the checks
+/// ran before it was asked. A tool which fails to answer must cost the request that tool, not the
+/// whole request.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]

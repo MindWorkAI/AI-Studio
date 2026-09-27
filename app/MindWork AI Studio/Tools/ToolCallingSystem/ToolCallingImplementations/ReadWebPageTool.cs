@@ -17,7 +17,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_TIMEOUT_SECONDS = 240;
     private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
-    private const BraveMode DEFAULT_BRAVE_MODE = BraveMode.OFF;
+    private const FreeAddressChoice DEFAULT_FREE_ADDRESS_CHOICE = FreeAddressChoice.OFF;
 
     /// <summary>
     /// Below how many characters the content of an HTML page is reported as partial.
@@ -32,7 +32,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const string TIMEOUT_SECONDS_SETTING = "timeoutSeconds";
     private const string MAX_CONTENT_CHARACTERS_SETTING = "maxContentCharacters";
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
-    private const string BRAVE_MODE_SETTING = "braveMode";
+    private const string FREE_ADDRESS_CHOICE_SETTING = "freeAddressChoice";
 
     private const string URL_ARGUMENT = "url";
 
@@ -51,13 +51,13 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .Optional(TIMEOUT_SECONDS_SETTING)
             .Optional(MAX_CONTENT_CHARACTERS_SETTING)
             .Optional(ALLOWED_PRIVATE_HOSTS_SETTING)
-            .OptionalChoice(BRAVE_MODE_SETTING, ToolSettingsOptionSources.BRAVE_MODE)
+            .OptionalChoice(FREE_ADDRESS_CHOICE_SETTING, ToolSettingsOptionSources.FREE_ADDRESS_CHOICE)
             .Build(),
 
-        // Those of the default Brave Mode. A request gets the ones of the mode actually set, see
-        // ResolveSystemPromptInstructionsAsync, while the token count below the message field
-        // reads these:
-        SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_BRAVE_MODE),
+        // Those of the default free address choice. A request gets the ones of the value actually
+        // set, see ResolveSystemPromptInstructionsAsync, while the token count below the message
+        // field reads these:
+        SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_FREE_ADDRESS_CHOICE),
         Function = new()
         {
             Name = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
@@ -83,7 +83,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         TIMEOUT_SECONDS_SETTING => TB("Timeout Seconds"),
         MAX_CONTENT_CHARACTERS_SETTING => TB("Maximum Content Characters"),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("Allowed Private Hosts"),
-        BRAVE_MODE_SETTING => TB("Brave Mode"),
+        FREE_ADDRESS_CHOICE_SETTING => TB("Free Address Choice"),
         _ => TB(fieldDefinition.Title),
     };
 
@@ -92,7 +92,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         TIMEOUT_SECONDS_SETTING => TB("(Optional) HTTP timeout for loading a web page in seconds."),
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
-        BRAVE_MODE_SETTING => TB("(Optional) With Brave Mode off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. With Brave Mode on, it may also choose addresses itself. Off is the default. Either way, this is an instruction to the AI, not a technical block."),
+        FREE_ADDRESS_CHOICE_SETTING => TB("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. With it on, the AI may also choose addresses itself. Off is the default. Either way, this is an instruction to the AI, not a technical block."),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -134,16 +134,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         }
 
         //
-        // The dropdown offers only valid modes, but a value from an organization's configuration
+        // The dropdown offers only valid values, but a value from an organization's configuration
         // may be misspelled. Guessing what it meant would decide on the organization's behalf
         // whether the AI may choose addresses, so it is reported instead:
         //
-        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, BRAVE_MODE_SETTING, ToolSettingsOptionSources.BRAVE_MODE, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var braveModeError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, FREE_ADDRESS_CHOICE_SETTING, ToolSettingsOptionSources.FREE_ADDRESS_CHOICE, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var freeAddressChoiceError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = braveModeError,
+                Message = freeAddressChoiceError,
             });
         }
 
@@ -154,34 +154,34 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     public async ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
     {
         var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
-        return BuildSystemPromptInstructions(ReadBraveMode(settingsValues.GetValueOrDefault(BRAVE_MODE_SETTING)));
+        return BuildSystemPromptInstructions(ReadFreeAddressChoice(settingsValues.GetValueOrDefault(FREE_ADDRESS_CHOICE_SETTING)));
     }
 
     /// <summary>
-    /// Reads the Brave Mode from its stored value.
+    /// Reads the free address choice from its stored value.
     /// </summary>
     /// <remarks>
     /// An unset value reads as the default, which is the careful one. So does anything that is not
-    /// the name of a single mode: read as a number or as several names, "1" or "ON, OFF" would turn
-    /// into ON without anybody having written it, see EnumNames. The configuration check reports
-    /// such a value anyway and keeps the tool out of use until somebody corrects it.
+    /// the name of a single value: read as a number or as several names, "1" or "ON, OFF" would
+    /// turn into ON without anybody having written it, see EnumNames. The configuration check
+    /// reports such a value anyway and keeps the tool out of use until somebody corrects it.
     /// </remarks>
-    internal static BraveMode ReadBraveMode(string? configuredValue) => EnumNames.TryParse<BraveMode>(configuredValue, out var braveMode) ? braveMode : DEFAULT_BRAVE_MODE;
+    internal static FreeAddressChoice ReadFreeAddressChoice(string? configuredValue) => EnumNames.TryParse<FreeAddressChoice>(configuredValue, out var freeAddressChoice) ? freeAddressChoice : DEFAULT_FREE_ADDRESS_CHOICE;
 
     /// <summary>
     /// Words the rules the model follows when it reads web pages.
     /// </summary>
     /// <remarks>
-    /// The modes differ in one rule only: whether the model may choose an address itself. Links in
+    /// Off and on differ in one rule only: whether the model may choose an address itself. Links in
     /// what a tool returned count as given in both, because searching and then reading what was
     /// found is what the tools are for, and Search Confluence relies on it to open its hits.
     /// Following such a link cannot carry anything out of the conversation, since the link is read
     /// word for word; putting parts of the conversation into an address could, which is why that
-    /// is ruled out in both modes.
+    /// is ruled out in both cases.
     /// </remarks>
-    internal static string BuildSystemPromptInstructions(BraveMode braveMode)
+    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice)
     {
-        var urlRules = braveMode is BraveMode.ON
+        var urlRules = freeAddressChoice is FreeAddressChoice.ON
             ? "- Read a URL from this conversation, or choose one yourself when you know where the information is."
             : """
               - Only read a URL which appears word for word in this conversation: in the system prompt, in a message of the user including the documents and data source content it carries, or in the result of a tool, such as a search hit or a link on a page you read before.

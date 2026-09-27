@@ -58,15 +58,15 @@ public static class ToolSettingsOptionSources
     public const string WEB_SEARCH_BACKEND_STRATEGY = "web_search_backend_strategy";
 
     /// <summary>
-    /// The modes of Read Web Page's Brave Mode.
+    /// Whether Read Web Page may also open web addresses the AI chose itself.
     /// </summary>
     /// <remarks>
-    /// The names say what each mode does instead of a bare "Off" and "On": whether a brave mode
-    /// that is on is the careful or the daring choice cannot be told from its name alone.
+    /// The names say what each value does instead of a bare "Off" and "On", so the dropdown
+    /// explains itself without its description.
     /// </remarks>
-    public const string BRAVE_MODE = "brave_mode";
+    public const string FREE_ADDRESS_CHOICE = "free_address_choice";
 
-    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or BRAVE_MODE;
+    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE;
 
     /// <summary>
     /// Resolves one option source to its current values and names.
@@ -97,10 +97,10 @@ public static class ToolSettingsOptionSources
             new(nameof(WebSearchBackendStrategy.SPECIFIC), TB("Only the preferred one")),
         ],
 
-        BRAVE_MODE =>
+        FREE_ADDRESS_CHOICE =>
         [
-            new(nameof(BraveMode.OFF), TB("Off: only web addresses from the chat or tools")),
-            new(nameof(BraveMode.ON), TB("On: the AI may also choose web addresses itself")),
+            new(nameof(FreeAddressChoice.OFF), TB("Off: only web addresses from the chat or tools")),
+            new(nameof(FreeAddressChoice.ON), TB("On: the AI may also choose web addresses itself")),
         ],
 
         _ => [],

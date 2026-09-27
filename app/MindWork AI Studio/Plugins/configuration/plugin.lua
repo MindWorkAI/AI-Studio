@@ -837,7 +837,7 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds.
 --   maxContentCharacters  Content-character limit.
---   braveMode             Whether the AI may read web addresses it chose itself. Allowed values are:
+--   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
 --                           OFF -> the AI reads only addresses which appear in the chat, such as in
 --                                  a message, an attached document, or a data source, or which a
 --                                  tool returned, such as a search hit. This is the default.
@@ -867,7 +867,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
---     ["read_web_page.braveMode"] = "OFF",
+--     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
