@@ -60,7 +60,7 @@
                         <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Dense="@true"/>
                         @if (this.areDataSourcesEnabled)
                         {
-                            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it.")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers.")" ValueChanged="@this.SemanticSearchChanged" Dense="@true"/>
+                            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Dense="@true"/>
                             @if (this.IsSemanticSearchFallingBack)
                             {
                                 <MudJustifiedText Typo="Typo.body2" Color="Color.Info" Class="mb-2">
@@ -206,12 +206,12 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
         <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesDisabledLocked())"/>
         @if (this.areDataSourcesEnabled)
         {
-            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it.")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers.")" ValueChanged="@this.SemanticSearchChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesRetrievalModeLocked())"/>
+            <MudTextSwitch Label="@T("Semantic Search")" Value="@this.IsSemanticSearchPreferred" LabelOn="@T("Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).")" LabelOff="@T("No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).")" ValueChanged="@this.SemanticSearchChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesRetrievalModeLocked())"/>
             @* No provider is known here, so this says in general what the chat itself tells about its model: *@
             @if (this.IsSemanticSearchPreferred)
             {
                 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-                    @T("When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead.")
+                    @T("When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.")
                 </MudJustifiedText>
             }
 
@@ -220,7 +220,7 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             @* Semantic Search may fall back to searching with every message, so the validation is kept, marked as belonging to that way only: *@
             <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
                 <MudJustifiedText Typo="Typo.body2" Class="mb-2">
-                    @T("Only used when AI Studio searches your data sources with every message:")
+                    @T("Only used with classic RAG, which searches your data sources with every message:")
                 </MudJustifiedText>
                 <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@(this.ReadOnly || this.IsPreselectedDataSourcesAutomaticValidationLocked())"/>
             </MudPaper>

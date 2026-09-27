@@ -367,11 +367,11 @@ public partial class DataSourceSelection : MSGComponentBase
 
     private string GetSemanticSearchFallbackMessage() => this.effectiveRetrievalMode.FallbackReason switch
     {
-        ToolOfferBlockReason.TOOLS_SWITCHED_OFF => T("Your organization has switched tools off, so AI Studio searches your data sources with every message instead."),
-        ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => T("The selected model cannot use tools, so AI Studio searches your data sources with every message instead."),
-        ToolOfferBlockReason.TOOL_SWITCHED_OFF => T("Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead."),
-        ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW => T("The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead."),
-        _ => T("Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead."),
+        ToolOfferBlockReason.TOOLS_SWITCHED_OFF => T("Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => T("The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.TOOL_SWITCHED_OFF => T("Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW => T("The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message."),
+        _ => T("Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message."),
     };
 
     private async Task ValidationModeChanged(bool state)
