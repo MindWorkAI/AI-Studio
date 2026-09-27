@@ -321,8 +321,30 @@ public record ChatTemplate(
             DisableDataSources = disableDataSources,
             AutomaticDataSourceSelection = automaticSelection,
             AutomaticValidation = automaticValidation,
+            RetrievalMode = ParseRetrievalMode(idx, optionsTable),
             PreselectedDataSourceIds = ParsePreselectedDataSourceIds(idx, optionsTable),
         };
+    }
+
+    /// <remarks>
+    /// Like the other options, a template which leaves this out does not take it from the chat
+    /// defaults: it gets semantic search, the default everywhere. Only a name counts, since
+    /// parsing alone would also accept a number, or several names at once.
+    /// </remarks>
+    private static DataSourceRetrievalMode ParseRetrievalMode(int idx, LuaTable optionsTable)
+    {
+        if (!optionsTable.TryGetValue("RetrievalMode", out var retrievalModeValue))
+            return DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+        if (retrievalModeValue.TryRead<string>(out var retrievalModeText))
+        {
+            var retrievalModeName = Enum.GetNames<DataSourceRetrievalMode>().FirstOrDefault(name => name.Equals(retrievalModeText.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (retrievalModeName is not null)
+                return Enum.Parse<DataSourceRetrievalMode>(retrievalModeName);
+        }
+
+        LOGGER.LogWarning("The RetrievalMode of chat template {IdxChatTemplate} is not one of {RetrievalModes}. The template uses semantic search instead.", idx, string.Join(", ", Enum.GetNames<DataSourceRetrievalMode>()));
+        return DataSourceRetrievalMode.SEMANTIC_SEARCH;
     }
 
     /// <remarks>
@@ -603,6 +625,7 @@ public record ChatTemplate(
         builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
         builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
         builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
 
         if (options.PreselectedDataSourceIds.Count == 0)
             builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");

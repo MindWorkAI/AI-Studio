@@ -467,6 +467,20 @@ CONFIG["SETTINGS"] = {}
 -- Controls whether data sources are off by default:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
 
+-- Controls how the data sources are searched. Allowed values are:
+--   SEMANTIC_SEARCH -> the AI searches the data sources itself, through the tool
+--                      semantic_search, whenever a question calls for it. This is the default.
+--   EVERY_MESSAGE   -> AI Studio searches the data sources with every message, before the AI
+--                      answers.
+-- SEMANTIC_SEARCH works only where semantic_search can be offered: the model has to be able to
+-- call tools, neither the tools nor semantic_search may be switched off, and the provider has
+-- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
+-- searches with every message instead.
+-- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- then lets the AI itself choose among all data sources it may use, and
+-- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
+
 -- Controls whether AI Studio asks an agent to choose data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
@@ -495,6 +509,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
@@ -1090,11 +1105,20 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --
 --     -- Optional: the data source options a chat with this template starts with.
 --     -- Every field inside is optional as well. DisableDataSources defaults to false here,
---     -- because writing this table at all says that the template wants data sources; the
---     -- other three default to false and an empty list.
+--     -- because writing this table at all says that the template wants data sources;
+--     -- RetrievalMode defaults to SEMANTIC_SEARCH, and the other three default to false and
+--     -- an empty list.
 --     ["DataSourceOptions"] = {
 --         -- Set to true to start the chat with data sources switched off.
 --         ["DisableDataSources"] = false,
+--
+--         -- How the data sources are searched, with the same values and the same fallback
+--         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
+--         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
+--         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
+--         -- sources it may use, and AutomaticValidation has no effect.
+--         ["RetrievalMode"] = "EVERY_MESSAGE",
 --
 --         -- Let an agent choose the fitting data sources for each question. When true,
 --         -- PreselectedDataSourceIds is not used.

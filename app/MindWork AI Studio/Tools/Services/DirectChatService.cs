@@ -194,6 +194,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
                 DisableDataSources = false,
                 AutomaticDataSourceSelection = false,
                 AutomaticValidation = standardOptions.AutomaticValidation,
+                RetrievalMode = standardOptions.RetrievalMode,
                 PreselectedDataSourceIds = launcherDataSourceIds.Select(dataSourceId => dataSourceId.ToString()).ToList(),
             };
         }
