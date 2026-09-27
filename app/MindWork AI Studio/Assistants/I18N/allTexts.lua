@@ -3940,8 +3940,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Loc
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
 
+-- The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1196965712"] = "The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead."
+
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Yes, let the AI validate & filter the retrieved data."
+
+-- Yes, the AI searches your data sources itself, whenever a question calls for it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1416500885"] = "Yes, the AI searches your data sources itself, whenever a question calls for it."
 
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Data Source Selection"
@@ -3967,11 +3973,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Selec
 -- Manage your data sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2149927097"] = "Manage your data sources"
 
+-- Your organization has switched tools off, so AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2709416353"] = "Your organization has switched tools off, so AI Studio searches your data sources with every message instead."
+
 -- Select data
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T274155039"] = "Select data"
 
+-- Whenever a question calls for it, the AI picks the fitting ones among these data sources itself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2854302511"] = "Whenever a question calls for it, the AI picks the fitting ones among these data sources itself."
+
 -- Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2975936221"] = "Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable."
+
+-- Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2997279568"] = "Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead."
 
 -- Read more about ERI
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3095532189"] = "Read more about ERI"
@@ -3982,11 +3997,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3100256862"] = "AI-
 -- No, I don't want to use data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3135725655"] = "No, I don't want to use data sources."
 
+-- No, AI Studio searches your data sources with every message, before the AI answers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3325754790"] = "No, AI Studio searches your data sources with every message, before the AI answers."
+
 -- No, I manually decide which data source to use.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3440789294"] = "No, I manually decide which data source to use."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3448155331"] = "Close"
+
+-- Only used when AI Studio searches your data sources with every message:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3459580465"] = "Only used when AI Studio searches your data sources with every message:"
 
 -- The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source."
@@ -3997,8 +4018,20 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3751463241"] = "No,
 -- Are data sources enabled?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T396683085"] = "Are data sources enabled?"
 
+-- Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T4236543035"] = "Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead."
+
+-- When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T574485085"] = "When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead."
+
+-- The selected model cannot use tools, so AI Studio searches your data sources with every message instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T605784848"] = "The selected model cannot use tools, so AI Studio searches your data sources with every message instead."
+
 -- Manage Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Manage Data Sources"
+
+-- Semantic Search
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T853993291"] = "Semantic Search"
 
 -- Available Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Available Data Sources"
@@ -11962,6 +11995,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T358303
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T1071345316"] = "Chat attachment"
 
+-- Data source description
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T1553588912"] = "Data source description"
+
 -- Web content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T2626468388"] = "Web content"
 
@@ -12205,6 +12241,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T14
 -- The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T1842169943"] = "The data source '{0}' was left out of the answer: its embedding provider is not available. Please check it in the settings."
 
+-- The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector to search with.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T2103139465"] = "The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector to search with."
+
 -- Chunk {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T2544251224"] = "Chunk {0}"
 
@@ -12213,9 +12252,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T29
 
 -- The data source '{0}' was left out of the answer because your message is too long to search with.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T2975290052"] = "The data source '{0}' was left out of the answer because your message is too long to search with."
-
--- The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector for your message.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T3469074321"] = "The data source '{0}' was left out of the answer: its embedding provider '{1}' did not return a vector for your message."
 
 -- The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCELOCALRETRIEVALSERVICE::T4022014739"] = "The data source '{0}' was left out of the answer: it is being indexed again and cannot be searched until that is finished."
@@ -12660,6 +12696,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- (Optional) Global truncation limit for extracted characters returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T900659180"] = "(Optional) Global truncation limit for extracted characters returned to the model."
+
+-- Lets the AI search the data sources of your chat itself, whenever a question calls for it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEMANTICSEARCH::SEMANTICSEARCHTOOL::T1093293142"] = "Lets the AI search the data sources of your chat itself, whenever a question calls for it."
+
+-- None of the data sources of this chat can be searched right now.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEMANTICSEARCH::SEMANTICSEARCHTOOL::T2761160878"] = "None of the data sources of this chat can be searched right now."
+
+-- Semantic Search
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEMANTICSEARCH::SEMANTICSEARCHTOOL::T853993291"] = "Semantic Search"
 
 -- SearXNG instance
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::WEBSEARCH::SEARXNG::SEARXNGSEARCHBACKEND::T1390012964"] = "SearXNG instance"
