@@ -29,6 +29,8 @@ public static class ModelCorpus
     [
         new(OPEN_AI, "gpt-6-astra", NAMED_BY_A_RULE),
         new(OPEN_AI, "gpt-6-astra-mini", NAMED_BY_A_RULE),
+        new(OPEN_AI, "gpt-6-sol", NAMED_BY_NO_RULE),
+        new(OPEN_AI, "gpt-6-luna", NAMED_BY_NO_RULE),
         new(OPEN_AI, "gpt-5.6", NAMED_BY_A_RULE),
         new(OPEN_AI, "gpt-5.5", ON_THE_MANUAL_TEST_LIST),
         new(OPEN_AI, "gpt-5.4", NAMED_BY_A_RULE),
