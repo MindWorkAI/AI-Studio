@@ -3942,14 +3942,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Lok
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Ja, die KI soll entscheiden, welche Datenquellen benötigt werden."
 
--- The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1196965712"] = "Der ausgewählte Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Daher durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
+-- The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1071901367"] = "Der ausgewählte Anbieter ist für die semantische Suche nicht vertrauenswürdig genug. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
+
+-- Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1087321364"] = "Ja, die KI durchsucht Ihre Datenquellen selbst, wann immer eine Frage es erfordert (semantische Suche)."
 
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Ja, die KI soll die abgerufenen Daten überprüfen und filtern."
-
--- Yes, the AI searches your data sources itself, whenever a question calls for it.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1416500885"] = "Ja, die KI durchsucht Ihre Datenquellen selbst, wann immer eine Frage es erfordert."
 
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Datenauswahl"
@@ -3959,6 +3959,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T168406579"] = "KI-a
 
 -- AI-based data validation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "KI-gestützte Datenvalidierung"
+
+-- The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1848447607"] = "Das ausgewählte Modell kann keine Werkzeuge verwenden. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1852534051"] = "Diese Datenquellen sind vorausgewählt, können derzeit jedoch nicht verwendet werden – entweder aufgrund von Datenschutz- oder Vertrauensanforderungen oder weil sie nicht verfügbar sind:"
@@ -3975,8 +3978,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Wähl
 -- Manage your data sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2149927097"] = "Ihre Datenquellen verwalten"
 
--- Your organization has switched tools off, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2709416353"] = "Ihre Organisation hat die Werkzeuge deaktiviert. Daher durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
+-- When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2382076848"] = "Wenn das Modell eines Chats keine Werkzeuge verwenden kann, nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- Select data
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T274155039"] = "Daten auswählen"
@@ -3987,8 +3990,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2854302511"] = "Wan
 -- Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2975936221"] = "Ihre Datenquellen können aufgrund von Datenschutzbestimmungen oder Anforderungen an das Vertrauensniveau nicht mit den ausgewählten Anbietern verwendet werden oder sind derzeit nicht verfügbar."
 
--- Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2997279568"] = "Ihre Organisation hat die semantische Suche deaktiviert. Daher durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
+-- Only used with classic RAG, which searches your data sources with every message:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3004548232"] = "Gilt nur für das klassische RAG, das Ihre Datenquellen bei jeder Nachricht durchsucht:"
 
 -- Read more about ERI
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3095532189"] = "Mehr über ERI erfahren"
@@ -3999,35 +4002,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3100256862"] = "KI-
 -- No, I don't want to use data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3135725655"] = "Nein, ich möchte keine Datenquellen verwenden."
 
--- No, AI Studio searches your data sources with every message, before the AI answers.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3325754790"] = "Nein, AI Studio durchsucht Ihre Datenquellen bei jeder Nachricht, bevor die KI antwortet."
-
 -- No, I manually decide which data source to use.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3440789294"] = "Nein, ich wähle die Datenquelle manuell aus."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3448155331"] = "Schließen"
 
--- Only used when AI Studio searches your data sources with every message:
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3459580465"] = "Gilt nur, wenn AI Studio Ihre Datenquellen bei jeder Nachricht durchsucht:"
-
 -- The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "Die KI bewertet jede ihrer Eingaben, um zu bestimmen, ob und welche Datenquellen notwendig sind. Derzeit hat die KI keine Quelle ausgewählt."
+
+-- No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3622679053"] = "Nein, AI Studio durchsucht Ihre Datenquellen bei jeder Nachricht, bevor die KI antwortet (klassisches RAG)."
+
+-- Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3710026542"] = "Die semantische Suche kann hier nicht verwendet werden. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- No, use all data retrieved from the data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3751463241"] = "Nein, ich möchte alle Daten verwenden, die aus den Datenquellen abgerufen wurden."
 
+-- Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T39141388"] = "Ihre Organisation hat die Werkzeuge deaktiviert. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
+
 -- Are data sources enabled?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T396683085"] = "Sind Datenquellen aktiviert?"
 
--- Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T4236543035"] = "Die semantische Suche kann hier nicht verwendet werden. Daher durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
-
--- When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T574485085"] = "Wenn das Modell eines Chats keine Werkzeuge verwenden kann, durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
-
--- The selected model cannot use tools, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T605784848"] = "Das ausgewählte Modell kann keine Werkzeuge verwenden. Daher durchsucht AI Studio Ihre Datenquellen bei jeder Nachricht."
+-- Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T652590775"] = "Ihre Organisation hat die semantische Suche deaktiviert. Daher nutzt AI Studio das klassische RAG und durchsucht Ihre Datenquellen bei jeder Nachricht."
 
 -- Manage Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Datenquellen verwalten"
@@ -4319,6 +4319,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1166628228"] = "Bishe
 
 -- No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1220991024"] = "Kein LLM-Anbieter erfüllt die Vertrauensanforderungen. Bitte konfigurieren Sie einen geeigneten Anbieter in den App-Einstellungen."
+
+-- Tool calling possible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1454599994"] = "Werkzeugaufrufe möglich"
 
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audioeingabe möglich"

@@ -3942,14 +3942,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Loc
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
 
--- The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1196965712"] = "The selected provider is not trusted enough for Semantic Search, so AI Studio searches your data sources with every message instead."
+-- The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1071901367"] = "The selected provider is not trusted enough for Semantic Search, so AI Studio uses classic RAG instead and searches your data sources with every message."
+
+-- Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1087321364"] = "Yes, the AI searches your data sources itself, whenever a question calls for it (Semantic Search)."
 
 -- Yes, let the AI validate & filter the retrieved data.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1309929755"] = "Yes, let the AI validate & filter the retrieved data."
-
--- Yes, the AI searches your data sources itself, whenever a question calls for it.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1416500885"] = "Yes, the AI searches your data sources itself, whenever a question calls for it."
 
 -- Data Source Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T15302104"] = "Data Source Selection"
@@ -3959,6 +3959,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T168406579"] = "AI-S
 
 -- AI-based data validation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1744745490"] = "AI-based data validation"
+
+-- The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1848447607"] = "The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."
 
 -- These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1852534051"] = "These data sources are preselected, but cannot be used right now, either due to data privacy or confidence-level requirements, or because they are unavailable:"
@@ -3975,8 +3978,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T21181525"] = "Selec
 -- Manage your data sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2149927097"] = "Manage your data sources"
 
--- Your organization has switched tools off, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2709416353"] = "Your organization has switched tools off, so AI Studio searches your data sources with every message instead."
+-- When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2382076848"] = "When the model of a chat cannot use tools, AI Studio uses classic RAG instead and searches your data sources with every message."
 
 -- Select data
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T274155039"] = "Select data"
@@ -3987,8 +3990,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2854302511"] = "Whe
 -- Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2975936221"] = "Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable."
 
--- Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T2997279568"] = "Your organization has switched Semantic Search off, so AI Studio searches your data sources with every message instead."
+-- Only used with classic RAG, which searches your data sources with every message:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3004548232"] = "Only used with classic RAG, which searches your data sources with every message:"
 
 -- Read more about ERI
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3095532189"] = "Read more about ERI"
@@ -3999,35 +4002,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3100256862"] = "AI-
 -- No, I don't want to use data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3135725655"] = "No, I don't want to use data sources."
 
--- No, AI Studio searches your data sources with every message, before the AI answers.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3325754790"] = "No, AI Studio searches your data sources with every message, before the AI answers."
-
 -- No, I manually decide which data source to use.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3440789294"] = "No, I manually decide which data source to use."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3448155331"] = "Close"
 
--- Only used when AI Studio searches your data sources with every message:
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3459580465"] = "Only used when AI Studio searches your data sources with every message:"
-
 -- The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3574254516"] = "The AI evaluates each of your inputs to determine whether and which data sources are necessary. Currently, the AI has not selected any source."
+
+-- No, AI Studio searches your data sources with every message, before the AI answers (classic RAG).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3622679053"] = "No, AI Studio searches your data sources with every message, before the AI answers (classic RAG)."
+
+-- Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3710026542"] = "Semantic Search cannot be used here, so AI Studio uses classic RAG instead and searches your data sources with every message."
 
 -- No, use all data retrieved from the data sources.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T3751463241"] = "No, use all data retrieved from the data sources."
 
+-- Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T39141388"] = "Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."
+
 -- Are data sources enabled?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T396683085"] = "Are data sources enabled?"
 
--- Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T4236543035"] = "Semantic Search cannot be used here, so AI Studio searches your data sources with every message instead."
-
--- When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T574485085"] = "When the model of a chat cannot use tools, AI Studio searches your data sources with every message instead."
-
--- The selected model cannot use tools, so AI Studio searches your data sources with every message instead.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T605784848"] = "The selected model cannot use tools, so AI Studio searches your data sources with every message instead."
+-- Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T652590775"] = "Your organization has switched Semantic Search off, so AI Studio uses classic RAG instead and searches your data sources with every message."
 
 -- Manage Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Manage Data Sources"
@@ -4319,6 +4319,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1166628228"] = "No LL
 
 -- No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1220991024"] = "No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings."
+
+-- Tool calling possible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1454599994"] = "Tool calling possible"
 
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audio input possible"
