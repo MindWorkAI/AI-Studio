@@ -43,7 +43,8 @@ public sealed class Gpt6Family : ModelFamily
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API | CHAT_COMPLETION_API)
             .Reasoning(ReasoningSupport.ON_BY_DEFAULT)
-            .ContextWindow(1_050_000);
+            .ContextWindow(1_050_000)
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         builder.Rule("gpt-6-astra").AsPrefix().InheritsFrom("gpt-6")
             .Reasoning(ReasoningSupport.ALWAYS);

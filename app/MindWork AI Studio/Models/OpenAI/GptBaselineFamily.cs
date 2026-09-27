@@ -40,5 +40,6 @@ public sealed class GptBaselineFamily : ModelFamily
         builder.Rule("gpt").AsSegment().OnlyOn(LLMProviders.OPEN_AI)
             .Capabilities(TEXT_INPUT | MULTIPLE_IMAGE_INPUT | TEXT_OUTPUT | FUNCTION_CALLING | WEB_SEARCH)
             .Apis(RESPONSES_API)
-            .Reasoning(ReasoningSupport.ON_BY_DEFAULT);
+            .Reasoning(ReasoningSupport.ON_BY_DEFAULT)
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 }

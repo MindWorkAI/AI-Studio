@@ -55,6 +55,7 @@ public static class ModelCorpus
         new(OPEN_AI, "o1", NAMED_BY_A_RULE),
         new(OPEN_AI, "o1-pro", NAMED_BY_A_RULE),
         new(OPEN_AI, "o1-mini", NAMED_BY_A_RULE),
+        new(OPEN_AI, "o1-preview", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3-pro", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3-mini", NAMED_BY_A_RULE),
