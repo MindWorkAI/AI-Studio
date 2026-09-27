@@ -3,6 +3,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -62,7 +63,10 @@ public partial class DataSourceSelection : MSGComponentBase
 
     [Inject]
     private DataSourceService DataSourceService { get; init; } = null!;
-    
+
+    [Inject]
+    private ToolRegistry ToolRegistry { get; init; } = null!;
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -246,7 +250,12 @@ public partial class DataSourceSelection : MSGComponentBase
         // that field holds what was usable the last time we looked, so a source filtered out once
         // would never come back, while the RAG process keeps reading it from the preselection.
         //
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, DataSourceRetrievalMode.EVERY_MESSAGE, this.GetDataSourcesFromConfiguredIds());
+        // How the chat searches decides whether the agents of the RAG process see the data, and
+        // with that which data sources the provider of the chat may use at all. This component
+        // only ever selects for a chat:
+        //
+        var retrievalMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(this.DataSourceOptions, this.LLMProvider, Tools.Components.CHAT);
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, retrievalMode.Mode, this.GetDataSourcesFromConfiguredIds());
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 

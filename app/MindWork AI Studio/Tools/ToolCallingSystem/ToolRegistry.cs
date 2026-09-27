@@ -2,6 +2,7 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -460,6 +461,36 @@ public sealed class ToolRegistry
 
         var providerConfidence = provider.UsedLLMProvider.GetConfidence(this.settingsManager).Level;
         return (await this.CheckToolAsync(definition, providerConfidence)).BlockReason;
+    }
+
+    /// <summary>
+    /// How the data sources of a chat are actually searched: the way the user wants, or with every
+    /// message when Semantic Search cannot be offered.
+    /// </summary>
+    /// <remarks>
+    /// The one place which decides between the two. The RAG process, the data source selection,
+    /// and the check of what a launched chat may search all ask here, so that none of them counts
+    /// the agents of the RAG process in or out while another does the opposite. The preference of
+    /// the user comes first; only for Semantic Search are the questions of GetOfferBlockReasonAsync
+    /// asked, and their answer comes along so that the user can learn why the chat searches with
+    /// every message instead.<br/><br/>
+    /// Whether Semantic Search has data sources to offer right now is no question here. Without
+    /// them, the RAG process would find nothing to search either: it asks the same checks, and more
+    /// providers have to pass them.
+    /// </remarks>
+    /// <param name="options">The data source options of the chat.</param>
+    /// <param name="provider">The provider the chat runs with.</param>
+    /// <param name="component">Where the chat runs.</param>
+    /// <returns>How the data sources are searched, and why not as the user wants, if so.</returns>
+    public async Task<EffectiveRetrievalMode> GetEffectiveRetrievalModeAsync(DataSourceOptions options, AIStudio.Settings.Provider provider, Components component)
+    {
+        if (options.RetrievalMode is not DataSourceRetrievalMode.SEMANTIC_SEARCH)
+            return new(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.NONE);
+
+        var blockReason = await this.GetOfferBlockReasonAsync(ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID, provider, component);
+        return blockReason is ToolOfferBlockReason.NONE
+            ? new(DataSourceRetrievalMode.SEMANTIC_SEARCH, ToolOfferBlockReason.NONE)
+            : new(DataSourceRetrievalMode.EVERY_MESSAGE, blockReason);
     }
 
     /// <summary>

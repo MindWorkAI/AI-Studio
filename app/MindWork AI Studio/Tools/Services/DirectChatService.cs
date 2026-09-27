@@ -273,9 +273,11 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             //
             // The options the launched chat will run under are what this check runs against: they
             // decide which agent providers take part, and an agent with too little confidence makes
-            // a data source unavailable.
+            // a data source unavailable. Agents take part only when the chat searches with every
+            // message, which the chat decides the same way:
             //
-            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, chosenOptions, DataSourceRetrievalMode.EVERY_MESSAGE, requestedDataSources);
+            var retrievalMode = await toolRegistry.GetEffectiveRetrievalModeAsync(chosenOptions, provider, Components.CHAT);
+            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, chosenOptions, retrievalMode.Mode, requestedDataSources);
         }
         catch (Exception exception)
         {
