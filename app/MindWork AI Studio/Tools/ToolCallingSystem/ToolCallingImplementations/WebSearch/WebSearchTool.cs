@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
@@ -681,10 +682,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static WebSearchBackendStrategy ReadBackendStrategy(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredStrategy = settingsValues.GetValueOrDefault(BACKEND_STRATEGY_SETTING);
-        if (string.IsNullOrWhiteSpace(configuredStrategy))
-            return DEFAULT_BACKEND_STRATEGY;
-
-        return Enum.TryParse<WebSearchBackendStrategy>(configuredStrategy, true, out var strategy) ? strategy : DEFAULT_BACKEND_STRATEGY;
+        return EnumNames.TryParse<WebSearchBackendStrategy>(configuredStrategy, out var strategy) ? strategy : DEFAULT_BACKEND_STRATEGY;
     }
 
     /// <summary>
@@ -698,10 +696,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static WebSearchBackend? ReadPrimaryBackend(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredBackend = settingsValues.GetValueOrDefault(PRIMARY_BACKEND_SETTING);
-        if (string.IsNullOrWhiteSpace(configuredBackend))
-            return null;
-
-        return Enum.TryParse<WebSearchBackend>(configuredBackend, true, out var backend) ? backend : null;
+        return EnumNames.TryParse<WebSearchBackend>(configuredBackend, out var backend) ? backend : null;
     }
 
     private static JsonObject BuildResultJson(WebSearchPageResult result, WebPageModelContent sanitizedContent)
@@ -868,9 +863,6 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     private static SafeSearchPolicy? ReadSafeSearchPolicy(IReadOnlyDictionary<string, string> settingsValues)
     {
         var configuredPolicy = settingsValues.GetValueOrDefault(DEFAULT_SAFE_SEARCH_SETTING);
-        if (string.IsNullOrWhiteSpace(configuredPolicy))
-            return null;
-
-        return Enum.TryParse<SafeSearchPolicy>(configuredPolicy, true, out var policy) ? policy : null;
+        return EnumNames.TryParse<SafeSearchPolicy>(configuredPolicy, out var policy) ? policy : null;
     }
 }
