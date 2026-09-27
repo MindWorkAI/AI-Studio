@@ -340,16 +340,11 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         for (var index = 0; index < pages.Length; index++)
             dataSourceResults.Add(DescribeResult(request.DataSources[index], pages[index], resultCounts[index], leftOutCounts[index]));
 
-        var contributingDataSources = request.DataSources.Where((_, index) => resultCounts[index] > 0).ToList();
         var leftOutCount = leftOutCounts.Sum();
         logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, request.Page, passageCount, leftOutCount);
 
-        //
-        // Only the data sources whose passages reached the model raise what the chat requires from
-        // now on: a search which found nothing brought nothing into the chat. Finding nothing is no
-        // error either; the model reads it from the result counts.
-        //
-        var requiresSelfHosted = contributingDataSources.OfType<IExternalDataSource>().Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
+        // Finding nothing is no error; the model reads it from the result counts:
+        var requirements = GetRequirements(request.DataSources, resultCounts);
         return new ToolExecutionResult
         {
             JsonContent = new JsonObject
@@ -360,11 +355,31 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                 ["text_content"] = textContent.ToString(),
             },
             Sources = sources,
-            RequiredProviderConfidence = contributingDataSources.GetRequiredConfidenceLevel(),
-            RequiredDataSecurity = contributingDataSources.Count == 0
-                ? DataSourceSecurity.NOT_SPECIFIED
-                : requiresSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY,
+            RequiredProviderConfidence = requirements.Confidence,
+            RequiredDataSecurity = requirements.Security,
         };
+    }
+
+    /// <summary>
+    /// What the chat has to require from now on, because of the passages which reached the model.
+    /// </summary>
+    /// <remarks>
+    /// Only the data sources whose passages reached the model count: a search which found nothing
+    /// brought nothing into the chat, and a passage left out for the budget never reached it. A
+    /// data source which may only be used with self-hosted providers restricts the chat to those,
+    /// the same way as with the classic RAG process, cf. AISrcSelWithRetCtxVal.
+    /// </remarks>
+    /// <param name="searchedDataSources">The data sources searched.</param>
+    /// <param name="resultCounts">How many passages of each data source reached the model, in the same order.</param>
+    /// <returns>The provider confidence and the data security the chat requires from now on; NOT_SPECIFIED leaves the latter as it was.</returns>
+    internal static (ConfidenceLevel Confidence, DataSourceSecurity Security) GetRequirements(IReadOnlyList<IDataSource> searchedDataSources, IReadOnlyList<int> resultCounts)
+    {
+        var contributingDataSources = searchedDataSources.Where((_, index) => resultCounts[index] > 0).ToList();
+        if (contributingDataSources.Count == 0)
+            return (ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED);
+
+        var requiresSelfHosted = contributingDataSources.OfType<IExternalDataSource>().Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
+        return (contributingDataSources.GetRequiredConfidenceLevel(), requiresSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY);
     }
 
     /// <summary>
@@ -442,7 +457,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     /// Only AI Studio's own values: the ID and the name as configured, counts, and sentences of its
     /// own. Whatever a data source returned is in the passages, which went through the filter.
     /// </remarks>
-    private static JsonObject DescribeResult(IDataSource dataSource, RetrievalPage page, int resultCount, int leftOutCount)
+    internal static JsonObject DescribeResult(IDataSource dataSource, RetrievalPage page, int resultCount, int leftOutCount)
     {
         var issues = new JsonArray();
         foreach (var gap in page.Gaps)
