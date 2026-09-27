@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
@@ -16,6 +17,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_TIMEOUT_SECONDS = 240;
     private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
+    private const BraveMode DEFAULT_BRAVE_MODE = BraveMode.OFF;
 
     /// <summary>
     /// Below how many characters the content of an HTML page is reported as partial.
@@ -31,8 +33,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const string MAX_CONTENT_CHARACTERS_SETTING = "maxContentCharacters";
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
     private const string BRAVE_MODE_SETTING = "braveMode";
-    private const string BRAVE_MODE_OFF = "OFF";
-    private const string BRAVE_MODE_ON = "ON";
 
     private const string URL_ARGUMENT = "url";
 
@@ -51,11 +51,11 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .Optional(TIMEOUT_SECONDS_SETTING)
             .Optional(MAX_CONTENT_CHARACTERS_SETTING)
             .Optional(ALLOWED_PRIVATE_HOSTS_SETTING)
-            .OptionalEnumWithDefault(BRAVE_MODE_SETTING, BRAVE_MODE_OFF, BRAVE_MODE_OFF, BRAVE_MODE_ON)
+            .OptionalChoice(BRAVE_MODE_SETTING, ToolSettingsOptionSources.BRAVE_MODE)
             .Build(),
 
-        SystemPromptInstructions = BuildSystemPromptInstructions(BRAVE_MODE_OFF),
-        SystemPromptInstructionsFactory = () => BuildSystemPromptInstructions(toolSettingsService.GetEffectiveNonSecretSetting(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, BRAVE_MODE_SETTING)),
+        SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_BRAVE_MODE),
+        SystemPromptInstructionsFactory = () => BuildSystemPromptInstructions(ReadBraveMode(toolSettingsService.GetEffectiveNonSecretSetting(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, BRAVE_MODE_SETTING))),
         Function = new()
         {
             Name = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
@@ -90,7 +90,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         TIMEOUT_SECONDS_SETTING => TB("(Optional) HTTP timeout for loading a web page in seconds."),
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
-        BRAVE_MODE_SETTING => TB("Off: the model is instructed to read only URLs supplied in the system prompt, your message (including loaded documents and retrieved data), or tool results. On: the model may choose a URL itself. This instruction guides the model; it does not technically block URL requests."),
+        BRAVE_MODE_SETTING => TB("(Optional) With Brave Mode off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. With Brave Mode on, it may also choose addresses itself. Off is the default. Either way, this is an instruction to the AI, not a technical block."),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -98,21 +98,11 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         TIMEOUT_SECONDS_SETTING => DEFAULT_TIMEOUT_SECONDS.ToString(),
         MAX_CONTENT_CHARACTERS_SETTING => DEFAULT_MAX_CONTENT_CHARACTERS.ToString(),
-        BRAVE_MODE_SETTING => BRAVE_MODE_OFF,
         _ => null,
     };
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default)
     {
-        if (settingsValues.TryGetValue(BRAVE_MODE_SETTING, out var braveMode) && !string.IsNullOrWhiteSpace(braveMode) && braveMode is not (BRAVE_MODE_OFF or BRAVE_MODE_ON))
-        {
-            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
-            {
-                IsConfigured = false,
-                Message = TB("Brave Mode must be Off or On."),
-            });
-        }
-
         var positiveIntegerErrorFormat = TB("The setting '{0}' must be a positive integer.");
         if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, TIMEOUT_SECONDS_SETTING, positiveIntegerErrorFormat, out _, out var timeoutError))
         {
@@ -141,12 +131,37 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             });
         }
 
+        //
+        // The dropdown offers only valid modes, but a value from an organization's configuration
+        // may be misspelled. Guessing what it meant would decide on the organization's behalf
+        // whether the AI may choose addresses, so it is reported instead:
+        //
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, BRAVE_MODE_SETTING, ToolSettingsOptionSources.BRAVE_MODE, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var braveModeError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = braveModeError,
+            });
+        }
+
         return Task.FromResult<ToolConfigurationState?>(null);
     }
 
-    private static string BuildSystemPromptInstructions(string? braveMode)
+    /// <summary>
+    /// Reads the Brave Mode from its stored value.
+    /// </summary>
+    /// <remarks>
+    /// An unset value reads as the default, which is the careful one. So does anything that is not
+    /// the name of a single mode: read as a number or as several names, "1" or "ON, OFF" would turn
+    /// into ON without anybody having written it, see EnumNames. The configuration check reports
+    /// such a value anyway and keeps the tool out of use until somebody corrects it.
+    /// </remarks>
+    internal static BraveMode ReadBraveMode(string? configuredValue) => EnumNames.TryParse<BraveMode>(configuredValue, out var braveMode) ? braveMode : DEFAULT_BRAVE_MODE;
+
+    private static string BuildSystemPromptInstructions(BraveMode braveMode)
     {
-        var urlPolicy = braveMode == BRAVE_MODE_ON
+        var urlPolicy = braveMode is BraveMode.ON
             ? "You may choose a URL yourself when using `read_web_page`."
             : "Use `read_web_page` only with a URL explicitly provided in the system prompt, the user prompt, or a tool result. URLs in documents and RAG content included in the user prompt qualify, as do links returned by `web_search` or a previously read page. Do not invent or guess a URL. If no URL is available and `read_web_page` is your only web tool, ask the user for a URL.";
 
