@@ -295,6 +295,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     {
         var positiveIntegerErrorFormat = TB("The setting '{0}' must be a positive integer.");
         var maximumErrorFormat = TB("The setting '{0}' must be less than or equal to {1}.");
+        var invalidOptionErrorFormat = TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values.");
 
         //
         // No backend field is required in the schema, because requiring one would mean every
@@ -323,7 +324,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             }
         }
 
-        if (!TryValidateOptionValue(settingsValues, BACKEND_STRATEGY_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKEND_STRATEGY, out var backendStrategyError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, BACKEND_STRATEGY_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKEND_STRATEGY, invalidOptionErrorFormat, out var backendStrategyError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -332,7 +333,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             });
         }
 
-        if (!TryValidateOptionValue(settingsValues, PRIMARY_BACKEND_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKENDS, out var primaryBackendError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, PRIMARY_BACKEND_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKENDS, invalidOptionErrorFormat, out var primaryBackendError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -373,7 +374,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         // list or come from an organization's configuration. An unknown value would be sent to
         // the search service and quietly yield nothing, so it is reported instead.
         //
-        if (!TryValidateOptionValue(settingsValues, DEFAULT_LANGUAGE_SETTING, ToolSettingsOptionSources.COMMON_LANGUAGES, out var languageError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, DEFAULT_LANGUAGE_SETTING, ToolSettingsOptionSources.COMMON_LANGUAGES, invalidOptionErrorFormat, out var languageError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -382,7 +383,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             });
         }
 
-        if (!TryValidateOptionValue(settingsValues, DEFAULT_SAFE_SEARCH_SETTING, ToolSettingsOptionSources.SAFE_SEARCH, out var safeSearchError))
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, DEFAULT_SAFE_SEARCH_SETTING, ToolSettingsOptionSources.SAFE_SEARCH, invalidOptionErrorFormat, out var safeSearchError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -871,23 +872,5 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
             return null;
 
         return Enum.TryParse<SafeSearchPolicy>(configuredPolicy, true, out var policy) ? policy : null;
-    }
-
-    /// <summary>
-    /// Checks that a stored value is one the option source still offers.
-    /// </summary>
-    /// <remarks>
-    /// An empty value passes: whether the field may be empty is decided by the settings schema's
-    /// required list, which the tool settings service checks before this method runs.
-    /// </remarks>
-    private static bool TryValidateOptionValue(IReadOnlyDictionary<string, string> settingsValues, string fieldName, string optionSource, out string error)
-    {
-        error = string.Empty;
-        var value = settingsValues.GetValueOrDefault(fieldName);
-        if (string.IsNullOrWhiteSpace(value) || ToolSettingsOptionSources.GetValues(optionSource).Contains(value))
-            return true;
-
-        error = string.Format(TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), fieldName, value);
-        return false;
     }
 }
