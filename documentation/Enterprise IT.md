@@ -682,13 +682,14 @@ The export reads saved, effective settings, including organization-managed value
 
 ### Complete tool export
 
-For example, save a timeout of `30`, a content limit of `12000`, and an empty private-host list for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
+For example, save a timeout of `30`, a content limit of `12000`, an empty private-host list, and Brave Mode switched off for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
 
 ```lua
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.timeoutSeconds"] = "30"
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.maxContentCharacters"] = "12000"
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.allowedPrivateHosts"] = ""
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.braveMode"] = "OFF"
 
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] or {}
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"]["read_web_page"] = "VERY_LOW"

@@ -57,6 +57,8 @@ Use stable lower-case IDs with underscores, and keep `Id`, `ImplementationKey`, 
 
 Keep `Function.DescriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `SystemPromptInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
 
+When those instructions follow one of the tool's settings, register the ones of its default and word the current ones in `IToolImplementation.ResolveSystemPromptInstructionsAsync`. The registry asks for them with every request, after all checks and only when the tool has a function to offer; a tool which throws there is left out of the request, the same as with `ResolveFunctionAsync`. Everything outside a request reads the registered instructions, the token count below the message field among it. `read_web_page` words its instructions this way for its Brave Mode, see below.
+
 A setting offering a fixed choice takes it from an option source — `RequiredChoice` and `OptionalChoice` name a list the app maintains, see `ToolSettingsOptionSources` — or spells its values out in the field's `enum` list, which is how a definition arriving as data offers a choice of its own. The two are mutually exclusive, and `ToolRegistry` rejects a definition that uses both or names an unknown source. Check a stored value in `ValidateConfigurationAsync` either way: it can predate the current list or arrive from an organization's configuration.
 
 When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks. Being listed in `DataSourceSecuritySettings.TrustedProviderIds` does not meet that requirement: the list belongs to data-source security checks, not to confidence. An organization which wants a contractually covered provider to continue such chats raises its level through `DataConfidence.CustomConfidenceScheme`.
@@ -126,9 +128,17 @@ What differs between callers is which targets are acceptable, and that follows f
 
 Confluence Cloud is not supported yet. It offers neither `dosearchsite.action` as a server-rendered page nor the operating-system sign-in; its search needs Confluence's REST API with an API token instead, which is also the way to stop depending on the HTML of the Data Center search page.
 
-The global `read_web_page.braveMode` setting is `OFF` by default. With `OFF`, the per-request tool instruction tells the model to use only URLs explicitly present in the system prompt, user prompt, or a tool result. URLs in documents and RAG content loaded into the user prompt qualify, as do URLs returned by `web_search` and links returned by an earlier page read. If there is no URL and `read_web_page` is the only web tool, the model is told to ask the user for one. With `ON`, the model may choose a URL itself. Both instructions treat retrieved content as untrusted. This is prompt guidance, not a technical URL provenance check; the application still applies its network target restrictions. The setting uses the usual locked organization value, saved user value, then organization default precedence.
-
 Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
+
+### Brave Mode
+
+`read_web_page.braveMode` decides whether the model may read addresses it chose itself. `OFF`, the default, tells the model to read only URLs which appear word for word in the conversation: in the system prompt, in a user message with the documents and data source content it carries, or in a tool result. When none fits and no other tool can find one, the model asks the user. `ON` lets it choose addresses as well. The values are the members of `BraveMode`, offered through `ToolSettingsOptionSources.BRAVE_MODE`, and the setting follows the usual precedence of tool settings: a locked organization value, then the user's saved value, then an organization default.
+
+Both modes are instructions to the model, not a technical check of where a URL came from. Such a check would have to know every way an address reaches the model: attachments are read from disk only when a message is sent, pages link relatively, and servers redirect, so a URL the model reads correctly may still match no spelling in the conversation. A technical check is left for a change of its own. What the application enforces is the same in both modes: the network target restrictions of `WebPageRetrievalService` and the prompt-injection filter.
+
+Links in a tool result count as given in both modes, a link on a page read before included. Searching and then reading what was found is what these tools are for, and `search_confluence` opens its hits that way. Before Brave Mode existed, the instructions forbade following a link which only retrieved content mentioned; that rule was dropped on purpose. Following a link word for word cannot carry anything out of the conversation. Putting parts of the conversation into an address could, so the instructions forbid that in both modes.
+
+The instructions depend on the setting, so `read_web_page` words them per request through `ResolveSystemPromptInstructionsAsync`. Its registered instructions are those of `OFF`, and the token count below the message field counts with them. With `ON`, a request carries a shorter instruction, and the count comes out a few tokens high.
 
 ## Searching Data Sources
 
@@ -150,6 +160,7 @@ The data sources are checked again before each search, since rounds may have pas
 - Protect secrets and sensitive trace arguments.
 - Add provider-confidence checks when tool output may contain sensitive data, and raise `RequiredProviderConfidence` and `RequiredDataSecurity` for what actually reached the model.
 - For a tool which offers itself from the context of the chat, set `Activation = ToolActivation.CONTEXT` and return null from `ResolveFunctionAsync` when there is nothing to offer. Keep a tailored function stable for the same chat, and cache what it fetches.
+- When the system prompt instructions follow a setting, register those of the default and word the current ones in `ResolveSystemPromptInstructionsAsync`.
 - Page with `page` and `has_more`, not with a total, and cap how deep the model may go.
 - Document each setting's field name, meaning, and data type in `Plugins/configuration/plugin.lua`, so administrators can manage it.
 - Add a changelog entry when users or administrators are affected.
