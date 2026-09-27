@@ -155,11 +155,15 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
     private async Task<IReadOnlyList<IDataSource>> GetOfferedDataSourcesAsync(ChatThread thread, Func<DataSourceOptions, IReadOnlyCollection<IDataSource>, Task<AllowedSelectedDataSources>> checkDataSources)
     {
+        // When the user wants AI Studio to search with every message, the model does not search itself:
+        var options = thread.DataSourceOptions;
+        if (options.RetrievalMode is not DataSourceRetrievalMode.SEMANTIC_SEARCH)
+            return [];
+
         //
         // Data sources are a preview feature, and a chat keeps its data source options while the
         // feature is switched off, cf. AISrcSelWithRetCtxVal:
         //
-        var options = thread.DataSourceOptions;
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager) || !options.IsEnabled())
             return [];
 

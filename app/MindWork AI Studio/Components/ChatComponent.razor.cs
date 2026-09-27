@@ -794,6 +794,7 @@ public partial class ChatComponent : MSGComponentBase
         return left.DisableDataSources == right.DisableDataSources
                && left.AutomaticDataSourceSelection == right.AutomaticDataSourceSelection
                && left.AutomaticValidation == right.AutomaticValidation
+               && left.RetrievalMode == right.RetrievalMode
                && left.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal).SetEquals(right.PreselectedDataSourceIds);
     }
     
