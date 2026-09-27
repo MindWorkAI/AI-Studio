@@ -99,7 +99,7 @@ public static class ToolSettingsOptionSources
 
         BRAVE_MODE =>
         [
-            new(nameof(BraveMode.OFF), TB("Off: only web addresses from the chat or from tools")),
+            new(nameof(BraveMode.OFF), TB("Off: only web addresses from the chat or tools")),
             new(nameof(BraveMode.ON), TB("On: the AI may also choose web addresses itself")),
         ],
 
