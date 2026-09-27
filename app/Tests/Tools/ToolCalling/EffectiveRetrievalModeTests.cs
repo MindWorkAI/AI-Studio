@@ -12,6 +12,9 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// every message instead, and says why. A wrong answer in one direction leaves a chat searching
 /// nothing, in the other direction searching twice. Whether the chain of checks itself holds is
 /// the business of ToolRegistryOfferTests; these tests check what the answer makes of it.
+///
+/// Why Semantic Search cannot be used comes along whatever the user prefers. The data source
+/// selection leaves out the choice when there is none, which it can tell only this way.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -22,7 +25,17 @@ public sealed class EffectiveRetrievalModeTests : ToolRegistryTestBase
     {
         var mode = await this.GetModeAsync(DataSourceRetrievalMode.EVERY_MESSAGE, ToolCapableProvider());
 
-        Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.NONE)), "The user chose this, so there is no fallback to explain.");
+        Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.NONE)), "The user chose this, and Semantic Search would be possible: the choice stays open.");
+    }
+
+    [Test]
+    public async Task AModelWithoutToolsSaysSoWhateverTheUserPrefers()
+    {
+        var provider = ToolCapableProvider() with { CapabilityOverrides = new() { FunctionCalling = false } };
+
+        var mode = await this.GetModeAsync(DataSourceRetrievalMode.EVERY_MESSAGE, provider);
+
+        Assert.That(mode, Is.EqualTo(new EffectiveRetrievalMode(DataSourceRetrievalMode.EVERY_MESSAGE, ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS)), "Otherwise, the choice would be offered, and switching it on would change nothing.");
     }
 
     [Test]

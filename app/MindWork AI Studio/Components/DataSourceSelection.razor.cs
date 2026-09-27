@@ -363,9 +363,17 @@ public partial class DataSourceSelection : MSGComponentBase
     /// </remarks>
     private bool IsSemanticSearchEffective => this.IsSemanticSearchPreferred && this.effectiveRetrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
 
-    private bool IsSemanticSearchFallingBack => this.IsSemanticSearchPreferred && this.effectiveRetrievalMode.FallbackReason is not ToolOfferBlockReason.NONE;
+    /// <summary>
+    /// Whether Semantic Search cannot be used in this chat, whatever the user prefers.
+    /// </summary>
+    /// <remarks>
+    /// Then there is nothing to choose: classic RAG searches the data sources. The choice is left
+    /// out rather than shown as one which changes nothing, and the preference stays as it is, so it
+    /// is back the moment the chat gets a model which can search itself.
+    /// </remarks>
+    private bool IsSemanticSearchUnavailable => this.effectiveRetrievalMode.SemanticSearchBlockReason is not ToolOfferBlockReason.NONE;
 
-    private string GetSemanticSearchFallbackMessage() => this.effectiveRetrievalMode.FallbackReason switch
+    private string GetSemanticSearchUnavailableMessage() => this.effectiveRetrievalMode.SemanticSearchBlockReason switch
     {
         ToolOfferBlockReason.TOOLS_SWITCHED_OFF => T("Your organization has switched tools off, so AI Studio uses classic RAG instead and searches your data sources with every message."),
         ToolOfferBlockReason.MODEL_CANNOT_USE_TOOLS => T("The selected model cannot use tools, so AI Studio uses classic RAG instead and searches your data sources with every message."),
