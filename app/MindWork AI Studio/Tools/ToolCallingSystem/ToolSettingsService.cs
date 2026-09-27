@@ -27,7 +27,9 @@ public sealed partial class ToolSettingsService(SettingsManager settingsManager,
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        var storedValues = settingsManager.ConfigurationData.Tools.Settings.GetValueOrDefault(definition.Id);
         var lockedSettings = settingsManager.ConfigurationData.Tools.LockedToolSettings;
+        var defaultSettings = settingsManager.ConfigurationData.Tools.DefaultToolSettings;
 
         foreach (var property in definition.SettingsSchema.Properties)
         {
@@ -57,26 +59,15 @@ public sealed partial class ToolSettingsService(SettingsManager settingsManager,
                 continue;
             }
 
-            if (this.GetEffectiveNonSecretSetting(definition.Id, fieldName) is { } value)
-                values[fieldName] = value;
+            if (lockedSettings.TryGetValue(managedKey, out var lockedValue))
+                values[fieldName] = lockedValue;
+            else if (storedValues?.TryGetValue(fieldName, out var storedValue) is true)
+                values[fieldName] = storedValue;
+            else if (defaultSettings.TryGetValue(managedKey, out var defaultValue))
+                values[fieldName] = defaultValue;
         }
 
         return values;
-    }
-
-    /// <summary>
-    /// Reads one non-secret setting with the same organization, user, and default precedence as GetSettingsAsync.
-    /// Prompt instructions use this synchronous path while each request is assembled.
-    /// </summary>
-    public string? GetEffectiveNonSecretSetting(string toolId, string fieldName)
-    {
-        var tools = settingsManager.ConfigurationData.Tools;
-        var managedKey = ManagedSettingKey(toolId, fieldName);
-        if (tools.LockedToolSettings.TryGetValue(managedKey, out var lockedValue))
-            return lockedValue;
-        if (tools.Settings.GetValueOrDefault(toolId)?.TryGetValue(fieldName, out var storedValue) is true)
-            return storedValue;
-        return tools.DefaultToolSettings.GetValueOrDefault(managedKey);
     }
 
     public async Task<ToolConfigurationState> GetConfigurationStateAsync(

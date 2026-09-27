@@ -54,8 +54,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .OptionalChoice(BRAVE_MODE_SETTING, ToolSettingsOptionSources.BRAVE_MODE)
             .Build(),
 
+        // Those of the default Brave Mode. A request gets the ones of the mode actually set, see
+        // ResolveSystemPromptInstructionsAsync, while the token count below the message field
+        // reads these:
         SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_BRAVE_MODE),
-        SystemPromptInstructionsFactory = () => BuildSystemPromptInstructions(ReadBraveMode(toolSettingsService.GetEffectiveNonSecretSetting(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, BRAVE_MODE_SETTING))),
         Function = new()
         {
             Name = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
@@ -146,6 +148,13 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         }
 
         return Task.FromResult<ToolConfigurationState?>(null);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
+    {
+        var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
+        return BuildSystemPromptInstructions(ReadBraveMode(settingsValues.GetValueOrDefault(BRAVE_MODE_SETTING)));
     }
 
     /// <summary>

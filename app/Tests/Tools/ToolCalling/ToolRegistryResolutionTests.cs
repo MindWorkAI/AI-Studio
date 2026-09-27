@@ -10,7 +10,8 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// </summary>
 /// <remarks>
 /// A tool may describe itself differently per request, as Semantic Search does with the data
-/// sources of a chat. What it must never do on the way is become another tool, or decide whether it
+/// sources of a chat, or word its instructions after one of its settings, as Read Web Page does
+/// with its Brave Mode. What it must never do on the way is become another tool, or decide whether it
 /// is allowed: the name is what the model's calls are matched by, and the checks ran before it was
 /// asked. A tool which fails to answer must cost the request that tool, not the whole request.
 /// </remarks>
@@ -96,6 +97,44 @@ public sealed class ToolRegistryResolutionTests : ToolRegistryTestBase
         var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), [TOOL_ID, OTHER_TOOL_ID], mayRunTools: true);
 
         Assert.That(runnableTools.Select(x => x.Definition.Id), Is.EquivalentTo(new[] { OTHER_TOOL_ID }));
+    }
+
+    [Test]
+    public async Task TailoredInstructionsReachTheSystemPrompt()
+    {
+        var tool = new TestTool(Definition() with { SystemPromptInstructions = "Registered." }, resolveInstructions: _ => "Tailored.");
+
+        var offered = await this.GetOfferedDefinition(tool);
+        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(offered is null ? [] : [offered]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(offered?.SystemPromptInstructions, Is.EqualTo("Tailored."));
+            Assert.That(offered?.Function.DescriptionForLLM, Is.EqualTo("A tool for tests."), "Tailoring the instructions leaves the function as registered.");
+            Assert.That(toolPolicy, Does.Contain("Tailored.").And.Not.Contain("Registered."), "The system prompt is built from the definitions a request offers.");
+        });
+    }
+
+    [Test]
+    public async Task ATailoredFunctionKeepsTheRegisteredInstructions()
+    {
+        var tool = new TestTool(Definition() with { SystemPromptInstructions = "Registered." }, registered => registered.Function with { DescriptionForLLM = "Tailored." });
+
+        var offered = await this.GetOfferedDefinition(tool);
+
+        Assert.That(offered?.SystemPromptInstructions, Is.EqualTo("Registered."));
+    }
+
+    [Test]
+    public async Task FailingInstructionsCostOnlyTheirTool()
+    {
+        var failing = new TestTool(Definition(), resolveInstructions: _ => throw new InvalidOperationException("The settings could not be read."));
+        var working = new TestTool(Definition(OTHER_TOOL_ID));
+        var registry = this.CreateRegistry(failing, working);
+
+        var runnableTools = await registry.GetRunnableToolsAsync(this.ContextFor(ToolCapableProvider()), [TOOL_ID, OTHER_TOOL_ID], mayRunTools: true);
+
+        Assert.That(runnableTools.Select(x => x.Definition.Id), Is.EquivalentTo(new[] { OTHER_TOOL_ID }), "A tool whose rules are unknown must not be offered with rules it may not have.");
     }
 
     [Test]

@@ -1677,6 +1677,10 @@ public partial class ChatComponent : MSGComponentBase
     /// Semantic Search is no selected tool, so it comes on top when it is offered. It counts with
     /// its static definition: the one a request offers lists the data sources as well, which only
     /// the request asks for.
+    ///
+    /// Read Web Page likewise counts with its registered instructions, those of its default Brave
+    /// Mode. With the mode switched on, a request carries a shorter instruction, so the count comes
+    /// out a few tokens high.
     /// </remarks>
     /// <param name="offersSemanticSearch">Whether the next request offers Semantic Search, see OffersSemanticSearchAsync.</param>
     /// <returns>The definitions of the selected tools, and of Semantic Search when it is offered.</returns>
