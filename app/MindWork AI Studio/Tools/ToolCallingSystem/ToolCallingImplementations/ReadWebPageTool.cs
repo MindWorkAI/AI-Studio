@@ -129,7 +129,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
-        var urlText = ReadRequiredString(arguments, URL_ARGUMENT);
+        var urlText = ToolArgumentReader.ReadRequiredString(arguments, URL_ARGUMENT);
         if (!Uri.TryCreate(urlText, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
             throw new ArgumentException("Argument 'url' must be a valid HTTP or HTTPS URL.");
 
@@ -336,18 +336,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private static IEnumerable<string> SplitAllowedPrivateHostPatterns(string? rawValue) => rawValue?
         .Split(['\r', '\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Where(x => !string.IsNullOrWhiteSpace(x)) ?? [];
-
-    private static string ReadRequiredString(JsonElement arguments, string propertyName)
-    {
-        if (!arguments.TryGetProperty(propertyName, out var value) || value.ValueKind is not JsonValueKind.String)
-            throw new ArgumentException($"Missing required argument '{propertyName}'.");
-
-        var text = value.GetString()?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException($"Missing required argument '{propertyName}'.");
-
-        return text;
-    }
 
     private static string FormatUrlForLog(Uri url)
     {

@@ -1314,11 +1314,16 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             var providerSettings = this.CreateSettingsProvider(chatModel);
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
-                providerSettings,
-                chatThread.RuntimeComponent,
+                new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = this.Provider.GetConfidence(settingsManager).Level,
+                    ChatThread = chatThread,
+                },
                 chatThread.RuntimeSelectedToolIds,
-                this.Provider.GetConfidence(settingsManager).Level,
-                chatThread.MayRunTools(settingsManager));
+                chatThread.MayRunTools(settingsManager),
+                token);
 
             systemPrompt = new TextMessage
             {
@@ -1387,15 +1392,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
-    /// <summary>
-    /// Describes this provider instance with the given model as configured provider settings.
-    /// </summary>
-    /// <remarks>
-    /// Anything asking about model capabilities must go through this, because the expert
-    /// capability overrides live on the settings object: a provider that builds its own settings
-    /// instance without them silently ignores what the user configured.
-    /// </remarks>
-    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    /// <inheritdoc />
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
         UsedLLMProvider = this.Provider,
         Model = chatModel,

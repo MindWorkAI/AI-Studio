@@ -5,12 +5,11 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
 
-public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
+public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> logger, ILogger<AgentBase> baseLogger, SettingsManager settingsManager, DataSourceService dataSourceService, DataSourceDescriptionService descriptionService, ThreadSafeRandom rng) : AgentBase(baseLogger, settingsManager, dataSourceService, rng)
 {
     private readonly List<ContentBlock> answers = new();
     
@@ -187,75 +186,24 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
         var additionalData = new Dictionary<string, string>();
         logger.LogInformation("Preparing the list of allowed data sources for the agent to choose from.");
         
-        // Notice: We do not dispose the Rust service here. The Rust service is a singleton
-        // and will be disposed when the application shuts down:
-        var rustService = Program.SERVICE_PROVIDER.GetService<RustService>()!;
-        
         var sb = new StringBuilder();
         sb.AppendLine("The following data sources are available for selection:");
         foreach (var ds in dataSources.AllowedDataSources)
         {
+            var description = await descriptionService.GetDescriptionAsync(ds, token);
+            var descriptionPart = string.IsNullOrWhiteSpace(description) ? string.Empty : $", description='{description}'";
             switch (ds)
             {
                 case DataSourceLocalDirectory localDirectory:
-                    if (string.IsNullOrWhiteSpace(localDirectory.Description))
-                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'");
-                    else
-                    {
-                        var description = localDirectory.Description.Replace("\n", " ").Replace("\r", " ");
-                        sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}', description='{description}'");
-                    }
+                    sb.AppendLine($"- Id={ds.Id}, name='{localDirectory.Name}', type=local directory, path='{localDirectory.Path}'{descriptionPart}");
                     break;
 
                 case DataSourceLocalFile localFile:
-                    if (string.IsNullOrWhiteSpace(localFile.Description))
-                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'");
-                    else
-                    {
-                        var description = localFile.Description.Replace("\n", " ").Replace("\r", " ");
-                        sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}', description='{description}'");
-                    }
+                    sb.AppendLine($"- Id={ds.Id}, name='{localFile.Name}', type=local file, path='{localFile.FilePath}'{descriptionPart}");
                     break;
 
                 case IERIDataSource eriDataSource:
-                    var eriServerDescription = string.Empty;
-
-                    try
-                    {
-                        //
-                        // Call the ERI server to get the server description:
-                        //
-                        using var eriClient = ERIClientFactory.Get(eriDataSource.Version, eriDataSource)!;
-                        var authResponse = await eriClient.AuthenticateAsync(rustService, cancellationToken: token);
-                        if (authResponse.Successful)
-                        {
-                            var serverDescriptionResponse = await eriClient.GetDataSourceInfoAsync(token);
-                            if (serverDescriptionResponse.Successful)
-                            {
-                                eriServerDescription = serverDescriptionResponse.Data.Description;
-
-                                // Remove all line breaks from the description:
-                                eriServerDescription = eriServerDescription.Replace("\n", " ").Replace("\r", " ");
-                            }
-                            else
-                                logger.LogWarning($"Was not able to retrieve the server description from the ERI data source '{eriDataSource.Name}'. Message: {serverDescriptionResponse.Message}");
-                        }
-                        else
-                            logger.LogWarning($"Was not able to authenticate with the ERI data source '{eriDataSource.Name}'. Message: {authResponse.Message}");
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogWarning($"The ERI data source '{eriDataSource.Name}' is not available. Thus, we cannot retrieve the server description. Error: {e.Message}");
-                    }
-
-                    //
-                    // Append the ERI data source to the list. Use the server description if available:
-                    //
-                    if (string.IsNullOrWhiteSpace(eriServerDescription))
-                        sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source");
-                    else
-                        sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source, description='{eriServerDescription}'");
-
+                    sb.AppendLine($"- Id={ds.Id}, name='{eriDataSource.Name}', type=external data source{descriptionPart}");
                     break;
             }
         }

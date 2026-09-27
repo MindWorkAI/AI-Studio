@@ -794,6 +794,7 @@ public partial class ChatComponent : MSGComponentBase
         return left.DisableDataSources == right.DisableDataSources
                && left.AutomaticDataSourceSelection == right.AutomaticDataSourceSelection
                && left.AutomaticValidation == right.AutomaticValidation
+               && left.RetrievalMode == right.RetrievalMode
                && left.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal).SetEquals(right.PreselectedDataSourceIds);
     }
     
@@ -1608,6 +1609,13 @@ public partial class ChatComponent : MSGComponentBase
         var reported = ReportedHistory.UNKNOWN;
 
         //
+        // Semantic Search offers itself rather than being selected, and the registry answers
+        // whether it can be offered asynchronously. So this is asked before collecting, which only
+        // reads the provider and the choice of the chat, nothing a background job appends to:
+        //
+        var offersSemanticSearch = await this.OffersSemanticSearchAsync();
+
+        //
         // Collected on the render thread, counted off it. Counting may take an IPC call per text,
         // and while it runs, the background job which writes the answer appends to the very list
         // which is walked here.
@@ -1621,7 +1629,7 @@ public partial class ChatComponent : MSGComponentBase
             // of it would tell a person their window is empty while their first message is not.
             //
             var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
-            var toolDefinitions = this.GetRunnableToolDefinitions();
+            var toolDefinitions = this.GetRunnableToolDefinitions(offersSemanticSearch);
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
             reported = thread.ReportedHistoryFor(provider.Model);
@@ -1665,13 +1673,45 @@ public partial class ChatComponent : MSGComponentBase
     /// Asked for once and used twice: their policy goes into the system prompt, and their schemas
     /// travel next to it in the request body. Both cost tokens, and both change the moment somebody
     /// switches a tool on.
+    ///
+    /// Semantic Search is no selected tool, so it comes on top when it is offered. It counts with
+    /// its static definition: the one a request offers lists the data sources as well, which only
+    /// the request asks for.
     /// </remarks>
-    /// <returns>The definitions of the selected tools.</returns>
-    private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions() => this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
-        .Select(this.ToolRegistry.GetDefinition)
-        .Where(definition => definition is not null)
-        .Select(definition => definition!)
-        .ToList();
+    /// <param name="offersSemanticSearch">Whether the next request offers Semantic Search, see OffersSemanticSearchAsync.</param>
+    /// <returns>The definitions of the selected tools, and of Semantic Search when it is offered.</returns>
+    private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions(bool offersSemanticSearch)
+    {
+        var definitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
+            .Select(this.ToolRegistry.GetDefinition)
+            .Where(definition => definition is not null)
+            .Select(definition => definition!)
+            .ToList();
+
+        if (offersSemanticSearch && this.ToolRegistry.GetDefinition(ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID) is { } semanticSearch)
+            definitions.Add(semanticSearch);
+
+        return definitions;
+    }
+
+    /// <summary>
+    /// Whether the next request offers the model Semantic Search, as far as this can be told without asking the data sources.
+    /// </summary>
+    /// <remarks>
+    /// An estimate on purpose. Whether a data source can be searched right now would mean asking
+    /// every ERI server with every count, and the count runs all the time. Once the first answer is
+    /// there, the number the provider reported takes over anyway, see ChatThread.ReportedHistoryFor.
+    /// </remarks>
+    /// <returns>True when the next request offers Semantic Search, as far as can be told.</returns>
+    private async Task<bool> OffersSemanticSearchAsync()
+    {
+        var options = this.GetCurrentDataSourceOptions();
+        if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager) || !options.IsEnabled())
+            return false;
+
+        var retrievalMode = await this.ToolRegistry.GetEffectiveRetrievalModeAsync(options, this.Provider, Tools.Components.CHAT);
+        return retrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
+    }
 
     /// <summary>
     /// The thread a new chat starts with, as the selections made so far decide it.

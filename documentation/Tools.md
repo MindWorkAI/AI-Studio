@@ -4,15 +4,16 @@ This document explains how local model-driven tools are added to AI Studio. Tool
 
 Tools are currently part of the .NET app. They are currently not Lua plugins and they are currently not loaded dynamically from user folders. Adding a tool currently requires code changes.
 
-A tool is a single `IToolImplementation` class in `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/`, registered in `Program.cs`. It states what it is through `GetDefinition()` and does what it promises in `ExecuteAsync`. There are no tool definition files and no schema to keep in sync by hand, so this document carries only what the code cannot tell you: how the provider APIs differ, the rules a tool has to follow, and the obligations that come with returning content from outside AI Studio. For the shape of a tool, read `WebSearchTool` and `ReadWebPageTool`.
+A tool is a single `IToolImplementation` class in `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/`, registered in `Program.cs`. It states what it is through `GetDefinition()` and does what it promises in `ExecuteAsync`. There are no tool definition files and no schema to keep in sync by hand, so this document carries only what the code cannot tell you: how the provider APIs differ, the rules a tool has to follow, and the obligations that come with returning content from outside AI Studio. For the shape of a tool, read `WebSearchTool` and `ReadWebPageTool`; for a tool which offers itself and describes the chat it is offered in, read `SemanticSearchTool`.
 
 The provider only sees local tools that are
 
 - available for the current component and
-- selected by the user or defaults and
+- selected by the user or defaults, or offering themselves from the context of the chat, and
 - supported by the model and
 - configured correctly and
-- allowed by the provider confidence rules.
+- allowed by the provider confidence rules and
+- able to offer something in this request.
 
 ## Provider API Shapes
 
@@ -60,9 +61,32 @@ A setting offering a fixed choice takes it from an option source — `RequiredCh
 
 When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks. Being listed in `DataSourceSecuritySettings.TrustedProviderIds` does not meet that requirement: the list belongs to data-source security checks, not to confidence. An organization which wants a contractually covered provider to continue such chats raises its level through `DataConfidence.CustomConfidenceScheme`.
 
+`ToolExecutionResult.RequiredDataSecurity` is the other axis: a result from a data source which may only be used with self-hosted providers sets it to `SELF_HOSTED`, and the chat refuses every other provider from then on. Both only ever tighten, see `ChatThread.RequireProviderConfidence` and `ChatThread.RequireDataSecurity`, so raise them for what actually reached the model, not for everything the tool looked at. A search which found nothing brought nothing into the chat.
+
+A result in `JsonContent` reaches the model the way `ToolExecutionResult.ToModelContent` writes it, which escapes only what JSON requires. Umlauts and other characters outside ASCII stay as they are rather than costing six characters each.
+
+## Tools Which Offer Themselves
+
+Most tools are selected: by the user, by the defaults of a component, by a chat template, or by the rules of an assistant. A tool whose use follows from the chat instead sets `Activation = ToolActivation.CONTEXT`. Nobody can select such a tool, so it appears in no selection. `ToolRegistry.GetCatalogAsync` leaves it out of every list built for a component, and `ToolSelectionRules.NormalizeSelection` drops it from a selection which names it anyway, such as the one of a chat template. The tool list of the app settings still shows it, so that an organization can switch it off or raise the confidence it requires. `semantic_search` is the only such tool so far.
+
+The registry takes every context tool of the component as a candidate and runs it through the same checks as a selected one. A tool which passes them is then asked what it offers in this request, through `IToolImplementation.ResolveFunctionAsync`. Most tools leave that method alone and offer the function they registered. A tool which has to know the chat first returns a function tailored to it, or null when it has nothing to offer, and is then left out of the request. Only the description and the parameters of the answer count; the name and the strict mode stay as registered, because the calls of the model find their tool by its name. A resolution which throws costs that one tool and no other.
+
+Two rules come with it:
+
+- **Keep the answer stable while the chat stays the same**, down to the order of what it lists. The providers cache a request from its beginning, and the tools are part of that beginning.
+- **Keep it cheap.** It runs before every request. Whatever a resolution has to fetch from elsewhere belongs in a short-lived cache, the way `DataSourceDescriptionService` keeps the descriptions of ERI data sources for five minutes.
+
+Whoever decides something on behalf of a request asks the registry rather than checking for itself. `ToolRegistry.GetOfferBlockReasonAsync` answers whether a tool can be offered to a provider in a component, with the same checks in the same order as the request, and names what is in the way otherwise. Ask it with the provider settings the request uses, `IProvider.CreateSettingsProvider`, or the two can come to different answers. On purpose, it cannot tell whether a tool has something to offer right now: only the request can answer that.
+
+### Paging Without State
+
+A tool whose results come in pages takes a `page` argument starting at 1 and reports `has_more` with each result, never a total. A total is often unknown — a vector search has none, since every chunk matches, only less closely — and a number known for some sources and not for others invites the model to page through all of them. `semantic_search` works this way; `web_search` takes a `page` as well.
+
+Paging stays stateless: every call brings its query and its page again. It has to, because tool results do not travel into later turns. `ToolInvocationTrace.Result` is not saved, and the tool conversation of a request is gone once the answer stands. Cap how deep a model may page, since every page fetches its whole window again, and refuse a page beyond the cap with the last page there is in the message.
+
 ## Security
 
-Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `WebSearchTool` shows the pattern.
+Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `ToolArgumentReader` reads strings, positive integers, and values out of a fixed choice, alone or as a list, and words the refusals so; `WebSearchTool` shows how a tool uses it.
 
 For tools that perform network requests:
 
@@ -104,6 +128,14 @@ Confluence Cloud is not supported yet. It offers neither `dosearchsite.action` a
 
 Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
 
+## Searching Data Sources
+
+`semantic_search` lets the model search the data sources of a chat itself, with a query it works out from the conversation, whenever a question calls for it. The classic RAG process, `AISrcSelWithRetCtxVal`, searches them with every message instead, using the message as the query. One place decides which of the two runs, `ToolRegistry.GetEffectiveRetrievalModeAsync`. Semantic search is the default, and the user can choose the other way per chat through `DataSourceOptions.RetrievalMode`. Whenever the tool cannot be offered — a model without tool calling, tools or this tool switched off, a provider below a confidence the organization set for it — the classic process searches instead. That process steps back only when the answer is semantic search, so a chat never ends up searching nothing.
+
+The tool offers the data sources of the chat which the provider may use. With the automatic selection switched on, those are all data sources the provider may use: the AI which selects is the chat model itself. No agent takes part, so `DataSourceService` counts only the chat provider when it decides what may be used, see `DataSourceRetrievalMode`. The description of the tool lists the offered data sources by ID, name, kind, page size, and last page, with their own description shortened to 500 characters. The description of an ERI data source comes from its server, so it goes through the prompt-injection filter before it gets there. The listed IDs are the only values `data_source_ids` accepts.
+
+The data sources are checked again before each search, since rounds may have passed since they were offered, and then searched in parallel. A data source which fails is reported as not searched rather than left out, so that the model does not take its silence for finding nothing. Every passage goes through the same filter and into the same shape as with the classic RAG process, `IRetrievalContext.AsMarkdown`, within one `PromptInjectionGuardService.BeginAction()` scope, so that the user hears about what was filtered once per search. The result holds whole passages up to 100,000 characters, and the data sources take turns: first the best passage of each, then the second best of each. Otherwise, the data source listed first would take the whole budget. What does not fit is counted in the result, with a narrower query as the way out. The passages become sources through `IRetrievalContext.ToSources()`, as with the classic process, and only the data sources whose passages reached the model raise the requirements of the chat.
+
 ## Checklist
 
 - Add the `IToolImplementation` class, including its `GetDefinition()`.
@@ -114,6 +146,8 @@ Every successfully retrieved page with readable content is also returned as a st
 - Validate settings and model arguments, and refuse a wrong argument with a message the model can correct itself from.
 - Filter content fetched from outside AI Studio for prompt injections, and declare `ReturnsUntrustedExternalContent`.
 - Protect secrets and sensitive trace arguments.
-- Add provider-confidence checks when tool output may contain sensitive data.
+- Add provider-confidence checks when tool output may contain sensitive data, and raise `RequiredProviderConfidence` and `RequiredDataSecurity` for what actually reached the model.
+- For a tool which offers itself from the context of the chat, set `Activation = ToolActivation.CONTEXT` and return null from `ResolveFunctionAsync` when there is nothing to offer. Keep a tailored function stable for the same chat, and cache what it fetches.
+- Page with `page` and `has_more`, not with a total, and cap how deep the model may go.
 - Document each setting's field name, meaning, and data type in `Plugins/configuration/plugin.lua`, so administrators can manage it.
 - Add a changelog entry when users or administrators are affected.

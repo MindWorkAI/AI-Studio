@@ -192,6 +192,8 @@ When adding, changing, or removing model-driven tools, keep these parts in sync:
 
 Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
 
+A tool which offers itself from the context of a chat instead of being selected, such as `semantic_search`, sets `Activation = ToolActivation.CONTEXT` and tailors its function to each request in `ResolveFunctionAsync`. Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
+
 ## Model Capabilities
 
 **Documentation:** `documentation/Models.md`
@@ -212,7 +214,8 @@ Rules are never tried in order: specificity is computed from the rule, and two r
 RAG integration is currently in development (preview feature). Architecture:
 - **External Retrieval Interface (ERI)** - Contract for integrating external data sources
 - **Data Sources** - Local files and external data via ERI servers
-- **Agents** - AI agents select data sources and validate retrieval quality
+- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. See "Searching Data Sources" in `documentation/Tools.md`.
+- **Agents** - AI agents select data sources and validate retrieval quality, in the classic process only
 - **Embedding providers** - Support for various embedding models
 - **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
 - **Index database** - SQLite, holding the file fingerprints and the chunk texts for full-text search; see "Databases" below

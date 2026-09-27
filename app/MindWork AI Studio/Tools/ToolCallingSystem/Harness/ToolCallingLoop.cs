@@ -223,17 +223,19 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     }
 
                     toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence, sources) = await context.ToolExecutor.ExecuteAsync(
+                    var (toolContent, trace, requiredProviderConfidence, requiredDataSecurity, sources) = await context.ToolExecutor.ExecuteAsync(
                         call.CallId,
                         call.ToolName,
                         call.ArgumentsJson,
                         context.RunnableTools,
                         context.Provider,
+                        context.ChatThread,
                         toolCallCount,
                         token);
 
                     toolResultCharacterCount += toolContent.Length;
                     context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
+                    context.ChatThread.RequireDataSecurity(requiredDataSecurity);
                     toolSources.MergeSources(sources);
                     await context.AddToolInvocationAsync(trace);
 

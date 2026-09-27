@@ -2,7 +2,14 @@ using AIStudio.Provider;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
-public sealed class ToolDefinition
+/// <summary>
+/// What a tool is: what the model may call, which settings it needs, and where it may be used.
+/// </summary>
+/// <remarks>
+/// A record, so that the registry can hand out a definition whose function a tool tailored to one
+/// request while everything else stays as registered, see IToolImplementation.ResolveFunctionAsync.
+/// </remarks>
+public sealed record ToolDefinition
 {
     public int SchemaVersion { get; init; } = 1;
 
@@ -11,6 +18,11 @@ public sealed class ToolDefinition
     public string ImplementationKey { get; init; } = string.Empty;
 
     public ToolVisibilityDefinition VisibleIn { get; init; } = new();
+
+    /// <summary>
+    /// Whether the tool waits to be selected, or offers itself whenever the chat calls for it.
+    /// </summary>
+    public ToolActivation Activation { get; init; } = ToolActivation.SELECTION;
 
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 

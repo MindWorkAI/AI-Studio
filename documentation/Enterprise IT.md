@@ -722,9 +722,18 @@ Writing such a template by hand means knowing that saying nothing and saying non
 | no `ToolIds` at all | starts with the tools the user has set as their chat default |
 | `ToolIds` present but empty | starts with no tool at all, whatever that default says |
 | no `DataSourceOptions` at all | starts with the data source options the user has set as their chat default |
-| `DataSourceOptions` present | starts with exactly those, including the choice to let an agent pick the sources |
+| `DataSourceOptions` present | starts with exactly those, including how the sources are searched and whether an agent picks them |
 
 Writing the `DataSourceOptions` table at all is already the statement that this template wants data sources, so `DisableDataSources` starts at `false` inside it, unlike everywhere else in the app.
+
+`RetrievalMode` inside that table decides how the chat searches its data sources:
+
+| Value | What happens |
+|---|---|
+| `SEMANTIC_SEARCH` (default) | The AI searches the data sources itself, through the tool `semantic_search`, whenever a question calls for it. No agent takes part: `AutomaticDataSourceSelection` lets the AI itself choose among all data sources it may use, and `AutomaticValidation` has no effect. |
+| `EVERY_MESSAGE` | AI Studio searches the data sources with every message, before the AI answers, with the agents for selection and validation as configured. |
+
+Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
 
 When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
 

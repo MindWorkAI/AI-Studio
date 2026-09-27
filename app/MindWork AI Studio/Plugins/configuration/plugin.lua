@@ -467,6 +467,20 @@ CONFIG["SETTINGS"] = {}
 -- Controls whether data sources are off by default:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
 
+-- Controls how the data sources are searched. Allowed values are:
+--   SEMANTIC_SEARCH -> the AI searches the data sources itself, through the tool
+--                      semantic_search, whenever a question calls for it. This is the default.
+--   EVERY_MESSAGE   -> AI Studio searches the data sources with every message, before the AI
+--                      answers.
+-- SEMANTIC_SEARCH works only where semantic_search can be offered: the model has to be able to
+-- call tools, neither the tools nor semantic_search may be switched off, and the provider has
+-- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
+-- searches with every message instead.
+-- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- then lets the AI itself choose among all data sources it may use, and
+-- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
+
 -- Controls whether AI Studio asks an agent to choose data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
@@ -495,6 +509,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
@@ -736,18 +751,27 @@ CONFIG["SETTINGS"] = {}
 
 -- Disable individual tools by their stable tool ID. The default is an empty set.
 -- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- semantic_search lets the model search the data sources of a chat itself. Nobody selects it:
+-- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
+-- search the data sources with every message instead, the way it does for models without
+-- tool usage.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page, search_confluence
+-- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
+-- semantic_search = NONE
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
+-- semantic_search offers a provider only the data sources whose own confidence level it meets,
+-- so it needs no minimum of its own. A provider below a minimum set here has the data sources
+-- searched with every message instead.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
---     ["search_confluence"] = "HIGH"
+--     ["search_confluence"] = "HIGH",
+--     ["semantic_search"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -1073,18 +1097,28 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Selecting search_confluence also selects read_web_page.
+--     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
 --         "read_web_page",
 --     },
 --
 --     -- Optional: the data source options a chat with this template starts with.
 --     -- Every field inside is optional as well. DisableDataSources defaults to false here,
---     -- because writing this table at all says that the template wants data sources; the
---     -- other three default to false and an empty list.
+--     -- because writing this table at all says that the template wants data sources;
+--     -- RetrievalMode defaults to SEMANTIC_SEARCH, and the other three default to false and
+--     -- an empty list.
 --     ["DataSourceOptions"] = {
 --         -- Set to true to start the chat with data sources switched off.
 --         ["DisableDataSources"] = false,
+--
+--         -- How the data sources are searched, with the same values and the same fallback
+--         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
+--         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
+--         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
+--         -- sources it may use, and AutomaticValidation has no effect.
+--         ["RetrievalMode"] = "EVERY_MESSAGE",
 --
 --         -- Let an agent choose the fitting data sources for each question. When true,
 --         -- PreselectedDataSourceIds is not used.

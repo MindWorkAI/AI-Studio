@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -99,6 +100,10 @@ public partial class ProviderSelection : MSGComponentBase
 
         if (profile.Has(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+
+        // The same check which decides whether a request offers tools, Semantic Search among them:
+        if (provider.GetToolCallingAvailability().IsAvailable)
+            capabilityIcons.Add(new(Icons.Material.Filled.Build, this.T("Tool calling possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
         if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
