@@ -5,7 +5,7 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use tauri::Url;
+use tauri::{Manager, Url};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use crate::api_token::APIToken;
@@ -38,6 +38,12 @@ static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 
 pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Dotnet;
+
+/// Tells the .NET host where to extract the native libraries bundled into the server.
+const DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR: &str = "DOTNET_BUNDLE_EXTRACT_BASE_DIR";
+
+/// The directory below the app's cache directory where the .NET host extracts them.
+const DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME: &str = "dotnet";
 
 /// Removes ANSI escape sequences and non-printable control chars from stdout lines.
 fn sanitize_stdout_line(line: &str) -> String {
@@ -113,6 +119,44 @@ fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, St
     ]
 }
 
+/// Returns the directory where the .NET host extracts the native libraries of the server.
+///
+/// The server is a single-file bundle, and the native libraries inside it -- SQLite above all --
+/// have to be written to disk before the .NET host can load them. That happens before any of our
+/// own .NET code runs. Left to itself, the host picks `$HOME/.net` or `%TEMP%\.net` and exits at
+/// once when that location is not writable. The Flatpak sandbox mounts the home directory
+/// read-only, so the server never started there. Our own cache directory is writable wherever
+/// the app runs, which is why we choose the location on every platform instead of trusting the
+/// default.
+///
+/// Returns `None` when the directory is not available. The host then falls back to its default.
+fn dotnet_bundle_extraction_directory<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Option<String> {
+    let cache_directory = match app_handle.path().app_cache_dir() {
+        Ok(path) => path,
+        Err(e) => {
+            error!(Source = "Bootloader .NET"; "Failed to resolve the app cache directory for extracting the native libraries of the .NET server: {e}");
+            return None;
+        }
+    };
+
+    let extraction_directory = cache_directory.join(DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME);
+    if let Err(e) = std::fs::create_dir_all(&extraction_directory) {
+        error!(Source = "Bootloader .NET"; "Failed to create the directory '{}' for extracting the native libraries of the .NET server: {e}", extraction_directory.display());
+        return None;
+    }
+
+    match extraction_directory.to_str() {
+        Some(path) => {
+            info!(Source = "Bootloader .NET"; "The .NET server extracts its native libraries to '{path}'.");
+            Some(path.to_string())
+        }
+        None => {
+            error!(Source = "Bootloader .NET"; "The directory '{}' for extracting the native libraries of the .NET server is not valid UTF-8.", extraction_directory.display());
+            None
+        }
+    }
+}
+
 /// Creates the startup environment file for the .NET server in the development
 /// environment. The file is created in the root directory of the repository.
 /// Creating that env file on a production environment would be a security
@@ -164,6 +208,9 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
     ]);
     dotnet_server_environment.extend(external_http_custom_root_certificate_policy_environment());
+    if let Some(extraction_directory) = dotnet_bundle_extraction_directory(&app_handle) {
+        dotnet_server_environment.insert(String::from(DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR), extraction_directory);
+    }
 
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
