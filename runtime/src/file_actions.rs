@@ -557,9 +557,10 @@ async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
 /// They all mean the same thing and every one of them spells it differently. A viewer which is not
 /// covered here shows its first page, which is what the system would have done anyway.
 ///
-/// Which spellings exist follows from where a viewer is found: Acrobat is named by the Windows
-/// registration and by nothing else, and the three Linux viewers are named by a desktop entry and
-/// by nothing else. Only a browser is reached on both, so only its spelling is needed everywhere.
+/// Which spellings exist follows from where a viewer is found: Acrobat and Foxit are named by the
+/// Windows registration and by nothing else, and the three Linux viewers are named by a desktop
+/// entry and by nothing else. Only a browser is reached on both, so only its spelling is needed
+/// everywhere.
 #[cfg(any(windows, target_os = "linux", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PageArgument {
@@ -570,6 +571,11 @@ enum PageArgument {
     /// Acrobat and Acrobat Reader take an open action: `/A page=12`.
     #[cfg(any(windows, test))]
     AcrobatOpenAction,
+
+    /// Foxit PDF Reader and Foxit PDF Editor take the same open action, but after the file:
+    /// `handbook.pdf /A page=12`.
+    #[cfg(any(windows, test))]
+    FoxitOpenAction,
 
     /// The GNOME document viewer and its forks count from zero, so page 12 is index 11.
     #[cfg(any(target_os = "linux", test))]
@@ -614,6 +620,9 @@ fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<
 
         #[cfg(any(windows, test))]
         PageArgument::AcrobatOpenAction => vec![String::from("/A"), format!("page={page}"), path_argument],
+
+        #[cfg(any(windows, test))]
+        PageArgument::FoxitOpenAction => vec![path_argument, String::from("/A"), format!("page={page}")],
 
         #[cfg(any(target_os = "linux", test))]
         PageArgument::ZeroBasedIndex => vec![format!("--page-index={}", page.saturating_sub(1)), path_argument],
@@ -667,6 +676,7 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
         };
 
         let Some(argument) = windows_page_argument(&prog_id) else {
+            info!("The program registered for PDFs as '{prog_id}' cannot be sent to a page; the document opens on its first page.");
             return DocumentOpenPlan::Plain;
         };
 
@@ -688,6 +698,7 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
         };
 
         let Some((program, argument)) = linux_page_aware_program(&desktop_id) else {
+            info!("The program registered for PDFs as '{desktop_id}' cannot be sent to a page; the document opens on its first page.");
             return DocumentOpenPlan::Plain;
         };
 
@@ -703,14 +714,26 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
 ///
 /// The user's own choice comes first; the class registration is what is left when they never made
 /// one, for instance right after the system was installed.
+///
+/// Newer builds of Windows 11 keep that choice under `UserChoiceLatest` as well and, once they have
+/// moved it there, go by nothing else. Whether `UserChoice` still follows a later change is nowhere
+/// documented, so the newer key is asked first and the older one only where it is missing.
 #[cfg(windows)]
 fn windows_default_pdf_prog_id() -> Option<String> {
     use windows_registry::*;
 
-    const USER_CHOICE_KEY: &str = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice";
+    //
+    // Not a typo: below `UserChoiceLatest`, the value `ProgId` sits in a key named `ProgId`.
+    //
+    const USER_CHOICE_KEYS: [&str; 2] = [
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoiceLatest\ProgId",
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice",
+    ];
 
-    if let Ok(key) = CURRENT_USER.open(USER_CHOICE_KEY) && let Ok(prog_id) = key.get_string("ProgId") {
-        return Some(prog_id);
+    for user_choice_key in USER_CHOICE_KEYS {
+        if let Ok(key) = CURRENT_USER.open(user_choice_key) && let Ok(prog_id) = key.get_string("ProgId") && !prog_id.is_empty() {
+            return Some(prog_id);
+        }
     }
 
     CLASSES_ROOT.open(".pdf").ok()
@@ -756,11 +779,19 @@ fn windows_page_argument(prog_id: &str) -> Option<PageArgument> {
     let prog_id = prog_id.to_ascii_lowercase();
 
     //
-    // Acrobat is asked about first, because its registration says nothing about a browser while
-    // the browsers below are recognized by their own name in it.
+    // Acrobat and Foxit are asked about first, because their registration says nothing about a
+    // browser while the browsers below are recognized by their own name in it.
     //
     if prog_id.contains("acroexch") || prog_id.contains("acrobat") {
         return Some(PageArgument::AcrobatOpenAction);
+    }
+
+    //
+    // Foxit keeps its names across products: the current Foxit PDF Editor still registers as
+    // `FoxitPhantomPDF.Document`, so asking for the maker covers the Reader and the Editor alike.
+    //
+    if prog_id.contains("foxit") {
+        return Some(PageArgument::FoxitOpenAction);
     }
 
     const BROWSERS: [&str; 5] = ["msedge", "chrome", "firefox", "opera", "brave"];
@@ -1195,6 +1226,12 @@ mod tests {
         );
 
         assert_eq!(
+            page_arguments(PageArgument::FoxitOpenAction, document, 12).unwrap(),
+            vec![String::from("/docs/handbook.pdf"), String::from("/A"), String::from("page=12")],
+            "Foxit takes the open action Acrobat takes, but only after the file.",
+        );
+
+        assert_eq!(
             page_arguments(PageArgument::ZeroBasedIndex, document, 12).unwrap(),
             vec![String::from("--page-index=11"), String::from("/docs/handbook.pdf")],
             "The GNOME viewer counts from zero, so page twelve is index eleven.",
@@ -1214,6 +1251,10 @@ mod tests {
     #[test]
     fn windows_recognizes_the_programs_it_can_send_to_a_page() {
         assert_eq!(windows_page_argument("AcroExch.Document.DC"), Some(PageArgument::AcrobatOpenAction));
+        assert_eq!(windows_page_argument("FoxitPhantomPDF.Document"), Some(PageArgument::FoxitOpenAction), "The current Foxit PDF Editor still registers under its old name.");
+        assert_eq!(windows_page_argument("FoxitPDFEditor.Document"), Some(PageArgument::FoxitOpenAction));
+        assert_eq!(windows_page_argument("FoxitReader.Document"), Some(PageArgument::FoxitOpenAction));
+        assert_eq!(windows_page_argument("Applications\\FoxitPDFReader.exe"), Some(PageArgument::FoxitOpenAction), "A program picked through 'Open with' is registered by its file name.");
         assert_eq!(windows_page_argument("MSEdgePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("ChromePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("FirefoxPDF"), Some(PageArgument::UrlFragment));
@@ -1226,6 +1267,12 @@ mod tests {
             executable_from_command(r#""C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --single-argument %1"#).as_deref(),
             Some(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
             "A quoted program keeps the spaces in its path and loses the arguments written for a file name.",
+        );
+
+        assert_eq!(
+            executable_from_command(r#""c:\Program Files (x86)\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe" "%1""#).as_deref(),
+            Some(r"c:\Program Files (x86)\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe"),
+            "The file name the command names is dropped, because the page arguments name the file themselves.",
         );
 
         assert_eq!(
