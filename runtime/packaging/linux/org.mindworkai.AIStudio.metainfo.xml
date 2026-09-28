@@ -102,7 +102,7 @@
   </screenshots>
 
   <releases>
-    <release type="stable" version="26.9.1" date="2026-09-27">
+    <release type="stable" version="26.9.1" date="2026-09-28">
       <description>
         <ul>
           <li>Added a way to copy an entire chat, either with the button in the chat toolbar or next to the chat in the chat list. The copy opens right away so you can continue in it, while the original conversation stays exactly as it was. Many thanks to Peer Hogeterp (<code>peerschuett</code>) and Jens Erler (<code>j-erler</code>) for this feature.</li>
@@ -209,6 +209,7 @@
           <li>Fixed AI Studio following your system into light or dark mode even though you had chosen a fixed color theme in the app settings.</li>
           <li>Fixed AI Studio keeping its previous color theme after your computer woke up from sleep, when your system had switched between light and dark mode during that time.</li>
           <li>Fixed instructions slipping past the protection against prompt injection when invisible characters were hidden inside their words. Removing those characters used to put such an instruction back together unnoticed.</li>
+          <li>Fixed Windows Explorer opening your Documents folder instead of showing the file you wanted to see, such as the startup log on the information page or in the Log Viewer assistant. This happened with every file whose path contains a space.</li>
           <li>Upgraded the Visual Briefing assistant (in preview) from the prototype to the beta state. The assistant is now completely implemented and is undergoing a deeper testing phase in preparation for release. To try it, open the app settings, allow preview features down to beta, and then enable the Visual Briefing assistant there.</li>
           <li>Upgraded the vector database behind local RAG (Qdrant Edge) to version 0.8.0.</li>
           <li>Upgraded to .NET v9.0.20</li>
