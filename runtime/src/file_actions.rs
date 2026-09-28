@@ -714,14 +714,26 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
 ///
 /// The user's own choice comes first; the class registration is what is left when they never made
 /// one, for instance right after the system was installed.
+///
+/// Newer builds of Windows 11 keep that choice under `UserChoiceLatest` as well and, once they have
+/// moved it there, go by nothing else. Whether `UserChoice` still follows a later change is nowhere
+/// documented, so the newer key is asked first and the older one only where it is missing.
 #[cfg(windows)]
 fn windows_default_pdf_prog_id() -> Option<String> {
     use windows_registry::*;
 
-    const USER_CHOICE_KEY: &str = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice";
+    //
+    // Not a typo: below `UserChoiceLatest`, the value `ProgId` sits in a key named `ProgId`.
+    //
+    const USER_CHOICE_KEYS: [&str; 2] = [
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoiceLatest\ProgId",
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice",
+    ];
 
-    if let Ok(key) = CURRENT_USER.open(USER_CHOICE_KEY) && let Ok(prog_id) = key.get_string("ProgId") {
-        return Some(prog_id);
+    for user_choice_key in USER_CHOICE_KEYS {
+        if let Ok(key) = CURRENT_USER.open(user_choice_key) && let Ok(prog_id) = key.get_string("ProgId") && !prog_id.is_empty() {
+            return Some(prog_id);
+        }
     }
 
     CLASSES_ROOT.open(".pdf").ok()
