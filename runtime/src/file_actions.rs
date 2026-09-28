@@ -18,6 +18,9 @@ use ashpd::desktop::open_uri::{OpenDirectoryRequest, OpenFileRequest};
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
 
+#[cfg(any(windows, test))]
+use std::ffi::OsString;
+
 /// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -972,12 +975,29 @@ async fn open_path_in_linux_file_manager(target: &FileManagerTarget) -> Result<(
 fn create_file_manager_command(target: &FileManagerTarget) -> Command {
     let mut command = Command::new("explorer.exe");
     if target.reveal_file {
-        command.arg(format!("/select,{}", target.path.to_string_lossy()));
+        //
+        // Explorer reads its command line on its own. Passed as a regular argument, a path with
+        // a space would be quoted as a whole, "/select,C:\My Folder\file.txt", which Explorer
+        // does not understand: it opens the Documents folder instead.
+        //
+        command.raw_arg(explorer_select_argument(&target.path));
     } else {
         command.arg(&target.path);
     }
 
     command
+}
+
+/// Builds the argument which makes Explorer show the given file selected in its folder.
+///
+/// Only the path is quoted, as in /select,"C:\My Folder\file.txt". Windows allows no quotation
+/// mark inside a file or folder name, so the path itself never needs escaping.
+#[cfg(any(windows, test))]
+fn explorer_select_argument(path: &Path) -> OsString {
+    let mut argument = OsString::from("/select,\"");
+    argument.push(path.as_os_str());
+    argument.push("\"");
+    argument
 }
 
 #[cfg(target_os = "macos")]
@@ -1041,6 +1061,13 @@ mod tests {
         assert!(target.reveal_file);
         assert_eq!(linux_portal_operation(&target), LinuxPortalOperation::RevealFile);
         assert_eq!(xdg_open_fallback_path(&target), temp_dir.path());
+    }
+
+    #[test]
+    fn explorer_select_argument_quotes_only_the_path() {
+        let argument = explorer_select_argument(Path::new(r"C:\Users\thorsten\AI Studio Events.log"));
+
+        assert_eq!(argument, OsString::from(r#"/select,"C:\Users\thorsten\AI Studio Events.log""#));
     }
 
     #[test]
