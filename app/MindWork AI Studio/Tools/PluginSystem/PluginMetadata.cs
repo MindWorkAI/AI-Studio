@@ -23,6 +23,9 @@ public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isM
     public PluginVersion Version { get; } = plugin.Version;
 
     /// <inheritdoc />
+    public DateOnly? LastChanged { get; } = plugin.LastChanged;
+
+    /// <inheritdoc />
     public string[] Authors { get; } = plugin.Authors;
 
     /// <inheritdoc />
