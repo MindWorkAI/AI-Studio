@@ -6,7 +6,7 @@ use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use tauri::{Manager, Url};
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::process::{CommandChild, CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
 use crate::api_token::APIToken;
 use crate::runtime_api_token::API_TOKEN;
@@ -45,8 +45,8 @@ const DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR: &str = "DOTNET_BUNDLE_EXTRACT_BASE_DIR
 /// The directory below the app's cache directory where the .NET host extracts them.
 const DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME: &str = "dotnet";
 
-/// Removes ANSI escape sequences and non-printable control chars from stdout lines.
-fn sanitize_stdout_line(line: &str) -> String {
+/// Removes ANSI escape sequences and non-printable control chars from stdout and stderr lines.
+fn sanitize_output_line(line: &str) -> String {
     let mut sanitized = String::with_capacity(line.len());
     let mut chars = line.chars().peekable();
 
@@ -98,6 +98,15 @@ fn sanitize_stdout_line(line: &str) -> String {
     sanitized
 }
 
+/// Describes how a process ended, for the log.
+fn describe_termination(payload: &TerminatedPayload) -> String {
+    match (payload.code, payload.signal) {
+        (Some(code), _) => format!("exit code {code}"),
+        (None, Some(signal)) => format!("signal {signal}"),
+        (None, None) => String::from("neither an exit code nor a signal"),
+    }
+}
+
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
 pub async fn dotnet_port(_token: APIToken) -> String {
@@ -129,7 +138,8 @@ fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, St
 /// the app runs, which is why we choose the location on every platform instead of trusting the
 /// default.
 ///
-/// Returns `None` when the directory is not available. The host then falls back to its default.
+/// Returns `None` when the directory is not available. The host then falls back to its default,
+/// and should that fail as well, its message shows up in our log as stderr of the .NET server.
 fn dotnet_bundle_extraction_directory<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Option<String> {
     let cache_directory = match app_handle.path().app_cache_dir() {
         Ok(path) => path,
@@ -232,13 +242,45 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
         // Log the output of the .NET server:
         // NOTE: Log events are sent via structured HTTP API calls.
         // This loop serves for fundamental output (e.g., startup errors).
+        //
+        // The .NET host writes its own failures to stderr, before any of our .NET code runs.
+        // Without stderr and the termination, a server that cannot even start leaves no trace.
         while let Some(event) = rx.recv().await {
-            if let CommandEvent::Stdout(line) = event {
-                let line_utf8 = String::from_utf8_lossy(&line).to_string();
-                let line = sanitize_stdout_line(line_utf8.trim_end());
-                if !line.trim().is_empty() {
-                    info!(Source = ".NET Server (stdout)"; "{line}");
+            match event {
+                CommandEvent::Stdout(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        info!(Source = ".NET Server (stdout)"; "{line}");
+                    }
                 }
+
+                CommandEvent::Stderr(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        error!(Source = ".NET Server (stderr)"; "{line}");
+                    }
+                }
+
+                CommandEvent::Error(e) => {
+                    error!(Source = "Bootloader .NET"; "Failed to read the output of the .NET server: {e}");
+                }
+
+                CommandEvent::Terminated(payload) => {
+                    //
+                    // stop_dotnet_server() takes the child out before killing it. When the child is
+                    // still here, nobody asked the server to stop.
+                    //
+                    let termination = describe_termination(&payload);
+                    if server_spawn_clone.lock().unwrap().is_some() {
+                        error!(Source = "Bootloader .NET"; "The .NET server process terminated unexpectedly with {termination}.");
+                    } else {
+                        info!(Source = "Bootloader .NET"; "The .NET server process terminated with {termination}.");
+                    }
+                }
+
+                _ => (),
             }
         }
     });
