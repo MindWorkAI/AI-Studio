@@ -6882,6 +6882,45 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T914647109"] = "Sendet D
 -- Destination
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T994314591"] = "Ziel"
 
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T1573770551"] = "Version"
+
+-- Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T1642243064"] = "Quelle"
+
+-- Authors
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T1985367263"] = "Autoren"
+
+-- No target groups specified
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T2178642403"] = "Keine Zielgruppen angegeben"
+
+-- No categories specified
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T2267956060"] = "Keine Kategorien angegeben"
+
+-- Target groups
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T2402831960"] = "Zielgruppen"
+
+-- Support contact
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T2434966596"] = "Supportkontakt"
+
+-- Last changed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T2839174209"] = "Zuletzt geändert"
+
+-- The authors marked this plugin as no longer maintained.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T3041246111"] = "Die Entwickler haben dieses Plugin als nicht mehr gepflegt gekennzeichnet."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T3448155331"] = "Schließen"
+
+-- No authors specified
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T3586343532"] = "Keine Autoren angegeben"
+
+-- Categories
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T4034259341"] = "Kategorien"
+
+-- The authors marked this plugin as deprecated: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGININFODIALOG::T497068698"] = "Die Autoren haben dieses Plugin als veraltet gekennzeichnet: {0}"
+
 -- Load what the AI should do from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1254789334"] = "Lade aus einer Datei, was die KI tun soll"
 
@@ -9825,6 +9864,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T923110805"] = "Eine Testkonfigur
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Pandoc installieren"
 
+-- Plugin information: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1155531948"] = "Plugin-Informationen: {0}"
+
 -- Potentially Dangerous Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1229643769"] = "Potenziell gefährliches Plugin"
 
@@ -9854,6 +9896,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T169921408"] = "Plugin aus einer Date
 
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Deaktivierte Plugins"
+
+-- Plugin information
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1743041840"] = "Plugin-Informationen"
 
 -- Edit assistant plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1851885496"] = "Assistent-Plugin bearbeiten"
