@@ -470,6 +470,20 @@ CONFIG["SETTINGS"] = {}
 -- Controls whether data sources are off by default:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
 
+-- Controls how the data sources are searched. Allowed values are:
+--   SEMANTIC_SEARCH -> the AI searches the data sources itself, through the tool
+--                      semantic_search, whenever a question calls for it. This is the default.
+--   EVERY_MESSAGE   -> AI Studio searches the data sources with every message, before the AI
+--                      answers.
+-- SEMANTIC_SEARCH works only where semantic_search can be offered: the model has to be able to
+-- call tools, neither the tools nor semantic_search may be switched off, and the provider has
+-- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
+-- searches with every message instead.
+-- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- then lets the AI itself choose among all data sources it may use, and
+-- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
+
 -- Controls whether AI Studio asks an agent to choose data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
@@ -498,6 +512,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
@@ -739,15 +754,27 @@ CONFIG["SETTINGS"] = {}
 
 -- Disable individual tools by their stable tool ID. The default is an empty set.
 -- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- semantic_search lets the model search the data sources of a chat itself. Nobody selects it:
+-- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
+-- search the data sources with every message instead, the way it does for models without
+-- tool usage.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
 -- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page
+-- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
+-- semantic_search = NONE
+-- search_confluence always searches with a HIGH-confidence provider only, whatever value is
+-- set here.
+-- semantic_search offers a provider only the data sources whose own confidence level it meets,
+-- so it needs no minimum of its own. A provider below a minimum set here has the data sources
+-- searched with every message instead.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
---     ["read_web_page"] = "VERY_LOW"
+--     ["read_web_page"] = "VERY_LOW",
+--     ["search_confluence"] = "HIGH",
+--     ["semantic_search"] = "NONE"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -813,27 +840,47 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds.
 --   maxContentCharacters  Content-character limit.
+--   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
+--                           OFF -> the AI reads only addresses which appear in the chat, such as in
+--                                  a message, an attached document, or a data source, or which a
+--                                  tool returned, such as a search hit. This is the default.
+--                           ON  -> the AI may also choose addresses itself.
+--                         Both are instructions to the AI, not a technical block of any address.
 --   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
 --                         listed. Wildcards match subdomains only, so add the root domain
 --                         separately. Allowed private hosts require a provider with HIGH
---                         confidence or one trusted by the organization. AI Studio only tries the
---                         current user's operating-system sign-in for explicitly allowed HTTPS
---                         targets when those provider requirements are met, and it never reuses
---                         browser cookies.
+--                         confidence. AI Studio only tries the current user's operating-system
+--                         sign-in for explicitly allowed HTTPS targets when that provider
+--                         requirement is met, and it never reuses browser cookies.
+--
+-- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
+-- Cloud is not supported yet.
+--   baseUrl          Required HTTPS root URL of the Confluence Data Center wiki, including its
+--                    context path if present, for example https://wiki.example.org/confluence/.
+--                    Search loads dosearchsite.action with the same web-page reader as
+--                    read_web_page and uses the current user's operating-system sign-in when the
+--                    wiki has a private or VPN address. Redirects outside this URL are refused. A
+--                    provider must have HIGH confidence to receive search results.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+-- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
+-- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
---     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+--     ["read_web_page.freeAddressChoice"] = "OFF",
+--     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
+--     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
 --     ["web_search.maxResults"] = "5",
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
---     ["read_web_page.timeoutSeconds"] = "30"
+--     ["read_web_page.timeoutSeconds"] = "30",
+--     ["search_confluence.timeoutSeconds"] = "30"
 -- }
 
 -- Configure the HTTP timeout for external requests, in seconds.
@@ -927,8 +974,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure provider instances trusted by your organization for data-source security checks.
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
--- only for data-source security checks and related local data warnings. Trusted LLM providers
--- can also use read_web_page for explicitly allowed private or VPN hosts.
+-- only for data-source security checks and related local data warnings. This trust does not
+-- meet a required confidence level, for example of a local data source or a private web page;
+-- raise the provider's level in the custom confidence scheme above for that.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely, so providers trusted by the base configuration lose that status. Repeat
@@ -1037,6 +1085,67 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     }
 -- }
 
+-- An example chat template which preselects tools and data sources:
+-- Both are optional and independent of each other. Leaving a field out is not the same as
+-- leaving it empty:
+--
+--   ToolIds omitted             -> the chat starts with the tools set as its default
+--   ToolIds = {}                -> the chat starts with no tools at all
+--   DataSourceOptions omitted   -> the chat starts with the data source defaults
+--   DataSourceOptions = { ... } -> the chat starts with exactly what this table says
+--
+-- Both are a preselection, not a limit: users change either of them in the chat as usual.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000002",
+--     ["Name"] = "Intranet Research",
+--     ["SystemPrompt"] = "You are <Company Name>'s research assistant. Answer from our own documents and say where each answer comes from.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the tools a chat with this template starts with, by tool ID.
+--     -- A tool ID unknown to the installation is ignored, and so is a tool your
+--     -- organization switched off. A tool has to meet the confidence requirements of the
+--     -- provider in use, so it may stay unavailable even though this template names it.
+--     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- selected here: it offers itself whenever the chat has data sources to search.
+--     ["ToolIds"] = {
+--         "read_web_page",
+--     },
+--
+--     -- Optional: the data source options a chat with this template starts with.
+--     -- Every field inside is optional as well. DisableDataSources defaults to false here,
+--     -- because writing this table at all says that the template wants data sources;
+--     -- RetrievalMode defaults to SEMANTIC_SEARCH, and the other three default to false and
+--     -- an empty list.
+--     ["DataSourceOptions"] = {
+--         -- Set to true to start the chat with data sources switched off.
+--         ["DisableDataSources"] = false,
+--
+--         -- How the data sources are searched, with the same values and the same fallback
+--         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
+--         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
+--         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
+--         -- sources it may use, and AutomaticValidation has no effect.
+--         ["RetrievalMode"] = "EVERY_MESSAGE",
+--
+--         -- Let an agent choose the fitting data sources for each question. When true,
+--         -- PreselectedDataSourceIds is not used.
+--         ["AutomaticDataSourceSelection"] = false,
+--
+--         -- Let an agent check whether the retrieved data fits the question.
+--         ["AutomaticValidation"] = true,
+--
+--         -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+--         -- IDs from another configuration of your organization work as well: they are
+--         -- resolved against every known data source, not only against the ones defined
+--         -- here. IDs that resolve to nothing are ignored.
+--         ["PreselectedDataSourceIds"] = {
+--             "00000000-0000-0000-0000-000000000000",
+--         },
+--     },
+-- }
+
 -- Introduction texts shown as expansion panels on the welcome page:
 CONFIG["INTRODUCTIONS"] = {}
 
@@ -1112,7 +1221,8 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
---     -- Tool IDs include: web_search, read_web_page
+--     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
 --     -- Optional: preselect a provider or profile by ID.

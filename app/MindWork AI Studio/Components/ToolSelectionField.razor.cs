@@ -49,6 +49,14 @@ public partial class ToolSelectionField : MSGComponentBase
 
     private List<ConfigurationSelectData<string>> availableTools = [];
 
+    protected override void OnParametersSet()
+    {
+        // Like ToolSelection, the field shows the tools which will actually run, also when the
+        // selection is read-only. See ToolSelectionRules.NormalizeSelection:
+        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        base.OnParametersSet();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))

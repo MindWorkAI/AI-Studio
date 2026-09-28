@@ -192,6 +192,8 @@ When adding, changing, or removing model-driven tools, keep these parts in sync:
 
 Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
 
+A tool which offers itself from the context of a chat instead of being selected, such as `semantic_search`, sets `Activation = ToolActivation.CONTEXT` and tailors its function to each request in `ResolveFunctionAsync`. Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
+
 ## Model Capabilities
 
 **Documentation:** `documentation/Models.md`
@@ -212,7 +214,8 @@ Rules are never tried in order: specificity is computed from the rule, and two r
 RAG integration is currently in development (preview feature). Architecture:
 - **External Retrieval Interface (ERI)** - Contract for integrating external data sources
 - **Data Sources** - Local files and external data via ERI servers
-- **Agents** - AI agents select data sources and validate retrieval quality
+- **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. See "Searching Data Sources" in `documentation/Tools.md`.
+- **Agents** - AI agents select data sources and validate retrieval quality, in the classic process only
 - **Embedding providers** - Support for various embedding models
 - **Vector database** - Qdrant Edge, embedded in the Rust runtime; see "Databases" below
 - **Index database** - SQLite, holding the file fingerprints and the chunk texts for full-text search; see "Databases" below
@@ -308,12 +311,28 @@ Multi-level confidence scheme allows users to control which providers see which 
 6. GitHub Actions builds release binaries for all platforms
 7. Binaries uploaded to GitHub Releases
 
+## Localization
+
+The app's texts are localized in two steps, and the developer always does the first one.
+
+1. The developer starts the app, which runs the I18N collector, and runs the localization assistant
+   in the app for German and US English. Agents never write these initial translations themselves:
+   they neither add nor regenerate entries in `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`,
+   `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`,
+   or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`.
+   When new or changed texts are waiting for translation, remind the developer to start the app and
+   run the localization.
+2. Afterward, agents always review the German translation. Compare the new and changed values of the
+   de-de `plugin.lua` with `main`, check them against the wording already established there, and
+   correct or improve them directly in that file. `allTexts.lua` and the en-us `plugin.lua` stay as
+   the assistant wrote them.
+
 ## Important Development Notes
 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **End of file formatting** - Do not append an extra empty line at the end of files.
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
-- **I18N resources are generated** - Do not manually edit `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`, `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`, or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`. These files are updated automatically by the I18N process.
+- **I18N resources are generated** - The developer produces the translations by running the localization assistant in the app; agents only review and correct the German values afterward. See "Localization" above.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Agent-run builds** - Never start `.NET` or Rust builds in the agent's own shell; it is sandboxed. Use the `rider` and `rustrover` MCP servers instead, which build in the IDE outside that sandbox. See "Running builds from an agent" above.
 - **Debug environment** - Reads `startup.env` file with IPC credentials

@@ -19,6 +19,52 @@ public interface IToolImplementation
     /// </remarks>
     public ToolDefinition GetDefinition();
 
+    /// <summary>
+    /// The function this tool offers the model in the request being prepared, or null when it has
+    /// nothing to offer there.
+    /// </summary>
+    /// <remarks>
+    /// A definition is registered once, but some tools cannot say what they offer until they know
+    /// the request. Semantic Search describes the data sources of the chat, and only those the
+    /// provider may search; without any of them, it has nothing to offer, and the model should not
+    /// learn about a tool which can only come back empty. Most tools offer the same function every
+    /// time, which is what this returns unless a tool says otherwise.<br/><br/>
+    /// Asked for every request, after every check of ToolRegistry has passed, so it only decides
+    /// what an allowed tool offers, never whether it is allowed. For the same reason, only the
+    /// description and the parameters of what comes back are used: the function keeps the name and
+    /// the strict mode it was registered with, and the definition everything else. A tool which
+    /// throws is left out of the request.<br/><br/>
+    /// Keep the result stable while the chat stays the same, down to the order of what it lists:
+    /// the providers cache a request from its beginning, and the tools are part of that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The function to offer, or null to leave the tool out of this request.</returns>
+    public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult<ToolFunctionDefinition?>(definition.Function);
+
+    /// <summary>
+    /// The instructions this tool adds to the system prompt of the request being prepared.
+    /// </summary>
+    /// <remarks>
+    /// Most tools always say the same, which is what this returns unless a tool says otherwise. A
+    /// tool whose rules follow one of its settings words them here instead: Read Web Page tells the
+    /// model whether it may choose web addresses itself, depending on its free address choice.
+    /// Everything outside a request keeps reading the registered instructions, the token count
+    /// below the message field among them, so those should describe the tool's default.<br/><br/>
+    /// Asked the way ResolveFunctionAsync is: for every request, after every check of ToolRegistry
+    /// has passed, and only when the tool has a function to offer. A tool which throws is left out
+    /// of the request. Keep the result stable while the chat and the settings stay the same: the
+    /// providers cache a request from its beginning, and the system prompt is that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The instructions to add to the system prompt, or an empty text for none.</returns>
+    public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult(definition.SystemPromptInstructions);
+
     public string Icon => Icons.Material.Filled.Build;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }

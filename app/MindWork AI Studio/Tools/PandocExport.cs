@@ -43,14 +43,23 @@ public static class PandocExport
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText, new UTF8Encoding(false), token);
 
             // Call Pandoc to create the document:
-            var pandoc = await PandocProcessBuilder
+            var pandocBuilder = PandocProcessBuilder
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
                 .WithOutputFormat(format.ToPandocOutputFormat())
                 .WithOutputFile(targetFilePath)
-                .WithInputFile(tempMarkdownFilePath)
-                .BuildAsync(rustService);
+                .WithInputFile(tempMarkdownFilePath);
+
+            //
+            // The document is named after the file it is written to. Set as metadata, the name
+            // reaches the page as a string which Pandoc escapes; only a file named true or false
+            // is read as a switch and keeps the temporary name.
+            //
+            if (format.NeedsPageTitle())
+                pandocBuilder.AddArgument("-M").AddArgument($"pagetitle={Path.GetFileNameWithoutExtension(targetFilePath)}");
+
+            var pandoc = await pandocBuilder.BuildAsync(rustService);
 
             using var process = Process.Start(pandoc.StartInfo);
             if (process is null)
@@ -108,8 +117,10 @@ public static class PandocExport
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
     /// <param name="markdownContent">The content to export.</param>
+    /// <param name="fileName">What the document is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
     /// <returns>True, when the document was written.</returns>
-    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, string dialogTitle, FileExportFormat format, IContent markdownContent)
+    public static async Task<bool> ToDocument(RustService rustService, PandocAvailabilityService pandocAvailability, string dialogTitle, FileExportFormat format, IContent markdownContent, string? fileName = null)
     {
         if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
@@ -125,7 +136,7 @@ public static class PandocExport
             return false;
         }
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");

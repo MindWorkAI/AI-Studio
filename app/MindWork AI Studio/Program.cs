@@ -14,6 +14,7 @@ using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
@@ -175,10 +176,12 @@ internal sealed class Program
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IToolImplementation, ConfluenceSearchTool>();
         builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();
         builder.Services.AddSingleton<IWebSearchBackend, StaanSearchBackend>();
         builder.Services.AddSingleton<IWebSearchBackend, TavilySearchBackend>();
         builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SemanticSearchTool>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
@@ -200,6 +203,7 @@ internal sealed class Program
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();

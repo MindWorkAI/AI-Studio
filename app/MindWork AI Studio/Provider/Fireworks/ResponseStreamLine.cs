@@ -1,3 +1,5 @@
+using AIStudio.Provider.OpenAI;
+
 namespace AIStudio.Provider.Fireworks;
 
 /// <summary>
@@ -15,6 +17,19 @@ public readonly record struct ResponseStreamLine(string Id, string Object, uint 
 
     /// <inheritdoc />
     public ContentStreamChunk GetContent() => new(this.Choices[0].Delta.Content, []);
+
+    /// <summary>
+    /// What Fireworks says the request cost, on the one line which carries it.
+    /// </summary>
+    /// <remarks>
+    /// The same block the OpenAI chat completion API sends, because this is that wire format.
+    /// Not a positional parameter: the struct is built from JSON, and a further parameter would
+    /// only be a value nobody passes.
+    /// </remarks>
+    public ChatCompletionUsage? Usage { get; init; }
+
+    /// <inheritdoc />
+    public TokenUsage GetUsage() => this.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
 
     #region Implementation of IAnnotationStreamLine
 

@@ -54,14 +54,18 @@ public sealed class HTMLParser
     /// </summary>
     /// <remarks>
     /// Callers go through the web page retrieval service rather than here: it decides which
-    /// targets are acceptable and extracts the readable content. This method only performs the
-    /// request, and the validation it applies is the validation its caller hands in.
+    /// targets and which content types are acceptable, and extracts the readable content. This
+    /// method only performs the request, and the validation it applies is the validation its
+    /// caller hands in.<br/><br/>
+    /// The media type is validated once the headers have arrived and before the body is read.
+    /// A PDF of 30 MB is then refused for being a PDF, instead of being downloaded up to the
+    /// size limit first and refused for its size.
     /// </remarks>
     public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES, ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
         ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
-        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, CancellationToken token = default)
+        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, Action<string>? validateMediaType = null, CancellationToken token = default)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
@@ -117,16 +121,16 @@ public sealed class HTMLParser
                 throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{currentUrl}'.", null, response.StatusCode);
             }
 
-            var html = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
+            var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+            validateMediaType?.Invoke(mediaType);
 
+            var body = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
             return new HTMLParserWebPage
             {
                 RequestedUrl = url,
                 FinalUrl = response.RequestMessage?.RequestUri ?? currentUrl,
-                ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
-                Document = document,
+                ContentType = mediaType,
+                Body = body,
             };
         }
 
@@ -229,6 +233,11 @@ public sealed class HTMLParser
         request.Headers.TryAddWithoutValidation("User-Agent", USER_AGENT);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
+
+        // What a browser asks for, too. A server offering a page still sends the page, while an
+        // API that negotiates strictly answers with its JSON instead of refusing with a 406:
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml", 0.9));
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.8));
         request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US"));
         request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en", 0.9));
         request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));

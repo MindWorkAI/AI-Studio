@@ -36,4 +36,134 @@ public sealed class FileExportFormatTests
             FileExportFormat.HTML,
         }), "A format was added to or removed from the export menu: say in FollowsPageAnchors whether its reader follows a page in a local link, then name it here.");
     }
+
+    [TestCase("Q3: Umsatz/Planung?", FileExportFormat.HTML, "Q3 Umsatz Planung.html", Description = "A chat is named after the first words of its question, and those may hold anything.")]
+    [TestCase("Notes for the meeting.", FileExportFormat.MARKDOWN, "Notes for the meeting.md", Description = "Windows drops a trailing dot anyway.")]
+    [TestCase(null, FileExportFormat.MICROSOFT_WORD, "export.docx")]
+    [TestCase("  ", FileExportFormat.LATEX, "export.tex", Description = "A name made of nothing is no name.")]
+    public void TheSaveDialogSuggestsAUsableFileName(string? name, FileExportFormat format, string expectedFileName)
+    {
+        Assert.That(format.ToSuggestedFileName(name), Is.EqualTo(expectedFileName));
+    }
+
+    [Test]
+    public void AnOverlongFileNameIsShortened()
+    {
+        var fileName = FileExportFormat.HTML.ToSuggestedFileName(new string('a', 100));
+
+        Assert.That(fileName, Is.EqualTo($"{new string('a', 60)}.html"), "The first ten words of a question easily outgrow what a dialog shows.");
+    }
+
+    [Test]
+    public void OnlyAWebPageNeedsAPageTitle()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.HTML.NeedsPageTitle(), Is.True, "Without one, the browser tab shows the random name of the temporary file Pandoc read.");
+            Assert.That(FileExportFormat.MICROSOFT_WORD.NeedsPageTitle(), Is.False, "Word would keep it as a document property nobody asked for.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.NeedsPageTitle(), Is.False, "The same goes for an OpenDocument file.");
+            Assert.That(FileExportFormat.LATEX.NeedsPageTitle(), Is.False);
+        });
+    }
+
+    [TestCase("html", FileExportFormat.HTML)]
+    [TestCase("latex", FileExportFormat.LATEX)]
+    [TestCase("tex", FileExportFormat.LATEX)]
+    [TestCase("markdown", FileExportFormat.MARKDOWN)]
+    [TestCase("md", FileExportFormat.MARKDOWN)]
+    [TestCase("csv", FileExportFormat.CSV)]
+    [TestCase("tsv", FileExportFormat.TSV)]
+    [TestCase("HTML", FileExportFormat.HTML, Description = "Models do not agree on the case.")]
+    [TestCase("LaTeX", FileExportFormat.LATEX)]
+    [TestCase("CSV", FileExportFormat.CSV)]
+    [TestCase(" md ", FileExportFormat.MARKDOWN, Description = "Space around the name is no part of it.")]
+    public void AFenceLanguageNamesItsFormat(string language, FileExportFormat expectedFormat)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.True);
+            Assert.That(format, Is.EqualTo(expectedFormat));
+            Assert.That(format.IsPlainText(), Is.True, "A code block holds text, so the export writes it as it is.");
+        });
+    }
+
+    [Test]
+    public void OnlyTheTwoOfficeFormatsAreNoPlainText()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormat.MICROSOFT_WORD.IsPlainText(), Is.False, "A Word file is an archive, and writing text into one breaks it.");
+            Assert.That(FileExportFormat.OPEN_DOCUMENT_TEXT.IsPlainText(), Is.False);
+            Assert.That(FileExportFormat.NONE.IsPlainText(), Is.False, "No format means no file.");
+            Assert.That(FileExportFormat.UNKNOWN.IsPlainText(), Is.False);
+            Assert.That(FileExportFormat.HTML.IsPlainText(), Is.True, "A page the model wrote is a finished file, even though an entire answer needs Pandoc to become one.");
+            Assert.That(FileExportFormat.LATEX.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.MARKDOWN.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.CSV.IsPlainText(), Is.True);
+            Assert.That(FileExportFormat.TSV.IsPlainText(), Is.True);
+        });
+    }
+
+    [TestCase("css", TestName = "A language AI Studio writes no file for")]
+    [TestCase("docx", TestName = "A format no code block can hold")]
+    [TestCase("", TestName = "A fence without a language")]
+    [TestCase(null, TestName = "A fence Markdig read no language for")]
+    public void AnyOtherFenceLanguageNamesNoFormat(string? language)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileExportFormatExtensions.TryFromCodeFenceLanguage(language, out var format), Is.False);
+            Assert.That(format, Is.EqualTo(FileExportFormat.NONE));
+        });
+    }
+
+    [TestCase(FileExportFormat.HTML)]
+    [TestCase(FileExportFormat.MARKDOWN)]
+    public void AnHtmlCommentEndsWhereItShouldAndNowhereElse(FileExportFormat format)
+    {
+        var found = format.TryToComment("A page titled --> Start, and one titled --!> Next", out var comment);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(comment, Does.StartWith("<!--"));
+            Assert.That(comment.IndexOf("-->", StringComparison.Ordinal), Is.EqualTo(comment.Length - 3), "Only the end of the comment may end it; the title would spill onto the page otherwise.");
+            Assert.That(comment, Does.Not.Contain("--!>"), "A browser ends a comment there as well.");
+            Assert.That(comment, Does.Contain("Start").And.Contain("Next"), "The title stays readable.");
+        });
+    }
+
+    [Test]
+    public void AnHtmlCommentKeepsTheDashesOfAnAddress()
+    {
+        FileExportFormat.HTML.TryToComment("https://xn--mnchen-3ya.de/", out var comment);
+
+        Assert.That(comment, Does.Contain("https://xn--mnchen-3ya.de/"), "A domain with an umlaut is written with two dashes, and the link has to keep working.");
+    }
+
+    [Test]
+    public void EveryLineOfALatexCommentIsOne()
+    {
+        var found = FileExportFormat.LATEX.TryToComment(Lines("# Sources", string.Empty, "- [1] A title with 100 % and a_b"), out var comment);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(found, Is.True);
+            Assert.That(comment.Split(Environment.NewLine), Is.EqualTo(new[] { "% # Sources", "%", "% - [1] A title with 100 % and a_b" }), "LaTeX has no end of a comment, only the end of a line.");
+        });
+    }
+
+    [TestCase(FileExportFormat.CSV)]
+    [TestCase(FileExportFormat.TSV)]
+    [TestCase(FileExportFormat.MICROSOFT_WORD)]
+    public void AFormatWithoutCommentsSaysSo(FileExportFormat format)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(format.TryToComment("A text.", out var comment), Is.False);
+            Assert.That(comment, Is.Empty);
+        });
+    }
+
+    private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);
 }

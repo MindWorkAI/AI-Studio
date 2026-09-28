@@ -218,7 +218,40 @@ public sealed class AnthropicMessageStreamAccumulatorTests
 
         Assert.That(response, Is.Null, "An unfinished message is not handed on as if it were finished.");
     }
-    
+
+    [Test]
+    public void TheMessageStartStatesWhatTheRequestCarried()
+    {
+        const string MESSAGE_START = """{"type":"message_start","message":{"id":"msg_1","type":"message","role":"assistant","model":"claude-opus-5-5","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":2679,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":3}}}""";
+
+        var part = new AnthropicMessageStreamAccumulator().Process(Event(MESSAGE_START));
+        var response = Read(
+            MESSAGE_START,
+            """{"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}""",
+            """{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Hello."}}""",
+            """{"type":"content_block_stop","index":0}""",
+            """{"type":"message_stop"}""");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(part.Usage.PromptTokens, Is.EqualTo(2679), "The start of the message states what the request carried.");
+            Assert.That(part.HasContent, Is.False, "And it has nothing to show.");
+            Assert.That(response!.Content, Has.Count.EqualTo(1), "Nor does it become a block of the message.");
+        });
+    }
+
+    [Test]
+    public void TheMessageDeltaStatesNothingAboutTheRequest()
+    {
+        //
+        // Its usage is cumulative and holds whatever a server tool fed back into the same request.
+        //
+        var part = new AnthropicMessageStreamAccumulator().Process(Event(
+            """{"type":"message_delta","delta":{"stop_reason":"end_turn","stop_sequence":null},"usage":{"input_tokens":10682,"output_tokens":510}}"""));
+
+        Assert.That(part.Usage.IsKnown, Is.False);
+    }
+
     private static AnthropicResponse? Read(params string[] data)
     {
         var accumulator = new AnthropicMessageStreamAccumulator();

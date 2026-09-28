@@ -57,6 +57,15 @@ public static class CapabilitySnapshot
     /// </remarks>
     private const string NO_TOKENIZER = "(unknown)";
 
+    /// <summary>
+    /// What a model no rule states a system prompt role for is written as.
+    /// </summary>
+    /// <remarks>
+    /// Which is nearly every model outside OpenAI's own line, and rightly so: the provider then
+    /// sends the system prompt the one way it knows.
+    /// </remarks>
+    private const string NO_SYSTEM_PROMPT_ROLE = "(unknown)";
+
     private const string HEADER =
         """
         # What the rules answer, for every model of the corpus.
@@ -66,8 +75,11 @@ public static class CapabilitySnapshot
         #
         # Columns are provider, model ID as the provider reports it, the capabilities sorted by
         # name, what the model is made for, its context window in tokens, how many images it
-        # accepts, and which tokenizer it uses. The ID stands here unchanged, so a line may well
-        # carry leading or trailing spaces.
+        # accepts, which tokenizer it uses, and which role its system prompt is sent in. The ID
+        # stands here unchanged, so a line may well carry leading or trailing spaces.
+        #
+        # A system prompt role written as "(unknown)" leaves the choice to the provider. Only the
+        # rules of OpenAI's own line state one, because only OpenAI's cloud asks the question.
         #
         # A window or an image limit written as "(unknown)" is one nobody has stated a source for.
         # That is a gap, not a claim: the app then shows a person how many tokens their conversation
@@ -137,8 +149,15 @@ public static class CapabilitySnapshot
     private static string Line(CorpusEntry entry)
     {
         var profile = entry.Provider.GetModelProfile(new Model(entry.ModelId, null));
-        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)} | {Describe(profile.Images)} | {Describe(profile.Tokenizer)}";
+        return $"{entry.Provider} | {entry.ModelId} | {Describe(RebuiltRules.AsCapabilities(profile))} | {profile.Kind} | {Describe(profile.Context)} | {Describe(profile.Images)} | {Describe(profile.Tokenizer)} | {Describe(profile.SystemPromptRole)}";
     }
+
+    /// <summary>
+    /// Writes a system prompt role the way a snapshot line does.
+    /// </summary>
+    /// <param name="role">The role to write.</param>
+    /// <returns>The role, or a marker when no rule stated one.</returns>
+    public static string Describe(SystemPromptRole role) => role is SystemPromptRole.UNKNOWN ? NO_SYSTEM_PROMPT_ROLE : role.ToString();
 
     /// <summary>
     /// Writes a tokenizer reference the way a snapshot line does.

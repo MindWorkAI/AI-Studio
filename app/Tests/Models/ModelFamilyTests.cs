@@ -59,6 +59,20 @@ public sealed class ModelFamilyTests
             Assert.That(codex.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL));
             Assert.That(codex.Context.DefaultTokens, Is.EqualTo(400_000));
             Assert.That(codex.Tokenizer.Id, Is.EqualTo("o200k_base"));
+            Assert.That(codex.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER));
+        });
+    }
+
+    [Test]
+    public void AModifierWhichSaysNothingAboutTheSystemPromptRoleLeavesItAlone()
+    {
+        var index = ModelFamilyIndex.Build(new SampleFamily().Rules.Concat(new FamilyWithAModifier().Rules));
+        var adjusted = index.Resolve(new ModelId("gpt-5.1-base"), LLMProviders.OPEN_AI, ModelVendor.OPEN_AI);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(adjusted.Has(Capability.FUNCTION_CALLING), Is.False, "The modifier did apply.");
+            Assert.That(adjusted.SystemPromptRole, Is.EqualTo(SystemPromptRole.DEVELOPER));
         });
     }
 
@@ -184,7 +198,8 @@ public sealed class ModelFamilyTests
                 .Apis(Capability.RESPONSES_API | Capability.CHAT_COMPLETION_API)
                 .Reasoning(ReasoningSupport.OPTIONAL)
                 .ContextWindow(400_000)
-                .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+                .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+                .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
             builder.Rule("gpt-5.1-codex").AsPrefix().Inherits().Removes(Capability.WEB_SEARCH);
         }

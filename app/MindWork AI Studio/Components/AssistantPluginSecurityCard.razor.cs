@@ -1,6 +1,7 @@
 using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -30,7 +31,9 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     /// should see that beforehand, which is why the count sits in the header next to the audit
     /// level and the tools themselves are named in the details.
     /// </remarks>
-    private IReadOnlyList<string> PluginToolIds => this.Plugin?.AssistantToolIds ?? this.Plugin?.ChatLaunchConfiguration?.ToolIds ?? [];
+    private IReadOnlyList<string> PluginToolIds => ToolSelectionRules.NormalizeSelection(this.Plugin?.AssistantToolIds ?? this.Plugin?.ChatLaunchConfiguration?.ToolIds ?? [])
+        .OrderBy(x => x, StringComparer.Ordinal)
+        .ToList();
 
     private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool showSecurityCard;
