@@ -1,0 +1,71 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
+            <tbody>
+                <tr>
+                    <td style="width: 180px;">
+                        <MudText Typo="Typo.body2"><b>@T("Version")</b></MudText>
+                    </td>
+                    <td><MudText Typo="Typo.body2">@this.Plugin.Version</MudText></td>
+                </tr>
+                <tr>
+                    <td>
+                        <MudText Typo="Typo.body2"><b>@T("Last changed")</b></MudText>
+                    </td>
+                    <td><MudText Typo="Typo.body2">@this.LastChangedText</MudText></td>
+                </tr>
+                <tr>
+                    <td>
+                        <MudText Typo="Typo.body2"><b>@T("Authors")</b></MudText>
+                    </td>
+                    <td><MudText Typo="Typo.body2">@this.AuthorsText</MudText></td>
+                </tr>
+                @if (!string.IsNullOrWhiteSpace(this.Plugin.SupportContact))
+                {
+                    <tr>
+                        <td>
+                            <MudText Typo="Typo.body2"><b>@T("Support contact")</b></MudText>
+                        </td>
+                        <td><MudText Typo="Typo.body2">@this.Plugin.SupportContact</MudText></td>
+                    </tr>
+                }
+                @if (!string.IsNullOrWhiteSpace(this.Plugin.SourceURL))
+                {
+                    <tr>
+                        <td>
+                            <MudText Typo="Typo.body2"><b>@T("Source")</b></MudText>
+                        </td>
+                        <td><MudText Typo="Typo.body2">@this.Plugin.SourceURL</MudText></td>
+                    </tr>
+                }
+                <tr>
+                    <td>
+                        <MudText Typo="Typo.body2"><b>@T("Categories")</b></MudText>
+                    </td>
+                    <td><MudText Typo="Typo.body2">@this.CategoriesText</MudText></td>
+                </tr>
+                <tr>
+                    <td>
+                        <MudText Typo="Typo.body2"><b>@T("Target groups")</b></MudText>
+                    </td>
+                    <td><MudText Typo="Typo.body2">@this.TargetGroupsText</MudText></td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+
+        @if (!this.Plugin.IsMaintained || !string.IsNullOrWhiteSpace(this.Plugin.DeprecationMessage))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">
+                @(string.IsNullOrWhiteSpace(this.Plugin.DeprecationMessage)
+                    ? T("The authors marked this plugin as no longer maintained.")
+                    : string.Format(T("The authors marked this plugin as deprecated: {0}"), this.Plugin.DeprecationMessage))
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
