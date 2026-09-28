@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -113,6 +114,13 @@ public static class DirectChatLauncherLuaWriter
         builder.AppendLine("-- The version of the plugin:");
         builder.AppendLine($"VERSION = \"{plugin.Version}\"");
         builder.AppendLine();
+
+        if (plugin.LastChanged is { } lastChanged)
+        {
+            builder.AppendLine("-- The date this plugin was last changed, formatted as YYYY-MM-DD. Optional.");
+            builder.AppendLine($"LAST_CHANGED = \"{lastChanged.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}\"");
+            builder.AppendLine();
+        }
 
         builder.AppendLine("-- The type of the plugin:");
         builder.AppendLine($"TYPE = \"{nameof(PluginType.ASSISTANT)}\"");
