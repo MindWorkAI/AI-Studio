@@ -38,6 +38,15 @@
         Assistants: Use ready-made assistants for common business and other tasks without writing prompts yourself.
       </li>
       <li>
+        Tools: AI models can search the web, read web pages, or search your organization's
+        Confluence wiki on their own, and answer with the sources they used. You decide which
+        tools a model may use.
+      </li>
+      <li>
+        Voice input: Dictate your messages and have recordings as well as audio and video files
+        transcribed by the provider of your choice, including one you host yourself.
+      </li>
+      <li>
         Unrestricted usage: Unlike services that impose limits after intensive use, MindWork
         AI Studio lets you use provider APIs without restrictions imposed by the app.
       </li>
@@ -50,6 +59,10 @@
       <li>
         Privacy: Control which providers receive your data using provider confidence settings
         and assign different protection levels to different tasks.
+      </li>
+      <li>
+        Enterprise IT: Your IT department can manage providers, assistants, chat templates,
+        tools, and settings centrally for the whole organization.
       </li>
       <li>
         Flexibility: Choose the provider and model best suited to your current task.
