@@ -52,6 +52,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         this.Provider = provider;
         this.BaseUri = baseUri;
         this.HttpClient = ExternalHttpClientTimeout.CreateHttpClient(baseUri, trustPolicy);
+        AppUserAgent.Apply(this.HttpClient);
     }
     
     #region Handling of IProvider, which all providers must implement
