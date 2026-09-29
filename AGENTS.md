@@ -22,7 +22,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 - **App:** .NET 9 Blazor Server application providing the UI and core functionality
 - **Communication:** The Rust runtime and .NET app communicate via HTTPS with TLS certificates generated at startup
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
-- **Plugin System:** Lua-based plugin system for language packs, configuration, and future assistant plugins
+- **Plugin System:** Lua-based plugin system for language packs, configuration, assistants, and model knowledge
 
 ## Building
 
@@ -211,7 +211,7 @@ Rules are never tried in order: specificity is computed from the rule, and two r
 
 ## RAG (Retrieval-Augmented Generation)
 
-RAG integration is currently in development (preview feature). Architecture:
+RAG is available as a beta preview feature. Architecture:
 - **External Retrieval Interface (ERI)** - Contract for integrating external data sources
 - **Data Sources** - Local files and external data via ERI servers
 - **Two ways to search** - By default, the chat model searches the data sources itself through the tool `semantic_search`, whenever a question calls for it. The classic process (`AISrcSelWithRetCtxVal`) searches them with every message instead, when the user chose so per chat (`DataSourceOptions.RetrievalMode`) or whenever the tool cannot be offered. `ToolRegistry.GetEffectiveRetrievalModeAsync` decides between the two; pass its answer to `DataSourceService`, because the agents only count as providers that see the data when they actually run. See "Searching Data Sources" in `documentation/Tools.md`.

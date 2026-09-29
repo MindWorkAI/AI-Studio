@@ -602,7 +602,7 @@ Enable **Show administration settings** in the app settings once. It reveals the
 |---|---|---|
 | LLM providers | the provider list in the app settings | providers you created yourself |
 | Embedding providers | the provider list in the app settings | as above, and only while the RAG preview is enabled |
-| Transcription providers | the provider list in the app settings | as above, and only while the speech-to-text preview is enabled |
+| Transcription providers | the provider list in the app settings | providers you created yourself |
 | Profiles | the profile dialog in the app settings | profiles you created yourself |
 | Chat templates | the chat template dialog in the app settings | templates you created yourself |
 | ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
