@@ -63,7 +63,7 @@ public partial class Home : MSGComponentBase
         this.itemsAdvantages = [
             new(this.T("Free of charge"), this.T("The app is free to use, both for personal and commercial purposes.")),
             new(this.T("Democratization of AI"), this.T("We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.")),
-            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")), 
+            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")),
             new(this.T("Assistants"), this.T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
             new(T("Tools"), T("AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work.")),
             new(T("Voice input"), T("Dictate your messages instead of typing them, and have your recordings as well as audio and video files transcribed. You choose the transcription provider, including one you host yourself.")),
@@ -190,7 +190,7 @@ public partial class Home : MSGComponentBase
         ## Step 4: Load OpenAI Models
         1. Ensure you have an internet connection and your API key is valid.
         2. Click "Reload" to retrieve a list of available OpenAI models.
-        3. Select "gpt-5.4" to use a current model.
+        3. Select "gpt-6-luna" to use a current model.
         4. Provide a name for this combination of provider, API key, and model. This is called the "instance name". For example, you can name it based on the usage context, such as "Personal OpenAI" or "Work OpenAI".
         
         ## Step 5: Save the Provider

@@ -31,7 +31,7 @@ Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 ![MindWork AI Studio - Home](documentation/AI%20Studio%20Home.png)
 ![MindWork AI Studio - Assistants](documentation/AI%20Studio%20Assistants.png)
 
-MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI o1, or even your own local AI models.
+MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI GPT-6, or even your own local AI models.
 
 **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
@@ -39,7 +39,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
 - **Democratization of AI**: We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
-  - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
+  - [OpenAI](https://openai.com/) (GPT-6, GPT-5, o3, etc.)
   - [Perplexity](https://www.perplexity.ai/)
   - [Mistral](https://mistral.ai/)
   - [Anthropic](https://www.anthropic.com/) (Claude)
