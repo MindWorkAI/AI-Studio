@@ -29,6 +29,18 @@ public sealed class CircuitStateService
     public string CircuitId { get; private set; } = "n/a";
 
     /// <summary>
+    /// Occurs when the browser connection returned after it was lost.
+    /// </summary>
+    /// <remarks>
+    /// It does not occur for the first connection of a circuit, only for the ones which follow a loss. Use it
+    /// to fetch again what the browser reports on its own: Blazor drops such reports while the connection is
+    /// down, and nothing sends them a second time. The event is raised while Blazor is still completing the
+    /// reconnection, though. A handler must not wait for JavaScript interop, because the browser's answer can
+    /// only be processed once the reconnection has finished. Start such work without awaiting it instead.
+    /// </remarks>
+    public event Action? ConnectionRestored;
+
+    /// <summary>
     /// Called by the circuit handler when the circuit was opened.
     /// </summary>
     /// <param name="circuitId">The ID of the opened circuit.</param>
@@ -37,7 +49,17 @@ public sealed class CircuitStateService
     /// <summary>
     /// Called by the circuit handler when the browser connection was established or restored.
     /// </summary>
-    public void MarkAsConnected() => this.isConnected = true;
+    /// <remarks>
+    /// A restored connection raises ConnectionRestored. Blazor never runs the handler's events of one circuit
+    /// concurrently, so reading and writing the state in two steps is safe here.
+    /// </remarks>
+    public void MarkAsConnected()
+    {
+        var wasConnected = this.isConnected;
+        this.isConnected = true;
+        if (!wasConnected)
+            this.ConnectionRestored?.Invoke();
+    }
 
     /// <summary>
     /// Called by the circuit handler when the browser connection was lost or the circuit ended.

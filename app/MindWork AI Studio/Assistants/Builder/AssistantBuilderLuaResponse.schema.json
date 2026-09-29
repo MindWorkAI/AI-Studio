@@ -131,11 +131,9 @@
     "chatLaunch": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "workspace_name"
-      ],
       "properties": {
         "workspace_name": {
+          "description": "Omit this field for a launcher that opens a chat without a workspace.",
           "type": "string",
           "minLength": 1
         },

@@ -267,17 +267,31 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             FileTypes.IsAllowedPath(source.Path, FileTypes.IMAGE)).ToArray();
         if (imageSources.Length == 0)
             return;
-        var capabilities = provider.GetModelCapabilities();
+        var profile = provider.GetModelProfile();
         var acceptsImages = imageSources.Length == 1
-            ? capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) ||
-              capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)
-            : capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
+            ? profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT)
+            : profile.Has(Capability.MULTIPLE_IMAGE_INPUT);
         if (!acceptsImages)
             throw new VisualBriefingBuildException(
                 VisualBriefingFailureCode.MODEL_CAPABILITY_MISSING,
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
                 "The selected model cannot process the number of source images and visual assets.",
-                $"ImageCount={imageSources.Length}; SingleImage={capabilities.Contains(Capability.SINGLE_IMAGE_INPUT)}; MultipleImages={capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)}.");
+                $"ImageCount={imageSources.Length}; SingleImage={profile.Has(Capability.SINGLE_IMAGE_INPUT)}; MultipleImages={profile.Has(Capability.MULTIPLE_IMAGE_INPUT)}.");
+
+        //
+        // And then the number, where a vendor has stated one. Without it, "takes several images"
+        // is all the check above can ask, and a briefing of two hundred pictures passes it only to
+        // be refused by the provider after everything has been read, uploaded and paid for.
+        //
+        // No limit is invented where none is documented. A model whose vendor says nothing keeps
+        // the answer it has always had, which is that several means several.
+        //
+        if (profile.Images.MaxInOneMessage is { } allowed && imageSources.Length > allowed)
+            throw new VisualBriefingBuildException(
+                VisualBriefingFailureCode.MODEL_CAPABILITY_MISSING,
+                VisualBriefingBuildStage.SOURCE_PREPARATION,
+                $"The selected model accepts at most {allowed} images at once, and this briefing uses {imageSources.Length}.",
+                $"ImageCount={imageSources.Length}; MaxPerMessage={profile.Images.MaxPerMessage}; MaxPerRequest={profile.Images.MaxPerRequest}.");
     }
 
     /// <summary>

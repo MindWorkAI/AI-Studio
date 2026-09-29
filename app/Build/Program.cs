@@ -7,4 +7,6 @@ app.AddCommands<UpdateMetadataCommands>();
 app.AddCommands<UpdateWebAssetsCommand>();
 app.AddCommands<CollectI18NKeysCommand>();
 app.AddCommands<AssistantPluginHashCommand>();
+app.AddCommands<VerifyModelsCommand>();
+app.AddCommands<VerifyCommand>();
 app.Run();

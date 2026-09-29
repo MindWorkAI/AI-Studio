@@ -444,7 +444,8 @@ ASSISTANT = {
     },
 }
 
--- direct chat launcher example; form-only fields and UI are not used in this mode:
+-- direct chat launcher example opening the chat in a workspace; form-only fields and UI are not
+-- used in this mode:
 ASSISTANT = {
     ["Title"] = "<main title of chat launcher>",
     ["Description"] = "<description of the chat that will be opened>",
@@ -453,14 +454,32 @@ ASSISTANT = {
     ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
     ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
     ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
+    -- Optional: the data sources the chat starts with. A chat template chosen above may bring
+    -- data source options of its own. It then decides them alone, the IDs named here are dropped,
+    -- and AI Studio writes a warning into the log. Only a chat template can also say that the AI
+    -- picks the sources for each message, which is why it wins as a whole instead of field by
+    -- field.
     ["DataSourceIds"] = {
         "<optional data source GUID>",
     },
     -- Optional: the tools preselected when the chat opens. Users may change the selection
     -- in the chat afterwards, and every tool has to meet the confidence requirements of the
-    -- provider in use. A tool ID unknown to the installation is ignored.
+    -- provider in use. A tool ID unknown to the installation is ignored. The same rule as for the
+    -- data sources applies here: a chat template which names tools of its own wins over this list.
     -- Tool IDs include: web_search, read_web_page
     ["ToolIds"] = {
         "<optional tool ID>",
     },
+}
+
+-- direct chat launcher example without a workspace: the tile opens a disappearing chat, which is
+-- kept apart from the workspaces and cleaned up according to the workspace maintenance settings.
+-- A WorkspaceName next to this launch behavior is an error instead of being ignored, so a leftover
+-- name cannot silently change the kind of chat the tile opens. Every optional field of the example
+-- above works here as well:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_TEMPORARY_CHAT",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
 }

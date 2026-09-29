@@ -104,6 +104,57 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Reads which format a model means when it names a language behind the opening fence of a
+    /// code block.
+    /// </summary>
+    /// <remarks>
+    /// A model which answers with a finished file puts it into a code block and names its language,
+    /// as in ```html. Models do not agree on the spelling, so we accept the usual names of a format
+    /// in any case. Only formats which are plain text appear here: a code block holds text, never
+    /// a Word document.
+    /// </remarks>
+    /// <param name="language">The language behind the opening fence, as Markdig reads it into
+    /// FencedCodeBlock.Info.</param>
+    /// <param name="format">The format the language names, or NONE when it names none of ours.</param>
+    /// <returns>True, when the language names a format AI Studio writes.</returns>
+    public static bool TryFromCodeFenceLanguage(string? language, out FileExportFormat format)
+    {
+        format = language?.Trim().ToLowerInvariant() switch
+        {
+            "html" => FileExportFormat.HTML,
+            "latex" or "tex" => FileExportFormat.LATEX,
+            "markdown" or "md" => FileExportFormat.MARKDOWN,
+            "csv" => FileExportFormat.CSV,
+            "tsv" => FileExportFormat.TSV,
+
+            _ => FileExportFormat.NONE,
+        };
+
+        return format is not FileExportFormat.NONE;
+    }
+
+    /// <summary>
+    /// Determines whether the format holds a table rather than a text.
+    /// </summary>
+    /// <param name="format">The format.</param>
+    /// <returns>True for the formats a spreadsheet opens.</returns>
+    public static bool IsTabular(this FileExportFormat format) => format is FileExportFormat.CSV or FileExportFormat.TSV;
+
+    /// <summary>
+    /// Determines whether a file of the format is plain text, which AI Studio writes as it is.
+    /// </summary>
+    /// <remarks>
+    /// That holds for a web page and a LaTeX document as well, even though an entire answer needs
+    /// Pandoc to become one: the answer is Markdown, whereas a page the model wrote is a finished
+    /// file already. A Word or an OpenDocument file is an archive, and only Pandoc produces one. The
+    /// list is spelled out on purpose, so a format added later counts as plain text only once
+    /// somebody says so.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a text written as it is makes a valid file of the format.</returns>
+    public static bool IsPlainText(this FileExportFormat format) => format is FileExportFormat.LATEX or FileExportFormat.MARKDOWN or FileExportFormat.HTML or FileExportFormat.CSV or FileExportFormat.TSV;
+
+    /// <summary>
     /// Returns the file name the save dialog starts with.
     /// </summary>
     /// <remarks>
@@ -179,7 +230,7 @@ public static class FileExportFormatExtensions
         FileExportFormat.OPEN_DOCUMENT_TEXT => FileTypes.ODT,
         FileExportFormat.LATEX => FileTypes.TEX,
         FileExportFormat.MARKDOWN => FileTypes.MARKDOWN,
-        FileExportFormat.HTML => FileTypes.HTML,
+        FileExportFormat.HTML => FileTypes.HTML_DOCUMENT,
         FileExportFormat.CSV => FileTypes.CSV,
         FileExportFormat.TSV => FileTypes.TSV,
 
@@ -203,6 +254,75 @@ public static class FileExportFormatExtensions
 
         _ => WITHOUT_BYTE_ORDER_MARK,
     };
+
+    /// <summary>
+    /// Wraps a text into a comment of the format: whoever opens the file in an editor reads it,
+    /// while a browser or a LaTeX run skips it.
+    /// </summary>
+    /// <remarks>
+    /// A comment in HTML, and so in Markdown, ends at the first --> it holds, and a browser takes
+    /// --!> for the same; the rest of the text would spill onto the page from there. The title of
+    /// a web page may hold either, so a space goes in before the bracket, which keeps the text
+    /// readable and ends nothing. Every other pair of dashes stays, because a web address may carry
+    /// one, as in the xn-- of a domain with an umlaut. A LaTeX comment has no end to watch for: it
+    /// runs to the end of its line, so every line starts one.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <param name="text">The text to put into the comment.</param>
+    /// <param name="comment">The comment, or an empty string when the format has none.</param>
+    /// <returns>True, when the format knows comments.</returns>
+    public static bool TryToComment(this FileExportFormat format, string text, out string comment)
+    {
+        var lines = text.TrimEnd().ReplaceLineEndings("\n").Split('\n');
+        switch (format)
+        {
+            case FileExportFormat.HTML or FileExportFormat.MARKDOWN:
+                var commentText = string.Join(Environment.NewLine, lines).Replace("-->", "-- >").Replace("--!>", "--! >");
+                comment = $"<!--{Environment.NewLine}{commentText}{Environment.NewLine}-->";
+                return true;
+
+            case FileExportFormat.LATEX:
+                comment = string.Join(Environment.NewLine, lines.Select(line => line.Length is 0 ? "%" : $"% {line}"));
+                return true;
+
+            default:
+                comment = string.Empty;
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether a link into a local file may name the page it points at.
+    /// </summary>
+    /// <remarks>
+    /// A page is named by the fragment of the link, the way the PDF open parameters call for. A
+    /// browser and a PDF reader follow that and open the document on the page; Word and LibreOffice
+    /// take the fragment for part of the file name, look for a file which does not exist, and refuse
+    /// the link altogether. There the page is dropped, so the link at least opens the document --
+    /// which page it was stays in the title of the source. Verified on 2026-09-15 with LibreOffice
+    /// on an exported .odt. A format added later keeps the page unless it is known to stumble too.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a reader of this format follows such a link.</returns>
+    public static bool FollowsPageAnchors(this FileExportFormat format) => format switch
+    {
+        FileExportFormat.MICROSOFT_WORD or FileExportFormat.OPEN_DOCUMENT_TEXT => false,
+
+        _ => true,
+    };
+
+    /// <summary>
+    /// Determines whether Pandoc has to be told the title of a document in the format.
+    /// </summary>
+    /// <remarks>
+    /// A web page shows its title in the browser tab. Without one, Pandoc names the page after its
+    /// input file, which is a temporary file of ours with a random name. Word and OpenDocument show
+    /// no such title, and handed one anyway, they keep it as a document property nobody asked for;
+    /// verified with Pandoc 3.8.3 on 2026-09-23. LaTeX ignores it.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>True, when a document of this format needs a title besides its content.</returns>
+    public static bool NeedsPageTitle(this FileExportFormat format) => format is FileExportFormat.HTML;
 
     /// <summary>
     /// Returns the name Pandoc knows the format by.

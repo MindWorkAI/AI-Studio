@@ -22,6 +22,7 @@ public sealed class ProviderValidation
 
     public Func<bool> IsModelProvidedManually { get; init; } = () => false;
 
+    public Func<string> GetCustomTokenizerValidationIssue { get; init; } = () => string.Empty;
     public Func<bool> IsModelSelectionHidden { get; init; } = () => false;
 
     public string? ValidatingHostname(string hostname)
@@ -48,16 +49,20 @@ public sealed class ProviderValidation
 
     public string? ValidatingAPIKey(string apiKey)
     {
-        if(this.GetProvider() is LLMProviders.SELF_HOSTED)
-            return null;
-        
+        // A key which could not be stored in or removed from the operating system has to reach the
+        // user for every provider. Self-hosted providers are exempt from having to name a key at
+        // all, not from being told that the one they named was lost on the way:
         var apiKeyStorageIssue = this.GetAPIKeyStorageIssue();
         if(!string.IsNullOrWhiteSpace(apiKeyStorageIssue))
             return apiKeyStorageIssue;
 
+        // A self-hosted server may well run without any key, so an empty field is fine for it:
+        if(this.GetProvider() is LLMProviders.SELF_HOSTED)
+            return null;
+
         if(string.IsNullOrWhiteSpace(apiKey))
             return TB("Please enter an API key.");
-        
+
         return null;
     }
 
@@ -130,6 +135,15 @@ public sealed class ProviderValidation
             return TB("Please select an Hugging Face inference provider.");
 
         return null;
+    }
+
+    public string? ValidatingCustomTokenizer(string _)
+    {
+        var issue = this.GetCustomTokenizerValidationIssue();
+        if (string.IsNullOrWhiteSpace(issue))
+            return null;
+
+        return issue;
     }
 
     /// <summary>

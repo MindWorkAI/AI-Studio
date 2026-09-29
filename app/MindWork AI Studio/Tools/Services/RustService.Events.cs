@@ -46,7 +46,14 @@ public partial class RustService
                                 and not TauriEventType.UNKNOWN
                                 and not TauriEventType.PING)
                         {
-                            this.logger!.LogDebug("Received Tauri event {EventType} with {NumPayloadItems} payload items.", tauriEvent.EventType, tauriEvent.Payload.Count);
+                            //
+                            // Log every event but the drag-over ones: those arrive about ten times per
+                            // second for as long as a drag lasts, and one line each would bury everything
+                            // else in the log.
+                            //
+                            if(tauriEvent.EventType is not TauriEventType.FILE_DROP_OVER)
+                                this.logger!.LogDebug("Received Tauri event {EventType} with {NumPayloadItems} payload items.", tauriEvent.EventType, tauriEvent.Payload.Count);
+
                             await MessageBus.INSTANCE.SendMessage(null, Event.TAURI_EVENT_RECEIVED, tauriEvent);
                         }
                     }

@@ -6,7 +6,7 @@
 @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
 {
     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.IntegrationInstructions" HeaderText="@T("Configure Embedding Providers")">
-        <PreviewPrototype ApplyInnerScrollingFix="true"/>
+        <PreviewBeta ApplyInnerScrollingFix="true"/>
         <MudText Typo="Typo.h4" Class="mb-3">
             @T("Configured Embedding Providers")
         </MudText>
@@ -73,12 +73,7 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
                             </MudTooltip>
-                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
-                            {
-                                <MudTooltip Text="@T("Export configuration")">
-                                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportEmbeddingProvider(context))"/>
-                                </MudTooltip>
-                            }
+                            <AdminExportButton OnClick="@(() => this.ExportEmbeddingProvider(context))" />
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>
                             </MudTooltip>
@@ -98,8 +93,6 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddEmbeddingProvider">
-            @T("Add Embedding")
-        </MudButton>
+        <LockableButton Text="@T("Add Embedding")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddEmbeddingProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddEmbeddingProvider" Class="mt-3" />
     </ExpansionPanel>
 }

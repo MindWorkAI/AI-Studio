@@ -16,3 +16,4 @@
  MWAIS0010 | Usage    | Error    | CanonicalJsonConfigurationAnalyzer
  MWAIS0011 | Usage    | Error    | CanonicalJsonShapeAnalyzer
  MWAIS0012 | Usage    | Error    | DirectI18NGetTextAnalyzer
+ MWAIS0013 | Usage    | Error    | ModelPatternLiteralAnalyzer

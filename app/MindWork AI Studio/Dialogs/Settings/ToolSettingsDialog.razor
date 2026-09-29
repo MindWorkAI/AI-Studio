@@ -57,7 +57,7 @@
                     var fieldOptions = field.GetOptions();
                     if (fieldOptions.Count > 0)
                     {
-                        <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(fieldName)">
+                        <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" Class="mb-3 configuration-help-justified" Disabled="@this.IsFieldDisabled(fieldName)">
                             @if (!this.toolDefinition.SettingsSchema.Required.Contains(fieldName))
                             {
                                 <MudSelectItem T="string" Value="@string.Empty">@T("Not set")</MudSelectItem>
@@ -70,7 +70,7 @@
                     }
                     else
                     {
-                        <MudTextField T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(fieldName)" />
+                        <MudTextField T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 configuration-help-justified" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(fieldName)" />
                     }
                 }
                 </MudPaper>

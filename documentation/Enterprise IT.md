@@ -379,7 +379,7 @@ One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limit
 
 ## Deploying other plugin types
 
-A deployment is not limited to a configuration, even though the directory it lands in is called `.config`. Your configuration server serves one archive per configuration ID, and you may use it for every kind of plugin: assistant plugins today, further types such as tool plugins as they arrive. Read the directory name as "centrally configured and rolled out", not as "configurations only".
+A deployment is not limited to a configuration, even though the directory it lands in is called `.config`. Your configuration server serves one archive per configuration ID, and you may use it for every kind of plugin: assistant plugins and model plugins today, further types such as tool plugins as they arrive. Read the directory name as "centrally configured and rolled out", not as "configurations only".
 
 Put each plugin into its own subdirectory of the archive:
 
@@ -424,7 +424,11 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Any number of ERI data sources for RAG
+- Any number of profiles and chat templates, including the tools and data sources a template brings along
+- Any number of policies for the Document Analysis assistant
 - Enterprise hash approvals for assistant plugins
+- Tool settings, encrypted tool API keys, and minimum provider confidence requirements
 - The update behavior of AI Studio
 - Various UI and feature settings (see the example configuration for details)
 
@@ -588,6 +592,33 @@ A test configuration carries the rights of an organization configuration without
 
 The data directory belongs to the user account, so whoever can write there can approve assistant plugins in the name of your organization until the next restart. Treat write access to the data directory as equivalent to deploying a configuration, and protect it accordingly on managed devices.
 
+## Exporting configurations from the app
+
+You do not have to write your configuration plugin by hand. Set something up in AI Studio, export it, and paste the Lua fragment into your plugin.
+
+Enable **Show administration settings** in the app settings once. It reveals the **Enterprise Administration** section and an **Export configuration** button next to each of these:
+
+| What you can export | Where the button sits | Offered for |
+|---|---|---|
+| LLM providers | the provider list in the app settings | providers you created yourself |
+| Embedding providers | the provider list in the app settings | as above, and only while the RAG preview is enabled |
+| Transcription providers | the provider list in the app settings | providers you created yourself |
+| Profiles | the profile dialog in the app settings | profiles you created yourself |
+| Chat templates | the chat template dialog in the app settings | templates you created yourself |
+| ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
+| Document analysis policies | the Document Analysis assistant itself | the policy you have selected |
+| Tools | **Tool Settings** in the app settings | every tool |
+
+Anything your organization already manages has no export button: it came from a plugin to begin with. Local files and local directories have none either — such a data source exists on one machine only, so there is nothing to hand to your colleagues.
+
+The button copies the fragment to your clipboard. Paste it into your [configuration plugin](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua), after the initialization of the table it extends, such as `CONFIG["LLM_PROVIDERS"] = {}`. One export writes to disk as well: a chat template whose attachments you package copies those files into a folder of your plugin and puts the Lua into your clipboard as usual.
+
+**An export mints a new ID** for the exported object, so exporting the same provider or template twice deploys two of them to your colleagues. Once something is in your plugin, keep its ID and edit the rest around it. Document analysis policies are the exception: they keep the ID they have.
+
+Some exports ask a question first: a provider with an API key offers to include it encrypted (see [Encrypted API Keys](#encrypted-api-keys)), an ERI data source does the same for its token or its credentials, a chat template with file attachments asks whether to keep their paths or copy them into your plugin, and a tool opens a dialog for the areas and the kind of management you want (see [Exporting tool configurations](#exporting-tool-configurations)).
+
+Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
+
 ## Encrypted API Keys
 
 You can include encrypted API keys in your configuration plugins for cloud providers (like OpenAI, Anthropic) or secured on-premise models. This feature provides obfuscation to prevent casual exposure of API keys in configuration files.
@@ -600,7 +631,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
 ### Setting Up Encrypted API Keys
 
 1. **Generate an encryption secret:**
-   In AI Studio, enable the "Show administration settings" toggle in the app settings. Then click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
+   In AI Studio, click the "Generate encryption secret and copy to clipboard" button in the "Enterprise Administration" section of the app settings, which [Show administration settings](#exporting-configurations-from-the-app) reveals. This generates a cryptographically secure 256-bit key and copies it to your clipboard as a base64 string.
 
 2. **Deploy the encryption secret:**
    Distribute the secret to all client machines using any supported enterprise source. The secret can be deployed on its own, even when no enterprise configuration IDs or server URLs are defined on that machine:
@@ -611,11 +642,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
 
 3. **Export encrypted API keys from AI Studio:**
-   Once the encryption secret is deployed on your machine:
-   - Configure a provider with an API key in AI Studio's settings
-   - Click the export button for that provider
-   - If an API key is configured, you will be asked if you want to include the encrypted API key in the export
-   - The exported Lua code will contain the encrypted API key in the format `ENC:v1:<base64-encoded data>`
+   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v1:<base64-encoded data>`.
 
 4. **Add encrypted keys to your configuration:**
    Copy the exported configuration (including the encrypted API key) into your configuration plugin.
@@ -639,6 +666,77 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+## Exporting tool configurations
+
+A tool export is the one that asks the most before it writes anything. It assumes `CONFIG` and `CONFIG["SETTINGS"]` already exist in your plugin.
+
+1. In **Tool Settings**, configure the tool and save your changes, then [export it](#exporting-configurations-from-the-app).
+2. Select the areas to export. All areas start selected. For Web Search, SearXNG, Staan, Tavily, and General are independent: selecting only Tavily does not include the search language, strategy, or preferred backend. Select General separately when you need those settings.
+3. Choose **Locked settings** or **Editable defaults**. Locked settings go into `DataTools.LockedToolSettings` and cannot be changed by users. Editable defaults go into `DataTools.DefaultToolSettings`; a user's saved value takes precedence over them.
+4. Optionally select **Include encrypted API keys and other secrets**, which starts off. The option is available only when the selected areas contain configured secrets and this machine has a valid enterprise encryption secret. Deploy the same secret to recipients as described in [Setting Up Encrypted API Keys](#setting-up-encrypted-api-keys). Secrets always go into `LockedToolSettings`, including when you choose editable defaults for the other fields. Managed tool secrets are used from the configuration without replacing the user's own keyring entries; removing the managed secret makes the user's own key available again.
+5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool and is locked, because a managed setting without an `AllowUserOverride` flag is locked by default. The export therefore only adds a comment about that flag instead of writing it: setting it applies to the entire confidence table, including entries for other tools, so that decision stays yours. Deselect this option if your fragment should not configure provider confidence.
+6. Click **Export to clipboard**, then paste the fragment into your plugin after its `CONFIG["SETTINGS"] = {}` initialization and after any assignments that replace the tables you want to extend. Review the code and test the plugin using [Local staging and testing](#local-staging-and-testing) before rollout. The export dialog stays open so you can produce another selection.
+
+The export reads saved, effective settings, including organization-managed values. It does not save settings or change the keyring. Missing values are omitted, explicitly empty non-secret values are preserved, and implicit runtime defaults are not added. Incomplete configurations can be exported so that you can finish them in Lua. If encryption fails, no partial fragment is copied; an empty export also leaves the clipboard unchanged.
+
+### Complete tool export
+
+For example, save a timeout of `30`, a content limit of `12000`, an empty private-host list, and free address choice switched off for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
+
+```lua
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.timeoutSeconds"] = "30"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.maxContentCharacters"] = "12000"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.allowedPrivateHosts"] = ""
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.freeAddressChoice"] = "OFF"
+
+CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] or {}
+CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"]["read_web_page"] = "VERY_LOW"
+-- The whole table is locked unless you set CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId.AllowUserOverride"] = true
+```
+
+### Exporting only one search backend
+
+For **Web Search**, select only Tavily, choose **Editable defaults**, enable encrypted secrets, and deselect **Include minimum provider confidence**. With a saved search depth of `basic` and an API key, the fragment has this form. The ciphertext below is a placeholder; use the encrypted value generated by your export.
+
+```lua
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>"
+
+CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"]["web_search.tavily.searchDepth"] = "basic"
+```
+
+This does not change the SearXNG or Staan settings, the general Web Search settings, or its confidence requirement. Web Search still needs a configured `defaultLanguage`; include it through a separate General-area export, add it manually, or let the user configure it. A backend-only export does not restrict the tool to that backend.
+
+You can combine both fragments in the same plugin: their table initializations preserve earlier entries, and only a later assignment to an identical key replaces its value. A later whole-table assignment such as `CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = { ... }` replaces those entries, so place exports after it or merge them manually. This behavior applies within one plugin; across separate configuration plugins, the winning plugin replaces the whole managed table as described in [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
+
+## Chat templates with tools and data sources
+
+On top of its system prompt and the rest, a chat template decides the tools and the data sources a chat started with it begins with. The data source IDs in an exported template are **carried over unchanged**, unlike the template's own ID: they point at the data sources of your organization. Check them against your `CONFIG["DATA_SOURCES"]` -- an ID that resolves to nothing is ignored, and a chat with that template then starts without that source.
+
+Writing such a template by hand means knowing that saying nothing and saying none are two different statements:
+
+| What the template says | What a chat started with it does |
+|---|---|
+| no `ToolIds` at all | starts with the tools the user has set as their chat default |
+| `ToolIds` present but empty | starts with no tool at all, whatever that default says |
+| no `DataSourceOptions` at all | starts with the data source options the user has set as their chat default |
+| `DataSourceOptions` present | starts with exactly those, including how the sources are searched and whether an agent picks them |
+
+Writing the `DataSourceOptions` table at all is already the statement that this template wants data sources, so `DisableDataSources` starts at `false` inside it, unlike everywhere else in the app.
+
+`RetrievalMode` inside that table decides how the chat searches its data sources:
+
+| Value | What happens |
+|---|---|
+| `SEMANTIC_SEARCH` (default) | The AI searches the data sources itself, through the tool `semantic_search`, whenever a question calls for it. No agent takes part: `AutomaticDataSourceSelection` lets the AI itself choose among all data sources it may use, and `AutomaticValidation` has no effect. |
+| `EVERY_MESSAGE` | AI Studio searches the data sources with every message, before the AI answers, with the agents for selection and validation as configured. |
+
+Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
+
+When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
 
 ## Letting users provide their own API key
 
@@ -713,6 +811,74 @@ The user's key follows the same "withdrawing a configuration" philosophy as ever
 document: if your configuration stops offering this provider, AI Studio removes the provider from
 the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
 provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
+
+## Describing your own models
+
+AI Studio knows what the models of the large vendors can do, and reads that knowledge from their
+model cards. It cannot know what your own models can do: a fine-tune of your own, a model behind an
+internal name, or an engine you configured differently from what the model card says. Two places let
+you say it, and they answer different questions.
+
+**One installation of a model: `CapabilityOverrides` on the provider.** Use this when you want to
+correct a detail for one provider entry -- an endpoint which accepts no images, or a context window
+your operator configured smaller than the model card advertises. It sits right in the provider entry
+of your configuration plugin:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Research cluster",
+    ["UsedLLMProvider"] = "SELF_HOSTED",
+    -- ...
+    ["CapabilityOverrides"] = {
+        ["MULTIPLE_IMAGE_INPUT"] = false,
+        ["CONTEXT_WINDOW"] = 32768,
+        ["MAX_IMAGES_PER_REQUEST"] = 4,
+    },
+}
+```
+
+Every key is optional and contradicts only what it names; everything else keeps the answer AI Studio
+works out by itself. The full list of keys is documented in
+`app/MindWork AI Studio/Plugins/configuration/plugin.lua`. Two notes worth knowing:
+
+- **`CONTEXT_WINDOW` feeds the token counter below the chat input.** A wrong number there misleads
+  your users about how much room they have left in a conversation.
+- **Your users can set the same values themselves**, in the expert settings of a provider. For a
+  provider you deploy, the fields show your numbers and stay locked.
+
+**A model wherever it is reached: a model plugin.** Use this when you run a model of your own and
+want AI Studio to treat it correctly everywhere it appears, rather than correcting one provider entry
+at a time. A model plugin is its own plugin with `TYPE = "MODEL"` and an ID of its own, deployed in
+its own subdirectory of your configuration archive, exactly like an assistant plugin -- see
+[Deploying other plugin types](#deploying-other-plugin-types).
+
+`app/MindWork AI Studio/Plugins/models/plugin.lua` is a complete, commented example. In short, each
+entry names the model names it describes and then states what those models can do: the capabilities,
+how the model reasons, what kind of model it is, its context window, its tokenizer, and how many
+images it takes.
+
+Three things decide whether it does what you expect:
+
+- **An entry replaces everything AI Studio would otherwise say about the names it matches.** Write it
+  as if AI Studio had never heard of these models: `CAPABILITIES` is therefore required, and it has
+  to name the APIs the model answers through. This is also why a single correction belongs in
+  `CapabilityOverrides` instead.
+- **Write the pattern the way a model name is written**: lower case, hyphens between the parts. A
+  pattern written differently can never match anything and is rejected with a message saying so.
+- **Name the page and the day.** `SOURCE_URL` and `SOURCE_CHECKED_ON` are required, for the same
+  reason AI Studio's own model rules carry them: your entry will outlive whoever wrote it, and a
+  statement nobody can check ages into a wrong answer.
+
+A model plugin only ever *describes*. It names no server, carries no API key, and runs no code,
+which is why it needs neither an approval nor a security audit the way an assistant plugin does. The
+same path-based authority applies as to everything else you deploy: what arrives under your
+configuration ID belongs to your organization, and users can neither edit nor remove it. AI Studio
+offers users no way to import a model plugin of their own; should one be placed in the local plugin
+directory by hand, anything your organization deployed wins over it.
+
+Where two of your own model plugins describe exactly the same model names, the optional `PRIORITY`
+decides. Plugins describing different models never get in each other's way, and both are used.
 
 ## Giving providers your own icon
 

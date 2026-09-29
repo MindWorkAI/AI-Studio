@@ -67,6 +67,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         _ => string.Empty,
     };
 
+    /// <summary>
+    /// What an export of the result is named after, which the save dialog suggests as file name.
+    /// An assistant whose result is about something more specific than the assistant itself names that.
+    /// </summary>
+    protected virtual string ExportFileName => this.Title;
+
     protected abstract void ResetForm();
 
     protected abstract bool MightPreselectValues();
@@ -184,7 +190,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            this.OnFormChange().Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
+            this.InvokeAsync(this.OnFormChange).Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
@@ -753,9 +759,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
-        this.ChatThread = null;
-        this.LastUserPrompt = null;
-        this.ResultingContentBlock = null;
+        this.ClearConversationState();
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);

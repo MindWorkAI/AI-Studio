@@ -42,14 +42,6 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
-    /// <summary>
-    /// Number of active drop areas above this page. While there is any, another component owns the
-    /// dropped files and this page must not catch them.
-    /// </summary>
-    private uint numDropAreasAboveThis;
-
-    private bool isDraggingOverPage;
-
     private const string IMPORT_ICON =
         @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
     <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
@@ -61,10 +53,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
-
-        // Register the whole page as a drop area, so users can drop a plugin archive anywhere on it:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED ]);
 
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -88,13 +77,6 @@ public partial class Plugins : MSGComponentBase
     {
         if (firstRender)
             await this.TryAutoAuditAssistantsAsync();
-    }
-
-    protected override void DisposeResources()
-    {
-        // Release the drop area again, so lower layers can catch dropped files:
-        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES).Observe($"{nameof(Plugins)}: releasing the drop area");
-        base.DisposeResources();
     }
 
     #endregion
@@ -276,7 +258,8 @@ public partial class Plugins : MSGComponentBase
     /// Highlights the plugin table while the user drags a file over the page, so it is visible
     /// where the file would land.
     /// </summary>
-    private string PluginTableClass => this.isDraggingOverPage
+    /// <param name="isDropTarget">Whether the page is the target of the drop being aimed right now.</param>
+    private static string PluginTableClass(bool isDropTarget) => isDropTarget
         ? "border-dashed border rounded-lg mud-border-primary border-4"
         : "border-dashed border rounded-lg";
 
@@ -571,51 +554,16 @@ public partial class Plugins : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
-
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int registeredLayer && registeredLayer > DropLayers.PAGES)
-                    this.numDropAreasAboveThis++;
-
-                break;
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int unregisteredLayer && unregisteredLayer > DropLayers.PAGES && this.numDropAreasAboveThis > 0)
-                    this.numDropAreasAboveThis--;
-
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if (!this.CanCatchDroppedFile())
-                    return;
-
-                this.isDraggingOverPage = true;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var droppedPaths }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
-                if (!this.CanCatchDroppedFile())
-                    return;
-
-                await this.ImportDroppedPluginArchiveAsync(droppedPaths);
-                break;
         }
     }
 
     #endregion
 
     /// <summary>
-    /// Decides whether this page may process dropped files: only when no drop area above it is
-    /// active and when the organization allows importing plugins at all.
+    /// Decides whether this page may process dropped files: only when the organization allows
+    /// importing plugins at all and no import is running.
     /// </summary>
-    private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && this.AllowPluginImport && !this.isImportingAssistantPlugin;
+    private bool CanCatchDroppedFile() => this.AllowPluginImport && !this.isImportingAssistantPlugin;
 
     /// <summary>
     /// Imports a plugin archive the user dropped onto the page. Anything that is not exactly one

@@ -14,7 +14,7 @@ public sealed class WebPageRetrievalOptions
     /// hosts named localhost — because those exist to keep a model from reaching into the user's
     /// network, and the user is not a model. The network-level protections stay: the connection
     /// is still bound to validated addresses, redirects are still checked, the response size is
-    /// still capped, and only HTML is still accepted.<br/><br/>
+    /// still capped, and only HTML and text content are still accepted.<br/><br/>
     /// Never set this for a URL that reached AI Studio through a model, however plausible it
     /// looks.
     /// </remarks>
@@ -24,11 +24,15 @@ public sealed class WebPageRetrievalOptions
 
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
-    public bool ProviderIsTrustedByConfiguration { get; init; }
-
     public bool UseOsSso { get; init; }
 
     public Func<string, bool>? IsPrivateHostAllowed { get; init; }
+
+    /// <summary>
+    /// Decides for every URL, the first one as well as each redirect target, whether it may be
+    /// requested at all. It runs before anything is sent, so a refused target never sees the URL.
+    /// </summary>
+    public Func<Uri, bool>? IsTargetAllowed { get; init; }
 
     public Func<Uri, ConfidenceLevel, Task>? OnPrivateHostProviderBlockAsync { get; init; }
 }

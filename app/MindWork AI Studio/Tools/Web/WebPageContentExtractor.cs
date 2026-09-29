@@ -76,7 +76,7 @@ internal static class WebPageContentExtractor
             .Select(x => LimitLength(x, MAX_OUTLINE_ITEM_CHARACTERS))
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        var markdown = HTMLParser.ParseToMarkdown(contentRoot.InnerHtml)
+        var markdown = ConvertToMarkdown(contentRoot.InnerHtml, finalUrl)
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n')
             .Trim();
@@ -139,6 +139,30 @@ internal static class WebPageContentExtractor
             Markdown = markdown,
             Outline = outline,
         };
+    }
+
+    /// <summary>
+    /// Converts the readable part of the page to Markdown.
+    /// </summary>
+    /// <remarks>
+    /// Only the call into the Markdown library is wrapped, not the extraction around it: a fault of
+    /// our own has to keep surfacing as what it is, instead of being filed away as an unreadable
+    /// page.<br/><br/>
+    /// What the library throws depends on the HTML it was handed, and it says nothing beyond "this
+    /// page could not be converted". Reported as an InvalidOperationException, the retrieval treats
+    /// it like any other page it could not read, which costs this one page rather than the whole
+    /// search it belongs to.
+    /// </remarks>
+    private static string ConvertToMarkdown(string html, Uri finalUrl)
+    {
+        try
+        {
+            return HTMLParser.ParseToMarkdown(html);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            throw new InvalidOperationException($"Converting the HTML of '{finalUrl}' to Markdown failed: {exception.Message}", exception);
+        }
     }
 
     private static JsonLdMetadata ExtractJsonLdMetadata(HtmlDocument document, Uri finalUrl)

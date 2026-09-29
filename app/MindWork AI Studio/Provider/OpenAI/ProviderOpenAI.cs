@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Models;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -48,10 +49,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
     }
 
-    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
         ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
-        _ => base.GetProviderRequestFailureUserMessage(failureReason),
+        _ => base.GetProviderRequestFailureUserMessage(failureReason, contextWindow),
     };
 
     /// <inheritdoc />
@@ -62,40 +63,18 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         if(!requestedSecret.Success)
             yield break;
         
-        // Unfortunately, OpenAI changed the name of the system prompt based on the model.
-        // All models that start with "o" (the omni aka reasoning models), all GPT4o models,
-        // and all newer models have the system prompt named "developer". All other models
-        // have the system prompt named "system". We need to check this to get the correct
-        // system prompt.
-        //
-        // To complicate it even more: The early versions of reasoning models, which are released
-        // before the 17th of December 2024, have no system prompt at all. We need to check this
-        // as well.
-        
-        // Apply the basic rule first:
-        var systemPromptRole =
-            chatModel.Id.StartsWith('o') ||
-            chatModel.Id.StartsWith("gpt-5", StringComparison.Ordinal) ||
-            chatModel.Id.Contains("4o") ? "developer" : "system";
-        
-        // Check if the model is an early version of the reasoning models:
-        systemPromptRole = chatModel.Id switch
-        {
-            "o1-mini" => "user",
-            "o1-mini-2024-09-12" => "user",
-            "o1-preview" => "user",
-            "o1-preview-2024-09-12" => "user",
-            
-            _ => systemPromptRole,
-        };
-
         // Read the model capabilities. Through the settings provider, so that the user's expert
         // capability overrides apply:
         var providerSettings = this.CreateSettingsProvider(chatModel);
-        var modelCapabilities = providerSettings.GetModelCapabilities();
-        
+        var modelProfile = providerSettings.GetModelProfile();
+
+        // OpenAI changed the role of the system prompt from one generation to the next, and the
+        // early reasoning models take no system prompt at all. Which role a model takes is stated
+        // by the OpenAI families in Models/OpenAI:
+        var systemPromptRole = modelProfile.SystemPromptRole.ToOpenAIRole();
+
         // Check if we are using the Responses API or the Chat Completion API:
-        var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
+        var usingResponsesAPI = modelProfile.Has(Capability.RESPONSES_API);
         
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
@@ -115,7 +94,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
         var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
                                  ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
-        IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
+        IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
             ? [ ProviderTools.WEB_SEARCH ]
             : [];
         
@@ -133,8 +112,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                async (systemPrompt, apiParameters, tools) =>
                                {
                                    var messages = await chatThread.Blocks.BuildMessagesAsync(
-                                       this.Provider,
-                                       chatModel,
+                                       providerSettings,
                                        role => role switch
                                        {
                                            ChatRole.USER => "user",
@@ -168,6 +146,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                },
                                systemPromptRole: systemPromptRole,
                                requestPath: "chat/completions",
+
+                               //
+                               // OpenAI binds a strict function's arguments to its schema -- read on
+                               // 2026-09-24 at https://developers.openai.com/api/docs/guides/function-calling.
+                               // Most other hosts of this API do not: Groq applies strict mode to
+                               // response formats only (https://console.groq.com/docs/structured-outputs,
+                               // same day) and merely validates a tool call afterward, so it rejects
+                               // every call that leaves out an argument the strict schema requires:
+                               //
+                               enforcesStrictToolSchemas: true,
                                token: token))
                 yield return content;
 
@@ -176,16 +164,21 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
+        currentAssistantContent?.BeginToolRun();
 
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
             ? []
             : await toolRegistry.GetRunnableToolsAsync(
-                providerSettings,
-                chatThread.RuntimeComponent,
+                new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = providerConfidence,
+                    ChatThread = chatThread,
+                },
                 chatThread.RuntimeSelectedToolIds,
-                providerConfidence,
-                chatThread.MayRunTools(settingsManager));
+                chatThread.MayRunTools(settingsManager),
+                token);
 
         var toolAwareDefinitions = toolExecutor is null
             ? Enumerable.Empty<ToolDefinition>()
@@ -198,7 +191,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
-            this.Provider, chatModel,
+            providerSettings,
             role => role switch
             {
                 ChatRole.USER => "user",
@@ -229,7 +222,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 additionalApiParameters,
                 providerTools,
                 runnableTools,
-                (requestDto, requestToken) => this.ExecuteResponsesRequest(requestDto, requestedSecret, requestToken));
+                (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
 
             var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
             var loopContext = new ToolCallingLoopContext
@@ -316,22 +309,25 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield return content;
     }
 
-    private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    /// <summary>
+    /// Runs one round of a tool calling conversation against the Responses API.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the HTTP request is done here. The retries, the timeouts, and the error
+    /// classification come from the shared stream reader, which the tool calling rounds used to
+    /// go without; reading the events is the adapter's business.
+    /// </remarks>
+    private IAsyncEnumerable<ServerSentEvent> StreamResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "responses");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
-        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+        return this.ReadServerSentEventsAsync("OpenAI", "responses call", RequestBuilder, token);
 
-        using var response = await this.HttpClient.SendAsync(request, token);
-        if (!response.IsSuccessStatusCode)
+        async Task<HttpRequestMessage> RequestBuilder()
         {
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-            LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-            await ToolCallingMessages.SendToolCallingRequestFailedAsync((int)response.StatusCode);
-            return null;
+            var request = new HttpRequestMessage(HttpMethod.Post, "responses");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
         }
-
-        return await response.Content.ReadFromJsonAsync<ResponsesResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -368,25 +364,25 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, model => model.IsImageModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, model => model.IsTranscriptionModel(this.Provider), apiKeyProvisional, token);
     }
     
     #endregion

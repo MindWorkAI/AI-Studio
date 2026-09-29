@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Tools.AIJobs;
 
 namespace AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -55,7 +56,25 @@ public sealed class ToolCallingLoopContext
             return;
 
         this.CurrentAssistantContent.ToolInvocations.Add(trace);
-        await this.CurrentAssistantContent.StreamingEvent();
+        await this.AnnounceAsync(this.CurrentAssistantContent);
+    }
+
+    /// <summary>
+    /// Hands the conversation the adapter has accumulated to the assistant message.
+    /// </summary>
+    /// <remarks>
+    /// Called after every recording, not once per round: a round which reads five web pages is the
+    /// one during which the request grows the most, and a number which only moves between rounds
+    /// would stand still through exactly that.
+    /// </remarks>
+    /// <param name="adapter">The adapter of this run, which knows what it has recorded.</param>
+    public async Task PublishPendingToolConversationAsync(IToolCallingProviderAdapter adapter)
+    {
+        if (this.CurrentAssistantContent is null)
+            return;
+
+        this.CurrentAssistantContent.PendingToolConversation = [..adapter.RecordedRequestTexts];
+        await this.AnnounceAsync(this.CurrentAssistantContent);
     }
 
     /// <summary>
@@ -72,7 +91,7 @@ public sealed class ToolCallingLoopContext
             ToolNames = [.. toolNames],
         };
 
-        await this.CurrentAssistantContent.StreamingEvent();
+        await this.AnnounceAsync(this.CurrentAssistantContent);
     }
 
     /// <summary>
@@ -88,6 +107,32 @@ public sealed class ToolCallingLoopContext
             return;
 
         this.CurrentAssistantContent.ToolRuntimeStatus = new();
-        await this.CurrentAssistantContent.StreamingEvent();
+        await this.AnnounceAsync(this.CurrentAssistantContent);
+    }
+
+    /// <summary>
+    /// Says that something about the running answer has changed.
+    /// </summary>
+    /// <remarks>
+    /// Two receivers, because the screen is built from two of them. The content's own event
+    /// renders the message block, which is what shows a running tool and the calls it has made.
+    /// The job service renders the chat around it, and that is what recounts the tokens -- which
+    /// nothing else would ask for during a tool run: the chat hears about progress one streamed
+    /// chunk at a time, and a tool run produces none until it is over.<br/><br/>
+    /// One method rather than two calls at each of the four places above, because the second of
+    /// them is the one which is easy to forget.
+    /// </remarks>
+    /// <param name="content">The assistant message which changed.</param>
+    private async Task AnnounceAsync(ContentText content)
+    {
+        await content.StreamingEvent();
+
+        //
+        // Asked for here rather than taken as a dependency: the same loop runs for the assistants,
+        // where there is no job to tell and nothing which counts tokens.
+        //
+        var jobService = Program.SERVICE_PROVIDER.GetService<AIJobService>();
+        if (jobService is not null)
+            await jobService.NotifyChatActivityAsync(this.ChatThread.ChatId);
     }
 }

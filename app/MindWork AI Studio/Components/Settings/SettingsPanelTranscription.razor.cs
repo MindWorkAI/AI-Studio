@@ -36,7 +36,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         var modelName = provider.Model.ToString();
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
     }
-    
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()

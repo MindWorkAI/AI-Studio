@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Tools.ToolCallingSystem;
@@ -15,18 +16,23 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
     TextMessage systemPrompt, IDictionary<string, object> apiParameters,
-    IList<object> providerTools,
+    IList<object> providerTools, bool mayAskForSequentialToolCalls,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ChatCompletionAPIRequest, CancellationToken, Task<ChatCompletionResponse?>> executeRequestAsync,
-    string providerInstanceName, ILogger logger)
+    Func<ChatCompletionAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync,
+    Func<ServerSentEvent, IList<ISource>> readSources,
+    ILogger logger)
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
 {
     private readonly List<IMessageBase> internalMessages = [];
+    private readonly List<string> recordedRequestTexts = [];
     private ChatCompletionResponseMessage? lastResponseMessage;
     private List<ChatCompletionToolCall> lastToolCalls = [];
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         var requestSystemPrompt = finalResponseInstruction is null
             ? systemPrompt : systemPrompt with
@@ -38,64 +44,97 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         var requestDto = requestDtoBase with
         {
             Messages = [..requestDtoBase.Messages, ..this.internalMessages],
-            Stream = false,
+            Stream = true,
 
             //
             // AI Studio runs tool calls one after another, so asking for parallel calls would
             // only produce work it then has to serialize anyway. Requests without tools omit the
-            // parameter because some providers reject it then.
+            // parameter because some providers reject it then. So does every request to a provider
+            // which rejects the parameter altogether: its models may then ask for several calls at
+            // once, and the loop works through them one by one, checking the limits per call.
             //
-            ParallelToolCalls = requestDtoBase.Tools is null ? null : false,
+            ParallelToolCalls = requestDtoBase.Tools is null || !mayAskForSequentialToolCalls ? null : false,
         };
 
-        var response = await executeRequestAsync(requestDto, token);
-        if (response is null)
-            return null;
-
-        // The response comes from a provider, so its shape is a promise rather than a guarantee:
-        // a JSON null for the choices field overwrites the initialized property with null.
-        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-        var responseChoice = response.Choices?.FirstOrDefault();
-        if (responseChoice?.Message is null)
+        //
+        // The text goes out while it is being written; the tool calls are put back together
+        // behind it, fragment by fragment. The usage goes out with every round: which of them
+        // describes the conversation is the loop's decision, which knows which round this is.
+        //
+        var accumulator = new ChatCompletionToolCallAccumulator(readSources);
+        await foreach (var serverSentEvent in streamRequestAsync(requestDto, token))
         {
-            logger.LogError(
-                "The tool calling response did not contain a usable choice. ProviderInstanceName={ProviderInstanceName}, ChoiceCount={ChoiceCount}",
-                providerInstanceName,
-                response.Choices?.Count ?? 0);
-
-            throw ToolCallingMessages.InvalidToolCallingResponse(providerInstanceName);
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, part.Sources, Usage: part.Usage));
         }
 
-        this.lastResponseMessage = responseChoice.Message;
-        var preparedCalls = this.PrepareToolCalls(responseChoice.Message.ToolCalls ?? []);
+        var message = accumulator.Build();
+        if (message is null)
+            yield break;
+
+        this.lastResponseMessage = message;
+        var preparedCalls = this.PrepareToolCalls(message.ToolCalls ?? []);
         this.lastToolCalls = preparedCalls.Select(x => x.ToolCall).ToList();
 
-        return new ToolCallingRound(
-            responseChoice.Message.Content ?? string.Empty,
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
+            message.Content ?? string.Empty,
             preparedCalls
                 .Select(x => new ToolCallingRequestedCall(x.ToolCall.Id!, x.ToolCall.Function!.Name!, x.ToolCall.Function!.Arguments!, x.IsValid))
                 .ToList(),
-            []);
+            []));
     }
 
     /// <inheritdoc />
-    public void RecordAssistantTurn() => this.internalMessages.Add(new AssistantToolCallMessage
+    public void RecordAssistantTurn()
     {
-        Content = this.lastResponseMessage?.RawContent,
-        ReasoningContent = this.lastResponseMessage?.ReasoningContent,
-        ToolCalls = this.lastToolCalls,
-    });
+        this.internalMessages.Add(new AssistantToolCallMessage
+        {
+            Content = this.lastResponseMessage?.RawContent,
+            ReasoningContent = this.lastResponseMessage?.ReasoningContent,
+            ToolCalls = this.lastToolCalls,
+        });
+
+        //
+        // The text of the message, not the message: this adapter builds the message itself, so it
+        // knows which of its fields carry words rather than wire format. The name of a call travels
+        // with its arguments because the model is charged for both.
+        //
+        this.Record(this.lastResponseMessage?.Content);
+        this.Record(this.lastResponseMessage?.ReasoningContent);
+        foreach (var toolCall in this.lastToolCalls)
+            this.Record($"{toolCall.Function?.Name}{toolCall.Function?.Arguments}");
+    }
 
     /// <inheritdoc />
     /// <remarks>
     /// Chat Completions has no error flag on a tool message, so a failure travels in the content
     /// like any other result.
     /// </remarks>
-    public void RecordToolResult(string callId, string content, bool isError = false) => this.internalMessages.Add(new ToolResultMessage
+    public void RecordToolResult(string callId, string content, bool isError = false)
     {
-        Content = content,
-        ToolCallId = callId,
-    });
+        this.internalMessages.Add(new ToolResultMessage
+        {
+            Content = content,
+            ToolCallId = callId,
+        });
+
+        this.Record(content);
+    }
+
+    /// <summary>
+    /// Notes one piece of text as part of what the next round sends.
+    /// </summary>
+    /// <remarks>
+    /// Empty pieces are left out rather than noted as nothing. A round without text and a round
+    /// without reasoning are the normal case here, and a list of empty strings would be carried
+    /// through the whole counting for no answer it could change.
+    /// </remarks>
+    private void Record(string? text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+            this.recordedRequestTexts.Add(text);
+    }
 
     /// <summary>
     /// Normalizes the tool calls of one response.

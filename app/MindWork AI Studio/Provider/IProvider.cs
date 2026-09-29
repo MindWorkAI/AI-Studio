@@ -35,11 +35,31 @@ public interface IProvider
     public string AdditionalJsonApiParameters { get; }
 
     /// <summary>
+    /// The tokenizer path associated with this provider configuration.
+    /// </summary>
+    public string TokenizerPath { get; }
+
+    /// <summary>
     /// Whether this provider instance can load available models from the backend/API.
     /// This capability may differ by provider type, host, or modality.
     /// </summary>
     public bool HasModelLoadingCapability { get; }
-    
+
+    /// <summary>
+    /// Describes this provider instance with the given model as configured provider settings.
+    /// </summary>
+    /// <remarks>
+    /// Anything asking about model capabilities must go through this, because the expert
+    /// capability overrides live on the settings object: a provider that builds its own settings
+    /// instance without them silently ignores what the user configured.<br/><br/>
+    /// Whoever decides something on behalf of a request asks with these as well, so that both come
+    /// to the same answer. The RAG process, for instance, leaves the searching of the data sources
+    /// to Semantic Search only when the request is going to offer that tool.
+    /// </remarks>
+    /// <param name="chatModel">The model to describe the provider with.</param>
+    /// <returns>The settings of this provider instance with that model.</returns>
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel);
+
     /// <summary>
     /// Starts a chat completion stream.
     /// </summary>

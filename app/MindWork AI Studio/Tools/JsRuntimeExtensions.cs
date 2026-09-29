@@ -72,6 +72,40 @@ public static class JsRuntimeExtensions
     }
 
     /// <summary>
+    /// Calls a JavaScript function which returns a value, unless the circuit is known to be disconnected.
+    /// </summary>
+    /// <remarks>
+    /// The two parts of the result answer two different questions, and callers must keep them apart.
+    /// Whether the browser ran the function at all comes first: a call which never arrived says nothing
+    /// about the page, so nobody may act on an answer they did not get. What the function returned is the
+    /// second question, and there a null is a legitimate answer -- it means the browser looked and found
+    /// nothing.
+    /// </remarks>
+    /// <param name="jsRuntime">The JS runtime to call.</param>
+    /// <param name="circuitState">The circuit of the caller.</param>
+    /// <param name="identifier">The name of the JavaScript function.</param>
+    /// <param name="args">The arguments for the JavaScript function.</param>
+    /// <returns>Whether the browser ran the function, and what it returned.</returns>
+    public static async ValueTask<(bool WasInvoked, TValue? Value)> TryInvokeAsync<TValue>(this IJSRuntime jsRuntime, CircuitStateService circuitState, string identifier, params object?[]? args)
+    {
+        if (!circuitState.IsConnected)
+        {
+            LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
+            return (false, default);
+        }
+
+        try
+        {
+            return (true, await jsRuntime.InvokeAsync<TValue>(identifier, args));
+        }
+        catch (Exception exception)
+        {
+            LogInvocationFailure(exception, identifier);
+            return (false, default);
+        }
+    }
+
+    /// <summary>
     /// Calls a function of a JavaScript module which returns nothing, and tolerates a circuit which is
     /// already gone. See the remarks on the JS runtime variant of this method.
     /// </summary>

@@ -87,8 +87,10 @@ public sealed partial class UpdateMetadataCommands
         await new CollectI18NKeysCommand().CollectI18NKeys();
         
         // Build the final release, where Rust knows the updated metadata, the .NET
-        // artifacts are already in place, and .NET knows the updated web assets, etc.:
-        await this.Build(offline);
+        // artifacts are already in place, and .NET knows the updated web assets, etc.
+        // The gate already ran in the first build; running it a second time on the same
+        // sources would only add minutes:
+        await this.Build(offline, skipVerify: true);
     }
 
     [Command("update-metainfo", Description = "Update the AppStream metainfo entry of one release from its changelog")]
@@ -221,11 +223,21 @@ public sealed partial class UpdateMetadataCommands
     
     [Command("build", Description = "Build MindWork AI Studio")]
     public async Task Build(
-        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
+        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false,
+        [Option("skip-verify", Description = "Skip the quality gate which otherwise runs before anything is built")] bool skipVerify = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
-        
+
+        //
+        // The gate runs before anything is built, and the build stops when it does not pass. That
+        // way the same command answers both questions a person has -- is it sound, and does it
+        // build -- and answers them in that order, because building something the tests reject
+        // takes minutes to produce an artifact nobody should use.
+        //
+        if (!skipVerify && await new VerifyCommand().Verify() is not 0)
+            throw new CommandExitedException(1);
+
         //
         // Build the .NET project:
         //
@@ -596,7 +608,7 @@ public sealed partial class UpdateMetadataCommands
 
         // Drop any earlier entry of this version, so that the version stays unique and moves to the top.
         // We remove from the back, so that the index of the remaining matches stays valid:
-        foreach (var previousRelease in ReleaseBlockRegex().Matches(metainfo).Cast<Match>().Where(match => ReleaseTagHasVersion(match.Value, appVersion)).Reverse())
+        foreach (var previousRelease in ReleaseBlockRegex().Matches(metainfo).Where(match => ReleaseTagHasVersion(match.Value, appVersion)).Reverse())
             metainfo = metainfo.Remove(previousRelease.Index, previousRelease.Length);
 
         var lineEnding = metainfo.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";

@@ -12,6 +12,15 @@ public sealed record AnthropicResponse
     public IList<JsonElement> Content { get; init; } = [];
 
     /// <summary>
+    /// The argument text of those tool uses whose arguments never parsed, by tool use ID.
+    /// </summary>
+    /// <remarks>
+    /// Empty for a non-streamed answer, where the arguments either arrived as an object or did
+    /// not arrive at all.
+    /// </remarks>
+    public IReadOnlyDictionary<string, string> UnparsableToolInputs { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>
     /// The tool calls the model asked for.
     /// </summary>
     /// <remarks>
@@ -25,6 +34,7 @@ public sealed record AnthropicResponse
             Id = ReadString(x, "id"),
             Name = ReadString(x, "name"),
             Input = x.TryGetProperty("input", out var input) ? input : default,
+            UnparsableArguments = this.UnparsableToolInputs.GetValueOrDefault(ReadString(x, "id")),
         })
         .Where(x => !string.IsNullOrWhiteSpace(x.Id) && !string.IsNullOrWhiteSpace(x.Name))
         .ToList();

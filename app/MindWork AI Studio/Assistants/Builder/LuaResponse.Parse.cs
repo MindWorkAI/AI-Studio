@@ -124,7 +124,12 @@ internal sealed partial class LuaResponse
 
     private static bool IsValidChatLaunchMetadata(AssistantBuilderChatLaunchMetadata? launch)
     {
-        if (launch is null || string.IsNullOrWhiteSpace(launch.WorkspaceName))
+        //
+        // A missing workspace name describes a launcher that opens a chat without a workspace, so
+        // only the launch block itself is mandatory here. Whether the name matches the plugin the
+        // model wrote is decided later, by comparing both.
+        //
+        if (launch is null)
             return false;
 
         if (!IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||

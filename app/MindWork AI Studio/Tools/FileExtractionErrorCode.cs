@@ -32,6 +32,13 @@ public enum FileExtractionErrorCode
     FORMAT_DETECTION_FAILED,
     NOT_A_VALID_PDF,
     NOT_A_VALID_SPREADSHEET,
+
+    /// <summary>
+    /// The package of a Word, OpenDocument, or presentation file is broken, e.g. a damaged
+    /// archive or a missing part inside it.
+    /// </summary>
+    NOT_A_VALID_DOCUMENT,
+
     PDFIUM_UNAVAILABLE,
     PDF_ENCRYPTED,
     PAGE_EXTRACTION_FAILED,

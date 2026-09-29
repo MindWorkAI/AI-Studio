@@ -2,7 +2,9 @@
 @inherits AssistantLowerBase
 @typeparam TSettings
 
-<div class="inner-scrolling-context">
+@* Every assistant is a drop area: a file dropped anywhere inside it lands on the assistant's
+   default zone, while a file dropped on one of its specific zones lands there. *@
+<PathDropZone IsArea="@true" Class="inner-scrolling-context">
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2 mr-3" StretchItems="StretchItems.Start">
         <MudText Typo="Typo.h3">
@@ -77,7 +79,7 @@
 
             @if (this.ShowResult && !this.ShowEntireChatThread && this.ResultingContentBlock?.Content != null)
             {
-                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content" ExportTitle="@TB("Export result")"/>
+                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content" ExportTitle="@TB("Export result")" ExportFileName="@this.ExportFileName"/>
             }
             
             @if(this.ShowResult && this.ShowEntireChatThread && this.ChatThread is not null)
@@ -86,7 +88,7 @@
                 {
                     @if (block is { HideFromUser: false, Content: not null })
                     {
-                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@TB("Export result")"/>
+                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@TB("Export result")" ExportFileName="@this.ExportFileName"/>
                     }
                 }
             }
@@ -186,4 +188,4 @@
             </MudStack>
         </FooterContent>
     </InnerScrolling>
-</div>
+</PathDropZone>

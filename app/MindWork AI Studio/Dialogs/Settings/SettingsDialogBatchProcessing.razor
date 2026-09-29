@@ -12,6 +12,8 @@
         </MudText>
     </TitleContent>
     <DialogContent>
+        @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
+        <PathDropZone IsArea="@true">
         <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
             <ConfigurationOption OptionDescription="@T("Preselect batch processing options?")" LabelOn="@T("Batch processing options are preselected")" LabelOff="@T("No batch processing options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions = value)" OptionHelp="@T("When enabled, new batch runs start with the defaults configured below.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectOptions, out var meta) && meta.IsLocked"/>
 
@@ -24,12 +26,12 @@
             <ConfigurationSelect OptionDescription="@T("Default source of the instructions")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource)" Data="@this.PromptSourceData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptSource, out var meta) && meta.IsLocked"/>
             @if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.FREE_PROMPT)
             {
-                <ReadFileContent Text="@T("Load default prompt from file")" FileContent="@this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt" FileContentChanged="@this.UpdateFreePromptFromFileAsync" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" Disabled="@this.FreePromptImportDisabled()"/>
+                <ReadFileContent Text="@T("Load default prompt from file")" FileContent="@this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt" FileContentChanged="@this.UpdateFreePromptFromFileAsync" EnableDragDrop="true" Disabled="@this.FreePromptImportDisabled()"/>
                 <ConfigurationText OptionDescription="@T("Default prompt")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.EditNote" NumLines="5" MaxLines="26" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt = value)" OptionHelp="@T("These instructions are applied to every document of a new batch run.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FreePrompt, out var meta) && meta.IsLocked"/>
             }
             else if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.FILE_IMPORT)
             {
-                <ReadFileContent Text="@T("Load default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" FilePathLoaded="@this.UpdatePromptFilePathAsync" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" Disabled="@this.PromptFileImportDisabled()"/>
+                <ReadFileContent Text="@T("Load default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" FilePathLoaded="@this.UpdatePromptFilePathAsync" EnableDragDrop="true" Disabled="@this.PromptFileImportDisabled()"/>
                 <ConfigurationFile OptionDescription="@T("Default Markdown instructions file")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath = value)" FileDialogTitle="@T("Select the default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" OptionHelp="@T("The current content of this Markdown file is loaded whenever the defaults are applied.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptFilePath, out var meta) && meta.IsLocked"/>
             }
             else
@@ -86,6 +88,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@this.DefaultsDisabled" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
             <ConfigurationProviderSelection Component="Components.BATCH_PROCESSING_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
         </MudPaper>
+        </PathDropZone>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>

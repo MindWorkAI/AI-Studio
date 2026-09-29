@@ -39,7 +39,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
                            async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -84,7 +84,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -96,7 +96,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(), apiKeyProvisional, token);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(this.Provider), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />

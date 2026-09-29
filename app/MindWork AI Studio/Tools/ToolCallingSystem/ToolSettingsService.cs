@@ -4,7 +4,7 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
-public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService, ILogger<ToolSettingsService> logger)
+public sealed partial class ToolSettingsService(SettingsManager settingsManager, RustService rustService, ILogger<ToolSettingsService> logger)
 {
     /// <summary>
     /// Builds the key under which an organization's configuration addresses one tool setting.

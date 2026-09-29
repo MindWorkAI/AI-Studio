@@ -21,7 +21,12 @@ public class NoProvider : IProvider
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
     public bool HasModelLoadingCapability => false;
+
+    /// <inheritdoc />
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => AIStudio.Settings.Provider.NONE;
 
     public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
 
@@ -46,8 +51,6 @@ public class NoProvider : IProvider
     public Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(TranscriptionResult.Failure());
     
     public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts) => Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
-
-    public IReadOnlyCollection<Capability> GetModelCapabilities(Model model) => [ Capability.NONE ];
 
     #endregion
 }

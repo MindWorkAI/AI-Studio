@@ -14,8 +14,14 @@ namespace AIStudio.Tools.ToolCallingSystem.Harness;
 public interface IToolCallingProviderAdapter
 {
     /// <summary>
-    /// Executes one non-streamed round and returns what the model answered.
+    /// Executes one round and streams what the model answers.
     /// </summary>
+    /// <remarks>
+    /// Every piece of text the model writes travels as a TEXT_DELTA event, including the text it
+    /// writes before it calls a tool. The round's outcome carries that text as well, but only so
+    /// that the loop can tell an answered round from a silent one -- whatever reaches the user
+    /// reaches them through the deltas, and through them only.
+    /// </remarks>
     /// <param name="finalResponseInstruction">
     /// When set, the instruction telling the model that no more tools are available. The adapter
     /// appends it to the system prompt for this round only.
@@ -23,10 +29,12 @@ public interface IToolCallingProviderAdapter
     /// <param name="includeTools">Whether the tools may be offered in this round.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>
-    /// The round's outcome, or null when the request failed. Null ends the loop without an error
-    /// message because the adapter has already told the user what went wrong.
+    /// The events of this round: any number of TEXT_DELTA events, closed by one ROUND_COMPLETED
+    /// event carrying the outcome. A stream which ends without that closing event is a failed
+    /// round; it ends the loop without an error message because the adapter has already told the
+    /// user what went wrong.
     /// </returns>
-    public Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default);
+    public IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default);
 
     /// <summary>
     /// Records the model's turn from the round just executed, so that the next round sees it.
@@ -49,4 +57,19 @@ public interface IToolCallingProviderAdapter
     /// the others carry the failure in the content, which is where it has to be legible anyway.
     /// </param>
     public void RecordToolResult(string callId, string content, bool isError = false);
+
+    /// <summary>
+    /// The texts which everything recorded so far adds to the request of every following round.
+    /// </summary>
+    /// <remarks>
+    /// Kept by the adapter rather than by the loop, because the adapter is the only place which
+    /// knows what actually travels. The loop hands over arguments and results and would count
+    /// those; what the Responses API additionally demands back -- its reasoning items -- never
+    /// passes through the loop at all, and a conversation whose largest part is invisible is the
+    /// very thing this is here to rule out.<br/><br/>
+    /// These texts exist for as long as the adapter does, which is one streaming call. Nothing of
+    /// this reaches the next request the user sends: the accumulated conversation goes away with
+    /// the adapter.
+    /// </remarks>
+    public IReadOnlyList<string> RecordedRequestTexts { get; }
 }

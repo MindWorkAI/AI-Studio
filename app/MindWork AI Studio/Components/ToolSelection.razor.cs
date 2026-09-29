@@ -129,6 +129,29 @@ public partial class ToolSelection : MSGComponentBase
             this.ProviderConfidence.GetName());
     }
 
+    /// <summary>
+    /// Every reason why this tool is out of reach right now, as one text.
+    /// </summary>
+    /// <remarks>
+    /// Several reasons can apply at once, such as a missing setting and a provider without the
+    /// confidence the tool needs. One justified paragraph reads better than a stack of short lines.
+    /// </remarks>
+    private string GetWarningText(ToolCatalogItem item)
+    {
+        var warnings = new List<string>(3);
+        if (!item.ConfigurationState.IsConfigured)
+            warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
+
+        if (!item.IsActive)
+            warnings.Add(T("This tool has been disabled by your organization."));
+
+        var providerConfidenceHint = this.GetProviderConfidenceHint(item);
+        if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
+            warnings.Add(providerConfidenceHint);
+
+        return string.Join(' ', warnings);
+    }
+
     private async Task OpenSettings(string toolId)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>

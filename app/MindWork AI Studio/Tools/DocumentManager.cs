@@ -9,12 +9,14 @@ namespace AIStudio.Tools;
 public sealed class DocumentManager
 {
     private StringBuilder? currentPageContent;
+    private int? currentPageTokenCount;
+    private int? currentPageNumber;
 
-    public string? AddPage(ContentStreamDocumentMetadata metadata, string? content, bool extractImages)
+    public ContentStreamPendingContent? AddPage(ContentStreamDocumentMetadata metadata, string? content, int? tokenCount, bool extractImages)
     {
         var pageNumber = metadata.Document?.PageNumber ?? 0;
         if (pageNumber == 0)
-            return content;
+            return content is null ? null : new ContentStreamPendingContent(content, tokenCount);
 
         var image = metadata.Document?.Image;
         if (image is null)
@@ -32,6 +34,15 @@ public sealed class DocumentManager
             this.currentPageContent.AppendLine($"<!-- Estimated page {pageNumber} -->");
             this.currentPageContent.AppendLine();
             this.currentPageContent.Append(content);
+
+            //
+            // The count waits here together with the page it belongs to. Handing it out along with
+            // the page we just completed would size that page by the text of this one. The page
+            // number waits for the same reason: it belongs to the page being buffered, not to the
+            // one leaving here.
+            //
+            this.currentPageTokenCount = tokenCount;
+            this.currentPageNumber = pageNumber;
             return completedPage;
         }
 
@@ -45,19 +56,30 @@ public sealed class DocumentManager
             {
                 this.currentPageContent.AppendLine();
                 this.currentPageContent.AppendLine(markdownImage);
+
+                //
+                // The runtime counted the text of this page, not the image we just embedded into it.
+                // A data URI is orders of magnitude larger than that text, so the count no longer
+                // describes the page: we drop it, and whoever needs one counts the page itself.
+                //
+                this.currentPageTokenCount = null;
             }
         }
 
         return null;
     }
 
-    public string? Flush()
+    public ContentStreamPendingContent? Flush()
     {
         if (this.currentPageContent is null)
             return null;
 
         var result = this.currentPageContent.ToString();
+        var tokenCount = this.currentPageTokenCount;
+        var pageNumber = this.currentPageNumber;
         this.currentPageContent = null;
-        return string.IsNullOrWhiteSpace(result) ? null : result;
+        this.currentPageTokenCount = null;
+        this.currentPageNumber = null;
+        return string.IsNullOrWhiteSpace(result) ? null : new ContentStreamPendingContent(result, tokenCount, pageNumber);
     }
 }

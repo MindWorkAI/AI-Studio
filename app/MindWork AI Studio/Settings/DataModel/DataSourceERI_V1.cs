@@ -7,6 +7,7 @@ using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using SharedTools;
 
@@ -75,6 +76,43 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
+        var latestUserPrompt = lastUserPrompt switch
+        {
+            ContentText text => text.Text,
+            ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                ? base64Image
+                : string.Empty,
+            _ => string.Empty
+        };
+
+        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token) ?? [];
+    }
+
+    /// <inheritdoc />
+    public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
+    {
+        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        if (this.MaxMatches == 0)
+            return RetrievalPage.EMPTY;
+
+        //
+        // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
+        // thread still tells the server what the conversation is about. Nor does it know an offset:
+        // the server returns the whole window, and the page is cut from it here. Hence, the pages
+        // are only as stable as the order in which the server returns its matches. A server which
+        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        //
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        if (contexts is null)
+            return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
+
+        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
+        return new RetrievalPage(pageContexts, hasMore);
+    }
+
+    /// <returns>What the ERI server found, or null when it could not be searched.</returns>
+    private async Task<IReadOnlyList<IRetrievalContext>?> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
+    {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
         var logger = Program.SERVICE_PROVIDER.GetRequiredService<ILogger<DataSourceERI_V1>>();
@@ -85,18 +123,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             var retrievalRequest = new RetrievalRequest
             {
-                LatestUserPromptType = lastUserPrompt.ToERIContentType,
-                LatestUserPrompt = lastUserPrompt switch
-                {
-                    ContentText text => text.Text,
-                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image 
-                        : string.Empty,
-                    _ => string.Empty
-                },
+                LatestUserPromptType = latestUserPromptType,
+                LatestUserPrompt = latestUserPrompt,
                 
                 Thread = await thread.ToERIChatThread(token),
-                MaxMatches = this.MaxMatches,
+                MaxMatches = maxMatches,
                 RetrievalProcessId = this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };
@@ -148,11 +179,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             }
 
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
-            return [];
+            return null;
         }
 
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
-        return [];
+        return null;
     }
 
     public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
@@ -164,9 +195,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
-        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
+        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || !DataSourceValidation.IsNameValid(name))
         {
-            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name of at most {DataSourceValidation.MAX_NAME_LENGTH} characters without control characters. (Plugin ID: {configPluginId})");
             return false;
         }
 

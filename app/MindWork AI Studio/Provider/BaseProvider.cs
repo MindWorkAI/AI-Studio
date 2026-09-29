@@ -3,10 +3,10 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
-using AIStudio.Provider.Anthropic;
+using AIStudio.Models;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
@@ -37,20 +37,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
-    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Converters =
-        {
-            new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower),
-            new AnnotationConverter(),
-            new MessageBaseConverter(),
-            new SubContentConverter(),
-            new SubContentImageSourceConverter(),
-            new SubContentImageUrlConverter(),
-        },
-        AllowTrailingCommas = false
-    };
+    protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = ProviderJsonOptions.OPTIONS;
 
     /// <summary>
     /// Constructor for the base provider.
@@ -90,6 +77,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
+
+    /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
 
     /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
@@ -188,6 +178,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         Action<HttpRequestMessage, string>? requestConfigurator = null,
         JsonSerializerOptions? jsonSerializerOptions = null,
         bool isTryingSecret = false,
+        Func<TResponse, IEnumerable<ModelListing>>? listingFactory = null,
         CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
@@ -217,6 +208,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                 if (parsedResponse is null)
                     return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, "Model list response could not be deserialized.");
 
+                //
+                // What the list stated about the models, read before anything is filtered out of
+                // it: a model left out below as an embedding model is still a model somebody may
+                // have configured this instance with, and a list like this one is the only place
+                // its window is ever stated. Only pass a whole list in here -- reporting a part of
+                // one would tell the app that everything left out has stopped existing.
+                //
+                if (listingFactory is not null)
+                    ListedModels.Shared.Report(this.ConfiguredProviderId, listingFactory(parsedResponse));
+
                 return SuccessfulModelLoadResult(modelFactory(parsedResponse));
             }
             catch (Exception e)
@@ -232,14 +233,144 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
 
-    protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    /// <summary>
+    /// Says what a failed request means for the user.
+    /// </summary>
+    /// <remarks>
+    /// The window is only ever known where the caller knows which model the request was for, which
+    /// is why it is optional rather than a second required argument: most failures say nothing
+    /// about a length and need no number to explain themselves.
+    /// </remarks>
+    /// <param name="failureReason">Why the request failed.</param>
+    /// <param name="contextWindow">What the model reads, where that is known.</param>
+    /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
+    protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason, ContextWindow contextWindow = default) => failureReason switch
     {
         ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
+        ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY => string.Format(TB("The API key for the provider '{0}' is missing or was rejected. Please check the key in the settings."), this.InstanceName),
+        ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR => string.Format(TB("The provider '{0}' refused the request. Your account might not be allowed to use the selected model, or the provider might not serve your region."), this.InstanceName),
+        ProviderRequestFailureReason.PROVIDER_UNAVAILABLE => string.Format(TB("The provider '{0}' could not be reached. Please check whether it is running and reachable, then try again."), this.InstanceName),
+        ProviderRequestFailureReason.MODEL_NOT_FOUND => string.Format(TB("The provider '{0}' does not know the selected model. Please select another model."), this.InstanceName),
+        //
+        // Naming the number is the whole point of knowing it: "too long" leaves the user guessing
+        // by how much, while the window turns the next step into arithmetic. Where nobody knows the
+        // window, no number is invented -- the sentence below says the same thing without one.
+        //
+        // Written out in full rather than shortened the way the chat shortens it. The sentence ends
+        // by asking the user to set a chunk size, and 32.77k is not a number anybody types into a
+        // field.
+        //
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED when contextWindow.IsKnown => string.Format(TB("The text was longer than the selected model accepts, which is {0} tokens. Please select a model which takes longer texts, or reduce the chunk size of the data source."), contextWindow.DefaultTokens.ToString("N0", I18N.I.Culture)),
+        ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED => TB("The text was longer than the selected model accepts. Please select a model which takes longer texts, or reduce the chunk size of the data source."),
+        ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED => string.Format(TB("The selected model is not able to use tools. Please select a model which can, or open the settings of the provider '{0}', show its expert settings, and switch the function calling capability off there."), this.InstanceName),
+        ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED => string.Format(TB("The provider '{0}' cannot create embeddings. Please select a provider which offers an embedding model."), this.InstanceName),
+        ProviderRequestFailureReason.INVALID_RESPONSE => string.Format(TB("The provider '{0}' sent an answer AI Studio was not able to read."), this.InstanceName),
         _ => string.Empty,
     };
 
+    /// <summary>
+    /// Builds the failure a provider reports when it offers no embeddings at all.
+    /// </summary>
+    /// <remarks>
+    /// Such a provider used to answer with an empty list, which the caller was not able to tell
+    /// apart from a provider which simply produced nothing this time. Saying it outright is what
+    /// lets the user go and pick a provider which can do the job.
+    /// </remarks>
+    protected ProviderRequestException CreateEmbeddingsNotSupportedException() => new(ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED,
+        this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.EMBEDDINGS_NOT_SUPPORTED));
+
+    /// <summary>
+    /// Builds the failure of an embedding request the provider answered with an error.
+    /// </summary>
+    /// <remarks>
+    /// Shared with the providers which talk to an embedding endpoint of their own: what the user
+    /// needs to know does not depend on which route the request took.
+    /// </remarks>
+    protected ProviderRequestException CreateEmbeddingRequestException(HttpStatusCode statusCode, string reasonPhrase, string responseBody, Model embeddingModel)
+    {
+        //
+        // What the rules know about this model, corrected by whatever this installation reported
+        // about it. That is the same walk a configured chat provider takes, minus the expert
+        // settings: an embedding provider has none, so there is nothing above the two to ask.
+        //
+        var stated = this.Provider.GetModelProfile(embeddingModel);
+        var contextWindow = ListedModels.Shared.Of(this.ConfiguredProviderId, embeddingModel.Id).ApplyTo(stated).Context;
+
+        var failureReason = this.ClassifyEmbeddingRequestFailure(statusCode, responseBody);
+        var userMessage = this.GetProviderRequestFailureUserMessage(failureReason, contextWindow);
+
+        // We know nothing about this failure, so we pass on what the provider said about it:
+        if (string.IsNullOrWhiteSpace(userMessage))
+        {
+            var providerMessage = ReadProviderErrorMessage(responseBody);
+            userMessage = string.IsNullOrWhiteSpace(providerMessage)
+                ? string.Format(TB("The provider '{0}' rejected the embedding request with the status code {1}."), this.InstanceName, (int)statusCode)
+                : string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+        }
+
+        return new(failureReason, userMessage, statusCode, reasonPhrase, responseBody);
+    }
+
+    /// <summary>
+    /// Builds the failure of an embedding request which did not get an answer at all.
+    /// </summary>
+    /// <param name="exception">What went wrong while the request was on its way.</param>
+    /// <param name="isTimeout">Whether the provider took longer than we were willing to wait.</param>
+    protected ProviderRequestException CreateEmbeddingRequestException(Exception exception, bool isTimeout)
+    {
+        if (isTimeout)
+            return new(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE), responseBody: exception.Message);
+
+        return new(ProviderRequestFailureReason.UNKNOWN, string.Format(TB("The embedding request to the provider '{0}' failed: {1}"), this.InstanceName, exception.Message), responseBody: exception.Message);
+    }
+
+    /// <summary>
+    /// Classifies why an embedding request failed.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from the chat classification on purpose. The chat path turns most failures into
+    /// a message and carries on, so classifying more cases there would change what every user
+    /// sees. The embedding path has no such fallback: it either produces vectors or it fails, and
+    /// then the caller has to be able to say why.
+    /// </remarks>
+    private ProviderRequestFailureReason ClassifyEmbeddingRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        //
+        // Whatever the shared classification recognizes wins: it knows what a provider says about
+        // quota and rate limits, and several providers refine it for their own error format.
+        //
+        var sharedFailureReason = this.ClassifyProviderRequestFailure(statusCode, responseBody);
+        if (sharedFailureReason is not ProviderRequestFailureReason.NONE)
+            return sharedFailureReason;
+
+        return statusCode switch
+        {
+            HttpStatusCode.Unauthorized => ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY,
+            HttpStatusCode.Forbidden => ProviderRequestFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
+            HttpStatusCode.NotFound => ProviderRequestFailureReason.MODEL_NOT_FOUND,
+            HttpStatusCode.RequestEntityTooLarge => ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED,
+            HttpStatusCode.BadRequest when IsContextLengthFailure(responseBody) => ProviderRequestFailureReason.CONTEXT_LENGTH_EXCEEDED,
+            HttpStatusCode.RequestTimeout or HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout => ProviderRequestFailureReason.PROVIDER_UNAVAILABLE,
+            _ => ProviderRequestFailureReason.UNKNOWN,
+        };
+    }
+
+    /// <summary>
+    /// Recognizes the answer a provider gives when the text was longer than the model accepts.
+    /// </summary>
+    /// <remarks>
+    /// There is no common error code for this. What the answers have in common is that they talk
+    /// about the context and about tokens, which is the same hint the chat path goes by.
+    /// </remarks>
+    private static bool IsContextLengthFailure(string responseBody) =>
+        responseBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
+        responseBody.Contains("token", StringComparison.InvariantCultureIgnoreCase);
+
     protected virtual ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
     {
+        if (statusCode is HttpStatusCode.BadRequest && IsToolsNotSupportedFailure(responseBody))
+            return ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED;
+
         if (statusCode is not HttpStatusCode.TooManyRequests)
             return ProviderRequestFailureReason.NONE;
 
@@ -251,7 +382,78 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (IsTooManyRequestsError(errorCode) || IsTooManyRequestsError(errorType) || IsTooManyRequestsError(errorMessage))
             return ProviderRequestFailureReason.TOO_MANY_REQUESTS;
 
+        //
+        // Some providers do not refuse the request outright, they open the stream and put the
+        // refusal into the first event. It is the same failure, so it gets the same answer:
+        //
+        if (IsToolsNotSupportedFailure(errorMessage) || IsToolsNotSupportedFailure(responseBody))
+            return ProviderRequestFailureReason.TOOLS_NOT_SUPPORTED;
+
         return ProviderRequestFailureReason.NONE;
+    }
+
+    //
+    // The words a provider uses for the ability to call tools, and the words it uses to deny an
+    // ability. Neither list is complete, and neither can be: every provider words this in its own
+    // way. Ollama says "<model> does not support tools", Mistral "Function calling is not enabled
+    // for this model", others again something else. What they have in common is one word from each
+    // of these two lists.
+    //
+    private static readonly string[] TOOL_CALLING_WORDS = ["tool", "function call", "function_call", "function-call", "functions"];
+
+    private static readonly string[] ABILITY_DENIALS = ["not support", "unsupported", "not enabled", "not available", "not allowed", "not capable", "no support", "not implemented"];
+
+    //
+    // How far apart the two words may stand and still be read as one statement. The distance is
+    // what makes the check trustworthy: a provider which quotes the failed request back sends our
+    // whole tool list along with the error, so the word "tool" is then in the body no matter what
+    // actually went wrong. A denial elsewhere in such a body says nothing about tool calling.
+    //
+    private const int TOOL_DENIAL_MAX_DISTANCE = 60;
+
+    /// <summary>
+    /// Recognizes the answer a provider gives when the model cannot use the tools we offered it.
+    /// </summary>
+    /// <remarks>
+    /// There is no error code for this either, which is why this reads the wording like the
+    /// context length check above does. AI Studio needs to recognize it because it assumes tool
+    /// calling for models it does not know: without this, the user would see nothing but the raw
+    /// provider message and no hint at what to do about it.
+    /// </remarks>
+    /// <param name="responseBody">What the provider said about the failure.</param>
+    /// <returns>True, when the provider denied the ability to call tools.</returns>
+    private static bool IsToolsNotSupportedFailure(string? responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return false;
+
+        foreach (var denial in ABILITY_DENIALS)
+        {
+            var denialIndex = responseBody.IndexOf(denial, StringComparison.OrdinalIgnoreCase);
+            while (denialIndex is not -1)
+            {
+                if (MentionsToolCallingNearby(responseBody, denialIndex, denial.Length))
+                    return true;
+
+                // The same denial may appear again later in the body, next to the tool words:
+                denialIndex = responseBody.IndexOf(denial, denialIndex + 1, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return false;
+    }
+
+    private static bool MentionsToolCallingNearby(string responseBody, int denialIndex, int denialLength)
+    {
+        var windowStart = Math.Max(0, denialIndex - TOOL_DENIAL_MAX_DISTANCE);
+        var windowEnd = Math.Min(responseBody.Length, denialIndex + denialLength + TOOL_DENIAL_MAX_DISTANCE);
+        var window = responseBody.AsSpan(windowStart, windowEnd - windowStart);
+
+        foreach (var word in TOOL_CALLING_WORDS)
+            if (window.Contains(word, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+        return false;
     }
 
     private static bool IsTooManyRequestsError(string? value)
@@ -394,11 +596,13 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <remarks>
     /// Providers word their errors differently, but they all put a sentence somewhere into the
     /// body. Passing that sentence on is what lets a user act on the problem instead of only
-    /// learning that something went wrong.
+    /// learning that something went wrong. Open to the providers themselves as well, because some
+    /// of them talk to an endpoint of their own rather than through the shared request methods,
+    /// and their users deserve the same explanation.
     /// </remarks>
     /// <param name="responseBody">The body of the failed response.</param>
     /// <returns>The message, or an empty string when the body carries none.</returns>
-    private static string ReadProviderErrorMessage(string responseBody)
+    protected static string ReadProviderErrorMessage(string responseBody)
     {
         if (string.IsNullOrWhiteSpace(responseBody))
             return string.Empty;
@@ -442,7 +646,19 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         return propertyElement.GetString();
     }
-    
+
+    /// <summary>
+    /// Builds the message a user gets to see when the chat outgrew what the model reads.
+    /// </summary>
+    /// <remarks>
+    /// Two answers mean this: one provider says so in the body of a bad request, another turns the
+    /// request down with 413 instead. For the user they are the same thing, and saying it in one
+    /// place is also what keeps both on one I18N key.
+    /// </remarks>
+    /// <param name="providerMessage">What the provider itself said about the failure.</param>
+    /// <returns>The message to show.</returns>
+    private string GetContextTooLargeUserMessage(string? providerMessage) => string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, providerMessage);
+
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
@@ -463,6 +679,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var retry = 0;
         var response = default(HttpResponseMessage);
         var errorMessage = string.Empty;
+        var failureAlreadyExplained = false;
         var lastProviderRequestFailure = ProviderRequestFailureReason.NONE;
         HttpStatusCode? lastResponseStatusCode = null;
         var lastResponseReasonPhrase = string.Empty;
@@ -517,9 +734,35 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
+            //
+            // Some providers answer an oversized request with 413 instead of describing the
+            // problem in a 400 body. Handled here rather than below, because this is the one
+            // failure in this loop which cannot get better by being sent again: without its own
+            // branch it falls through to the retry delays, which resend the very same oversized
+            // request for several minutes before the user learns anything at all.
+            //
+            if(nextResponse.StatusCode is HttpStatusCode.RequestEntityTooLarge)
+            {
+                //
+                // The reason phrase of a 413 says no more than "Request Entity Too Large", and a
+                // proxy which refuses the request before the provider sees it sends no body worth
+                // reading. So we show what the body carries and fall back to the phrase:
+                //
+                var tooLargeMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(tooLargeMessage))
+                    tooLargeMessage = nextResponse.ReasonPhrase;
+
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(tooLargeMessage)));
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
+                break;
+            }
+
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
                 //
@@ -546,7 +789,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, this.GetContextTooLargeUserMessage(badRequestMessage)));
                 }
                 else
                 {
@@ -555,6 +798,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -563,6 +807,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -571,6 +816,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Key, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The API key might be invalid. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -579,6 +825,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
             
@@ -587,6 +834,32 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider is overloaded. The message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
                 errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
+                break;
+            }
+
+            //
+            // Everything else the provider answers in the 400 range is about this request itself,
+            // and sending the very same request again cannot change that answer. Only 408 and 429
+            // say "later" rather than "no", and waiting them out is what the delay below exists
+            // for. This branch comes last on purpose: every status code we have a better sentence
+            // for is handled above, and only what is left over ends up with this general wording.
+            //
+            if(nextResponse.StatusCode is not (HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests) && (int)nextResponse.StatusCode is >= 400 and < 500)
+            {
+                //
+                // What the provider said about it, falling back to the reason phrase. The status
+                // code is named as well: this is the branch for refusals we have no wording of our
+                // own for, and then the number is what the user can ask the provider about.
+                //
+                var refusalMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(refusalMessage))
+                    refusalMessage = nextResponse.ReasonPhrase;
+
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The provider turned the request down with the status code {2} and would turn it down again, so we stopped trying. The provider message is: '{3}'"), this.InstanceName, this.Provider, (int)nextResponse.StatusCode, refusalMessage)));
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                errorMessage = nextResponse.ReasonPhrase;
+                failureAlreadyExplained = true;
                 break;
             }
 
@@ -599,7 +872,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             await Task.Delay(TimeSpan.FromSeconds(timeSeconds), effectiveCancellationToken);
         }
         
-        if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
+        //
+        // Whether this request got an answer at all. The response is set in the success branch and
+        // nowhere else, so its absence is what "we have nothing to hand on" means. Going by the
+        // error message instead was wrong in both directions: a provider which sends no reason
+        // phrase left that message empty, and this method then reported success without a response
+        // for the caller to read; and an attempt which succeeded as the last one the loop allows
+        // was reported as a failure although its answer was right there.
+        //
+        if(response is null)
         {
             if (lastProviderRequestFailure is not ProviderRequestFailureReason.NONE)
             {
@@ -608,7 +889,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                 throw new ProviderRequestException(lastProviderRequestFailure, userMessage, lastResponseStatusCode, lastResponseReasonPhrase, lastErrorBody);
             }
 
-            await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+            //
+            // This is the message for a failure nobody was able to explain. Where one of the
+            // branches above named the cause, it has to stay silent: it speaks of all retries
+            // having been spent, while those branches stop after the very first answer. Sending
+            // both leaves the user with two messages which contradict each other, and the one
+            // which explains nothing is the one arriving last.
+            //
+            if(!failureAlreadyExplained)
+                await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
+
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
 
@@ -616,19 +906,20 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     /// <summary>
-    /// Streams the chat completion from the provider using the Chat Completion API.
+    /// Reads a server-sent event stream from the provider, line by line.
     /// </summary>
-    /// <param name="providerName">The name of the provider.</param>
+    /// <remarks>
+    /// Everything on the way to a line is here: the retries, the timeouts, the cancellation, and
+    /// the messages the user gets to see when any of it fails. What a line means is not here --
+    /// that differs per wire format, and reading it is the caller's business.
+    /// </remarks>
+    /// <param name="providerName">The name of the provider, for logging and error reporting.</param>
+    /// <param name="operationName">What is being streamed, for logging: a chat completion, say, or a responses call.</param>
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="token">The cancellation token to use.</param>
-    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
-    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
-    /// <returns>The stream of content chunks.</returns>
-    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
+    /// <returns>The events of the stream, in the order they arrived.</returns>
+    protected async IAsyncEnumerable<ServerSentEvent> ReadServerSentEventsAsync(string providerName, string operationName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Check if annotations are supported:
-        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
-        
         StreamReader? streamReader = null;
         using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
         var timeoutToken = timeoutTokenSource.Token;
@@ -638,7 +929,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
             if(responseData.IsFailedAfterAllRetries)
             {
-                this.logger.LogError($"The {providerName} chat completion failed: {responseData.ErrorMessage}");
+                this.logger.LogError("The {ProviderName} {OperationName} failed: {ErrorMessage}", providerName, operationName, responseData.ErrorMessage);
                 yield break;
             }
             
@@ -656,108 +947,139 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             if (token.IsCancellationRequested)
             {
-                this.logger.LogWarning("The user canceled the chat completion request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
+                this.logger.LogWarning("The user canceled the {OperationName} request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", operationName, providerName, this.InstanceName);
             }
             else if (this.IsTimeoutException(e, token))
             {
                 await this.SendTimeoutError("opening the chat response stream");
-                this.logger.LogError(e, "Timed out while opening the chat completion stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+                this.logger.LogError(e, "Timed out while opening the {OperationName} stream from {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
             }
             else
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to stream chat completion from {providerName} '{this.InstanceName}': {e.Message}");
+                this.logger.LogError(e, "Failed to stream the {OperationName} from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", operationName, providerName, this.InstanceName, e.Message);
             }
         }
 
         if (streamReader is null)
             yield break;
-        
-        //
-        // Read the stream, line by line:
-        //
-        while (true)
+
+        try
         {
-            try
+            //
+            // Read the stream, line by line:
+            //
+            while (true)
             {
-                if(streamReader.EndOfStream)
+                try
+                {
+                    if(streamReader.EndOfStream)
+                        break;
+                }
+                catch (Exception e)
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                    this.logger.LogWarning(e, "Failed to read the end-of-stream state from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
                     break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
+                }
 
-            // Check if the token is canceled:
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning($"The user canceled the chat completion for {providerName} '{this.InstanceName}'.");
-                streamReader.Close();
-                yield break;
-            }
-
-            //
-            // Read the next line:
-            //
-            string? line;
-            try
-            {
-                line = await streamReader.ReadLineAsync(timeoutToken);
-            }
-            catch (Exception e)
-            {
+                // Check if the token is canceled:
                 if (token.IsCancellationRequested)
                 {
-                    this.logger.LogWarning("The user canceled the chat completion stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
-                }
-                else if (this.IsTimeoutException(e, token))
-                {
-                    await this.SendTimeoutError("reading the chat response stream");
-                    this.logger.LogError(e, "Timed out while reading the chat stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-                }
-                else
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                    this.logger.LogWarning("The user canceled the {OperationName} for {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
+                    yield break;
                 }
 
-                break;
+                //
+                // Read the next line:
+                //
+                string? line;
+                try
+                {
+                    line = await streamReader.ReadLineAsync(timeoutToken);
+                }
+                catch (Exception e)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        this.logger.LogWarning("The user canceled the {OperationName} stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", operationName, providerName, this.InstanceName);
+                    }
+                    else if (this.IsTimeoutException(e, token))
+                    {
+                        await this.SendTimeoutError("reading the chat response stream");
+                        this.logger.LogError(e, "Timed out while reading the {OperationName} stream from {ProviderName} '{ProviderInstanceName}'.", operationName, providerName, this.InstanceName);
+                    }
+                    else
+                    {
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                        this.logger.LogError(e, "Failed to read the stream from {ProviderName} '{ProviderInstanceName}': {ErrorMessage}", providerName, this.InstanceName, e.Message);
+                    }
+
+                    break;
+                }
+
+                if (line is null)
+                    break;
+
+                // Skip empty lines:
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+                
+                if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
+                    throw providerRequestException;
+
+                //
+                // Only data lines carry a payload. Every other line goes out as it is, because
+                // some of them still say something the caller has to act on.
+                //
+                TryGetServerSentEventData(line, out var data);
+                yield return new ServerSentEvent(line, data);
             }
+        }
+        finally
+        {
+            streamReader.Dispose();
+        }
+    }
 
-            if (line is null)
-                break;
-
-            // Skip empty lines:
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
-                throw providerRequestException;
-
-            // Skip lines that do not start with "data:". According
-            // to the specification, we only want to read the data lines:
-            if (!TryGetServerSentEventData(line, out var jsonData))
+    /// <summary>
+    /// Streams the chat completion from the provider using the Chat Completion API.
+    /// </summary>
+    /// <param name="providerName">The name of the provider.</param>
+    /// <param name="requestBuilder">A function that builds the request.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <typeparam name="TDelta">The type of the delta lines inside the stream.</typeparam>
+    /// <typeparam name="TAnnotation">The type of the annotation lines inside the stream.</typeparam>
+    /// <returns>The stream of content chunks.</returns>
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletionInternal<TDelta, TAnnotation>(string providerName, Func<Task<HttpRequestMessage>> requestBuilder, [EnumeratorCancellation] CancellationToken token = default) where TDelta : IResponseStreamLine where TAnnotation : IAnnotationStreamLine
+    {
+        // Check if annotations are supported:
+        var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
+        
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "chat completion", requestBuilder, token))
+        {
+            // Skip lines without a payload. According to the specification,
+            // we only want to read the data lines:
+            if (serverSentEvent.Data.Length is 0)
                 continue;
 
             // Check if the line is the end of the stream:
-            if (jsonData is "[DONE]")
+            if (serverSentEvent.Data is "[DONE]")
                 yield break;
 
             //
             // Process annotation lines:
             //
-            if (annotationSupported && line.Contains("""
-                                                     "annotations":[
-                                                     """, StringComparison.InvariantCulture))
+            if (annotationSupported && serverSentEvent.Line.Contains("""
+                                                                     "annotations":[
+                                                                     """, StringComparison.InvariantCulture))
             {
                 TAnnotation? providerResponse;
                 
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -785,7 +1107,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -793,6 +1115,21 @@ public abstract class BaseProvider : IProvider, ISecretId
                 catch
                 {
                     // Skip invalid JSON data:
+                    continue;
+                }
+
+                //
+                // The line stating what the request cost carries no content of its own: providers
+                // send it as the last line of the stream, with no choices at all. It is handled
+                // before the check below, which would otherwise drop it as an empty response.
+                //
+                var usage = providerResponse.GetUsage();
+                if (usage.IsKnown)
+                {
+                    yield return providerResponse.ContainsContent()
+                        ? providerResponse.GetContent() with { Usage = usage }
+                        : new(string.Empty, [], Usage: usage);
+
                     continue;
                 }
 
@@ -804,8 +1141,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 yield return providerResponse.GetContent();
             }
         }
-        
-        streamReader.Dispose();
     }
 
     /// <summary>
@@ -822,132 +1157,56 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
-        StreamReader? streamReader = null;
-        using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
-        var timeoutToken = timeoutTokenSource.Token;
-        try
+        var isCompleted = false;
+        await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
         {
-            // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
-            if(responseData.IsFailedAfterAllRetries)
+            // Check if the line announces the end of the stream. This one is read off the raw
+            // line rather than off a payload, because it has none:
+            if (serverSentEvent.Line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
             {
-                this.logger.LogError($"The {providerName} responses call failed: {responseData.ErrorMessage}");
-                yield break;
+                isCompleted = true;
+                continue;
             }
             
-            // Open the response stream:
-            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(timeoutToken);
-
-            // Add a stream reader to read the stream, line by line:
-            streamReader = new StreamReader(providerStream);
-        }
-        catch(ProviderRequestException)
-        {
-            throw;
-        }
-        catch(Exception e)
-        {
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning("The user canceled the responses request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
-            }
-            else if (this.IsTimeoutException(e, token))
-            {
-                await this.SendTimeoutError("opening the chat response stream");
-                this.logger.LogError(e, "Timed out while opening the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-            }
-            else
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to stream responses from {providerName} '{this.InstanceName}': {e.Message}");
-            }
-        }
-
-        if (streamReader is null)
-            yield break;
-        
-        //
-        // Read the stream, line by line:
-        //
-        while (true)
-        {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
-
-            // Check if the token is canceled:
-            if (token.IsCancellationRequested)
-            {
-                this.logger.LogWarning($"The user canceled the responses for {providerName} '{this.InstanceName}'.");
-                streamReader.Close();
-                yield break;
-            }
+            // Skip lines without a payload:
+            if (serverSentEvent.Data.Length is 0)
+                continue;
 
             //
-            // Read the next line:
+            // The payload after the announcement is the whole response, and the only line which
+            // states what the request cost. The stream ends here whether that can be read or not,
+            // which keeps the end independent of how a gateway orders the fields of the payload.
             //
-            string? line;
-            try
+            if (isCompleted)
             {
-                line = await streamReader.ReadLineAsync(timeoutToken);
-            }
-            catch (Exception e)
-            {
-                if (token.IsCancellationRequested)
+                var usage = TokenUsage.UNKNOWN;
+                try
                 {
-                    this.logger.LogWarning("The user canceled the responses stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
+                    usage = JsonSerializer.Deserialize<ResponsesCompletedStreamLine>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS)?.GetUsage() ?? TokenUsage.UNKNOWN;
                 }
-                else if (this.IsTimeoutException(e, token))
+                catch
                 {
-                    await this.SendTimeoutError("reading the chat response stream");
-                    this.logger.LogError(e, "Timed out while reading the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
-                }
-                else
-                {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                    // Invalid JSON data states nothing, and the answer is complete either way.
                 }
 
-                break;
-            }
+                if (usage.IsKnown)
+                    yield return new(string.Empty, [], Usage: usage);
 
-            if (line is null)
-                break;
-
-            // Skip empty lines:
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-            
-            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
-                throw providerRequestException;
-
-            // Check if the line is the end of the stream:
-            if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
-            
-            if (!TryGetServerSentEventData(line, out var jsonData))
-                continue;
+            }
 
             //
             // Find delta lines:
             //
-            if (jsonData.StartsWith("""
-                                    {"type":"response.output_text.delta"
-                                    """, StringComparison.InvariantCulture))
+            if (serverSentEvent.Data.StartsWith("""
+                                                {"type":"response.output_text.delta"
+                                                """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TDelta>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -969,7 +1228,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             // Find annotation added lines:
             //
-            else if (annotationSupported && jsonData.StartsWith(
+            else if (annotationSupported && serverSentEvent.Data.StartsWith(
                          """
                          {"type":"response.output_text.annotation.added"
                          """, StringComparison.InvariantCulture))
@@ -978,7 +1237,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 try
                 {
                     // Deserialize the JSON data:
-                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
+                    providerResponse = JsonSerializer.Deserialize<TAnnotation>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS);
 
                     if (providerResponse is null)
                         continue;
@@ -997,8 +1256,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 yield return new(string.Empty, providerResponse.GetSources());
             }
         }
-        
-        streamReader.Dispose();
     }
 
     /// <summary>
@@ -1014,6 +1271,8 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="systemPromptRole">The system prompt role to use.</param>
     /// <param name="requestPath">The request path, relative to the provider base URL.</param>
     /// <param name="headersAction">Optional additional headers to add.</param>
+    /// <param name="mayAskForSequentialToolCalls">Whether a request which offers tools may ask for one call at a time. False for a provider which rejects the parallel_tool_calls parameter.</param>
+    /// <param name="enforcesStrictToolSchemas">Whether the provider binds the model's tool calls to a strict schema. Only then are tools offered in strict mode; everywhere else a strict schema would only tell the model that every argument is required.</param>
     /// <param name="token">The cancellation token.</param>
     /// <typeparam name="TRequest">The request DTO type.</typeparam>
     /// <typeparam name="TDelta">The delta stream line type.</typeparam>
@@ -1030,6 +1289,8 @@ public abstract class BaseProvider : IProvider, ISecretId
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
+        bool mayAskForSequentialToolCalls = true,
+        bool enforcesStrictToolSchemas = false,
         [EnumeratorCancellation] CancellationToken token = default)
         where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
@@ -1046,18 +1307,23 @@ public abstract class BaseProvider : IProvider, ISecretId
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
+        currentAssistantContent?.BeginToolRun();
 
         TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)
         {
             var providerSettings = this.CreateSettingsProvider(chatModel);
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
-                providerSettings,
-                chatThread.RuntimeComponent,
+                new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = this.Provider.GetConfidence(settingsManager).Level,
+                    ChatThread = chatThread,
+                },
                 chatThread.RuntimeSelectedToolIds,
-                this.Provider.GetConfidence(settingsManager).Level,
-                chatThread.MayRunTools(settingsManager));
+                chatThread.MayRunTools(settingsManager),
+                token);
 
             systemPrompt = new TextMessage
             {
@@ -1068,9 +1334,10 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
-                    (requestDto, requestToken) => this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, requestToken),
-                    this.InstanceName, this.logger);
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
+                    ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
+                    this.logger);
 
                 var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
                 var loopContext = new ToolCallingLoopContext
@@ -1125,15 +1392,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
-    /// <summary>
-    /// Describes this provider instance with the given model as configured provider settings.
-    /// </summary>
-    /// <remarks>
-    /// Anything asking about model capabilities must go through this, because the expert
-    /// capability overrides live on the settings object: a provider that builds its own settings
-    /// instance without them silently ignores what the user configured.
-    /// </remarks>
-    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    /// <inheritdoc />
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
         UsedLLMProvider = this.Provider,
         Model = chatModel,
@@ -1141,16 +1401,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         CapabilityOverrides = this.CapabilityOverrides,
     };
 
-    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(ChatCompletionAPIRequest requestDto, string requestPath, RequestedSecret requestedSecret,
-        Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+    /// <summary>
+    /// Runs one round of a tool calling conversation against a Chat Completions endpoint.
+    /// </summary>
+    /// <remarks>
+    /// Nothing but the HTTP request is done here. Reading the events is the adapter's business,
+    /// and everything on the way to them -- the retries, the timeouts, the error classification --
+    /// belongs to the shared stream reader, which the tool rounds used to go without.
+    /// </remarks>
+    private IAsyncEnumerable<ServerSentEvent> StreamChatCompletionRequest(ChatCompletionAPIRequest requestDto, string providerName, string requestPath,
+        RequestedSecret requestedSecret, Action<HttpRequestHeaders>? headersAction, CancellationToken token)
     {
-        var responseData = await this.SendRequest(RequestBuilder, token);
-        if (responseData.IsFailedAfterAllRetries)
-            return null;
-
-        using var response = responseData.Response!;
-        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
-
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
@@ -1161,6 +1422,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
+
+        return this.ReadServerSentEventsAsync(providerName, "chat completion", RequestBuilder, token);
     }
 
     /// <summary>
@@ -1336,9 +1599,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                     if(!requestedSecret.Success)
                     {
                         this.logger.LogError("No valid API key available for embedding request.");
-                        return [];
+                        throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
                     }
-                    
+
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
@@ -1351,21 +1614,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
-                var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
 
-                // We know nothing about this failure, so we pass on what the provider said about it:
-                if (string.IsNullOrWhiteSpace(userMessage))
-                {
-                    var providerMessage = ReadProviderErrorMessage(responseBody);
-                    if (!string.IsNullOrWhiteSpace(providerMessage))
-                        userMessage = string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
-                }
-
-                if (!string.IsNullOrWhiteSpace(userMessage))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
-
-                return [];
+                //
+                // Thrown instead of shown: the caller knows whether this is one file out of
+                // thousands being indexed in the background or the one thing the user just asked
+                // for, and only it can decide how often the user should hear about it.
+                //
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody, embeddingModel);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<EmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -1379,16 +1634,32 @@ public abstract class BaseProvider : IProvider, ISecretId
             else
             {
                 this.logger.LogError("Was not able to deserialize the embedding response.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_RESPONSE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_RESPONSE));
             }
+        }
+        catch (ProviderRequestException)
+        {
+            // Already classified and carrying its user message. Wrapping it again would only
+            // replace what we know with the fact that something went wrong:
+            throw;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            //
+            // The caller stopped the work, e.g. because the user removed the data source while it
+            // was being indexed. That is not a failure of the provider and must not be recorded
+            // as one:
+            //
+            throw;
         }
         catch (Exception e)
         {
-            if (this.IsTimeoutException(e, token))
+            var isTimeout = this.IsTimeoutException(e, token);
+            if (isTimeout)
                 await this.SendTimeoutError("creating embeddings");
 
             this.logger.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
-            return [];
+            throw this.CreateEmbeddingRequestException(e, isTimeout);
         }
     }
     

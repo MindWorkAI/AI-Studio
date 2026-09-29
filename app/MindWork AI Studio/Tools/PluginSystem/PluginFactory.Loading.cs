@@ -427,7 +427,12 @@ public static partial class PluginFactory
                 var assistantPlugin = new PluginAssistants(isInternal, state, type);
                 assistantPlugin.TryLoad();
                 return assistantPlugin;
-            
+
+            case PluginType.MODEL:
+                var modelPlugin = new PluginModels(isInternal, state, type);
+                modelPlugin.TryLoad();
+                return modelPlugin;
+
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");
         }

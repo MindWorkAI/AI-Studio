@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 
@@ -15,15 +17,19 @@ namespace AIStudio.Provider.Anthropic;
 /// </remarks>
 public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageBase> baseMessages, string systemPrompt, int maxTokens,
     IDictionary<string, object> apiParameters, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-    Func<ChatRequest, CancellationToken, Task<AnthropicResponse?>> executeRequestAsync) : IToolCallingProviderAdapter
+    Func<ChatRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
     private readonly List<IMessageBase> internalMessages = [];
     private readonly List<AnthropicToolResultContent> pendingToolResults = [];
+    private readonly List<string> recordedRequestTexts = [];
     private readonly List<AnthropicTool> tools = runnableTools.Select(x => ProviderToolAdapters.ToAnthropicTool(x.Definition)).ToList();
     private AnthropicResponse? lastResponse;
 
     /// <inheritdoc />
-    public async Task<ToolCallingRound?> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, CancellationToken token = default)
+    public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
     {
         //
         // The results of the previous round are flushed here rather than when they were recorded:
@@ -35,7 +41,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
             this.pendingToolResults.Clear();
         }
 
-        var response = await executeRequestAsync(new ChatRequest
+        var request = new ChatRequest
         {
             Model = chatModel.Id,
             Messages = [..baseMessages, ..this.internalMessages],
@@ -44,16 +50,31 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
                 : $"{systemPrompt}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
 
             MaxTokens = maxTokens,
-            Stream = false,
+            Stream = true,
             Tools = includeTools && this.tools.Count > 0 ? this.tools : null,
             AdditionalApiParameters = apiParameters,
-        }, token);
+        };
 
+        //
+        // The text goes out while it is being written; the blocks are put back together behind
+        // it, because they have to return to the provider exactly as they arrived. The usage goes
+        // out with every round: which of them describes the conversation is the loop's decision,
+        // which knows which round this is.
+        //
+        var accumulator = new AnthropicMessageStreamAccumulator();
+        await foreach (var serverSentEvent in streamRequestAsync(request, token))
+        {
+            var part = accumulator.Process(serverSentEvent);
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, [], Usage: part.Usage));
+        }
+
+        var response = accumulator.Build();
         if (response is null)
-            return null;
+            yield break;
 
         this.lastResponse = response;
-        return new ToolCallingRound(
+        yield return ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(
             response.GetTextOutput(),
             response.GetToolUses()
                 .Select(toolUse => new ToolCallingRequestedCall(
@@ -62,7 +83,7 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
                     toolUse.Arguments,
                     ToolExecutor.IsValidArgumentsJson(toolUse.Arguments)))
                 .ToList(),
-            []);
+            []));
     }
 
     /// <inheritdoc />
@@ -76,13 +97,30 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
         // returned unchanged for the model to continue from them.
         //
         this.internalMessages.Add(new AnthropicMessage([..this.lastResponse.Content]));
+
+        //
+        // And they are counted exactly as they arrived, for the same reason: a thinking block is
+        // sent back whole, so what it costs is what it says, not what we could read out of it.
+        //
+        foreach (var contentBlock in this.lastResponse.Content)
+            this.recordedRequestTexts.Add(contentBlock.GetRawText());
     }
 
     /// <inheritdoc />
-    public void RecordToolResult(string callId, string content, bool isError = false) => this.pendingToolResults.Add(new AnthropicToolResultContent
+    public void RecordToolResult(string callId, string content, bool isError = false)
     {
-        ToolUseId = callId,
-        Content = content,
-        IsError = isError,
-    });
+        this.pendingToolResults.Add(new AnthropicToolResultContent
+        {
+            ToolUseId = callId,
+            Content = content,
+            IsError = isError,
+        });
+
+        //
+        // Noted here rather than when the results are flushed into their message: the round they
+        // belong to is over, and whoever asks in the meantime has to see what it cost.
+        //
+        if (!string.IsNullOrWhiteSpace(content))
+            this.recordedRequestTexts.Add(content);
+    }
 }

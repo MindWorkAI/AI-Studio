@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
@@ -14,32 +15,57 @@ public sealed class HTMLParser
     private const int DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
     /// <summary>
-    /// The HTML to Markdown converter, built once from a fixed configuration.
+    /// The fixed configuration every HTML to Markdown conversion runs with.
     /// </summary>
     /// <remarks>
-    /// Shared rather than built per call: the configuration never changes, and one web search
-    /// converts a page per result.
+    /// This one is shared, because it is only ever read: a configuration holds no counters and no
+    /// collections which get written to. The converters reading it are not shared, see the pool
+    /// below.
     /// </remarks>
-    private static readonly Converter MARKDOWN_CONVERTER = new(new Config
+    private static readonly Config MARKDOWN_CONFIG = new()
     {
         UnknownTags = Config.UnknownTagsOption.Bypass,
         RemoveComments = true,
         SmartHrefHandling = true,
-    });
+    };
+
+    /// <summary>
+    /// The converters not currently in use, kept so that the reflection in their constructor does
+    /// not run for every page.
+    /// </summary>
+    /// <remarks>
+    /// One converter per conversion rather than one for all of them: a converter tracks the
+    /// ancestors of the node it is at in state of its own, updates that state at every single node,
+    /// and does so without any synchronization. A web search converts up to four pages at the same
+    /// time, which let those conversions tear each other's ancestor lists apart — sometimes loudly,
+    /// as an index outside the bounds of an array, and sometimes quietly, as a list indented by the
+    /// depth another page happened to be at.<br/><br/>
+    /// Which converter gets which page does not matter, so the pool needs no key: that ancestor
+    /// state is entered and left in pairs around every node, which leaves it empty once a
+    /// conversion returns. Nothing of a page outlives its own conversion. A key would, in fact, do
+    /// harm — two conversions of the same page at the same time would share one converter again.
+    /// <br/><br/>
+    /// The pool holds no more converters than are ever converting at once, which is a handful.
+    /// </remarks>
+    private static readonly ConcurrentBag<Converter> CONVERTER_POOL = [];
 
     /// <summary>
     /// Loads a web page.
     /// </summary>
     /// <remarks>
     /// Callers go through the web page retrieval service rather than here: it decides which
-    /// targets are acceptable and extracts the readable content. This method only performs the
-    /// request, and the validation it applies is the validation its caller hands in.
+    /// targets and which content types are acceptable, and extracts the readable content. This
+    /// method only performs the request, and the validation it applies is the validation its
+    /// caller hands in.<br/><br/>
+    /// The media type is validated once the headers have arrived and before the body is read.
+    /// A PDF of 30 MB is then refused for being a PDF, instead of being downloaded up to the
+    /// size limit first and refused for its size.
     /// </remarks>
     public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES, ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
         ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
-        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, CancellationToken token = default)
+        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, Action<string>? validateMediaType = null, CancellationToken token = default)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
@@ -95,16 +121,16 @@ public sealed class HTMLParser
                 throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{currentUrl}'.", null, response.StatusCode);
             }
 
-            var html = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
+            var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+            validateMediaType?.Invoke(mediaType);
 
+            var body = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
             return new HTMLParserWebPage
             {
                 RequestedUrl = url,
                 FinalUrl = response.RequestMessage?.RequestUri ?? currentUrl,
-                ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
-                Document = document,
+                ContentType = mediaType,
+                Body = body,
             };
         }
 
@@ -207,6 +233,11 @@ public sealed class HTMLParser
         request.Headers.TryAddWithoutValidation("User-Agent", USER_AGENT);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
+
+        // What a browser asks for, too. A server offering a page still sends the page, while an
+        // API that negotiates strictly answers with its JSON instead of refusing with a 406:
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml", 0.9));
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.8));
         request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US"));
         request.Headers.AcceptLanguage.Add(new StringWithQualityHeaderValue("en", 0.9));
         request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
@@ -238,5 +269,21 @@ public sealed class HTMLParser
     /// </summary>
     /// <param name="html">The HTML content to parse.</param>
     /// <returns>The converted Markdown content.</returns>
-    public static string ParseToMarkdown(string html) => MARKDOWN_CONVERTER.Convert(html);
+    /// <remarks>
+    /// The converter returns to the pool only after it converted without throwing, and that is
+    /// deliberately not done in a finally block: a conversion which throws leaves the ancestors it
+    /// entered behind, because the library does not unwind them itself. Such a converter would
+    /// count those ancestors into every page it is handed afterwards, so it is left to the garbage
+    /// collector rather than passed on.
+    /// </remarks>
+    public static string ParseToMarkdown(string html)
+    {
+        if (!CONVERTER_POOL.TryTake(out var converter))
+            converter = new Converter(MARKDOWN_CONFIG);
+
+        var markdown = converter.Convert(html);
+
+        CONVERTER_POOL.Add(converter);
+        return markdown;
+    }
 }

@@ -47,7 +47,7 @@
                 HelperText="@T("Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?")"
                 ReadOnly="@this.IsReadOnly"
             />
-            <ReadFileContent @bind-FileContent="@this.DataNeedToKnow" Disabled="@this.IsReadOnly"/>
+            <ReadFileContent Text="@T("Load what the AI should know from file")" @bind-FileContent="@this.DataNeedToKnow" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
 
             <MudTextField
                 T="string"
@@ -66,7 +66,7 @@
                 HelperText="@T("Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.")"
                 ReadOnly="@this.IsReadOnly"
             />
-            <ReadFileContent @bind-FileContent="@this.DataActions" Disabled="@this.IsReadOnly"/>
+            <ReadFileContent Text="@T("Load what the AI should do from file")" @bind-FileContent="@this.DataActions" EnableDragDrop="true" Disabled="@this.IsReadOnly"/>
 
             <MudJustifiedText Typo="Typo.body2" Class="mb-3 mt-3">
                 @T("Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.")

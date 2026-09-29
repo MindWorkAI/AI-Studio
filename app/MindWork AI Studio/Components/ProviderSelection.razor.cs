@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -18,6 +19,17 @@ public partial class ProviderSelection : MSGComponentBase
     
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
+
+    /// <summary>
+    /// What this place calls the thing being picked, when "Provider" is not the word it uses.
+    /// </summary>
+    /// <remarks>
+    /// Some places have the user pick a provider in order to set it up, and there the word is right.
+    /// Others have them pick one to get a job done, and speak of the model throughout. A field
+    /// labelled "Provider" in the middle of such a text reads like a second, different choice.
+    /// </remarks>
+    [Parameter]
+    public string? Label { get; set; }
 
     /// <summary>
     /// Gets or sets whether provider selection is disabled.
@@ -53,19 +65,45 @@ public partial class ProviderSelection : MSGComponentBase
             yield return new(provider, this.GetCapabilityIcons(provider));
     }
 
+    /// <summary>
+    /// Says why there is nothing to choose from, or nothing at all when that is not the user's doing.
+    /// </summary>
+    /// <remarks>
+    /// An empty list has two causes the user can act on, and they lead to different places in the
+    /// settings: there is no provider yet, or none of the configured ones reaches the confidence
+    /// this component asks for. Naming the wrong one sends the user looking in the wrong place --
+    /// a first start has nobody to blame for a confidence level it never set. A missing or invalid
+    /// component is a third case and neither of those: it is a defect, it was logged as one, and
+    /// any explanation offered to the user here would be a guess.
+    /// </remarks>
+    private string? GetEmptySelectionHint()
+    {
+        if (this.Component is null or Tools.Components.NONE)
+            return null;
+
+        if (!this.SettingsManager.GetAllProviders().Any(x => x.UsedLLMProvider is not LLMProviders.NONE))
+            return this.T("No LLM providers are configured yet. Add a provider in the app settings.");
+
+        return this.T("No LLM providers meet the confidence requirements. Configure an eligible provider in the app settings.");
+    }
+
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
     {
-        var capabilities = provider.GetModelCapabilities();
+        var profile = provider.GetModelProfile();
         List<CapabilityIcon> capabilityIcons = [];
 
-        if (capabilities.Contains(Capability.AUDIO_INPUT))
+        if (profile.Has(Capability.AUDIO_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
 
-        if (capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT))
+        if (profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
 
-        if (capabilities.Contains(Capability.SPEECH_INPUT))
+        if (profile.Has(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+
+        // The same check which decides whether a request offers tools, Semantic Search among them:
+        if (provider.GetToolCallingAvailability().IsAvailable)
+            capabilityIcons.Add(new(Icons.Material.Filled.Build, this.T("Tool calling possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
         if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
