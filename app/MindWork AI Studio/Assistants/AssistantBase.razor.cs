@@ -60,6 +60,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string SystemPrompt { get; }
 
     protected abstract Tools.Components Component { get; }
+
+    /// <summary>
+    /// The name of the assistant plugin, which is only set by plugin-provided assistants.
+    /// </summary>
+    protected virtual string RuntimeAssistantName => string.Empty;
     
     protected virtual Func<string> Result2Copy => () => this.ResultingContentBlock is null ? string.Empty : this.ResultingContentBlock.Content switch
     {
@@ -375,6 +380,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
             RuntimeComponent = this.Component,
+            RuntimeAssistantName = this.RuntimeAssistantName,
         };
     }
 
@@ -392,6 +398,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             Name = name,
             Blocks = [],
             RuntimeComponent = this.Component,
+            RuntimeAssistantName = this.RuntimeAssistantName,
         };
         
         return chatId;
@@ -517,6 +524,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
+            this.ChatThread.RuntimeAssistantName = this.RuntimeAssistantName;
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
             this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;

@@ -47,6 +47,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     // session and media state separate while ComponentsExtensions derives their defaults from chat.
     protected override Tools.Components Component => Tools.Components.DYNAMIC_ASSISTANT;
 
+    /// <inheritdoc />
+    protected override string RuntimeAssistantName => this.assistantPlugin?.Name ?? string.Empty;
+
     /// <summary>
     /// Gets the plugin ID as the assistant session instance ID.
     /// </summary>

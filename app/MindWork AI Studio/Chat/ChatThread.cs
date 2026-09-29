@@ -144,6 +144,12 @@ public sealed record ChatThread
     [JsonIgnore]
     public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.CHAT;
 
+    /// <summary>
+    /// The name of the assistant plugin running this thread, or empty for any other component.
+    /// </summary>
+    [JsonIgnore]
+    public string RuntimeAssistantName { get; set; } = string.Empty;
+
     [JsonIgnore]
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
 
