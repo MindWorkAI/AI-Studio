@@ -148,6 +148,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         var metadata = new DirectChatLauncherPluginMetadata(
             request.PluginId,
             DEFAULT_VERSION,
+            null,
             [DEFAULT_AUTHOR],
             DEFAULT_SUPPORT_CONTACT,
             DEFAULT_SOURCE_URL,

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using Lua;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -8,8 +10,10 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public abstract partial class PluginBase : IPluginMetadata, IDisposable
 {
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginBase));
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
-    
+
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState State;
 
@@ -32,6 +36,9 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
     
     /// <inheritdoc />
     public PluginVersion Version { get; }
+
+    /// <inheritdoc />
+    public DateOnly? LastChanged { get; }
 
     /// <inheritdoc />
     public string[] Authors { get; } = [];
@@ -119,7 +126,9 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
             this.Version = version;
         else if(this is not NoPlugin)
             issues.Add(issue);
-        
+
+        this.LastChanged = this.ReadLastChanged();
+
         if(this.TryInitAuthors(out issue, out var authors))
             this.Authors = authors;
         else if(this is not NoPlugin)
@@ -274,6 +283,29 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
         return true;
     }
     
+    /// <summary>
+    /// Reads the date the plugin was last changed, when the plugin states one.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the other fields, LAST_CHANGED is optional: existing plugins were shipped before this
+    /// field existed, and a missing or malformed date is not a reason to refuse loading an otherwise
+    /// valid plugin. A malformed value is logged and treated as absent.
+    /// </remarks>
+    /// <returns>The read date, or null when the field is absent or malformed.</returns>
+    private DateOnly? ReadLastChanged()
+    {
+        if (!this.State.Environment["LAST_CHANGED"].TryRead<string>(out var lastChangedText))
+            return null;
+
+        if (!DateOnly.TryParseExact(lastChangedText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var lastChanged))
+        {
+            LOG.LogInformation("The field LAST_CHANGED of plugin '{PluginName}' is not a valid date of the form YYYY-MM-DD. Ignoring it.", this.Name);
+            return null;
+        }
+
+        return lastChanged;
+    }
+
     /// <summary>
     /// Tries to read the authors of the plugin.
     /// </summary>

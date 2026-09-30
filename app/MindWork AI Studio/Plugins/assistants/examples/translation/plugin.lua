@@ -2,6 +2,7 @@ ID = "54f8f4a2-cd10-4a5f-b2d8-2e0f7875f9e4"
 NAME = "Translation"
 DESCRIPTION = "Assistant plugin example that translates text into a selected target language."
 VERSION = "1.0.0"
+LAST_CHANGED = "2026-09-22"
 TYPE = "ASSISTANT"
 AUTHORS = {"MindWork AI"}
 SUPPORT_CONTACT = "mailto:info@mindwork.ai"
