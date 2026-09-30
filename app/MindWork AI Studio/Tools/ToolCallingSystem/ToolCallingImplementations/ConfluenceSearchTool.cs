@@ -242,7 +242,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     internal static Uri BuildSearchUrl(Uri baseUrl, string query, string? spaceKey)
     {
-        var cql = $"text ~ \"{EscapeCqlValue(query)}\"";
+        var cql = $"siteSearch ~ \"{EscapeCqlValue(query)}\"";
         if (!string.IsNullOrWhiteSpace(spaceKey))
             cql += $" and space=\"{EscapeCqlValue(spaceKey)}\"";
 

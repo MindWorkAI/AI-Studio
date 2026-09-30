@@ -51,14 +51,14 @@ public sealed class ConfluenceSearchToolTests
         var parameters = HttpUtility.ParseQueryString(searchUrl.Query);
 
         Assert.That(searchUrl.GetLeftPart(UriPartial.Path), Is.EqualTo("https://wiki.example.org/confluence/dosearchsite.action"), "The search page lies below the context path of the wiki, even when the configured address lacks the final slash.");
-        Assert.That(parameters["cql"], Is.EqualTo("text ~ \"release plan\""));
+        Assert.That(parameters["cql"], Is.EqualTo("siteSearch ~ \"release plan\""));
         Assert.That(parameters["queryString"], Is.EqualTo("release plan"), "Confluence shows these words in its search field, so the page reads like a search the user made.");
         Assert.That(ConfluenceSearchTool.IsWithinWiki(WIKI, searchUrl), Is.True);
     }
 
-    [TestCase(@"plan"" or space = ""HR", @"text ~ ""plan\"" or space = \""HR""")]
-    [TestCase(@"C:\temp\", @"text ~ ""C:\\temp\\""")]
-    [TestCase(@"plan\"" or space = \""HR", @"text ~ ""plan\\\"" or space = \\\""HR""")]
+    [TestCase(@"plan"" or space = ""HR", @"siteSearch ~ ""plan\"" or space = \""HR""")]
+    [TestCase(@"C:\temp\", @"siteSearch ~ ""C:\\temp\\""")]
+    [TestCase(@"plan\"" or space = \""HR", @"siteSearch ~ ""plan\\\"" or space = \\\""HR""")]
     public void TheQueryCannotLeaveItsCqlString(string query, string expectedCql)
     {
         //
@@ -72,13 +72,13 @@ public sealed class ConfluenceSearchToolTests
     [Test]
     public void ASpaceKeyRestrictsTheSearchToThatSpace()
     {
-        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", "DEV")), Is.EqualTo("text ~ \"release plan\" and space=\"DEV\""));
+        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", "DEV")), Is.EqualTo("siteSearch ~ \"release plan\" and space=\"DEV\""));
     }
 
     [Test]
     public void ASpaceKeyCannotLeaveItsCqlStringEither()
     {
-        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", @"DEV"" or space = ""HR")), Is.EqualTo(@"text ~ ""release plan"" and space=""DEV\"" or space = \""HR"""), "The space key comes from the model as well, so it gets the same escaping as the words.");
+        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", @"DEV"" or space = ""HR")), Is.EqualTo(@"siteSearch ~ ""release plan"" and space=""DEV\"" or space = \""HR"""), "The space key comes from the model as well, so it gets the same escaping as the words.");
     }
 
     [TestCase(null)]
@@ -86,7 +86,7 @@ public sealed class ConfluenceSearchToolTests
     [TestCase("   ")]
     public void WithoutASpaceKeyTheWholeWikiIsSearched(string? spaceKey)
     {
-        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", spaceKey)), Is.EqualTo("text ~ \"release plan\""), "An empty space key would otherwise ask for a space which does not exist and find nothing.");
+        Assert.That(Cql(ConfluenceSearchTool.BuildSearchUrl(WIKI, "release plan", spaceKey)), Is.EqualTo("siteSearch ~ \"release plan\""), "An empty space key would otherwise ask for a space which does not exist and find nothing.");
     }
 
     [Test]
