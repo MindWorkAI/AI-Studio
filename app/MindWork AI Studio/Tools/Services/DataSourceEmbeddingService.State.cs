@@ -22,7 +22,7 @@ public sealed partial class DataSourceEmbeddingService
     /// <param name="dataSourceId">The data source to build anew.</param>
     public async Task RepairDataSourceAsync(string dataSourceId)
     {
-        if (!this.TryGetConfiguredDataSource(dataSourceId, out var dataSource) || !this.IsSupportedInternalDataSource(dataSource))
+        if (!this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
             return;
 
         logger.LogWarning(

@@ -134,7 +134,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
 
         var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedInternalDataSource)
+            .Where(this.IsSupportedIndexedSource)
             .ToList();
 
         logger.LogInformation(
@@ -188,15 +188,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
-    public bool CanRefreshDataSource(IDataSource dataSource)
+    public bool CanRefreshDataSource(IDataSourceBase dataSource)
     {
-        return this.IsSupportedInternalDataSource(dataSource);
+        return this.IsSupportedIndexedSource(dataSource);
     }
 
     public bool CanRefreshDataSource(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource) &&
-            this.CanRefreshDataSource(dataSource);
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out _);
     }
 
     /// <summary>
@@ -261,14 +260,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="dataSources">The data sources to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>Those of them which have stored index state.</returns>
-    public async Task<IReadOnlyList<IDataSource>> GetDataSourcesWithStoredIndexAsync(IReadOnlyCollection<IDataSource> dataSources, CancellationToken token = default)
+    public async Task<IReadOnlyList<IDataSourceBase>> GetDataSourcesWithStoredIndexAsync(IReadOnlyCollection<IDataSourceBase> dataSources, CancellationToken token = default)
     {
         //
         // Filtering first also keeps the index database from being created while local RAG is off:
         // asking for the store runs its migrations on the first call, which must not happen because
         // somebody opened a dialog.
         //
-        var candidates = dataSources.Where(this.IsSupportedInternalDataSource).ToList();
+        var candidates = dataSources.Where(this.IsSupportedIndexedSource).ToList();
         if (candidates.Count == 0)
             return [];
 
@@ -284,7 +283,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return candidates;
             }
 
-            var affected = new List<IDataSource>(candidates.Count);
+            var affected = new List<IDataSourceBase>(candidates.Count);
             foreach (var dataSource in candidates)
             {
                 var manifest = await indexStore.GetManifestAsync(dataSource.Id, timeout.Token);
@@ -323,14 +322,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="dataSource">The data source to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
-    public async Task<bool> IsAwaitingReindexAsync(IDataSource dataSource, CancellationToken token = default)
+    public async Task<bool> IsAwaitingReindexAsync(IDataSourceBase dataSource, CancellationToken token = default)
     {
         //
         // This guard also keeps the index database out of the picture while local RAG is switched
         // off: asking for the store creates the database and runs its migrations on the first call,
         // which must not happen because somebody opened the data source selection.
         //
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!this.IsSupportedIndexedSource(dataSource))
             return false;
 
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
@@ -410,32 +409,32 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </remarks>
     /// <param name="dataSource">The data source to ask about.</param>
     /// <returns>True when the data source waits for the user to have its index rebuilt.</returns>
-    public bool NeedsIndexRepair(IDataSource dataSource) =>
+    public bool NeedsIndexRepair(IDataSourceBase dataSource) =>
         this.statuses.TryGetValue(dataSource.Id, out var status) &&
         status is { State: DataSourceEmbeddingState.FAILED, VectorStoreUnreadable: true };
 
-    public Task QueueDataSourceAsync(IDataSource dataSource)
+    public Task QueueDataSourceAsync(IDataSourceBase dataSource)
     {
         return this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
     }
 
     public Task QueueDataSourceAsync(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource)
             ? this.QueueDataSourceAsync(dataSource)
             : Task.CompletedTask;
     }
 
     public Task RetryDataSourceAsync(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource)
             ? this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.MANUAL_RETRY)
             : Task.CompletedTask;
     }
 
-    private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
+    private async Task QueueDataSourceAsync(IDataSourceBase dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
     {
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!this.IsSupportedIndexedSource(dataSource))
             return;
 
         this.RefreshWatchers();
@@ -477,9 +476,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
-    public async Task RemoveDataSourceAsync(IDataSource dataSource)
+    public async Task RemoveDataSourceAsync(IDataSourceBase dataSource)
     {
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!this.IsSupportedIndexedSource(dataSource))
             return;
 
         this.RemoveWatcher(dataSource.Id);
@@ -511,14 +510,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             var dataSourceId = queueItem.DataSourceId;
             this.MarkDataSourceRunStarted(dataSourceId);
 
-            IDataSource? dataSource = null;
+            IIndexedDataSource? dataSource = null;
 
             try
             {
-                dataSource = settingsManager.ConfigurationData.DataSources
-                    .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-                if (dataSource is null || !this.IsSupportedInternalDataSource(dataSource))
+                if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
                     continue;
 
                 await this.ProcessDataSourceRunAsync(dataSource, queueItem.RefreshMode, stoppingToken);
@@ -566,20 +562,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         base.Dispose();
     }
 
-    private async Task ProcessDataSourceRunAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
+    private async Task ProcessDataSourceRunAsync(IDataSourceBase requestedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
     {
-        if (!this.TryGetConfiguredDataSource(dataSource.Id, out var configuredDataSource) ||
-            !this.IsSupportedInternalDataSource(configuredDataSource))
+        if (!this.TryGetConfiguredIndexedSource(requestedDataSource.Id, out var dataSource))
         {
             logger.LogDebug(
                 "Skipping embedding run for data source '{DataSourceName}' ({DataSourceId}) because it is no longer configured. RefreshMode={RefreshMode}.",
-                dataSource.Name,
-                dataSource.Id,
+                requestedDataSource.Name,
+                requestedDataSource.Id,
                 refreshMode);
             return;
         }
 
-        dataSource = configuredDataSource;
         var runTokenSource = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
         var runControl = new DataSourceRunControl(
             runTokenSource,
@@ -616,14 +610,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
     }
 
-    private async Task ProcessDataSourceAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    private async Task ProcessDataSourceAsync(IIndexedDataSource indexedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
-        if (dataSource is not IInternalDataSource internalDataSource)
+        if (indexedDataSource is not IInternalDataSource dataSource)
         {
             logger.LogWarning(
                 "Skipping background embeddings for non-internal data source '{DataSourceName}' ({DataSourceId}).",
-                dataSource.Name,
-                dataSource.Id);
+                indexedDataSource.Name,
+                indexedDataSource.Id);
             return;
         }
 
@@ -685,16 +679,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        if (!embeddingProvider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(internalDataSource.ConfidenceLevel))
+        if (!embeddingProvider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel))
         {
-            var errorMessage = string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), internalDataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
+            var errorMessage = string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
             logger.LogWarning(
                 "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) does not meet the required confidence. RequiredConfidence={RequiredConfidence}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
                 dataSource.Name,
                 dataSource.Id,
                 embeddingProvider.Name,
                 embeddingProvider.Id,
-                internalDataSource.ConfidenceLevel.GetName(),
+                dataSource.ConfidenceLevel.GetName(),
                 embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
 
             token.ThrowIfCancellationRequested();
@@ -1415,7 +1409,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RemoveAllWatchers();
 
         var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedInternalDataSource)
+            .Where(this.IsSupportedIndexedSource)
             .ToList();
 
         logger.LogInformation(
@@ -1488,7 +1482,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
-    private bool IsSupportedInternalDataSource(IDataSource dataSource)
+    private bool IsSupportedIndexedSource(IDataSourceBase dataSource)
     {
         //
         // Local RAG is a preview feature, so nothing here may run while it is switched off. This is
@@ -1506,15 +1500,30 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
     }
 
-    private bool TryGetConfiguredDataSource(string dataSourceId, [NotNullWhen(true)] out IDataSource? dataSource)
+    /// <summary>
+    /// Finds the configured data source this service indexes under a given id.
+    /// </summary>
+    /// <remarks>
+    /// The one place which looks a data source up by its id. Every run, every follow-up and every
+    /// request from the UI goes through here, so a data source which is no longer configured, or
+    /// which this service does not index, is turned away the same way everywhere.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <param name="dataSource">The data source, when it is configured and indexed by this service.</param>
+    /// <returns>True when such a data source was found.</returns>
+    private bool TryGetConfiguredIndexedSource(string dataSourceId, [NotNullWhen(true)] out IIndexedDataSource? dataSource)
     {
-        dataSource = settingsManager.ConfigurationData.DataSources
+        var configuredDataSource = settingsManager.ConfigurationData.DataSources
             .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
+
+        dataSource = configuredDataSource is IIndexedDataSource indexedDataSource && this.IsSupportedIndexedSource(indexedDataSource)
+            ? indexedDataSource
+            : null;
 
         return dataSource is not null;
     }
 
-    private bool TryResolveEmbeddingProvider(IDataSource dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
+    private bool TryResolveEmbeddingProvider(IDataSourceBase dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
         => DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out embeddingProvider);
 
     private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(
@@ -1702,7 +1711,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private DataSourceEmbeddingStatus CreateStatus(
-        IDataSource dataSource,
+        IDataSourceBase dataSource,
         DataSourceEmbeddingState state,
         int totalFiles,
         int indexedFiles,
@@ -1737,7 +1746,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// and a data source made of nothing but scanned images would otherwise ask for attention
     /// forever.
     /// </remarks>
-    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSource dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError, IReadOnlyList<DataSourceEmbeddingFailure>? failures = null, int permanentlySkippedFiles = 0)
+    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSourceBase dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError, IReadOnlyList<DataSourceEmbeddingFailure>? failures = null, int permanentlySkippedFiles = 0)
     {
         return this.CreateStatus(
             dataSource,
@@ -1754,7 +1763,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             permanentlySkippedFiles: permanentlySkippedFiles);
     }
 
-    private DataSourceEmbeddingStatus GetFallbackStatus(IDataSource dataSource, string errorMessage)
+    private DataSourceEmbeddingStatus GetFallbackStatus(IDataSourceBase dataSource, string errorMessage)
     {
         return this.CreateStatus(
             dataSource,
@@ -1771,7 +1780,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// path, is written in English for the log file, and says nothing about what happens next. What
     /// the user needs to read is what this means for their chats and where the way out is.
     /// </remarks>
-    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSource dataSource)
+    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSourceBase dataSource)
     {
         var errorMessage = string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name);
         return this.CreateStatus(
@@ -1843,7 +1852,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
     }
 
-    private DataSourceRunControl? CancelActiveDataSourceRun(IDataSource dataSource)
+    private DataSourceRunControl? CancelActiveDataSourceRun(IDataSourceBase dataSource)
     {
         if (!this.activeRuns.TryGetValue(dataSource.Id, out var activeRun))
             return null;
@@ -1866,12 +1875,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private async Task QueuePendingDataSourceRunAsync(string dataSourceId, CancellationToken token)
     {
-        var dataSource = token.IsCancellationRequested
-            ? null
-            : settingsManager.ConfigurationData.DataSources
-                .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-        if (!this.TryCompleteDataSourceRun(dataSourceId, dataSource is not null && this.IsSupportedInternalDataSource(dataSource)))
+        IIndexedDataSource? dataSource = null;
+        var isConfigured = !token.IsCancellationRequested && this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource);
+        if (!this.TryCompleteDataSourceRun(dataSourceId, isConfigured))
             return;
 
         if (dataSource is null)

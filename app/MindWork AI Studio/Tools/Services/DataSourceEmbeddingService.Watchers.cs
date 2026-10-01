@@ -28,7 +28,7 @@ public sealed partial class DataSourceEmbeddingService
         }
 
         var supportedSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedInternalDataSource)
+            .Where(this.IsSupportedIndexedSource)
             .ToDictionary(source => source.Id, StringComparer.OrdinalIgnoreCase);
 
         foreach (var existingWatcherId in this.watchers.Keys.Except(supportedSources.Keys, StringComparer.OrdinalIgnoreCase).ToList())
@@ -163,10 +163,7 @@ public sealed partial class DataSourceEmbeddingService
                 if (!this.TryCompletePendingWatcherRefresh(dataSourceId, debounceToken))
                     return;
 
-                var dataSource = settingsManager.ConfigurationData.DataSources
-                    .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-                if (dataSource is not null)
+                if (this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
                 {
                     logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled. The hash pipeline will reindex only changed files.", dataSource.Name, dataSource.Id);
                     await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);

@@ -145,7 +145,7 @@ public static class DataSourceReindexWarning
     /// </summary>
     /// <param name="dataSources">The data sources to name.</param>
     /// <returns>The Markdown list.</returns>
-    private static string FormatDataSourceNames(IReadOnlyList<IDataSource> dataSources)
+    private static string FormatDataSourceNames(IReadOnlyList<IDataSourceBase> dataSources)
     {
         var names = dataSources
             .Select(dataSource => dataSource.Name)
@@ -159,7 +159,7 @@ public static class DataSourceReindexWarning
         return string.Join(Environment.NewLine, lines);
     }
 
-    private static async Task<bool> ConfirmAsync(IDialogService dialogService, IReadOnlyList<IDataSource> affected, bool usesCloudEmbedding)
+    private static async Task<bool> ConfirmAsync(IDialogService dialogService, IReadOnlyList<IDataSourceBase> affected, bool usesCloudEmbedding)
     {
         if (affected.Count == 0)
             return true;
