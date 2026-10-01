@@ -681,7 +681,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
-        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, logger);
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, logger);
     }
 
     private async Task ProcessDataSourceAsync(IIndexedDataSource indexedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
@@ -866,7 +866,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(context, dataSource, file, fingerprint, ReportBlockProgress, token);
+                var chunkCount = await context.IndexDocumentAsync(this.CreateFileDocument(context, dataSource, file, fingerprint), ReportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
@@ -950,7 +950,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 manifest.PermanentFailures[absolutePath] = new PermanentIndexingFailureRecord(fingerprint, exception.Code, indexingMessage, occurredAtUtc);
                 await context.IndexStore.UpsertPermanentFailureAsync(
                     dataSource.Id,
-                    new PermanentIndexingFailure(this.CreateParentFileId(dataSource.Id, absolutePath), absolutePath, fingerprint, exception.Code, indexingMessage, occurredAtUtc),
+                    new PermanentIndexingFailure(IndexedDocumentIds.CreateParentId(dataSource.Id, absolutePath), absolutePath, fingerprint, exception.Code, indexingMessage, occurredAtUtc),
                     token);
 
                 logger.LogInformation(
@@ -1040,191 +1040,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             failedFiles,
             totalFiles,
             ShortHash(metadataSnapshot.SourceHash));
-    }
-
-    private async Task<int> IndexOneFileAsync(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, Action<int, int?> reportBlockProgress, CancellationToken token)
-    {
-        logger.LogDebug(
-            "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
-            file.FullName,
-            context.CollectionName);
-        await context.DeleteDocumentPointsAsync(file.FullName, token);
-        await context.IndexStore.DeleteFileAsync(dataSource.Id, file.FullName, token);
-
-        var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow);
-        await context.IndexStore.UpsertFileAsync(dataSource.Id, parentFile, token);
-
-        var embeddingBatchSize = Math.Max(1, context.EmbeddingProvider.EffectiveEmbeddingBatchSize);
-        var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
-        var totalChunkCount = 0;
-
-        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, token))
-        {
-            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
-            totalChunkCount++;
-            reportBlockProgress(totalChunkCount, chunk.PageNumber);
-
-            if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(context, file, fingerprint, parentFile, batch, token);
-        }
-
-        if (batch.Count > 0)
-            await this.FlushBatchAsync(context, file, fingerprint, parentFile, batch, token);
-
-        //
-        // The extraction itself did not report a failure, but nothing usable came out of it. For
-        // the index this is the same case as a scanned page without a text layer, which is why it
-        // carries a code of its own instead of an unclassified exception:
-        //
-        if (totalChunkCount == 0)
-            throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from the file '{0}'."), file.Name));
-
-        logger.LogDebug(
-            "Generated {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-            totalChunkCount,
-            file.FullName,
-            dataSource.Name,
-            dataSource.Id);
-
-        return totalChunkCount;
-    }
-
-    private async Task FlushBatchAsync(IndexedRunContext context, FileInfo file, string fingerprint, EmbeddingStateFile parentFile, List<EmbeddingChunkDraft> batch, CancellationToken token)
-    {
-        logger.LogDebug(
-            "Requesting embeddings for batch of {ChunkCount} chunks from file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-            batch.Count,
-            file.FullName,
-            context.DataSource.Name,
-            context.DataSource.Id);
-
-        var texts = batch.Select(item => item.Text).ToList();
-        IReadOnlyList<IReadOnlyList<float>> vectors;
-        try
-        {
-            vectors = await context.Provider.EmbedTextAsync(context.EmbeddingProvider.Model, settingsManager, token, texts);
-            token.ThrowIfCancellationRequested();
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (ProviderRequestException)
-        {
-            //
-            // The provider already named the cause and what to do about it. Wrapping that in a
-            // sentence about a batch of chunks would replace the one thing the user can act on
-            // with the fact that something failed:
-            //
-            throw;
-        }
-        catch (Exception exception)
-        {
-            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of the file '{1}'. The provider reported: {2}"), batch.Count, file.Name, exception.Message), exception);
-        }
-
-        if (vectors.Count != batch.Count)
-            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of the file '{2}'. Please select another embedding model or provider."), vectors.Count, batch.Count, file.Name));
-
-        var vectorSize = vectors.FirstOrDefault()?.Count ?? 0;
-        if (vectorSize <= 0)
-            throw new InvalidOperationException(TB("The embedding provider answered with an empty vector. Please select another embedding model or provider."));
-
-        if (vectors.Any(vector => vector.Count != vectorSize))
-            throw new InvalidOperationException(TB("The embedding provider answered with vectors of different sizes. Please select another embedding model or provider."));
-
-        if (vectors.Any(vector => vector.Any(value => !float.IsFinite(value))))
-            throw new InvalidOperationException(TB("The embedding provider answered with a vector containing an invalid number. Please select another embedding model or provider."));
-
-        if (context.Manifest.VectorSize > 0 && context.Manifest.VectorSize != vectorSize)
-            throw new InvalidOperationException(string.Format(TB("The size of the embedding vectors changed from {0} to {1}. Please save the data source again to index it from scratch."), context.Manifest.VectorSize, vectorSize));
-
-        if (context.Manifest.VectorSize == 0)
-        {
-            token.ThrowIfCancellationRequested();
-            var ensureResult = await context.VectorStore.EnsureVectorStoreExists(context.CollectionName, context.DataSource.Name, vectorSize, token);
-            if (!ensureResult.Created)
-            {
-                logger.LogWarning(
-                    "Vector store '{CollectionName}' exists for data source '{DataSourceName}' ({DataSourceId}) although no persisted embedding state exists. Replacing the orphaned store before indexing.",
-                    context.CollectionName,
-                    context.DataSource.Name,
-                    context.DataSource.Id);
-                await context.VectorStore.DeleteVectorStore(context.CollectionName, token);
-                ensureResult = await context.VectorStore.EnsureVectorStoreExists(context.CollectionName, context.DataSource.Name, vectorSize, token);
-                if (!ensureResult.Created)
-                    throw new InvalidOperationException(string.Format(TB("The local index '{0}' could not be created again. Please restart AI Studio and try once more."), context.CollectionName));
-            }
-
-            await context.IndexStore.UpdateVectorSizeAsync(context.DataSource.Id, vectorSize, token);
-            context.Manifest.VectorSize = vectorSize;
-            logger.LogInformation(
-                "Created embedding collection '{CollectionName}' with vector size {VectorSize} for data source '{DataSourceName}' ({DataSourceId}).",
-                context.CollectionName,
-                vectorSize,
-                context.DataSource.Name,
-                context.DataSource.Id);
-        }
-
-        token.ThrowIfCancellationRequested();
-        var embeddedAtUtc = DateTimeOffset.UtcNow;
-        await this.UpsertPointsAsync(
-            context,
-            file,
-            fingerprint,
-            parentFile,
-            batch,
-            vectors,
-            embeddedAtUtc,
-            token);
-        token.ThrowIfCancellationRequested();
-        await context.IndexStore.UpsertChunksAsync(
-            context.DataSource.Id,
-            this.CreateEmbeddingStateChunks(parentFile, batch, embeddedAtUtc),
-            token);
-
-        await context.RecordStoredChunksAsync(batch.Count, token);
-
-        logger.LogDebug(
-            "Stored {ChunkCount} embedded chunks for file '{FilePath}' in collection '{CollectionName}'.",
-            batch.Count,
-            file.FullName,
-            context.CollectionName);
-
-        batch.Clear();
-    }
-
-    private async Task UpsertPointsAsync(
-        IndexedRunContext context,
-        FileInfo file,
-        string fingerprint,
-        EmbeddingStateFile parentFile,
-        IReadOnlyList<EmbeddingChunkDraft> batch,
-        IReadOnlyList<IReadOnlyList<float>> vectors,
-        DateTimeOffset embeddedAtUtc,
-        CancellationToken token)
-    {
-        var points = batch.Select((item, index) => new VectorStoragePoint(
-            item.ChunkId,
-            vectors[index],
-            context.DataSource.Id,
-            context.DataSource.Type.ToString(),
-            item.ChunkId,
-            parentFile.ParentFileId,
-            file.FullName,
-            parentFile.AbsolutePath,
-            parentFile.FileName,
-            parentFile.RelativePath,
-            parentFile.FileType,
-            item.PageNumber,
-            item.ChunkIndex,
-            item.Text,
-            fingerprint,
-            parentFile.CreationUtc,
-            parentFile.LastWriteUtc,
-            embeddedAtUtc)).ToList();
-
-        await context.VectorStore.InsertEmbedding(context.CollectionName, points, token);
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)

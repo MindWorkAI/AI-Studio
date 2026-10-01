@@ -6,6 +6,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tools.Services;
 
@@ -41,21 +42,6 @@ public sealed partial class DataSourceEmbeddingService
     private sealed record ExtractedFileSegment(string Text, int? TokenCount, int? PageNumber);
 
     private sealed record ExtractedFileContent(string Text, IReadOnlyList<ExtractedFileSegment> SourceSegments);
-
-    /// <summary>
-    /// One chunk as the chunking produced it, together with the page it starts on.
-    /// </summary>
-    /// <remarks>
-    /// The page is carried rather than read back out of the chunk text. The runtime states it, and
-    /// the chunking knows which source segment a chunk begins in, so nothing has to be derived from
-    /// a marker in the text — which is what used to leave Word files and continued passages without
-    /// a page.
-    /// </remarks>
-    /// <param name="Text">The chunk itself, overlap prefix included.</param>
-    /// <param name="PageNumber">The page the chunk's own content starts on, or null when it has none.</param>
-    private sealed record EmbeddingChunk(string Text, int? PageNumber);
-
-    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
 
     internal sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
 
@@ -1143,12 +1129,26 @@ public sealed partial class DataSourceEmbeddingService
         return Convert.ToHexString(bytes);
     }
 
+    /// <summary>
+    /// Describes one file as a document for the shared part of an indexing run.
+    /// </summary>
+    /// <param name="context">The run the file is indexed in.</param>
+    /// <param name="dataSource">The data source the file belongs to.</param>
+    /// <param name="file">The file.</param>
+    /// <param name="fingerprint">The fingerprint of the file as it is about to be read.</param>
+    /// <returns>The document.</returns>
+    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint) => new(
+        file.FullName,
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow),
+        file.Name,
+        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, token));
+
     private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {
         file.Refresh();
         var absolutePath = Path.GetFullPath(file.FullName);
         return new(
-            this.CreateParentFileId(dataSource.Id, absolutePath),
+            IndexedDocumentIds.CreateParentId(dataSource.Id, absolutePath),
             absolutePath,
             file.Name,
             this.TryGetRelativePath(dataSource, file),
@@ -1161,39 +1161,9 @@ public sealed partial class DataSourceEmbeddingService
             chunkCount);
     }
 
-    private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTimeOffset embeddedAtUtc)
-    {
-        return batch
-            .Select(chunk => new EmbeddingStateChunk(
-                chunk.ChunkId,
-                parentFile.ParentFileId,
-                chunk.PageNumber,
-                chunk.ChunkIndex,
-                chunk.Text,
-                embeddedAtUtc))
-            .ToList();
-    }
-
     private static string GetFileType(FileInfo file)
     {
         var extension = file.Extension.TrimStart('.').ToLowerInvariant();
         return string.IsNullOrWhiteSpace(extension) ? "unknown" : extension;
-    }
-
-    private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
-        CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");
-
-    private string CreateParentFileId(string dataSourceId, string absolutePath) =>
-        CreateStableGuid($"{dataSourceId}:parent-file:{absolutePath}");
-
-    private static string CreateStableGuid(string source)
-    {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
-        var guidBytes = hash[..16].ToArray();
-
-        guidBytes[6] = (byte)((guidBytes[6] & 0x0F) | 0x40);
-        guidBytes[8] = (byte)((guidBytes[8] & 0x3F) | 0x80);
-
-        return new Guid(guidBytes).ToString();
     }
 }
