@@ -25,8 +25,9 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="indexStore">The index store, known to be available.</param>
 /// <param name="manifest">What the index stores about the data source, made to match the current embedding configuration.</param>
 /// <param name="settingsManager">The settings, which the provider reads when it embeds.</param>
+/// <param name="publishStatus">Hands a new status of the data source to the embedding service.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, SettingsManager settingsManager, ILogger logger)
+internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, SettingsManager settingsManager, Action<DataSourceEmbeddingStatus> publishStatus, ILogger logger)
 {
     /// <summary>
     /// After how many stored chunks the collection is optimized while a run is still going.
@@ -56,6 +57,12 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public DataSourceEmbeddingManifest Manifest => manifest;
 
     public string CollectionName { get; } = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
+
+    /// <summary>
+    /// Tells the user interface about a new status of the data source.
+    /// </summary>
+    /// <param name="status">The status.</param>
+    public void PublishStatus(DataSourceEmbeddingStatus status) => publishStatus(status);
 
     /// <summary>
     /// Embeds one document and stores it, in place of whatever was stored for it before.

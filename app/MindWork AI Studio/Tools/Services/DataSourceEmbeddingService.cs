@@ -12,16 +12,13 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services.Indexing;
 
+using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
+
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
     PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService
 {
-    /// <summary>
-    /// How often the block progress within one file is reported to the user interface at most.
-    /// </summary>
-    private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
-
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
     /// </summary>
@@ -681,7 +678,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
-        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, logger);
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, this.UpsertStatus, logger);
     }
 
     private async Task ProcessDataSourceAsync(IIndexedDataSource indexedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
@@ -737,6 +734,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             indexedFiles.Count,
             removedMissingFiles);
 
+        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger);
         if (this.CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
         {
             logger.LogInformation(
@@ -746,51 +744,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 refreshMode,
                 manifest.PermanentFailures.Count);
 
-            await context.OptimizeCollectionIfNeededAsync("data source finished after removing missing files", token);
-
-            token.ThrowIfCancellationRequested();
-            await context.IndexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
-
             //
             // The files which were skipped for good are none of the indexed ones, and their stored
             // reasons belong into the list even on a run which read nothing at all:
             //
-            this.UpsertStatus(this.CreateCompletedStatus(
-                dataSource,
-                totalFiles,
-                indexedFiles.Count - manifest.PermanentFailures.Count,
-                inputFiles.FailedFiles,
-                inputFiles.LastError,
-                [..inputFiles.Failures, ..CreatePermanentFailureDetails(manifest)],
-                manifest.PermanentFailures.Count));
+            progress.RecordUnchanged(indexedFiles.Count - manifest.PermanentFailures.Count);
+            foreach (var (filePath, permanentFailure) in manifest.PermanentFailures)
+                progress.RecordStillUnreadable(filePath, permanentFailure);
+
+            await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source finished after removing missing files", token);
             return;
         }
 
         token.ThrowIfCancellationRequested();
-        this.UpsertStatus(this.CreateStatus(
-            dataSource,
-            DataSourceEmbeddingState.RUNNING,
-            totalFiles,
-            0,
-            inputFiles.FailedFiles,
-            lastError: inputFiles.LastError,
-            failures: inputFiles.Failures));
-
-        var skippedFiles = 0;
-        var permanentlySkippedFiles = 0;
-        var completedFiles = 0;
-        var newFiles = 0;
-        var changedFiles = 0;
-        var failedFiles = inputFiles.FailedFiles;
-        var lastError = inputFiles.LastError;
-        var failureDetails = inputFiles.Failures.ToList();
-
-        //
-        // Which kinds of provider failure the user was already told about in this run. A rejected
-        // API key is the same problem for every one of a few thousand documents, and one message
-        // is what it takes to send the user to the settings.
-        //
-        var reportedFailureReasons = new HashSet<ProviderRequestFailureReason>();
+        progress.Publish();
 
         //
         // Everything the runtime filters out of these files is reported once for the whole data
@@ -816,8 +783,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     ShortHash(fingerprint),
                     file.LastWriteTimeUtc,
                     file.Length);
-                skippedFiles++;
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails, permanentlySkippedFiles: permanentlySkippedFiles));
+                progress.RecordUnchanged();
+                progress.Publish();
                 continue;
             }
 
@@ -837,22 +804,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     permanentFailure.Code,
                     ShortHash(fingerprint),
                     permanentFailure.OccurredAtUtc);
-                permanentlySkippedFiles++;
-
-                // The stored reason keeps its place in the list, so the user still sees why:
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, permanentFailure.Message, permanentFailure.OccurredAtUtc, ExtractionCode: permanentFailure.Code, IsPermanent: true));
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails, permanentlySkippedFiles: permanentlySkippedFiles));
+                progress.RecordStillUnreadable(file.FullName, permanentFailure);
+                progress.Publish();
                 continue;
             }
 
-            this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
-
-            //
-            // What the page says while one file is being worked on. Without it, a document of
-            // several thousand pages leaves the same sentence standing for hours, and a progress
-            // which never moves cannot be told apart from one which is stuck.
-            //
-            var lastBlockReportUtc = DateTimeOffset.MinValue;
+            var document = this.CreateFileDocument(context, dataSource, file, fingerprint);
+            var reportBlockProgress = progress.BeginDocument(document);
 
             try
             {
@@ -863,34 +821,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     dataSource.Id,
                     GetFileEmbeddingReason(file, fingerprint, existingRecord),
                     ShortHash(fingerprint),
-                    skippedFiles + completedFiles + 1,
+                    progress.DoneDocuments + 1,
                     totalFiles);
                 var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await context.IndexDocumentAsync(this.CreateFileDocument(context, dataSource, file, fingerprint), ReportBlockProgress, token);
+                var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
                     throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
 
-                var embeddedAtUtc = DateTimeOffset.UtcNow;
-                var record = new EmbeddedFileRecord(
-                    fingerprint,
-                    file.Length,
-                    new DateTimeOffset(file.LastWriteTimeUtc),
-                    embeddedAtUtc,
-                    chunkCount);
-                await context.IndexStore.UpsertFileAsync(
-                    dataSource.Id,
-                    this.CreateEmbeddingStateFile(dataSource, file, fingerprint, chunkCount, embeddedAtUtc),
-                    token);
-                manifest.Files[file.FullName] = record;
-                await context.ForgetPermanentFailureAsync(file.FullName, token);
-                completedFiles++;
-                if (existingRecord is null)
-                    newFiles++;
-                else
-                    changedFiles++;
-
+                await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
                 logger.LogInformation(
                     "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
                     file.FullName,
@@ -903,66 +843,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             {
                 throw;
             }
-            catch (ProviderRequestException exception)
-            {
-                //
-                // The provider said what went wrong and what the user can do about it. That
-                // sentence is what goes into the status, together with the classification the UI
-                // needs to offer the matching way out.
-                //
-                failedFiles++;
-                lastError = exception.UserMessage;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.UserMessage, DateTimeOffset.UtcNow, exception.FailureReason, exception.StatusCode, context.EmbeddingProvider.Name));
-                manifest.Files.Remove(file.FullName);
-                await context.ForgetPermanentFailureAsync(file.FullName, token);
-                await context.CleanupFailedDocumentAsync(file.FullName, token);
-
-                logger.LogWarning(
-                    exception,
-                    "Failed to embed file '{FilePath}' for data source '{DataSourceName}' because the embedding provider '{EmbeddingProviderName}' failed. FailureReason={FailureReason}, StatusCode={StatusCode}.",
-                    file.FullName,
-                    dataSource.Name,
-                    context.EmbeddingProvider.Name,
-                    exception.FailureReason,
-                    exception.StatusCode);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.UserMessage, failureDetails));
-
-                // Once per kind of failure, not once per file:
-                if (reportedFailureReasons.Add(exception.FailureReason))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
-            }
-            catch (FileExtractionException exception) when (exception.Code.IsPermanentIndexingFailure())
-            {
-                //
-                // The file itself is why this failed, so trying it again changes nothing until the
-                // file does. The reason is written into the index, and the fingerprint next to it
-                // decides when to come back: an OCR run over a scanned PDF changes both size and
-                // write time, which is exactly the moment the file deserves another attempt.
-                //
-                permanentlySkippedFiles++;
-                var occurredAtUtc = DateTimeOffset.UtcNow;
-                var indexingMessage = exception.Code.ToIndexingUserMessage(file.Name);
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, indexingMessage, occurredAtUtc, ExtractionCode: exception.Code, IsPermanent: true));
-                manifest.Files.Remove(file.FullName);
-                await context.CleanupFailedDocumentAsync(file.FullName, token);
-
-                var absolutePath = Path.GetFullPath(file.FullName);
-                manifest.PermanentFailures[absolutePath] = new PermanentIndexingFailureRecord(fingerprint, exception.Code, indexingMessage, occurredAtUtc);
-                await context.IndexStore.UpsertPermanentFailureAsync(
-                    dataSource.Id,
-                    new PermanentIndexingFailure(IndexedDocumentIds.CreateParentId(dataSource.Id, absolutePath), absolutePath, fingerprint, exception.Code, indexingMessage, occurredAtUtc),
-                    token);
-
-                logger.LogInformation(
-                    exception,
-                    "Skipping file '{FilePath}' of data source '{DataSourceName}' ({DataSourceId}) from now on because reading it failed for a reason which lies in the file. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    exception.Code,
-                    ShortHash(fingerprint));
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
-            }
             catch (VectorStoreUnreadableException)
             {
                 //
@@ -974,70 +854,23 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             }
             catch (Exception exception)
             {
-                //
-                // Everything which is not the provider's doing: a file which changed while it was
-                // read, one which yielded no text, a vector store which refused to store. These
-                // are about this one file, so they go into the list and not into a message which
-                // would interrupt whatever the user is doing right now.
-                //
-                failedFiles++;
-                var extractionCode = exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE;
-
-                //
-                // Deliberately not the message of the exception: that one is written for the log
-                // file, in English, and repeats the path which the list shows anyway.
-                //
-                var failureMessage = extractionCode.ToIndexingUserMessage(file.Name);
-                lastError = failureMessage;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode));
-                manifest.Files.Remove(file.FullName);
-                await context.ForgetPermanentFailureAsync(file.FullName, token);
-                await context.CleanupFailedDocumentAsync(file.FullName, token);
-
-                logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, failureMessage, failureDetails, permanentlySkippedFiles));
-            }
-
-            continue;
-
-            void ReportBlockProgress(int blockNumber, int? pageNumber)
-            {
-                //
-                // The first block goes out at once, so the line is there instead of blank. After
-                // that, at most one message every BLOCK_PROGRESS_INTERVAL: each one re-renders the
-                // embedding page, the navigation bar and the table in the settings, and the blocks
-                // of a large file arrive far faster than anybody can read them.
-                //
-                var nowUtc = DateTimeOffset.UtcNow;
-                if (blockNumber > 1 && nowUtc - lastBlockReportUtc < BLOCK_PROGRESS_INTERVAL)
-                    return;
-
-                lastBlockReportUtc = nowUtc;
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles, blockNumber, pageNumber));
+                await progress.RecordDocumentFailureAsync(document, exception, token);
             }
         }
 
-        manifest.SourceHash = metadataSnapshot.SourceHash;
-        token.ThrowIfCancellationRequested();
-        await context.OptimizeCollectionIfNeededAsync("data source embedding run finished", token);
-
-        token.ThrowIfCancellationRequested();
-        await context.IndexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
-        token.ThrowIfCancellationRequested();
-
-        this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError, failureDetails, permanentlySkippedFiles));
+        await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
         logger.LogInformation(
             "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
             dataSource.Name,
             dataSource.Id,
             refreshMode,
-            completedFiles,
-            newFiles,
-            changedFiles,
-            skippedFiles,
-            permanentlySkippedFiles,
+            progress.IndexedDocuments,
+            progress.NewDocuments,
+            progress.ChangedDocuments,
+            progress.UnchangedDocuments,
+            progress.PermanentlySkippedDocuments,
             removedMissingFiles,
-            failedFiles,
+            progress.FailedDocuments,
             totalFiles,
             ShortHash(metadataSnapshot.SourceHash));
     }
@@ -1331,10 +1164,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return true;
     }
 
-    private static List<DataSourceEmbeddingFailure> CreatePermanentFailureDetails(DataSourceEmbeddingManifest manifest) => manifest.PermanentFailures
-        .Select(failure => new DataSourceEmbeddingFailure(failure.Key, failure.Value.Message, failure.Value.OccurredAtUtc, ExtractionCode: failure.Value.Code, IsPermanent: true))
-        .ToList();
-
     private static string GetFileEmbeddingReason(FileInfo file, string currentHash, EmbeddedFileRecord? existingRecord)
     {
         if (existingRecord is null)
@@ -1353,14 +1182,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return reasons.Count == 0
             ? "the file hash changed"
             : string.Join("; ", reasons);
-    }
-
-    private static string ShortHash(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "<empty>";
-
-        return value.Length <= 12 ? value : value[..12];
     }
 
     private DataSourceEmbeddingStatus CreateStatus(
@@ -1392,28 +1213,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentFileBlock,
             currentFilePage,
             vectorStoreUnreadable);
-    }
-
-    /// <remarks>
-    /// Files which were skipped for good do not make a run unsuccessful: nothing is left to try,
-    /// and a data source made of nothing but scanned images would otherwise ask for attention
-    /// forever.
-    /// </remarks>
-    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSourceBase dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError, IReadOnlyList<DataSourceEmbeddingFailure>? failures = null, int permanentlySkippedFiles = 0)
-    {
-        return this.CreateStatus(
-            dataSource,
-            failedFiles > 0 ? DataSourceEmbeddingState.FAILED : DataSourceEmbeddingState.COMPLETED,
-            totalFiles,
-            indexedFiles,
-            failedFiles,
-            lastError: failedFiles > 0
-                ? string.IsNullOrWhiteSpace(lastError)
-                    ? TB("Some files could not be indexed. The list below says which ones and why.")
-                    : lastError
-                : string.Empty,
-            failures: failures,
-            permanentlySkippedFiles: permanentlySkippedFiles);
     }
 
     private DataSourceEmbeddingStatus GetFallbackStatus(IDataSourceBase dataSource, string errorMessage)
