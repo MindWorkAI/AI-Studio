@@ -259,6 +259,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to share or export plugins?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToSharePlugins, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to export chats into an archive?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToExportChats, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import chats from an archive?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportChats, this.Id, settingsTable, dryRun);
+
         // Config: show administration settings?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
         

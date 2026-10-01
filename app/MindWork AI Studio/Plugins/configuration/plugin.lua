@@ -411,6 +411,17 @@ CONFIG["SETTINGS"] = {}
 -- On Linux, this button exports the plugin archive instead of using a native share sheet.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToSharePlugins"] = false
 
+-- Configure the user permission to export chats into an archive file, which the data backup
+-- in the settings writes. When set to false, the export button stays visible but is disabled.
+-- Chats often hold confidential content, and an archive is a single file which can leave the
+-- computer on any stick or cloud drive.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToExportChats"] = false
+
+-- Configure the user permission to import chats from an archive file. When set to false, the
+-- button to choose an archive stays visible but is disabled. An archive brings along the
+-- locations of the documents its chats name, and those are read again when a chat continues.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChats"] = false
+
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
