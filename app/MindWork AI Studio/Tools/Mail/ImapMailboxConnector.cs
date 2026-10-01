@@ -296,6 +296,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         folder.FullName,
         folder.Name,
         folder.ParentFolder?.FullName ?? string.Empty,
+        folder.DirectorySeparator,
         ToSpecialUse(folder.Attributes),
         folder.Attributes.HasFlag(FolderAttributes.Inbox) || folder.FullName.Equals("INBOX", StringComparison.OrdinalIgnoreCase),
         !folder.Attributes.HasFlag(FolderAttributes.NoSelect));
