@@ -15,7 +15,7 @@ namespace AIStudio.Tools.Mail;
 /// </remarks>
 public static class MailboxProviderTemplates
 {
-    private const int IMAPS_PORT = 993;
+    private const int IMAPS_PORT = MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
 
     public static readonly IReadOnlyList<MailboxProviderTemplate> ALL =
     [

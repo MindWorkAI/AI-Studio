@@ -318,6 +318,29 @@ public static class ConfigurationSelectDataFactory
         }
     }
 
+    public static IEnumerable<ConfigurationSelectData<MailboxTransportSecurity>> GetMailboxTransportSecurityData()
+    {
+        foreach (var transportSecurity in Enum.GetValues<MailboxTransportSecurity>())
+        {
+            if (transportSecurity is MailboxTransportSecurity.UNKNOWN)
+                continue;
+
+            yield return new(transportSecurity.GetName(), transportSecurity);
+        }
+    }
+
+    public static IEnumerable<ConfigurationSelectData<MailboxMaxAge>> GetMailboxMaxAgeData()
+    {
+        foreach (var maxAge in Enum.GetValues<MailboxMaxAge>())
+            yield return new(maxAge.GetName(), maxAge);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData()
+    {
+        foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())
+            yield return new(restriction.GetName(), restriction);
+    }
+
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {
         foreach (var theme in Enum.GetValues<Themes>())

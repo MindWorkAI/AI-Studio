@@ -61,7 +61,7 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// <summary>
     /// The port of the IMAP server. The default is the one for IMAP with TLS from the first byte on.
     /// </summary>
-    public int Port { get; init; } = 993;
+    public int Port { get; init; } = MailboxTransportSecurityExtensions.SSL_ON_CONNECT_PORT;
 
     /// <summary>
     /// How the connection to the IMAP server is encrypted.

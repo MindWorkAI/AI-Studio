@@ -10,6 +10,10 @@ public sealed class DataSourceValidation
 {
     public const int MAX_NAME_LENGTH = 40;
 
+    public const int MIN_ATTACHMENT_SIZE_MEGABYTES = 1;
+
+    public const int MAX_ATTACHMENT_SIZE_MEGABYTES = 100;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
 
     public static bool IsNameValid(string name) => !string.IsNullOrWhiteSpace(name) && name.Length <= MAX_NAME_LENGTH && !name.Any(char.IsControl);
@@ -187,6 +191,53 @@ public sealed class DataSourceValidation
             return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.GetName(), ConfidenceLevel.HIGH.GetName());
 
         return this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
+    public static string? ValidateMailboxHost(string host)
+    {
+        if(string.IsNullOrWhiteSpace(host))
+            return TB("Please enter the host of the IMAP server, e.g., imap.example.org.");
+
+        if(Uri.CheckHostName(host.Trim()) is not (UriHostNameType.Dns or UriHostNameType.IPv4 or UriHostNameType.IPv6))
+            return TB("Please enter the host alone, without a protocol, a port, or a path, e.g., imap.example.org.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxTransportSecurity(MailboxTransportSecurity transportSecurity)
+    {
+        if(transportSecurity is MailboxTransportSecurity.UNKNOWN)
+            return TB("Please select how the connection to the server is encrypted.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxUsername(string username)
+    {
+        if(string.IsNullOrWhiteSpace(username))
+            return TB("The username must not be empty.");
+
+        return null;
+    }
+
+    public string? ValidateMailboxPassword(string password)
+    {
+        var secretStorageIssue = this.GetSecretStorageIssue();
+        if(!string.IsNullOrWhiteSpace(secretStorageIssue))
+            return secretStorageIssue;
+
+        if(string.IsNullOrEmpty(password))
+            return TB("Please enter your password.");
+
+        return null;
+    }
+
+    public static string? ValidateMailboxMaxAttachmentSize(int megabytes)
+    {
+        if(megabytes is < MIN_ATTACHMENT_SIZE_MEGABYTES or > MAX_ATTACHMENT_SIZE_MEGABYTES)
+            return string.Format(TB("The size must be between {0} and {1} MB."), MIN_ATTACHMENT_SIZE_MEGABYTES, MAX_ATTACHMENT_SIZE_MEGABYTES);
+
+        return null;
     }
 
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)

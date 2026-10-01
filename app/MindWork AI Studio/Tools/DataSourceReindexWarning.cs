@@ -69,7 +69,7 @@ public static class DataSourceReindexWarning
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the edit may be saved.</returns>
     public static async Task<bool> ConfirmDataSourceChangeAsync(IDialogService dialogService, SettingsManager settingsManager, DataSourceEmbeddingService embeddingService,
-        IInternalDataSource before, IInternalDataSource after, CancellationToken token = default)
+        IIndexedDataSource before, IIndexedDataSource after, CancellationToken token = default)
     {
         // Without a provider nothing is embedded at all, so nothing can be lost:
         if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, after, out var afterProvider))
