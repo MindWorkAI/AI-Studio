@@ -44,13 +44,13 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private CultureInfo currentCulture = CultureInfo.InvariantCulture;
 
-    private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedFiles);
+    private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedDocuments);
 
-    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalFiles - status.IndexedFiles - status.FailedFiles - status.PermanentlySkippedFiles));
+    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.PermanentlySkippedDocuments));
 
-    private int TotalFailedFiles => this.Statuses.Sum(status => status.FailedFiles);
+    private int TotalFailedFiles => this.Statuses.Sum(status => status.FailedDocuments);
 
-    private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedFiles);
+    private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
 
     /// <remarks>
     /// The chips above count files, which says nothing about how far the list of data sources itself
@@ -141,7 +141,7 @@ public partial class Embeddings : MSGComponentBase
     /// data source at once.
     /// </remarks>
     private static bool IsWorthOpening(DataSourceEmbeddingStatus status) =>
-        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedFiles > 0;
+        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0;
 
     /// <remarks>
     /// MudBlazor keeps track of which panel is open on its own, so this only records the decision.
@@ -189,20 +189,20 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private string GetFileProgressText(DataSourceEmbeddingStatus status)
     {
-        if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentFile))
-            return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedFiles), this.FormatNumber(status.TotalFiles));
+        if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentDocument))
+            return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments));
 
         //
         // Everything already dealt with, plus the one in hand. Skipped and failed files are part of
         // that: they are behind us in the folder, and leaving them out would let the number fall
         // behind the file whose name is shown right next to it.
         //
-        var currentFileNumber = Math.Min(status.TotalFiles, status.IndexedFiles + status.PermanentlySkippedFiles + status.FailedFiles + 1);
+        var currentFileNumber = Math.Min(status.TotalDocuments, status.IndexedDocuments + status.PermanentlySkippedDocuments + status.FailedDocuments + 1);
         return status switch
         {
-            { CurrentFileBlock: { } block, CurrentFilePage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block), this.FormatNumber(page)),
-            { CurrentFileBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles), this.FormatNumber(block)),
-            _ => string.Format(T("File {0} of {1} is being indexed."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalFiles)),
+            { CurrentDocumentBlock: { } block, CurrentDocumentPage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments), this.FormatNumber(block), this.FormatNumber(page)),
+            { CurrentDocumentBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments), this.FormatNumber(block)),
+            _ => string.Format(T("File {0} of {1} is being indexed."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments)),
         };
     }
 
@@ -213,7 +213,7 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingState.RUNNING => Color.Warning,
         DataSourceEmbeddingState.QUEUED => Color.Info,
         DataSourceEmbeddingState.FAILED => Color.Error,
-        DataSourceEmbeddingState.COMPLETED when status.FailedFiles > 0 => Color.Warning,
+        DataSourceEmbeddingState.COMPLETED when status.FailedDocuments > 0 => Color.Warning,
         DataSourceEmbeddingState.COMPLETED => Color.Success,
         _ => Color.Default,
     };
@@ -238,7 +238,7 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private IReadOnlyList<FailureGroup> GetFailureGroups(DataSourceEmbeddingStatus status) => status.Failures
         .GroupBy(this.GetFailureCause)
-        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => failure.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
+        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => failure.DocumentKey, StringComparer.OrdinalIgnoreCase).ToList()))
         .OrderBy(group => group.Cause.Priority)
         .ThenByDescending(group => group.Failures.Count)
         .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
@@ -287,7 +287,7 @@ public partial class Embeddings : MSGComponentBase
     /// A failure which was not about one file, such as a folder which is gone, carries the name of
     /// the data source instead of a path. There is nothing to show for those.
     /// </remarks>
-    private static bool CanShowInFileManager(DataSourceEmbeddingFailure failure) => !string.IsNullOrWhiteSpace(failure.FilePath) && Path.IsPathRooted(failure.FilePath);
+    private static bool CanShowInFileManager(DataSourceEmbeddingFailure failure) => !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
 
     /// <summary>
     /// Opens the file browser of the system and selects the file in it.
@@ -302,7 +302,7 @@ public partial class Embeddings : MSGComponentBase
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.TryOpenPathInRuntimeFileManager(failure.FilePath);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(failure.DocumentKey);
         }
         catch (Exception e)
         {
@@ -326,7 +326,7 @@ public partial class Embeddings : MSGComponentBase
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
                status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
-               (status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+               (status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
     }
 
     /// <remarks>

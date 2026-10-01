@@ -64,7 +64,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             logger.LogWarning(
                 "Cannot index data source input '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}'.",
-                failure.FilePath,
+                failure.DocumentKey,
                 dataSource.Name,
                 dataSource.Id,
                 failure.Reason);

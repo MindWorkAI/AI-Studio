@@ -73,19 +73,19 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         if (activeStatus is not null)
         {
-            var total = Math.Max(activeStatus.TotalFiles, 1);
+            var total = Math.Max(activeStatus.TotalDocuments, 1);
             return new(
                 activeStatus.State,
-                activeStatus.IndexedFiles,
+                activeStatus.IndexedDocuments,
                 total,
-                activeStatus.FailedFiles);
+                activeStatus.FailedDocuments);
         }
 
         var failedStatus = orderedStatuses
-            .FirstOrDefault(status => status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+            .FirstOrDefault(status => status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
 
         if (failedStatus is not null)
-            return new(DataSourceEmbeddingState.FAILED, failedStatus.IndexedFiles, failedStatus.TotalFiles, failedStatus.FailedFiles);
+            return new(DataSourceEmbeddingState.FAILED, failedStatus.IndexedDocuments, failedStatus.TotalDocuments, failedStatus.FailedDocuments);
 
         return new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     }
@@ -431,9 +431,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.UpsertStatus(this.CreateStatus(
                 dataSource,
                 DataSourceEmbeddingState.QUEUED,
-                currentStatus?.TotalFiles ?? 0,
-                currentStatus?.IndexedFiles ?? 0,
-                currentStatus?.FailedFiles ?? 0,
+                currentStatus?.TotalDocuments ?? 0,
+                currentStatus?.IndexedDocuments ?? 0,
+                currentStatus?.FailedDocuments ?? 0,
                 failures: currentStatus?.Failures ?? []));
         }
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
@@ -765,11 +765,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.statuses[dataSource.Id] = this.CreateStatus(
                 dataSource,
                 DataSourceEmbeddingState.QUEUED,
-                knownStatus?.TotalFiles ?? 0,
-                knownStatus?.IndexedFiles ?? 0,
-                knownStatus?.FailedFiles ?? 0,
+                knownStatus?.TotalDocuments ?? 0,
+                knownStatus?.IndexedDocuments ?? 0,
+                knownStatus?.FailedDocuments ?? 0,
                 failures: knownStatus?.Failures ?? [],
-                permanentlySkippedFiles: knownStatus?.PermanentlySkippedFiles ?? 0);
+                permanentlySkippedDocuments: knownStatus?.PermanentlySkippedDocuments ?? 0);
         }
 
         // One message for the whole list, rather than one per data source:
@@ -933,15 +933,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private DataSourceEmbeddingStatus CreateStatus(
         IDataSourceBase dataSource,
         DataSourceEmbeddingState state,
-        int totalFiles,
-        int indexedFiles,
-        int failedFiles,
-        string currentFile = "",
+        int totalDocuments,
+        int indexedDocuments,
+        int failedDocuments,
+        string currentDocument = "",
         string lastError = "",
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
-        int permanentlySkippedFiles = 0,
-        int? currentFileBlock = null,
-        int? currentFilePage = null,
+        int permanentlySkippedDocuments = 0,
+        int? currentDocumentBlock = null,
+        int? currentDocumentPage = null,
         bool vectorStoreUnreadable = false)
     {
         return new DataSourceEmbeddingStatus(
@@ -949,15 +949,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Type,
             state,
-            totalFiles,
-            indexedFiles,
-            failedFiles,
-            currentFile,
+            totalDocuments,
+            indexedDocuments,
+            failedDocuments,
+            currentDocument,
             lastError,
             failures?.ToList() ?? [],
-            permanentlySkippedFiles,
-            currentFileBlock,
-            currentFilePage,
+            permanentlySkippedDocuments,
+            currentDocumentBlock,
+            currentDocumentPage,
             vectorStoreUnreadable);
     }
 
@@ -1095,9 +1095,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.UpsertStatus(this.CreateStatus(
             dataSource,
             DataSourceEmbeddingState.QUEUED,
-            currentStatus?.TotalFiles ?? 0,
-            currentStatus?.IndexedFiles ?? 0,
-            currentStatus?.FailedFiles ?? 0,
+            currentStatus?.TotalDocuments ?? 0,
+            currentStatus?.IndexedDocuments ?? 0,
+            currentStatus?.FailedDocuments ?? 0,
             lastError: currentStatus?.LastError ?? string.Empty,
             failures: currentStatus?.Failures ?? []));
 

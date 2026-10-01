@@ -77,24 +77,24 @@
                                 @this.GetFileProgressText(status)
                             </MudText>
 
-                            @if (status.PermanentlySkippedFiles > 0)
+                            @if (status.PermanentlySkippedDocuments > 0)
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)
+                                    @string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)
                                 </MudText>
                             }
 
-                            @if (status.FailedFiles > 0)
+                            @if (status.FailedDocuments > 0)
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Failed files: {0}"), status.FailedFiles)
+                                    @string.Format(T("Failed files: {0}"), status.FailedDocuments)
                                 </MudText>
                             }
 
-                            @if (!string.IsNullOrWhiteSpace(status.CurrentFile))
+                            @if (!string.IsNullOrWhiteSpace(status.CurrentDocument))
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Current file: {0}"), status.CurrentFile)
+                                    @string.Format(T("Current file: {0}"), status.CurrentDocument)
                                 </MudText>
                             }
 
@@ -139,8 +139,8 @@
                                                     <RowTemplate>
                                                         <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
                                                             @* Captions render as spans, so each of them needs to be told to take its own line. *@
-                                                            <MudText Typo="Typo.body2">@GetFileName(context.FilePath)</MudText>
-                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.FilePath</MudText>
+                                                            <MudText Typo="Typo.body2">@GetFileName(context.DocumentKey)</MudText>
+                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.DocumentKey</MudText>
                                                             @if (group.Cause.ShowsMessagePerFile)
                                                             {
                                                                 <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block">@context.Reason</MudText>

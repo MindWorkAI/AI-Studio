@@ -35,9 +35,9 @@ public sealed class DocumentRunProgressTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(statuses[^1].FailedFiles, Is.EqualTo(1));
+            Assert.That(statuses[^1].FailedDocuments, Is.EqualTo(1));
             Assert.That(statuses[^1].LastError, Is.EqualTo("The API key was rejected."), "The provider said what to do, and that is what the user reads.");
-            Assert.That(statuses[^1].PermanentlySkippedFiles, Is.EqualTo(1), "The scanned file is still done. Dropping it from the status made the bar jump back after every provider failure.");
+            Assert.That(statuses[^1].PermanentlySkippedDocuments, Is.EqualTo(1), "The scanned file is still done. Dropping it from the status made the bar jump back after every provider failure.");
         });
     }
 
@@ -53,8 +53,8 @@ public sealed class DocumentRunProgressTests
         {
             Assert.That(manifest.PermanentFailures.Keys, Is.EquivalentTo([document.State.AbsolutePath]), "The mark is what keeps the document from being read again until it changes.");
             Assert.That(manifest.PermanentFailures[document.State.AbsolutePath].Fingerprint, Is.EqualTo(document.State.Fingerprint), "The fingerprint decides when the document deserves another attempt.");
-            Assert.That(statuses[^1].FailedFiles, Is.Zero, "A document which cannot be read for a reason of its own is not a failure of the run.");
-            Assert.That(statuses[^1].PermanentlySkippedFiles, Is.EqualTo(1));
+            Assert.That(statuses[^1].FailedDocuments, Is.Zero, "A document which cannot be read for a reason of its own is not a failure of the run.");
+            Assert.That(statuses[^1].PermanentlySkippedDocuments, Is.EqualTo(1));
         });
     }
 
@@ -70,7 +70,7 @@ public sealed class DocumentRunProgressTests
         Assert.Multiple(() =>
         {
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED), "Nothing is left to try, so the data source must not ask for attention forever.");
-            Assert.That(statuses[^1].IndexedFiles, Is.EqualTo(2));
+            Assert.That(statuses[^1].IndexedDocuments, Is.EqualTo(2));
             Assert.That(statuses[^1].ProgressPercent, Is.EqualTo(100));
             Assert.That(statuses[^1].Failures, Has.Count.EqualTo(1), "The stored reason keeps its place in the list, so the user still sees why.");
         });
@@ -88,7 +88,7 @@ public sealed class DocumentRunProgressTests
         {
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
             Assert.That(statuses[^1].LastError, Is.Not.Empty, "A failed run says why, or at least where to look.");
-            Assert.That(statuses[^1].Failures.Select(failure => failure.FilePath), Is.EquivalentTo(["/tmp/test-data/report.pdf"]));
+            Assert.That(statuses[^1].Failures.Select(failure => failure.DocumentKey), Is.EquivalentTo(["/tmp/test-data/report.pdf"]));
         });
     }
 

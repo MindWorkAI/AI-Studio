@@ -77,7 +77,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
             return Color.Warning;
 
-        return status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0
+        return status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0
             ? Color.Error
             : Color.Success;
     }
@@ -95,10 +95,10 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null)
             return T("Waiting for indexing status");
 
-        if (status.PermanentlySkippedFiles == 0)
+        if (status.PermanentlySkippedDocuments == 0)
             return status.StateLabel;
 
-        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)}";
+        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)}";
     }
 
     private string GetEmbeddingName(IDataSource dataSource)
