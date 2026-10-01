@@ -178,6 +178,17 @@ public sealed class DataSourceValidation
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
 
+    public string? ValidateMailboxConfidenceLevel(ConfidenceLevel confidenceLevel)
+    {
+        if(confidenceLevel is ConfidenceLevel.NONE)
+            return TB("Please select a required provider confidence level.");
+
+        if(!confidenceLevel.IsAllowedMailboxConfidence())
+            return string.Format(TB("A mailbox requires a provider confidence level from '{0}' to '{1}'."), ConfidenceLevel.VERY_LOW.GetName(), ConfidenceLevel.HIGH.GetName());
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
         if(this.GetSelectedCloudEmbedding() && !value)

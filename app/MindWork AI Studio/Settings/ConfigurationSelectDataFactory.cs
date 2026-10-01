@@ -306,7 +306,18 @@ public static class ConfigurationSelectDataFactory
             yield return new(level.GetName(), level);
         }
     }
-    
+
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetMailboxConfidenceLevelsData()
+    {
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+        {
+            if (!level.IsAllowedMailboxConfidence())
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
+    }
+
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {
         foreach (var theme in Enum.GetValues<Themes>())
