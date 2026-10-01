@@ -31,7 +31,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// One indexer per kind of data source this service indexes.
     /// </summary>
-    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = [new FileSourceIndexer(rustService, guardService, new TextChunker(rustService, logger), logger)];
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = [new FileSourceIndexer(settingsManager, rustService, guardService, new TextChunker(rustService, logger), logger)];
 
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);

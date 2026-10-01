@@ -20,12 +20,16 @@ namespace AIStudio.Tools.Services.Indexing;
 /// A file is a document under its full path. Whether it changed is told by a fingerprint over its
 /// path, name, size and write time, so an unchanged folder is worked through without reading a
 /// single file. Reading one goes through the runtime, which extracts the text and filters it.
+///
+/// Changes are noticed by a file system watcher per data source. A burst of changes is waited out
+/// before a run is asked for, so saving a document twice in a row costs one run, not two.
 /// </remarks>
+/// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
 /// <param name="guardService">The prompt injection filter, whose findings are reported once per run.</param>
 /// <param name="textChunker">Cuts the text of a file into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed class FileSourceIndexer(RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
@@ -234,7 +238,7 @@ internal sealed class FileSourceIndexer(RustService rustService, PromptInjection
     /// </summary>
     /// <param name="fileName">The name of the file.</param>
     /// <returns>True for shortcuts and the lock files of office suites.</returns>
-    internal static bool IsSkippedRagFileName(string fileName)
+    private static bool IsSkippedRagFileName(string fileName)
     {
         return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
                || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
@@ -245,7 +249,7 @@ internal sealed class FileSourceIndexer(RustService rustService, PromptInjection
     /// </summary>
     /// <param name="filePath">The path of the file.</param>
     /// <returns>True for every document type the runtime can read.</returns>
-    internal static bool IsSupportedRagFilePath(string filePath)
+    private static bool IsSupportedRagFilePath(string filePath)
     {
         return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
     }
