@@ -22,4 +22,18 @@ public sealed partial class NoIndexStoreClient
     public override Task UpdateMailFlagsAsync(string dataSourceId, string folderPath, IReadOnlyDictionary<long, MailFlags> flagsByUid, CancellationToken token) => Task.CompletedTask;
 
     public override Task<IReadOnlyList<string>> GetOrphanedMailsAsync(string dataSourceId, DateTimeOffset orphanedBefore, CancellationToken token) => Task.FromResult<IReadOnlyList<string>>([]);
+
+    public override Task<MailboxSyncState> GetMailboxSyncStateAsync(string dataSourceId, CancellationToken token) => Task.FromResult(new MailboxSyncState(null, null, null));
+
+    public override Task HoldBackMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token) => Task.CompletedTask;
+
+    public override Task<bool> ApprovePendingMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token) => Task.FromResult(false);
+
+    public override Task CompleteMailboxSyncAsync(string dataSourceId, DateTimeOffset completedUtc, CancellationToken token) => Task.CompletedTask;
+
+    public override Task<MailboxAuthFailure?> GetMailboxAuthFailureAsync(string dataSourceId, CancellationToken token) => Task.FromResult<MailboxAuthFailure?>(null);
+
+    public override Task UpsertMailboxAuthFailureAsync(string dataSourceId, MailboxAuthFailure failure, CancellationToken token) => Task.CompletedTask;
+
+    public override Task ClearMailboxAuthFailureAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 }

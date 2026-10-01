@@ -126,4 +126,70 @@ public abstract partial class IndexStoreClient
     /// <param name="token">The cancellation token.</param>
     /// <returns>The keys of their documents, to delete them like any other document.</returns>
     public abstract Task<IReadOnlyList<string>> GetOrphanedMailsAsync(string dataSourceId, DateTimeOffset orphanedBefore, CancellationToken token);
+
+    /// <summary>
+    /// Reads how the sync of a mailbox as a whole stands.
+    /// </summary>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The state; every value is null for a mailbox which was never synced.</returns>
+    public abstract Task<MailboxSyncState> GetMailboxSyncStateAsync(string dataSourceId, CancellationToken token);
+
+    /// <summary>
+    /// Holds back a sync which would remove many mails from the index at once, until the user decides.
+    /// </summary>
+    /// <remarks>
+    /// A count other than the one held back so far voids an earlier approval: the user agreed to
+    /// a number, not to whatever a later sync comes up with.
+    /// </remarks>
+    /// <param name="dataSourceId">The mailbox, which has to be stored as a data source.</param>
+    /// <param name="removalCount">How many mails the sync would remove from the index.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task HoldBackMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token);
+
+    /// <summary>
+    /// Records that the user agreed to the held back removal.
+    /// </summary>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="removalCount">The count the user was shown and agreed to.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when exactly that removal was held back and is now approved. False when nothing or another count is held back by now, and the user has to be asked again.</returns>
+    public abstract Task<bool> ApprovePendingMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token);
+
+    /// <summary>
+    /// Records a complete sync of a mailbox. A removal held back before has been dealt with by then.
+    /// </summary>
+    /// <param name="dataSourceId">The mailbox, which has to be stored as a data source.</param>
+    /// <param name="completedUtc">When the sync ended.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task CompleteMailboxSyncAsync(string dataSourceId, DateTimeOffset completedUtc, CancellationToken token);
+
+    /// <summary>
+    /// Reads whether the server of a mailbox refused a sign-in which nobody has dealt with yet.
+    /// </summary>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The refused sign-in, or null when AI Studio may sign in.</returns>
+    public abstract Task<MailboxAuthFailure?> GetMailboxAuthFailureAsync(string dataSourceId, CancellationToken token);
+
+    /// <summary>
+    /// Records a sign-in the server refused. From then on, AI Studio does not sign in on its own,
+    /// not even after a restart, until the failure is cleared.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from everything else about the mailbox, so it survives a rebuild of the index,
+    /// and stored for a mailbox which was never indexed as well: the very first sign-in can fail.
+    /// </remarks>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="failure">The refused sign-in.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task UpsertMailboxAuthFailureAsync(string dataSourceId, MailboxAuthFailure failure, CancellationToken token);
+
+    /// <summary>
+    /// Clears a refused sign-in, when the user saved a new password, asked for another try, or
+    /// deleted the mailbox.
+    /// </summary>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="token">The cancellation token.</param>
+    public abstract Task ClearMailboxAuthFailureAsync(string dataSourceId, CancellationToken token);
 }

@@ -196,6 +196,109 @@ public sealed partial class SqliteIndexStoreClientImplementation
             .ToListAsync(token);
     }
 
+    public override async Task<MailboxSyncState> GetMailboxSyncStateAsync(string dataSourceId, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var state = await context.MailboxSyncStates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(entity => entity.DataSourceId == dataSourceId, token);
+
+        return state is null
+            ? new MailboxSyncState(null, null, null)
+            : new MailboxSyncState(state.LastSyncCompletedUtc, state.PendingRemovalCount, state.PendingRemovalApprovedUtc);
+    }
+
+    public override async Task HoldBackMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(removalCount);
+
+        await using var context = this.CreateContext();
+        var state = await GetOrAddMailboxSyncStateAsync(context, dataSourceId, token);
+        if (state.PendingRemovalCount != removalCount)
+        {
+            state.PendingRemovalCount = removalCount;
+            state.PendingRemovalApprovedUtc = null;
+        }
+
+        await context.SaveChangesAsync(token);
+    }
+
+    public override async Task<bool> ApprovePendingMailRemovalAsync(string dataSourceId, int removalCount, CancellationToken token)
+    {
+        //
+        // One statement, so a sync cannot change the held back count between reading and writing
+        // it. Then the user would agree to a number they were never shown.
+        //
+        DateTimeOffset? approvedUtc = DateTimeOffset.UtcNow;
+        await using var context = this.CreateContext();
+        var approved = await context.MailboxSyncStates
+            .Where(state => state.DataSourceId == dataSourceId && state.PendingRemovalCount == removalCount)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(state => state.PendingRemovalApprovedUtc, approvedUtc), token);
+
+        return approved > 0;
+    }
+
+    public override async Task CompleteMailboxSyncAsync(string dataSourceId, DateTimeOffset completedUtc, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var state = await GetOrAddMailboxSyncStateAsync(context, dataSourceId, token);
+        state.LastSyncCompletedUtc = completedUtc;
+        state.PendingRemovalCount = null;
+        state.PendingRemovalApprovedUtc = null;
+
+        await context.SaveChangesAsync(token);
+    }
+
+    public override async Task<MailboxAuthFailure?> GetMailboxAuthFailureAsync(string dataSourceId, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        return await context.MailboxAuthStates
+            .AsNoTracking()
+            .Where(state => state.DataSourceId == dataSourceId)
+            .Select(state => new MailboxAuthFailure(state.FailedAtUtc, state.FailureMessage))
+            .FirstOrDefaultAsync(token);
+    }
+
+    public override async Task UpsertMailboxAuthFailureAsync(string dataSourceId, MailboxAuthFailure failure, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var state = await context.MailboxAuthStates.FirstOrDefaultAsync(entity => entity.DataSourceId == dataSourceId, token);
+        if (state is null)
+        {
+            state = new MailboxAuthStateEntity
+            {
+                DataSourceId = dataSourceId,
+            };
+            context.MailboxAuthStates.Add(state);
+        }
+
+        state.FailedAtUtc = failure.FailedAtUtc;
+        state.FailureMessage = failure.FailureMessage;
+        await context.SaveChangesAsync(token);
+    }
+
+    public override async Task ClearMailboxAuthFailureAsync(string dataSourceId, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        await context.MailboxAuthStates
+            .Where(state => state.DataSourceId == dataSourceId)
+            .ExecuteDeleteAsync(token);
+    }
+
+    private static async Task<MailboxSyncStateEntity> GetOrAddMailboxSyncStateAsync(IndexStoreDbContext context, string dataSourceId, CancellationToken token)
+    {
+        var state = await context.MailboxSyncStates.FirstOrDefaultAsync(entity => entity.DataSourceId == dataSourceId, token);
+        if (state is not null)
+            return state;
+
+        state = new MailboxSyncStateEntity
+        {
+            DataSourceId = dataSourceId,
+        };
+        context.MailboxSyncStates.Add(state);
+        return state;
+    }
+
     private static void ValidateMail(MailRecord mail)
     {
         if (mail.Locations.Count == 0)
