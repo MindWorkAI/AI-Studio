@@ -10,10 +10,10 @@ use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, NamedQuery, Payload, PointId,
-    PointInsertOperations, PointOperations, PointStruct, QueryEnum, QueryRequest, ScoredPoint,
-    ScoringQuery, UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface,
-    WithVector,
+    FieldCondition, Filter, HasIdCondition, HnswIndexConfig, Match, MatchValue, NamedQuery,
+    Payload, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
+    QueryRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants, VectorInternal,
+    Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -110,6 +110,10 @@ pub struct SearchQdrantEdgeEmbeddingRequest {
     pub store_name: String,
     pub vector: Vec<f32>,
     pub max_matches: usize,
+
+    /// The only points the search may return. Missing means the whole store. An empty list means
+    /// no point at all, so the search finds nothing -- it never falls back to the whole store.
+    pub point_ids: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -361,10 +365,16 @@ impl QdrantEdgeDatabase {
         Ok(())
     }
 
-    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
+    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize, point_ids: Option<Vec<String>>) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
         if max_matches == 0 {
             return Ok(vec![]);
         }
+
+        let filter = match point_ids {
+            None => None,
+            Some(point_ids) if point_ids.is_empty() => return Ok(vec![]),
+            Some(point_ids) => Some(point_id_filter(&point_ids)?),
+        };
 
         validate_vector_size(vector.len())?;
         let Some(shard) = self.get_existing_store(store_name)? else {
@@ -377,7 +387,7 @@ impl QdrantEdgeDatabase {
                 VectorInternal::Dense(vector),
                 VECTOR_NAME,
             )))),
-            filter: None,
+            filter,
             score_threshold: None,
             limit: max_matches,
             offset: 0,
@@ -485,7 +495,7 @@ pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<
 
 pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
     execute_qdrant_edge_request(|database| {
-        database.search_embedding(&request.store_name, request.vector, request.max_matches)
+        database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids)
     })
 }
 
@@ -901,6 +911,17 @@ fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filte
     })
 }
 
+/// Restricts a search to the given points. Every id has to be a valid UUID, the same as when the
+/// points were inserted, so a malformed id is an error rather than a point which is silently missed.
+fn point_id_filter(point_ids: &[String]) -> QdrantEdgeResult<Filter> {
+    let has_id = point_ids
+        .iter()
+        .map(|point_id| to_point_id(point_id))
+        .collect::<QdrantEdgeResult<HasIdCondition>>()?;
+
+    Ok(Filter::new_must(Condition::HasId(has_id)))
+}
+
 fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
     const MAX_STORE_NAME_LENGTH: usize = 128;
 
@@ -962,14 +983,7 @@ mod tests {
 
     #[test]
     fn ensure_store_reports_creation_and_updates_the_display_name() {
-        let test_directory = std::env::temp_dir().join(format!(
-            "ai-studio-qdrant-ensure-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
+        let test_directory = test_directory("ensure");
         let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
 
@@ -987,14 +1001,7 @@ mod tests {
 
     #[test]
     fn an_unreadable_store_is_reported_but_never_deleted() {
-        let test_directory = std::env::temp_dir().join(format!(
-            "ai-studio-qdrant-unreadable-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-        ));
+        let test_directory = test_directory("unreadable");
         let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
 
         let mut database = QdrantEdgeDatabase::new(test_directory.clone());
@@ -1027,5 +1034,114 @@ mod tests {
     fn point_ids_must_be_valid_uuids() {
         assert!(to_point_id("6cc665a8-2b1e-4d42-bc74-8015b7b391ec").is_ok());
         assert!(to_point_id("deliberate-collision-input").is_err());
+    }
+
+    #[test]
+    fn a_search_restricted_to_no_points_finds_nothing() {
+        let test_directory = test_directory("no-points");
+        let mut database = store_with_one_point_per_axis(&test_directory);
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![])).unwrap();
+
+        // An empty restriction comes from conditions which matched nothing. Searching the whole
+        // store instead would answer with exactly what those conditions ruled out.
+        assert!(found.is_empty());
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_search_restricted_to_some_points_finds_only_those() {
+        let test_directory = test_directory("some-points");
+        let mut database = store_with_one_point_per_axis(&test_directory);
+
+        let unrestricted = database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap();
+        assert_eq!(found_point_ids(&unrestricted), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        let restricted = database
+            .search_embedding(SEARCH_STORE, search_vector(), 10, Some(vec![POINT_Y.to_string(), POINT_Z.to_string()]))
+            .unwrap();
+        assert_eq!(
+            found_point_ids(&restricted),
+            vec![POINT_Y, POINT_Z],
+            "the closest point lies outside the restriction, so it must not be found"
+        );
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn a_restriction_with_a_malformed_point_id_is_rejected() {
+        assert!(point_id_filter(&[POINT_X.to_string()]).is_ok());
+        assert!(
+            point_id_filter(&[POINT_X.to_string(), "not-a-point-id".to_string()]).is_err(),
+            "skipping the malformed id would quietly search fewer points than asked for"
+        );
+    }
+
+    const SEARCH_STORE: &str = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+    const POINT_X: &str = "0b5f1e8a-3c2d-4e6f-9a1b-7c8d9e0f1a2b";
+    const POINT_Y: &str = "1c6a2f9b-4d3e-4f70-8b2c-8d9e0f1a2b3c";
+    const POINT_Z: &str = "2d7b3a0c-5e4f-4a81-9c3d-9e0f1a2b3c4d";
+
+    /// A directory of its own for one test, so tests running in parallel never share a store.
+    fn test_directory(label: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "ai-studio-qdrant-{label}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
+
+    /// A store with one point on each axis.
+    fn store_with_one_point_per_axis(test_directory: &Path) -> QdrantEdgeDatabase {
+        let mut database = QdrantEdgeDatabase::new(test_directory.to_path_buf());
+        database.ensure_store_exists(SEARCH_STORE, "Some source", 3).unwrap();
+        database
+            .insert_embedding(SEARCH_STORE, vec![
+                test_point(POINT_X, vec![1.0, 0.0, 0.0]),
+                test_point(POINT_Y, vec![0.0, 1.0, 0.0]),
+                test_point(POINT_Z, vec![0.0, 0.0, 1.0]),
+            ])
+            .unwrap();
+
+        database
+    }
+
+    /// Closest to the point on the x axis, then the one on the y axis, then the one on the z axis.
+    fn search_vector() -> Vec<f32> {
+        vec![1.0, 0.5, 0.0]
+    }
+
+    fn found_point_ids(found: &[QdrantEdgeSearchResult]) -> Vec<&str> {
+        found.iter().map(|result| result.point_id.as_str()).collect()
+    }
+
+    fn test_point(point_id: &str, vector: Vec<f32>) -> QdrantEdgeStoragePoint {
+        QdrantEdgeStoragePoint {
+            point_id: point_id.to_string(),
+            vector,
+            data_source_id: "6cc665a8-2b1e-4d42-bc74-8015b7b391ec".to_string(),
+            data_source_type: "LOCAL_DIRECTORY".to_string(),
+            chunk_id: point_id.to_string(),
+            parent_file_id: String::new(),
+            file_path: "/tmp/test-data/notes.md".to_string(),
+            absolute_path: "/tmp/test-data/notes.md".to_string(),
+            file_name: "notes.md".to_string(),
+            relative_path: "notes.md".to_string(),
+            file_type: "md".to_string(),
+            page_number: None,
+            chunk_index: 0,
+            text: "Some text.".to_string(),
+            fingerprint: String::new(),
+            creation_utc: String::new(),
+            last_write_utc: String::new(),
+            embedded_at_utc: String::new(),
+        }
     }
 }
