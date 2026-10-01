@@ -7,7 +7,7 @@
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         <PathDropZone IsArea="@true">
-        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
@@ -74,7 +74,7 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
+            <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
                     <MudSelectItem Value="@embedding.Value">
@@ -106,7 +106,7 @@
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
 
-            <MudSelect @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
+            <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
                 @foreach (var level in this.ConfidenceLevels)
                 {
                     <MudSelectItem Value="@level.Value">
@@ -138,6 +138,7 @@
                         @T("Optional expert settings for how this data source is split before embedding.")
                     </MudJustifiedText>
                     <MudNumericField
+                        @ref="@this.maxChunkTokenLengthField"
                         T="int"
                         @bind-Value="@this.dataMaxChunkTokenLength"
                         Label="@T("Token limit")"
@@ -151,6 +152,7 @@
                         AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
                         AdornmentColor="Color.Info"/>
                     <MudNumericField
+                        @ref="@this.chunkOverlapTokenLengthField"
                         T="int"
                         @bind-Value="@this.dataChunkOverlapTokenLength"
                         Label="@T("Token overlap")"

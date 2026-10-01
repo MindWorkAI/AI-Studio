@@ -7,6 +7,9 @@ using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
+using MudBlazor.Interfaces;
+using MudBlazor.Utilities;
+
 namespace AIStudio.Dialogs;
 
 public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
@@ -67,6 +70,12 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+
+    // The fields whose rules read other fields, see RevalidateDependentFields:
+    private MudSelect<string> embeddingSelect = null!;
+    private MudSelect<ConfidenceLevel> confidenceLevelSelect = null!;
+    private MudNumericField<int> maxChunkTokenLengthField = null!;
+    private MudNumericField<int> chunkOverlapTokenLengthField = null!;
 
     public DataSourceLocalDirectoryDialog()
     {
@@ -199,6 +208,14 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     
     private void Cancel() => this.MudDialog.Cancel();
 
+    /// <summary>
+    /// Gives the fields which are checked against each other a fresh verdict: the embedding provider
+    /// and the required confidence level, and the token limits, which depend on the embedding provider.
+    /// </summary>
+    private Task RevalidateDependentFields(IFormComponent? changedField) => DependentFieldValidation.RevalidateAsync(changedField, this.embeddingSelect, this.confidenceLevelSelect, this.maxChunkTokenLengthField, this.chunkOverlapTokenLengthField);
+
+    private Task RevalidateAfterFieldChange(FormFieldChangedEventArgs change) => this.RevalidateDependentFields(change.Field);
+
     private string? ValidateMaxChunkTokenLength(int maxChunkTokenLength)
     {
         if (!this.showExpertSettings)
@@ -231,11 +248,14 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         return null;
     }
 
-    private void ToggleExpertSettings()
+    private async Task ToggleExpertSettings()
     {
         this.showExpertSettings = !this.showExpertSettings;
         if (this.showExpertSettings && this.dataMaxChunkTokenLength < 1)
             this.dataMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
+
+        // The token limits are only checked while they are shown:
+        await this.RevalidateDependentFields(changedField: null);
     }
 
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
