@@ -88,6 +88,23 @@ public sealed class EmbeddingSignatureTests
     }
 
     [Test]
+    public void AnIndexedDataSourceOutsideDataSourcesIsCutByItsOwnSettings()
+    {
+        var directory = DataSource(ConfidenceLevel.LOW);
+        var elsewhere = new IndexedElsewhere
+        {
+            EmbeddingId = directory.EmbeddingId,
+            MaxChunkTokenLength = directory.MaxChunkTokenLength,
+            ChunkOverlapTokenLength = directory.ChunkOverlapTokenLength,
+        };
+
+        Assert.That(
+            DataSourceEmbeddingService.BuildEmbeddingSignature(elsewhere, EmbeddingProviderFor("text-embedding-3-small")),
+            Is.EqualTo(Signature(directory)),
+            "The chunking follows the indexed settings alone. Asking for IInternalDataSource instead would cut such a data source at the token limit of the provider, without anybody noticing.");
+    }
+
+    [Test]
     public void TheSignatureOfAKnownConfigurationIsPinned()
     {
         Assert.That(
@@ -130,4 +147,30 @@ public sealed class EmbeddingSignatureTests
 
     private static EmbeddingProvider EmbeddingProviderFor(string modelId) =>
         new(1, "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "Test embeddings", LLMProviders.OPEN_AI, new(modelId, modelId));
+
+    /// <summary>
+    /// A data source which is embedded but not kept in DataSources, the way mailboxes are.
+    /// </summary>
+    private readonly record struct IndexedElsewhere() : IIndexedDataSource
+    {
+        public string Id { get; init; } = "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
+
+        public uint Num { get; init; } = 2;
+
+        public string Name { get; init; } = "Indexed elsewhere";
+
+        public bool IsEnterpriseConfiguration { get; init; }
+
+        public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+
+        public DataSourceType Type { get; init; } = DataSourceType.NONE;
+
+        public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.LOW;
+
+        public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+
+        public int MaxChunkTokenLength { get; init; }
+
+        public int ChunkOverlapTokenLength { get; init; }
+    }
 }

@@ -593,17 +593,17 @@ public sealed partial class DataSourceEmbeddingService
     /// <param name="dataSource">The data source whose own chunk settings apply.</param>
     /// <param name="embeddingProvider">The embedding provider whose token limit caps them.</param>
     /// <returns>The chunk size and overlap which are actually used.</returns>
-    internal static ChunkingOptions GetChunkingOptions(IDataSource dataSource, EmbeddingProvider embeddingProvider)
+    internal static ChunkingOptions GetChunkingOptions(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider)
     {
         var providerMaxChunkTokenLength = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
-        var dataSourceMaxChunkTokenLength = dataSource is IInternalDataSource { MaxChunkTokenLength: > 0 } internalDataSource
-            ? internalDataSource.MaxChunkTokenLength
+        var dataSourceMaxChunkTokenLength = dataSource is IIndexedDataSource { MaxChunkTokenLength: > 0 } indexedDataSource
+            ? indexedDataSource.MaxChunkTokenLength
             : 0;
         var maxChunkTokenLength = dataSourceMaxChunkTokenLength > 0
             ? Math.Min(dataSourceMaxChunkTokenLength, providerMaxChunkTokenLength)
             : providerMaxChunkTokenLength;
 
-        var configuredOverlapTokenLength = dataSource is IInternalDataSource overlapDataSource
+        var configuredOverlapTokenLength = dataSource is IIndexedDataSource overlapDataSource
             ? overlapDataSource.ChunkOverlapTokenLength
             : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
         var overlapTokenLength = Math.Clamp(configuredOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
@@ -1025,7 +1025,7 @@ public sealed partial class DataSourceEmbeddingService
     /// re-embedded every file of a data source whenever somebody raised or lowered it — real money
     /// at a cloud embedding provider, for nothing.
     /// </remarks>
-    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
+    internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
     {
         return string.Join('|',
             CHUNK_METADATA_VERSION,
@@ -1047,7 +1047,7 @@ public sealed partial class DataSourceEmbeddingService
     /// <param name="dataSource">The data source the vectors belong to.</param>
     /// <param name="embeddingProvider">The embedding provider which makes them.</param>
     /// <returns>The signature of this pairing.</returns>
-    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider) =>
+    internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider) =>
         BuildEmbeddingSignature(dataSource, embeddingProvider, GetChunkingOptions(dataSource, embeddingProvider));
 
     private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
