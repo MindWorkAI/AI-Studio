@@ -225,27 +225,26 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return true;
         }
 
-        var manifest = await indexStore.GetManifestAsync(dataSourceId, token);
-        return HasStoredIndexState(manifest);
+        var indexState = await indexStore.GetDataSourceStateAsync(dataSourceId, token);
+        return HasStoredIndexState(indexState);
     }
 
     /// <summary>
     /// Whether the index holds anything at all about a data source.
     /// </summary>
-    /// <param name="manifest">What the index store returned for it.</param>
+    /// <remarks>
+    /// The row of the data source is the whole answer. Everything else the index stores about it --
+    /// its documents, their chunks and the documents skipped for good -- hangs on that row and is
+    /// deleted along with it, and the row itself is only ever written together with the embedding
+    /// provider and the signature. Reading the documents as well, the way the manifest does, would
+    /// add nothing but time, and a lot of it for a data source with a hundred thousand documents.
+    ///
+    /// A data source whose documents were all skipped for good therefore has index state as well,
+    /// even though nothing was indexed of it.
+    /// </remarks>
+    /// <param name="indexState">What the index store holds about the data source as a whole, or null.</param>
     /// <returns>True when there is stored index state.</returns>
-    private static bool HasStoredIndexState(DataSourceEmbeddingManifest manifest)
-    {
-        return !string.IsNullOrWhiteSpace(manifest.EmbeddingProviderId)
-               || !string.IsNullOrWhiteSpace(manifest.EmbeddingSignature)
-               || !string.IsNullOrWhiteSpace(manifest.SourceHash)
-               || manifest.VectorSize > 0
-               || manifest.Files.Count > 0
-
-               // A data source whose files were all skipped for good has index state as well,
-               // even though nothing was indexed of it:
-               || manifest.PermanentFailures.Count > 0;
-    }
+    private static bool HasStoredIndexState(DataSourceIndexState? indexState) => indexState is not null;
 
     /// <summary>
     /// Picks the data sources which already hold something in the index.
@@ -286,8 +285,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             var affected = new List<IDataSourceBase>(candidates.Count);
             foreach (var dataSource in candidates)
             {
-                var manifest = await indexStore.GetManifestAsync(dataSource.Id, timeout.Token);
-                if (HasStoredIndexState(manifest))
+                var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, timeout.Token);
+                if (HasStoredIndexState(indexState))
                     affected.Add(dataSource);
             }
 
@@ -657,10 +656,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var persistedManifest = await indexStore.GetManifestAsync(dataSource.Id, token);
-        if (persistedManifest.VectorSize > 0)
+        var persistedState = await indexStore.GetDataSourceStateAsync(dataSource.Id, token);
+        if (persistedState is { VectorSize: > 0 })
         {
-            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedManifest.VectorSize, token);
+            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedState.VectorSize, token);
             if (ensureResult.Created)
             {
                 logger.LogWarning(
