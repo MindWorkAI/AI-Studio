@@ -60,6 +60,27 @@ public static class ExternalHttpClientTimeout
             ValidateServerCertificateWithCustomRootCertificates(host, certificate, chain, sslPolicyErrors, customRootCertificateCache, trustPolicy);
     }
 
+    /// <summary>
+    /// The certificate validation for a TLS connection which does not go through HTTP, e.g., to an IMAP server.
+    /// </summary>
+    /// <remarks>
+    /// The same rules apply as to HTTPS: the system trust first, and the configured root certificates
+    /// only for the allowed hosts. This matters most in a Flatpak, which does not see the root
+    /// certificates of the OS, so that a server with an internal CA fails without the bundle.
+    /// </remarks>
+    /// <param name="host">The host the connection goes to, as an IDN host.</param>
+    /// <param name="trustPolicy">Whether the configured root certificates may be used.</param>
+    /// <returns>The callback, or null when no configured root certificates are usable and the system trust decides alone.</returns>
+    public static RemoteCertificateValidationCallback? CreateServerCertificateValidationCallback(string host, ExternalHttpTrustPolicy trustPolicy)
+    {
+        var customRootCertificateCache = GetCustomRootCertificateCache();
+        if (!customRootCertificateCache.State.IsUsable)
+            return null;
+
+        return (_, certificate, chain, sslPolicyErrors) =>
+            ValidateServerCertificateWithCustomRootCertificates(host, certificate, chain, sslPolicyErrors, customRootCertificateCache, trustPolicy);
+    }
+
     public static ExternalHttpCustomRootCertificateState CustomRootCertificateState => GetCustomRootCertificateCache().State;
 
     public static string GetTimeoutDescription()
