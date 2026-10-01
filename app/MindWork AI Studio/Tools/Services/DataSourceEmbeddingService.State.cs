@@ -37,7 +37,7 @@ public sealed partial class DataSourceEmbeddingService
 
         await this.ResetPersistedStateAsync(dataSourceId, null, null, CancellationToken.None);
         this.statuses.TryRemove(dataSourceId, out _);
-        this.PublishStatusChanged();
+        PublishStatusChanged();
 
         await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.MANUAL_RETRY);
     }

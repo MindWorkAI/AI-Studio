@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tools.Services;
 
@@ -250,10 +251,10 @@ public sealed partial class DataSourceEmbeddingService
         if (Directory.Exists(path))
             return true;
 
-        if (IsSkippedRagFileName(fileName))
+        if (FileSourceIndexer.IsSkippedRagFileName(fileName))
             return false;
 
-        if (this.IsSupportedRagFilePath(path))
+        if (FileSourceIndexer.IsSupportedRagFilePath(path))
             return true;
 
         return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed

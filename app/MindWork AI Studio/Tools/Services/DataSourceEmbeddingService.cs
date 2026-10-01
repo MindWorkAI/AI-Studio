@@ -28,7 +28,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </remarks>
     private static readonly TimeSpan REINDEX_CHECK_TIMEOUT = TimeSpan.FromSeconds(2);
 
-    private readonly TextChunker textChunker = new(rustService, logger);
+    /// <summary>
+    /// One indexer per kind of data source this service indexes.
+    /// </summary>
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = [new FileSourceIndexer(rustService, guardService, new TextChunker(rustService, logger), logger)];
+
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -47,14 +51,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         ALREADY_QUEUED,
         RUNNING,
         RUNNING_MARKED_PENDING,
-    }
-
-    private enum DataSourceEmbeddingRefreshMode
-    {
-        STARTUP_HASH_CHECK,
-        HASH_CHECK,
-        WATCHER_HASH_CHECK,
-        MANUAL_RETRY,
     }
 
     private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
@@ -466,7 +462,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
         this.statuses.TryRemove(dataSource.Id, out _);
-        this.PublishStatusChanged();
+        PublishStatusChanged();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -682,14 +678,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, this.UpsertStatus, logger);
     }
 
-    private async Task ProcessDataSourceAsync(IIndexedDataSource indexedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
-        if (indexedDataSource is not IInternalDataSource dataSource)
+        if (!this.TryGetIndexer(dataSource, out var indexer))
         {
             logger.LogWarning(
-                "Skipping background embeddings for non-internal data source '{DataSourceName}' ({DataSourceId}).",
-                indexedDataSource.Name,
-                indexedDataSource.Id);
+                "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because no indexer reads this kind of data source.",
+                dataSource.Name,
+                dataSource.Id);
             return;
         }
 
@@ -697,183 +693,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (context is null)
             return;
 
-        var manifest = context.Manifest;
-
-        var inputFiles = this.GetInputFiles(dataSource);
-        var indexedFiles = inputFiles.Files;
-        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
-
-        foreach (var failure in inputFiles.Failures)
-        {
-            logger.LogWarning(
-                "Cannot index data source input '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}'.",
-                failure.FilePath,
-                dataSource.Name,
-                dataSource.Id,
-                failure.Reason);
-        }
-
-        logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
-            dataSource.Name,
-            dataSource.Id,
-            indexedFiles.Count,
-            inputFiles.FailedFiles,
-            context.CollectionName);
-
-        var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
-        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, indexedFiles, token);
-        token.ThrowIfCancellationRequested();
-
-        logger.LogInformation(
-            "Compared data source hash for '{DataSourceName}' ({DataSourceId}). StoredSourceHashPrefix={StoredSourceHashPrefix}, CurrentSourceHashPrefix={CurrentSourceHashPrefix}, StoredFileRecords={StoredFileRecords}, CurrentFiles={CurrentFiles}, RemovedMissingFiles={RemovedMissingFiles}.",
-            dataSource.Name,
-            dataSource.Id,
-            ShortHash(manifest.SourceHash),
-            ShortHash(metadataSnapshot.SourceHash),
-            manifest.Files.Count,
-            indexedFiles.Count,
-            removedMissingFiles);
-
-        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger);
-        if (this.CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
-        {
-            logger.LogInformation(
-                "Skipping data source '{DataSourceName}' ({DataSourceId}) because the persisted data source hash and all persisted file hashes match. RefreshMode={RefreshMode}, PermanentlySkippedFiles={PermanentlySkippedFiles}.",
-                dataSource.Name,
-                dataSource.Id,
-                refreshMode,
-                manifest.PermanentFailures.Count);
-
-            //
-            // The files which were skipped for good are none of the indexed ones, and their stored
-            // reasons belong into the list even on a run which read nothing at all:
-            //
-            progress.RecordUnchanged(indexedFiles.Count - manifest.PermanentFailures.Count);
-            foreach (var (filePath, permanentFailure) in manifest.PermanentFailures)
-                progress.RecordStillUnreadable(filePath, permanentFailure);
-
-            await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source finished after removing missing files", token);
-            return;
-        }
-
-        token.ThrowIfCancellationRequested();
-        progress.Publish();
-
-        //
-        // Everything the runtime filters out of these files is reported once for the whole data
-        // source. A run over a few thousand documents which removes something in forty of them
-        // is one thing that happened to the user, not forty. The scope ends with this method, so
-        // the report arrives when the run is finished rather than in the middle of it.
-        //
-        await using var promptInjectionReportingScope = guardService.BeginAction();
-
-        foreach (var file in indexedFiles)
-        {
-            token.ThrowIfCancellationRequested();
-
-            var fingerprint = metadataSnapshot.FileHashes[file.FullName];
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) &&
-                string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because the persisted metadata hash matches. MetadataHashPrefix={MetadataHashPrefix}, LastWriteUtc={LastWriteUtc:O}, FileSize={FileSize}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    ShortHash(fingerprint),
-                    file.LastWriteTimeUtc,
-                    file.Length);
-                progress.RecordUnchanged();
-                progress.Publish();
-                continue;
-            }
-
-            //
-            // A file which failed for a reason of its own is not read again until it changes.
-            // Without this, a folder holding hundreds of scanned documents without a text layer
-            // would spend half an hour on every start to arrive at the result we already have:
-            //
-            if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) &&
-                string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    permanentFailure.Code,
-                    ShortHash(fingerprint),
-                    permanentFailure.OccurredAtUtc);
-                progress.RecordStillUnreadable(file.FullName, permanentFailure);
-                progress.Publish();
-                continue;
-            }
-
-            var document = this.CreateFileDocument(context, dataSource, file, fingerprint);
-            var reportBlockProgress = progress.BeginDocument(document);
-
-            try
-            {
-                logger.LogInformation(
-                    "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because {EmbeddingReason}. CurrentMetadataHashPrefix={CurrentMetadataHashPrefix}. Progress={CompletedFiles}/{TotalFiles}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    GetFileEmbeddingReason(file, fingerprint, existingRecord),
-                    ShortHash(fingerprint),
-                    progress.DoneDocuments + 1,
-                    totalFiles);
-                var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
-                token.ThrowIfCancellationRequested();
-                var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
-                if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
-                    throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
-
-                await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
-                logger.LogInformation(
-                    "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    chunkCount,
-                    (DateTimeOffset.UtcNow - startedAtUtc).TotalMilliseconds);
-            }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (VectorStoreUnreadableException)
-            {
-                //
-                // Not about this one file: the store of the whole data source cannot be opened, so
-                // every remaining file would fail the same way. Carrying on would fill the list
-                // with one entry per file and hide the single cause behind them.
-                //
-                throw;
-            }
-            catch (Exception exception)
-            {
-                await progress.RecordDocumentFailureAsync(document, exception, token);
-            }
-        }
-
-        await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
-        logger.LogInformation(
-            "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
-            dataSource.Name,
-            dataSource.Id,
-            refreshMode,
-            progress.IndexedDocuments,
-            progress.NewDocuments,
-            progress.ChangedDocuments,
-            progress.UnchangedDocuments,
-            progress.PermanentlySkippedDocuments,
-            removedMissingFiles,
-            progress.FailedDocuments,
-            totalFiles,
-            ShortHash(metadataSnapshot.SourceHash));
+        await indexer.ProcessAsync(context, refreshMode, token);
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
@@ -953,7 +773,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         // One message for the whole list, rather than one per data source:
-        this.PublishStatusChanged();
+        PublishStatusChanged();
 
         foreach (var dataSource in supportedDataSources)
         {
@@ -1011,7 +831,19 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager))
             return false;
 
-        return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
+        return this.TryGetIndexer(dataSource, out _);
+    }
+
+    /// <summary>
+    /// Finds the indexer which reads a data source.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="indexer">The indexer, when there is one for this kind of data source.</param>
+    /// <returns>True when an indexer was found.</returns>
+    private bool TryGetIndexer(IDataSourceBase dataSource, [NotNullWhen(true)] out IIndexedSourceIndexer? indexer)
+    {
+        indexer = this.indexers.FirstOrDefault(candidate => candidate.Supports(dataSource));
+        return indexer is not null;
     }
 
     /// <summary>
@@ -1096,93 +928,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             token);
 
         return manifest;
-    }
-
-    private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, IReadOnlyCollection<FileInfo> indexedFiles, CancellationToken token)
-    {
-        var manifest = context.Manifest;
-        var existingPaths = indexedFiles
-            .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var removedFiles = 0;
-        foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
-        {
-            await context.DeleteDocumentPointsAsync(removedFilePath, token);
-            await context.IndexStore.DeleteFileAsync(context.DataSource.Id, removedFilePath, token);
-            manifest.Files.Remove(removedFilePath);
-            removedFiles++;
-            logger.LogInformation(
-                "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
-                removedFilePath,
-                context.DataSource.Name,
-                context.DataSource.Id);
-        }
-
-        //
-        // A file which is gone needs no mark keeping it out of the index. Without this, the table
-        // would grow with every document the user ever deleted:
-        //
-        foreach (var removedFilePath in manifest.PermanentFailures.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
-            await context.ForgetPermanentFailureAsync(removedFilePath, token);
-
-        return removedFiles;
-    }
-
-    /// <remarks>
-    /// A file counts as settled when it was indexed or when it was skipped for good, both with a
-    /// matching fingerprint. Counting only the indexed ones would let a single unreadable document
-    /// send the whole folder through the slow path on every run.
-    /// </remarks>
-    private bool CanSkipDataSourceByHash(DataSourceEmbeddingManifest manifest, DataSourceMetadataSnapshot metadataSnapshot, IReadOnlyCollection<FileInfo> indexedFiles)
-    {
-        if (!string.Equals(manifest.SourceHash, metadataSnapshot.SourceHash, StringComparison.Ordinal))
-            return false;
-
-        if (manifest.Files.Count + manifest.PermanentFailures.Count != indexedFiles.Count)
-            return false;
-
-        foreach (var file in indexedFiles)
-        {
-            if (!metadataSnapshot.FileHashes.TryGetValue(file.FullName, out var currentHash))
-                return false;
-
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord))
-            {
-                if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-                    return false;
-
-                continue;
-            }
-
-            if (!manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure))
-                return false;
-
-            if (!string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal))
-                return false;
-        }
-
-        return true;
-    }
-
-    private static string GetFileEmbeddingReason(FileInfo file, string currentHash, EmbeddedFileRecord? existingRecord)
-    {
-        if (existingRecord is null)
-            return "no stored file hash exists";
-
-        var reasons = new List<string>();
-        if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-            reasons.Add($"stored hash {ShortHash(existingRecord.Fingerprint)} differs from current hash {ShortHash(currentHash)}");
-
-        if (existingRecord.FileSize != file.Length)
-            reasons.Add($"file size changed from {existingRecord.FileSize} to {file.Length} bytes");
-
-        if (existingRecord.LastWriteUtc != new DateTimeOffset(file.LastWriteTimeUtc))
-            reasons.Add($"last modified time changed from {existingRecord.LastWriteUtc:O} to {file.LastWriteTimeUtc:O}");
-
-        return reasons.Count == 0
-            ? "the file hash changed"
-            : string.Join("; ", reasons);
     }
 
     private DataSourceEmbeddingStatus CreateStatus(
@@ -1369,10 +1114,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private void UpsertStatus(DataSourceEmbeddingStatus status)
     {
         this.statuses[status.DataSourceId] = status;
-        this.PublishStatusChanged();
+        PublishStatusChanged();
     }
 
-    private void PublishStatusChanged()
+    private static void PublishStatusChanged()
     {
         _ = MessageBus.INSTANCE.SendMessage(null, Event.RAG_EMBEDDING_STATUS_CHANGED, true);
     }
