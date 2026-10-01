@@ -153,15 +153,15 @@ public sealed class EmbeddingSignatureTests
     /// </summary>
     private readonly record struct IndexedElsewhere() : IIndexedDataSource
     {
-        public string Id { get; init; } = "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
+        public string Id => "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
 
-        public uint Num { get; init; } = 2;
+        public uint Num => 2;
 
-        public string Name { get; init; } = "Indexed elsewhere";
+        public string Name => "Indexed elsewhere";
 
-        public bool IsEnterpriseConfiguration { get; init; }
+        public bool IsEnterpriseConfiguration => false;
 
-        public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
+        public Guid EnterpriseConfigurationPluginId => Guid.Empty;
 
         public DataSourceType Type { get; init; } = DataSourceType.NONE;
 

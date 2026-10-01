@@ -18,12 +18,15 @@ internal sealed partial class FileSourceIndexer
     /// </summary>
     private IReadOnlyDictionary<string, IIndexedDataSource> trackedSources = new Dictionary<string, IIndexedDataSource>(StringComparer.OrdinalIgnoreCase);
 
-    private Func<string, DataSourceEmbeddingRefreshMode, Task> requestRun = (_, _) => Task.CompletedTask;
+    /// <summary>
+    /// How to ask the embedding service for a run, as handed in last.
+    /// </summary>
+    private Func<string, DataSourceEmbeddingRefreshMode, Task> requestRunCallback = (_, _) => Task.CompletedTask;
 
     /// <inheritdoc />
     public void TrackChanges(IReadOnlyCollection<IIndexedDataSource> dataSources, Func<string, DataSourceEmbeddingRefreshMode, Task> requestRun)
     {
-        this.requestRun = requestRun;
+        this.requestRunCallback = requestRun;
 
         var supportedSources = dataSources
             .Where(this.Supports)
@@ -169,7 +172,7 @@ internal sealed partial class FileSourceIndexer
                 if (this.trackedSources.TryGetValue(dataSourceId, out var dataSource))
                 {
                     logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled. The hash pipeline will reindex only changed files.", dataSource.Name, dataSource.Id);
-                    await this.requestRun(dataSource.Id, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
+                    await this.requestRunCallback(dataSource.Id, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
                 }
             }
             catch (OperationCanceledException)

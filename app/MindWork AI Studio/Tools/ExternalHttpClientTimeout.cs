@@ -500,7 +500,6 @@ public static class ExternalHttpClientTimeout
     {
         var chainStatuses = FormatChainStatusesForLog(chain.ChainStatus);
         var elementStatuses = chain.ChainElements
-            .Cast<X509ChainElement>()
             .Select((element, index) => $"element {index}: {FormatChainStatusesForLog(element.ChainElementStatus)}")
             .ToList();
         LOGGER.Value.LogError($"Rejected external HTTPS certificate for '{HostForLog(host)}' after validation with configured custom root certificates. TLS policy errors: {sslPolicyErrors}. Chain statuses: {chainStatuses}. Chain element statuses: {string.Join("; ", elementStatuses)}");
