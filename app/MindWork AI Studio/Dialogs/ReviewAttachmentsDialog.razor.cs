@@ -38,6 +38,16 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
     [Parameter]
     public Func<bool>? IsAttachingUnavailable { get; set; }
 
+    /// <summary>
+    /// Whether the user may remove attachments here.
+    /// </summary>
+    /// <remarks>
+    /// False when this dialog gathers the attachments of several messages at once: a removal would
+    /// reach into a message that was already sent, and nothing here could tell which one.
+    /// </remarks>
+    [Parameter]
+    public bool CanRemove { get; set; } = true;
+
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
 
@@ -120,11 +130,12 @@ public partial class ReviewAttachmentsDialog : MSGComponentBase
 
     private async Task PathsDropped(List<string> paths) => await this.AttachPathsAsync(paths);
 
-    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null)
+    public static async Task<HashSet<FileAttachment>> OpenDialogAsync(IDialogService dialogService, HashSet<FileAttachment> documentPaths, Func<List<string>, Task<IReadOnlyList<FileAttachment>>>? attachPaths = null, Func<bool>? isAttachingUnavailable = null, bool canRemove = true)
     {
         var dialogParameters = new DialogParameters<ReviewAttachmentsDialog>
         {
-            { x => x.DocumentPaths, documentPaths }
+            { x => x.DocumentPaths, documentPaths },
+            { x => x.CanRemove, canRemove },
         };
 
         if (attachPaths is not null)
