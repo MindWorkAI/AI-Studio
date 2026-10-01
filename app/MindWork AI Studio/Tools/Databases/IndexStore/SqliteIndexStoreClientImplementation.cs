@@ -310,47 +310,60 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         if (string.IsNullOrWhiteSpace(ftsQuery))
             return [];
 
-        //
-        // Chunks of the same score keep the order of their rows. The results are cut into pages by
-        // asking for more of them each time, cf. RetrievalPaging. If ties could fall differently
-        // with every limit, a page might show a chunk again or skip one.
-        //
         await using var context = this.CreateContext();
-        var results = await context.SearchResults
-            .FromSqlInterpolated($"""
-                                  SELECT
-                                      c.chunk_id AS ChunkId,
-                                      c.parent_file_id AS ParentFileId,
-                                      ds.data_source_id AS DataSourceId,
-                                      ds.data_source_type AS DataSourceType,
-                                      f.absolute_path AS AbsolutePath,
-                                      f.file_name AS FileName,
-                                      f.relative_path AS RelativePath,
-                                      f.file_type AS FileType,
-                                      c.page_number AS PageNumber,
-                                      c.chunk_index AS ChunkIndex,
-                                      c.chunk_text AS ChunkText,
-                                      bm25(embedding_chunks_fts) AS Score,
-                                      f.fingerprint AS Fingerprint,
-                                      f.file_size AS FileSize,
-                                      f.creation_utc AS CreationUtc,
-                                      f.last_write_utc AS LastWriteUtc,
-                                      c.embedded_at_utc AS EmbeddedAtUtc,
-                                      f.chunk_count AS ChunkCount
-                                  FROM embedding_chunks_fts
-                                  JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
-                                  JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
-                                  JOIN data_sources ds ON ds.data_source_id = f.data_source_id
-                                  WHERE ds.data_source_id = {dataSourceId}
-                                    AND embedding_chunks_fts MATCH {ftsQuery}
-                                  ORDER BY Score, c.id
-                                  LIMIT {maxMatches}
-                                  """)
-            .AsNoTracking()
+        var results = await InSearchOrder(MatchChunks(context, dataSourceId, ftsQuery))
+            .Take(maxMatches)
             .ToListAsync(token);
 
         return results.Select(ToSearchResult).ToList();
     }
+
+    /// <summary>
+    /// The chunks of a data source which match a full-text query, unordered, as a query to build on.
+    /// </summary>
+    /// <remarks>
+    /// Kept free of ORDER BY and LIMIT, so EF Core can wrap it and filter it further before either
+    /// of them applies, cf. InSearchOrder.
+    /// </remarks>
+    private static IQueryable<IndexStoreSearchResultEntity> MatchChunks(IndexStoreDbContext context, string dataSourceId, string ftsQuery) => context.SearchResults
+        .FromSqlInterpolated($"""
+                              SELECT
+                                  c.chunk_id AS ChunkId,
+                                  c.parent_file_id AS ParentFileId,
+                                  ds.data_source_id AS DataSourceId,
+                                  ds.data_source_type AS DataSourceType,
+                                  f.absolute_path AS AbsolutePath,
+                                  f.file_name AS FileName,
+                                  f.relative_path AS RelativePath,
+                                  f.file_type AS FileType,
+                                  c.page_number AS PageNumber,
+                                  c.chunk_index AS ChunkIndex,
+                                  c.chunk_text AS ChunkText,
+                                  bm25(embedding_chunks_fts) AS Score,
+                                  f.fingerprint AS Fingerprint,
+                                  f.file_size AS FileSize,
+                                  f.creation_utc AS CreationUtc,
+                                  f.last_write_utc AS LastWriteUtc,
+                                  c.embedded_at_utc AS EmbeddedAtUtc,
+                                  f.chunk_count AS ChunkCount
+                              FROM embedding_chunks_fts
+                              JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
+                              JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
+                              JOIN data_sources ds ON ds.data_source_id = f.data_source_id
+                              WHERE ds.data_source_id = {dataSourceId}
+                                AND embedding_chunks_fts MATCH {ftsQuery}
+                              """)
+        .AsNoTracking();
+
+    /// <remarks>
+    /// Chunks of the same score keep a fixed order, by their document and their place in it. The
+    /// results are cut into pages by asking for more of them each time, cf. RetrievalPaging. If
+    /// ties could fall differently with every limit, a page might show a chunk again or skip one.
+    /// </remarks>
+    private static IQueryable<IndexStoreSearchResultEntity> InSearchOrder(IQueryable<IndexStoreSearchResultEntity> results) => results
+        .OrderBy(result => result.Score)
+        .ThenBy(result => result.ParentFileId)
+        .ThenBy(result => result.ChunkIndex);
 
     public override async Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token)
     {

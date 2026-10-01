@@ -477,12 +477,7 @@ public sealed partial class SqliteIndexStoreClientImplementation
         ParseStoredName(mail.EncryptionKind, MailEncryptionKind.UNKNOWN),
         mail.MailHash,
         mail.FirstSeenUtc,
-        mail.Addresses
-            .Select(address => (Role: ParseStoredName(address.Role, MailAddressRole.UNKNOWN), Address: address))
-            .OrderBy(entry => entry.Role)
-            .ThenBy(entry => entry.Address.Position)
-            .Select(entry => new MailAddressRecord(entry.Role, entry.Address.Address, entry.Address.DisplayName))
-            .ToList(),
+        ToMailAddressRecords(mail.Addresses),
         mail.Parts
             .Select(part => (Kind: ParseStoredName(part.Kind, MailPartKind.UNKNOWN), Part: part))
             .OrderBy(entry => entry.Kind)
@@ -494,6 +489,16 @@ public sealed partial class SqliteIndexStoreClientImplementation
             .ThenBy(location => location.Uid)
             .Select(location => new MailLocationRecord(location.Folder!.Path, location.Uid, new MailFlags(location.IsSeen, location.IsFlagged, location.IsAnswered)))
             .ToList());
+
+    /// <summary>
+    /// The addresses of a mail, grouped by their role and in their order within each header.
+    /// </summary>
+    private static IReadOnlyList<MailAddressRecord> ToMailAddressRecords(IEnumerable<MailAddressEntity> addresses) => addresses
+        .Select(address => (Role: ParseStoredName(address.Role, MailAddressRole.UNKNOWN), Address: address))
+        .OrderBy(entry => entry.Role)
+        .ThenBy(entry => entry.Address.Position)
+        .Select(entry => new MailAddressRecord(entry.Role, entry.Address.Address, entry.Address.DisplayName))
+        .ToList();
 
     /// <remarks>
     /// A row written by a newer version may name a value this one does not know. The row still
