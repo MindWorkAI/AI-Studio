@@ -6,7 +6,7 @@ public static class BatchProcessingOutputModeExtensions
 
     public static string Name(this BatchProcessingOutputMode outputMode) => outputMode switch
     {
-        BatchProcessingOutputMode.MARKDOWN_FILES => TB("One Markdown file per document"),
+        BatchProcessingOutputMode.INDIVIDUAL_FILES => TB("One file per document"),
         BatchProcessingOutputMode.TABLE_ONLY => TB("One CSV results table, where each answer becomes one row"),
 
         _ => TB("Unknown output mode"),

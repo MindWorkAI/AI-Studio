@@ -57,6 +57,19 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
+
+    /// <summary>
+    /// The tools this policy permits the model to use.
+    /// </summary>
+    /// <remarks>
+    /// A limit, not a preselection: a tool absent from this list cannot be chosen for a run of this
+    /// policy. Empty therefore means no tools at all, which is what a policy written before this
+    /// field existed gets — an analysis keeps working exactly as its author wrote it.<br/><br/>
+    /// This narrows what the user may pick; it never widens what a tool is allowed to do. Every
+    /// permitted tool still has to pass the provider confidence checks, so a tool demanding High
+    /// confidence stays out of reach of a weaker provider whether a policy lists it or not.
+    /// </remarks>
+    public HashSet<string> AllowedToolIds { get; set; } = [];
     
     /// <summary>
     /// Which LLM provider should be preselected?
@@ -130,6 +143,23 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         if (table.TryGetValue("HidePolicyDefinition", out var hideValue) && hideValue.TryRead<bool>(out var hide))
             hidePolicyDefinition = hide;
 
+        //
+        // Unknown tool IDs are kept rather than rejected: an organization may roll out a policy
+        // before the plugin providing that tool reaches every workstation. A tool that does not
+        // exist simply never shows up, and the policy starts working once it does.
+        //
+        var allowedToolIds = new HashSet<string>(StringComparer.Ordinal);
+        if (table.TryGetValue("AllowedToolIds", out var toolIdsValue) && toolIdsValue.TryRead<LuaTable>(out var toolIdsTable))
+        {
+            for (var toolIdx = 1; toolIdx <= toolIdsTable.ArrayLength; toolIdx++)
+            {
+                if (toolIdsTable[toolIdx].TryRead<string>(out var toolId) && !string.IsNullOrWhiteSpace(toolId))
+                    allowedToolIds.Add(toolId.Trim());
+                else
+                    LOG.LogWarning("The configured document analysis policy {PolicyIndex} contains an invalid entry in its AllowedToolIds list.", idx);
+            }
+        }
+
         policy = new DataDocumentAnalysisPolicy
         {
             Id = id.ToString(),
@@ -139,6 +169,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             AnalysisRules = analysisRules,
             OutputRules = outputRules,
             MinimumProviderConfidence = minimumConfidence,
+            AllowedToolIds = allowedToolIds,
             PreselectedProvider = preselectedProvider,
             PreselectedProfile = preselectedProfile,
             HidePolicyDefinition = hidePolicyDefinition,

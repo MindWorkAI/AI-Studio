@@ -90,7 +90,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.customTargetLanguage = string.Empty;
         }
 
-        _ = this.OnChangedLanguage();
+        this.OnChangedLanguage().Observe($"{nameof(AssistantI18N)}: applying a language change");
     }
     
     protected override bool MightPreselectValues()

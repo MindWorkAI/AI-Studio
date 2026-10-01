@@ -38,10 +38,10 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -52,6 +52,7 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
                                    // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -76,7 +77,7 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
     /// <inhertidoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        throw this.CreateEmbeddingsNotSupportedException();
     }
 
     /// <inheritdoc />

@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
@@ -56,19 +57,38 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The transcription model to use.
     /// </summary>
     [Parameter]
     public Model DataModel { get; set; }
+
+    /// <summary>
+    /// The Hugging Face inference provider to use.
+    /// </summary>
+    [Parameter]
+    public HFInferenceProvider HFInferenceProviderId { get; set; } = HFInferenceProvider.NONE;
     
     /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
+
+    /// <summary>
+    /// Whether this transcription provider is managed by an enterprise configuration plugin. When
+    /// true, every field except the API key is locked, matching Settings.TranscriptionProvider.IsEnterpriseConfiguration.
+    /// </summary>
+    [Parameter]
+    public bool IsEnterpriseConfiguration { get; set; }
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -85,7 +105,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
-    private string dataManuallyModel = string.Empty;
+    private bool dataHadStoredAPIKeyOnLoad;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
@@ -106,7 +126,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider.IsTranscriptionModelProvidedManually(this.DataHost),
         };
     }
     
@@ -114,30 +133,9 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     {
         var cleanedHostname = this.DataHostname.Trim();
 
-        // Determine the model based on the provider and host configuration:
-        Model model;
-        if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
-        {
-            // Use system model placeholder for hosts that don't support model selection (e.g., whisper.cpp):
-            model = Model.SYSTEM_MODEL;
-        }
-        else if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-        {
-            switch (this.DataHost)
-            {
-                case Host.OLLAMA:
-                    model = new Model(this.dataManuallyModel, null);
-                    break;
-
-                case Host.VLLM:
-                case Host.LM_STUDIO:
-                default:
-                    model = this.DataModel;
-                    break;
-            }
-        }
-        else
-            model = this.DataModel;
+        // whisper.cpp serves whatever it was started with and names no models, so the placeholder
+        // stands in for the one model there is. Everywhere else the user picked one from the list:
+        var model = this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost) ? Model.SYSTEM_MODEL : this.DataModel;
 
         return new()
         {
@@ -149,8 +147,10 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
-            IsEnterpriseConfiguration = false,
+            IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
+            HFInferenceProvider = this.HFInferenceProviderId,
         };
     }
     
@@ -171,29 +171,24 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
-            
-            // When using self-hosted models, we must copy the model name:
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
-                this.dataManuallyModel = this.DataModel.Id;
-            
-            //
-            // We cannot load the API key for self-hosted providers:
-            //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
-            {
-                await this.ReloadModels();
-                await base.OnInitializedAsync();
-                return;
-            }
-            
-            // Load the API key:
+
+            // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
+            // token of its own, and any of these servers can sit behind an authenticating proxy.
+            // So we try for every host and treat a missing key as the normal case (isTrying).
+            // ReloadModels() below reads dataAPIKey, so the key has to be here before it runs:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
+            {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
+                this.dataHadStoredAPIKeyOnLoad = !string.IsNullOrWhiteSpace(this.dataAPIKey);
+            }
             else
             {
                 this.dataAPIKey = string.Empty;
-                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+
+                // For an enterprise-managed provider, having no key yet is the expected first-run
+                // state, not a storage failure -- the user is just about to set their own key:
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
@@ -218,8 +213,12 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToSecretId();
-    
+    // Must mirror Settings.TranscriptionProvider.SecretId exactly: when editing an enterprise-managed
+    // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
+    // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
+    // silently end up in the wrong keyring row and never be found again.
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+
     public string SecretName => this.DataName;
 
     #endregion
@@ -255,19 +254,27 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
                 await this.form.Validate();
                 return;
             }
+
+            this.dataHadStoredAPIKeyOnLoad = true;
+        }
+        else if (this.dataHadStoredAPIKeyOnLoad)
+        {
+            // The user cleared a previously stored key. Without this, the old key would simply
+            // stay in the OS keyring untouched and keep being used:
+            var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+            if (!deleteResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.Validate();
+                return;
+            }
+
+            this.dataHadStoredAPIKeyOnLoad = false;
         }
 
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
     }
     
-    private string? ValidateManuallyModel(string manuallyModel)
-    {
-        if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
-            return T("Please enter a transcription model name.");
-
-        return null;
-    }
-
     private void Cancel() => this.MudDialog.Cancel();
 
     private async Task OnAPIKeyChanged(string apiKey)
@@ -285,7 +292,22 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         // When the host changes, reset the model selection state:
         this.DataHost = selectedHost;
         this.DataModel = default;
-        this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
+    /// <summary>
+    /// Resets the model selection when the user picks another Hugging Face inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Each inference provider offers transcription models of its own, so the models loaded for the
+    /// previous one say nothing about the new one.
+    /// </remarks>
+    /// <param name="selectedInferenceProvider">The inference provider the user chose.</param>
+    private void OnHFInferenceProviderChanged(HFInferenceProvider selectedInferenceProvider)
+    {
+        this.HFInferenceProviderId = selectedInferenceProvider;
+        this.DataModel = default;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
     }

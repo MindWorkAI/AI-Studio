@@ -13,6 +13,7 @@ public enum TauriEventType
     WINDOW_NOT_FOCUSED,
 
     FILE_DROP_HOVERED,
+    FILE_DROP_OVER,
     FILE_DROP_DROPPED,
     FILE_DROP_CANCELED,
 

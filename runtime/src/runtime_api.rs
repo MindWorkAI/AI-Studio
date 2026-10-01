@@ -1,5 +1,6 @@
 use log::info;
 use once_cell::sync::Lazy;
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
@@ -10,6 +11,10 @@ use crate::environment::is_dev;
 use crate::network::get_available_port;
 
 static RUSTLS_CRYPTO_PROVIDER_INIT: Once = Once::new();
+
+/// The request body limit for one batch of prompt injection filtering. The app caps the text
+/// it returns to a model well below this, so the limit is headroom, not a working constraint.
+const PROMPT_INJECTION_BATCH_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
 
 /// The port used for the runtime API server. In the development environment, we use a fixed
 /// port, in the production environment we use the next available port. This differentiation
@@ -35,7 +40,9 @@ pub fn start_runtime_api() {
         .route("/system/qdrant-edge/info", get(crate::qdrant_edge_database::qdrant_edge_info))
         .route("/system/qdrant-edge/ensure", post(crate::qdrant_edge_database::ensure_qdrant_edge_store))
         .route("/system/qdrant-edge/insert", post(crate::qdrant_edge_database::insert_qdrant_edge_embedding))
+        .route("/system/qdrant-edge/search", post(crate::qdrant_edge_database::search_qdrant_edge_embeddings))
         .route("/system/qdrant-edge/delete-file", post(crate::qdrant_edge_database::delete_qdrant_edge_embedding_by_file))
+        .route("/system/qdrant-edge/optimize", post(crate::qdrant_edge_database::optimize_qdrant_edge_store))
         .route("/system/qdrant-edge/delete-store", post(crate::qdrant_edge_database::delete_qdrant_edge_store))
         .route("/clipboard/set", post(crate::clipboard::set_clipboard))
         .route("/share/file", post(crate::share_sheet::share_file))
@@ -48,6 +55,7 @@ pub fn start_runtime_api() {
         .route("/select/files", post(crate::file_actions::select_files))
         .route("/save/file", post(crate::file_actions::save_file))
         .route("/open/path", post(crate::file_actions::open_path_in_file_manager))
+        .route("/open/document", post(crate::file_actions::open_document))
         .route("/secrets/get", post(crate::secret::get_secret))
         .route("/secrets/store", post(crate::secret::store_secret))
         .route("/secrets/delete", post(crate::secret::delete_secret))
@@ -61,12 +69,25 @@ pub fn start_runtime_api() {
         .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))
         .route("/system/enterprise/configs", get(crate::environment::read_enterprise_configs))
         .route("/retrieval/fs/extract", get(crate::file_data::extract_data))
+        .route("/security/prompt-injection/sanitize", post(crate::prompt_injection::api::sanitize))
+        //
+        // A batch carries every text of one tool call, which is far more than Axum's 2 MB
+        // default allows. Exceeding that limit would answer 413, and the app treats a failed
+        // filter call as "cannot filter" and uses the text unfiltered — the protection would
+        // drop out silently on exactly the largest results. Hence the explicit limit.
+        //
+        .route("/security/prompt-injection/sanitize-batch", post(crate::prompt_injection::api::sanitize_batch)
+            .layer(DefaultBodyLimit::max(PROMPT_INJECTION_BATCH_BODY_LIMIT_BYTES)))
         .route("/media/jobs", post(crate::media::create_job))
         .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
         .route("/media/jobs/{id}", delete(crate::media::cancel_job))
         .route("/image/prepare", post(crate::image::prepare_image))
         .route("/log/paths", get(crate::log::get_log_paths))
         .route("/log/event", post(crate::log::log_event))
+        .route("/tokenizer/count", post(crate::tokenizer::token_count))
+        .route("/tokenizer/validate", post(crate::tokenizer::validate_tokenizer))
+        .route("/tokenizer/store", post(crate::tokenizer::store_tokenizer))
+        .route("/tokenizer/delete", post(crate::tokenizer::delete_tokenizer))
         .route("/shortcuts/register", post(crate::app_window::register_shortcut))
         .route("/shortcuts/validate", post(crate::app_window::validate_shortcut))
         .route("/shortcuts/suspend", post(crate::app_window::suspend_shortcuts))

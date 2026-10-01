@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -59,6 +60,18 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public bool AllowProfileUsage { get; set; } = true;
 
+    /// <summary>
+    /// The tools this template preselects, or null when it says nothing about tools.
+    /// </summary>
+    [Parameter]
+    public HashSet<string>? ToolIds { get; set; }
+
+    /// <summary>
+    /// The data source options this template preselects, or null when it says nothing about them.
+    /// </summary>
+    [Parameter]
+    public DataSourceOptions? DataSourceOptions { get; set; }
+
     [Parameter]
     public bool CreateFromExistingChatThread { get; set; }
 
@@ -78,6 +91,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool dataIsValid;
     private List<ContentBlock> dataExampleConversation = [];
     private HashSet<FileAttachment> fileAttachments = [];
+    private bool preselectTools;
+    private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
+    private bool preselectDataSources;
+    private DataSourceOptions templateDataSourceOptions = new();
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -96,6 +113,20 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
         // Load the used instance names:
         this.UsedNames = this.SettingsManager.ConfigurationData.ChatTemplates.Select(x => x.Name.ToLowerInvariant()).ToList();
+
+        //
+        // The two switches below carry the third state of the preselection: switched off, this
+        // template says nothing, and a chat started with it uses the defaults from the chat
+        // options. Their working copies live apart from the parameters, so switching a
+        // preselection off and on again does not throw away what was picked.
+        //
+        this.preselectTools = this.ToolIds is not null;
+        this.selectedToolIds = this.ToolIds is null ? new(StringComparer.Ordinal) : new(this.ToolIds, StringComparer.Ordinal);
+        this.preselectDataSources = this.DataSourceOptions is not null;
+
+        // Saying that this template preselects data sources is already the statement that it wants
+        // them, so the switch inside the selection starts on instead of at its usual default:
+        this.templateDataSourceOptions = this.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
 
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -138,10 +169,14 @@ public partial class ChatTemplateDialog : MSGComponentBase
         ExampleConversation = this.dataExampleConversation,
         FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
+        ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
+        DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,
 
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
+
+    private void SetSelectedToolIds(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
 
     private void RemoveMessage(ContentBlock item)
     {

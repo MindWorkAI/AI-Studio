@@ -64,9 +64,9 @@ public partial class DebouncedTextField : MudComponentBase, IDisposable
         this.debounceTimer.Elapsed += (_, _) =>
         {
             this.debounceTimer.Stop();
-            this.InvokeAsync(async () => await this.TextChanged.InvokeAsync(this.text));
-            this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text));
-            this.InvokeAsync(() => this.WhenTextCanged(this.text));
+            this.InvokeAsync(async () => await this.TextChanged.InvokeAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: notifying about changed text");
+            this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text asynchronously");
+            this.InvokeAsync(() => this.WhenTextCanged(this.text)).Observe($"{nameof(DebouncedTextField)}: handling changed text");
         };
         
         this.isInitialized = true;

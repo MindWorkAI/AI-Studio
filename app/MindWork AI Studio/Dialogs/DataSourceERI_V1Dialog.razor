@@ -1,4 +1,5 @@
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Validation
 @using AIStudio.Tools.ERIClient.DataModel
 @inherits MSGComponentBase
 
@@ -11,8 +12,8 @@
                 @bind-Text="@this.dataName"
                 Label="@T("Data Source Name")"
                 Class="mb-6"
-                MaxLength="40"
-                Counter="40"
+                MaxLength="@DataSourceValidation.MAX_NAME_LENGTH"
+                Counter="@DataSourceValidation.MAX_NAME_LENGTH"
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
@@ -119,7 +120,7 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-            
+
             <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             
         </MudForm>

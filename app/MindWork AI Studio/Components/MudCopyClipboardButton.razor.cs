@@ -61,16 +61,20 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// <summary>
     /// Copy this block's content to the clipboard.
     /// </summary>
+    /// <remarks>
+    /// The user copies what the card shows, and the card shows the answer together with the sources
+    /// AI Studio collected for it. Pasting the answer into a mail without them would leave the
+    /// reader with claims nobody is able to check.
+    /// </remarks>
     private async Task CopyToClipboard(IContent? contentToCopy)
     {
         if (contentToCopy is null)
             return;
-        
+
         switch (this.Type)
         {
-            case ContentType.TEXT:
-                var textContent = (ContentText) contentToCopy;
-                await this.RustService.CopyText2Clipboard(textContent.Text);
+            case ContentType.TEXT when contentToCopy.TryGetExportMarkdown(out var markdown):
+                await this.RustService.CopyText2Clipboard(markdown);
                 break;
             
             default:

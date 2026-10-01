@@ -1,9 +1,8 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Chat;
 using AIStudio.Settings;
 
+using ComponentKind = AIStudio.Tools.Components;
 using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
@@ -77,7 +76,6 @@ public sealed class VisualBriefingEditorState
     /// <param name="briefing">The manifest to read.</param>
     /// <param name="settingsManager">The settings used to resolve the stored provider and profile.</param>
     /// <returns>The editor state for the briefing.</returns>
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "A stored briefing references one specific provider and model by id, so it must be looked up directly instead of using the preselection APIs.")]
     public static VisualBriefingEditorState FromManifest(VisualBriefingManifest briefing, SettingsManager settingsManager) => new()
     {
         Name = briefing.Name,
@@ -94,8 +92,8 @@ public sealed class VisualBriefingEditorState
         ProtectionLevel = briefing.Settings.ProtectionLevel,
         CustomProtectionLevel = briefing.Settings.CustomProtectionLevel,
 
-        Provider = settingsManager.ConfigurationData.Providers.FirstOrDefault(candidate => candidate.Id == briefing.Settings.ProviderId && candidate.Model.Id == briefing.Settings.ModelId) ?? ProviderSettings.NONE,
-        Profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(candidate => candidate.Id == briefing.Settings.ProfileId) ?? Profile.NO_PROFILE,
+        Provider = ResolveProvider(briefing, settingsManager),
+        Profile = settingsManager.GetProfileById(briefing.Settings.ProfileId),
 
         SourceMaterial =
         [
@@ -111,6 +109,43 @@ public sealed class VisualBriefingEditorState
                 .Select(source => FileAttachment.FromPath(source.Path))
         ],
     };
+
+    /// <summary>
+    /// Resolves the provider a stored briefing refers to.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A briefing stores its provider and model as two separate ids, and both must still match: when
+    /// the user changed the model of that provider, the stored combination no longer exists and the
+    /// editor starts without a provider.
+    /// </para>
+    /// <para>
+    /// The resolved provider is additionally checked against the minimum confidence level of the
+    /// visual briefing assistant. This matters because the confidence settings may have become
+    /// stricter since the briefing was stored: the user may have lowered the confidence of that
+    /// provider, or may now enforce a global minimum. Without this check, opening an old briefing
+    /// would silently restore a provider the user no longer trusts, bypassing the filtering that
+    /// the provider dropdown applies. Note that the component minimum already covers the enforced
+    /// global minimum as well.
+    /// </para>
+    /// </remarks>
+    /// <param name="briefing">The manifest to read.</param>
+    /// <param name="settingsManager">The settings used to resolve the provider.</param>
+    /// <returns>The stored provider, or <see cref="ProviderSettings.NONE"/> when it is unavailable or no longer trusted.</returns>
+    private static ProviderSettings ResolveProvider(VisualBriefingManifest briefing, SettingsManager settingsManager)
+    {
+        var storedProvider = settingsManager.GetProviderById(briefing.Settings.ProviderId);
+        if (storedProvider == ProviderSettings.NONE)
+            return ProviderSettings.NONE;
+
+        if (storedProvider.Model.Id != briefing.Settings.ModelId)
+            return ProviderSettings.NONE;
+
+        if (!settingsManager.IsProviderConfident(storedProvider, ComponentKind.VISUAL_BRIEFING_ASSISTANT))
+            return ProviderSettings.NONE;
+
+        return storedProvider;
+    }
 
     /// <summary>
     /// Creates the persisted settings for this editor state.

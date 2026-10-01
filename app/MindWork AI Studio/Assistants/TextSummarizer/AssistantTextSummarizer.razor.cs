@@ -35,6 +35,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     protected override void ResetForm()
     {
         this.inputText = string.Empty;
+        this.webContentURL = string.Empty;
         if(!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
@@ -66,6 +67,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     
     private bool showWebContentReader;
     private bool useContentCleanerAgent;
+    private string webContentURL = string.Empty;
     private string inputText = string.Empty;
     private bool isAgentRunning;
     private CommonLanguages selectedTargetLanguage;
@@ -75,6 +77,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private string importantAspects = string.Empty;
     private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
+    private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
     private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
@@ -88,6 +91,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     {
         state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
         state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
+        state.Set(WEB_CONTENT_URL_STATE_KEY, this.webContentURL);
         state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
         state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
         state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
@@ -102,6 +106,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     {
         state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
         state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
+        state.Restore(WEB_CONTENT_URL_STATE_KEY, value => this.webContentURL = value);
         state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
         state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
         state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
@@ -115,7 +120,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
         

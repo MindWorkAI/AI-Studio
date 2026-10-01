@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -34,30 +32,32 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     
     [Parameter]
     public Func<bool> IsLocked { get; set; } = () => false;
-    
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
             yield return new(T("Use app default"), string.Empty);
-        
-        // Get the minimum confidence level for this component, and/or the enforced global minimum confidence level:
-        var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
-        
-        // Apply the explicit minimum confidence level if set and higher than the current minimum level:
-        if (this.ExplicitMinimumConfidence is not ConfidenceLevel.UNKNOWN && this.ExplicitMinimumConfidence > minimumLevel)
-            minimumLevel = this.ExplicitMinimumConfidence;
-        
-        // Filter the providers based on the minimum confidence level:
+
+        //
+        // Filter the providers based on the minimum confidence level of this component, the enforced
+        // global minimum, and the explicit minimum level when it is higher. Providers which no longer
+        // exist resolve to `Provider.NONE` and are dropped by the confidence check as well:
+        //
         foreach (var providerId in this.Data)
         {
-            var provider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId.Value);
-            if (provider is null)
-                continue;
-            
-            if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            var provider = this.SettingsManager.GetProviderById(providerId.Value);
+            if (this.SettingsManager.IsProviderConfident(provider, this.Component, this.ExplicitMinimumConfidence))
                 yield return providerId;
         }
+    }
+
+    private AIStudio.Settings.Provider? GetProvider(string providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return null;
+
+        var provider = this.SettingsManager.GetProviderById(providerId);
+        return provider == AIStudio.Settings.Provider.NONE ? null : provider;
     }
 
     #region Overrides of MSGComponentBase

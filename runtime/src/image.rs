@@ -222,12 +222,21 @@ fn encode(image: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>, (StatusC
 mod tests {
     use super::*;
 
+    /// A path no other test works on.
+    ///
+    /// The name is counted rather than timed. The clock looks unique but is not: these tests run
+    /// in parallel, and two of them reading it within the same tick got the same path, so one
+    /// removed the file the other was still working on. That failed about one run in twelve, and
+    /// never when the tests ran one after another.
     fn temporary_image_path(extension: &str) -> std::path::PathBuf {
-        let unique = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        std::env::temp_dir().join(format!("mwai-visual-briefing-test-{unique}.{extension}"))
+        use std::sync::atomic::{AtomicU32, Ordering};
+
+        //
+        // The process id is part of it as well, so that two test runs at once stay apart.
+        //
+        static NEXT_IMAGE: AtomicU32 = AtomicU32::new(0);
+        let unique = NEXT_IMAGE.fetch_add(1, Ordering::Relaxed);
+        std::env::temp_dir().join(format!("mwai-visual-briefing-test-{}-{unique}.{extension}", std::process::id()))
     }
 
     #[test]

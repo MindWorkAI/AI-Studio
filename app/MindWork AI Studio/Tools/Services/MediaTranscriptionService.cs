@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -173,7 +174,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPaths[0]), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat));
+        Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat)).Observe($"{nameof(MediaTranscriptionService)}: running an attachment batch");
         return true;
     }
 
@@ -191,7 +192,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunTextImportAsync(mediaPath, target));
+        Task.Run(() => this.RunTextImportAsync(mediaPath, target)).Observe($"{nameof(MediaTranscriptionService)}: running a text import");
         return true;
     }
 
@@ -531,7 +532,15 @@ public sealed class MediaTranscriptionService(
                     fileName,
                     operation.Id,
                     providerResult.ErrorMessage);
-                return MediaTranscriptionResult.Failed(TB("The transcription provider could not transcribe the media file."));
+
+                //
+                // When the provider told us why it failed, the user gets to read it. Only that
+                // message says whether to wait, to check the API key, or to ask the provider for
+                // a format it can read:
+                //
+                return MediaTranscriptionResult.Failed(string.IsNullOrWhiteSpace(providerResult.ErrorMessage)
+                    ? TB("The transcription provider could not transcribe the media file.")
+                    : providerResult.ErrorMessage);
             }
 
             return MediaTranscriptionResult.Succeeded(providerResult.Text.Trim());
@@ -638,9 +647,23 @@ public sealed class MediaTranscriptionService(
         MediaOperation operation,
         bool updateImportState)
     {
+        // The bitrate governs re-encoding, not every upload: the runtime hands a file through
+        // unchanged when it already is a single mono 48 kHz Opus track in a WebM container and small
+        // enough. Such a file keeps whatever bitrate it was made with, which is the better outcome --
+        // re-encoding it could only take quality away, never add any.
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+
+        // Which quality an upload was produced with is the first question to ask when a transcript
+        // comes back missing something, so it has to be in the log of the job it belongs to:
+        logger.LogInformation(
+            "Normalizing media for operation {OperationId}; re-encoding uses the Opus bitrate {OpusBitrate} ({OpusBitrateBps} bps).",
+            operation.Id,
+            settingsManager.ConfigurationData.App.OpusBitrate,
+            opusBitrateBps);
+
         // The quick POST is intentionally not cancelled: losing its response could orphan a job
         // whose ID the client never received. Cancellation is applied immediately after ownership.
-        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, CancellationToken.None);
+        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, opusBitrateBps, CancellationToken.None);
         operation.JobId = jobId;
 
         try

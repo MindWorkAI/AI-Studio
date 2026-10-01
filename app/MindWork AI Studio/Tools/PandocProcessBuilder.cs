@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 
 using AIStudio.Tools.Metadata;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using SharedTools;
@@ -256,7 +257,7 @@ public sealed class PandocProcessBuilder
     /// </summary>
     public static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
 
-    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName, string linuxPackageType)
+    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName, LinuxPackageType linuxPackageType)
     {
         var candidates = new List<string>();
 
@@ -275,7 +276,7 @@ public sealed class PandocProcessBuilder
                 break;
 
             case RID.LINUX_X64 or RID.LINUX_ARM64:
-                if (string.Equals(linuxPackageType, "flatpak", StringComparison.OrdinalIgnoreCase))
+                if (linuxPackageType is LinuxPackageType.FLATPAK)
                     AddCandidate(candidates, FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY, executableName);
 
                 AddCandidate(candidates, "/usr/local/bin", executableName);

@@ -1,14 +1,19 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
 using AIStudio.Components;
+using AIStudio.Models;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Tools.Rust;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -78,6 +83,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The LLM model to use, e.g., GPT-4o.
@@ -90,9 +101,19 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
+
+    /// <summary>
+    /// Whether this provider is managed by an enterprise configuration plugin. When true, every
+    /// field except the API key is locked, matching Settings.Provider.IsEnterpriseConfiguration.
+    /// </summary>
+    [Parameter]
+    public bool IsEnterpriseConfiguration { get; set; }
     
     [Parameter]
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DataTokenizerPath { get; set; } = string.Empty;
 
     [Parameter]
     public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
@@ -107,6 +128,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private static readonly IReadOnlyList<Capability> SWITCH_CAPABILITY_OVERRIDES =
     [
         Capability.AUDIO_INPUT,
+        Capability.FUNCTION_CALLING,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT
@@ -120,7 +142,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         ReasoningOverrideMode.ON_BY_DEFAULT,
         ReasoningOverrideMode.ALWAYS_ON
     ];
-    
+
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
@@ -129,13 +151,30 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
+    private bool dataHadStoredAPIKeyOnLoad;
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private string dataFilePath = string.Empty;
+    private string dataCustomTokenizerValidationIssue = string.Empty;
+    private Task dataTokenizerValidationTask = Task.CompletedTask;
+    private bool dataStoreWasAttempted;
+    private bool isTokenizerFileDialogOpen;
+    private int dataTokenizerValidationRevision;
     private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
     private ProviderCapabilityOverrides capabilityOverrides = new();
+
+    /// <summary>
+    /// The culture the numbers of this dialog are written in.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio's language is a setting of its own and does not move the thread's culture along
+    /// with it. Without this, a German who chose German would read a context window of 131,072
+    /// tokens as a number a thousand times smaller.
+    /// </remarks>
+    private CultureInfo currentCulture = CultureInfo.InvariantCulture;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -154,6 +193,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
             IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
+            GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
             IsModelSelectionHidden = () => this.IsLLMModelSelectionHidden,
         };
     }
@@ -170,12 +210,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             UsedLLMProvider = this.DataLLMProvider,
             Model = this.GetSelectedModel(),
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
-            IsEnterpriseConfiguration = false,
+            IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
+            TokenizerPath = this.dataFilePath,
             CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
     }
 
@@ -196,45 +238,49 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     {
         // Call the base initialization first so that the I18N is ready:
         await base.OnInitializedAsync();
-        
+
+        // The numbers of the expert settings are written the way the chosen language writes them:
+        var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        this.currentCulture = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
+
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
-        #pragma warning disable MWAIS0001
-        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
-        #pragma warning restore MWAIS0001
+        this.UsedInstanceNames = this.SettingsManager.GetAllProviders().Select(x => x.InstanceName.ToLowerInvariant()).ToList();
 
         this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
-        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters)
+                                  || this.capabilityOverrides.HasOverrides
+                                  || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
+            this.dataFilePath = this.DataTokenizerPath;
             
-            // When using Fireworks or Hugging Face, we must copy the model name:
+            // When using Fireworks, we must copy the model name:
             if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 this.dataManuallyModel = this.DataModel.Id;
             
-            //
-            // We cannot load the API key for self-hosted providers:
-            //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA && this.DataHost is not Host.VLLM)
-            {
-                await this.ReloadModels();
-                await base.OnInitializedAsync();
-                return;
-            }
-            
-            // Load the API key:
+            // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
+            // token of its own, and any of these servers can sit behind an authenticating proxy.
+            // So we try for every host and treat a missing key as the normal case (isTrying).
+            // ReloadModels() below reads dataAPIKey, so the key has to be here before it runs:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
+            {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
+                this.dataHadStoredAPIKeyOnLoad = !string.IsNullOrWhiteSpace(this.dataAPIKey);
+            }
             else
             {
                 this.dataAPIKey = string.Empty;
-                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+
+                // For an enterprise-managed provider, having no key yet is the expected first-run
+                // state, not a storage failure -- the user is just about to set their own key:
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
@@ -259,14 +305,20 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToSecretId();
-    
+    // Must mirror Settings.Provider.SecretId exactly: when editing an enterprise-managed
+    // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
+    // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
+    // silently end up in the wrong keyring row and never be found again.
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+
     public string SecretName => this.DataInstanceName;
 
     #endregion
 
     private async Task Store()
     {
+        this.dataStoreWasAttempted = true;
+        await this.dataTokenizerValidationTask;
         await this.form.Validate();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
@@ -283,6 +335,27 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
+
+        var tokenizerResponse = await this.StoreOrDeleteTokenizerAsync();
+        if (!tokenizerResponse.Success)
+        {
+            //
+            // Storing a tokenizer the user has chosen must succeed: otherwise the provider would
+            // silently work without the tokenizer the user asked for. Removing a tokenizer the
+            // user has cleared is best effort, though. A failed cleanup leaves an unused file
+            // behind, which is no reason to refuse saving the provider itself.
+            //
+            if (!string.IsNullOrWhiteSpace(this.dataFilePath))
+            {
+                this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
+                await this.form.Validate();
+                return;
+            }
+
+            this.Logger.LogWarning($"Failed to remove the tokenizer of provider '{this.DataInstanceName}'. The provider is stored anyway. The message was: {tokenizerResponse.Message}");
+        }
+
+        this.dataFilePath = tokenizerResponse.StoredPath;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:
@@ -297,6 +370,22 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 await this.form.Validate();
                 return;
             }
+
+            this.dataHadStoredAPIKeyOnLoad = true;
+        }
+        else if (this.dataHadStoredAPIKeyOnLoad)
+        {
+            // The user cleared a previously stored key. Without this, the old key would simply
+            // stay in the OS keyring untouched and keep being used:
+            var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.LLM_PROVIDER);
+            if (!deleteResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.Validate();
+                return;
+            }
+
+            this.dataHadStoredAPIKeyOnLoad = false;
         }
 
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
@@ -322,6 +411,122 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
     }
 
+    private async Task OpenTokenizerFileDialog()
+    {
+        if (this.isTokenizerFileDialogOpen)
+            return;
+
+        this.isTokenizerFileDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            if (!response.UserCancelled)
+                await this.OnDataFilePathChanged(response.SelectedFilePath);
+        }
+        finally
+        {
+            this.isTokenizerFileDialogOpen = false;
+        }
+    }
+
+    private Task ClearPathTokenizer(MouseEventArgs _)
+    {
+        return this.OnDataFilePathChanged(string.Empty);
+    }
+
+    /// <summary>
+    /// Takes the first dropped path which can serve as a tokenizer.
+    /// </summary>
+    /// <remarks>
+    /// A provider carries exactly one tokenizer, so a multi-selection cannot be honored as a whole.
+    /// Everything which is not a readable JSON file is skipped rather than handed to the runtime:
+    /// the validation would reject it anyway, and saying so right away names the actual mistake.
+    /// </remarks>
+    /// <param name="paths">The dropped paths.</param>
+    private async Task OnTokenizerPathsDropped(List<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path) || !FileTypes.IsAllowedPath(path, FileTypes.JSON))
+                continue;
+
+            await this.OnDataFilePathChanged(path);
+            return;
+        }
+
+        this.Logger.LogWarning("None of the {Count} dropped path(s) could be used as a tokenizer.", paths.Count);
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Please drop a tokenizer file in the JSON format.")));
+    }
+
+    private async Task OnDataFilePathChanged(string filePath)
+    {
+        this.dataFilePath = filePath;
+        var validationRevision = ++this.dataTokenizerValidationRevision;
+        this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
+        await this.dataTokenizerValidationTask;
+
+        if (validationRevision != this.dataTokenizerValidationRevision)
+            return;
+
+        if (this.dataStoreWasAttempted)
+            await this.form.Validate();
+        else
+            this.form.ResetValidation();
+    }
+
+    private async Task ValidateCustomTokenizer(string filePath, int validationRevision)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            if (validationRevision == this.dataTokenizerValidationRevision)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+
+            return;
+        }
+
+        try
+        {
+            var response = await this.RustService.ValidateTokenizer(filePath);
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            if (response.Success)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+            else
+                this.dataCustomTokenizerValidationIssue = T("Invalid tokenizer: ") + response.Message;
+        }
+        catch (Exception e)
+        {
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            this.Logger.LogError(e, "Failed to validate custom tokenizer.");
+            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
+        }
+    }
+
+    /// <summary>
+    /// Stores a new tokenizer or deletes the existing one, based on the specified tokenizer path.
+    /// If the path is null or empty, any existing tokenizer is removed.
+    /// Otherwise, the tokenizer is stored at the specified path.
+    /// </summary>
+    private Task<TokenizerResponse> StoreOrDeleteTokenizerAsync()
+    {
+        var tokenizerId = TokenizerModelId.ForProviderId(this.DataId);
+        if (!string.IsNullOrWhiteSpace(this.dataFilePath))
+            return this.RustService.StoreTokenizer(tokenizerId, this.dataFilePath);
+
+        //
+        // A provider which never had a tokenizer has nothing to clean up. Calling the runtime
+        // anyway could only fail here, and that failure would block saving a provider which has
+        // nothing to do with tokenizers at all.
+        //
+        if (string.IsNullOrWhiteSpace(this.DataTokenizerPath))
+            return Task.FromResult(new TokenizerResponse(true, 0, string.Empty));
+
+        return this.RustService.DeleteTokenizer(tokenizerId);
+    }
+
     private void OnProviderChanged(LLMProviders selectedProvider)
     {
         this.DataLLMProvider = selectedProvider;
@@ -331,6 +536,24 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
         this.usesLegacySystemModelFallback = false;
+    }
+
+    /// <summary>
+    /// Resets the model selection when the user picks another Hugging Face inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Which models are on offer depends on the inference provider, so the models loaded for the
+    /// previous one say nothing about the new one. Keeping them would let the user pick a model
+    /// their provider does not serve, which the router answers with an error.
+    /// </remarks>
+    /// <param name="selectedInferenceProvider">The inference provider the user chose.</param>
+    private void OnHFInferenceProviderChanged(HFInferenceProvider selectedInferenceProvider)
+    {
+        this.HFInferenceProviderId = selectedInferenceProvider;
+        this.DataModel = default;
+        this.capabilityOverrides = new();
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
     }
 
     private void OnHostChanged(Host selectedHost)
@@ -391,6 +614,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                              this.DataHost is Host.LLAMA_CPP &&
                                              this.usesLegacySystemModelFallback;
 
+    /// <summary>
+    /// The catalog of the provider, where the user can read up on the models before choosing one.
+    /// </summary>
+    private string ModelsOverviewURL => this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId);
+
+    /// <summary>
+    /// Whether the custom tokenizer is offered at all. It is an expert setting which only makes
+    /// sense while the RAG preview is enabled.
+    /// </summary>
+    private bool ShowTokenizerSettings => this.DataLLMProvider != LLMProviders.NONE && PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
+
     private void UpdateModelSelectionAfterLoading()
     {
         if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED || this.DataHost is not Host.LLAMA_CPP)
@@ -438,33 +672,29 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (alwaysReasoning is null && optionalReasoning is null && reasoningByDefault is null)
             return ReasoningOverrideMode.AUTOMATIC;
 
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
-
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
+        return ModeOf(this.GetCurrentModelProfile().Reasoning);
     }
 
-    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode()
+    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode() => ModeOf(this.GetAutomaticModelProfile().Reasoning);
+
+    /// <summary>
+    /// Which of the choices in this dialog a reasoning state is.
+    /// </summary>
+    /// <remarks>
+    /// The five entries of the list were always this one answer, only written as three flags and
+    /// read back by asking for them in the right order. Now they are the same four words plus
+    /// "automatic", which is the absence of a statement rather than a state a model can be in.
+    /// </remarks>
+    /// <param name="reasoning">How the model reasons.</param>
+    /// <returns>The choice standing for it.</returns>
+    private static ReasoningOverrideMode ModeOf(ReasoningSupport reasoning) => reasoning switch
     {
-        var capabilities = this.GetAutomaticModelCapabilities();
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            return ReasoningOverrideMode.ALWAYS_ON;
+        ReasoningSupport.ALWAYS => ReasoningOverrideMode.ALWAYS_ON,
+        ReasoningSupport.ON_BY_DEFAULT => ReasoningOverrideMode.ON_BY_DEFAULT,
+        ReasoningSupport.OPTIONAL => ReasoningOverrideMode.CAN_BE_ENABLED,
 
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
-            return ReasoningOverrideMode.ON_BY_DEFAULT;
-
-        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
-            return ReasoningOverrideMode.CAN_BE_ENABLED;
-
-        return ReasoningOverrideMode.NO_REASONING;
-    }
+        _ => ReasoningOverrideMode.NO_REASONING,
+    };
 
     private void SetReasoningOverrideMode(ReasoningOverrideMode mode)
     {
@@ -521,11 +751,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private bool HasCapabilityOverride(Capability capability) => this.capabilityOverrides.GetOverride(capability) is not null;
 
-    private bool IsCapabilityEnabled(Capability capability)
-    {
-        var capabilities = this.GetCurrentModelCapabilities();
-        return capabilities.Contains(capability);
-    }
+    private bool IsCapabilityEnabled(Capability capability) => this.GetCurrentModelProfile().Has(capability);
 
     private string GetCapabilityEffectiveLabel(Capability capability)
     {
@@ -536,21 +762,107 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return isEnabled ? T("Enabled (Auto)") : T("Disabled (Auto)");
     }
 
-    private List<Capability> GetCurrentModelCapabilities()
+    /// <summary>
+    /// States how many tokens this installation reads and writes.
+    /// </summary>
+    /// <param name="tokens">The number of tokens, or null to go back to the automatic answer.</param>
+    private void SetContextWindowOverride(int? tokens) => this.capabilityOverrides = this.capabilityOverrides with { ContextWindowTokens = tokens };
+
+    /// <summary>
+    /// States how many images one message may carry here.
+    /// </summary>
+    /// <param name="images">The number of images, or null to go back to the automatic answer.</param>
+    private void SetMaxImagesPerMessageOverride(int? images) => this.capabilityOverrides = this.capabilityOverrides with { MaxImagesPerMessage = images };
+
+    /// <summary>
+    /// States how many images one request may carry here.
+    /// </summary>
+    /// <param name="images">The number of images, or null to go back to the automatic answer.</param>
+    private void SetMaxImagesPerRequestOverride(int? images) => this.capabilityOverrides = this.capabilityOverrides with { MaxImagesPerRequest = images };
+
+    /// <summary>
+    /// What an empty window field shows.
+    /// </summary>
+    /// <remarks>
+    /// Written without separators, unlike the number in the helper text next to it: this one stands
+    /// inside the field a person types into, and what they see there has to be what they may type.
+    /// </remarks>
+    private string AutomaticContextWindowPlaceholder
     {
-        var currentProviderSettings = this.CreateProviderSettings();
-        return currentProviderSettings.GetModelCapabilities();
+        get
+        {
+            var context = this.GetAutomaticModelProfile().Context;
+            return context.IsKnown ? context.DefaultTokens.ToString(CultureInfo.InvariantCulture) : string.Empty;
+        }
     }
 
-    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.GetSelectedModel());
+    /// <summary>
+    /// What an empty image field shows.
+    /// </summary>
+    /// <param name="limit">The limit the rules worked out, if any.</param>
+    /// <returns>The number, or nothing where nobody stated one.</returns>
+    private string AutomaticImageLimitPlaceholder(int? limit) => limit?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+    /// <summary>
+    /// What the window field says below itself.
+    /// </summary>
+    /// <remarks>
+    /// It names the automatic answer rather than the one in effect, because the number in effect is
+    /// already in the field. What a person cannot otherwise see is what they would go back to.
+    /// </remarks>
+    private string ContextWindowHelperText
+    {
+        get
+        {
+            var context = this.GetAutomaticModelProfile().Context;
+            return context.IsKnown
+                ? string.Format(T("Detected: {0} tokens. Leave the field empty to use that."), context.DefaultTokens.ToString("N0", this.currentCulture))
+                : T("Nobody has stated a window for this model. Left empty, the chat counts the tokens of a conversation without saying what they may grow to.");
+        }
+    }
+
+    /// <summary>
+    /// What the two image fields say above themselves.
+    /// </summary>
+    /// <remarks>
+    /// The number in effect, not the two the person typed: which of them decides is the one thing
+    /// two fields cannot show on their own, and it is the one the chat and the Visual Briefing go by.
+    /// </remarks>
+    private string ImageLimitsEffectiveLabel
+    {
+        get
+        {
+            var allowed = this.GetCurrentModelProfile().Images.MaxInOneMessage;
+            return allowed is { } count
+                ? string.Format(T("At most {0} images at once."), count.ToString("N0", this.currentCulture))
+                : T("No limit known, so AI Studio does not stop anybody from attaching more.");
+        }
+    }
+
+    /// <summary>
+    /// What the model can do as this provider instance is configured, the person's own settings included.
+    /// </summary>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetCurrentModelProfile() => this.CreateProviderSettings().GetModelProfile();
+
+    /// <summary>
+    /// What holds without anybody switching anything, which is what each field shows as its automatic answer.
+    /// </summary>
+    /// <remarks>
+    /// The rules, plus whatever the provider itself stated when the model list was loaded a moment
+    /// ago. A self-hosted engine is the case this matters for: it reports the window it was started
+    /// with, and that is the number a person gets by leaving the field below empty.
+    /// </remarks>
+    /// <returns>The profile.</returns>
+    private ModelProfile GetAutomaticModelProfile() => this.CreateProviderSettings().GetAutomaticModelProfile();
 
     private string GetCurrentModelApiLabel()
     {
-        var capabilities = this.GetCurrentModelCapabilities();
-        if (capabilities.Contains(Capability.RESPONSES_API))
+        var profile = this.GetCurrentModelProfile();
+        if (profile.Has(Capability.RESPONSES_API))
             return "Responses API";
 
-        if (capabilities.Contains(Capability.CHAT_COMPLETION_API))
+        if (profile.Has(Capability.CHAT_COMPLETION_API))
             return "Chat Completions API";
 
         return "Unknown";
@@ -559,6 +871,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
     {
         Capability.AUDIO_INPUT => T("Audio input"),
+        Capability.FUNCTION_CALLING => T("Tool calling"),
         Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
         Capability.SPEECH_INPUT => T("Speech input"),
         Capability.VIDEO_INPUT => T("Video input"),
@@ -592,7 +905,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
         catch (JsonException)
         {
-            return T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+            return T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
         }
     }
 
@@ -725,16 +1038,16 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (objectStack.Count != 0)
         {
-            errorMessage = T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+            errorMessage = T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
             return false;
         }
 
         return true;
     }
-    
+
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
-    
-    private static string GetPlaceholderExpertSettings => 
+
+    private static string GetPlaceholderExpertSettings =>
       """
       "temperature": 0.5,
       "top_p": 0.9,

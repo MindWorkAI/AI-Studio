@@ -16,14 +16,6 @@ using WritingStylesEMail = AIStudio.Assistants.EMail.WritingStyles;
 namespace AIStudio.Settings;
 
 /// <summary>
-/// A data structure to map a name to a value.
-/// </summary>
-/// <param name="Name">The name of the value, to be displayed in the UI.</param>
-/// <param name="Value">The value to be stored.</param>
-/// <typeparam name="T">The type of the value to store.</typeparam>
-public readonly record struct ConfigurationSelectData<T>(string Name, T Value);
-
-/// <summary>
 /// A static factory class to get the lists of selectable values.
 /// </summary>
 public static class ConfigurationSelectDataFactory
@@ -303,6 +295,17 @@ public static class ConfigurationSelectDataFactory
             }
         }
     }
+
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceConfidenceLevelsData()
+    {
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+        {
+            if (level is ConfidenceLevel.NONE)
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
+    }
     
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {
@@ -318,6 +321,14 @@ public static class ConfigurationSelectDataFactory
                 continue;
 
             yield return new(level.GetName(), level);
+        }
+    }
+
+    public static IEnumerable<ConfigurationSelectData<TranscriptionOpusBitrate>> GetTranscriptionOpusBitrateData()
+    {
+        foreach (var bitrate in Enum.GetValues<TranscriptionOpusBitrate>())
+        {
+            yield return new(bitrate.GetName(), bitrate);
         }
     }
 }

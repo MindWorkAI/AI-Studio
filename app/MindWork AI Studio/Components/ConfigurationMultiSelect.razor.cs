@@ -29,10 +29,25 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     public Action<HashSet<TData>> SelectionUpdate { get; set; } = _ => { };
 
     /// <summary>
+    /// An asynchronous action that is called when the selection changes.
+    /// </summary>
+    [Parameter]
+    public Func<HashSet<TData>, Task> SelectionUpdateAsync { get; set; } = _ => Task.CompletedTask;
+
+    /// <summary>
     /// Determines whether a specific item is locked by a configuration plugin.
     /// </summary>
     [Parameter]
     public Func<TData, bool> IsItemLocked { get; set; } = _ => false;
+
+    [Parameter]
+    public string? EmptySelectionText { get; set; }
+
+    [Parameter]
+    public string? SingleSelectionText { get; set; }
+
+    [Parameter]
+    public string? MultipleSelectionText { get; set; }
     
     #region Overrides of ConfigurationBase
 
@@ -49,11 +64,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     
     private async Task OptionChanged(IEnumerable<TData?>? updatedValues)
     {
-        if(updatedValues is null)
-            this.SelectionUpdate([]);
-        else
-            this.SelectionUpdate(updatedValues.Where(n => n is not null).ToHashSet()!);
-        
+        // OfType drops the nulls and gives back the non-nullable element type in one step, which
+        // Where cannot: it keeps the nullable type no matter what the predicate proves.
+        var selection = updatedValues is null ? [] : updatedValues.OfType<TData>().ToHashSet();
+        this.SelectionUpdate(selection);
+        await this.SelectionUpdateAsync(selection);
+
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }
@@ -61,12 +77,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     private string GetMultiSelectionText(List<TData?>? selectedValues)
     {
         if(selectedValues is null || selectedValues.Count == 0)
-            return T("No preview features selected.");
+            return this.EmptySelectionText ?? T("No items selected.");
         
         if(selectedValues.Count == 1)
-            return T("You have selected 1 preview feature.");
+            return this.SingleSelectionText ?? T("You have selected 1 item.");
         
-        return string.Format(T("You have selected {0} preview features."), selectedValues.Count);
+        return string.Format(this.MultipleSelectionText ?? T("You have selected {0} items."), selectedValues.Count);
     }
 
     private bool IsLockedValue(TData value) => this.IsItemLocked(value);

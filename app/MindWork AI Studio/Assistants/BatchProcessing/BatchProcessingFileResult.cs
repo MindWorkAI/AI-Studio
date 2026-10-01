@@ -56,4 +56,14 @@ public sealed class BatchProcessingFileResult
     /// The time when the processing of this file finished.
     /// </summary>
     public DateTimeOffset ProcessedAt { get; set; }
+
+    /// <summary>
+    /// The tools the model used for this file, ready to be read in the log.
+    /// </summary>
+    /// <remarks>
+    /// Recorded per file, because the model decides per document whether it
+    /// needs a tool at all. Without this, a batch run gives no clue why one
+    /// answer is better informed than the next.
+    /// </remarks>
+    public string UsedTools { get; set; } = string.Empty;
 }

@@ -128,7 +128,7 @@ public partial class AssistantSWOTAnalysis : AssistantBaseCore<SettingsDialogSWO
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SWOT_ANALYSIS_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SWOT_ANALYSIS_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
 

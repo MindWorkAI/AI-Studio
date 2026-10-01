@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1000"
+   height="1000"
+   viewBox="0 0 200 200"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg66"
+   sodipodi:docname="AI_Studio_Logo.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   inkscape:export-filename="AI_Studio_Logo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview66"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.82519361"
+     inkscape:cx="238.12594"
+     inkscape:cy="544.72065"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g66" />
+  <title
+     id="title">AI Studio Logo</title>
+  <desc
+     id="desc">Grüne Waldlandschaft mit Sprechblase, drei Punkten, Wolke und warmer Sonne.</desc>
+  <defs
+     id="defs26">
+    <clipPath
+       id="artboard">
+      <rect
+         x="6"
+         y="8"
+         width="188"
+         height="185"
+         rx="39"
+         ry="39"
+         id="rect1" />
+    </clipPath>
+    <linearGradient
+       id="sky"
+       x1="18"
+       y1="180"
+       x2="181"
+       y2="17"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#397d6c"
+         id="stop1" />
+      <stop
+         offset=".53"
+         stop-color="#66aa83"
+         id="stop2" />
+      <stop
+         offset="1"
+         stop-color="#9dba69"
+         id="stop3" />
+    </linearGradient>
+    <radialGradient
+       id="sun"
+       cx="177"
+       cy="12"
+       r="58"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#f8dc62"
+         id="stop4" />
+      <stop
+         offset=".52"
+         stop-color="#e8c95c"
+         stop-opacity=".92"
+         id="stop5" />
+      <stop
+         offset="1"
+         stop-color="#d9bd57"
+         stop-opacity="0"
+         id="stop6" />
+    </radialGradient>
+    <linearGradient
+       id="bubble"
+       x1="43"
+       y1="48"
+       x2="97"
+       y2="115"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#eee6af"
+         id="stop7" />
+      <stop
+         offset=".42"
+         stop-color="#e7edb0"
+         id="stop8" />
+      <stop
+         offset="1"
+         stop-color="#e6eca8"
+         id="stop9" />
+    </linearGradient>
+    <linearGradient
+       id="bubbleTail"
+       x1="49"
+       y1="106"
+       x2="61"
+       y2="142"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#d6d99b"
+         id="stop10" />
+      <stop
+         offset="1"
+         stop-color="#c9c78d"
+         id="stop11" />
+    </linearGradient>
+    <linearGradient
+       id="cloud"
+       x1="133"
+       y1="121"
+       x2="136"
+       y2="166"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#f8e77b"
+         id="stop12" />
+      <stop
+         offset=".43"
+         stop-color="#e9dc70"
+         id="stop13" />
+      <stop
+         offset=".7"
+         stop-color="#8caf72"
+         id="stop14" />
+      <stop
+         offset="1"
+         stop-color="#77a786"
+         id="stop15" />
+    </linearGradient>
+    <linearGradient
+       id="hill"
+       x1="64"
+       y1="150"
+       x2="70"
+       y2="189"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#0c633c"
+         id="stop16" />
+      <stop
+         offset="1"
+         stop-color="#063b2f"
+         id="stop17" />
+    </linearGradient>
+    <linearGradient
+       id="hillLight"
+       x1="108"
+       y1="145"
+       x2="128"
+       y2="188"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#4f982f"
+         id="stop18" />
+      <stop
+         offset="1"
+         stop-color="#11673a"
+         id="stop19" />
+    </linearGradient>
+    <filter
+       id="softShadow"
+       x="-0.053877552"
+       y="-0.053333334"
+       width="1.1077551"
+       height="1.1066667">
+      <feGaussianBlur
+         stdDeviation="2.2"
+         id="feGaussianBlur19" />
+    </filter>
+    <filter
+       id="cloudShadow"
+       x="-0.084210526"
+       y="-0.10434783"
+       width="1.1684211"
+       height="1.2608696">
+      <feGaussianBlur
+         in="SourceAlpha"
+         stdDeviation="2"
+         result="blur"
+         id="feGaussianBlur20" />
+      <feOffset
+         dy="2.4"
+         result="off"
+         id="feOffset20" />
+      <feColorMatrix
+         in="off"
+         type="matrix"
+         values="0 0 0 0 0.12 0 0 0 0 0.28 0 0 0 0 0.22 0 0 0 .28 0"
+         id="feColorMatrix20" />
+      <feMerge
+         id="feMerge21">
+        <feMergeNode
+           id="feMergeNode20" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode21" />
+      </feMerge>
+    </filter>
+    <g
+       id="pine-dark">
+      <path
+         d="M0 0 .9 31-.9 31Z"
+         fill="#153f35"
+         id="path21" />
+      <path
+         d="M0 1-5 12-2.2 11-7 19-3 17-9 27-2.5 24 0 31Z"
+         fill="#0b4436"
+         id="path22" />
+      <path
+         d="M0 1 4.5 12 2 11 6.5 19 2.8 17 8 27 2.4 24 0 31Z"
+         fill="#17543d"
+         id="path23" />
+    </g>
+    <g
+       id="pine-light">
+      <path
+         d="M0 0 1 32-1 32Z"
+         fill="#174b35"
+         id="path24" />
+      <path
+         d="M0 0-5 13-2.5 12-7 20-3 18-9 28-2.5 25 0 32Z"
+         fill="#176d3c"
+         id="path25" />
+      <path
+         d="M0 0 5 13 2.4 12 7 20 3 18 9 28 2.5 25 0 32Z"
+         fill="#5b9c3f"
+         id="path26" />
+    </g>
+  </defs>
+  <g
+     clip-path="url(#artboard)"
+     id="g66">
+    <!-- sky and late-afternoon glow -->
+    <rect
+       x="6"
+       y="8"
+       width="188"
+       height="185"
+       rx="39"
+       fill="url(#sky)"
+       id="rect26" />
+    <circle
+       cx="176"
+       cy="8"
+       r="58"
+       fill="url(#sun)"
+       id="circle26" />
+    <path
+       d="M132 8c-1 24 16 47 40 54 7 2 14 2 22 0V8Z"
+       fill="#f1cd5a"
+       opacity=".22"
+       id="path27" />
+    <!-- distant left mountain and tiny ridge details -->
+    <path
+       d="m29 58 10 33 17 25-18-17Z"
+       fill="#718d70"
+       opacity=".35"
+       id="path30" />
+    <!-- small lookout silhouette -->
+    <!-- shadow behind chat bubble -->
+    <path
+       d="M47 48h46c15 0 25 12 25 27v14c0 16-11 27-25 27H63c-2 7 1 17 6 29-11-11-21-20-28-28-13-3-21-13-21-28V73c0-15 11-27 27-27Z"
+       fill="#183f36"
+       opacity=".34"
+       filter="url(#softShadow)"
+       id="path37" />
+    <path
+       d="M45 50h47c14 0 23 11 23 25v16c0 14-10 25-23 25H60c-1 7 3 17 8 28-10-11-19-19-26-27-12-3-20-12-20-26V75c0-14 10-25 23-25Z"
+       fill="#b98370"
+       opacity=".64"
+       id="path38" />
+    <!-- main chat bubble -->
+    <path
+       d="M47 47h46c13 0 23 11 23 25v17c0 14-10 25-23 25H63c-3 7-1 17 4 27-10-10-18-19-25-27-11-3-19-12-19-25V73c0-15 10-26 24-26Z"
+       fill="url(#bubble)"
+       stroke="#f4edb5"
+       stroke-width=".8"
+       id="path39" />
+    <path
+       d="M42 114c6 1 13 1 21 0-3 7-1 17 4 27-10-10-18-19-25-27Z"
+       fill="url(#bubbleTail)"
+       id="path40" />
+    <path
+       d="M64 113h29c12 0 20-7 23-19-1 13-10 22-23 23H63Z"
+       fill="#9ca97a"
+       opacity=".2"
+       id="path41" />
+    <path
+       d="M25 68c5-13 13-20 27-21h12L28 95c-3-7-4-17-3-27Z"
+       fill="#f2d7aa"
+       opacity=".15"
+       id="path42" />
+    <!-- conversation dots -->
+    <circle
+       cx="45"
+       cy="84"
+       r="7"
+       fill="#23833f"
+       id="circle42"
+       style="fill:#268040;fill-opacity:1" />
+    <circle
+       cx="68"
+       cy="84"
+       r="7"
+       fill="#2b8b57"
+       id="circle43"
+       style="fill:#278040;fill-opacity:1" />
+    <circle
+       cx="90"
+       cy="84"
+       r="7"
+       fill="#4a9a66"
+       id="circle44"
+       style="fill:#268040;fill-opacity:1" />
+    <!-- tiny floating marks -->
+    <!-- small pale cloud above the main cloud -->
+    <path
+       d="m 127.25364,93.888603 h 26 c 0,-2 -3,-4 -6,-4 h -5 c 0,-4 -2,-7 -5,-7 -3,0 -5,3 -5,7 -3,0 -5,1 -5,4 z"
+       fill="#f5df8a"
+       id="path45" />
+    <path
+       d="m 133.25364,89.888603 c 0,-3 1,-5 3,-6 l -1,9 z"
+       fill="#dfc269"
+       opacity="0.55"
+       id="path46" />
+    <path
+       d="m 30.97828,36.962689 h 26 c 0,-2 -3,-4 -6,-4 h -5 c 0,-4 -2,-7 -5,-7 -3,0 -5,3 -5,7 -3,0 -5,1 -5,4 z"
+       fill="#f5df8a"
+       id="path45-8-2" />
+    <path
+       d="m 37.37828,32.562689 c 0,-3 1,-5 3,-6 l -1,9 z"
+       fill="#dfc269"
+       opacity="0.55"
+       id="path46-4" />
+    <!-- large cloud -->
+    <g
+       filter="url(#cloudShadow)"
+       id="g50">
+      <path
+         d="M104 140c0-6 5-11 11-11 2-5 6-8 11-8 5 0 9 3 11 7 3-4 7-6 12-5 7 1 12 7 12 14 0 6-3 10-7 14-4 4-9 10-17 16-7-7-12-12-17-15-10-1-16-5-16-12Z"
+         fill="url(#cloud)"
+         id="path47" />
+      <path
+         d="M106 141c11-2 22-2 32 2 8-5 15-5 22-3-1 5-3 8-6 11-4 4-9 10-17 16-7-7-12-12-17-15-8-1-13-4-14-11Z"
+         fill="#7ea86f"
+         opacity=".48"
+         id="path49" />
+      <path
+         d="M117 131c3-3 6-4 9-3l-10 8-6 2Z"
+         fill="#d1c35f"
+         opacity=".55"
+         id="path50" />
+    </g>
+    <!-- layered ground -->
+    <path
+       d="M42 169c15-13 30-20 46-21 17-1 31 6 43 18l-47 17Z"
+       fill="url(#hill)"
+       id="path51" />
+    <path
+       d="M76 169c9-12 19-20 31-21 13 1 26 9 36 24-22-8-42-9-67-3Z"
+       fill="url(#hillLight)"
+       id="path52" />
+    <path
+       d="M91 162c6-7 12-12 18-14 11 2 21 9 29 20-14-5-28-7-45-5Z"
+       fill="#529837"
+       opacity=".72"
+       id="path53" />
+    <path
+       d="M94 158c6-3 11-6 16-8m-12 11c7-5 13-8 19-10m-13 12c7-5 13-8 19-9m-15 11c7-4 13-7 19-8"
+       fill="none"
+       stroke="#9eb83e"
+       stroke-width=".75"
+       opacity=".74"
+       id="path54" />
+    <path
+       d="M102 153c5 2 10 5 14 9m-6-12c6 3 11 7 16 12m-8-10c6 3 11 7 15 11"
+       fill="none"
+       stroke="#247b37"
+       stroke-width=".65"
+       opacity=".85"
+       id="path55" />
+    <path
+       d="M6 181c20-12 39-20 60-22 24-2 45 4 66 10 22 6 40 8 62 16v8H6Z"
+       fill="#12613a"
+       id="path56" />
+    <path
+       d="M6 184c27-16 54-24 81-24 35 0 67 15 107 27v6H6Z"
+       fill="#126b3c"
+       opacity=".78"
+       id="path57" />
+    <path
+       d="M6 193c30-15 59-20 91-19 31 1 64 7 97 16v3Z"
+       fill="#075039"
+       opacity=".82"
+       id="path58" />
+    <!-- left forest -->
+    <g
+       transform="matrix(0.84,0,0,0.84,31.4,143.4)"
+       id="g58">
+      <use
+         href="#pine-dark"
+         id="use58" />
+    </g>
+    <g
+       transform="matrix(1.12,0,0,1.12,49,129)"
+       id="g59">
+      <use
+         href="#pine-dark"
+         id="use59" />
+    </g>
+    <g
+       transform="matrix(0.7,0,0,0.7,39,145.4)"
+       id="g60">
+      <use
+         href="#pine-dark"
+         id="use60" />
+    </g>
+    <g
+       transform="matrix(0.7,0,0,0.7,89.06539,127.87167)"
+       id="g60-5">
+      <use
+         href="#pine-dark"
+         id="use60-1" />
+    </g>
+    <g
+       transform="matrix(0.66,0,0,0.66,25.4,151.4)"
+       id="g61">
+      <use
+         href="#pine-light"
+         id="use61" />
+    </g>
+    <g
+       transform="matrix(0.5,0,0,0.5,19.2,159.8)"
+       id="g62">
+      <use
+         href="#pine-dark"
+         id="use62" />
+    </g>
+    <!-- right pines -->
+    <g
+       transform="matrix(1.35,0,0,1.35,170,135.8)"
+       id="g63">
+      <use
+         href="#pine-light"
+         id="use63" />
+    </g>
+    <g
+       transform="matrix(0.75,0,0,0.75,177,157.8)"
+       id="g64">
+      <use
+         href="#pine-light"
+         id="use64" />
+    </g>
+    <g
+       transform="matrix(0.75,0,0,0.75,82.453055,128.12775)"
+       id="g64-1">
+      <use
+         href="#pine-light"
+         id="use64-5" />
+    </g>
+    <g
+       transform="matrix(0.64,0,0,0.64,160.8,157.4)"
+       id="g65">
+      <use
+         href="#pine-dark"
+         id="use65" />
+    </g>
+  </g>
+</svg>

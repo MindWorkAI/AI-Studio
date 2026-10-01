@@ -1,3 +1,3 @@
 namespace AIStudio.Tools.Rust;
 
-public readonly record struct RuntimeInfoResponse(string WorkingDirectory, string ExecutablePath, string LinuxPackageType);
+public readonly record struct RuntimeInfoResponse(string WorkingDirectory, string ExecutablePath, LinuxPackageType LinuxPackageType, InstallationKind InstallationKind);

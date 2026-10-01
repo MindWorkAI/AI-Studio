@@ -57,6 +57,9 @@ DEPLOYED_USING_CONFIG_SERVER = false
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",
+    ["SystemPrompt"] = "<System prompt for the assistant>",
+    ["SubmitText"] = "<label for submit button>",
+    ["AllowProfiles"] = true,
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {}
@@ -70,8 +73,19 @@ ASSISTANT = {
     ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
-    ["LaunchBehavior"] = "<NONE|OPEN_WORKSPACE_CHAT_BY_NAME>", -- optional; when set to OPEN_WORKSPACE_CHAT_BY_NAME the tile opens a chat directly
-    ["WorkspaceName"] = "<name of the workspace to open or create>", -- optional; required for OPEN_WORKSPACE_CHAT_BY_NAME
+    
+    -- Optional: the tools your assistant runs with. Naming them takes the choice away from the
+    -- user: the tool selection disappears from the assistant, and it always runs with exactly
+    -- these tools. Omit the field to let users select the tools themselves.
+    -- Naming a tool is a wish, not a permission: a tool switched off in the settings stays off,
+    -- and every tool still has to meet the confidence requirements of the provider in use. Users
+    -- see the tools your assistant asks for before they enable it, and the security audit weighs
+    -- them against what your assistant claims to do.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "web_search",
+    },
+    
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
@@ -428,4 +442,44 @@ ASSISTANT = {
             },
         }
     },
+}
+
+-- direct chat launcher example opening the chat in a workspace; form-only fields and UI are not
+-- used in this mode:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
+    ["WorkspaceName"] = "<name of the workspace to open or create>",
+    ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
+    ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
+    -- Optional: the data sources the chat starts with. A chat template chosen above may bring
+    -- data source options of its own. It then decides them alone, the IDs named here are dropped,
+    -- and AI Studio writes a warning into the log. Only a chat template can also say that the AI
+    -- picks the sources for each message, which is why it wins as a whole instead of field by
+    -- field.
+    ["DataSourceIds"] = {
+        "<optional data source GUID>",
+    },
+    -- Optional: the tools preselected when the chat opens. Users may change the selection
+    -- in the chat afterwards, and every tool has to meet the confidence requirements of the
+    -- provider in use. A tool ID unknown to the installation is ignored. The same rule as for the
+    -- data sources applies here: a chat template which names tools of its own wins over this list.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "<optional tool ID>",
+    },
+}
+
+-- direct chat launcher example without a workspace: the tile opens a disappearing chat, which is
+-- kept apart from the workspaces and cleaned up according to the workspace maintenance settings.
+-- A WorkspaceName next to this launch behavior is an error instead of being ignored, so a leftover
+-- name cannot silently change the kind of chat the tile opens. Every optional field of the example
+-- above works here as well:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_TEMPORARY_CHAT",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
 }
