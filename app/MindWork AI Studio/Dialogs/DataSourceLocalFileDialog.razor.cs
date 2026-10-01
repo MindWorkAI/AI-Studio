@@ -88,8 +88,10 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
-        // Load the used instance names:
-        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant()).ToList();
+        // Load the used instance names, those of the mailboxes included:
+        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
+            .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Select(x => x.Name.ToLowerInvariant()))
+            .ToList();
         
         // When editing, we need to load the data:
         if(this.IsEditing)

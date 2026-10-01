@@ -48,7 +48,7 @@ public static class DataSourceReindexWarning
 
         var candidates = GetDataSourcesUsing(settingsManager, before.Id)
             .Where(dataSource => EmbeddingChangeImpact.AffectsStoredIndex(dataSource, before, after))
-            .Cast<IDataSource>()
+            .Cast<IDataSourceBase>()
             .ToList();
 
         if (candidates.Count == 0)
@@ -112,7 +112,7 @@ public static class DataSourceReindexWarning
         if (embeddingProvider == EmbeddingProvider.NONE)
             return string.Empty;
 
-        var affected = GetDataSourcesUsing(settingsManager, embeddingProvider.Id).Cast<IDataSource>().ToList();
+        var affected = GetDataSourcesUsing(settingsManager, embeddingProvider.Id).Cast<IDataSourceBase>().ToList();
         if (affected.Count == 0)
             return string.Empty;
 
@@ -129,14 +129,15 @@ public static class DataSourceReindexWarning
     }
 
     /// <summary>
-    /// The data sources which are indexed with a given embedding provider.
+    /// The data sources and mailboxes which are indexed with a given embedding provider.
     /// </summary>
-    /// <param name="settingsManager">The settings holding the data sources.</param>
+    /// <param name="settingsManager">The settings holding the data sources and the mailboxes.</param>
     /// <param name="embeddingProviderId">The id of the embedding provider.</param>
-    /// <returns>The data sources pointing at that embedding provider.</returns>
-    private static IReadOnlyList<IInternalDataSource> GetDataSourcesUsing(SettingsManager settingsManager, string embeddingProviderId) =>
+    /// <returns>The data sources and mailboxes pointing at that embedding provider.</returns>
+    private static IReadOnlyList<IIndexedDataSource> GetDataSourcesUsing(SettingsManager settingsManager, string embeddingProviderId) =>
         settingsManager.ConfigurationData.DataSources
             .OfType<IInternalDataSource>()
+            .Concat(settingsManager.ConfigurationData.Mailboxes.Cast<IIndexedDataSource>())
             .Where(dataSource => embeddingProviderId.Equals(dataSource.EmbeddingId, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
