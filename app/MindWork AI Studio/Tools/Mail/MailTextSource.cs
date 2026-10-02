@@ -13,7 +13,7 @@ namespace AIStudio.Tools.Mail;
 /// <param name="Headers">The complete header block of the mail.</param>
 /// <param name="HtmlBody">The HTML part a reader sees, decoded from its transfer encoding and charset, or null when there is none.</param>
 /// <param name="TextBody">The plain text part, decoded likewise, or null when there is none.</param>
-/// <param name="AttachmentNames">The file names of the attachments, in their order.</param>
+/// <param name="AttachmentNames">The file names of the attachments, in their order, without the signature of a signed mail.</param>
 /// <param name="StructureEncryption">How the structure of the mail says its content is encrypted, see MailEncryptionDetection.</param>
 public sealed record MailTextSource(HeaderList Headers, string? HtmlBody, string? TextBody, IReadOnlyList<string> AttachmentNames, MailEncryptionKind StructureEncryption)
 {
@@ -25,6 +25,7 @@ public sealed record MailTextSource(HeaderList Headers, string? HtmlBody, string
     public static MailTextSource FromMessage(MimeMessage message)
     {
         var attachmentNames = message.Attachments
+            .Where(attachment => !MailAttachmentRules.IsSignature(attachment.ContentType))
             .Select(attachment => attachment.ContentDisposition?.FileName ?? attachment.ContentType.Name ?? string.Empty)
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToList();

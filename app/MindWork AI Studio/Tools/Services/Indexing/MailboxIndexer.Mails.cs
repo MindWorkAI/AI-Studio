@@ -29,6 +29,12 @@ internal sealed partial class MailboxIndexer
     private const string HEADER_BLOCK_CONTENT_TYPE = "text/rfc822-headers";
 
     /// <summary>
+    /// How many fields of a mail pass the filter ahead of the names of its attachments: the header
+    /// block, the body and the subject.
+    /// </summary>
+    private const int FILTERED_MAIL_FIELDS = 3;
+
+    /// <summary>
     /// Links a mail the index holds already to its place in this folder, or reads and indexes it.
     /// </summary>
     private async Task SyncNewMailAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, string folderPath, IMessageSummary summary, DocumentRunProgress progress, ISet<string> encounteredKeys, CancellationToken token)
@@ -73,19 +79,19 @@ internal sealed partial class MailboxIndexer
 
         var foundAtUtc = DateTimeOffset.UtcNow;
         var isNew = !context.Manifest.Files.ContainsKey(key);
-        var document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, null);
+        var document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, null, []);
 
         try
         {
-            var text = await this.ReadMailTextAsync(connector, mailbox, summary, token);
-            document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, text);
+            var (text, attachments) = await this.ReadMailAsync(context, connector, mailbox, summary, token);
+            document = this.CreateMailDocument(context, mailbox, summary, key, mailId, mailHash, displayName, foundAtUtc, text, attachments);
 
             var reportBlockProgress = progress.BeginDocument(document);
             var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
             await progress.RecordDocumentIndexedAsync(document, chunkCount, isNew, token);
 
             // Only after the last chunk: indexing the document deleted whatever the index kept of the mail.
-            await context.IndexStore.UpsertMailAsync(mailbox.Id, CreateMailRecord(mailId, summary, text, mailHash, location, foundAtUtc), token);
+            await context.IndexStore.UpsertMailAsync(mailbox.Id, CreateMailRecord(mailId, summary, text, attachments, mailHash, location, foundAtUtc), token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -108,22 +114,36 @@ internal sealed partial class MailboxIndexer
     }
 
     /// <summary>
-    /// Reads the text of a mail and filters it for prompt injections.
+    /// Reads the text of a mail and of its attachments, filtered for prompt injections.
     /// </summary>
     /// <remarks>
-    /// Of an encrypted mail, nothing but the header block is read, and its text parts stay on the
-    /// server. The subject is filtered on its own as well, since the index stores it apart from the
-    /// text, and whatever reads it there may hand it on to a model. A passage the filter removes
-    /// from the subject is therefore reported twice.
+    /// Of an encrypted mail, nothing but the header block is read: its text parts and its
+    /// attachments stay on the server. The subject and the names of the attachments are filtered
+    /// on their own as well, since the index stores them apart from the text, and whatever reads
+    /// them there may hand them on to a model. A passage the filter removes from them is therefore
+    /// reported twice.
     /// </remarks>
-    private async Task<MailText> ReadMailTextAsync(ImapMailboxConnector connector, DataSourceMailbox mailbox, IMessageSummary summary, CancellationToken token)
+    private async Task<(MailText Text, IReadOnlyList<MailAttachmentText> Attachments)> ReadMailAsync(IndexedRunContext context, ImapMailboxConnector connector, DataSourceMailbox mailbox, IMessageSummary summary, CancellationToken token)
     {
         var textParts = MailEncryptionDetection.Detect(summary.Body) is MailEncryptionKind.NONE ? await connector.FetchTextPartsAsync(summary, token) : null;
         var text = MailTextBuilder.Build(MailSummaryReader.ReadTextSource(summary, textParts));
 
+        // The text itself may reveal an encryption the structure did not, cf. MailTextBuilder:
+        var attachmentParts = text.EncryptionKind is MailEncryptionKind.NONE ? MailSummaryReader.ReadAttachments(summary) : [];
+
         var source = PromptInjectionSource.MailContent(mailbox.Name);
-        var filtered = await guardService.SanitizeAsync([new(text.HeaderBlock, source), new(text.Body, source), new(text.Subject, source)]);
-        return text with { HeaderBlock = filtered[0], Body = filtered[1], Subject = filtered[2] };
+        var filtered = await guardService.SanitizeAsync([
+            new(text.HeaderBlock, source),
+            new(text.Body, source),
+            new(text.Subject, source),
+            ..attachmentParts.Select(part => new PromptInjectionText(MailTextNormalization.NormalizeHeaderValue(part.FileName), source)),
+        ]);
+
+        var attachments = new List<MailAttachmentText>(attachmentParts.Count);
+        for (var index = 0; index < attachmentParts.Count; index++)
+            attachments.Add(await this.ReadAttachmentAsync(context, mailbox, connector, summary.UniqueId, attachmentParts[index], filtered[FILTERED_MAIL_FIELDS + index], token));
+
+        return (text with { HeaderBlock = filtered[0], Body = filtered[1], Subject = filtered[2] }, attachments);
     }
 
     /// <summary>
@@ -142,8 +162,9 @@ internal sealed partial class MailboxIndexer
     /// <param name="displayName">How the mail is called in messages for the user.</param>
     /// <param name="foundAtUtc">When AI Studio found the mail.</param>
     /// <param name="text">The filtered text of the mail, or null while it is not read yet. Such a document has no chunks and only serves to record a failure.</param>
+    /// <param name="attachments">The attachments of the mail, empty while it is not read yet.</param>
     /// <returns>The document.</returns>
-    private EmbeddingDocument CreateMailDocument(IndexedRunContext context, DataSourceMailbox mailbox, IMessageSummary summary, string key, string mailId, string mailHash, string displayName, DateTimeOffset foundAtUtc, MailText? text)
+    private EmbeddingDocument CreateMailDocument(IndexedRunContext context, DataSourceMailbox mailbox, IMessageSummary summary, string key, string mailId, string mailHash, string displayName, DateTimeOffset foundAtUtc, MailText? text, IReadOnlyList<MailAttachmentText> attachments)
     {
         var (sentAtUtc, receivedAtUtc) = ReadDates(summary, foundAtUtc);
         var state = new EmbeddingStateFile(
@@ -160,14 +181,14 @@ internal sealed partial class MailboxIndexer
             0);
 
         //
-        // One piece of text: the first chunk starts with the header block, so a search for a sender
-        // or a subject finds the mail.
+        // The mail itself is one piece of text: the first chunk starts with the header block, so a
+        // search for a sender or a subject finds the mail. The attachments follow it.
         //
         var fullText = text?.FullText ?? string.Empty;
         var content = new SegmentedText(fullText, fullText.Length is 0 ? [] : [new TextSegment(fullText, null, null)]);
         var chunkingOptions = DataSourceEmbeddingService.GetChunkingOptions(mailbox, context.EmbeddingProvider);
 
-        return new(key, state, displayName, chunkToken => textChunker.SplitAsync(content, TextChunker.DOCUMENT_STRATEGY, chunkingOptions, context.EmbeddingProvider, chunkToken));
+        return new(key, state, displayName, chunkToken => this.StreamMailChunksAsync(content, attachments, chunkingOptions, context.EmbeddingProvider, chunkToken));
     }
 
     /// <summary>
@@ -176,11 +197,12 @@ internal sealed partial class MailboxIndexer
     /// <param name="mailId">The id of the mail, which is the id of its document.</param>
     /// <param name="summary">The summary of the mail, with its header block and its structure.</param>
     /// <param name="text">The filtered text of the mail.</param>
+    /// <param name="attachments">The attachments of the mail. Each one is kept, with its text or with the reason why there is none.</param>
     /// <param name="mailHash">The hash of the mail, cf. MailSummaryReader.ComputeMailHash.</param>
     /// <param name="location">Where the mail was found.</param>
     /// <param name="foundAtUtc">When AI Studio found the mail. The index keeps the earliest time it found the mail.</param>
     /// <returns>The mail as the index keeps it.</returns>
-    internal static MailRecord CreateMailRecord(string mailId, IMessageSummary summary, MailText text, string mailHash, MailLocationRecord location, DateTimeOffset foundAtUtc)
+    internal static MailRecord CreateMailRecord(string mailId, IMessageSummary summary, MailText text, IReadOnlyList<MailAttachmentText> attachments, string mailHash, MailLocationRecord location, DateTimeOffset foundAtUtc)
     {
         var headers = summary.Headers ?? throw new ArgumentException("The mail was fetched without its header block.", nameof(summary));
         var (sentAtUtc, receivedAtUtc) = ReadDates(summary, foundAtUtc);
@@ -201,6 +223,18 @@ internal sealed partial class MailboxIndexer
 
         if (bodyPart is not null && text.Body.Length > 0)
             parts.Add(new(MailPartKind.BODY, string.Empty, bodyPart.ContentType.MimeType, bodyPart.Octets, text.Body, MailPartTextState.EXTRACTED));
+
+        //
+        // Every attachment, whether its text was read or not: that a mail has attachments, and
+        // what they are called, is worth searching for either way.
+        //
+        parts.AddRange(attachments.Select(attachment => new MailPartRecord(
+            MailPartKind.ATTACHMENT,
+            attachment.Name,
+            attachment.Part.ContentType.MimeType,
+            attachment.Part.Octets,
+            attachment.TextState is MailPartTextState.EXTRACTED ? attachment.Content.Text : null,
+            attachment.TextState)));
 
         return new(
             mailId,

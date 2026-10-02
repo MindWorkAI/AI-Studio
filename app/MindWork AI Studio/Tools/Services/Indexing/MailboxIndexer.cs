@@ -40,9 +40,10 @@ namespace AIStudio.Tools.Services.Indexing;
 /// every run.
 ///
 /// Starting AI Studio asks no server anything: the run at startup shows what the index holds. Logs
-/// name the mailbox by its id, never by a subject, an address, a folder or what a server answered.
+/// name the mailbox by its id, never by a subject, an address, a folder, an attachment or what a
+/// server answered.
 /// </remarks>
-/// <param name="rustService">The runtime, which holds the password in the OS keyring.</param>
+/// <param name="rustService">The runtime, which holds the password in the OS keyring and reads the text of attachments.</param>
 /// <param name="guardService">The prompt injection filter, which every mail passes before it is embedded.</param>
 /// <param name="textChunker">Cuts the text of a mail into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>

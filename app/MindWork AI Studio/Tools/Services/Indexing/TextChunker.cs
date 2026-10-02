@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services.Indexing;
 
@@ -76,6 +77,29 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
     }
 
     /// <summary>
+    /// Picks the strategy which suits a file, by its type.
+    /// </summary>
+    /// <remarks>
+    /// For every reader of files alike, be the file on disk or attached to a mail. HTML counts as a
+    /// document, not as source code: the runtime turns it into text before it gets here.
+    /// </remarks>
+    /// <param name="filePath">The path or the name of the file.</param>
+    /// <returns>The strategy to cut its text by.</returns>
+    public static ChunkingStrategy GetStrategyForFile(string filePath)
+    {
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.POWER_POINT))
+            return PRESENTATION_STRATEGY;
+
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.TABULAR, FileTypes.SPREADSHEET))
+            return TABLE_STRATEGY;
+
+        if (!FileTypes.IsAllowedPath(filePath, FileTypes.HTML) && FileTypes.IsAllowedPath(filePath, FileTypes.SOURCE_CODE))
+            return SOURCE_CODE_STRATEGY;
+
+        return DOCUMENT_STRATEGY;
+    }
+
+    /// <summary>
     /// Cuts a text into chunks.
     /// </summary>
     /// <param name="content">The text, in the pieces its source delivered it in.</param>
@@ -83,15 +107,19 @@ internal sealed partial class TextChunker(RustService rustService, ILogger logge
     /// <param name="options">How large a chunk may become, and how much the next one repeats.</param>
     /// <param name="embeddingProvider">The embedding provider whose tokenizer measures the chunks.</param>
     /// <param name="token">The cancellation token.</param>
+    /// <param name="heading">
+    /// A line the first chunk starts with, e.g. which attachment of a mail the text comes from, or
+    /// empty for none. It counts against the size of that chunk, like the overlap of every later one.
+    /// </param>
     /// <returns>The chunks, in the order of the text.</returns>
-    public async IAsyncEnumerable<EmbeddingChunk> SplitAsync(SegmentedText content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    public async IAsyncEnumerable<EmbeddingChunk> SplitAsync(SegmentedText content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token, string heading = "")
     {
         var estimatedTokenCount = SumTokenCounts(content.SourceSegments);
 
         // The whole text starts where the first segment starts, so that is the page it is on until
         // the splitting reaches a segment boundary:
         var firstPageNumber = content.SourceSegments.Count > 0 ? content.SourceSegments[0].PageNumber : null;
-        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, estimatedTokenCount: estimatedTokenCount))
+        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, heading, estimatedTokenCount))
             yield return chunk;
     }
 

@@ -46,13 +46,22 @@ public static class MailSummaryReader
     /// <returns>The source for MailTextBuilder.</returns>
     public static MailTextSource ReadTextSource(IMessageSummary summary, MailTextParts? textParts)
     {
-        var attachmentNames = summary.Attachments
+        var attachmentNames = ReadAttachments(summary)
             .Select(attachment => attachment.FileName ?? string.Empty)
             .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToList();
 
         return new(GetHeaders(summary), textParts?.HtmlBody, textParts?.TextBody, attachmentNames, MailEncryptionDetection.Detect(summary.Body));
     }
+
+    /// <summary>
+    /// Reads which attachments a reader of the mail sees, from its structure.
+    /// </summary>
+    /// <param name="summary">The summary, fetched with its structure.</param>
+    /// <returns>The attachments in their order, without the signature of a signed mail, cf. MailAttachmentRules.IsSignature.</returns>
+    public static IReadOnlyList<BodyPartBasic> ReadAttachments(IMessageSummary summary) => summary.Attachments
+        .Where(attachment => !MailAttachmentRules.IsSignature(attachment.ContentType))
+        .ToList();
 
     /// <summary>
     /// Reads every address of the header block together with the header it comes from.

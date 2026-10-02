@@ -346,39 +346,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = DataSourceEmbeddingService.GetChunkingOptions(dataSource, embeddingProvider);
-        var strategy = this.GetChunkingStrategy(filePath);
-        var content = await this.ReadExtractedFileContentAsync(filePath, embeddingProvider, token);
+        var strategy = TextChunker.GetStrategyForFile(filePath);
+        var content = await ExtractedFileText.ReadAsync(rustService, filePath, embeddingProvider, null, token);
 
         await foreach (var chunk in textChunker.SplitAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
-    }
-
-    private async Task<SegmentedText> ReadExtractedFileContentAsync(string filePath, EmbeddingProvider embeddingProvider, CancellationToken token)
-    {
-        var segments = new List<TextSegment>();
-
-        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider, token))
-        {
-            var normalized = TextChunker.NormalizeSegment(segment.Content);
-            if (!string.IsNullOrWhiteSpace(normalized))
-                segments.Add(new(normalized, segment.TokenCount, segment.PageNumber));
-        }
-
-        return new(string.Join("\n", segments.Select(segment => segment.Text)).Trim(), segments);
-    }
-
-    private ChunkingStrategy GetChunkingStrategy(string filePath)
-    {
-        if (this.IsPresentationFilePath(filePath))
-            return TextChunker.PRESENTATION_STRATEGY;
-
-        if (this.IsDelimitedTableFilePath(filePath) || this.IsSpreadsheetFilePath(filePath))
-            return TextChunker.TABLE_STRATEGY;
-
-        if (this.IsSourceCodeFilePath(filePath))
-            return TextChunker.SOURCE_CODE_STRATEGY;
-
-        return TextChunker.DOCUMENT_STRATEGY;
     }
 
     private FileEnumerationResult GetInputFiles(IDataSource dataSource)
@@ -495,31 +467,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private bool IsImageFilePath(string filePath)
     {
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
-    }
-
-    private bool IsPresentationFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.POWER_POINT);
-    }
-
-    private bool IsDelimitedTableFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.TABULAR);
-    }
-
-    private bool IsSpreadsheetFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.SPREADSHEET);
-    }
-
-    private bool IsSourceCodeFilePath(string filePath)
-    {
-        return !this.IsHtmlFilePath(filePath) && FileTypes.IsAllowedPath(filePath, FileTypes.SOURCE_CODE);
-    }
-
-    private bool IsHtmlFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.HTML);
     }
 
     private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)

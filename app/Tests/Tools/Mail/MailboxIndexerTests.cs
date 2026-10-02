@@ -41,7 +41,7 @@ public sealed class MailboxIndexerTests
         };
 
         var text = MailTextBuilder.Build(MailSummaryReader.ReadTextSource(summary, new MailTextParts(null, "Please review the attached report before the board meeting.")));
-        var record = MailboxIndexer.CreateMailRecord(MAIL_ID, summary, text with { Body = "Please review the attached report." }, "HASH", LOCATION, FOUND_AT);
+        var record = MailboxIndexer.CreateMailRecord(MAIL_ID, summary, text with { Body = "Please review the attached report." }, [], "HASH", LOCATION, FOUND_AT);
 
         Assert.Multiple(() =>
         {
@@ -68,7 +68,7 @@ public sealed class MailboxIndexerTests
         };
 
         var text = MailTextBuilder.Build(MailSummaryReader.ReadTextSource(summary, null));
-        var record = MailboxIndexer.CreateMailRecord(MAIL_ID, summary, text, "HASH", LOCATION, FOUND_AT);
+        var record = MailboxIndexer.CreateMailRecord(MAIL_ID, summary, text, [], "HASH", LOCATION, FOUND_AT);
 
         Assert.Multiple(() =>
         {
@@ -78,4 +78,35 @@ public sealed class MailboxIndexerTests
             Assert.That(record.ReceivedAtUtc.Offset, Is.EqualTo(TimeSpan.Zero));
         });
     }
+
+    [Test]
+    public void EveryAttachmentIsKeptWithItsTextOrWhyThereIsNone()
+    {
+        var summary = new MessageSummary(0)
+        {
+            Headers = MailFixtures.Load("priority-with-attachment.eml").Headers,
+            Body = new BodyPartText(new ContentType("text", "plain"), PART_SPECIFIER) { Octets = 61 },
+        };
+
+        var report = Attachment("application", "pdf", 4096);
+        var video = Attachment("video", "mp4", 80_000_000);
+        var text = MailTextBuilder.Build(MailSummaryReader.ReadTextSource(summary, new MailTextParts(null, "Please review the attached report.")));
+        var record = MailboxIndexer.CreateMailRecord(MAIL_ID, summary, text, [
+            new MailAttachmentText(report, "board-report.pdf", MailPartTextState.EXTRACTED, new SegmentedText("Revenue rose by four percent.", []), TextChunker.DOCUMENT_STRATEGY),
+            MailAttachmentText.WithoutText(video, "keynote.mp4", MailPartTextState.UNSUPPORTED_TYPE),
+        ], "HASH", LOCATION, FOUND_AT);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(record.Parts.Select(part => part.Kind), Is.EqualTo(new[] { MailPartKind.HEADERS, MailPartKind.BODY, MailPartKind.ATTACHMENT, MailPartKind.ATTACHMENT }));
+            Assert.That(record.Parts[2], Is.EqualTo(new MailPartRecord(MailPartKind.ATTACHMENT, "board-report.pdf", "application/pdf", 4096, "Revenue rose by four percent.", MailPartTextState.EXTRACTED)));
+            Assert.That(record.Parts[3], Is.EqualTo(new MailPartRecord(MailPartKind.ATTACHMENT, "keynote.mp4", "video/mp4", 80_000_000, null, MailPartTextState.UNSUPPORTED_TYPE)), "An attachment without text is still an attachment, and a search for mails with attachments has to find it.");
+        });
+    }
+
+    private static BodyPartBasic Attachment(string mediaType, string mediaSubtype, uint octets) => new(new ContentType(mediaType, mediaSubtype), PART_SPECIFIER)
+    {
+        ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+        Octets = octets,
+    };
 }

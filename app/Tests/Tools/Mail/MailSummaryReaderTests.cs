@@ -99,6 +99,24 @@ public sealed class MailSummaryReaderTests
     }
 
     [Test]
+    public void TheSignatureOfASignedMailIsNoAttachment()
+    {
+        var signature = new BodyPartBasic(new ContentType("application", "pkcs7-signature"), PART_SPECIFIER)
+        {
+            ContentDisposition = new ContentDisposition(ContentDisposition.Attachment) { FileName = "smime.p7s" },
+        };
+
+        var signed = Summary("smime-clear-signed.eml");
+        signed.Body = Multipart("signed", new BodyPartText(new ContentType("text", "plain"), PART_SPECIFIER), signature);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(MailSummaryReader.ReadAttachments(signed), Is.Empty);
+            Assert.That(MailSummaryReader.ReadTextSource(signed, new MailTextParts(null, "Signed, but readable for everybody.")).AttachmentNames, Is.Empty);
+        });
+    }
+
+    [Test]
     public void TheFlagsAreRead()
     {
         Assert.Multiple(() =>

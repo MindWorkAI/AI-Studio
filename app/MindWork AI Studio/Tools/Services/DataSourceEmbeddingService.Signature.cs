@@ -1,5 +1,8 @@
+using System.Globalization;
+
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Mail;
 using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tools.Services;
@@ -34,8 +37,11 @@ public sealed partial class DataSourceEmbeddingService
     /// every other data source alone.
     ///
     /// Version 1: the header block and the text from the HTML part, without attachments.
+    ///
+    /// Version 2: the text of attached documents follows, each attachment under a line naming it.
+    /// The signature of a signed mail no longer counts as an attachment.
     /// </remarks>
-    private const string MAIL_TEXT_VERSION = "1";
+    private const string MAIL_TEXT_VERSION = "2";
 
     /// <summary>
     /// Works out how the text of a data source is cut for a given embedding provider.
@@ -95,7 +101,10 @@ public sealed partial class DataSourceEmbeddingService
     /// re-embedded every file of a data source whenever somebody raised or lowered it — real money
     /// at a cloud embedding provider, for nothing.
     ///
-    /// A mailbox appends the version of its mail text, cf. MAIL_TEXT_VERSION. Nothing else is
+    /// A mailbox appends the version of its mail text, cf. MAIL_TEXT_VERSION, and up to which size
+    /// it reads attachments. A mail is never read again once it is indexed, so reading attachments
+    /// from now on, or larger ones, reaches the mails indexed before only by indexing them anew. The
+    /// dialog asks before it does that, as for every change of this signature. Nothing else is
     /// appended for the other kinds of data source, so their stored signatures stay valid.
     /// </remarks>
     internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
@@ -113,7 +122,14 @@ public sealed partial class DataSourceEmbeddingService
             chunkingOptions.MaxChunkTokenLength,
             chunkingOptions.OverlapTokenLength);
 
-        return dataSource is DataSourceMailbox ? $"{signature}|mail:{MAIL_TEXT_VERSION}" : signature;
+        if (dataSource is not DataSourceMailbox mailbox)
+            return signature;
+
+        var attachments = MailAttachmentRules.GetMaxSizeMegabytes(mailbox) is { } maxSizeMegabytes
+            ? maxSizeMegabytes.ToString(CultureInfo.InvariantCulture)
+            : "none";
+
+        return $"{signature}|mail:{MAIL_TEXT_VERSION}|attachments:{attachments}";
     }
 
     /// <summary>

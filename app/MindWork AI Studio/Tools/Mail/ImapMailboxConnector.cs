@@ -297,7 +297,8 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// Fetches the text parts of a mail in the open folder, and nothing else of it.
     /// </summary>
     /// <remarks>
-    /// Attachments stay on the server. A part larger than MAX_TEXT_PART_BYTES is left out as well.
+    /// Attachments stay on the server, cf. FetchAttachmentAsync. A part larger than
+    /// MAX_TEXT_PART_BYTES is left out as well.
     /// </remarks>
     /// <param name="summary">The summary of the mail, with its structure.</param>
     /// <param name="token">The cancellation token.</param>
@@ -315,6 +316,38 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         {
             throw new MailboxConnectionException(failure, $"Fetching the text of a mail failed: {failure}.", e);
         }
+    }
+
+    /// <summary>
+    /// Fetches one attachment of a mail in the open folder, and writes it out as the file it was.
+    /// </summary>
+    /// <remarks>
+    /// The attachment arrives as a whole before it is written, so its size has to be checked
+    /// beforehand, cf. MailAttachmentRules. Only fetching it counts as a failure of the connection.
+    /// Writing it out is a failure of this one attachment, e.g. a full disk.
+    /// </remarks>
+    /// <param name="uid">The UID of the mail.</param>
+    /// <param name="part">The attachment, from the structure of the mail.</param>
+    /// <param name="destination">Where the decoded attachment is written to.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <exception cref="MailboxConnectionException">The server could not deliver the attachment.</exception>
+    /// <exception cref="InvalidDataException">The server delivered something other than a file.</exception>
+    public async Task FetchAttachmentAsync(UniqueId uid, BodyPartBasic part, Stream destination, CancellationToken token)
+    {
+        MimeEntity entity;
+        try
+        {
+            entity = await this.GetOpenFolder().GetBodyPartAsync(uid, part, token);
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Fetching an attachment failed: {failure}.", e);
+        }
+
+        if (entity is not MimePart { Content: { } content })
+            throw new InvalidDataException("The server delivered the attachment as something other than a file.");
+
+        await content.DecodeToAsync(destination, token);
     }
 
     /// <summary>

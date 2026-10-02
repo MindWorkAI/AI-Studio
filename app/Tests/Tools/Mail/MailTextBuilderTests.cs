@@ -124,6 +124,7 @@ public sealed class MailTextBuilderTests
             Assert.That(text.EncryptionKind, Is.EqualTo(MailEncryptionKind.NONE));
             Assert.That(text.Body, Is.EqualTo("Signed, but readable for everybody."));
             Assert.That(text.HeaderBlock, Does.Not.Contain("Content:"));
+            Assert.That(text.HeaderBlock, Does.Not.Contain("Attachments:"), "The signature is no attachment for anybody reading the mail.");
         });
     }
 
