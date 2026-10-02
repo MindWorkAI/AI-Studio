@@ -44,18 +44,24 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private CultureInfo currentCulture = CultureInfo.InvariantCulture;
 
-    private int TotalIndexedFiles => this.Statuses.Sum(status => status.IndexedDocuments);
+    /// <remarks>
+    /// The sums above every data source count files and mails alike, which is why their chips name
+    /// neither.
+    /// </remarks>
+    private int TotalIndexedDocuments => this.Statuses.Sum(status => status.IndexedDocuments);
 
-    private int TotalPendingFiles => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.PermanentlySkippedDocuments));
+    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.PermanentlySkippedDocuments));
 
-    private int TotalFailedFiles => this.Statuses.Sum(status => status.FailedDocuments);
+    private int TotalFailedDocuments => this.Statuses.Sum(status => status.FailedDocuments);
 
-    private int TotalPermanentlySkippedFiles => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
+    private int TotalPermanentlySkippedDocuments => this.Statuses.Sum(status => status.PermanentlySkippedDocuments);
+
+    private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
 
     /// <remarks>
-    /// The chips above count files, which says nothing about how far the list of data sources itself
-    /// has come. While several of them wait their turn, this is the one line saying so. With a single
-    /// data source there is nothing to say: its own row already tells the whole story.
+    /// The chips above count documents, which says nothing about how far the list of data sources
+    /// itself has come. While several of them wait their turn, this is the one line saying so. With a
+    /// single data source there is nothing to say: its own row already tells the whole story.
     /// </remarks>
     private bool IsWorkingThroughDataSources => this.Statuses.Count > 1 && this.Statuses.Any(status => status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED);
 
@@ -173,7 +179,7 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// What the panel of a data source says about its progress through the files.
+    /// What the panel of a data source says about its progress through its files or mails.
     /// </summary>
     /// <remarks>
     /// While a file is being worked on, the sentence names that file and how far into it we are.
@@ -186,25 +192,54 @@ public partial class Embeddings : MSGComponentBase
     /// while it is being read, and hanging the choice on the block number let the line jump back
     /// and forth between two entirely different sentences at every file. Now the beginning of the
     /// sentence stays put and the blocks are appended to it as soon as the first one arrives.
+    ///
+    /// A mail has no pages: those of its attachments would not say which attachment they are in.
     /// </remarks>
-    private string GetFileProgressText(DataSourceEmbeddingStatus status)
+    private string GetProgressText(DataSourceEmbeddingStatus status)
     {
+        var isMailbox = IsMailbox(status);
         if (status.State is not DataSourceEmbeddingState.RUNNING || string.IsNullOrWhiteSpace(status.CurrentDocument))
-            return string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments));
+        {
+            return isMailbox
+                ? string.Format(T("{0} of {1} mails are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments))
+                : string.Format(T("{0} of {1} files are indexed."), this.FormatNumber(status.IndexedDocuments), this.FormatNumber(status.TotalDocuments));
+        }
 
         //
         // Everything already dealt with, plus the one in hand. Skipped and failed files are part of
         // that: they are behind us in the folder, and leaving them out would let the number fall
         // behind the file whose name is shown right next to it.
         //
-        var currentFileNumber = Math.Min(status.TotalDocuments, status.IndexedDocuments + status.PermanentlySkippedDocuments + status.FailedDocuments + 1);
+        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.PermanentlySkippedDocuments + status.FailedDocuments + 1));
+        var total = this.FormatNumber(status.TotalDocuments);
+        if (isMailbox)
+        {
+            return status.CurrentDocumentBlock is { } mailBlock
+                ? string.Format(T("Mail {0} of {1} is being indexed: block {2}."), currentNumber, total, this.FormatNumber(mailBlock))
+                : string.Format(T("Mail {0} of {1} is being indexed."), currentNumber, total);
+        }
+
         return status switch
         {
-            { CurrentDocumentBlock: { } block, CurrentDocumentPage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments), this.FormatNumber(block), this.FormatNumber(page)),
-            { CurrentDocumentBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments), this.FormatNumber(block)),
-            _ => string.Format(T("File {0} of {1} is being indexed."), this.FormatNumber(currentFileNumber), this.FormatNumber(status.TotalDocuments)),
+            { CurrentDocumentBlock: { } block, CurrentDocumentPage: { } page } => string.Format(T("File {0} of {1} is being indexed: block {2}, page {3}."), currentNumber, total, this.FormatNumber(block), this.FormatNumber(page)),
+            { CurrentDocumentBlock: { } block } => string.Format(T("File {0} of {1} is being indexed: block {2}."), currentNumber, total, this.FormatNumber(block)),
+            _ => string.Format(T("File {0} of {1} is being indexed."), currentNumber, total),
         };
     }
+
+    private string GetSkippedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Skipped mails: {0}."), this.FormatNumber(status.PermanentlySkippedDocuments))
+        : string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), this.FormatNumber(status.PermanentlySkippedDocuments));
+
+    private string GetFailedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Failed mails: {0}"), this.FormatNumber(status.FailedDocuments))
+        : string.Format(T("Failed files: {0}"), this.FormatNumber(status.FailedDocuments));
+
+    private string GetCurrentDocumentText(DataSourceEmbeddingStatus status) => IsMailbox(status)
+        ? string.Format(T("Current mail: {0}"), status.CurrentDocument)
+        : string.Format(T("Current file: {0}"), status.CurrentDocument);
+
+    private static bool IsMailbox(DataSourceEmbeddingStatus status) => status.DataSourceType is DataSourceType.MAILBOX;
 
     private string FormatNumber(int value) => value.ToString("N0", this.currentCulture);
 
@@ -238,7 +273,7 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private IReadOnlyList<FailureGroup> GetFailureGroups(DataSourceEmbeddingStatus status) => status.Failures
         .GroupBy(this.GetFailureCause)
-        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => failure.DocumentKey, StringComparer.OrdinalIgnoreCase).ToList()))
+        .Select(group => new FailureGroup(group.Key, GetEmbeddingProviderName(group), group.OrderBy(failure => IsMailbox(status) ? GetMailName(failure) : failure.DocumentKey, StringComparer.OrdinalIgnoreCase).ToList()))
         .OrderBy(group => group.Cause.Priority)
         .ThenByDescending(group => group.Failures.Count)
         .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
@@ -285,9 +320,19 @@ public partial class Embeddings : MSGComponentBase
 
     /// <remarks>
     /// A failure which was not about one file, such as a folder which is gone, carries the name of
-    /// the data source instead of a path. There is nothing to show for those.
+    /// the data source instead of a path. There is nothing to show for those, nor for a mail, which
+    /// lies on a server.
     /// </remarks>
-    private static bool CanShowInFileManager(DataSourceEmbeddingFailure failure) => !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
+    private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, DataSourceEmbeddingFailure failure) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
+
+    /// <summary>
+    /// How a failed mail is called in the list: by its subject, which is all the user knows it by.
+    /// </summary>
+    /// <remarks>
+    /// The key of a mail is a hash, which means nothing to anybody. A failure which was not about
+    /// one mail carries the name of the mailbox instead.
+    /// </remarks>
+    private static string GetMailName(DataSourceEmbeddingFailure failure) => string.IsNullOrWhiteSpace(failure.DisplayName) ? failure.DocumentKey : failure.DisplayName;
 
     /// <summary>
     /// Opens the file browser of the system and selects the file in it.

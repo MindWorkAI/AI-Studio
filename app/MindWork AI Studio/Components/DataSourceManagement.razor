@@ -3,11 +3,18 @@
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-    @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
+    @if (this.AreMailboxesEnabled)
+    {
+        @T("You might configure different data sources. A data source can include one file, all files in a directory, a mailbox, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
+    }
+    else
+    {
+        @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
+    }
 </MudJustifiedText>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
-    <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@T("Local data sources refresh when files change.")" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
+    <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@(this.AreMailboxesEnabled ? T("Local data sources refresh when files change, mailboxes every 16 minutes.") : T("Local data sources refresh when files change."))" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
     <MudTooltip Text="@T("Refresh all")">
         <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources"/>
     </MudTooltip>
@@ -28,7 +35,7 @@
         <MudTh>@T("Name")</MudTh>
         <MudTh>@T("Type")</MudTh>
         <MudTh>@T("Embedding")</MudTh>
-        <MudTh>@T("Indexed files")</MudTh>
+        <MudTh>@T("Indexed")</MudTh>
         <MudTh>@T("Actions")</MudTh>
     </HeaderContent>
     <RowTemplate>
@@ -43,7 +50,7 @@
                 <MudTooltip Text="@this.GetIndexingStatusTooltip(embeddingStatus)">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="width: 0.75rem; height: 0.75rem; flex-shrink: 0;"/>
-                        <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedDocuments, embeddingStatus.TotalDocuments))</MudText>
+                        <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedDocuments.CompactCount(), embeddingStatus.TotalDocuments.CompactCount()))</MudText>
                     </MudStack>
                 </MudTooltip>
             }

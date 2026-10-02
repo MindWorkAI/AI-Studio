@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.PluginSystem;
 
@@ -186,7 +187,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 //
                 this.FailedDocuments++;
                 this.LastError = providerFailure.UserMessage;
-                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, providerFailure.UserMessage, DateTimeOffset.UtcNow, providerFailure.FailureReason, providerFailure.StatusCode, context.EmbeddingProvider.Name));
+                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, providerFailure.UserMessage, DateTimeOffset.UtcNow, providerFailure.FailureReason, providerFailure.StatusCode, context.EmbeddingProvider.Name, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
@@ -218,8 +219,8 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 //
                 this.PermanentlySkippedDocuments++;
                 var occurredAtUtc = DateTimeOffset.UtcNow;
-                var indexingMessage = extractionFailure.Code.ToIndexingUserMessage(document.DisplayName);
-                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true));
+                var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document);
+                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
 
@@ -257,9 +258,9 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 // Deliberately not the message of the exception: that one is written for the log
                 // file, in English, and repeats the path which the list shows anyway.
                 //
-                var failureMessage = extractionCode.ToIndexingUserMessage(document.DisplayName);
+                var failureMessage = this.GetFailureMessage(extractionCode, document);
                 this.LastError = failureMessage;
-                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode));
+                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
@@ -294,7 +295,9 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         var hasFailures = this.FailedDocuments > 0;
         var lastError = hasFailures
             ? string.IsNullOrWhiteSpace(this.LastError)
-                ? TB("Some files could not be indexed. The list below says which ones and why.")
+                ? context.DataSource is DataSourceMailbox
+                    ? TB("Some mails could not be indexed. The list below says which ones and why.")
+                    : TB("Some files could not be indexed. The list below says which ones and why.")
                 : this.LastError
             : string.Empty;
 
@@ -361,6 +364,22 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         await context.IndexStore.UpdateDataSourceHashAsync(context.DataSource.Id, sourceHash, token);
         token.ThrowIfCancellationRequested();
     }
+
+    /// <summary>
+    /// What the user reads about a document which could not be indexed.
+    /// </summary>
+    /// <remarks>
+    /// A mail only ever fails as a whole: its text is not read from a file, and an attachment which
+    /// cannot be read costs the mail nothing but that attachment. So one sentence serves every
+    /// reason, and the log holds the details. The sentences about files would speak of a file, and
+    /// of a change which never comes to a mail.
+    /// </remarks>
+    /// <param name="code">Why reading the document failed, NONE when it was not about reading it.</param>
+    /// <param name="document">The document.</param>
+    /// <returns>The message, ready to show.</returns>
+    private string GetFailureMessage(FileExtractionErrorCode code, EmbeddingDocument document) => context.DataSource is DataSourceMailbox
+        ? string.Format(TB("The mail '{0}' could not be indexed. AI Studio tries again during the next sync."), document.DisplayName)
+        : code.ToIndexingUserMessage(document.DisplayName);
 
     private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null) => new(
         context.DataSource.Id,

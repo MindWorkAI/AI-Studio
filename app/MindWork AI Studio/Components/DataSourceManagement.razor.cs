@@ -38,6 +38,8 @@ public partial class DataSourceManagement : MSGComponentBase
     private IEnumerable<IDataSourceBase> ConfiguredDataSources => this.SettingsManager.ConfigurationData.DataSources
         .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Cast<IDataSourceBase>());
 
+    private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -105,7 +107,8 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null)
             return T("Waiting for indexing status");
 
-        if (status.PermanentlySkippedDocuments == 0)
+        // Only files are skipped for want of readable text. A mail is read from the server, never from a file:
+        if (status.PermanentlySkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
             return status.StateLabel;
 
         return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)}";

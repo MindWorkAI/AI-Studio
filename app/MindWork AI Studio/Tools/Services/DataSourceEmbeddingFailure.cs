@@ -20,5 +20,6 @@ namespace AIStudio.Tools.Services;
 /// <param name="EmbeddingProviderName">The embedding provider that was asked.</param>
 /// <param name="ExtractionCode">Why reading the document failed, where the failure was about reading it at all.</param>
 /// <param name="IsPermanent">Whether the document stays out of the index until it changes.</param>
+/// <param name="DisplayName">How the document is called for the user, e.g. the name of a file or the subject of a mail. Empty where the run did not know it, e.g. for a failure stored by an earlier run.</param>
 public sealed record DataSourceEmbeddingFailure(string DocumentKey, string Reason, DateTimeOffset OccurredAtUtc, ProviderRequestFailureReason FailureReason = ProviderRequestFailureReason.NONE,
-    HttpStatusCode? StatusCode = null, string EmbeddingProviderName = "", FileExtractionErrorCode ExtractionCode = FileExtractionErrorCode.NONE, bool IsPermanent = false);
+    HttpStatusCode? StatusCode = null, string EmbeddingProviderName = "", FileExtractionErrorCode ExtractionCode = FileExtractionErrorCode.NONE, bool IsPermanent = false, string DisplayName = "");

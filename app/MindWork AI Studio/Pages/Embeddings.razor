@@ -13,11 +13,17 @@
         <MudText Typo="Typo.body1" Class="mt-2">
             @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.")
         </MudText>
+        @if (this.AreMailboxesEnabled)
+        {
+            <MudText Typo="Typo.body1" Class="mt-2">
+                @T("Mailboxes are synced every 16 minutes while the automatic refresh is on. Each mail is embedded only once: when it moves to another folder, AI Studio merely notes where it lies now.")
+            </MudText>
+        }
         <MudStack Row="true" Class="mt-3" Wrap="Wrap.Wrap" Spacing="2">
-            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">@string.Format(T("Indexed files: {0}"), this.TotalIndexedFiles)</MudChip>
-            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">@string.Format(T("Pending files: {0}"), this.TotalPendingFiles)</MudChip>
-            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled">@string.Format(T("Skipped files: {0}"), this.TotalPermanentlySkippedFiles)</MudChip>
-            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed files: {0}"), this.TotalFailedFiles)</MudChip>
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">@string.Format(T("Indexed: {0}"), this.FormatNumber(this.TotalIndexedDocuments))</MudChip>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">@string.Format(T("Pending: {0}"), this.FormatNumber(this.TotalPendingDocuments))</MudChip>
+            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled">@string.Format(T("Skipped: {0}"), this.FormatNumber(this.TotalPermanentlySkippedDocuments))</MudChip>
+            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed: {0}"), this.FormatNumber(this.TotalFailedDocuments))</MudChip>
         </MudStack>
         @if (this.IsWorkingThroughDataSources)
         {
@@ -74,27 +80,27 @@
                             <MudProgressLinear Value="@status.ProgressPercent" Rounded="@true" Color="@GetStatusColor(status)" />
 
                             <MudText Typo="Typo.body2">
-                                @this.GetFileProgressText(status)
+                                @this.GetProgressText(status)
                             </MudText>
 
                             @if (status.PermanentlySkippedDocuments > 0)
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)
+                                    @this.GetSkippedText(status)
                                 </MudText>
                             }
 
                             @if (status.FailedDocuments > 0)
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Failed files: {0}"), status.FailedDocuments)
+                                    @this.GetFailedText(status)
                                 </MudText>
                             }
 
                             @if (!string.IsNullOrWhiteSpace(status.CurrentDocument))
                             {
                                 <MudText Typo="Typo.body2">
-                                    @string.Format(T("Current file: {0}"), status.CurrentDocument)
+                                    @this.GetCurrentDocumentText(status)
                                 </MudText>
                             }
 
@@ -112,7 +118,7 @@
                                             <MudStack Spacing="3">
                                                 <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2" AlignItems="AlignItems.Center">
                                                     <MudChip T="string" Size="Size.Small" Color="@group.Cause.Color" Variant="Variant.Outlined">
-                                                        @(group.Cause.IsPermanent ? T("Skipped until the file changes") : T("Tried again during the next run"))
+                                                        @(group.Cause.IsPermanent ? (IsMailbox(status) ? T("Skipped") : T("Skipped until the file changes")) : T("Tried again during the next run"))
                                                     </MudChip>
                                                     @if (!string.IsNullOrWhiteSpace(group.EmbeddingProviderName))
                                                     {
@@ -132,15 +138,22 @@
                                                         <col style="width: 7em;"/>
                                                     </ColGroup>
                                                     <HeaderContent>
-                                                        <MudTh>@T("File")</MudTh>
+                                                        <MudTh>@(IsMailbox(status) ? T("Mail") : T("File"))</MudTh>
                                                         <MudTh>@T("Noticed")</MudTh>
                                                         <MudTh>@T("Actions")</MudTh>
                                                     </HeaderContent>
                                                     <RowTemplate>
                                                         <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
                                                             @* Captions render as spans, so each of them needs to be told to take its own line. *@
-                                                            <MudText Typo="Typo.body2">@GetFileName(context.DocumentKey)</MudText>
-                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.DocumentKey</MudText>
+                                                            @if (IsMailbox(status))
+                                                            {
+                                                                <MudText Typo="Typo.body2">@GetMailName(context)</MudText>
+                                                            }
+                                                            else
+                                                            {
+                                                                <MudText Typo="Typo.body2">@GetFileName(context.DocumentKey)</MudText>
+                                                                <MudText Typo="Typo.caption" Class="mud-text-secondary d-block">@context.DocumentKey</MudText>
+                                                            }
                                                             @if (group.Cause.ShowsMessagePerFile)
                                                             {
                                                                 <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block">@context.Reason</MudText>
@@ -150,7 +163,7 @@
                                                             <MudText Typo="Typo.caption">@GetOccurrenceText(context)</MudText>
                                                         </MudTd>
                                                         <MudTd>
-                                                            @if (CanShowInFileManager(context))
+                                                            @if (CanShowInFileManager(status, context))
                                                             {
                                                                 <MudTooltip Text="@T("Show this file in the file browser of your system")">
                                                                     <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.ShowInFileManager(context))"/>

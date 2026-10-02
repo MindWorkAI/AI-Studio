@@ -25,6 +25,8 @@ public sealed class DocumentRunProgressTests
 {
     private const string DATA_SOURCE_ID = "6f1d6a4e-6a5e-4c62-9a4f-0f2d2c8b7a11";
 
+    private const string EMBEDDING_ID = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01";
+
     [Test]
     public async Task AProviderFailureKeepsTheDocumentsSkippedForGoodInTheStatus()
     {
@@ -148,12 +150,40 @@ public sealed class DocumentRunProgressTests
         Assert.That(statuses.Select(status => status.State), Is.EqualTo(new[] { DataSourceEmbeddingState.IDLE, DataSourceEmbeddingState.COMPLETED }));
     }
 
-    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments)
+    [Test]
+    public async Task AFailedMailIsCalledByItsSubject()
+    {
+        var mailbox = new DataSourceMailbox { Num = 2, Id = DATA_SOURCE_ID, Name = "Work", EmbeddingId = EMBEDDING_ID, ConfidenceLevel = ConfidenceLevel.LOW };
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 1, mailbox);
+        var mail = Document("mail:5f0c2a9e7b14", "Board report due today");
+
+        await progress.RecordDocumentFailureAsync(mail, new IOException("The vector store refused the chunks."), CancellationToken.None);
+        await progress.CompleteRunAsync("SOURCE-HASH", "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("Board report due today"), "The key of a mail is a hash, which tells the user nothing.");
+            Assert.That(statuses[^1].Failures[0].Reason, Does.Contain("'Board report due today'").And.Not.Contain("file"), "A mail was called a file.");
+            Assert.That(statuses[^1].LastError, Does.Not.Contain("file"));
+        });
+    }
+
+    [Test]
+    public async Task AFailedFileKeepsItsName()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 1);
+
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
+
+        Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
+    }
+
+    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest();
-        var embeddingProvider = new EmbeddingProvider(1, "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
-        var dataSource = new DataSourceLocalDirectory
+        var embeddingProvider = new EmbeddingProvider(1, EMBEDDING_ID, "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
+        var dataSource = indexedDataSource ?? new DataSourceLocalDirectory
         {
             Num = 1,
             Id = DATA_SOURCE_ID,
@@ -178,10 +208,12 @@ public sealed class DocumentRunProgressTests
         return (new DocumentRunProgress(context, totalDocuments, 0, string.Empty, [], NullLogger.Instance), statuses, manifest);
     }
 
-    private static EmbeddingDocument Document(string path) => new(
-        path,
-        new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, path), path, Path.GetFileName(path), Path.GetFileName(path), "pdf", "FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 0),
-        Path.GetFileName(path),
+    private static EmbeddingDocument Document(string path) => Document(path, Path.GetFileName(path));
+
+    private static EmbeddingDocument Document(string key, string displayName) => new(
+        key,
+        new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, key), key, displayName, displayName, "pdf", "FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 0),
+        displayName,
         _ => NoChunks());
 
     private static async IAsyncEnumerable<EmbeddingChunk> NoChunks()
