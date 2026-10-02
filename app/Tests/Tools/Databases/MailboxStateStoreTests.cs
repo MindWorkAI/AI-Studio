@@ -129,4 +129,21 @@ public sealed class MailboxStateStoreTests
 
         Assert.That(await this.Client.GetMailboxAuthFailureAsync(NEVER_INDEXED, TOKEN), Is.EqualTo(failure), "The very first sign-in of a mailbox can fail, long before the index holds anything of it.");
     }
+
+    [Test]
+    public async Task EveryMailboxTheIndexKeepsSomethingOfIsListedOnce()
+    {
+        const string NEVER_INDEXED = "5a1e9c37-2b4d-4e8f-a6c0-3d7b9e1f2a48";
+        const string FOLDER = "9d2b4f6a-1c3e-4a5b-8d7f-0e2c4a6b8d1f";
+        var failure = new MailboxAuthFailure(DateTimeOffset.UtcNow, "AUTHENTICATIONFAILED Invalid credentials");
+
+        await this.Client.UpsertDataSourceAsync(FOLDER, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+        await this.Client.UpsertMailboxAuthFailureAsync(DATA_SOURCE_ID, failure, TOKEN);
+        await this.Client.UpsertMailboxAuthFailureAsync(NEVER_INDEXED, failure, TOKEN);
+
+        Assert.That(
+            await this.Client.GetStoredMailboxIdsAsync(TOKEN),
+            Is.EquivalentTo(new[] { DATA_SOURCE_ID, NEVER_INDEXED }),
+            "A refused sign-in outlives the index, so it is left over just as well. A folder is no mailbox, whatever happens to it.");
+    }
 }

@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Mail;
 
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,11 @@ namespace AIStudio.Tools.Databases.IndexStore;
 
 public sealed partial class SqliteIndexStoreClientImplementation
 {
+    /// <summary>
+    /// The type a mailbox is stored under in data_sources, as the embedding service writes it.
+    /// </summary>
+    private const string MAILBOX_DATA_SOURCE_TYPE = nameof(DataSourceType.MAILBOX);
+
     public override async Task<IReadOnlyList<MailFolderRecord>> GetMailFoldersAsync(string dataSourceId, CancellationToken token)
     {
         await using var context = this.CreateContext();
@@ -283,6 +289,23 @@ public sealed partial class SqliteIndexStoreClientImplementation
         await context.MailboxAuthStates
             .Where(state => state.DataSourceId == dataSourceId)
             .ExecuteDeleteAsync(token);
+    }
+
+    public override async Task<IReadOnlyCollection<string>> GetStoredMailboxIdsAsync(CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var indexedIds = await context.DataSources
+            .AsNoTracking()
+            .Where(dataSource => dataSource.DataSourceType == MAILBOX_DATA_SOURCE_TYPE)
+            .Select(dataSource => dataSource.DataSourceId)
+            .ToListAsync(token);
+
+        var refusedIds = await context.MailboxAuthStates
+            .AsNoTracking()
+            .Select(state => state.DataSourceId)
+            .ToListAsync(token);
+
+        return indexedIds.Concat(refusedIds).ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     private static async Task<MailboxSyncStateEntity> GetOrAddMailboxSyncStateAsync(IndexStoreDbContext context, string dataSourceId, CancellationToken token)

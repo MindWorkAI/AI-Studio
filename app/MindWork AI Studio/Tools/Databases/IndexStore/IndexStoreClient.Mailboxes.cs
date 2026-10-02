@@ -192,4 +192,16 @@ public abstract partial class IndexStoreClient
     /// <param name="dataSourceId">The mailbox.</param>
     /// <param name="token">The cancellation token.</param>
     public abstract Task ClearMailboxAuthFailureAsync(string dataSourceId, CancellationToken token);
+
+    /// <summary>
+    /// Lists every mailbox the index keeps something of: an index, a refused sign-in, or both.
+    /// </summary>
+    /// <remarks>
+    /// The refused sign-ins count on their own, since they outlive the index on purpose. What is
+    /// listed here for a mailbox which is no longer configured is left over, cf.
+    /// DataSourceEmbeddingService.DeleteOrphanedMailboxIndexesAsync.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The ids of the mailboxes, each once.</returns>
+    public abstract Task<IReadOnlyCollection<string>> GetStoredMailboxIdsAsync(CancellationToken token);
 }

@@ -36,4 +36,6 @@ public sealed partial class NoIndexStoreClient
     public override Task UpsertMailboxAuthFailureAsync(string dataSourceId, MailboxAuthFailure failure, CancellationToken token) => Task.CompletedTask;
 
     public override Task ClearMailboxAuthFailureAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
+
+    public override Task<IReadOnlyCollection<string>> GetStoredMailboxIdsAsync(CancellationToken token) => Task.FromResult<IReadOnlyCollection<string>>([]);
 }

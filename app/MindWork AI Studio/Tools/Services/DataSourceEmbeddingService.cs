@@ -747,6 +747,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         // Before the first run: from then on, a sync may be writing an attachment there.
         MailAttachmentFiles.DeleteLeftovers(logger);
+        await this.DeleteOrphanedMailboxIndexesAsync(token);
 
         logger.LogInformation("Embedding background service is ready. Running the initial persisted hash check before activating file watchers.");
         await this.RunInitialDataSourceHashCheckAsync(token);

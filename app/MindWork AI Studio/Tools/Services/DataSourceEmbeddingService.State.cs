@@ -72,6 +72,65 @@ public sealed partial class DataSourceEmbeddingService
         return true;
     }
 
+    /// <summary>
+    /// Deletes what the index keeps of mailboxes which are no longer configured.
+    /// </summary>
+    /// <remarks>
+    /// Such leftovers come about in two ways. An older version of AI Studio does not know mailboxes
+    /// and saves the settings without them. Or the stores could not be reached while the user
+    /// deleted a mailbox. Either way, nothing would ever delete the index then, nor a refused
+    /// sign-in kept next to it.
+    ///
+    /// Only with settings which were loaded and may be written. Settings which could not be read
+    /// look like settings without a single mailbox, and every index would be deleted for that. Both
+    /// stores have to be there as well: the row in the index store is all that leads to the
+    /// collection in the vector store, so deleting the one without the other would leave the other
+    /// behind for good.
+    ///
+    /// Runs before the first run, so none of the mailboxes is in use. The password stays in the OS
+    /// keyring: its entry carries the name of the mailbox, which nothing here knows anymore.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    private async Task DeleteOrphanedMailboxIndexesAsync(CancellationToken token)
+    {
+        if (!settingsManager.HasCompletedInitialSettingsLoad || settingsManager.SettingsWriteBlocked)
+        {
+            logger.LogInformation("Leaving the indexes of mailboxes alone, since the settings could not be loaded completely. SettingsWriteBlockReason={SettingsWriteBlockReason}.", settingsManager.SettingsWriteBlockReason);
+            return;
+        }
+
+        try
+        {
+            var vectorStore = await databaseClientProvider.GetVectorStoreAsync(token);
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
+            if (!vectorStore.IsAvailable || !indexStore.IsAvailable)
+                return;
+
+            var configuredIds = settingsManager.ConfigurationData.Mailboxes
+                .Select(mailbox => mailbox.Id)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var mailboxId in await indexStore.GetStoredMailboxIdsAsync(token))
+            {
+                if (configuredIds.Contains(mailboxId))
+                    continue;
+
+                await this.ResetPersistedStateAsync(mailboxId, vectorStore, indexStore, token);
+                await indexStore.ClearMailboxAuthFailureAsync(mailboxId, token);
+                logger.LogInformation("Deleted the index of mailbox '{DataSourceId}', which is no longer configured.", mailboxId);
+            }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // Nothing depends on it: whatever is left over is tried again on the next start.
+            logger.LogWarning(exception, "Could not delete the indexes of mailboxes which are no longer configured.");
+        }
+    }
+
     private async Task ResetPersistedStateAsync(
         string dataSourceId,
         VectorStoreClient? vectorStore,
