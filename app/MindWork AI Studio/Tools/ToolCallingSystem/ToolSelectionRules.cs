@@ -11,6 +11,7 @@ public static class ToolSelectionRules
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
     public const string SEMANTIC_SEARCH_TOOL_ID = "semantic_search";
+    public const string SEARCH_MAILS_TOOL_ID = "search_mails";
 
     /// <summary>
     /// Turns a set of selected tool IDs into the set which actually runs.

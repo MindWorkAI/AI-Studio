@@ -19,7 +19,8 @@ public sealed class ToolExecutionResult
     /// JSON embedded in a web page, which this never is: a German document would reach the model
     /// with every umlaut as six characters. The relaxed encoder escapes only what JSON requires.
     /// </remarks>
-    private static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    // Internal, so a tool which keeps its result within a budget measures exactly what the model gets:
+    internal static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public string? TextContent { get; init; }
 

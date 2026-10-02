@@ -64,6 +64,19 @@ internal static class MailToolArguments
         .OptionalString(FOLDER_ARGUMENT, "Optional full path of the folder the mails lie in, exactly as results show it, such as 'INBOX' or 'Archive/2026'. Subfolders are not included.");
 
     /// <summary>
+    /// The value of the importance argument which stands for the given importance.
+    /// </summary>
+    /// <remarks>
+    /// Results name the importance of a mail the same way, so a model can take it over as a condition.
+    /// </remarks>
+    public static string ToArgumentValue(MailImportance importance) => importance switch
+    {
+        MailImportance.LOW => "low",
+        MailImportance.HIGH => "high",
+        _ => "normal",
+    };
+
+    /// <summary>
     /// Reads which of the offered mailboxes the model asked for.
     /// </summary>
     /// <param name="arguments">The arguments the model passed.</param>

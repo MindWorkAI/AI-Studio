@@ -33,6 +33,15 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     private const int CHUNKS_PER_MAIL = 4;
 
     /// <summary>
+    /// Whether mailboxes exist in this installation right now: both of their previews are switched on.
+    /// </summary>
+    /// <remarks>
+    /// Mailboxes are a preview of their own, on top of local RAG. The mail tools are available
+    /// exactly as long as this holds, see IToolImplementation.IsAvailable.
+    /// </remarks>
+    public bool AreMailboxesEnabled => PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager) && PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(settingsManager);
+
+    /// <summary>
     /// The mailboxes which the provider of a chat may read, in the order the tools offer them.
     /// </summary>
     /// <remarks>
@@ -44,7 +53,7 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// <returns>The mailboxes, none while one of the previews is switched off.</returns>
     public IReadOnlyList<DataSourceMailbox> GetReadableMailboxes(ConfidenceLevel chatProviderConfidence)
     {
-        if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager) || !PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(settingsManager))
+        if (!this.AreMailboxesEnabled)
             return [];
 
         return settingsManager.ConfigurationData.Mailboxes
