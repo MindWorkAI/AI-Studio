@@ -241,6 +241,14 @@ public partial class Embeddings : MSGComponentBase
 
     private static bool IsMailbox(DataSourceEmbeddingStatus status) => status.DataSourceType is DataSourceType.MAILBOX;
 
+    /// <remarks>
+    /// A mailbox can be searched long before it was worked through once: its first sync takes
+    /// hours with a large one, newest mails first. What the index lacks until then are older mails.
+    /// </remarks>
+    private string GetLastSyncText(DataSourceEmbeddingStatus status) => status.LastSyncUtc is { } lastSyncUtc
+        ? string.Format(T("Last complete sync: {0}"), lastSyncUtc.ToLocalTime().ToString("g", this.currentCulture))
+        : T("Not synced completely yet. AI Studio works through the mailbox piece by piece, the newest mails first, and older mails are still missing.");
+
     private string FormatNumber(int value) => value.ToString("N0", this.currentCulture);
 
     private static Color GetStatusColor(DataSourceEmbeddingStatus status) => status.State switch
@@ -397,6 +405,34 @@ public partial class Embeddings : MSGComponentBase
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {
         await this.DataSourceEmbeddingService.RetryDataSourceAsync(status.DataSourceId);
+        this.ReloadStatuses();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    /// <summary>
+    /// Opens the settings of a mailbox, e.g. to enter the current password after a refused sign-in.
+    /// </summary>
+    /// <remarks>
+    /// Saving them syncs the mailbox right away. With a new password, that sync is allowed to sign
+    /// in. The page reloads through CONFIGURATION_CHANGED, which it receives like everybody else.
+    /// </remarks>
+    private async Task ChangeMailboxSettings(DataSourceEmbeddingStatus status)
+    {
+        if (await MailboxEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, status.DataSourceId))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    /// <summary>
+    /// Agrees to the removal a mailbox held back, for the very number the user read.
+    /// </summary>
+    private async Task ApproveMailRemoval(DataSourceEmbeddingStatus status)
+    {
+        if (status.PendingRemovalCount is not { } removalCount)
+            return;
+
+        if (!await this.DataSourceEmbeddingService.ApprovePendingMailRemovalAsync(status.DataSourceId, removalCount))
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.PlaylistRemove, T("Your agreement could not be recorded: either the number of mails to remove changed in the meantime, or the index cannot be reached. AI Studio asks you again after the next sync.")));
+
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);
     }

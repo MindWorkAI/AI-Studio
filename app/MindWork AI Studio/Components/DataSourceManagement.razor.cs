@@ -501,29 +501,8 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task EditMailbox(DataSourceMailbox mailbox)
     {
-        if (mailbox.IsEnterpriseConfiguration)
-            return;
-
-        var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
-        {
-            { x => x.IsEditing, true },
-            { x => x.DataSource, mailbox },
-            { x => x.LockSource, await this.DataSourceEmbeddingService.ShouldLockDataSourceOriginAsync(mailbox.Id) },
-            { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<DataSourceMailboxDialog>(T("Edit Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-
-        var editedMailbox = (DataSourceMailbox)dialogResult.Data!;
-        var mailboxes = this.SettingsManager.ConfigurationData.Mailboxes;
-        mailboxes[mailboxes.IndexOf(mailbox)] = editedMailbox;
-
-        await this.SettingsManager.StoreSettings();
-        await this.DataSourceEmbeddingService.QueueDataSourceAsync(editedMailbox);
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        if (await MailboxEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, mailbox.Id))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     /// <summary>

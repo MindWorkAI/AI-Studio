@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 
@@ -40,6 +41,35 @@ public sealed partial class DataSourceEmbeddingService
         PublishStatusChanged();
 
         await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.MANUAL_RETRY);
+    }
+
+    /// <summary>
+    /// Records that the user agreed to the removal a mailbox held back, and syncs the mailbox to carry it out.
+    /// </summary>
+    /// <remarks>
+    /// The count is the one the status showed the user, cf. DataSourceEmbeddingStatus.PendingRemovalCount.
+    /// The agreement holds for exactly that number: should a sync have come up with another one in the
+    /// meantime, nothing is agreed to, and the user is asked anew. The sync which carries the removal
+    /// out signs in like any other, so a recorded sign-in failure still keeps it from the server.
+    /// </remarks>
+    /// <param name="dataSourceId">The mailbox.</param>
+    /// <param name="removalCount">How many mails the user agreed to remove from the index.</param>
+    /// <returns>True when the agreement was recorded. False when the number changed in the meantime, or the index cannot be reached.</returns>
+    public async Task<bool> ApprovePendingMailRemovalAsync(string dataSourceId, int removalCount)
+    {
+        if (!this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource) || dataSource is not DataSourceMailbox)
+            return false;
+
+        var indexStore = await databaseClientProvider.GetIndexStoreAsync(CancellationToken.None);
+        if (!await indexStore.ApprovePendingMailRemovalAsync(dataSourceId, removalCount, CancellationToken.None))
+        {
+            logger.LogInformation("The removal held back for mailbox '{DataSourceId}' was not approved, since another number is held back by now or the index store is unavailable.", dataSourceId);
+            return false;
+        }
+
+        logger.LogInformation("The user approved removing {RemovalCount} mails from the index of mailbox '{DataSourceId}'.", removalCount, dataSourceId);
+        await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
+        return true;
     }
 
     private async Task ResetPersistedStateAsync(
