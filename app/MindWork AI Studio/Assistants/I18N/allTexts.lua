@@ -2623,6 +2623,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T388
 -- This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4072390012"] = "This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues."
 
+-- The model response could not be displayed as a SWOT matrix because it did not have the expected structure. The unprocessed response is shown instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T50304522"] = "The model response could not be displayed as a SWOT matrix because it did not have the expected structure. The unprocessed response is shown instead."
+
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysis focus"
 

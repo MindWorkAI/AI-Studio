@@ -116,6 +116,13 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     [Parameter]
     public string? ExportFileName { get; set; }
+
+    /// <summary>
+    /// Optional visual replacement for a completed text block. The original text remains the
+    /// source for copying and exporting.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? CustomTextContent { get; set; }
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -325,6 +332,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
         hash.Add(this.Content.Sources.Count);
+        hash.Add(this.CustomTextContent is not null);
 
         switch (this.Content)
         {
