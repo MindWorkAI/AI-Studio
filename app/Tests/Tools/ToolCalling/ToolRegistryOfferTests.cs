@@ -59,6 +59,12 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AToolWhosePreviewIsSwitchedOff()
+    {
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition()) { IsAvailable = false }), ToolCapableProvider(), ToolOfferBlockReason.NOT_AVAILABLE_HERE, "The tool belongs to a preview the user did not switch on.");
+    }
+
+    [Test]
     public async Task AToolSwitchedOffByTheOrganization()
     {
         this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add(TOOL_ID);

@@ -214,14 +214,24 @@ public sealed class ToolRegistry
     public IReadOnlyList<ToolDefinition> GetDefinitionsForComponent(Components component)
     {
         return this.definitionsById.Values
-            .Where(x => x.VisibleIn.IsVisibleIn(component))
+            .Where(x => x.VisibleIn.IsVisibleIn(component) && !this.IsUnavailable(x))
             .OrderBy(x => this.implementationsByKey.GetValueOrDefault(x.ImplementationKey)?.GetDisplayName(), StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
     public IReadOnlyList<ToolDefinition> GetAllDefinitions() => this.definitionsById.Values
+        .Where(x => !this.IsUnavailable(x))
         .OrderBy(x => this.implementationsByKey.GetValueOrDefault(x.ImplementationKey)?.GetDisplayName(), StringComparer.OrdinalIgnoreCase)
         .ToList();
+
+    /// <summary>
+    /// Whether the implementation of a tool says it does not exist right now, e.g., while its preview is switched off.
+    /// </summary>
+    /// <remarks>
+    /// A definition without an implementation is not unavailable in this sense: the lists keep it
+    /// as before, and every check leaves it out as a tool nobody knows.
+    /// </remarks>
+    private bool IsUnavailable(ToolDefinition definition) => this.implementationsByKey.GetValueOrDefault(definition.ImplementationKey) is { IsAvailable: false };
 
     public ToolDefinition? GetDefinition(string toolId) => this.definitionsById.GetValueOrDefault(toolId);
 
@@ -256,7 +266,7 @@ public sealed class ToolRegistry
     /// <param name="provider">The provider the request goes to.</param>
     /// <param name="selectedToolIds">The tools the user selected.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
-    /// <returns>The subset that is enabled, active, allowed by the provider's confidence, and allowed by the outbound data restriction.</returns>
+    /// <returns>The subset that is enabled, active, available, allowed by the provider's confidence, and allowed by the outbound data restriction.</returns>
     public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds, OutboundDataRestriction outboundDataRestriction)
     {
         if (!this.settingsManager.AreToolsEnabled())
@@ -281,9 +291,10 @@ public sealed class ToolRegistry
                 continue;
             }
 
-            if (this.GetDefinition(toolId) is { } definition &&
-                this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) &&
-                !ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction, implementation))
+            if (this.GetDefinition(toolId) is not { } definition || !this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+                continue;
+
+            if (!implementation.IsAvailable || !ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction, implementation))
                 filtered.Remove(toolId);
         }
 
@@ -336,7 +347,7 @@ public sealed class ToolRegistry
         var items = new List<ToolCatalogItem>(definitionList.Count);
         foreach (var definition in definitionList)
         {
-            if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+            if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) || !implementation.IsAvailable)
                 continue;
 
             items.Add(new ToolCatalogItem
@@ -523,7 +534,7 @@ public sealed class ToolRegistry
         if (!this.settingsManager.IsToolActive(definition.Id))
             return new(ToolOfferBlockReason.TOOL_SWITCHED_OFF, null, null);
 
-        if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+        if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) || !implementation.IsAvailable)
             return new(ToolOfferBlockReason.NOT_AVAILABLE_HERE, null, null);
 
         var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);

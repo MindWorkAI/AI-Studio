@@ -27,7 +27,8 @@ public enum ToolOfferBlockReason
     MODEL_CANNOT_USE_TOOLS,
 
     /// <summary>
-    /// This installation does not know the tool, or the tool is not meant for this part of the app.
+    /// This installation does not know the tool, the tool belongs to a preview which is switched
+    /// off, or it is not meant for this part of the app.
     /// </summary>
     NOT_AVAILABLE_HERE,
 

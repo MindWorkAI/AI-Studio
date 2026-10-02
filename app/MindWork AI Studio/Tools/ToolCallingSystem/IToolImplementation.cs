@@ -67,6 +67,17 @@ public interface IToolImplementation
 
     public string Icon => Icons.Material.Filled.Build;
 
+    /// <summary>
+    /// Whether this tool exists in this installation right now.
+    /// </summary>
+    /// <remarks>
+    /// For a tool which belongs to a preview feature. While the preview is switched off, the tool
+    /// appears nowhere, neither in a selection nor in the settings, and no request offers it. A
+    /// selection which names it keeps it all the same, so it comes back with the preview. Asked
+    /// whenever tools are listed, so it has to be cheap.
+    /// </remarks>
+    public bool IsAvailable => true;
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
 
     /// <summary>

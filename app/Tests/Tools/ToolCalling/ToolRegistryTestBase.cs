@@ -119,6 +119,11 @@ public abstract class ToolRegistryTestBase
 
         public bool EnforcesOutboundDataRestriction { get; init; }
 
+        /// <summary>
+        /// Whether the tool exists right now. Settable, so a test can switch its preview off and on again.
+        /// </summary>
+        public bool IsAvailable { get; set; } = true;
+
         public string ImplementationKey => definition.ImplementationKey;
 
         public ToolDefinition GetDefinition() => definition;
