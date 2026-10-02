@@ -54,7 +54,7 @@ public sealed class MailAttachmentRulesTests
     public void TheLimitCountsTheFileNotItsEncoding()
     {
         // 12 MB of Base64 decode to 9 MB, which the limit of 10 MB lets through:
-        var base64 = Attachment("application", "pdf", "board-report.pdf", 12 * MEGABYTE, "base64");
+        var base64 = Attachment("application", "pdf", "board-report.pdf", 12 * MEGABYTE);
         var unencoded = Attachment("application", "pdf", "board-report.pdf", 12 * MEGABYTE, "binary");
 
         Assert.Multiple(() =>
