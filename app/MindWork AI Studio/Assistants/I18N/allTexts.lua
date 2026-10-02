@@ -6676,6 +6676,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3022287235"] = "Th
 -- Of a larger attachment, only the name is indexed.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3024773576"] = "Of a larger attachment, only the name is indexed."
 
+-- Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3041774829"] = "Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself."
+
 -- Instructions of {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3068867667"] = "Instructions of {0}"
 

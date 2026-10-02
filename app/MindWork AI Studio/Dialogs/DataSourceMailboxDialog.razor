@@ -42,6 +42,9 @@
 
             @if (this.CanChangeSource)
             {
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
+                </MudJustifiedText>
                 <MudSelect T="string" Value="@this.SelectedTemplateName" ValueChanged="@this.SelectTemplate" Text="@this.SelectedTemplateText" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business">
                     <MudSelectItem T="string" Value="@string.Empty">
                         @T("Another provider")
