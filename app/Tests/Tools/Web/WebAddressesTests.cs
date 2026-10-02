@@ -25,6 +25,14 @@ public sealed class WebAddressesTests
     [TestCase("https://en.wikipedia.org/wiki/Mercury_(planet)", "https://en.wikipedia.org/wiki/Mercury_(planet)")]
     [TestCase("[Mercury](https://en.wikipedia.org/wiki/Mercury_(planet))", "https://en.wikipedia.org/wiki/Mercury_(planet)")]
     [TestCase("HTTPS://EXAMPLE.ORG/Report, and more", "HTTPS://EXAMPLE.ORG/Report")]
+
+    // Internal services often run without TLS, e.g., a simple Python web server which publishes the
+    // results of a data science run:
+    [TestCase("The results are on http://10.20.30.40:8000/run-17/.", "http://10.20.30.40:8000/run-17/")]
+    [TestCase("Server runs at http://localhost:8000/", "http://localhost:8000/")]
+    [TestCase("[Plot](http://ds-results.intern:8080/plots/loss.html)", "http://ds-results.intern:8080/plots/loss.html")]
+    [TestCase("HTTP://DS-RESULTS.INTERN/report.html; see there", "HTTP://DS-RESULTS.INTERN/report.html")]
+    [TestCase("Try http://[fd00::5]:8000/run-17/ as well", "http://[fd00::5]:8000/run-17/")]
     public void AnAddressIsFoundAsItStands(string text, string expected) =>
         Assert.That(WebAddresses.Find(text), Is.EqualTo(new[] { expected }));
 
@@ -50,6 +58,11 @@ public sealed class WebAddressesTests
     [TestCase("https://example.org/report", "https://example.org./report")]
     [TestCase("https://bücher.example/", "https://xn--bcher-kva.example/")]
     [TestCase("https://example.org/a/../report", "https://example.org/report")]
+    [TestCase("http://ds-results.intern/report.html", "http://DS-RESULTS.intern:80/report.html")]
+    [TestCase("http://ds-results.intern/report.html", "HTTP://ds-results.intern/report.html#loss")]
+    [TestCase("http://10.20.30.40:8000/run-17/", "http://10.20.30.40:8000/run-17/#plot")]
+    [TestCase("http://localhost:8000/", "http://LOCALHOST:8000/")]
+    [TestCase("http://[fd00::5]:8000/run-17/", "http://[FD00:0:0:0:0:0:0:5]:8000/run-17/")]
     public void AddressesAskingForTheSameCountAsTheSame(string inChat, string fromModel)
     {
         Assert.Multiple(() =>
@@ -69,6 +82,13 @@ public sealed class WebAddressesTests
     [TestCase("https://example.org/report", "http://example.org/report")]
     [TestCase("https://example.org/report", "https://example.org:8443/report")]
     [TestCase("https://example.org/report", "https://budget.example.org/report")]
+    [TestCase("http://ds-results.intern:8000/report.html", "http://ds-results.intern/report.html")]
+    [TestCase("http://ds-results.intern/report.html", "https://ds-results.intern/report.html")]
+    [TestCase("http://10.20.30.40:8000/run-17/", "http://10.20.30.40:8001/run-17/")]
+    [TestCase("http://10.20.30.40:8000/run-17/", "http://10.20.30.41:8000/run-17/")]
+    [TestCase("http://10.20.30.40:8000/run-17/", "http://10.20.30.40:8000/run-17/?budget=2026")]
+    [TestCase("http://[fd00::5]:8000/run-17/", "http://[fd00::6]:8000/run-17/")]
+    [TestCase("http://[fd00::5]:8000/run-17/", "http://[fd00::5]:8001/run-17/")]
     public void AddressesAskingForSomethingElseDoNotCount(string inChat, string fromModel)
     {
         Assert.Multiple(() =>

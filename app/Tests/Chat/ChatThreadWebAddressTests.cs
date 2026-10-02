@@ -30,6 +30,20 @@ public sealed class ChatThreadWebAddressTests
     }
 
     [Test]
+    public void AnAddressWithoutTlsTheUserWroteIsGiven()
+    {
+        // An internal service such as a simple Python web server for the results of a data science run:
+        var thread = Thread(Block(ChatRole.USER, "The results of run 17 are on http://10.20.30.40:8000/run-17/, please compare them with run 16.", 1));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("http://10.20.30.40:8000/run-17/")), Is.True);
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("http://10.20.30.40:8000/run-16/")), Is.False, "The user named run 16, but not its address.");
+            Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://10.20.30.40:8000/run-17/")), Is.False, "Another scheme is another request.");
+        });
+    }
+
+    [Test]
     public void AnAddressInAHiddenMessageOfTheUserIsGiven()
     {
         // The prompt an assistant sends into a chat on behalf of the user:
