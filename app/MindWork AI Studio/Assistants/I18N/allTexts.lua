@@ -2134,6 +2134,240 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T469116133
 -- Clear
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T77955010"] = "Clear"
 
+-- Both models receive this text together with your question, for example the document they are supposed to summarize.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1084467271"] = "Both models receive this text together with your question, for example the document they are supposed to summarize."
+
+-- The judge saw both answers as equally good, matching your own vote.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T110452334"] = "The judge saw both answers as equally good, matching your own vote."
+
+-- You do not know yet which model wrote which answer, and the columns are in random order. Compare them by what they say.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1255084431"] = "You do not know yet which model wrote which answer, and the columns are in random order. Compare them by what they say."
+
+-- Skipping the remaining votes. Waiting for the rest of the batch to finish...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1308855949"] = "Skipping the remaining votes. Waiting for the rest of the batch to finish..."
+
+-- Setup
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T137864150"] = "Setup"
+
+-- Repeat the same comparison several times to see how consistently the models -- and the judge -- come out the same way. Every run gets its own blind vote.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1382748771"] = "Repeat the same comparison several times to see how consistently the models -- and the judge -- come out the same way. Every run gets its own blind vote."
+
+-- Run {0}: no usable answer, nothing to vote on.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1407798402"] = "Run {0}: no usable answer, nothing to vote on."
+
+-- Answer A
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1420338340"] = "Answer A"
+
+-- 20 (heavy load on the models)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1426001529"] = "20 (heavy load on the models)"
+
+-- Run {0}: the models are done, waiting for the judge.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1451649171"] = "Run {0}: the models are done, waiting for the judge."
+
+-- Answer B
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1470671197"] = "Answer B"
+
+-- Please provide a question or task for both models.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1481551697"] = "Please provide a question or task for both models."
+
+-- Delete this preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T148310729"] = "Delete this preset"
+
+-- The judge preferred {0}, differing from your own vote.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1499258629"] = "The judge preferred {0}, differing from your own vote."
+
+-- All {0} runs are done.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1508408704"] = "All {0} runs are done."
+
+-- Run {0}: queued, waiting for a free slot.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1600973378"] = "Run {0}: queued, waiting for a free slot."
+
+-- Your request
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1607440787"] = "Your request"
+
+-- The preset '{0}' is deleted right away. This cannot be undone.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T163336631"] = "The preset '{0}' is deleted right away. This cannot be undone."
+
+-- Your question or task
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1646098156"] = "Your question or task"
+
+-- First token after {0}, complete after {1}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1658271318"] = "First token after {0}, complete after {1}"
+
+-- Send the same request to two models and compare their answers side by side. You vote blindly for the better answer, and only after your vote you learn which model wrote which answer.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1766730560"] = "Send the same request to two models and compare their answers side by side. You vote blindly for the better answer, and only after your vote you learn which model wrote which answer."
+
+-- Start a new request
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1767930003"] = "Start a new request"
+
+-- Run {0}: still working.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1838060603"] = "Run {0}: still working."
+
+-- Update preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1860438243"] = "Update preset"
+
+-- Judge verdicts
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T1879874010"] = "Judge verdicts"
+
+-- Judge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2094884932"] = "Judge"
+
+-- Run {0}: the models and the judge are done, your vote is missing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2115467037"] = "Run {0}: the models and the judge are done, your vote is missing."
+
+-- Save as new preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2148615337"] = "Save as new preset"
+
+-- Skipping the remaining votes. Waiting for the judges to finish...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2167132827"] = "Skipping the remaining votes. Waiting for the judges to finish..."
+
+-- 1 (single comparison)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2267053576"] = "1 (single comparison)"
+
+-- Which answer is better?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2388547151"] = "Which answer is better?"
+
+-- The judge preferred {0}, matching your own vote.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2457939612"] = "The judge preferred {0}, matching your own vote."
+
+-- Yes, delete it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2466176832"] = "Yes, delete it"
+
+-- Equally good
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T248601509"] = "Equally good"
+
+-- Context: {0} characters
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2553774988"] = "Context: {0} characters"
+
+-- Progress Runs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2638545408"] = "Progress Runs"
+
+-- Finish
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2670325426"] = "Finish"
+
+-- Both models are answering. This can take a while.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2709682697"] = "Both models are answering. This can take a while."
+
+-- Run {0}: your vote was skipped.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2715329048"] = "Run {0}: your vote was skipped."
+
+-- Both are equally good
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2723559248"] = "Both are equally good"
+
+-- {0} of {1} runs have no usable judge verdict.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2725027740"] = "{0} of {1} runs have no usable judge verdict."
+
+-- Preset from {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2841002060"] = "Preset from {0}"
+
+-- Context (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T2925041491"] = "Context (optional)"
+
+-- {0} of {1} runs have no usable vote -- never cast, or the run itself never got a usable answer -- and are not counted above.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3101172189"] = "{0} of {1} runs have no usable vote -- never cast, or the run itself never got a usable answer -- and are not counted above."
+
+-- Answer A is better
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3123852190"] = "Answer A is better"
+
+-- Skip remaining votes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3188579167"] = "Skip remaining votes"
+
+-- The judge saw both answers as equally good, while you preferred one of them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3189061594"] = "The judge saw both answers as equally good, while you preferred one of them."
+
+-- Skip this run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3334593867"] = "Skip this run"
+
+-- Load the context from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3370653375"] = "Load the context from file"
+
+-- More runs are still being generated in the background.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3475250486"] = "More runs are still being generated in the background."
+
+-- LLM judge (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3486621434"] = "LLM judge (optional)"
+
+-- Next run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3533713133"] = "Next run"
+
+-- At least one of the models did not answer in this run, so there is nothing to compare.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3561467042"] = "At least one of the models did not answer in this run, so there is nothing to compare."
+
+-- Compare
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3581545044"] = "Compare"
+
+-- What should the judge pay particular attention to? (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3591351622"] = "What should the judge pay particular attention to? (Optional)"
+
+-- Your votes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T360017507"] = "Your votes"
+
+-- The judge already sees the request and both answers, and judges by that alone unless you add something more specific here, for example: a good summary keeps every number and names its source. It never learns which model wrote which answer, and its opinion is shown to you only after your own vote.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3613128085"] = "The judge already sees the request and both answers, and judges by that alone unless you add something more specific here, for example: a good summary keeps every number and names its source. It never learns which model wrote which answer, and its opinion is shown to you only after your own vote."
+
+-- Delete this preset?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3766894914"] = "Delete this preset?"
+
+-- Run {0}: voted on.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3789682551"] = "Run {0}: voted on."
+
+-- Done.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T38691245"] = "Done."
+
+-- Expand
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3889190145"] = "Expand"
+
+-- Presets
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3897629751"] = "Presets"
+
+-- Model Comparison
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3910956815"] = "Model Comparison"
+
+-- Load a saved preset
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T3970228636"] = "Load a saved preset"
+
+-- Preset name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T40334785"] = "Preset name"
+
+-- First model
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T4044223184"] = "First model"
+
+-- No, keep it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T4188329028"] = "No, keep it"
+
+-- Run {0}: the models are done, your vote is missing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T4197671504"] = "Run {0}: the models are done, your vote is missing."
+
+-- The judge did not give a usable verdict.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T4278818434"] = "The judge did not give a usable verdict."
+
+-- Answers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T46578788"] = "Answers"
+
+-- This provider does not meet the confidence requirements of this assistant. Please choose another one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T512106357"] = "This provider does not meet the confidence requirements of this assistant. Please choose another one."
+
+-- Collapse
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T5885182"] = "Collapse"
+
+-- LLM judge: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T609232321"] = "LLM judge: {0}"
+
+-- Number of runs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T752176293"] = "Number of runs"
+
+-- Waiting for the next run...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T758625750"] = "Waiting for the next run..."
+
+-- Second model
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T867467332"] = "Second model"
+
+-- Answer B is better
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T933724747"] = "Answer B is better"
+
+-- Judge model
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MODELCOMPARISON::ASSISTANTMODELCOMPARISON::T953975257"] = "Judge model"
+
 -- You can enter text, attach one or more documents, or use both. At least one input is required.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1442535450"] = "You can enter text, attach one or more documents, or use both. At least one input is required."
 
@@ -9163,11 +9397,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3756213118"] = "Generate an ERI s
 -- Use an LLM to find an icon for a given context.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3881504200"] = "Use an LLM to find an icon for a given context."
 
+-- Model Comparison
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3910956815"] = "Model Comparison"
+
 -- Job Posting
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3930052338"] = "Job Posting"
 
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Ask a question about a legal document."
+
+-- Compare two models on the same request and vote blindly for the better answer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T401960846"] = "Compare two models on the same request and vote blindly for the better answer."
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Log Viewer"
@@ -10857,6 +11097,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T555062689"] = "Log View
 
 -- New Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T826248509"] = "New Chat"
+
+-- Model Comparison Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T941908687"] = "Model Comparison Assistant"
 
 -- Trust LLM providers from the USA
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T1748300640"] = "Trust LLM providers from the USA"
