@@ -147,7 +147,7 @@ public sealed class SwotAnalysisResponseTests
         {
             Assert.That(restored, Is.Not.Null);
             Assert.That(restored!.MatrixHeading, Is.EqualTo("SWOT Matrix"));
-            Assert.That(restored.Categories.SelectMany(category => category.Findings), Has.Count.EqualTo(4));
+            Assert.That(restored.Categories.SelectMany(category => category.Findings).Count(), Is.EqualTo(4));
         });
     }
 
