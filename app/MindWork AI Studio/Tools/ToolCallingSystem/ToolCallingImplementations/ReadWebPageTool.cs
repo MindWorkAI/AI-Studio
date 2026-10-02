@@ -273,7 +273,11 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (!IsAllowedByFreeAddressChoice(url, freeAddressChoice, context.ChatThread))
         {
             logger.LogInformation("Refused a web page because its address was not given to the model and the free address choice is off. ToolCallId={ToolCallId}", context.ToolCallId);
-            throw new ToolExecutionBlockedException(TB("Free address choice is off, so only web pages whose address stands word for word in the chat can be read: in the system prompt, in a message of the user or a document attached to it, or in the result of a tool. The requested address is none of them. Do not change, complete, or guess addresses. If the page is needed, ask the user for its address."));
+            //
+            // The text reaches the model and the user alike, so it states what happened and gives no
+            // instructions. Those stand in the system prompt, see BuildSystemPromptInstructions:
+            //
+            throw new ToolExecutionBlockedException(TB("Free address choice is off, so only web pages whose address stands word for word in the chat can be read: in the system prompt, in a message of the user or a document attached to it, or in the result of a tool. The requested address is none of them. If the page is needed, the user can write its address into the chat."));
         }
 
         var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
