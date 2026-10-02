@@ -22,6 +22,10 @@ public static class DependentFieldValidation
     /// The field which just changed is skipped, because the form checks it anyway. So is every
     /// field the user has not reached yet and which shows no error: a dialog just opened must not
     /// greet anybody with errors about fields they have not filled in.
+    /// <br/><br/>
+    /// A field checks the value it holds itself, and a value set in code reaches it only with the
+    /// next render. Where the code changes a value before asking for a fresh verdict, it asks after
+    /// that render, i.e., in OnAfterRenderAsync; asked at once, the field would judge the old value.
     /// </remarks>
     /// <param name="changedField">The field the form reported as changed, or null when the change happened outside the fields.</param>
     /// <param name="dependentFields">The fields whose rules read other fields. A field which is not rendered yet is null.</param>

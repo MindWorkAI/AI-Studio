@@ -103,6 +103,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private ushort dataMaxMatches = 10;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.NONE;
     private bool showExpertSettings;
+    private bool revalidateAfterRender;
 
     private MailboxProviderTemplate? selectedTemplate;
     private MailboxAuthFailure? authFailure;
@@ -195,6 +196,13 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // We don't want to show validation errors when the user opens the dialog.
         if (!this.IsEditing && firstRender)
             this.form.ResetValidation();
+
+        // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
+        if (this.revalidateAfterRender)
+        {
+            this.revalidateAfterRender = false;
+            await this.RevalidateDependentFields(changedField: null);
+        }
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -560,14 +568,15 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         return null;
     }
 
-    private async Task ToggleExpertSettings()
+    private void ToggleExpertSettings()
     {
         this.showExpertSettings = !this.showExpertSettings;
         if (this.showExpertSettings && this.dataMaxChunkTokenLength < 1)
             this.dataMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
 
-        // The token limits are only checked while they are shown:
-        await this.RevalidateDependentFields(changedField: null);
+        // The token limits are only checked while they are shown. The field learns the limit set
+        // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
     }
 
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
