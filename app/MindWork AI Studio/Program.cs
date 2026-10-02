@@ -207,6 +207,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
+        builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         

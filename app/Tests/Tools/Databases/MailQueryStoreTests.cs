@@ -256,17 +256,8 @@ public sealed class MailQueryStoreTests
         });
     }
 
-    private async Task StoreMailAsync(string dataSourceId, string name, string subject, string text, MailRecord mail)
-    {
-        var key = $"mail:{name}";
-        var mailId = IndexedDocumentIds.CreateParentId(dataSourceId, key);
-        var now = DateTimeOffset.UtcNow;
-
-        await this.Client.UpsertFileAsync(dataSourceId, new EmbeddingStateFile(mailId, key, subject, key, "mail", name, 2048, now, now, now, 1), TOKEN);
-        await this.Client.UpsertChunksAsync(dataSourceId, [new EmbeddingStateChunk(ChunkIdOf(dataSourceId, name), mailId, null, 0, text, now)], TOKEN);
-        await this.Client.UpsertMailAsync(dataSourceId, mail with { MailId = mailId }, TOKEN);
-        this.mailIds[name] = mailId;
-    }
+    private async Task StoreMailAsync(string dataSourceId, string name, string subject, string text, MailRecord mail) =>
+        this.mailIds[name] = await this.store.StoreMailAsync(dataSourceId, name, subject, text, mail);
 
     private string[] IdsOf(params string[] names) => names.Select(name => this.mailIds[name]).ToArray();
 
