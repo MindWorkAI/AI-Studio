@@ -13113,14 +13113,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- This chat read e-mails, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1844389828"] = "Dieser Chat hat E-Mails gelesen und darf deshalb nur Webseiten lesen, deren Adresse genau so im Chat steht, wie der Benutzer sie geschrieben oder ein Werkzeug sie zurückgegeben hat, sowie Seiten des in AI Studio konfigurierten Wikis. Die angeforderte Adresse erfüllt keine dieser Bedingungen. Wird die Seite benötigt, kann der Benutzer ihre Adresse in den Chat schreiben."
 
+-- (Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2016138446"] = "(Optional) Ist die freie Adresswahl aus, öffnet die KI nur Webadressen, die im Chat vorkommen, etwa in Ihren Nachrichten, angehängten Dokumenten oder Datenquellen, oder die ein Werkzeug zurückgegeben hat. Alle anderen Adressen lehnt AI Studio ab. Ist sie an, darf die KI Adressen auch selbst wählen. Standardmäßig ist sie aus."
+
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Zulässige private Hosts dürfen nur Hostnamen enthalten, ohne Schema oder Pfad."
 
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximale Inhaltszeichen"
-
--- (Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. With it on, the AI may also choose addresses itself. Off is the default. Either way, this is an instruction to the AI, not a technical block.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2833972063"] = "(Optional) Ist die freie Adresswahl aus, öffnet die KI nur Webadressen, die im Chat vorkommen, etwa in Ihren Nachrichten, angehängten Dokumenten oder Datenquellen, oder die ein Werkzeug zurückgegeben hat. Ist sie an, darf die KI Adressen auch selbst wählen. Standardmäßig ist sie aus. In beiden Fällen ist dies eine Anweisung an die KI, keine technische Sperre."
 
 -- Allowed private host '{0}' is not valid.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Der zulässige private Host „{0}“ ist ungültig."
