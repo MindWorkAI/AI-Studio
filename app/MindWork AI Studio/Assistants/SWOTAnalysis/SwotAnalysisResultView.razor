@@ -1,0 +1,94 @@
+<div class="swot-result">
+    @foreach (var category in this.Result.Categories)
+    {
+        <section class="swot-detail-section">
+            <MudText Typo="Typo.h5" Class="mb-2">@category.Label</MudText>
+            @if (category.Findings.Count == 0)
+            {
+                <MudText Typo="Typo.body1">@category.EmptyMessage</MudText>
+            }
+            else
+            {
+                <ul class="swot-detail-list">
+                    @foreach (var finding in category.Findings)
+                    {
+                        <li>
+                            <strong>@finding.Summary</strong>
+                            <span> — @finding.Explanation</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    }
+
+    <section class="swot-detail-section">
+        <MudText Typo="Typo.h5" Class="mb-2">@this.Result.PrioritizedActions.Label</MudText>
+        @if (this.Result.PrioritizedActions.Items.Count == 0)
+        {
+            <MudText Typo="Typo.body1">@this.Result.PrioritizedActions.EmptyMessage</MudText>
+        }
+        else
+        {
+            <ol class="swot-actions">
+                @foreach (var action in this.Result.PrioritizedActions.Items)
+                {
+                    <li>
+                        <strong>@action.Action</strong>
+                        <span> — @action.Rationale</span>
+                        <div class="swot-factors">
+                            @foreach (var factor in action.AddressedFactors)
+                            {
+                                <span>@factor</span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+
+    <section class="swot-matrix-section" aria-labelledby="swot-matrix-heading">
+        <MudText Typo="Typo.h5" Class="mb-3" id="swot-matrix-heading">@this.Result.MatrixHeading</MudText>
+        <div class="swot-matrix-scroll">
+            <table class="swot-matrix">
+                <thead>
+                    <tr>
+                        <th class="swot-corner"></th>
+                        <th scope="col">@this.Result.PositiveLabel</th>
+                        <th scope="col">@this.Result.NegativeLabel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">@this.Result.InternalLabel</th>
+                        <td class="swot-strengths">
+                            <strong class="swot-cell-heading">@this.Result.Strengths.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Strengths"/>
+                        </td>
+                        <td class="swot-weaknesses">
+                            <strong class="swot-cell-heading">@this.Result.Weaknesses.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Weaknesses"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">@this.Result.ExternalLabel</th>
+                        <td class="swot-opportunities">
+                            <strong class="swot-cell-heading">@this.Result.Opportunities.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Opportunities"/>
+                        </td>
+                        <td class="swot-threats">
+                            <strong class="swot-cell-heading">@this.Result.Threats.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Threats"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter]
+    public SwotAnalysisResult Result { get; set; } = new();
+}

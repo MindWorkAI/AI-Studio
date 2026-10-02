@@ -1,0 +1,32 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
+            @T("Assistant: SWOT Analysis Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <ConfigurationOption OptionDescription="@T("Hide the web content reader?")" LabelOn="@T("Web content reader is hidden")" LabelOff="@T("Web content reader is shown")" State="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader = updatedState)" OptionHelp="@T("When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use.")"/>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect SWOT analysis options?")" LabelOn="@T("SWOT analysis options are preselected")" LabelOff="@T("No SWOT analysis options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect the SWOT analysis options. This is useful when you prefer a specific language, analysis focus, or LLM.")"/>
+            <ConfigurationOption OptionDescription="@T("Preselect the web content reader?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions || this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)" LabelOn="@T("Web content reader is preselected")" LabelOff="@T("Web content reader is not preselected")" State="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectWebContentReader)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectWebContentReader = updatedState)" OptionHelp="@T("When enabled, the web content reader is preselected. This is useful when you often analyze content from websites.")"/>
+            <ConfigurationOption OptionDescription="@T("Preselect the content cleaner agent?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions || this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)" LabelOn="@T("Content cleaner agent is preselected")" LabelOff="@T("Content cleaner agent is not preselected")" State="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectContentCleanerAgent)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectContentCleanerAgent = updatedState)" OptionHelp="@T("When enabled, the content cleaner agent is preselected for cleaning website content before it is analyzed.")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
+            @if (this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationText OptionDescription="@T("Preselect an analysis focus")" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" Text="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedImportantAspects)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedImportantAspects = updatedText)" NumLines="2" OptionHelp="@T("Specify topics the SWOT analysis should pay particular attention to.")" Icon="@Icons.Material.Filled.List"/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SWOTAnalysis.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.SWOT_ANALYSIS_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.SWOTAnalysis.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

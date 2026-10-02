@@ -1,0 +1,102 @@
+.swot-detail-section + .swot-detail-section {
+    margin-top: 1.5rem;
+}
+
+.swot-detail-list,
+.swot-actions {
+    margin: 0;
+    padding-left: 1.4rem;
+}
+
+.swot-detail-list li + li,
+.swot-actions li + li {
+    margin-top: 0.5rem;
+}
+
+.swot-factors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+
+.swot-factors span {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 999px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8rem;
+    padding: 0.1rem 0.55rem;
+}
+
+.swot-matrix-section {
+    margin-top: 2rem;
+}
+
+.swot-matrix-scroll {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+}
+
+.swot-matrix {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 44rem;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.swot-matrix th,
+.swot-matrix td {
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    border-right: 1px solid var(--mud-palette-lines-default);
+    padding: 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.swot-matrix thead th {
+    background: var(--mud-palette-background-grey);
+    border-top: 1px solid var(--mud-palette-lines-default);
+    text-align: center;
+}
+
+.swot-matrix tr > :first-child {
+    border-left: 1px solid var(--mud-palette-lines-default);
+}
+
+.swot-matrix tbody th {
+    background: var(--mud-palette-background-grey);
+    text-align: center;
+    vertical-align: middle;
+    width: 8rem;
+}
+
+.swot-corner {
+    width: 8rem;
+}
+
+.swot-cell-heading {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+}
+
+.swot-strengths {
+    border-top: 0.3rem solid var(--mud-palette-success);
+    background: color-mix(in srgb, var(--mud-palette-success) 8%, transparent);
+}
+
+.swot-weaknesses {
+    border-top: 0.3rem solid var(--mud-palette-warning);
+    background: color-mix(in srgb, var(--mud-palette-warning) 8%, transparent);
+}
+
+.swot-opportunities {
+    border-top: 0.3rem solid var(--mud-palette-info);
+    background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent);
+}
+
+.swot-threats {
+    border-top: 0.3rem solid var(--mud-palette-error);
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent);
+}

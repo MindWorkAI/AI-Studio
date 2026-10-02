@@ -481,7 +481,7 @@ fn scale_cursor_position(position: PhysicalPosition<f64>, scale_factor: f64) -> 
 
 /// Decides whether a drag-over event is due, given when we sent the last one.
 fn drag_over_is_due(last_sent: Option<Instant>, now: Instant) -> bool {
-    !last_sent.is_some_and(|last_at| now.duration_since(last_at) < DRAG_OVER_EVENT_INTERVAL)
+    last_sent.is_none_or(|last_at| now.duration_since(last_at) >= DRAG_OVER_EVENT_INTERVAL)
 }
 
 /// Forgets when we sent the last drag-over event, so the next drag starts with a fresh interval.
