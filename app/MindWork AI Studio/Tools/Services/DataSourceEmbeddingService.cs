@@ -31,7 +31,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// One indexer per kind of data source this service indexes.
     /// </summary>
-    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = [new FileSourceIndexer(settingsManager, rustService, guardService, new TextChunker(rustService, logger), logger)];
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
 
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
@@ -56,6 +56,19 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
 
     private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion);
+
+    /// <summary>
+    /// Creates one indexer per kind of data source, all of them cutting their text with the same chunker.
+    /// </summary>
+    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, ILogger logger)
+    {
+        var textChunker = new TextChunker(rustService, logger);
+        return
+        [
+            new FileSourceIndexer(settingsManager, rustService, guardService, textChunker, logger),
+            new MailboxIndexer(rustService, guardService, textChunker, logger),
+        ];
+    }
 
     public IReadOnlyList<DataSourceEmbeddingStatus> GetStatuses()
     {
@@ -99,9 +112,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     {
         this.RefreshWatchers();
 
-        var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedIndexedSource)
-            .ToList();
+        var supportedDataSources = this.GetConfiguredIndexedSources();
 
         logger.LogInformation(
             "Queueing {DataSourceCount} supported internal data source(s) for background embedding hash checks. QueueAfterCurrentRun={QueueAfterCurrentRun}.",
@@ -648,9 +659,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return null;
         }
 
-        if (!embeddingProvider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel))
+        if (!AllowsEmbedding(dataSource, embeddingProvider.GetConfidenceLevel(settingsManager)))
         {
-            var errorMessage = string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
+            var errorMessage = dataSource is DataSourceMailbox && !dataSource.ConfidenceLevel.IsAllowedMailboxConfidence()
+                ? TB("The mailbox has no valid confidence level, so no provider may read it. Please choose one in the settings of the mailbox.")
+                : string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
             logger.LogWarning(
                 "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) does not meet the required confidence. RequiredConfidence={RequiredConfidence}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
                 dataSource.Name,
@@ -742,9 +755,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.RemoveAllWatchers();
 
-        var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedIndexedSource)
-            .ToList();
+        var supportedDataSources = this.GetConfiguredIndexedSources();
 
         logger.LogInformation(
             "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG embedding state will be retried during this pass. File watchers will be activated after this check completes.",
@@ -831,8 +842,41 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager))
             return false;
 
+        // Mailboxes are a preview of their own, on top of local RAG:
+        if (dataSource is DataSourceMailbox && !PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(settingsManager))
+            return false;
+
         return this.TryGetIndexer(dataSource, out _);
     }
+
+    /// <summary>
+    /// Whether an embedding provider of the given confidence level may read a data source.
+    /// </summary>
+    /// <remarks>
+    /// A mailbox is stricter than the other data sources: without a level of its own, it is closed
+    /// to every provider rather than open to all, cf. AllowsMailboxConfidenceLevel.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="embeddingProviderConfidence">The confidence level of the embedding provider.</param>
+    /// <returns>True when the provider may embed the content of the data source.</returns>
+    internal static bool AllowsEmbedding(IIndexedDataSource dataSource, ConfidenceLevel embeddingProviderConfidence) => dataSource is DataSourceMailbox
+        ? embeddingProviderConfidence.AllowsMailboxConfidenceLevel(dataSource.ConfidenceLevel)
+        : embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel);
+
+    /// <summary>
+    /// The configured data sources this service indexes, from every list which holds some.
+    /// </summary>
+    /// <remarks>
+    /// The one place which knows where data sources are kept: in DataSources those which classic
+    /// RAG and the agents see as well, in Mailboxes those which only the mail tools read. Whatever
+    /// works through all of them, or looks one up by its id, goes through here.
+    /// </remarks>
+    /// <returns>The data sources, those from DataSources first.</returns>
+    private IReadOnlyList<IIndexedDataSource> GetConfiguredIndexedSources() => settingsManager.ConfigurationData.DataSources
+        .OfType<IIndexedDataSource>()
+        .Concat(settingsManager.ConfigurationData.Mailboxes.Select(mailbox => (IIndexedDataSource)mailbox))
+        .Where(this.IsSupportedIndexedSource)
+        .ToList();
 
     /// <summary>
     /// Finds the indexer which reads a data source.
@@ -859,13 +903,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <returns>True when such a data source was found.</returns>
     private bool TryGetConfiguredIndexedSource(string dataSourceId, [NotNullWhen(true)] out IIndexedDataSource? dataSource)
     {
-        var configuredDataSource = settingsManager.ConfigurationData.DataSources
-            .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-        dataSource = configuredDataSource is IIndexedDataSource indexedDataSource && this.IsSupportedIndexedSource(indexedDataSource)
-            ? indexedDataSource
-            : null;
-
+        dataSource = this.GetConfiguredIndexedSources().FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
         return dataSource is not null;
     }
 

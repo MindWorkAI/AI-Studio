@@ -140,6 +140,17 @@ public sealed class MailTextBuilderTests
     }
 
     [Test]
+    public void TheTextNamesThePartItWasReadFrom()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(Build("injection-hidden-elements.eml").BodySource, Is.EqualTo(MailBodySource.HTML), "The plain text part was read, although the mail has an HTML part.");
+            Assert.That(Build("priority-with-attachment.eml").BodySource, Is.EqualTo(MailBodySource.PLAIN_TEXT));
+            Assert.That(Build("smime-enveloped.eml").BodySource, Is.EqualTo(MailBodySource.NONE), "An encrypted mail names a part its text was read from.");
+        });
+    }
+
+    [Test]
     public void TheHeaderBlockNamesImportanceAndAttachments()
     {
         var text = Build("priority-with-attachment.eml");

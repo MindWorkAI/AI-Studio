@@ -56,20 +56,24 @@ public static class MailTextBuilder
         IReadOnlyList<string> attachmentNames = isReadable ? source.AttachmentNames : [];
 
         var headerBlock = BuildHeaderBlock(source.Headers, subject, importance, attachmentNames, encryptionKind);
-        var body = isReadable ? ReadBody(source) : string.Empty;
-        return new(headerBlock, body, subject, encryptionKind, importance);
+        var (body, bodySource) = isReadable ? ReadBody(source) : (string.Empty, MailBodySource.NONE);
+        return new(headerBlock, body, subject, encryptionKind, importance, bodySource);
     }
 
-    private static string ReadBody(MailTextSource source)
+    private static (string Body, MailBodySource Source) ReadBody(MailTextSource source)
     {
         if (!string.IsNullOrWhiteSpace(source.HtmlBody))
         {
             var markdown = MailHtmlConverter.ToMarkdown(source.HtmlBody);
             if (markdown.Length > 0)
-                return markdown;
+                return (markdown, MailBodySource.HTML);
         }
 
-        return string.IsNullOrWhiteSpace(source.TextBody) ? string.Empty : MailTextNormalization.NormalizeBody(source.TextBody).Trim();
+        if (string.IsNullOrWhiteSpace(source.TextBody))
+            return (string.Empty, MailBodySource.NONE);
+
+        var text = MailTextNormalization.NormalizeBody(source.TextBody).Trim();
+        return text.Length > 0 ? (text, MailBodySource.PLAIN_TEXT) : (string.Empty, MailBodySource.NONE);
     }
 
     private static string BuildHeaderBlock(HeaderList headers, string subject, MailImportance importance, IReadOnlyList<string> attachmentNames, MailEncryptionKind encryptionKind)

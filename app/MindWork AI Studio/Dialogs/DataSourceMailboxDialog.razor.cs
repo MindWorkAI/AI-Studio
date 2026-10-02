@@ -69,11 +69,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// </summary>
     private static readonly TimeSpan CONNECTION_TEST_TIMEOUT = TimeSpan.FromMinutes(2);
 
-    /// <summary>
-    /// How much of the answer to a failed sign-in is kept, which is plenty for any reason a server gives.
-    /// </summary>
-    private const int MAX_SERVER_ANSWER_LENGTH = 500;
-
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     private readonly DataSourceValidation dataSourceValidation;
@@ -457,8 +452,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
                 break;
 
             case MailboxConnectionFailure.AUTHENTICATION_FAILED:
-                var trimmedAnswer = serverAnswer.Trim();
-                this.authFailure = new MailboxAuthFailure(DateTimeOffset.UtcNow, trimmedAnswer.Length > MAX_SERVER_ANSWER_LENGTH ? trimmedAnswer[..MAX_SERVER_ANSWER_LENGTH] : trimmedAnswer);
+                this.authFailure = MailboxAuthFailure.FromServerAnswer(serverAnswer);
                 await indexStore.UpsertMailboxAuthFailureAsync(this.dataId, this.authFailure, CancellationToken.None);
                 break;
         }

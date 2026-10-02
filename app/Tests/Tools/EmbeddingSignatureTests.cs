@@ -113,6 +113,23 @@ public sealed class EmbeddingSignatureTests
             "Reordering or extending the signature throws away every index anybody has. This test makes that a decision somebody takes rather than something which happens on the way past.");
     }
 
+    [Test]
+    public void TheSignatureOfAMailboxIsPinned()
+    {
+        var mailbox = new DataSourceMailbox
+        {
+            Id = "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40",
+            EmbeddingId = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01",
+            MaxChunkTokenLength = 512,
+            ChunkOverlapTokenLength = 100,
+        };
+
+        Assert.That(
+            DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox, EmbeddingProviderFor("text-embedding-3-small")),
+            Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100|mail:1"),
+            "The text of a mail has a version of its own, which rebuilds the mailboxes and nothing else. Every other data source keeps the signature pinned above.");
+    }
+
     /// <summary>
     /// Builds the signature the way an indexing run does, working the chunking out along the way.
     /// </summary>

@@ -247,11 +247,12 @@ The parts:
   write a chunker of your own.
 
 To add a kind of data source:
-1. Write its indexer in `Tools/Services/Indexing/` and add it to `indexers` in `DataSourceEmbeddingService`.
+1. Write its indexer in `Tools/Services/Indexing/` and create it in `DataSourceEmbeddingService.CreateIndexers`,
+   which hands every indexer the same `TextChunker`.
 2. Gate it in `IsSupportedIndexedSource`, behind a preview feature of its own while it is new.
-3. When the data source is not kept in `DataSources`, extend `TryGetConfiguredIndexedSource` and the places
-   which enumerate the configured data sources: the startup hash check, `QueueAllInternalDataSourcesAsync` and
-   `RefreshWatchers`.
+3. When the data source is not kept in `DataSources`, add its list to `GetConfiguredIndexedSources`. Every lookup
+   by id and every pass over all data sources goes through it: the startup hash check,
+   `QueueAllInternalDataSourcesAsync` and `RefreshWatchers`.
 4. Keep whatever the kind has to remember beyond its documents in tables of its own in the index store, added
    by an EF Core migration (see "Databases").
 5. Report every status through `DocumentRunProgress`, so all rows of the embedding page behave alike.

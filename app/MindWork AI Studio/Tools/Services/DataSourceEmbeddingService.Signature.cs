@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tools.Services;
@@ -22,6 +23,19 @@ public sealed partial class DataSourceEmbeddingService
     /// continuing across a page break, without a page.
     /// </remarks>
     private const string CHUNK_METADATA_VERSION = "2";
+
+    /// <summary>
+    /// What this build makes of a mail before it is cut into chunks. Raise it whenever that changes.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart of CHUNK_METADATA_VERSION for mailboxes alone. A mail on the server never
+    /// changes, so nothing reads it again once it is indexed, however differently MailTextBuilder
+    /// would write it today. Raising this number rebuilds the index of every mailbox and leaves
+    /// every other data source alone.
+    ///
+    /// Version 1: the header block and the text from the HTML part, without attachments.
+    /// </remarks>
+    private const string MAIL_TEXT_VERSION = "1";
 
     /// <summary>
     /// Works out how the text of a data source is cut for a given embedding provider.
@@ -80,10 +94,13 @@ public sealed partial class DataSourceEmbeddingService
     /// service checks it again before each indexing run. It was part of this signature once, which
     /// re-embedded every file of a data source whenever somebody raised or lowered it — real money
     /// at a cloud embedding provider, for nothing.
+    ///
+    /// A mailbox appends the version of its mail text, cf. MAIL_TEXT_VERSION. Nothing else is
+    /// appended for the other kinds of data source, so their stored signatures stay valid.
     /// </remarks>
     internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
     {
-        return string.Join('|',
+        var signature = string.Join('|',
             CHUNK_METADATA_VERSION,
             embeddingProvider.Id,
             embeddingProvider.UsedLLMProvider,
@@ -95,6 +112,8 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.EffectiveTokenLimit,
             chunkingOptions.MaxChunkTokenLength,
             chunkingOptions.OverlapTokenLength);
+
+        return dataSource is DataSourceMailbox ? $"{signature}|mail:{MAIL_TEXT_VERSION}" : signature;
     }
 
     /// <summary>

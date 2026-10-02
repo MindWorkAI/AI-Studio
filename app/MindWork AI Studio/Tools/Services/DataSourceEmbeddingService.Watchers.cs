@@ -1,5 +1,3 @@
-using AIStudio.Settings;
-
 namespace AIStudio.Tools.Services;
 
 /// <remarks>
@@ -30,11 +28,7 @@ public sealed partial class DataSourceEmbeddingService
             return;
         }
 
-        var supportedSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedIndexedSource)
-            .OfType<IIndexedDataSource>()
-            .ToList();
-
+        var supportedSources = this.GetConfiguredIndexedSources();
         foreach (var indexer in this.indexers)
             indexer.TrackChanges(supportedSources.Where(indexer.Supports).ToList(), this.RequestRunAsync);
     }

@@ -1,5 +1,7 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 namespace AIStudio.Tests.Settings;
@@ -48,6 +50,20 @@ public sealed class MailboxConfidenceTests
     {
         var admittedLevels = Enum.GetValues<ConfidenceLevel>().Where(providerLevel => providerLevel.AllowsMailboxConfidenceLevel(mailboxLevel));
         Assert.That(admittedLevels, Is.EqualTo(MAILBOX_LEVELS.Where(level => level >= mailboxLevel)));
+    }
+
+    [TestCaseSource(nameof(FORBIDDEN_LEVELS))]
+    public void NoEmbeddingProviderIndexesAMailboxWithAForbiddenLevel(ConfidenceLevel mailboxLevel)
+    {
+        var mailbox = new DataSourceMailbox { ConfidenceLevel = mailboxLevel };
+        Assert.That(DataSourceEmbeddingService.AllowsEmbedding(mailbox, ConfidenceLevel.HIGH), Is.False, "The indexing run asked the rule of the other data sources, which lets every provider read a source without a level.");
+    }
+
+    [Test]
+    public void AFolderWithoutALevelStaysOpenToEveryEmbeddingProvider()
+    {
+        var directory = new DataSourceLocalDirectory { ConfidenceLevel = ConfidenceLevel.NONE };
+        Assert.That(DataSourceEmbeddingService.AllowsEmbedding(directory, ConfidenceLevel.UNTRUSTED), Is.True, "The stricter rule of the mailboxes reached the other data sources.");
     }
 
     [TestCaseSource(nameof(FORBIDDEN_LEVELS))]

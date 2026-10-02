@@ -8,7 +8,8 @@ namespace AIStudio.Tools.Mail;
 /// <param name="Subject">The subject on one line, empty when the mail has none.</param>
 /// <param name="EncryptionKind">How the content is encrypted, NONE when it is readable.</param>
 /// <param name="Importance">How important the sender marked the mail.</param>
-public sealed record MailText(string HeaderBlock, string Body, string Subject, MailEncryptionKind EncryptionKind, MailImportance Importance)
+/// <param name="BodySource">Which part of the mail the text was read from.</param>
+public sealed record MailText(string HeaderBlock, string Body, string Subject, MailEncryptionKind EncryptionKind, MailImportance Importance, MailBodySource BodySource)
 {
     /// <summary>
     /// The header block and the text together, which is what gets cut into chunks: the first

@@ -110,7 +110,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         // carries a code of its own instead of an unclassified exception:
         //
         if (totalChunkCount == 0)
-            throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from the file '{0}'."), document.DisplayName));
+            throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from '{0}'."), document.Key));
 
         logger.LogDebug(
             "Generated {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
@@ -276,11 +276,15 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         }
         catch (Exception exception)
         {
-            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of the file '{1}'. The provider reported: {2}"), batch.Count, document.DisplayName, exception.Message), exception);
+            //
+            // The messages of these exceptions end up in the log, never in front of the user, so
+            // they name the document by its key: the name a user reads may be the subject of a mail.
+            //
+            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of '{1}'. The provider reported: {2}"), batch.Count, document.Key, exception.Message), exception);
         }
 
         if (vectors.Count != batch.Count)
-            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of the file '{2}'. Please select another embedding model or provider."), vectors.Count, batch.Count, document.DisplayName));
+            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of '{2}'. Please select another embedding model or provider."), vectors.Count, batch.Count, document.Key));
 
         var vectorSize = vectors.FirstOrDefault()?.Count ?? 0;
         if (vectorSize <= 0)

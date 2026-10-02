@@ -301,6 +301,36 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         context.PublishStatus(this.CreateStatus(hasFailures ? DataSourceEmbeddingState.FAILED : DataSourceEmbeddingState.COMPLETED, string.Empty, lastError, null, null));
     }
 
+    /// <summary>
+    /// Tells the user interface how the data source stands as the index holds it, without a run.
+    /// </summary>
+    /// <remarks>
+    /// For a data source which is not looked at right now, e.g. a mailbox while AI Studio starts:
+    /// its server is asked nothing then. Whether the last run got through the whole data source
+    /// decides between completed and idle. Nothing is written.
+    /// </remarks>
+    public void PublishStoredState()
+    {
+        var state = string.IsNullOrWhiteSpace(context.Manifest.SourceHash) ? DataSourceEmbeddingState.IDLE : DataSourceEmbeddingState.COMPLETED;
+        context.PublishStatus(this.CreateStatus(state, string.Empty, string.Empty, null, null));
+    }
+
+    /// <summary>
+    /// Ends a run which cannot go on, for a reason which is not about any one document.
+    /// </summary>
+    /// <remarks>
+    /// E.g. the server of a mailbox which cannot be reached or refuses the sign-in. Nothing is
+    /// written: whatever the run indexed so far stays, and the data source keeps counting as not
+    /// worked through, so the next run picks up where this one stopped.
+    /// </remarks>
+    /// <param name="message">Why the run stopped, and what the user can do about it.</param>
+    public void PublishRunFailure(string message)
+    {
+        this.LastError = message;
+        this.failures.Add(new DataSourceEmbeddingFailure(context.DataSource.Name, message, DateTimeOffset.UtcNow));
+        context.PublishStatus(this.CreateStatus(DataSourceEmbeddingState.FAILED, string.Empty, message, null, null));
+    }
+
     private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage) => new(
         context.DataSource.Id,
         context.DataSource.Name,
