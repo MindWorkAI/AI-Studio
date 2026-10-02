@@ -1,10 +1,12 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -148,6 +150,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 RequiredDataSecurity = result.RequiredDataSecurity,
                 RequiredOutboundDataRestriction = result.RequiredOutboundDataRestriction,
                 Sources = result.Sources,
+                ReturnedWebAddresses = FindReturnedWebAddresses(result, document.RootElement),
             };
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -202,6 +205,90 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
     }
 
     private string CreateError(string toolName) => $"Tool '{toolName}' is not available.";
+
+    /// <summary>
+    /// The web addresses in a result which did not come from the model.
+    /// </summary>
+    /// <remarks>
+    /// An address which stands in one of the arguments, even as a part of one, is an echo of what
+    /// the model wrote and is left out. Case does not matter for that, so a tool which writes the
+    /// host in lower case does not slip one through, and neither does a tool which writes the same
+    /// request in another encoding, since an address in the arguments also counts by its request
+    /// key. The texts are compared as the JSON values read, so an escape in the JSON cannot hide an
+    /// echo either.
+    /// </remarks>
+    private static HashSet<string> FindReturnedWebAddresses(ToolExecutionResult result, JsonElement arguments)
+    {
+        var argumentTexts = new List<string>();
+        CollectStrings(arguments, argumentTexts);
+
+        var argumentRequestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in argumentTexts.SelectMany(WebAddresses.Find))
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                argumentRequestKeys.Add(requestKey);
+
+        var resultTexts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(result.TextContent))
+            resultTexts.Add(result.TextContent);
+
+        CollectStrings(result.JsonContent, resultTexts);
+
+        var requestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in resultTexts.SelectMany(WebAddresses.Find))
+        {
+            if (argumentTexts.Any(argument => argument.Contains(address, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey) && !argumentRequestKeys.Contains(requestKey))
+                requestKeys.Add(requestKey);
+        }
+
+        return requestKeys;
+    }
+
+    private static void CollectStrings(JsonElement element, List<string> texts)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                texts.Add(element.GetString() ?? string.Empty);
+                break;
+
+            case JsonValueKind.Object:
+                foreach (var property in element.EnumerateObject())
+                    CollectStrings(property.Value, texts);
+
+                break;
+
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    CollectStrings(item, texts);
+
+                break;
+        }
+    }
+
+    private static void CollectStrings(JsonNode? node, List<string> texts)
+    {
+        switch (node)
+        {
+            case JsonObject jsonObject:
+                foreach (var property in jsonObject)
+                    CollectStrings(property.Value, texts);
+
+                break;
+
+            case JsonArray jsonArray:
+                foreach (var item in jsonArray)
+                    CollectStrings(item, texts);
+
+                break;
+
+            case JsonValue jsonValue when jsonValue.GetValueKind() is JsonValueKind.String:
+                texts.Add(jsonValue.GetValue<string>());
+                break;
+        }
+    }
 
     private static Dictionary<string, string> FormatArguments(JsonElement rootElement, IReadOnlySet<string> sensitiveNames)
     {

@@ -7,6 +7,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat;
 
@@ -166,6 +167,43 @@ public sealed record ChatThread
 
     [JsonIgnore]
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// The web addresses tools returned in this chat since it was opened, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// Addresses the model wrote into the call itself are left out, see ToolCallOutcome.ReturnedWebAddresses.
+    /// Not stored, like the results of the tools themselves: after a restart, a chat knows fewer
+    /// addresses, never more.
+    /// </remarks>
+    [JsonIgnore]
+    public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Whether a web address was given to the model rather than chosen by it.
+    /// </summary>
+    /// <remarks>
+    /// Given means: it stands in a message of the user, or a tool returned it, see
+    /// RuntimeWebAddressesFromTools. What the model wrote itself never counts, its answers included,
+    /// because the model could have put anything of the chat into it. The comparison is the one of
+    /// WebAddresses.CreateRequestKey, so an address counts when it asks the server for the same.
+    /// </remarks>
+    /// <param name="url">The address the model wants to read.</param>
+    /// <returns>True when the address was given to the model.</returns>
+    public bool IsWebAddressGivenToTheModel(Uri url)
+    {
+        var requestKey = WebAddresses.CreateRequestKey(url);
+        if (this.RuntimeWebAddressesFromTools.Contains(requestKey))
+            return true;
+
+        return this.Blocks
+            .Where(block => block.Role is ChatRole.USER)
+            .Select(block => block.Content)
+            .OfType<ContentText>()
+            .SelectMany(content => WebAddresses.Find(content.Text))
+            .Any(address => WebAddresses.TryCreateRequestKey(address, out var key) && string.Equals(key, requestKey, StringComparison.Ordinal));
+    }
 
     /// <summary>
     /// Whether the tools of this run were named by the assistant's own rules instead of chosen by

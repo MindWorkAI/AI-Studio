@@ -237,6 +237,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     context.ChatThread.RequireProviderConfidence(outcome.RequiredProviderConfidence);
                     context.ChatThread.RequireDataSecurity(outcome.RequiredDataSecurity);
                     context.ChatThread.RequireOutboundDataRestriction(outcome.RequiredOutboundDataRestriction);
+                    context.ChatThread.RuntimeWebAddressesFromTools.UnionWith(outcome.ReturnedWebAddresses);
                     toolSources.MergeSources(outcome.Sources);
                     await context.AddToolInvocationAsync(outcome.Trace);
 

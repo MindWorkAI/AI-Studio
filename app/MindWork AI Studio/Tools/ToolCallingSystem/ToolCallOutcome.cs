@@ -34,4 +34,16 @@ public sealed record ToolCallOutcome(string Content, ToolInvocationTrace Trace)
     /// The sources the result contributes to the answer.
     /// </summary>
     public IReadOnlyList<Source> Sources { get; init; } = [];
+
+    /// <summary>
+    /// The web addresses in the result, as request keys, except those the model wrote into the call.
+    /// </summary>
+    /// <remarks>
+    /// A chat restricted by a mailbox may read the web pages whose addresses a tool returned, see
+    /// ChatThread.IsWebAddressGivenToTheModel. A tool which repeats its arguments would otherwise
+    /// turn any address the model makes up into one a tool returned: Semantic Search, for one,
+    /// returns its query. Found where the arguments are still at hand in full, because the trace
+    /// hides the sensitive ones.
+    /// </remarks>
+    public IReadOnlyCollection<string> ReturnedWebAddresses { get; init; } = [];
 }

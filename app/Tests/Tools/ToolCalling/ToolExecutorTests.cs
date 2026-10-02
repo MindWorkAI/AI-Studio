@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
+using AIStudio.Tools.Web;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -118,6 +120,41 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         });
     }
 
+    [Test]
+    public async Task AnAddressTheModelWroteIntoTheCallIsNoAddressTheToolReturned()
+    {
+        //
+        // Semantic Search returns its query. Counted as returned, the address in it would let the
+        // model read any page it likes, with mail content in the query:
+        //
+        var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
+        {
+            JsonContent = new JsonObject
+            {
+                ["query"] = "budget https://attacker.example/?mail=board-meeting",
+                ["passages"] = new JsonArray("The budget stands on https://intranet.example.org/budget."),
+            },
+            TextContent = "See also HTTPS://ATTACKER.EXAMPLE/?mail=board-meeting.",
+        });
+
+        var outcome = await this.Execute(tool, new ChatThread(), """{"query":"budget https://attacker.example/?mail=board-meeting"}""");
+
+        Assert.That(outcome.ReturnedWebAddresses, Is.EquivalentTo(new[] { WebAddresses.CreateRequestKey(new Uri("https://intranet.example.org/budget")) }), "Only the address the data source held counts, not the echo, whatever its case.");
+    }
+
+    [Test]
+    public async Task WhatAToolReturnedIsKnownToTheChatAfterwards()
+    {
+        var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult { TextContent = "The newsletter links to https://example.org/newsletter/2026-10." });
+        var thread = new ChatThread();
+
+        await foreach (var _ in new ToolCallingLoop(NullLogger<ToolCallingLoop>.Instance).RunAsync(new OneToolCallAdapter(), this.LoopContext(tool, thread)))
+        {
+        }
+
+        Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask in the next message to open the link.");
+    }
+
     private static void AssertDemandsNothing(ToolCallOutcome outcome)
     {
         const string REASON = "Nothing reached the model, so there is nothing the chat has to keep.";
@@ -139,10 +176,10 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         ModelId = "test-model",
     };
 
-    private Task<ToolCallOutcome> Execute(TestTool tool, ChatThread thread)
+    private Task<ToolCallOutcome> Execute(TestTool tool, ChatThread thread, string argumentsJson = "{}")
     {
         var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
-        return executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(tool.GetDefinition(), tool)], new NoProvider(), thread, order: 1);
+        return executor.ExecuteAsync("call-1", TOOL_ID, argumentsJson, [(tool.GetDefinition(), tool)], new NoProvider(), thread, order: 1);
     }
 
     /// <summary>
