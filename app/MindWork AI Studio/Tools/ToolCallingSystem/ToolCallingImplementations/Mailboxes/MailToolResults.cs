@@ -164,9 +164,9 @@ internal static class MailToolResults
     /// The source a mail which reached the model leaves in the chat.
     /// </summary>
     /// <remarks>
-    /// The address is unique per mail, because the sources of a chat are told apart by it. It
-    /// leads nowhere yet; the mail viewer will open it. Subject and sender have to be filtered
-    /// already, since the user reads the title.
+    /// The address leads nowhere yet, so the list of sources shows the title as text; the mail
+    /// viewer will open it. Subject and sender have to be filtered already, since the user reads
+    /// the title.
     /// </remarks>
     /// <param name="mailbox">The mailbox the mail belongs to.</param>
     /// <param name="mailId">The id of the mail.</param>
@@ -176,7 +176,7 @@ internal static class MailToolResults
     /// <param name="timeZone">The time zone of the user.</param>
     public static Source CreateSource(DataSourceMailbox mailbox, string mailId, string subject, string senderName, DateTimeOffset receivedAtUtc, TimeZoneInfo timeZone) => new(
         string.Create(CultureInfo.InvariantCulture, $"Mail: {subject} — {senderName}, {TimeZoneInfo.ConvertTime(receivedAtUtc, timeZone):yyyy-MM-dd}"),
-        $"mailbox://{mailbox.Id}/{mailId}",
+        SourceExtensions.CreateMailSourceUrl(mailbox.Id, mailId),
         SourceOrigin.TOOL);
 
     /// <summary>
