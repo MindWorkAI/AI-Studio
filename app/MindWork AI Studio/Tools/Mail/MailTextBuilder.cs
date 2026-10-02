@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 
 using MimeKit;
-using MimeKit.Utils;
 
 namespace AIStudio.Tools.Mail;
 
@@ -80,7 +79,7 @@ public static class MailTextBuilder
         AppendLine(block, "To", FormatAddresses(headers, HeaderId.To));
         AppendLine(block, "Cc", FormatAddresses(headers, HeaderId.Cc));
         AppendLine(block, "Subject", subject);
-        AppendLine(block, "Date", FormatDate(headers[HeaderId.Date]));
+        AppendLine(block, "Date", MailHeaders.ReadDate(headers)?.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture) ?? string.Empty);
         AppendLine(block, "Importance", importance switch
         {
             MailImportance.HIGH => "high",
@@ -103,24 +102,8 @@ public static class MailTextBuilder
     /// <summary>
     /// Names the addresses of all headers of one kind, e.g. both To lines of a mail which has two.
     /// </summary>
-    /// <remarks>
-    /// Parsed from the raw header rather than from its decoded text: a display name may carry an
-    /// encoded comma, as in "=?utf-8?q?Doe=2C_John?=", which decoded first would split one person
-    /// into two.
-    /// </remarks>
-    private static string FormatAddresses(HeaderList headers, HeaderId headerId)
-    {
-        var addresses = new List<string>();
-        foreach (var header in headers.Where(header => header.Id == headerId))
-        {
-            if (!InternetAddressList.TryParse(ParserOptions.Default, header.RawValue, out var list))
-                continue;
-
-            addresses.AddRange(list.Mailboxes.Select(FormatAddress).Where(address => address.Length > 0));
-        }
-
-        return FormatList(addresses, MAX_LISTED_ADDRESSES);
-    }
+    private static string FormatAddresses(HeaderList headers, HeaderId headerId) =>
+        FormatList(MailHeaders.ReadMailboxes(headers, headerId).Select(FormatAddress).Where(address => address.Length > 0).ToList(), MAX_LISTED_ADDRESSES);
 
     private static string FormatAddress(MailboxAddress mailbox)
     {
@@ -139,10 +122,6 @@ public static class MailTextBuilder
 
         return $"{string.Join(", ", items.Take(maxListed))}, and {(items.Count - maxListed).ToString(CultureInfo.InvariantCulture)} more";
     }
-
-    private static string FormatDate(string? value) => DateUtils.TryParse(value ?? string.Empty, out var date)
-        ? date.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)
-        : string.Empty;
 
     private static string DescribeEncryption(MailEncryptionKind encryptionKind) => encryptionKind switch
     {

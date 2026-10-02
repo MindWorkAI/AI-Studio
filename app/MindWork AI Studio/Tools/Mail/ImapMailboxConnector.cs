@@ -2,10 +2,14 @@ using System.Globalization;
 using System.Net.Sockets;
 
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases.IndexStore;
 
 using MailKit;
 using MailKit.Net.Imap;
+using MailKit.Search;
 using MailKit.Security;
+
+using MimeKit;
 
 namespace AIStudio.Tools.Mail;
 
@@ -28,6 +32,19 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// The longest folder name accepted when creating a folder.
     /// </summary>
     public const int MAX_FOLDER_NAME_LENGTH = 200;
+
+    /// <summary>
+    /// The largest text part which is fetched, in bytes. Nobody writes a mail that long; a part this
+    /// large is a generated report or a newsletter gone wrong, and its mail is indexed by its header
+    /// block alone.
+    /// </summary>
+    public const long MAX_TEXT_PART_BYTES = 4 * 1024 * 1024;
+
+    /// <summary>
+    /// How many UIDs go into one FETCH. A long list of scattered UIDs makes a long command line, and
+    /// some servers refuse lines beyond a few kilobytes.
+    /// </summary>
+    private const int MAX_UIDS_PER_FETCH = 500;
 
     private const string PLAIN_MECHANISM = "PLAIN";
 
@@ -57,6 +74,17 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         //
         CheckCertificateRevocation = false,
     };
+
+    /// <summary>
+    /// The folder the reading methods work in, cf. OpenFolderAsync.
+    /// </summary>
+    private IMailFolder? openFolder;
+
+    /// <summary>
+    /// Whether the server tells which mails changed since a point it handed out before (CONDSTORE).
+    /// Without it, the flags of every mail have to be fetched to find the changed ones.
+    /// </summary>
+    public bool SupportsChangeTracking => this.client.Capabilities.HasFlag(ImapCapabilities.CondStore);
 
     /// <summary>
     /// Connects to the IMAP server of the mailbox and signs in.
@@ -159,6 +187,137 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     }
 
     /// <summary>
+    /// Opens a folder for the reading methods below, and reads how it stands.
+    /// </summary>
+    /// <remarks>
+    /// The folder is opened read-only (EXAMINE), so nothing fetched from it can mark a mail as read,
+    /// whatever the server makes of the request. The unread count comes from STATUS, which is asked
+    /// before the folder is opened: a server need not answer STATUS for the folder which is open.
+    /// </remarks>
+    /// <param name="folderPath">The full path of the folder.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>How the folder stands.</returns>
+    /// <exception cref="MailboxConnectionException">The server could not open the folder.</exception>
+    public async Task<MailFolderState> OpenFolderAsync(string folderPath, CancellationToken token)
+    {
+        try
+        {
+            var folder = await this.client.GetFolderAsync(folderPath, token);
+            await folder.StatusAsync(StatusItems.Unread, token);
+            var unseenCount = folder.Unread;
+
+            await folder.OpenAsync(FolderAccess.ReadOnly, token);
+            this.openFolder = folder;
+
+            var highestModSeq = this.SupportsChangeTracking && folder.HighestModSeq > 0 ? (long)folder.HighestModSeq : (long?)null;
+            return new(folder.UidValidity, folder.UidNext?.Id, highestModSeq, folder.Count, unseenCount);
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Opening a folder failed: {failure}.", e);
+        }
+    }
+
+    /// <summary>
+    /// Finds the mails of the open folder which belong into the index.
+    /// </summary>
+    /// <remarks>
+    /// Those which arrived since the given day, and every flagged one, however old. The day counts
+    /// as a whole, in the time zone of the server, since that is how IMAP compares dates.
+    /// </remarks>
+    /// <param name="receivedSince">The first day of the period, or null for all mails.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Their UIDs, in ascending order.</returns>
+    /// <exception cref="MailboxConnectionException">The server could not search the folder.</exception>
+    public async Task<IReadOnlyList<long>> SearchIndexedMailsAsync(DateTimeOffset? receivedSince, CancellationToken token)
+    {
+        var folder = this.GetOpenFolder();
+        var query = receivedSince is { } since
+            ? SearchQuery.DeliveredAfter(since.UtcDateTime.Date).Or(SearchQuery.Flagged)
+            : SearchQuery.All;
+
+        try
+        {
+            var uids = await folder.SearchAsync(query, token);
+            return uids.Select(uid => (long)uid.Id).Order().ToList();
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Searching a folder failed: {failure}.", e);
+        }
+    }
+
+    /// <summary>
+    /// Reads the flags of mails in the open folder.
+    /// </summary>
+    /// <param name="uids">The UIDs to ask about.</param>
+    /// <param name="changedSinceModSeq">With CONDSTORE, only mails changed after this HIGHESTMODSEQ are reported. Null asks about all of them.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The flags by UID. A mail which is gone, or did not change, is missing.</returns>
+    /// <exception cref="MailboxConnectionException">The server could not read the flags.</exception>
+    public async Task<IReadOnlyDictionary<long, MailFlags>> FetchFlagsAsync(IReadOnlyCollection<long> uids, long? changedSinceModSeq, CancellationToken token)
+    {
+        var request = new FetchRequest(MessageSummaryItems.UniqueId | MessageSummaryItems.Flags);
+        if (changedSinceModSeq is { } modSeq && this.SupportsChangeTracking)
+            request.ChangedSince = (ulong)modSeq;
+
+        var flagsByUid = new Dictionary<long, MailFlags>();
+        foreach (var summary in await this.FetchAsync(uids, request, token))
+            flagsByUid[summary.UniqueId.Id] = MailSummaryReader.ReadFlags(summary.Flags);
+
+        return flagsByUid;
+    }
+
+    /// <summary>
+    /// Reads what the sync needs to know about mails in the open folder before it fetches any text.
+    /// </summary>
+    /// <remarks>
+    /// That is the complete header block, the structure, the size, the arrival time and the flags,
+    /// and the ids by which the server tells a mail apart in every folder, wherever it knows them:
+    /// the EMAILID with OBJECTID, the X-GM-MSGID with Gmail. Neither is asked for elsewhere, since a
+    /// server answers an item it does not know with an error.
+    /// </remarks>
+    /// <param name="uids">The UIDs of the mails.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>One summary per mail which still exists.</returns>
+    /// <exception cref="MailboxConnectionException">The server could not read the mails.</exception>
+    public async Task<IReadOnlyList<IMessageSummary>> FetchSummariesAsync(IReadOnlyCollection<long> uids, CancellationToken token)
+    {
+        var items = MessageSummaryItems.UniqueId | MessageSummaryItems.Flags | MessageSummaryItems.InternalDate | MessageSummaryItems.Size | MessageSummaryItems.BodyStructure | MessageSummaryItems.Headers;
+        if (this.client.Capabilities.HasFlag(ImapCapabilities.ObjectID))
+            items |= MessageSummaryItems.EmailId;
+
+        if (this.client.Capabilities.HasFlag(ImapCapabilities.GMailExt1))
+            items |= MessageSummaryItems.GMailMessageId;
+
+        return await this.FetchAsync(uids, new FetchRequest(items), token);
+    }
+
+    /// <summary>
+    /// Fetches the text parts of a mail in the open folder, and nothing else of it.
+    /// </summary>
+    /// <remarks>
+    /// Attachments stay on the server. A part larger than MAX_TEXT_PART_BYTES is left out as well.
+    /// </remarks>
+    /// <param name="summary">The summary of the mail, with its structure.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The HTML and the plain text part, each null when the mail has none.</returns>
+    /// <exception cref="MailboxConnectionException">The server could not deliver the parts.</exception>
+    public async Task<MailTextParts> FetchTextPartsAsync(IMessageSummary summary, CancellationToken token)
+    {
+        try
+        {
+            var htmlBody = await this.FetchTextPartAsync(summary.UniqueId, summary.HtmlBody, token);
+            var textBody = await this.FetchTextPartAsync(summary.UniqueId, summary.TextBody, token);
+            return new(htmlBody, textBody);
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Fetching the text of a mail failed: {failure}.", e);
+        }
+    }
+
+    /// <summary>
     /// Whether a name can become a folder below a parent with this hierarchy delimiter.
     /// </summary>
     /// <param name="name">The name, without leading or trailing whitespace.</param>
@@ -227,6 +386,43 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
             return MailFolderSpecialUse.IMPORTANT;
 
         return MailFolderSpecialUse.NONE;
+    }
+
+    private IMailFolder GetOpenFolder() => this.openFolder is { IsOpen: true } folder
+        ? folder
+        : throw new InvalidOperationException("No folder is open. Call OpenFolderAsync first.");
+
+    /// <summary>
+    /// Fetches from the open folder, a limited number of UIDs per command.
+    /// </summary>
+    private async Task<IReadOnlyList<IMessageSummary>> FetchAsync(IReadOnlyCollection<long> uids, IFetchRequest request, CancellationToken token)
+    {
+        var folder = this.GetOpenFolder();
+        var summaries = new List<IMessageSummary>(uids.Count);
+
+        try
+        {
+            foreach (var batch in uids.Order().Chunk(MAX_UIDS_PER_FETCH))
+            {
+                var uidSet = new UniqueIdSet(batch.Select(uid => new UniqueId((uint)uid)), SortOrder.Ascending);
+                summaries.AddRange(await folder.FetchAsync(uidSet, request, token));
+            }
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Fetching mails failed: {failure}.", e);
+        }
+
+        return summaries;
+    }
+
+    private async Task<string?> FetchTextPartAsync(UniqueId uid, BodyPartText? part, CancellationToken token)
+    {
+        if (part is null || part.Octets > MAX_TEXT_PART_BYTES)
+            return null;
+
+        var entity = await this.GetOpenFolder().GetBodyPartAsync(uid, part, token);
+        return entity is TextPart textPart ? textPart.Text : null;
     }
 
     private async Task SignInAsync(string username, string password, CancellationToken token)
