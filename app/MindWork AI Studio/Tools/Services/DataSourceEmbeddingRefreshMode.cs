@@ -14,4 +14,10 @@ internal enum DataSourceEmbeddingRefreshMode
     /// Carries on where the last run of the same data source stopped after its share of the work.
     /// </summary>
     CONTINUATION,
+
+    /// <summary>
+    /// The interval came round at which a data source is looked at again, since nothing reports its
+    /// changes, e.g. a mailbox on a server.
+    /// </summary>
+    INTERVAL_CHECK,
 }

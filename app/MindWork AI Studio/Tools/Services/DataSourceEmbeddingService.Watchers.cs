@@ -2,7 +2,8 @@ namespace AIStudio.Tools.Services;
 
 /// <remarks>
 /// A watcher here is whatever an indexer uses to notice that one of its data sources changed, a file
-/// system watcher for local files. The indexers own them; this service only decides when they run.
+/// system watcher for local files, an interval for mailboxes. The indexers own them; this service
+/// only decides when they run.
 /// </remarks>
 public sealed partial class DataSourceEmbeddingService
 {
@@ -52,13 +53,32 @@ public sealed partial class DataSourceEmbeddingService
     }
 
     /// <summary>
-    /// Queues the run an indexer asked for after it noticed a change.
+    /// Queues the run an indexer asked for after it noticed a change, or because its interval came round.
     /// </summary>
     /// <param name="dataSourceId">The id of the data source which changed.</param>
     /// <param name="refreshMode">Why the indexer asks.</param>
     private async Task RequestRunAsync(string dataSourceId, DataSourceEmbeddingRefreshMode refreshMode)
     {
-        if (this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
-            await this.QueueDataSourceAsync(dataSource, true, refreshMode);
+        if (!this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
+            return;
+
+        if (this.statuses.TryGetValue(dataSourceId, out var status) && IsWaitingForSignIn(status))
+        {
+            logger.LogDebug("Skipped the requested run of data source '{DataSourceId}' because its sign-in failed and waits for the user. RefreshMode={RefreshMode}.", dataSourceId, refreshMode);
+            return;
+        }
+
+        await this.QueueDataSourceAsync(dataSource, true, refreshMode);
     }
+
+    /// <summary>
+    /// Whether a data source waits for the user since its sign-in failed.
+    /// </summary>
+    /// <remarks>
+    /// Then only the user starts its next run, by saving a new password or with a retry. The indexer
+    /// would not sign in on any other run either, but every one of them would make the row of the
+    /// data source change from failed to queued and back, every interval anew.
+    /// </remarks>
+    /// <param name="status">The current status of the data source.</param>
+    internal static bool IsWaitingForSignIn(DataSourceEmbeddingStatus status) => status.Attention is DataSourceAttention.AUTH_FAILED;
 }

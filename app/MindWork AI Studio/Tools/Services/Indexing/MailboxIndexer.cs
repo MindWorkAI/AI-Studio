@@ -64,6 +64,19 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// </summary>
     private static readonly TimeSpan MAX_RUN_DURATION = TimeSpan.FromMinutes(5);
 
+    /// <summary>
+    /// How often every mailbox is synced while AI Studio runs.
+    /// </summary>
+    private static readonly TimeSpan SYNC_INTERVAL = TimeSpan.FromMinutes(16);
+
+    /// <summary>
+    /// How long after the tracking started the mailboxes are synced for the first time. The run at
+    /// startup asks no server anything, so this is the first sync after AI Studio started.
+    /// </summary>
+    private static readonly TimeSpan FIRST_SYNC_DELAY = TimeSpan.FromMinutes(1);
+
+    private readonly IntervalRunRequester syncRequester = new(SYNC_INTERVAL, FIRST_SYNC_DELAY, DataSourceEmbeddingRefreshMode.INTERVAL_CHECK, logger);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailboxIndexer).Namespace, nameof(MailboxIndexer));
 
     /// <summary>
@@ -159,26 +172,20 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
 
     /// <inheritdoc />
     /// <remarks>
-    /// Mailboxes are not watched: a mailbox is synced whenever it is queued.
+    /// A server reports no changes to a mailbox, so every mailbox is synced at an interval,
+    /// cf. SYNC_INTERVAL. A mailbox whose sign-in failed is left out by the embedding service, and
+    /// it would not sign in anyway.
     /// </remarks>
-    public void TrackChanges(IReadOnlyCollection<IIndexedDataSource> dataSources, Func<string, DataSourceEmbeddingRefreshMode, Task> requestRun)
-    {
-    }
+    public void TrackChanges(IReadOnlyCollection<IIndexedDataSource> dataSources, Func<string, DataSourceEmbeddingRefreshMode, Task> requestRun) => this.syncRequester.Track(dataSources, requestRun);
 
     /// <inheritdoc />
-    public void StopTracking(string dataSourceId)
-    {
-    }
+    public void StopTracking(string dataSourceId) => this.syncRequester.Stop(dataSourceId);
 
     /// <inheritdoc />
-    public void StopTrackingAll()
-    {
-    }
+    public void StopTrackingAll() => this.syncRequester.StopAll();
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-    }
+    public void Dispose() => this.syncRequester.Dispose();
 
     #endregion
 
