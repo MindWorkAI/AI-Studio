@@ -243,17 +243,21 @@ public sealed class ToolRegistry
         this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id, definition.MinimumProviderConfidence);
 
     /// <summary>
-    /// Narrows a selection of tool IDs to those the given provider may actually use.
+    /// Narrows a selection of tool IDs to those the given provider may actually use in this chat.
     /// </summary>
     /// <remarks>
     /// Used before a request is sent, so the chat records what will really be available rather
-    /// than what the user once ticked. Lives here because judging a tool needs its definition:
-    /// the settings know the overrides, the definition knows the tool's own minimum.
+    /// than what the user once ticked, and by the token count below the message field, so a tool
+    /// the request leaves out does not count. Lives here because judging a tool needs its
+    /// definition: the settings know the overrides, the definition knows the tool's own minimum.
+    /// Where the chat may still send data is judged with the rule the preparation of a request
+    /// uses, see CheckToolAsync.
     /// </remarks>
     /// <param name="provider">The provider the request goes to.</param>
     /// <param name="selectedToolIds">The tools the user selected.</param>
-    /// <returns>The subset that is enabled, active, and allowed by the provider's confidence.</returns>
-    public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds)
+    /// <param name="outboundDataRestriction">Where the chat may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
+    /// <returns>The subset that is enabled, active, allowed by the provider's confidence, and allowed by the outbound data restriction.</returns>
+    public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds, OutboundDataRestriction outboundDataRestriction)
     {
         if (!this.settingsManager.AreToolsEnabled())
             return [];
@@ -272,6 +276,14 @@ public sealed class ToolRegistry
             }
 
             if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, this.GetMinimumProviderConfidence(toolId)))
+            {
+                filtered.Remove(toolId);
+                continue;
+            }
+
+            if (this.GetDefinition(toolId) is { } definition &&
+                this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) &&
+                !ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction, implementation))
                 filtered.Remove(toolId);
         }
 

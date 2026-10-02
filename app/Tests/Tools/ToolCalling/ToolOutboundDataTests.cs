@@ -85,6 +85,27 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         });
     }
 
+    [TestCase(OutboundDataRestriction.UNRESTRICTED)]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES)]
+    public async Task TheToolsCountedForARequestAreTheOnesItOffers(OutboundDataRestriction restriction)
+    {
+        //
+        // The token count below the message field and the tools a chat records for its request
+        // both come from FilterToolIdsForProvider. A tool which the request leaves out, but which
+        // the count still counts, makes the number wrong in exactly the chats which read mails:
+        //
+        var webSearch = new TestTool(Definition("web_search_test")) { OutboundData = ToolOutboundData.THIRD_PARTY_QUERIES };
+        var wiki = new TestTool(Definition("wiki_search_test")) { OutboundData = ToolOutboundData.CONFIGURED_SERVICE };
+        var registry = this.CreateRegistry(webSearch, wiki);
+        var thread = restriction is OutboundDataRestriction.UNRESTRICTED ? new ChatThread() : RestrictedChat(restriction);
+
+        var counted = registry.FilterToolIdsForProvider(ToolCapableProvider(), ["web_search_test", "wiki_search_test"], thread.RequiredOutboundDataRestriction.Restriction);
+        var offered = await this.OfferedToolIds(registry, thread);
+
+        Assert.That(counted, Is.EquivalentTo(offered));
+    }
+
     [Test]
     public async Task AToolWhichKeepsToTheRestrictionItselfIsOffered()
     {
