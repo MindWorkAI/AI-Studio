@@ -1,7 +1,6 @@
 using System.Text.Json;
 
 using AIStudio.Provider;
-using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
 using AIStudio.Tools.Services;

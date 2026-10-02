@@ -208,7 +208,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
             Importance = MailImportance.HIGH,
         }, "INBOX");
 
-        var description = SearchMailsTool.DescribeConditions(conditions, timeZone);
+        var description = MailToolResults.DescribeConditions(conditions, timeZone);
 
         Assert.Multiple(() =>
         {

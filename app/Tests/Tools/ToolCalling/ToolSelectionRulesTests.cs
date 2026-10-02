@@ -19,11 +19,12 @@ public sealed class ToolSelectionRulesTests
     private const string SEMANTIC_SEARCH = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID;
     private const string SEARCH_MAILS = ToolSelectionRules.SEARCH_MAILS_TOOL_ID;
     private const string READ_MAIL = ToolSelectionRules.READ_MAIL_TOOL_ID;
+    private const string COUNT_MAILS = ToolSelectionRules.COUNT_MAILS_TOOL_ID;
 
     [Test]
-    public void SearchMailsBringsReadMailAlong()
+    public void SearchMailsBringsReadMailAndCountMailsAlong()
     {
-        Assert.That(ToolSelectionRules.NormalizeSelection([SEARCH_MAILS]), Is.EquivalentTo(new[] { SEARCH_MAILS, READ_MAIL }), "The search shows excerpts only; without Read Mail the model could not read a single mail whole.");
+        Assert.That(ToolSelectionRules.NormalizeSelection([SEARCH_MAILS]), Is.EquivalentTo(new[] { SEARCH_MAILS, READ_MAIL, COUNT_MAILS }), "The search shows excerpts and pages only; the model needs Read Mail to read a mail whole, and Count Mails to tell how many there are.");
     }
 
     [Test]
@@ -35,6 +36,7 @@ public sealed class ToolSelectionRulesTests
     [TestCase(READ_WEB_PAGE)]
     [TestCase(WEB_SEARCH)]
     [TestCase(READ_MAIL)]
+    [TestCase(COUNT_MAILS)]
     public void OtherToolsBringNothingAlong(string toolId)
     {
         Assert.That(ToolSelectionRules.NormalizeSelection([toolId]), Is.EquivalentTo(new[] { toolId }), "Only the searches depend on another tool. The readers in particular do not pull a search in.");
