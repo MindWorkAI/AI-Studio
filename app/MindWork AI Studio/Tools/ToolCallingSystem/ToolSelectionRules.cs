@@ -12,13 +12,15 @@ public static class ToolSelectionRules
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
     public const string SEMANTIC_SEARCH_TOOL_ID = "semantic_search";
     public const string SEARCH_MAILS_TOOL_ID = "search_mails";
+    public const string READ_MAIL_TOOL_ID = "read_mail";
 
     /// <summary>
     /// Turns a set of selected tool IDs into the set which actually runs.
     /// </summary>
     /// <remarks>
     /// Removes duplicates and adds the tools another one depends on: Search Confluence only finds
-    /// pages, so it brings Read Web Page along to open them. An added tool keeps its own rules.
+    /// pages, so it brings Read Web Page along to open them, and Search Mails shows excerpts, so it
+    /// brings Read Mail along to read a whole mail. An added tool keeps its own rules.
     /// ToolRegistry still drops it when it is switched off or the provider's confidence is too
     /// low, and Read Web Page reaches a wiki on a private or VPN address only when its host is
     /// allowed there.<br/><br/>
@@ -35,6 +37,9 @@ public static class ToolSelectionRules
         var normalized = selectedToolIds.ToHashSet(StringComparer.Ordinal);
         if (normalized.Contains(SEARCH_CONFLUENCE_TOOL_ID))
             normalized.Add(READ_WEB_PAGE_TOOL_ID);
+
+        if (normalized.Contains(SEARCH_MAILS_TOOL_ID))
+            normalized.Add(READ_MAIL_TOOL_ID);
 
         normalized.Remove(SEMANTIC_SEARCH_TOOL_ID);
         return normalized;

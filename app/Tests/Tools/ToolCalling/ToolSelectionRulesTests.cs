@@ -17,6 +17,14 @@ public sealed class ToolSelectionRulesTests
     private const string READ_WEB_PAGE = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
     private const string WEB_SEARCH = ToolSelectionRules.WEB_SEARCH_TOOL_ID;
     private const string SEMANTIC_SEARCH = ToolSelectionRules.SEMANTIC_SEARCH_TOOL_ID;
+    private const string SEARCH_MAILS = ToolSelectionRules.SEARCH_MAILS_TOOL_ID;
+    private const string READ_MAIL = ToolSelectionRules.READ_MAIL_TOOL_ID;
+
+    [Test]
+    public void SearchMailsBringsReadMailAlong()
+    {
+        Assert.That(ToolSelectionRules.NormalizeSelection([SEARCH_MAILS]), Is.EquivalentTo(new[] { SEARCH_MAILS, READ_MAIL }), "The search shows excerpts only; without Read Mail the model could not read a single mail whole.");
+    }
 
     [Test]
     public void SearchConfluenceBringsReadWebPageAlong()
@@ -26,9 +34,10 @@ public sealed class ToolSelectionRulesTests
 
     [TestCase(READ_WEB_PAGE)]
     [TestCase(WEB_SEARCH)]
+    [TestCase(READ_MAIL)]
     public void OtherToolsBringNothingAlong(string toolId)
     {
-        Assert.That(ToolSelectionRules.NormalizeSelection([toolId]), Is.EquivalentTo(new[] { toolId }), "Only Search Confluence depends on another tool. Read Web Page in particular does not pull the search in.");
+        Assert.That(ToolSelectionRules.NormalizeSelection([toolId]), Is.EquivalentTo(new[] { toolId }), "Only the searches depend on another tool. The readers in particular do not pull a search in.");
     }
 
     [Test]
