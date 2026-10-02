@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
@@ -54,8 +55,8 @@ public sealed class ReadWebPageFreeAddressChoiceTests
     [Test]
     public void OnlyOnLetsTheModelChooseAddresses()
     {
-        var off = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF);
-        var on = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.ON);
+        var off = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.UNRESTRICTED, wiki: null);
+        var on = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.ON, OutboundDataRestriction.UNRESTRICTED, wiki: null);
 
         Assert.Multiple(() =>
         {
@@ -68,7 +69,7 @@ public sealed class ReadWebPageFreeAddressChoiceTests
     [TestCase(FreeAddressChoice.ON)]
     public void BothValuesKeepTheConversationOutOfAddressesAndDistrustWhatComesBack(FreeAddressChoice freeAddressChoice)
     {
-        var instructions = ReadWebPageTool.BuildSystemPromptInstructions(freeAddressChoice);
+        var instructions = ReadWebPageTool.BuildSystemPromptInstructions(freeAddressChoice, OutboundDataRestriction.UNRESTRICTED, wiki: null);
 
         Assert.Multiple(() =>
         {

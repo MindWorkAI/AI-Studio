@@ -43,7 +43,23 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string ImplementationKey => ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID;
 
-    public ToolDefinition GetDefinition() => new()
+    public ToolDefinition GetDefinition() => CreateDefinition();
+
+    /// <summary>
+    /// The wiki configured for this tool, or null when no valid one is.
+    /// </summary>
+    /// <remarks>
+    /// A service configured in AI Studio, so a chat restricted by a mailbox may still read its
+    /// pages through Read Web Page. Whether the tool itself is switched on does not matter for that:
+    /// the wiki is no less configured, and Read Web Page reaches the same pages in any other chat.
+    /// </remarks>
+    internal static async Task<Uri?> ReadConfiguredWikiAsync(ToolSettingsService toolSettingsService)
+    {
+        var settingsValues = await toolSettingsService.GetSettingsAsync(CreateDefinition());
+        return TryParseBaseUrl(settingsValues.GetValueOrDefault(BASE_URL_SETTING), out var baseUrl) ? baseUrl : null;
+    }
+
+    private static ToolDefinition CreateDefinition() => new()
     {
         Id = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
