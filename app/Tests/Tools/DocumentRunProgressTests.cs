@@ -92,6 +92,62 @@ public sealed class DocumentRunProgressTests
         });
     }
 
+    [Test]
+    public async Task APausedRunKeepsItsHashAndLeavesTheStatusToWhatComesNext()
+    {
+        var (progress, statuses, manifest) = CreateProgress(totalDocuments: 10);
+
+        progress.RecordUnchanged(4);
+        await progress.PauseRunAsync("SOURCE-HASH", "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.SourceHash, Is.EqualTo("SOURCE-HASH"), "Without the hash, a mailbox stays out of every search for the hours its first sync takes.");
+            Assert.That(statuses, Is.Empty, "The status said the run is over, while the next one is about to carry on.");
+        });
+    }
+
+    [Test]
+    public void EveryStatusOfARunCarriesTheLastSync()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 2);
+        var lastSyncUtc = new DateTimeOffset(2026, 10, 1, 7, 0, 0, TimeSpan.Zero);
+
+        progress.LastSyncUtc = lastSyncUtc;
+        progress.Publish();
+        progress.PublishRunFailure("The server could not be reached.");
+        progress.PublishStoredState(workedThrough: true);
+
+        Assert.That(statuses.Select(status => status.LastSyncUtc), Is.All.EqualTo(lastSyncUtc));
+    }
+
+    [Test]
+    public void AHeldBackRemovalSaysWhatItAsksAbout()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 1_000);
+
+        progress.PublishRunFailure("This sync would remove 250 mails.", DataSourceAttention.MASS_REMOVAL_PENDING, 250);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
+            Assert.That(statuses[^1].Attention, Is.EqualTo(DataSourceAttention.MASS_REMOVAL_PENDING));
+            Assert.That(statuses[^1].PendingRemovalCount, Is.EqualTo(250), "Agreeing hands back the very number the user was shown.");
+            Assert.That(statuses[^1].LastError, Is.EqualTo("This sync would remove 250 mails."));
+        });
+    }
+
+    [Test]
+    public void AStoredStateIsCompletedOnlyWhenARunGotThroughOnce()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 3);
+
+        progress.PublishStoredState(workedThrough: false);
+        progress.PublishStoredState(workedThrough: true);
+
+        Assert.That(statuses.Select(status => status.State), Is.EqualTo(new[] { DataSourceEmbeddingState.IDLE, DataSourceEmbeddingState.COMPLETED }));
+    }
+
     private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();

@@ -65,6 +65,12 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     public string LastError { get; private set; } = lastInputError;
 
     /// <summary>
+    /// When the data source was last worked through as a whole, for those which are synced rather
+    /// than watched. Every status of the run carries it.
+    /// </summary>
+    public DateTimeOffset? LastSyncUtc { get; set; }
+
+    /// <summary>
     /// Documents which need nothing more in this run, whether they were indexed now or before.
     /// </summary>
     public int DoneDocuments => this.UnchangedDocuments + this.IndexedDocuments;
@@ -278,13 +284,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// <param name="token">The cancellation token.</param>
     public async Task CompleteRunAsync(string sourceHash, string reason, CancellationToken token)
     {
-        context.Manifest.SourceHash = sourceHash;
-        token.ThrowIfCancellationRequested();
-        await context.OptimizeCollectionIfNeededAsync(reason, token);
-
-        token.ThrowIfCancellationRequested();
-        await context.IndexStore.UpdateDataSourceHashAsync(context.DataSource.Id, sourceHash, token);
-        token.ThrowIfCancellationRequested();
+        await this.StoreSourceHashAsync(sourceHash, reason, token);
 
         //
         // Documents which were skipped for good do not make a run unsuccessful: nothing is left to
@@ -302,36 +302,67 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     }
 
     /// <summary>
+    /// Ends a run before it got through the whole data source, keeping what it did for the next one.
+    /// </summary>
+    /// <remarks>
+    /// Stores everything CompleteRunAsync stores, the hash included. For a data source which is
+    /// worked through in several runs, the hash therefore says that its index can be searched, not
+    /// that the data source was worked through as a whole: that is what LastSyncUtc tells. Without
+    /// it, a mailbox would stay out of every search for the hours its first sync takes.
+    ///
+    /// The user interface learns nothing here. Whatever comes next tells it: the run being queued
+    /// again, or the question the user has to answer first.
+    /// </remarks>
+    /// <param name="sourceHash">The hash of the data source as this run found it.</param>
+    /// <param name="reason">Why the collection is optimized now, for the log.</param>
+    /// <param name="token">The cancellation token.</param>
+    public Task PauseRunAsync(string sourceHash, string reason, CancellationToken token) => this.StoreSourceHashAsync(sourceHash, reason, token);
+
+    /// <summary>
     /// Tells the user interface how the data source stands as the index holds it, without a run.
     /// </summary>
     /// <remarks>
     /// For a data source which is not looked at right now, e.g. a mailbox while AI Studio starts:
-    /// its server is asked nothing then. Whether the last run got through the whole data source
-    /// decides between completed and idle. Nothing is written.
+    /// its server is asked nothing then. Nothing is written.
     /// </remarks>
-    public void PublishStoredState()
-    {
-        var state = string.IsNullOrWhiteSpace(context.Manifest.SourceHash) ? DataSourceEmbeddingState.IDLE : DataSourceEmbeddingState.COMPLETED;
-        context.PublishStatus(this.CreateStatus(state, string.Empty, string.Empty, null, null));
-    }
+    /// <param name="workedThrough">Whether a run got through the whole data source at some point, which decides between completed and idle.</param>
+    public void PublishStoredState(bool workedThrough) =>
+        context.PublishStatus(this.CreateStatus(workedThrough ? DataSourceEmbeddingState.COMPLETED : DataSourceEmbeddingState.IDLE, string.Empty, string.Empty, null, null));
 
     /// <summary>
     /// Ends a run which cannot go on, for a reason which is not about any one document.
     /// </summary>
     /// <remarks>
-    /// E.g. the server of a mailbox which cannot be reached or refuses the sign-in. Nothing is
-    /// written: whatever the run indexed so far stays, and the data source keeps counting as not
-    /// worked through, so the next run picks up where this one stopped.
+    /// E.g. the server of a mailbox which cannot be reached or refuses the sign-in, or a removal
+    /// the user has to agree to first. Nothing is written: whatever the run indexed so far stays,
+    /// and the data source keeps counting as not worked through, so the next run picks up where
+    /// this one stopped.
     /// </remarks>
     /// <param name="message">Why the run stopped, and what the user can do about it.</param>
-    public void PublishRunFailure(string message)
+    /// <param name="attention">What the user has to decide, if anything.</param>
+    /// <param name="pendingRemovalCount">The number of documents a held back removal asks about.</param>
+    public void PublishRunFailure(string message, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null)
     {
         this.LastError = message;
         this.failures.Add(new DataSourceEmbeddingFailure(context.DataSource.Name, message, DateTimeOffset.UtcNow));
-        context.PublishStatus(this.CreateStatus(DataSourceEmbeddingState.FAILED, string.Empty, message, null, null));
+        context.PublishStatus(this.CreateStatus(DataSourceEmbeddingState.FAILED, string.Empty, message, null, null, attention, pendingRemovalCount));
     }
 
-    private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage) => new(
+    /// <summary>
+    /// Stores what a run found about the data source as a whole, and tidies up the collection.
+    /// </summary>
+    private async Task StoreSourceHashAsync(string sourceHash, string reason, CancellationToken token)
+    {
+        context.Manifest.SourceHash = sourceHash;
+        token.ThrowIfCancellationRequested();
+        await context.OptimizeCollectionIfNeededAsync(reason, token);
+
+        token.ThrowIfCancellationRequested();
+        await context.IndexStore.UpdateDataSourceHashAsync(context.DataSource.Id, sourceHash, token);
+        token.ThrowIfCancellationRequested();
+    }
+
+    private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null) => new(
         context.DataSource.Id,
         context.DataSource.Name,
         context.DataSource.Type,
@@ -344,5 +375,8 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         this.failures.ToList(),
         this.PermanentlySkippedDocuments,
         currentBlock,
-        currentPage);
+        currentPage,
+        Attention: attention,
+        PendingRemovalCount: pendingRemovalCount,
+        LastSyncUtc: this.LastSyncUtc);
 }

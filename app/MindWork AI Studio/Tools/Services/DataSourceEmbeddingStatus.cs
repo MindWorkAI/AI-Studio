@@ -13,7 +13,12 @@ namespace AIStudio.Tools.Services;
 ///
 /// VectorStoreUnreadable says why a data source failed, not only that it did. The UI needs that
 /// difference to offer the repair for this one case, and it is carried as its own flag so nothing
-/// has to read it back out of the message in LastError.
+/// has to read it back out of the message in LastError. Attention does the same for what the user
+/// has to decide, and PendingRemovalCount is the number a held back removal asks about: agreeing to
+/// it hands that very number back, cf. ApprovePendingMailRemovalAsync.
+///
+/// LastSyncUtc is when the data source was last worked through as a whole, for those which are
+/// synced rather than watched, such as mailboxes. It stays null for the others.
 /// </remarks>
 public sealed record DataSourceEmbeddingStatus(
     string DataSourceId,
@@ -29,7 +34,10 @@ public sealed record DataSourceEmbeddingStatus(
     int PermanentlySkippedDocuments = 0,
     int? CurrentDocumentBlock = null,
     int? CurrentDocumentPage = null,
-    bool VectorStoreUnreadable = false)
+    bool VectorStoreUnreadable = false,
+    DataSourceAttention Attention = DataSourceAttention.NONE,
+    int? PendingRemovalCount = null,
+    DateTimeOffset? LastSyncUtc = null)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingStatus).Namespace, nameof(DataSourceEmbeddingStatus));
 

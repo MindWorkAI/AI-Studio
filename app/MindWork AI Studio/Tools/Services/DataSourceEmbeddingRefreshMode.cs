@@ -9,4 +9,9 @@ internal enum DataSourceEmbeddingRefreshMode
     HASH_CHECK,
     WATCHER_HASH_CHECK,
     MANUAL_RETRY,
+
+    /// <summary>
+    /// Carries on where the last run of the same data source stopped after its share of the work.
+    /// </summary>
+    CONTINUATION,
 }

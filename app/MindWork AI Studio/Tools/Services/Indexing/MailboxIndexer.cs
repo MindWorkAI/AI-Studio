@@ -28,6 +28,11 @@ namespace AIStudio.Tools.Services.Indexing;
 /// had its chance to link a mail which merely moved there. Even then, a mail is only orphaned, and
 /// deleted one run later, should it not turn up again by then.
 ///
+/// A run reads a limited number of mails, for a limited time, and leaves the rest to the next run.
+/// The first sync of a large mailbox takes hours, and the other data sources wait in the same
+/// queue. Nothing is removed before a run got through the whole mailbox, and a removal of a large
+/// part of it waits for the user to agree, cf. MailRemovalGuard.
+///
 /// Signing in is guarded, because every refused attempt brings an account closer to being locked.
 /// A refused sign-in is stored, and no run signs in again until the user saves a new password,
 /// tests the connection, or explicitly asks for another try. That this record can be read at all
@@ -48,6 +53,16 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// </summary>
     private const int SUMMARY_BATCH_SIZE = 100;
 
+    /// <summary>
+    /// How many mails one run reads at most, whether embedding them works or not.
+    /// </summary>
+    private const int MAX_READ_MAILS_PER_RUN = 500;
+
+    /// <summary>
+    /// How long one run takes at most, before it leaves the rest to the next one.
+    /// </summary>
+    private static readonly TimeSpan MAX_RUN_DURATION = TimeSpan.FromMinutes(5);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(MailboxIndexer).Namespace, nameof(MailboxIndexer));
 
     /// <summary>
@@ -58,13 +73,22 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// <param name="StoredAtStart">The folder as the first pass stored it.</param>
     /// <param name="Plan">What is left to do in the folder.</param>
     /// <param name="IndexedUidCount">How many of its mails belong into the index.</param>
-    private sealed record PlannedFolder(MailServerFolder Folder, MailFolderState ServerState, MailFolderRecord StoredAtStart, MailFolderSyncPlan Plan, int IndexedUidCount);
+    /// <param name="StoredLocationCount">How many locations the index held in the folder before the run.</param>
+    private sealed record PlannedFolder(MailServerFolder Folder, MailFolderState ServerState, MailFolderRecord StoredAtStart, MailFolderSyncPlan Plan, int IndexedUidCount, int StoredLocationCount);
+
+    /// <summary>
+    /// What a run found gone, once it got through the whole mailbox.
+    /// </summary>
+    /// <param name="GoneFolderPaths">The stored folders which no longer belong to the mailbox.</param>
+    /// <param name="Count">How many locations would go, those of the gone folders included.</param>
+    /// <param name="IndexedCount">How many locations the index held before the run.</param>
+    private sealed record PlannedRemovals(IReadOnlyList<string> GoneFolderPaths, int Count, int IndexedCount);
 
     /// <inheritdoc />
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceMailbox;
 
     /// <inheritdoc />
-    public async Task ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not DataSourceMailbox mailbox)
             throw new ArgumentException("The mailbox indexer reads mailboxes only.", nameof(context));
@@ -72,8 +96,8 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         if (refreshMode is DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK)
         {
             logger.LogInformation("Showing the stored index of mailbox '{MailboxId}' without asking its server, since AI Studio is starting.", mailbox.Id);
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishStoredState();
-            return;
+            await this.PublishStoredStateAsync(context, token);
+            return IndexedRunOutcome.DONE;
         }
 
         //
@@ -84,15 +108,15 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         if (authFailure is not null && refreshMode is not DataSourceEmbeddingRefreshMode.MANUAL_RETRY)
         {
             logger.LogInformation("Not signing in to mailbox '{MailboxId}' because the server refused a sign-in on {FailedAtUtc:O}, and nobody has dealt with that yet.", mailbox.Id, authFailure.FailedAtUtc);
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(GetAuthFailureMessage(authFailure));
-            return;
+            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(GetAuthFailureMessage(authFailure), DataSourceAttention.AUTH_FAILED);
+            return IndexedRunOutcome.DONE;
         }
 
         var password = await this.ReadPasswordAsync(mailbox);
         if (password is null)
         {
             (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(TB("The password of the mailbox could not be read from the operating system. Please enter it again in the settings of the mailbox."));
-            return;
+            return IndexedRunOutcome.DONE;
         }
 
         await using var connector = new ImapMailboxConnector();
@@ -103,7 +127,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         catch (MailboxConnectionException e)
         {
             logger.LogWarning("Signing in to mailbox '{MailboxId}' failed: {Failure} ({ExceptionType}).", mailbox.Id, e.Failure, e.InnerException?.GetType().Name ?? "no inner exception");
-            var message = e.Failure.GetDescription();
+            var progress = await this.CreateStoredStateProgressAsync(context, token);
 
             //
             // A network which is down says nothing about the password, so only a refusal is
@@ -113,11 +137,12 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             {
                 var failure = MailboxAuthFailure.FromServerAnswer(e.InnerException?.Message ?? string.Empty);
                 await context.IndexStore.UpsertMailboxAuthFailureAsync(mailbox.Id, failure, token);
-                message = GetAuthFailureMessage(failure);
+                progress.PublishRunFailure(GetAuthFailureMessage(failure), DataSourceAttention.AUTH_FAILED);
             }
+            else
+                progress.PublishRunFailure(e.Failure.GetDescription());
 
-            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(message);
-            return;
+            return IndexedRunOutcome.DONE;
         }
 
         if (authFailure is not null)
@@ -126,7 +151,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             await context.IndexStore.ClearMailboxAuthFailureAsync(mailbox.Id, token);
         }
 
-        await this.SyncAsync(context, mailbox, connector, refreshMode, token);
+        return await this.SyncAsync(context, mailbox, connector, refreshMode, token);
     }
 
     #region Implementation of IIndexedSourceIndexer's tracking
@@ -159,7 +184,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// <summary>
     /// Works through the folders of a mailbox, once the connector is signed in.
     /// </summary>
-    private async Task SyncAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    private async Task<IndexedRunOutcome> SyncAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         var runStartedUtc = DateTimeOffset.UtcNow;
         DocumentRunProgress? progress = null;
@@ -175,9 +200,10 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
                 //
                 logger.LogWarning("The server no longer lists the root folder of mailbox '{MailboxId}'. The sync stops, and nothing is removed from the index.", mailbox.Id);
                 (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(string.Format(TB("The server no longer lists the folder '{0}' to which this mailbox is limited. Perhaps it was renamed or deleted. Nothing was removed from the index. Rename the folder back on the server, or add the mailbox anew."), mailbox.RootFolder));
-                return;
+                return IndexedRunOutcome.DONE;
             }
 
+            var syncState = await context.IndexStore.GetMailboxSyncStateAsync(mailbox.Id, token);
             var storedFolders = (await context.IndexStore.GetMailFoldersAsync(mailbox.Id, token)).ToDictionary(folder => folder.Path, StringComparer.Ordinal);
             var plannedFolders = await this.PlanFoldersAsync(context, mailbox, connector, selection, storedFolders, token);
 
@@ -185,7 +211,11 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             // Counted by location: a mail which lies in two folders counts twice, as it does on the
             // server. Telling the mails apart would mean fetching every one of them.
             //
-            progress = new DocumentRunProgress(context, plannedFolders.Sum(folder => folder.IndexedUidCount), 0, string.Empty, [], logger);
+            progress = new DocumentRunProgress(context, plannedFolders.Sum(folder => folder.IndexedUidCount), 0, string.Empty, [], logger)
+            {
+                LastSyncUtc = syncState.LastSyncCompletedUtc,
+            };
+
             progress.RecordUnchanged(plannedFolders.Sum(folder => folder.Plan.KeptUids.Count));
             progress.Publish();
 
@@ -194,20 +224,47 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             // once, when the second pass is done, rather than once per mail.
             //
             var encounteredKeys = new HashSet<string>(StringComparer.Ordinal);
+            var workedThrough = true;
             await using (guardService.BeginAction())
             {
                 foreach (var folder in plannedFolders)
-                    await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, token);
+                {
+                    if (await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, runStartedUtc, token))
+                        continue;
+
+                    workedThrough = false;
+                    break;
+                }
             }
 
-            var deletedMails = await this.ApplyRemovalsAsync(context, mailbox, plannedFolders, storedFolders.Keys, runStartedUtc, token);
-            await ForgetVanishedFailuresAsync(context, encounteredKeys, token);
-            await context.IndexStore.CompleteMailboxSyncAsync(mailbox.Id, DateTimeOffset.UtcNow, token);
-
             var sourceHash = BuildSourceHash(plannedFolders);
+            if (!workedThrough)
+                return await this.PauseAsync(mailbox, progress, sourceHash, refreshMode, token);
+
+            //
+            // Every folder is through, so what is gone can be told now: a mail missing from one
+            // folder had its chance to turn up in another.
+            //
+            var removals = await CollectRemovalsAsync(context, mailbox, plannedFolders, storedFolders.Keys, token);
+            if (MailRemovalGuard.Decide(removals.IndexedCount, removals.Count, syncState) is MailRemovalDecision.HOLD_BACK)
+            {
+                logger.LogWarning("Syncing mailbox '{MailboxId}' would remove {RemovalCount} of {IndexedCount} location(s) from the index at once. The removal waits for the user to agree.", mailbox.Id, removals.Count, removals.IndexedCount);
+                await context.IndexStore.HoldBackMailRemovalAsync(mailbox.Id, removals.Count, token);
+                await progress.PauseRunAsync(sourceHash, "mailbox sync waits for a removal to be approved", token);
+                progress.PublishRunFailure(GetRemovalMessage(removals.Count), DataSourceAttention.MASS_REMOVAL_PENDING, removals.Count);
+                return IndexedRunOutcome.DONE;
+            }
+
+            var deletedMails = await this.ApplyRemovalsAsync(context, mailbox, plannedFolders, removals, runStartedUtc, token);
+            await ForgetVanishedFailuresAsync(context, encounteredKeys, token);
+
+            var completedUtc = DateTimeOffset.UtcNow;
+            await context.IndexStore.CompleteMailboxSyncAsync(mailbox.Id, completedUtc, token);
+            progress.LastSyncUtc = completedUtc;
+
             await progress.CompleteRunAsync(sourceHash, "mailbox sync finished", token);
             logger.LogInformation(
-                "Finished syncing mailbox '{MailboxId}'. RefreshMode={RefreshMode}, Folders={FolderCount}, Embedded={EmbeddedMails}, LinkedOrUnchanged={UnchangedMails}, PermanentlySkipped={PermanentlySkippedMails}, Failed={FailedMails}, Deleted={DeletedMails}, SourceHashPrefix={SourceHashPrefix}.",
+                "Finished syncing mailbox '{MailboxId}'. RefreshMode={RefreshMode}, Folders={FolderCount}, Embedded={EmbeddedMails}, LinkedOrUnchanged={UnchangedMails}, PermanentlySkipped={PermanentlySkippedMails}, Failed={FailedMails}, RemovedLocations={RemovedLocations}, Deleted={DeletedMails}, SourceHashPrefix={SourceHashPrefix}.",
                 mailbox.Id,
                 refreshMode,
                 plannedFolders.Count,
@@ -215,8 +272,11 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
                 progress.UnchangedDocuments,
                 progress.PermanentlySkippedDocuments,
                 progress.FailedDocuments,
+                removals.Count,
                 deletedMails,
                 ShortHash(sourceHash));
+
+            return IndexedRunOutcome.DONE;
         }
         catch (MailboxConnectionException e)
         {
@@ -228,7 +288,39 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             await context.OptimizeCollectionIfNeededAsync("mailbox sync stopped", token);
             progress ??= await this.CreateStoredStateProgressAsync(context, token);
             progress.PublishRunFailure(e.Failure.GetDescription());
+            return IndexedRunOutcome.DONE;
         }
+    }
+
+    /// <summary>
+    /// Ends a run which did its share of the work before it got through the mailbox.
+    /// </summary>
+    /// <remarks>
+    /// Only a run which got something done hands on to another one. When every mail it read
+    /// failed, e.g. because the embedding provider is down, the next run would fail all the same,
+    /// and the one after it, without end. Such a run ends with its failures instead, and waits for
+    /// the next time the mailbox is queued.
+    /// </remarks>
+    private async Task<IndexedRunOutcome> PauseAsync(DataSourceMailbox mailbox, DocumentRunProgress progress, string sourceHash, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    {
+        if (progress.IndexedDocuments is 0 && progress.FailedDocuments > 0)
+        {
+            logger.LogWarning("Syncing mailbox '{MailboxId}' stops without carrying on, since none of the {FailedMails} mail(s) it read could be indexed.", mailbox.Id, progress.FailedDocuments);
+            await progress.CompleteRunAsync(sourceHash, "mailbox sync stopped without progress", token);
+            return IndexedRunOutcome.DONE;
+        }
+
+        await progress.PauseRunAsync(sourceHash, "mailbox sync paused", token);
+        logger.LogInformation(
+            "Syncing mailbox '{MailboxId}' carries on in another run. RefreshMode={RefreshMode}, Embedded={EmbeddedMails}, Failed={FailedMails}, Done={DoneMails}/{TotalMails}.",
+            mailbox.Id,
+            refreshMode,
+            progress.IndexedDocuments,
+            progress.FailedDocuments,
+            progress.DoneDocuments,
+            progress.TotalDocuments);
+
+        return IndexedRunOutcome.MORE_TO_DO;
     }
 
     /// <summary>
@@ -283,7 +375,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
                 plan.KeptUids.Count,
                 plan.ChecksFlags);
 
-            plannedFolders.Add(new(folder, serverState, storedAtStart, plan, indexedUids.Count));
+            plannedFolders.Add(new(folder, serverState, storedAtStart, plan, indexedUids.Count, storedLocations.Count));
         }
 
         return plannedFolders;
@@ -292,7 +384,8 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// <summary>
     /// The second pass through one folder: links or indexes the mails the index does not hold there yet.
     /// </summary>
-    private async Task SyncNewMailsAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, PlannedFolder folder, DocumentRunProgress progress, ISet<string> encounteredKeys, CancellationToken token)
+    /// <returns>True when the folder is through, false when the run did its share of the work before.</returns>
+    private async Task<bool> SyncNewMailsAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, PlannedFolder folder, DocumentRunProgress progress, ISet<string> encounteredKeys, DateTimeOffset runStartedUtc, CancellationToken token)
     {
         if (folder.Plan.NewUids.Count > 0)
         {
@@ -304,16 +397,23 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             if (serverState.UidValidity != folder.ServerState.UidValidity)
             {
                 logger.LogInformation("The server numbered a folder of mailbox '{MailboxId}' anew during the sync. The folder is synced during the next run.", mailbox.Id);
-                return;
+                return true;
             }
 
             foreach (var uidBatch in folder.Plan.NewUids.Chunk(SUMMARY_BATCH_SIZE))
             {
                 token.ThrowIfCancellationRequested();
+                if (HasDoneItsShare(progress, runStartedUtc))
+                    return false;
 
                 var summaries = await connector.FetchSummariesAsync(uidBatch, token);
                 foreach (var summary in summaries.OrderByDescending(summary => summary.UniqueId.Id))
+                {
+                    if (HasDoneItsShare(progress, runStartedUtc))
+                        return false;
+
                     await this.SyncNewMailAsync(context, mailbox, connector, folder.Folder.FullName, summary, progress, encounteredKeys, token);
+                }
             }
         }
 
@@ -327,20 +427,53 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             HighestModSeq = folder.ServerState.HighestModSeq,
             InitialSyncCompletedUtc = folder.StoredAtStart.InitialSyncCompletedUtc ?? DateTimeOffset.UtcNow,
         }, token);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Whether a run did its share of the work, so other data sources get their turn.
+    /// </summary>
+    /// <remarks>
+    /// Counted are the mails which were read, whether embedding them worked or not. Linking a mail
+    /// the index holds already costs next to nothing, so only the time limits that.
+    /// </remarks>
+    private static bool HasDoneItsShare(DocumentRunProgress progress, DateTimeOffset runStartedUtc) =>
+        progress.IndexedDocuments + progress.FailedDocuments >= MAX_READ_MAILS_PER_RUN || DateTimeOffset.UtcNow - runStartedUtc >= MAX_RUN_DURATION;
+
+    /// <summary>
+    /// Works out what a run which got through the whole mailbox would remove.
+    /// </summary>
+    /// <remarks>
+    /// Counted by location, as during the run. A mail which lies in two folders and leaves both
+    /// counts twice, so the user is asked rather too often than too rarely.
+    /// </remarks>
+    private static async Task<PlannedRemovals> CollectRemovalsAsync(IndexedRunContext context, DataSourceMailbox mailbox, IReadOnlyList<PlannedFolder> plannedFolders, IEnumerable<string> storedFolderPaths, CancellationToken token)
+    {
+        // Folders which the server no longer lists, or which no longer lie below the root folder:
+        var plannedPaths = plannedFolders.Select(folder => folder.Folder.FullName).ToHashSet(StringComparer.Ordinal);
+        var goneFolderPaths = storedFolderPaths.Where(path => !plannedPaths.Contains(path)).ToList();
+
+        var goneFolderLocationCount = 0;
+        foreach (var folderPath in goneFolderPaths)
+            goneFolderLocationCount += (await context.IndexStore.GetMailLocationsAsync(mailbox.Id, folderPath, token)).Count;
+
+        return new(
+            goneFolderPaths,
+            plannedFolders.Sum(folder => folder.Plan.GoneUids.Count) + goneFolderLocationCount,
+            plannedFolders.Sum(folder => folder.StoredLocationCount) + goneFolderLocationCount);
     }
 
     /// <summary>
     /// Forgets what is gone from the server, now that every folder had its chance to link a mail which only moved.
     /// </summary>
     /// <returns>How many mails were deleted from the index, which lost their last location before this run.</returns>
-    private async Task<int> ApplyRemovalsAsync(IndexedRunContext context, DataSourceMailbox mailbox, IReadOnlyList<PlannedFolder> plannedFolders, IEnumerable<string> storedFolderPaths, DateTimeOffset runStartedUtc, CancellationToken token)
+    private async Task<int> ApplyRemovalsAsync(IndexedRunContext context, DataSourceMailbox mailbox, IReadOnlyList<PlannedFolder> plannedFolders, PlannedRemovals removals, DateTimeOffset runStartedUtc, CancellationToken token)
     {
         foreach (var folder in plannedFolders.Where(folder => folder.Plan.GoneUids.Count > 0))
             await context.IndexStore.RemoveMailLocationsAsync(mailbox.Id, folder.Folder.FullName, folder.Plan.GoneUids, token);
 
-        // A folder which the server no longer lists, or which no longer lies below the root folder:
-        var plannedPaths = plannedFolders.Select(folder => folder.Folder.FullName).ToHashSet(StringComparer.Ordinal);
-        foreach (var folderPath in storedFolderPaths.Where(path => !plannedPaths.Contains(path)).ToList())
+        foreach (var folderPath in removals.GoneFolderPaths)
             await context.IndexStore.DeleteMailFolderAsync(mailbox.Id, folderPath, token);
 
         //
@@ -374,6 +507,33 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     }
 
     /// <summary>
+    /// Tells the user interface how the mailbox stands, from the index alone.
+    /// </summary>
+    /// <remarks>
+    /// A refused sign-in and a removal held back are stored, so they are shown again after a
+    /// restart, before any server is asked.
+    /// </remarks>
+    private async Task PublishStoredStateAsync(IndexedRunContext context, CancellationToken token)
+    {
+        var dataSourceId = context.DataSource.Id;
+        var progress = await this.CreateStoredStateProgressAsync(context, token);
+        if (await context.IndexStore.GetMailboxAuthFailureAsync(dataSourceId, token) is { } authFailure)
+        {
+            progress.PublishRunFailure(GetAuthFailureMessage(authFailure), DataSourceAttention.AUTH_FAILED);
+            return;
+        }
+
+        var syncState = await context.IndexStore.GetMailboxSyncStateAsync(dataSourceId, token);
+        if (syncState is { PendingRemovalCount: { } pendingRemovalCount, PendingRemovalApprovedUtc: null })
+        {
+            progress.PublishRunFailure(GetRemovalMessage(pendingRemovalCount), DataSourceAttention.MASS_REMOVAL_PENDING, pendingRemovalCount);
+            return;
+        }
+
+        progress.PublishStoredState(syncState.LastSyncCompletedUtc is not null);
+    }
+
+    /// <summary>
     /// Counts what the index holds of a mailbox, for a status which comes without a run.
     /// </summary>
     /// <remarks>
@@ -387,7 +547,11 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             locationCount += (await context.IndexStore.GetMailLocationsAsync(dataSourceId, folder.Path, token)).Count;
 
         var permanentFailures = context.Manifest.PermanentFailures;
-        var progress = new DocumentRunProgress(context, locationCount + permanentFailures.Count, 0, string.Empty, [], logger);
+        var progress = new DocumentRunProgress(context, locationCount + permanentFailures.Count, 0, string.Empty, [], logger)
+        {
+            LastSyncUtc = (await context.IndexStore.GetMailboxSyncStateAsync(dataSourceId, token)).LastSyncCompletedUtc,
+        };
+
         progress.RecordUnchanged(locationCount);
         foreach (var (key, failure) in permanentFailures)
             progress.RecordStillUnreadable(key, failure);
@@ -409,12 +573,16 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         TB("Signing in to the mailbox failed on {0}. Presumably your password changed. AI Studio does not try again on its own, so that your account is not locked. Please enter your current password in the settings of the mailbox."),
         failure.FailedAtUtc.ToLocalTime().ToString("g", I18N.I.Culture));
 
+    private static string GetRemovalMessage(int removalCount) => string.Format(
+        TB("This sync would remove {0} mails from the index of AI Studio at once, so it waits for you to agree. On the server, the mails stay as they are. Should they come back later, e.g. because you choose a larger period again, they have to be embedded anew, which takes time and, with a cloud provider, money."),
+        removalCount.CompactCount());
+
     /// <summary>
     /// Hashes how the folders of a mailbox stood on the server when a run worked through them.
     /// </summary>
     /// <remarks>
     /// Nothing compares it to decide what to do, since every run asks the server anyway. It says
-    /// that a run got through the whole mailbox, cf. DocumentRunProgress.CompleteRunAsync.
+    /// that the index of the mailbox can be searched, cf. DocumentRunProgress.PauseRunAsync.
     /// </remarks>
     private static string BuildSourceHash(IReadOnlyList<PlannedFolder> plannedFolders)
     {

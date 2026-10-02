@@ -27,10 +27,16 @@ internal interface IIndexedSourceIndexer : IDisposable
     /// <summary>
     /// Works through the documents of the data source of a run, from finding them to completing the run.
     /// </summary>
+    /// <remarks>
+    /// A run may stop after its share of the work and leave the rest to another one, so a data source
+    /// which takes hours does not hold up all others for that long. Whether and when that run comes
+    /// is the embedding service's to decide.
+    /// </remarks>
     /// <param name="context">The prepared run, whose data source this indexer supports.</param>
     /// <param name="refreshMode">Why the run was started.</param>
     /// <param name="token">The cancellation token.</param>
-    public Task ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token);
+    /// <returns>Whether another run has to carry on.</returns>
+    public Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token);
 
     /// <summary>
     /// Keeps track of changes to the given data sources, and of nothing else.

@@ -445,7 +445,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 currentStatus?.TotalDocuments ?? 0,
                 currentStatus?.IndexedDocuments ?? 0,
                 currentStatus?.FailedDocuments ?? 0,
-                failures: currentStatus?.Failures ?? []));
+                failures: currentStatus?.Failures ?? [],
+                lastSyncUtc: currentStatus?.LastSyncUtc));
         }
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
         await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSource.Id, refreshMode));
@@ -706,7 +707,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (context is null)
             return;
 
-        await indexer.ProcessAsync(context, refreshMode, token);
+        //
+        // Queued behind whatever else waits, so a data source which takes hours gives the others
+        // their turn. While this run is still active, that is the follow-up run every request
+        // during a run leaves behind. Should the user ask for a run of their own in the meantime,
+        // theirs comes first, and carries on just the same.
+        //
+        if (await indexer.ProcessAsync(context, refreshMode, token) is IndexedRunOutcome.MORE_TO_DO)
+            await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
@@ -780,7 +788,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 knownStatus?.IndexedDocuments ?? 0,
                 knownStatus?.FailedDocuments ?? 0,
                 failures: knownStatus?.Failures ?? [],
-                permanentlySkippedDocuments: knownStatus?.PermanentlySkippedDocuments ?? 0);
+                permanentlySkippedDocuments: knownStatus?.PermanentlySkippedDocuments ?? 0,
+                lastSyncUtc: knownStatus?.LastSyncUtc);
         }
 
         // One message for the whole list, rather than one per data source:
@@ -980,7 +989,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         int permanentlySkippedDocuments = 0,
         int? currentDocumentBlock = null,
         int? currentDocumentPage = null,
-        bool vectorStoreUnreadable = false)
+        bool vectorStoreUnreadable = false,
+        DateTimeOffset? lastSyncUtc = null)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
@@ -996,7 +1006,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             permanentlySkippedDocuments,
             currentDocumentBlock,
             currentDocumentPage,
-            vectorStoreUnreadable);
+            vectorStoreUnreadable,
+            LastSyncUtc: lastSyncUtc);
     }
 
     private DataSourceEmbeddingStatus GetFallbackStatus(IDataSourceBase dataSource, string errorMessage)
@@ -1137,7 +1148,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentStatus?.IndexedDocuments ?? 0,
             currentStatus?.FailedDocuments ?? 0,
             lastError: currentStatus?.LastError ?? string.Empty,
-            failures: currentStatus?.Failures ?? []));
+            failures: currentStatus?.Failures ?? [],
+            lastSyncUtc: currentStatus?.LastSyncUtc));
 
         try
         {

@@ -49,7 +49,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
 
     /// <inheritdoc />
-    public async Task ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not IDataSource dataSource || !this.Supports(dataSource))
             throw new ArgumentException("The file indexer reads local files and folders only.", nameof(context));
@@ -111,7 +111,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 progress.RecordStillUnreadable(filePath, permanentFailure);
 
             await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source finished after removing missing files", token);
-            return;
+            return IndexedRunOutcome.DONE;
         }
 
         token.ThrowIfCancellationRequested();
@@ -231,6 +231,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             progress.FailedDocuments,
             totalFiles,
             ShortHash(metadataSnapshot.SourceHash));
+
+        return IndexedRunOutcome.DONE;
     }
 
     /// <summary>
