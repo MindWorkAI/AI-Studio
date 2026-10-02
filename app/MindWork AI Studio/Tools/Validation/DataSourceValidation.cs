@@ -12,7 +12,7 @@ public sealed class DataSourceValidation
 
     public const int MIN_ATTACHMENT_SIZE_MEGABYTES = 1;
 
-    public const int MAX_ATTACHMENT_SIZE_MEGABYTES = 100;
+    public const int MAX_ATTACHMENT_SIZE_MEGABYTES = 2048;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
 

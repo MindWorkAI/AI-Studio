@@ -96,7 +96,8 @@ public static class MailAttachmentRules
         if (!FileTypes.IsAllowedExtension(GetExtension(part), FileTypes.DOCUMENT))
             return MailPartTextState.UNSUPPORTED_TYPE;
 
-        if (EstimateDecodedSize(part) > maxSize * BYTES_PER_MEGABYTE)
+        // Beyond what can be fetched at all, an attachment is too large whatever the limit:
+        if (EstimateDecodedSize(part) > maxSize * BYTES_PER_MEGABYTE || part.Octets > MailAttachmentPieces.MAX_OCTETS)
             return MailPartTextState.TOO_LARGE;
 
         return null;

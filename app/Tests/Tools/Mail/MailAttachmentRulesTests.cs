@@ -66,6 +66,18 @@ public sealed class MailAttachmentRulesTests
     }
 
     [Test]
+    public void AnAttachmentBeyondWhatCanBeFetchedIsTooLargeWhateverTheLimit()
+    {
+        // 2.5 GB of Base64 decode to less than the largest limit, but cannot be fetched in pieces:
+        var attachment = Attachment("application", "pdf", "scanned-archive.pdf", 2560 * MEGABYTE);
+        Assert.Multiple(() =>
+        {
+            Assert.That(MailAttachmentRules.EstimateDecodedSize(attachment), Is.LessThan(DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES * MEGABYTE));
+            Assert.That(MailAttachmentRules.GetReasonToSkip(attachment, DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES), Is.EqualTo(MailPartTextState.TOO_LARGE));
+        });
+    }
+
+    [Test]
     public void TheTypeComesFromTheNameOrElseFromTheContentType()
     {
         Assert.Multiple(() =>

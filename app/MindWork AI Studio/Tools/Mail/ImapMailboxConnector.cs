@@ -49,6 +49,11 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     private const string PLAIN_MECHANISM = "PLAIN";
 
     /// <summary>
+    /// The IMAP section of the text of a mail, i.e., everything below its header.
+    /// </summary>
+    private const string TEXT_SECTION = "TEXT";
+
+    /// <summary>
     /// Characters IMAP reserves as wildcards in LIST, which therefore make no folder name.
     /// </summary>
     private static readonly char[] LIST_WILDCARDS = ['*', '%'];
@@ -322,32 +327,24 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// Fetches one attachment of a mail in the open folder, and writes it out as the file it was.
     /// </summary>
     /// <remarks>
-    /// The attachment arrives as a whole before it is written, so its size has to be checked
-    /// beforehand, cf. MailAttachmentRules. Only fetching it counts as a failure of the connection.
-    /// Writing it out is a failure of this one attachment, e.g. a full disk.
+    /// The attachment arrives in pieces, and each is written out as soon as it is there, cf.
+    /// MailAttachmentPieces. So even a large attachment takes little memory. Whether it is wanted
+    /// at all is checked beforehand, cf. MailAttachmentRules. Only fetching it counts as a failure of
+    /// the connection. Decoding or writing it out is a failure of this one attachment, e.g. a full disk.
     /// </remarks>
     /// <param name="uid">The UID of the mail.</param>
     /// <param name="part">The attachment, from the structure of the mail.</param>
-    /// <param name="destination">Where the decoded attachment is written to.</param>
+    /// <param name="destination">Where the decoded attachment is written to. It is left open.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="MailboxConnectionException">The server could not deliver the attachment.</exception>
-    /// <exception cref="InvalidDataException">The server delivered something other than a file.</exception>
-    public async Task FetchAttachmentAsync(UniqueId uid, BodyPartBasic part, Stream destination, CancellationToken token)
+    /// <exception cref="InvalidDataException">The attachment cannot be decoded, or the server delivered more than it was asked for.</exception>
+    public Task FetchAttachmentAsync(UniqueId uid, BodyPartBasic part, Stream destination, CancellationToken token)
     {
-        MimeEntity entity;
-        try
-        {
-            entity = await this.GetOpenFolder().GetBodyPartAsync(uid, part, token);
-        }
-        catch (Exception e) when (Classify(e, token) is { } failure)
-        {
-            throw new MailboxConnectionException(failure, $"Fetching an attachment failed: {failure}.", e);
-        }
+        var folder = this.GetOpenFolder();
 
-        if (entity is not MimePart { Content: { } content })
-            throw new InvalidDataException("The server delivered the attachment as something other than a file.");
-
-        await content.DecodeToAsync(destination, token);
+        // A mail which consists of this one part has it as its text, cf. RFC 3501, section 6.4.5:
+        var section = part.PartSpecifier.Length > 0 ? part.PartSpecifier : TEXT_SECTION;
+        return MailAttachmentPieces.WriteDecodedAsync((offset, pieceToken) => FetchAttachmentPieceAsync(folder, uid, section, offset, pieceToken), part.ContentTransferEncoding, destination, MailAttachmentPieces.PIECE_BYTES, token);
     }
 
     /// <summary>
@@ -447,6 +444,18 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         }
 
         return summaries;
+    }
+
+    private static async Task<Stream> FetchAttachmentPieceAsync(IMailFolder folder, UniqueId uid, string section, int offset, CancellationToken token)
+    {
+        try
+        {
+            return await folder.GetStreamAsync(uid, section, offset, MailAttachmentPieces.PIECE_BYTES, token);
+        }
+        catch (Exception e) when (Classify(e, token) is { } failure)
+        {
+            throw new MailboxConnectionException(failure, $"Fetching an attachment failed: {failure}.", e);
+        }
     }
 
     private async Task<string?> FetchTextPartAsync(UniqueId uid, BodyPartText? part, CancellationToken token)
