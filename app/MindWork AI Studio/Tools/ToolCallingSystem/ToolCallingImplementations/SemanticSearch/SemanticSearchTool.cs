@@ -260,6 +260,10 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     // written to steer a model:
     public bool ReturnsUntrustedExternalContent => true;
 
+    // The query goes to the ERI servers and to the embedding providers of the data sources, all of
+    // them configured in AI Studio:
+    public ToolOutboundData OutboundData => ToolOutboundData.CONFIGURED_SERVICE;
+
     //
     // Unlike the query of a Confluence search, this one stays visible in the tool log: seeing
     // what the model searched the user's own documents for is what the log is for. The chat

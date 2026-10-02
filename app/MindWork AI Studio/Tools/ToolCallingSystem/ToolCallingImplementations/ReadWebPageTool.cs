@@ -72,6 +72,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     public bool ReturnsUntrustedExternalContent => true;
 
+    // The model passes the address, and the address alone can carry data out:
+    public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
     public string GetDisplayName() => TB("Read Web Page");

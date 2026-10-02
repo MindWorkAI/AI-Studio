@@ -393,10 +393,11 @@ public sealed class ToolRegistry
             .Where(x => x.Activation is ToolActivation.CONTEXT || selectedToolIdSet.Contains(x.Id))
             .ToList();
 
+        var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
-            var check = await this.CheckToolAsync(definition, providerConfidence);
+            var check = await this.CheckToolAsync(definition, providerConfidence, outboundDataRestriction);
             if (check.MinimumConfidence is { } minimumConfidence)
                 this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumConfidence.ConfidenceLevel, minimumConfidence.Source);
 
@@ -420,6 +421,10 @@ public sealed class ToolRegistry
                     this.logger.LogInformation("Skipping tool '{ToolId}' because provider confidence '{ProviderConfidence}' is below the required minimum '{MinimumConfidence}'.", definition.Id, providerConfidence, check.MinimumConfidence?.ConfidenceLevel);
                     break;
 
+                case { BlockReason: ToolOfferBlockReason.OUTBOUND_DATA_RESTRICTED }:
+                    this.logger.LogInformation("Skipping tool '{ToolId}' because the chat read from a mailbox which restricts outbound data to '{OutboundDataRestriction}'.", definition.Id, outboundDataRestriction);
+                    break;
+
                 case { BlockReason: ToolOfferBlockReason.NOT_AVAILABLE_HERE }:
                     this.logger.LogWarning("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
                     break;
@@ -441,9 +446,12 @@ public sealed class ToolRegistry
     /// request will. The RAG process, for instance, leaves the searching of the data sources to
     /// Semantic Search only when this says it can be offered; checks of its own which forgot one
     /// of these would leave a chat without its data sources.<br/><br/>
-    /// Two questions stay out. Whether the tool is selected is the caller's business, and whether
+    /// Three questions stay out. Whether the tool is selected is the caller's business, and whether
     /// the tool has anything to offer right now depends on the chat, so only the preparation of a
-    /// request can answer it.
+    /// request can answer it. Where the chat may still send data belongs to the chat as well, see
+    /// ChatThread.RequiredOutboundDataRestriction, so the tool is judged as for a chat which read
+    /// no mailbox. Semantic Search, which the RAG process asks about, only reaches services
+    /// configured in AI Studio, and no restriction ever keeps it back.
     /// </remarks>
     /// <param name="toolId">The tool to check.</param>
     /// <param name="provider">The provider the request would go to.</param>
@@ -461,7 +469,7 @@ public sealed class ToolRegistry
             return ToolOfferBlockReason.NOT_AVAILABLE_HERE;
 
         var providerConfidence = provider.UsedLLMProvider.GetConfidence(this.settingsManager).Level;
-        return (await this.CheckToolAsync(definition, providerConfidence)).BlockReason;
+        return (await this.CheckToolAsync(definition, providerConfidence, OutboundDataRestriction.UNRESTRICTED)).BlockReason;
     }
 
     /// <summary>
@@ -498,7 +506,7 @@ public sealed class ToolRegistry
     /// drift apart. It reports rather than logs: the preparation of a request writes down why a
     /// tool was left out, while a question asked by the user interface on every render must not.
     /// </remarks>
-    private async Task<ToolCheck> CheckToolAsync(ToolDefinition definition, ConfidenceLevel providerConfidence)
+    private async Task<ToolCheck> CheckToolAsync(ToolDefinition definition, ConfidenceLevel providerConfidence, OutboundDataRestriction outboundDataRestriction)
     {
         if (!this.settingsManager.IsToolActive(definition.Id))
             return new(ToolOfferBlockReason.TOOL_SWITCHED_OFF, null, null);
@@ -513,6 +521,9 @@ public sealed class ToolRegistry
         var minimumConfidence = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id, definition.MinimumProviderConfidence);
         if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumConfidence.ConfidenceLevel))
             return new(ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, implementation, minimumConfidence);
+
+        if (!ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction, implementation))
+            return new(ToolOfferBlockReason.OUTBOUND_DATA_RESTRICTED, implementation, minimumConfidence);
 
         return new(ToolOfferBlockReason.NONE, implementation, minimumConfidence);
     }

@@ -83,6 +83,29 @@ public interface IToolImplementation
     /// </remarks>
     public bool ReturnsUntrustedExternalContent => false;
 
+    /// <summary>
+    /// Where this tool sends data when it runs, beyond AI Studio and the provider of the model.
+    /// </summary>
+    /// <remarks>
+    /// A chat which read from a mailbox keeps the tools whose data goes further than the mailbox
+    /// allows from being offered and from running, see ToolSelectionRules.IsOutboundDataAllowed.
+    /// A tool which says nothing counts as one which contacts addresses the model chooses, the most
+    /// open kind: a tool which forgot to say, or one written by a plugin author, is kept back rather
+    /// than let through.
+    /// </remarks>
+    public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
+    /// <summary>
+    /// Whether this tool keeps to the outbound data restriction of the chat itself.
+    /// </summary>
+    /// <remarks>
+    /// For a tool whose kind of outbound data would be kept back, but which can tell allowed
+    /// destinations from others on its own. Such a tool is offered whatever the chat demands, and
+    /// it has to read ToolExecutionContext.ChatThread.RequiredOutboundDataRestriction on every call
+    /// and refuse what goes too far.
+    /// </remarks>
+    public bool EnforcesOutboundDataRestriction => false;
+
     public string GetDisplayName() => TB("Tool");
 
     public string GetDescription() => TB("Tool description");

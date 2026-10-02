@@ -112,6 +112,13 @@ public abstract class ToolRegistryTestBase
     {
         public int ResolveCount { get; private set; }
 
+        /// <summary>
+        /// Where the tool sends data; when left out, the most open kind, as for every tool which says nothing.
+        /// </summary>
+        public ToolOutboundData OutboundData { get; init; } = ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
+        public bool EnforcesOutboundDataRestriction { get; init; }
+
         public string ImplementationKey => definition.ImplementationKey;
 
         public ToolDefinition GetDefinition() => definition;

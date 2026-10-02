@@ -78,6 +78,9 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public bool ReturnsUntrustedExternalContent => true;
 
+    // Only the configured wiki gets the query, and a redirect out of it is refused:
+    public ToolOutboundData OutboundData => ToolOutboundData.CONFIGURED_SERVICE;
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal) { QUERY_ARGUMENT };
 
     public string GetDisplayName() => TB("Search Confluence");

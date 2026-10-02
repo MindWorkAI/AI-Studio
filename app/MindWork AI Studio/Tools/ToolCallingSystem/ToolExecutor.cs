@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -100,8 +101,19 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         try
         {
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
-            var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
             var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+
+            //
+            // Asked again here, although the request only offers what was allowed: the tools of a
+            // request are chosen once, before its first round, and a tool which reads a mailbox may
+            // restrict the chat in the middle of it. The model can then still call a tool it was
+            // offered, with the mail content in its arguments.
+            //
+            var outboundDataRestriction = chatThread.RequiredOutboundDataRestriction;
+            if (!ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction.Restriction, implementation))
+                throw new ToolExecutionBlockedException(outboundDataRestriction.GetToolBlockedMessage(settingsManager.ConfigurationData.Mailboxes));
+
+            var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
             var result = await implementation.ExecuteAsync(document.RootElement, new ToolExecutionContext
             {
                 Definition = definition,

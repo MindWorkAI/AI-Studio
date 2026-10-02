@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,17 @@ public partial class ToolSelection : MSGComponentBase
 
     [Parameter]
     public required AIStudio.Settings.Provider LLMProvider { get; set; }
+
+    /// <summary>
+    /// Where the chat of this selection may still send data, because of the mailboxes it read from.
+    /// </summary>
+    /// <remarks>
+    /// The selection shows a tool this keeps back as unavailable, with the reason, the same way it
+    /// does for a provider with too little confidence. Keeping the tool out of the request is the
+    /// business of the tool registry and the tool executor; this only explains it.
+    /// </remarks>
+    [Parameter]
+    public required OutboundDataRequirement RequiredOutboundDataRestriction { get; set; }
 
     [Parameter]
     public HashSet<string> SelectedToolIds { get; set; } = [];
@@ -76,10 +88,11 @@ public partial class ToolSelection : MSGComponentBase
     /// <remarks>
     /// The switch and the row click share this, so both agree on when a tool is out of reach: the
     /// organization disabled it, it is not configured, the provider lacks the confidence it needs,
-    /// a response is running, or the model cannot call tools in the first place.
+    /// the chat read a mailbox which keeps the tool back, a response is running, or the model
+    /// cannot call tools in the first place.
     /// </remarks>
     private bool IsRowDisabled(ToolCatalogItem item) => !item.IsActive || !item.ConfigurationState.IsConfigured || this.IsBlockedByProviderConfidence(item) ||
-                                                        this.Disabled || !this.SupportsTools;
+                                                        this.IsBlockedByOutboundDataRestriction(item) || this.Disabled || !this.SupportsTools;
 
     /// <summary>
     /// Switches a tool when the user clicks anywhere in its row.
@@ -118,6 +131,8 @@ public partial class ToolSelection : MSGComponentBase
 
     private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
 
+    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, item.Implementation);
+
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
         if (!this.IsBlockedByProviderConfidence(item))
@@ -138,7 +153,7 @@ public partial class ToolSelection : MSGComponentBase
     /// </remarks>
     private string GetWarningText(ToolCatalogItem item)
     {
-        var warnings = new List<string>(3);
+        var warnings = new List<string>(4);
         if (!item.ConfigurationState.IsConfigured)
             warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
 
@@ -148,6 +163,9 @@ public partial class ToolSelection : MSGComponentBase
         var providerConfidenceHint = this.GetProviderConfidenceHint(item);
         if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
             warnings.Add(providerConfidenceHint);
+
+        if (this.IsBlockedByOutboundDataRestriction(item))
+            warnings.Add(this.RequiredOutboundDataRestriction.GetToolBlockedMessage(this.SettingsManager.ConfigurationData.Mailboxes));
 
         return string.Join(' ', warnings);
     }

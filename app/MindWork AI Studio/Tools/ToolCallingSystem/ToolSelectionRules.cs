@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -75,4 +76,22 @@ public static class ToolSelectionRules
 
     public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>
         minimumToolConfidence is ConfidenceLevel.NONE || providerConfidence >= minimumToolConfidence;
+
+    /// <summary>
+    /// Whether a tool may run in a chat with this outbound data restriction.
+    /// </summary>
+    /// <remarks>
+    /// Services configured in AI Studio stay allowed on every level. Below UNRESTRICTED, both
+    /// queries to third parties and addresses the model chooses are kept back, unless the tool
+    /// keeps to the restriction itself. That is why both stricter levels decide alike here: they
+    /// differ only in what such a tool lets through. A level this version does not know is treated
+    /// like a strict one.
+    /// </remarks>
+    /// <param name="restriction">Where the chat may still send data.</param>
+    /// <param name="implementation">The tool.</param>
+    /// <returns>True when the tool may run.</returns>
+    public static bool IsOutboundDataAllowed(OutboundDataRestriction restriction, IToolImplementation implementation) =>
+        restriction is OutboundDataRestriction.UNRESTRICTED ||
+        implementation.OutboundData is ToolOutboundData.NONE or ToolOutboundData.CONFIGURED_SERVICE ||
+        implementation.EnforcesOutboundDataRestriction;
 }

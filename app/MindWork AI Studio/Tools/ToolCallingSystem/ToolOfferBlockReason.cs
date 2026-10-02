@@ -45,4 +45,10 @@ public enum ToolOfferBlockReason
     /// The provider is not trusted enough for this tool.
     /// </summary>
     PROVIDER_CONFIDENCE_TOO_LOW,
+
+    /// <summary>
+    /// The chat read from a mailbox, and the tool would send data further than the mailbox allows.
+    /// A new chat can use the tool again.
+    /// </summary>
+    OUTBOUND_DATA_RESTRICTED,
 }
