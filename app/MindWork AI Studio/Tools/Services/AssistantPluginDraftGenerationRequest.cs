@@ -6,6 +6,7 @@ public sealed record AssistantPluginDraftGenerationRequest(
     string AssistantTitle,
     string TypicalInput,
     string ExpectedOutput,
+    string ExpectedDataSourceContent,
     string RequestedUiInputComponents,
     string OutputLanguage,
     bool AllowAiStudioProfiles,
