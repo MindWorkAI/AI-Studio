@@ -40,6 +40,17 @@ public sealed class ToolExecutionResult
     /// </remarks>
     public DataSourceSecurity RequiredDataSecurity { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
 
+    /// <summary>
+    /// Where the chat may still send data from now on, because of what this result brings in.
+    /// </summary>
+    /// <remarks>
+    /// A tool which returns mail content sets the restriction of the mailbox it came from, and the
+    /// strictest one when several mailboxes contributed. The chat then keeps it, see
+    /// ChatThread.RequireOutboundDataRestriction. Left at NONE, the result says nothing about it,
+    /// and the chat stays as it was.
+    /// </remarks>
+    public OutboundDataRequirement RequiredOutboundDataRestriction { get; init; } = OutboundDataRequirement.NONE;
+
     public string ToModelContent()
     {
         if (this.JsonContent is not null)
