@@ -18,7 +18,7 @@ public interface IIndexedDataSource : IDataSourceBase
     public ConfidenceLevel ConfidenceLevel { get; init; }
 
     /// <summary>
-    /// The unique identifier of the embedding method used by this data source.
+    /// The unique identifier of the embedding provider used by this data source.
     /// </summary>
     public string EmbeddingId { get; init; }
 
