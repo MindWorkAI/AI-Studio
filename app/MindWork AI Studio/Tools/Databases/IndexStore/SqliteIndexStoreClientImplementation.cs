@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
+using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -88,6 +89,13 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         yield return (TB("Indexed data sources"), OrUnknown(snapshot.DataSourceCount));
         yield return (TB("Indexed files"), OrUnknown(snapshot.FileCount));
         yield return (TB("Permanently skipped files"), OrUnknown(snapshot.FailureCount));
+
+        // Only once a mailbox brought any mails. Without one, the lines would say nothing but zero:
+        if (snapshot.MailCount > 0 || snapshot.MailFailureCount > 0)
+        {
+            yield return (TB("Indexed mails"), OrUnknown(snapshot.MailCount));
+            yield return (TB("Permanently skipped mails"), OrUnknown(snapshot.MailFailureCount));
+        }
     }
 
     public override async Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token)
@@ -416,7 +424,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
     /// Everything the display info reads out of the database in one go.
     /// </summary>
     /// <remarks>
-    /// Every property is empty when its probe could not answer. The caller turns that into "unknown".
+    /// Every property is empty or null when its probe could not answer. The caller turns that into "unknown".
+    /// The documents of mailboxes are counted apart from files, told apart by their keys, cf. MailContentKey.
     /// </remarks>
     private sealed record DisplaySnapshot
     {
@@ -428,14 +437,20 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
 
         public string TableCount { get; init; } = string.Empty;
 
-        public string DataSourceCount { get; init; } = string.Empty;
+        public int? DataSourceCount { get; init; }
 
-        public string FileCount { get; init; } = string.Empty;
+        public int? FileCount { get; init; }
 
-        public string FailureCount { get; init; } = string.Empty;
+        public int? FailureCount { get; init; }
+
+        public int? MailCount { get; init; }
+
+        public int? MailFailureCount { get; init; }
     }
 
     private static string OrUnknown(string value) => string.IsNullOrWhiteSpace(value) ? TB("unknown") : value;
+
+    private static string OrUnknown(int? count) => count?.CompactCount() ?? TB("unknown");
 
     private async Task<DisplaySnapshot> ReadDisplaySnapshotAsync()
     {
@@ -449,9 +464,11 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                 JournalMode = (await QueryScalarTextAsync(context, "PRAGMA journal_mode;", token)).ToUpperInvariant(),
                 SchemaVersion = await GetSchemaVersionAsync(context, token),
                 TableCount = await GetTableCountAsync(context, token),
-                DataSourceCount = await FormatCountAsync(context.DataSources, token),
-                FileCount = await FormatCountAsync(context.EmbeddedFiles, token),
-                FailureCount = await FormatCountAsync(context.PermanentIndexingFailures, token),
+                DataSourceCount = await TryCountAsync(context.DataSources, token),
+                FileCount = await TryCountAsync(context.EmbeddedFiles.Where(file => !file.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                FailureCount = await TryCountAsync(context.PermanentIndexingFailures.Where(failure => !failure.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                MailCount = await TryCountAsync(context.EmbeddedFiles.Where(file => file.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                MailFailureCount = await TryCountAsync(context.PermanentIndexingFailures.Where(failure => failure.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
             };
         }
         catch (Exception exception)
@@ -536,15 +553,15 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         }
     }
 
-    private static async Task<string> FormatCountAsync<T>(IQueryable<T> query, CancellationToken token) where T : class
+    private static async Task<int?> TryCountAsync<T>(IQueryable<T> query, CancellationToken token) where T : class
     {
         try
         {
-            return (await query.CountAsync(token)).CompactCount();
+            return await query.CountAsync(token);
         }
         catch
         {
-            return string.Empty;
+            return null;
         }
     }
 
