@@ -181,26 +181,47 @@ public sealed record ChatThread
     public HashSet<string> RuntimeWebAddressesFromTools { get; } = new(StringComparer.Ordinal);
 
     /// <summary>
+    /// The web addresses in the system prompt the last request was sent with, as request keys.
+    /// </summary>
+    /// <remarks>
+    /// Collected by PrepareSystemPrompt, because the system prompt is put together only then: from
+    /// the chat template, the content of the data sources the RAG process found, the profile and
+    /// the tool policy. Not stored, since every request puts it together anew.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlySet<string> RuntimeSystemPromptWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
     /// Whether a web address was given to the model rather than chosen by it.
     /// </summary>
     /// <remarks>
-    /// Given means: it stands in a message of the user, or a tool returned it, see
-    /// RuntimeWebAddressesFromTools. What the model wrote itself never counts, its answers included,
-    /// because the model could have put anything of the chat into it. The comparison is the one of
-    /// WebAddresses.CreateRequestKey, so an address counts when it asks the server for the same.
+    /// Given means: it stands in the system prompt, see RuntimeSystemPromptWebAddresses, in a
+    /// message of the user or a document attached to one, see ContentText.RuntimeAttachmentWebAddresses,
+    /// or a tool returned it, see RuntimeWebAddressesFromTools. What the model wrote itself never
+    /// counts, its answers included, because the model could have put anything of the chat into it.
+    /// The comparison is the one of WebAddresses.CreateRequestKey, so an address counts when it
+    /// asks the server for the same.<br/><br/>
+    /// Shared by both rules of Read Web Page which depend on it: a free address choice switched
+    /// off, and a mailbox which allows the addresses from the chat only.
     /// </remarks>
     /// <param name="url">The address the model wants to read.</param>
     /// <returns>True when the address was given to the model.</returns>
     public bool IsWebAddressGivenToTheModel(Uri url)
     {
         var requestKey = WebAddresses.CreateRequestKey(url);
-        if (this.RuntimeWebAddressesFromTools.Contains(requestKey))
+        if (this.RuntimeWebAddressesFromTools.Contains(requestKey) || this.RuntimeSystemPromptWebAddresses.Contains(requestKey))
             return true;
 
-        return this.Blocks
+        var messagesOfTheUser = this.Blocks
             .Where(block => block.Role is ChatRole.USER)
             .Select(block => block.Content)
             .OfType<ContentText>()
+            .ToList();
+
+        if (messagesOfTheUser.Any(content => content.RuntimeAttachmentWebAddresses.Contains(requestKey)))
+            return true;
+
+        return messagesOfTheUser
             .SelectMany(content => WebAddresses.Find(content.Text))
             .Any(address => WebAddresses.TryCreateRequestKey(address, out var key) && string.Equals(key, requestKey, StringComparison.Ordinal));
     }
@@ -244,6 +265,13 @@ public sealed record ChatThread
         // default system prompt:
         this.SystemPrompt = prepared.BasePrompt;
         LOGGER.LogInformation(prepared.Explanation);
+
+        var systemPromptWebAddresses = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in WebAddresses.Find(prepared.Text))
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                systemPromptWebAddresses.Add(requestKey);
+
+        this.RuntimeSystemPromptWebAddresses = systemPromptWebAddresses;
 
         return prepared.Text;
     }
