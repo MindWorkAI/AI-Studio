@@ -567,7 +567,11 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             }
         }
 
-        if (isRenamed)
+        //
+        // A name which differs only in case keeps the old entry: some keyrings ignore case, so both
+        // names lead to the same entry, and deleting the old one would delete the password:
+        //
+        if (isRenamed && !string.Equals(this.DataSource.Name, mailbox.Name, StringComparison.OrdinalIgnoreCase))
         {
             var deleteResponse = await this.RustService.DeleteSecret(this.DataSource, SecretStoreType.DATA_SOURCE);
             if (!deleteResponse.Success)

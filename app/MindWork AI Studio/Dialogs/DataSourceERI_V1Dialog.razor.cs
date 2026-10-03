@@ -25,7 +25,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     public DataSourceERI_V1 DataSource { get; set; }
     
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    private ILogger<DataSourceERI_V1Dialog> Logger { get; init; } = null!;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -332,6 +332,19 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.Validate();
                 return;
+            }
+
+            //
+            // The OS keyring stores the secret under the name of the data source, so a renamed one
+            // got a new entry just now, and the old one goes once the new one is in place. A name
+            // which differs only in case is no rename here: some keyrings ignore case, so both
+            // names lead to the same entry, and deleting the old one would delete the secret.
+            //
+            if (this.IsEditing && !string.Equals(this.DataSource.Name, addedDataSource.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                var deleteResponse = await this.RustService.DeleteSecret(this.DataSource, SecretStoreType.DATA_SOURCE);
+                if (!deleteResponse.Success)
+                    this.Logger.LogWarning($"Failed to delete the secret of the data source '{this.dataId}' stored under its previous name: {deleteResponse.Issue}");
             }
         }
         
