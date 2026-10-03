@@ -38,11 +38,11 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         if (this.item is null)
             return;
 
-        var sections = new List<ToolSection>(this.item.Tools.Count);
+        var loadedSections = new List<ToolSection>(this.item.Tools.Count);
         foreach (var tool in this.item.Tools)
-            sections.Add(new(tool.Definition, tool.Implementation, await this.ToolSettingsService.GetSettingsAsync(tool.Definition), BuildFieldGroups(tool.Definition)));
+            loadedSections.Add(new(tool.Definition, tool.Implementation, await this.ToolSettingsService.GetSettingsAsync(tool.Definition), BuildFieldGroups(tool.Definition)));
 
-        this.sections = sections;
+        this.sections = loadedSections;
     }
 
     /// <summary>

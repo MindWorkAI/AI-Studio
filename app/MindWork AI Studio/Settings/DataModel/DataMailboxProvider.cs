@@ -110,7 +110,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
         var usernameHint = string.Empty;
         if (table.TryGetValue("UsernameHint", out var usernameHintValue))
         {
-            if (!usernameHintValue.TryRead<string>(out var usernameHintText) || usernameHintText is null)
+            if (!usernameHintValue.TryRead<string>(out var usernameHintText))
             {
                 logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid UsernameHint field. The hint must be a text.", index);
                 return false;
@@ -122,7 +122,7 @@ public sealed record DataMailboxProvider : ILivePluginContent
         var helpUrl = string.Empty;
         if (table.TryGetValue("HelpUrl", out var helpUrlValue))
         {
-            if (!helpUrlValue.TryRead<string>(out var helpUrlText) || !Uri.TryCreate(helpUrlText?.Trim(), UriKind.Absolute, out var helpUri) || (helpUri.Scheme != Uri.UriSchemeHttps && helpUri.Scheme != Uri.UriSchemeHttp))
+            if (!helpUrlValue.TryRead<string>(out var helpUrlText) || !Uri.TryCreate(helpUrlText.Trim(), UriKind.Absolute, out var helpUri) || (helpUri.Scheme != Uri.UriSchemeHttps && helpUri.Scheme != Uri.UriSchemeHttp))
             {
                 logger.LogWarning("The configured mailbox provider {ProviderIndex} does not contain a valid HelpUrl field. The URL must be an absolute http or https address.", index);
                 return false;
