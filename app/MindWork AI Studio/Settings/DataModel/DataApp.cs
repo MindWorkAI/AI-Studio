@@ -182,6 +182,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
 
     /// <summary>
+    /// Should the user be allowed to add mailboxes?
+    /// </summary>
+    /// <remarks>
+    /// Independent of AllowUserToAddProvider, because a mailbox is a data source, not a provider.
+    /// Mailboxes the user added before stay, and the user may still edit or delete them.
+    /// </remarks>
+    public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
+
+    /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>
     public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);

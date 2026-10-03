@@ -127,8 +127,9 @@
     </MudMenuItem>
     @if (PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager))
     {
-        <MudMenuItem OnClick="@this.AddMailbox">
-            @T("Mailbox (IMAP)")
+        @* Shown with a lock rather than left out, like the locked buttons for adding providers: *@
+        <MudMenuItem OnClick="@this.AddMailbox" Disabled="@(!this.MayAddMailbox)" Icon="@(this.MayAddMailbox ? null : Icons.Material.Filled.Lock)">
+            @(this.MayAddMailbox ? T("Mailbox (IMAP)") : T("Mailbox (IMAP), not allowed by your organization"))
         </MudMenuItem>
     }
 </MudMenu>

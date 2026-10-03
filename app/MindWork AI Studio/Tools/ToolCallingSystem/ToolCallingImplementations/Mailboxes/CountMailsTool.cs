@@ -155,7 +155,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
 
         // A number tells something about a mailbox as well, e.g., that a certain sender wrote:
         var contributingMailboxes = counts.Where((count, index) => count.Outcome.Count is not null || listedFolders[index] is { Count: > 0 }).Select(count => count.Mailbox).ToList();
-        var requirements = MailToolResults.GetRequirements(contributingMailboxes);
+        var requirements = MailToolResults.GetRequirements(contributingMailboxes, settingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction);
 
         logger.LogInformation("Mail count finished. ToolCallId={ToolCallId}, MailboxCount={MailboxCount}, Grouping={Grouping}, CountedMailboxes={CountedMailboxes}", context.ToolCallId, counts.Length, request.Grouping, contributingMailboxes.Count);
 

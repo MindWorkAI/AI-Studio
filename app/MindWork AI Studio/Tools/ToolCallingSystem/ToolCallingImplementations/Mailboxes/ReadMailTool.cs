@@ -143,7 +143,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
             lastPage,
             request.IncludeHeaders);
 
-        var requirements = MailToolResults.GetRequirements([reading.Mailbox]);
+        var requirements = MailToolResults.GetRequirements([reading.Mailbox], settingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction);
         return new ToolExecutionResult
         {
             JsonContent = description.Json,

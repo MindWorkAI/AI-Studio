@@ -265,7 +265,7 @@
             </MudJustifiedText>
 
             <MudSelect T="OutboundDataRestriction" @bind-Value="@this.dataOutboundDataRestriction" Text="@this.dataOutboundDataRestriction.GetName()" Label="@T("Where a chat may send data after reading mails")" Class="mb-1" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Shield">
-                @foreach (var restriction in ConfigurationSelectDataFactory.GetOutboundDataRestrictionData())
+                @foreach (var restriction in ConfigurationSelectDataFactory.GetOutboundDataRestrictionData(this.MinimumOutboundDataRestriction))
                 {
                     <MudSelectItem T="OutboundDataRestriction" Value="@restriction.Value">
                         @restriction.Name
@@ -275,6 +275,12 @@
             <MudJustifiedText Typo="Typo.body2" Class="mb-1">
                 @this.dataOutboundDataRestriction.GetDescription()
             </MudJustifiedText>
+            @if (this.IsOutboundDataRestrictionLimited)
+            {
+                <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                    @T("Your organization does not allow less strict settings than the ones offered here.")
+                </MudJustifiedText>
+            }
             <MudJustifiedText Typo="Typo.body2" Class="mb-6">
                 @T("Mails come from strangers and may contain instructions meant for the AI. This setting decides where a chat may still send data once it has read from this mailbox. Mind that opening a link can be enough to set something off, e.g., to confirm a subscription, an order, or a payment.")
             </MudJustifiedText>

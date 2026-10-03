@@ -213,7 +213,7 @@ Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by
 
 ### Custom root certificates for Flatpak deployments
 
-On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, and enterprise configuration servers.
+On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, the IMAP servers of mailboxes, and enterprise configuration servers.
 
 If your organization uses private root CAs, place a PEM bundle with the required root CA certificates in a location that is readable inside the Flatpak sandbox. The bundle should contain one or more certificates using the regular PEM marker:
 
@@ -739,6 +739,30 @@ Writing the `DataSourceOptions` table at all is already the statement that this 
 Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
 
 When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
+## Mailboxes
+
+Mailboxes are still a preview: enable `PRE_MAILBOXES_2026` together with `PRE_RAG_2024` in `DataApp.EnabledPreviewFeatures`. Users add a mailbox as a data source, with their own username and password for its IMAP server. AI Studio synchronizes it every 16 minutes and keeps a local index of it, which the tool collection `mailboxes` searches, reads, and counts.
+
+Three settings decide how your organization uses them:
+
+| Setting | Effect |
+|---|---|
+| `DataApp.AllowUserToAddMailbox` | `false` keeps users from adding mailboxes. Mailboxes they added before stay. |
+| `DataMailboxes.MinimumOutboundDataRestriction` | The least strict outbound data restriction a mailbox may have, see below. |
+| `DataTools.DisabledToolIds` with `mailboxes` | Keeps the AI from reading any mailbox. |
+
+Mails come from strangers and may contain instructions meant for the AI. That is why each mailbox decides where a chat may still send data once it has read mails from it:
+
+| Value | What the chat may still do |
+|---|---|
+| `ONLY_CONFIGURED_SERVICES` | Use only services configured in AI Studio, such as the mailbox itself or your Confluence. New mailboxes start here. |
+| `ONLY_LINKS_FROM_CHAT` | Also read web pages whose addresses stand in the chat, written by the user or returned by a tool. No web search, and no addresses the AI chooses itself. |
+| `UNRESTRICTED` | Use every tool the user selected. |
+
+With `DataMailboxes.MinimumOutboundDataRestriction`, you rule out the less strict levels. A mailbox set to one of them gets your level whenever its mails reach a chat, and its dialog no longer offers them. A chat which read mails before keeps the level it got then, until it reads mails again.
+
+Every mailbox also requires a provider confidence of its own, from `VERY_LOW` to `HIGH`. The chat provider and the embedding provider have to meet it before they see a mail. An IMAP server whose certificate chains to your private root CA works with the same settings as HTTPS, see [Custom root certificates for Flatpak deployments](#custom-root-certificates-for-flatpak-deployments).
 
 ## Letting users provide their own API key
 

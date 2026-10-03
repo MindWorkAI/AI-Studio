@@ -187,6 +187,10 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.authFailure = await indexStore.GetMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
         }
 
+        // A level the organization ruled out after the mailbox was saved is not offered anymore, so
+        // the dialog starts with the one which applies anyway, see MailToolResults.GetRequirements:
+        this.dataOutboundDataRestriction = this.dataOutboundDataRestriction.StricterOf(this.MinimumOutboundDataRestriction);
+
         await base.OnInitializedAsync();
     }
 
@@ -257,6 +261,10 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string RootFolderText => string.IsNullOrEmpty(this.dataRootFolder) ? T("Whole mailbox") : this.dataRootFolder;
 
     private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.GetName();
+
+    private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
+
+    private bool IsOutboundDataRestrictionLimited => this.MinimumOutboundDataRestriction is not OutboundDataRestriction.UNRESTRICTED;
 
     private string TestResultText
     {

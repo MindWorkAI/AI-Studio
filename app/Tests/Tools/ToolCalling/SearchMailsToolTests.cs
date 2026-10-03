@@ -169,7 +169,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     [Test]
     public void ASearchWhichBroughtNothingRequiresNothing()
     {
-        var (confidence, outboundData) = MailToolResults.GetRequirements([]);
+        var (confidence, outboundData) = MailToolResults.GetRequirements([], OutboundDataRestriction.UNRESTRICTED);
 
         Assert.Multiple(() =>
         {
@@ -181,7 +181,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     [Test]
     public void TheStrictestMailboxDecides()
     {
-        var (confidence, outboundData) = MailToolResults.GetRequirements([WORK, PRIVATE]);
+        var (confidence, outboundData) = MailToolResults.GetRequirements([WORK, PRIVATE], OutboundDataRestriction.UNRESTRICTED);
 
         Assert.Multiple(() =>
         {
@@ -193,7 +193,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     [Test]
     public void OnATieTheFirstMailboxIsNamed()
     {
-        var (_, outboundData) = MailToolResults.GetRequirements([WORK, WORK with { Id = "1b5e9c3a-7d2f-4e6b-a8c1-0f4d6e2b9a75" }]);
+        var (_, outboundData) = MailToolResults.GetRequirements([WORK, WORK with { Id = "1b5e9c3a-7d2f-4e6b-a8c1-0f4d6e2b9a75" }], OutboundDataRestriction.UNRESTRICTED);
 
         Assert.That(outboundData.DataSourceId, Is.EqualTo(WORK.Id), "Otherwise the chat would name another mailbox with every search.");
     }

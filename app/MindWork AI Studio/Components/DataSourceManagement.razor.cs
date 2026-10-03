@@ -40,6 +40,8 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
 
+    private bool MayAddMailbox => this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -479,6 +481,9 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddMailbox()
     {
+        if (!this.MayAddMailbox)
+            return;
+
         var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
         {
             { x => x.IsEditing, false },

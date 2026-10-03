@@ -57,6 +57,11 @@ public sealed class Data
     public List<DataSourceMailbox> Mailboxes { get; set; } = [];
 
     /// <summary>
+    /// Settings which apply to all mailboxes.
+    /// </summary>
+    public DataMailboxes MailboxSettings { get; init; } = new(x => x.MailboxSettings);
+
+    /// <summary>
     /// List of configured profiles.
     /// </summary>
     public List<Profile> Profiles { get; init; } = [];

@@ -105,6 +105,9 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// <summary>
     /// Where a chat may still send data, once it has read from this mailbox.
     /// </summary>
+    /// <remarks>
+    /// An organization may demand a stricter one, see DataMailboxes.MinimumOutboundDataRestriction.
+    /// </remarks>
     public OutboundDataRestriction OutboundDataRestriction { get; init; } = OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
 
     /// <summary>

@@ -335,10 +335,15 @@ public static class ConfigurationSelectDataFactory
             yield return new(maxAge.GetName(), maxAge);
     }
 
-    public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData()
+    /// <summary>
+    /// The restrictions a mailbox may have.
+    /// </summary>
+    /// <param name="minimumRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
+    public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData(OutboundDataRestriction minimumRestriction)
     {
         foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())
-            yield return new(restriction.GetName(), restriction);
+            if (restriction.StricterOf(minimumRestriction) == restriction)
+                yield return new(restriction.GetName(), restriction);
     }
 
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()

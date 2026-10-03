@@ -6,6 +6,14 @@ public static class OutboundDataRestrictionExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(OutboundDataRestrictionExtensions).Namespace, nameof(OutboundDataRestrictionExtensions));
 
+    /// <summary>
+    /// The stricter of two restrictions.
+    /// </summary>
+    /// <param name="restriction">The one restriction.</param>
+    /// <param name="other">The other restriction.</param>
+    /// <returns>The restriction which allows less.</returns>
+    public static OutboundDataRestriction StricterOf(this OutboundDataRestriction restriction, OutboundDataRestriction other) => other < restriction ? other : restriction;
+
     public static string GetName(this OutboundDataRestriction restriction) => restriction switch
     {
         OutboundDataRestriction.ONLY_CONFIGURED_SERVICES => TB("Only services configured in AI Studio"),

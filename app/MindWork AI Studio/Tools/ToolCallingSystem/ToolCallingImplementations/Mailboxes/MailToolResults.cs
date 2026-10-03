@@ -185,11 +185,13 @@ internal static class MailToolResults
     /// <remarks>
     /// A result which brought nothing of a mailbox into the chat requires nothing for it. Of several
     /// mailboxes, the strictest restriction wins; on a tie, the first one is named, so the chat does
-    /// not name another mailbox with every search.
+    /// not name another mailbox with every search. A mailbox set to a less strict restriction than
+    /// the organization allows counts with the least strict one allowed.
     /// </remarks>
     /// <param name="contributingMailboxes">The mailboxes whose content reached the model.</param>
+    /// <param name="minimumOutboundDataRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
     /// <returns>The provider confidence and the outbound data restriction the chat requires from now on.</returns>
-    public static (ConfidenceLevel Confidence, OutboundDataRequirement OutboundData) GetRequirements(IEnumerable<DataSourceMailbox> contributingMailboxes)
+    public static (ConfidenceLevel Confidence, OutboundDataRequirement OutboundData) GetRequirements(IEnumerable<DataSourceMailbox> contributingMailboxes, OutboundDataRestriction minimumOutboundDataRestriction)
     {
         var confidence = ConfidenceLevel.NONE;
         var outboundData = OutboundDataRequirement.NONE;
@@ -198,7 +200,7 @@ internal static class MailToolResults
             if (mailbox.ConfidenceLevel > confidence)
                 confidence = mailbox.ConfidenceLevel;
 
-            outboundData = outboundData.StricterOf(new(mailbox.OutboundDataRestriction, mailbox.Id));
+            outboundData = outboundData.StricterOf(new(mailbox.OutboundDataRestriction.StricterOf(minimumOutboundDataRestriction), mailbox.Id));
         }
 
         return (confidence, outboundData);

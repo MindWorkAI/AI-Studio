@@ -395,6 +395,12 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
+-- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
+-- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
+-- adding a mailbox stays visible but is disabled. Mailboxes the user added before stay; to keep
+-- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
@@ -785,7 +791,8 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
---     ["semantic_search"] = "NONE"
+--     ["semantic_search"] = "NONE",
+--     ["mailboxes"] = "VERY_LOW"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
@@ -997,6 +1004,21 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the least strict outbound data restriction a mailbox may have. Mails come from
+-- strangers and may contain instructions meant for the AI, so each mailbox decides where a chat
+-- may still send data once it has read mails from it:
+--   ONLY_CONFIGURED_SERVICES  Only services configured in AI Studio, such as the mailbox itself
+--                             or your Confluence. No web pages, no web search.
+--   ONLY_LINKS_FROM_CHAT      Also web pages whose addresses stand in the chat, written by the
+--                             user or returned by a tool. No web search, and no addresses the AI
+--                             chooses itself.
+--   UNRESTRICTED              Every tool the user selected.
+-- A mailbox set to a less strict level gets this one whenever its mails reach a chat, and the
+-- mailbox dialog no longer offers the less strict levels. A chat which read mails before keeps
+-- the level it got then, until it reads mails again. The default is UNRESTRICTED, which leaves
+-- the choice to the user. New mailboxes start with ONLY_CONFIGURED_SERVICES either way.
+-- CONFIG["SETTINGS"]["DataMailboxes.MinimumOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT"
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.

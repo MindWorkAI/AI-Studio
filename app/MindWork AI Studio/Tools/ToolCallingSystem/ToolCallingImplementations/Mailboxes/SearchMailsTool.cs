@@ -248,7 +248,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
         // Only the mailboxes whose content reached the model count, the folders they list included:
         var contributingMailboxes = searches.Where((_, index) => mails[index].Count > 0 || listedFolders[index] is { Count: > 0 }).Select(search => search.Mailbox).ToList();
-        var requirements = MailToolResults.GetRequirements(contributingMailboxes);
+        var requirements = MailToolResults.GetRequirements(contributingMailboxes, settingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction);
 
         logger.LogInformation(
             "Mail search finished. ToolCallId={ToolCallId}, MailboxCount={MailboxCount}, ByRelevance={ByRelevance}, Page={Page}, MailCount={MailCount}, LeftOutCount={LeftOutCount}",

@@ -250,6 +250,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to add transcription providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddTranscriptionProvider, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to add mailboxes?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddMailbox, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
 
@@ -306,6 +309,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
+
+        // Config: the least strict outbound data restriction a mailbox may have
+        ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
 
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
