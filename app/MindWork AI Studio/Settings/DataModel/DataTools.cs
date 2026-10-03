@@ -13,6 +13,9 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// </summary>
     public Dictionary<string, Dictionary<string, string>> Settings { get; set; } = [];
 
+    /// <summary>
+    /// The tool collections preselected per component, see DisabledToolIds for the IDs.
+    /// </summary>
     public Dictionary<string, HashSet<string>> DefaultToolIdsByComponent { get; set; } = [];
 
     public HashSet<string> VisibleToolSelectionComponents { get; set; } = [];
@@ -22,11 +25,27 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         x => x.EnableTools,
         true);
 
+    /// <summary>
+    /// The tool collections an organization switched off.
+    /// </summary>
+    /// <remarks>
+    /// The IDs are those of tool collections. A tool outside of a declared collection forms one of
+    /// its own under its own ID, which is why the names of this and the other settings still speak
+    /// of tools. The ID of a tool inside a declared collection stands for its whole collection, see
+    /// ToolRegistry.GetCollectionId.
+    /// </remarks>
     public HashSet<string> DisabledToolIds { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.DisabledToolIds,
         []);
 
+    /// <summary>
+    /// The minimum provider confidence per tool collection, see DisabledToolIds for the IDs.
+    /// </summary>
+    /// <remarks>
+    /// When the ID of a collection and those of its tools carry different levels, the highest one
+    /// applies, see SettingsManager.GetMinimumProviderConfidenceResolution.
+    /// </remarks>
     public Dictionary<string, string> MinimumProviderConfidenceByToolId { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.MinimumProviderConfidenceByToolId,

@@ -86,6 +86,22 @@ A tool whose results come in pages takes a `page` argument starting at 1 and rep
 
 Paging stays stateless: every call brings its query and its page again. It has to, because tool results do not travel into later turns. `ToolInvocationTrace.Result` is not saved, and the tool conversation of a request is gone once the answer stands. Cap how deep a model may page, since every page fetches its whole window again, and refuse a page beyond the cap with the last page there is in the message.
 
+## Tool Collections
+
+Some tools only make sense together. Searching mails without being able to read the ones found gets in the way, and reading them with less trust than the search asks for would protect nothing. Such tools form a collection: people select it as one entry, it needs one minimum provider confidence, and an organization switches it off as one. The model still sees each of its tools on its own and calls each by its name.
+
+A collection is an `IToolCollection` class next to its tools, registered in `Program.cs`. It states its `ToolCollectionDefinition`: its ID, the IDs of its tools in the order they are listed, its minimum provider confidence, and a description for a model which picks the tools of an assistant. Its name, description, and icon come from its own members, so they can be translated. Whether it exists right now follows from its tools: it disappears with the last of them, e.g., while their preview is switched off. `ToolRegistry` registers collections after the tools and leaves out what it cannot accept: a collection taking the ID of a tool, a tool which is not registered or which offers itself from the context of a chat, and a tool another collection claimed first.
+
+Every tool belongs to exactly one collection. A tool which belongs to no declared collection forms one of its own under its own ID. That is why the settings which used to name tools need no migration: `DisabledToolIds`, `MinimumProviderConfidenceByToolId`, the defaults of the components, chat templates, document analysis policies, and assistant plugins all name collections now, and the ID of such a tool is the ID of its collection. The ID of a tool in a declared collection stands for its whole collection wherever it appears. A selection stored before the tool joined the collection selects the collection, and an organization which names one tool of a collection switches the whole collection off or raises its confidence. Of several levels set for a collection and its tools, the highest applies, and the minimum a tool declares itself does not count once it belongs to a collection.
+
+Three methods of the registry translate between both views:
+
+- `ToolRegistry.NormalizeSelection` turns a selection into the collections which run. Every place which shows or stores a selection calls it.
+- `ToolRegistry.ExpandSelection` turns a selection into the tools which run. Preparing a request, counting its tokens, the security card of an assistant plugin, and its audit use it, because they are about what the model reads.
+- `ToolRegistry.GetCollectionId` names the collection of a tool.
+
+The settings of a tool stay with the tool, also inside a collection. An organization addresses them by `"<toolId>.<fieldName>"`, and the settings dialog of a collection shows one section per tool. `mailboxes` is the only declared collection so far, with `search_mails`, `read_mail`, and `count_mails`.
+
 ## Security
 
 Treat model-provided tool arguments as untrusted input. Refuse a wrong one rather than guessing what it meant: a placeholder such as `0` is not a page, and reading it as "no page" does something the model did not ask for. The model reads the refusal and tries again, so the message has to name the argument and the value that arrived, say what would be valid, and, for an optional argument, that leaving it out is always possible. `ToolArgumentReader` reads strings, positive integers, and values out of a fixed choice, alone or as a list, and words the refusals so; `WebSearchTool` shows how a tool uses it.
@@ -156,6 +172,7 @@ The data sources are checked again before each search, since rounds may have pas
 - Register the implementation in `Program.cs`.
 - Put every argument and setting name in a constant that the schema and the reading code share.
 - Set `MinimumProviderConfidence` to what the tool actually exposes.
+- When the tool only makes sense together with others, put them into a tool collection, and set the minimum provider confidence there.
 - Mark a setting the tool cannot work without as `Required`, rather than saying so in its description.
 - Validate settings and model arguments, and refuse a wrong argument with a message the model can correct itself from.
 - Filter content fetched from outside AI Studio for prompt injections, and declare `ReturnsUntrustedExternalContent`.

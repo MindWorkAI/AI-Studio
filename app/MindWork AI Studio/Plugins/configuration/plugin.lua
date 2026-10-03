@@ -749,7 +749,19 @@ CONFIG["SETTINGS"] = {}
 -- but the global tool settings remain available to administrators.
 -- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
 
--- Disable individual tools by their stable tool ID. The default is an empty set.
+-- Tools and tool collections:
+-- Some tools only make sense together, e.g., searching, reading, and counting mails. They form a
+-- tool collection: users select it as one, it needs one minimum provider confidence, and you
+-- switch it off as one. The model still calls each of its tools by name. Wherever the settings
+-- below, chat templates, or document analysis policies ask for a tool ID, use the ID of the
+-- collection for such tools. A tool which belongs to no collection keeps its own ID.
+-- The ID of a tool in a collection stands for its whole collection: naming it switches off the
+-- whole collection or sets its confidence, and of several levels set for a collection and its
+-- tools, the highest applies.
+-- Collection IDs include: mailboxes (search_mails, read_mail, and count_mails; while the mailbox
+-- preview is enabled)
+
+-- Disable individual tools or tool collections by their stable ID. The default is an empty set.
 -- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
 -- semantic_search lets the model search the data sources of a chat itself. Nobody selects it:
 -- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
@@ -757,11 +769,13 @@ CONFIG["SETTINGS"] = {}
 -- tool usage.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
--- Configure the minimum provider confidence level required for individual tools.
+-- Configure the minimum provider confidence level required for individual tools or tool
+-- collections.
 -- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
+-- Collection IDs include: mailboxes
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE
+-- semantic_search = NONE, mailboxes = VERY_LOW
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
@@ -776,7 +790,8 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
 -- always strings. This works for every tool, including tools added by plugins, because nothing
--- here needs to be known to AI Studio in advance.
+-- here needs to be known to AI Studio in advance. Settings belong to the tool, also when it is
+-- part of a tool collection, so these keys always start with the tool ID.
 --
 -- Two tables decide how firmly a value applies:
 --   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
@@ -1098,11 +1113,12 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     ["SystemPrompt"] = "You are <Company Name>'s research assistant. Answer from our own documents and say where each answer comes from.",
 --     ["AllowProfileUsage"] = true,
 --
---     -- Optional: the tools a chat with this template starts with, by tool ID.
+--     -- Optional: the tools a chat with this template starts with, by tool or collection ID.
 --     -- A tool ID unknown to the installation is ignored, and so is a tool your
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Collection IDs include: mailboxes
 --     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
@@ -1213,12 +1229,13 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --     ["MinimumProviderConfidence"] = "MEDIUM",
 --
---     -- Optional: the tools an analysis with this policy may use, by tool ID.
+--     -- Optional: the tools an analysis with this policy may use, by tool or collection ID.
 --     -- This is a limit, not a preselection: a tool which is not listed here cannot be
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Collection IDs include: mailboxes
 --     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
