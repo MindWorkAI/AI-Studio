@@ -3882,6 +3882,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2940206485"] = "Yo
 -- This data source is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "This data source is managed by your organization."
 
+-- Mailbox (IMAP), not allowed by your organization
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T308474155"] = "Mailbox (IMAP), not allowed by your organization"
+
 -- Add Mailbox
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3173750212"] = "Add Mailbox"
 
@@ -6015,6 +6018,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3410030691
 -- Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3616855807"] = "Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."
 
+-- {0} mail servers offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3738390714"] = "{0} mail servers offered for new mailboxes"
+
 -- {0} settings return to their default values
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3841220170"] = "{0} settings return to their default values"
 
@@ -6032,6 +6038,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T4193757254
 
 -- {0} document analysis policies
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T449490978"] = "{0} document analysis policies"
+
+-- {0} mail server offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T505438821"] = "{0} mail server offered for new mailboxes"
 
 -- {0} data source, including its credentials in your operating system's keychain
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T511418335"] = "{0} data source, including its credentials in your operating system's keychain"
@@ -6570,6 +6579,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1108876344"] = "Hi
 -- Optional expert settings for how this data source is split before embedding.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1133561850"] = "Optional expert settings for how this data source is split before embedding."
 
+-- Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1317840926"] = "Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself."
+
 -- Selected folder
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1319932168"] = "Selected folder"
 
@@ -6578,6 +6590,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1324262823"] = "AI
 
 -- The server answered: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T14046206"] = "The server answered: {0}"
+
+-- Please choose a mail server
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1414807573"] = "Please choose a mail server"
 
 -- The server did not create the folder. Perhaps a folder of this name exists already.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1423901762"] = "The server did not create the folder. Perhaps a folder of this name exists already."
@@ -6600,6 +6615,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1720021383"] = "Ma
 -- Please select a level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1762705584"] = "Please select a level"
 
+-- Your organization has not set up any of its mail servers here yet. Please ask your IT department.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1770606046"] = "Your organization has not set up any of its mail servers here yet. Please ask your IT department."
+
 -- Another provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1809361321"] = "Another provider"
 
@@ -6621,6 +6639,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2101951526"] = "Th
 -- Test the connection to select another folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Test the connection to select another folder."
 
+-- Your organization does not allow less strict settings than the ones offered here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Your organization does not allow less strict settings than the ones offered here."
+
 -- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2256114537"] = "Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder."
 
@@ -6638,6 +6659,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2438696751"] = "Ma
 
 -- This name is too long, or it contains a character the server reserves for folder paths.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T245562809"] = "This name is too long, or it contains a character the server reserves for folder paths."
+
+-- Your organization offers this mail server. Sign in with your own username and password.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2460920721"] = "Your organization offers this mail server. Sign in with your own username and password."
 
 -- Failed to load the password from the operating system. The message was: {0}. You might ignore this message and provide the password again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2479473994"] = "Failed to load the password from the operating system. The message was: {0}. You might ignore this message and provide the password again."
@@ -6666,6 +6690,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2838542994"] = "Em
 -- IMAP server host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2863494437"] = "IMAP server host"
 
+-- Please choose one of the mail servers of your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2886261266"] = "Please choose one of the mail servers of your organization."
+
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2961294165"] = "Token limit"
 
@@ -6686,6 +6713,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3068867667"] = "In
 
 -- No, only list the names of attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3184334998"] = "No, only list the names of attachments"
+
+-- Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3232793374"] = "Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you."
 
 -- How many mails do you want at most per search?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242233038"] = "How many mails do you want at most per search?"
@@ -7197,6 +7227,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3540986519"] = "{0} man
 -- Transcription provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3566003684"] = "Transcription provider"
 
+-- {0} mail servers offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3738390714"] = "{0} mail servers offered for new mailboxes"
+
 -- Replace plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4068580334"] = "Replace plugin"
 
@@ -7211,6 +7244,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T449490978"] = "{0} docu
 
 -- The authors marked this plugin as deprecated: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T497068698"] = "The authors marked this plugin as deprecated: {0}"
+
+-- {0} mail server offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T505438821"] = "{0} mail server offered for new mailboxes"
 
 -- It also brings:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T713968030"] = "It also brings:"
@@ -11717,6 +11753,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T327
 
 -- The server rejected the username or the password. Some providers require an app password instead of your usual password.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T3841891828"] = "The server rejected the username or the password. Some providers require an app password instead of your usual password."
+
+-- Your organization allows mailboxes only on its own mail servers, and this server is none of them. AI Studio does not connect to it, and the AI does not read this mailbox.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T450103580"] = "Your organization allows mailboxes only on its own mail servers, and this server is none of them. AI Studio does not connect to it, and the AI does not read this mailbox."
 
 -- The connection to the server failed for an unknown reason.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXCONNECTIONFAILUREEXTENSIONS::T611947988"] = "The connection to the server failed for an unknown reason."

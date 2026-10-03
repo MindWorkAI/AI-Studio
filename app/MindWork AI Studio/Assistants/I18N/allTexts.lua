@@ -6589,6 +6589,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1324262823"] = "AI
 -- The server answered: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T14046206"] = "The server answered: {0}"
 
+-- Please choose a mail server
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1414807573"] = "Please choose a mail server"
+
 -- The server did not create the folder. Perhaps a folder of this name exists already.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1423901762"] = "The server did not create the folder. Perhaps a folder of this name exists already."
 
@@ -6609,6 +6612,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1720021383"] = "Ma
 
 -- Please select a level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1762705584"] = "Please select a level"
+
+-- Your organization has not set up any of its mail servers here yet. Please ask your IT department.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1770606046"] = "Your organization has not set up any of its mail servers here yet. Please ask your IT department."
 
 -- Another provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1809361321"] = "Another provider"
@@ -6682,6 +6688,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2838542994"] = "Em
 -- IMAP server host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2863494437"] = "IMAP server host"
 
+-- Please choose one of the mail servers of your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2886261266"] = "Please choose one of the mail servers of your organization."
+
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2961294165"] = "Token limit"
 
@@ -6702,6 +6711,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3068867667"] = "In
 
 -- No, only list the names of attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3184334998"] = "No, only list the names of attachments"
+
+-- Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3232793374"] = "Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you."
 
 -- How many mails do you want at most per search?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242233038"] = "How many mails do you want at most per search?"
