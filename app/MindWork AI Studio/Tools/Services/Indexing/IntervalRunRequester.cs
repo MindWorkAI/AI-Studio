@@ -3,7 +3,8 @@ using AIStudio.Settings;
 namespace AIStudio.Tools.Services.Indexing;
 
 /// <summary>
-/// Asks for a run of each tracked data source at a fixed interval.
+/// Asks for a run of each tracked data source at a fixed interval, and soon again for one whose
+/// server was out of reach.
 /// </summary>
 /// <remarks>
 /// For a kind of data source whose changes nothing reports, e.g. a mailbox on a server, so an indexer
@@ -16,7 +17,9 @@ namespace AIStudio.Tools.Services.Indexing;
 /// whoever adds it queues it right away regardless.
 ///
 /// The first round comes shortly after tracking starts rather than a whole interval later, so the
-/// index is not that much behind after AI Studio started.
+/// index is not that much behind after AI Studio started. Whether a round or a retry is due goes by
+/// the clock, cf. IntervalRunSchedule; the timer only asks once per check period. A timer alone
+/// would count only the time the computer is awake.
 /// </remarks>
 /// <param name="interval">The time between two rounds.</param>
 /// <param name="firstRoundDelay">The time from the start of the tracking to the first round.</param>
@@ -24,8 +27,13 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="logger">The logger of the embedding service.</param>
 internal sealed class IntervalRunRequester(TimeSpan interval, TimeSpan firstRoundDelay, DataSourceEmbeddingRefreshMode refreshMode, ILogger logger) : IDisposable
 {
+    /// <summary>
+    /// How often the timer asks what is due. After the computer woke up, a round comes no later than this.
+    /// </summary>
+    private static readonly TimeSpan CHECK_PERIOD = TimeSpan.FromMinutes(1);
+
     private readonly Lock stateLock = new();
-    private readonly HashSet<string> dataSourceIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly IntervalRunSchedule schedule = new(interval, firstRoundDelay, CHECK_PERIOD);
     private Func<string, DataSourceEmbeddingRefreshMode, Task>? requestRun;
     private Timer? timer;
 
@@ -38,17 +46,20 @@ internal sealed class IntervalRunRequester(TimeSpan interval, TimeSpan firstRoun
     {
         lock (this.stateLock)
         {
-            this.dataSourceIds.Clear();
-            this.dataSourceIds.UnionWith(dataSources.Select(dataSource => dataSource.Id));
+            this.schedule.Track(dataSources.Select(dataSource => dataSource.Id), DateTimeOffset.UtcNow);
             this.requestRun = requestRunCallback;
 
-            if (this.dataSourceIds.Count is 0)
+            if (!this.schedule.IsTrackingAny)
             {
                 this.StopTimer();
                 return;
             }
 
-            this.timer ??= new Timer(this.OnRoundDue, null, firstRoundDelay, interval);
+            //
+            // The first check comes when the first round is due, and every further one a check
+            // period later.
+            //
+            this.timer ??= new Timer(this.OnCheckDue, null, firstRoundDelay, CHECK_PERIOD);
         }
     }
 
@@ -60,8 +71,8 @@ internal sealed class IntervalRunRequester(TimeSpan interval, TimeSpan firstRoun
     {
         lock (this.stateLock)
         {
-            this.dataSourceIds.Remove(dataSourceId);
-            if (this.dataSourceIds.Count is 0)
+            this.schedule.Stop(dataSourceId);
+            if (!this.schedule.IsTrackingAny)
                 this.StopTimer();
         }
     }
@@ -73,27 +84,85 @@ internal sealed class IntervalRunRequester(TimeSpan interval, TimeSpan firstRoun
     {
         lock (this.stateLock)
         {
-            this.dataSourceIds.Clear();
+            this.schedule.StopAll();
             this.StopTimer();
         }
     }
 
     /// <summary>
-    /// Asks for a run of every tracked data source, which is what one round does.
+    /// Notes that the server of a data source was out of reach, so it is tried again soon.
     /// </summary>
     /// <remarks>
-    /// A request which fails costs only its own data source the round.
+    /// Only for a network which is down or a host out of reach. A server which answered, even with a
+    /// refusal, is reached.
     /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    public void RecordServerOutOfReach(string dataSourceId)
+    {
+        TimeSpan? delay;
+        lock (this.stateLock)
+            delay = this.schedule.RecordServerOutOfReach(dataSourceId, DateTimeOffset.UtcNow);
+
+        if (delay is { } pause)
+            logger.LogInformation("The server of data source '{DataSourceId}' was out of reach. It is tried again in {Minutes} minute(s).", dataSourceId, pause.TotalMinutes);
+        else
+            logger.LogDebug("The server of data source '{DataSourceId}' was out of reach. No earlier retry is planned for it.", dataSourceId);
+    }
+
+    /// <summary>
+    /// Notes that the server of a data source could be reached.
+    /// </summary>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    public void RecordServerReached(string dataSourceId)
+    {
+        lock (this.stateLock)
+            this.schedule.RecordServerReached(dataSourceId);
+    }
+
+    /// <summary>
+    /// Asks for a run of every tracked data source, which is what one round does.
+    /// </summary>
     internal async Task RequestRunsAsync()
     {
         string[] ids;
         Func<string, DataSourceEmbeddingRefreshMode, Task>? callback;
         lock (this.stateLock)
         {
-            ids = [..this.dataSourceIds];
+            ids = [..this.schedule.DataSourceIds];
             callback = this.requestRun;
         }
 
+        await this.RequestAsync(ids, callback);
+    }
+
+    /// <summary>
+    /// Asks for the runs which are due now: a round, or the retries of servers which were out of reach.
+    /// </summary>
+    private async Task RequestDueRunsAsync()
+    {
+        (bool IsRound, IReadOnlyList<string> DataSourceIds) due;
+        Func<string, DataSourceEmbeddingRefreshMode, Task>? callback;
+        lock (this.stateLock)
+        {
+            due = this.schedule.TakeDue(DateTimeOffset.UtcNow);
+            callback = this.requestRun;
+        }
+
+        if (!due.IsRound)
+            foreach (var id in due.DataSourceIds)
+                logger.LogInformation("Asking again for a run of data source '{DataSourceId}', since its server was out of reach.", id);
+
+        await this.RequestAsync(due.DataSourceIds, callback);
+    }
+
+    /// <summary>
+    /// Asks for a run of each of the given data sources.
+    /// </summary>
+    /// <remarks>
+    /// A request which fails costs only its own data source the run.
+    /// </remarks>
+    private async Task RequestAsync(IReadOnlyList<string> ids, Func<string, DataSourceEmbeddingRefreshMode, Task>? callback)
+    {
         if (callback is null)
             return;
 
@@ -111,9 +180,9 @@ internal sealed class IntervalRunRequester(TimeSpan interval, TimeSpan firstRoun
     }
 
     /// <summary>
-    /// Starts a round when the timer elapses. RequestRunsAsync catches every failure itself.
+    /// Asks for what is due when the timer elapses. RequestAsync catches every failure itself.
     /// </summary>
-    private void OnRoundDue(object? state) => _ = this.RequestRunsAsync();
+    private void OnCheckDue(object? state) => _ = this.RequestDueRunsAsync();
 
     private void StopTimer()
     {

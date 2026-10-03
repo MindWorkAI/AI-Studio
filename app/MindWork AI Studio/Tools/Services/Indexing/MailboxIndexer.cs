@@ -65,7 +65,8 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     private static readonly TimeSpan MAX_RUN_DURATION = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    /// How often every mailbox is synced while AI Studio runs.
+    /// How often every mailbox is synced while AI Studio runs. It goes by the clock, so a computer
+    /// which slept longer than this syncs right after waking up.
     /// </summary>
     private static readonly TimeSpan SYNC_INTERVAL = TimeSpan.FromMinutes(16);
 
@@ -141,6 +142,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         catch (MailboxConnectionException e)
         {
             logger.LogWarning("Signing in to mailbox '{MailboxId}' failed: {Failure} ({ExceptionType}).", mailbox.Id, e.Failure, e.InnerException?.GetType().Name ?? "no inner exception");
+            this.RecordConnectionFailure(mailbox.Id, e.Failure);
             var progress = await this.CreateStoredStateProgressAsync(context, token);
 
             //
@@ -159,6 +161,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             return IndexedRunOutcome.DONE;
         }
 
+        this.syncRequester.RecordServerReached(mailbox.Id);
         if (authFailure is not null)
         {
             logger.LogInformation("Signing in to mailbox '{MailboxId}' worked again, so the refused sign-in on record is cleared.", mailbox.Id);
@@ -173,8 +176,8 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// <inheritdoc />
     /// <remarks>
     /// A server reports no changes to a mailbox, so every mailbox is synced at an interval,
-    /// cf. SYNC_INTERVAL. A mailbox whose sign-in failed is left out by the embedding service, and
-    /// it would not sign in anyway.
+    /// cf. SYNC_INTERVAL, and a mailbox whose server was out of reach is tried again soon. A mailbox
+    /// whose sign-in failed is left out by the embedding service, and it would not sign in anyway.
     /// </remarks>
     public void TrackChanges(IReadOnlyCollection<IIndexedDataSource> dataSources, Func<string, DataSourceEmbeddingRefreshMode, Task> requestRun) => this.syncRequester.Track(dataSources, requestRun);
 
@@ -293,11 +296,30 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
             // stays, and the next run picks up from there.
             //
             logger.LogWarning("Syncing mailbox '{MailboxId}' stopped: {Failure} ({ExceptionType}). What was indexed so far stays.", mailbox.Id, e.Failure, e.InnerException?.GetType().Name ?? "no inner exception");
+            this.RecordConnectionFailure(mailbox.Id, e.Failure);
             await context.OptimizeCollectionIfNeededAsync("mailbox sync stopped", token);
             progress ??= await this.CreateStoredStateProgressAsync(context, token);
             progress.PublishRunFailure(e.Failure.GetDescription());
             return IndexedRunOutcome.DONE;
         }
+    }
+
+    /// <summary>
+    /// Tells the sync requester whether a failed connection reached the server at all.
+    /// </summary>
+    /// <remarks>
+    /// A server out of reach is tried again soon, since a VPN tunnel is often up only a little
+    /// later. A server which answered, even with a refusal, waits for the next round; settings
+    /// which never let a connection start say nothing about the server.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <param name="failure">Why the connection failed.</param>
+    private void RecordConnectionFailure(string mailboxId, MailboxConnectionFailure failure)
+    {
+        if (failure is MailboxConnectionFailure.NETWORK_UNAVAILABLE)
+            this.syncRequester.RecordServerOutOfReach(mailboxId);
+        else if (failure is not MailboxConnectionFailure.INVALID_SETTINGS)
+            this.syncRequester.RecordServerReached(mailboxId);
     }
 
     /// <summary>
