@@ -8,11 +8,13 @@ A tool is a single `IToolImplementation` class in `app/MindWork AI Studio/Tools/
 
 The provider only sees local tools that are
 
+- present in this installation, which a tool of a preview feature only is while the preview is switched on, and
 - available for the current component and
 - selected by the user or defaults, or offering themselves from the context of the chat, and
 - supported by the model and
 - configured correctly and
 - allowed by the provider confidence rules and
+- allowed by the outbound data restriction of the chat and
 - able to offer something in this request.
 
 ## Provider API Shapes
@@ -53,6 +55,8 @@ User-visible names, descriptions, and icons come from the implementation's own m
 
 Use stable lower-case IDs with underscores, and keep `Id`, `ImplementationKey`, and `Function.Name` identical unless there is a clear compatibility reason not to. Give every argument and setting name a constant that the schema and the reading code share: the two then cannot drift apart.
 
+A tool which belongs to a preview feature returns false from `IToolImplementation.IsAvailable` while the preview is switched off. The registry then leaves it out of every list, the settings and the selections included, out of every request, where `CheckToolAsync` reports `NOT_AVAILABLE_HERE`, and out of the token count below the message field. A selection which names it keeps it, so the tool comes back with the preview. The property is asked whenever tools are listed, so keep it cheap; the mail tools ask `MailboxRetrievalService.AreMailboxesEnabled`.
+
 `VisibleIn.AllowedComponents` and `VisibleIn.DeniedComponents` are optional lists of `Components` values; a value outside the enum makes the definition invalid. When both lists are empty, the `Chat` and `Assistants` flags apply. As soon as either list has an entry, the lists replace those flags: an empty allow list starts by allowing every component, a non-empty allow list allows only its entries, and the deny list is applied last and always wins.
 
 Keep `Function.DescriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `SystemPromptInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
@@ -64,6 +68,17 @@ A setting offering a fixed choice takes it from an option source — `RequiredCh
 When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks. Being listed in `DataSourceSecuritySettings.TrustedProviderIds` does not meet that requirement: the list belongs to data-source security checks, not to confidence. An organization which wants a contractually covered provider to continue such chats raises its level through `DataConfidence.CustomConfidenceScheme`.
 
 `ToolExecutionResult.RequiredDataSecurity` is the other axis: a result from a data source which may only be used with self-hosted providers sets it to `SELF_HOSTED`, and the chat refuses every other provider from then on. Both only ever tighten, see `ChatThread.RequireProviderConfidence` and `ChatThread.RequireDataSecurity`, so raise them for what actually reached the model, not for everything the tool looked at. A search which found nothing brought nothing into the chat.
+
+The third requirement is where the chat may still send data. Mails come from strangers and may carry instructions meant for the AI, so each mailbox decides it, see `OutboundDataRestriction`. A tool which brings content of a mailbox into the chat sets `ToolExecutionResult.RequiredOutboundDataRestriction`, and the chat keeps the strictest level reached, together with the mailbox which demanded it, see `ChatThread.RequireOutboundDataRestriction`. Every tool therefore declares where its arguments go in `IToolImplementation.OutboundData`:
+
+| Value | Where the data goes |
+|---|---|
+| `NONE` | Nowhere beyond AI Studio and the provider of the model. |
+| `CONFIGURED_SERVICE` | To a service configured in AI Studio, such as the wiki of the organization, an ERI server, or the embedding provider of a data source. |
+| `THIRD_PARTY_QUERIES` | Queries the model writes go to a service somebody else runs, such as a web search engine. |
+| `MODEL_CHOSEN_ADDRESSES` | The tool contacts addresses the model chooses; the address alone can carry data out. A tool which says nothing counts as this, the most open kind. |
+
+Below `UNRESTRICTED`, only the first two may run, see `ToolSelectionRules.IsOutboundDataAllowed`. The registry does not offer the others (`ToolOfferBlockReason.OUTBOUND_DATA_RESTRICTED`), and `ToolExecutor` checks again before each call, because a mail tool can tighten the chat in the middle of a request. A tool which can tell allowed destinations from others on its own sets `EnforcesOutboundDataRestriction`. It is then offered on every level and has to refuse what goes too far on every call, as `read_web_page` does, see below.
 
 A result in `JsonContent` reaches the model the way `ToolExecutionResult.ToModelContent` writes it, which escapes only what JSON requires. Umlauts and other characters outside ASCII stay as they are rather than costing six characters each.
 
@@ -158,6 +173,15 @@ Links in a tool result count as given with both values, a link on a page read be
 
 The instructions depend on the setting, so `read_web_page` words them per request through `ResolveSystemPromptInstructionsAsync`. Its registered instructions are those of `OFF`, and the token count below the message field counts with them. With `ON`, a request carries a shorter instruction, and the count comes out a few tokens high.
 
+### After Reading Mails
+
+`read_web_page` contacts addresses the model chooses, so a chat which read from a mailbox would keep it from running. It keeps to the outbound data restriction itself instead, see `ReadWebPageTool.IsAllowedByOutboundDataRestriction`:
+
+- `ONLY_LINKS_FROM_CHAT` allows the addresses given to the model, by the same rule as the free address choice, and the pages of the Confluence wiki configured for `search_confluence`.
+- `ONLY_CONFIGURED_SERVICES` allows the pages of that wiki only. Without a configured wiki, the tool offers nothing on this level.
+
+A wiki page whose address the model chose has to stay in the wiki, redirects included: the address may carry mail content, and a redirect elsewhere could carry it on. An address given to the model may be redirected anywhere, since whatever the redirect carries came from the server. A call has to pass both the restriction and the free address choice, so with the choice switched off, a wiki page counts only when its address was given to the model, e.g., as a hit of a wiki search. The instructions of the tool name what is left on the level of the chat, and the refusal never repeats the address.
+
 ## Searching Data Sources
 
 `semantic_search` lets the model search the data sources of a chat itself, with a query it works out from the conversation, whenever a question calls for it. The classic RAG process, `AISrcSelWithRetCtxVal`, searches them with every message instead, using the message as the query. One place decides which of the two runs, `ToolRegistry.GetEffectiveRetrievalModeAsync`. Semantic search is the default, and the user can choose the other way per chat through `DataSourceOptions.RetrievalMode`. Whenever the tool cannot be offered — a model without tool calling, tools or this tool switched off, a provider below a confidence the organization set for it — the classic process searches instead. That process steps back only when the answer is semantic search, so a chat never ends up searching nothing.
@@ -166,10 +190,25 @@ The tool offers the data sources of the chat which the provider may use. With th
 
 The data sources are checked again before each search, since rounds may have passed since they were offered, and then searched in parallel. A data source which fails is reported as not searched rather than left out, so that the model does not take its silence for finding nothing. Every passage goes through the same filter and into the same shape as with the classic RAG process, `IRetrievalContext.AsMarkdown`, within one `PromptInjectionGuardService.BeginAction()` scope, so that the user hears about what was filtered once per search. The result holds whole passages up to 100,000 characters, and the data sources take turns: first the best passage of each, then the second best of each. Otherwise, the data source listed first would take the whole budget. What does not fit is counted in the result, with a narrower query as the way out. The passages become sources through `IRetrievalContext.ToSources()`, as with the classic process, and only the data sources whose passages reached the model raise the requirements of the chat.
 
+## Searching Mailboxes
+
+`search_mails`, `read_mail`, and `count_mails` form the collection `mailboxes`, behind the preview `PRE_MAILBOXES_2026` on top of `PRE_RAG_2024`. None of them asks a mail server anything. They read the local index which `MailboxIndexer` keeps, through `MailboxRetrievalService`. Mailboxes are kept in a list of their own, `Data.Mailboxes`, so `semantic_search` and the classic RAG process never see one.
+
+- `search_mails` searches with a `query` by meaning and by words, and returns each mail once with the passage which matched best. Without a query, it lists the mails meeting the conditions, the most recently received first. Results come in pages per mailbox, so a page after the first needs exactly one mailbox. All mailboxes share a budget of 100,000 characters and take turns in it.
+- `read_mail` reads one mail in pages of 30,000 characters, an attachment by its number, and the header block on request. It names the mail this one replies to, when that one is in the index.
+- `count_mails` counts with the same conditions, by folder or by sender on request, and adds how many mails the folders hold on the server.
+
+The tools offer the mailboxes which `MailboxRetrievalService.GetReadableMailboxes` returns. The chat provider and the embedding provider both have to meet the level of a mailbox, because the embedding provider receives the query, which the model may have written from a mail. A mailbox requires a level from `VERY_LOW` to `HIGH`; `NONE`, `UNTRUSTED`, and `UNKNOWN` would let almost every provider through, so they close the mailbox instead. A mailbox on a server the organization does not allow is left out as well, see `MailServerPolicy`. Each call checks again, since rounds may have passed since the tools were offered, and `read_mail` finds a mail only in the mailboxes the provider may read.
+
+Mails are written by others. Everything of a mail which reaches the model, from the subject and the addresses to the passages and the names of attachments, goes through one `PromptInjectionGuardService` batch per call, as `PromptInjectionSource.MailContent`. Only the mailboxes whose content reached the model raise the requirements of the chat; of several, the strictest restriction wins, and the first mailbox demanding it is named. An organization's `DataMailboxes.MinimumOutboundDataRestriction` tightens a mailbox whose own level is less strict. Found and read mails become sources under `mailbox://<mailbox ID>/<mail ID>`, which the sources list shows as text without a link, see `SourceExtensions.IsMailSource`. AI Studio cannot read an encrypted mail, only its header, and the instructions tell the model to say so rather than guess.
+
+Logs name a mailbox and its ID, never a subject, a sender or recipient, a folder, or an attachment. `ToolExecutor` logs the message of every exception, so a mail tool must not throw with such a value either. A `folder` the mailboxes do not know is therefore answered in the result, together with the folders to choose from, rather than refused by an exception.
+
 ## Checklist
 
 - Add the `IToolImplementation` class, including its `GetDefinition()`.
 - Register the implementation in `Program.cs`.
+- When the tool belongs to a preview feature, return false from `IsAvailable` while the preview is switched off.
 - Put every argument and setting name in a constant that the schema and the reading code share.
 - Set `MinimumProviderConfidence` to what the tool actually exposes.
 - When the tool only makes sense together with others, put them into a tool collection, and set the minimum provider confidence there.
@@ -177,7 +216,8 @@ The data sources are checked again before each search, since rounds may have pas
 - Validate settings and model arguments, and refuse a wrong argument with a message the model can correct itself from.
 - Filter content fetched from outside AI Studio for prompt injections, and declare `ReturnsUntrustedExternalContent`.
 - Protect secrets and sensitive trace arguments.
-- Add provider-confidence checks when tool output may contain sensitive data, and raise `RequiredProviderConfidence` and `RequiredDataSecurity` for what actually reached the model.
+- Add provider-confidence checks when tool output may contain sensitive data, and raise `RequiredProviderConfidence`, `RequiredDataSecurity`, and `RequiredOutboundDataRestriction` for what actually reached the model.
+- Declare where the tool sends data in `OutboundData`. Set `EnforcesOutboundDataRestriction` only when the tool refuses what goes too far itself, on every call.
 - For a tool which offers itself from the context of the chat, set `Activation = ToolActivation.CONTEXT` and return null from `ResolveFunctionAsync` when there is nothing to offer. Keep a tailored function stable for the same chat, and cache what it fetches.
 - When the system prompt instructions follow a setting, register those of the default and word the current ones in `ResolveSystemPromptInstructionsAsync`.
 - Page with `page` and `has_more`, not with a total, and cap how deep the model may go.
