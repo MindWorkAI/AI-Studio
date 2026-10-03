@@ -34,4 +34,19 @@ public static class MailServerHosts
                 return false;
         }
     }
+
+    /// <summary>
+    /// Whether two hosts name the same server, however each was written.
+    /// </summary>
+    /// <remarks>
+    /// Case, umlauts against their ASCII form, and a closing dot make no difference. A text which
+    /// is no host at all is the same as nothing.
+    /// </remarks>
+    /// <param name="host">The one host.</param>
+    /// <param name="otherHost">The other host.</param>
+    /// <returns>True when both are hosts and name the same server.</returns>
+    public static bool AreSame(string host, string otherHost) =>
+        TryGetIdnHost(host, out var idnHost) &&
+        TryGetIdnHost(otherHost, out var otherIdnHost) &&
+        idnHost.TrimEnd('.').Equals(otherIdnHost.TrimEnd('.'), StringComparison.OrdinalIgnoreCase);
 }

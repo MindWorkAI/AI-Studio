@@ -105,6 +105,8 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private bool showExpertSettings;
     private bool revalidateAfterRender;
 
+    private IReadOnlyList<DataMailboxProvider> organizationProviders = [];
+    private DataMailboxProvider? selectedOrganizationProvider;
     private MailboxProviderTemplate? selectedTemplate;
     private MailboxAuthFailure? authFailure;
     private string storedPassword = string.Empty;
@@ -146,6 +148,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
 
+        // The mail servers of the organization come from the running configuration plugins:
+        this.organizationProviders = PluginFactory.GetMailboxProviders();
+
         // A mailbox and a data source must not share a name:
         this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
             .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Select(x => x.Name.ToLowerInvariant()))
@@ -172,7 +177,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
-            this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
+            this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(provider => MailServerHosts.AreSame(provider.Host, this.DataSource.Host));
+            if (this.selectedOrganizationProvider is null)
+                this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
 
             var requestedSecret = await this.RustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
             if (requestedSecret.Success)
@@ -244,11 +251,18 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         && !string.IsNullOrEmpty(this.dataPassword);
 
     /// <summary>
-    /// The name of the chosen provider template, or empty for another provider.
+    /// The key of the chosen provider, see GetProviderKey, or empty for another provider.
     /// </summary>
-    private string SelectedTemplateName => this.selectedTemplate?.Name ?? string.Empty;
+    private string SelectedProviderKey => this.selectedOrganizationProvider is { } organizationProvider
+        ? GetProviderKey(organizationProvider)
+        : this.selectedTemplate is { } template ? GetProviderKey(template) : string.Empty;
 
-    private string SelectedTemplateText => this.selectedTemplate?.Name ?? T("Another provider");
+    private string SelectedProviderText => this.selectedOrganizationProvider?.Name ?? this.selectedTemplate?.Name ?? T("Another provider");
+
+    /// <summary>
+    /// Whether the organization offers any mail servers of its own.
+    /// </summary>
+    private bool HasOrganizationProviders => this.organizationProviders.Count > 0;
 
     private string SignInGroupClass => this.authFailure is null
         ? "border-dashed border rounded-lg pa-3 mb-6"
@@ -336,16 +350,30 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         MaxMatches = this.dataMaxMatches,
     };
 
-    private void SelectTemplate(string templateName)
-    {
-        var template = MailboxProviderTemplates.ALL.FirstOrDefault(candidate => candidate.Name == templateName);
-        this.selectedTemplate = template;
-        if (template is null)
-            return;
+    //
+    // A key per choice rather than the name: an organization may well call its mail server like
+    // one of the well-known providers, e.g., "Microsoft Exchange Server".
+    //
+    private static string GetProviderKey(DataMailboxProvider organizationProvider) => $"organization:{organizationProvider.Id}";
 
-        this.dataHost = template.Host;
-        this.dataPort = template.Port;
-        this.dataTransportSecurity = template.TransportSecurity;
+    private static string GetProviderKey(MailboxProviderTemplate template) => $"template:{template.Name}";
+
+    private void SelectProvider(string providerKey)
+    {
+        this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);
+        this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(candidate => GetProviderKey(candidate) == providerKey);
+        if (this.selectedOrganizationProvider is { } organizationProvider)
+        {
+            this.dataHost = organizationProvider.Host;
+            this.dataPort = organizationProvider.Port;
+            this.dataTransportSecurity = organizationProvider.TransportSecurity;
+        }
+        else if (this.selectedTemplate is { } template)
+        {
+            this.dataHost = template.Host;
+            this.dataPort = template.Port;
+            this.dataTransportSecurity = template.TransportSecurity;
+        }
     }
 
     private void SelectTransportSecurity(MailboxTransportSecurity transportSecurity)

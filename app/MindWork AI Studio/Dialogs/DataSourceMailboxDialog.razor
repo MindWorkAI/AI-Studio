@@ -43,22 +43,58 @@
             @if (this.CanChangeSource)
             {
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                    @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
+                    @if (this.HasOrganizationProviders)
+                    {
+                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.")
+                    }
+                    else
+                    {
+                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
+                    }
                 </MudJustifiedText>
-                <MudSelect T="string" Value="@this.SelectedTemplateName" ValueChanged="@this.SelectTemplate" Text="@this.SelectedTemplateText" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business">
+                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business">
                     <MudSelectItem T="string" Value="@string.Empty">
                         @T("Another provider")
                     </MudSelectItem>
+                    @foreach (var organizationProvider in this.organizationProviders)
+                    {
+                        <MudSelectItem T="string" Value="@GetProviderKey(organizationProvider)">
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info" Size="Size.Small"/>
+                                <span>@organizationProvider.Name</span>
+                            </MudStack>
+                        </MudSelectItem>
+                    }
                     @foreach (var template in MailboxProviderTemplates.ALL)
                     {
-                        <MudSelectItem T="string" Value="@template.Name">
+                        <MudSelectItem T="string" Value="@GetProviderKey(template)">
                             @template.Name
                         </MudSelectItem>
                     }
                 </MudSelect>
             }
 
-            @if (this.selectedTemplate is not null)
+            @if (this.selectedOrganizationProvider is { } chosenOrganizationProvider)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                        @T("Your organization offers this mail server. Sign in with your own username and password.")
+                    </MudJustifiedText>
+                    @if (!string.IsNullOrEmpty(chosenOrganizationProvider.UsernameHint))
+                    {
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                            @string.Format(T("Username: {0}"), chosenOrganizationProvider.UsernameHint)
+                        </MudJustifiedText>
+                    }
+                    @if (!string.IsNullOrEmpty(chosenOrganizationProvider.HelpUrl))
+                    {
+                        <MudLink Href="@chosenOrganizationProvider.HelpUrl" Target="_blank" Typo="Typo.body2">
+                            @string.Format(T("Instructions of {0}"), chosenOrganizationProvider.Name)
+                        </MudLink>
+                    }
+                </MudAlert>
+            }
+            else if (this.selectedTemplate is not null)
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-6">
                     @foreach (var requirement in this.selectedTemplate.Requirements.GetDescriptions())

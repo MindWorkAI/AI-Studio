@@ -3880,6 +3880,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2940206485"] = "Yo
 -- This data source is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "This data source is managed by your organization."
 
+-- Mailbox (IMAP), not allowed by your organization
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T308474155"] = "Mailbox (IMAP), not allowed by your organization"
+
 -- Add Mailbox
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3173750212"] = "Add Mailbox"
 
@@ -6013,6 +6016,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3410030691
 -- Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3616855807"] = "Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."
 
+-- {0} mail servers offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3738390714"] = "{0} mail servers offered for new mailboxes"
+
 -- {0} settings return to their default values
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3841220170"] = "{0} settings return to their default values"
 
@@ -6030,6 +6036,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T4193757254
 
 -- {0} document analysis policies
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T449490978"] = "{0} document analysis policies"
+
+-- {0} mail server offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T505438821"] = "{0} mail server offered for new mailboxes"
 
 -- {0} data source, including its credentials in your operating system's keychain
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T511418335"] = "{0} data source, including its credentials in your operating system's keychain"
@@ -6619,6 +6628,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2101951526"] = "Th
 -- Test the connection to select another folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Test the connection to select another folder."
 
+-- Your organization does not allow less strict settings than the ones offered here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Your organization does not allow less strict settings than the ones offered here."
+
 -- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2256114537"] = "Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder."
 
@@ -7195,6 +7207,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3540986519"] = "{0} man
 -- Transcription provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3566003684"] = "Transcription provider"
 
+-- {0} mail servers offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3738390714"] = "{0} mail servers offered for new mailboxes"
+
 -- Replace plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4068580334"] = "Replace plugin"
 
@@ -7209,6 +7224,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T449490978"] = "{0} docu
 
 -- The authors marked this plugin as deprecated: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T497068698"] = "The authors marked this plugin as deprecated: {0}"
+
+-- {0} mail server offered for new mailboxes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T505438821"] = "{0} mail server offered for new mailboxes"
 
 -- It also brings:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T713968030"] = "It also brings:"
