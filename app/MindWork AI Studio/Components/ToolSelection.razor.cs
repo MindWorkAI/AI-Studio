@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -13,6 +14,17 @@ public partial class ToolSelection : MSGComponentBase
 
     [Parameter]
     public required AIStudio.Settings.Provider LLMProvider { get; set; }
+
+    /// <summary>
+    /// Where the chat of this selection may still send data, because of the mailboxes it read from.
+    /// </summary>
+    /// <remarks>
+    /// The selection shows a tool this keeps back as unavailable, with the reason, the same way it
+    /// does for a provider with too little confidence. Keeping the tool out of the request is the
+    /// business of the tool registry and the tool executor; this only explains it.
+    /// </remarks>
+    [Parameter]
+    public required OutboundDataRequirement RequiredOutboundDataRestriction { get; set; }
 
     [Parameter]
     public HashSet<string> SelectedToolIds { get; set; } = [];
@@ -37,7 +49,7 @@ public partial class ToolSelection : MSGComponentBase
 
     protected override void OnParametersSet()
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(this.SelectedToolIds);
         base.OnParametersSet();
     }
 
@@ -76,10 +88,11 @@ public partial class ToolSelection : MSGComponentBase
     /// <remarks>
     /// The switch and the row click share this, so both agree on when a tool is out of reach: the
     /// organization disabled it, it is not configured, the provider lacks the confidence it needs,
-    /// a response is running, or the model cannot call tools in the first place.
+    /// the chat read a mailbox which keeps the tool back, a response is running, or the model
+    /// cannot call tools in the first place.
     /// </remarks>
     private bool IsRowDisabled(ToolCatalogItem item) => !item.IsActive || !item.ConfigurationState.IsConfigured || this.IsBlockedByProviderConfidence(item) ||
-                                                        this.Disabled || !this.SupportsTools;
+                                                        this.IsBlockedByOutboundDataRestriction(item) || this.Disabled || !this.SupportsTools;
 
     /// <summary>
     /// Switches a tool when the user clicks anywhere in its row.
@@ -94,21 +107,21 @@ public partial class ToolSelection : MSGComponentBase
         if (this.IsRowDisabled(item))
             return;
 
-        await this.ChangeSelection(item.Definition.Id, !this.SelectedToolIds.Contains(item.Definition.Id));
+        await this.ChangeSelection(item.Id, !this.SelectedToolIds.Contains(item.Id));
     }
 
-    private async Task ChangeSelection(string toolId, bool isSelected)
+    private async Task ChangeSelection(string collectionId, bool isSelected)
     {
-        if (isSelected && !this.SettingsManager.IsToolActive(toolId))
+        if (isSelected && !this.ToolRegistry.IsToolActive(collectionId))
             return;
 
         var updated = new HashSet<string>(this.SelectedToolIds, StringComparer.Ordinal);
         if (isSelected)
-            updated.Add(toolId);
+            updated.Add(collectionId);
         else
-            updated.Remove(toolId);
+            updated.Remove(collectionId);
 
-        updated = ToolSelectionRules.NormalizeSelection(updated);
+        updated = this.ToolRegistry.NormalizeSelection(updated);
         this.SelectedToolIds = updated;
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
     }
@@ -117,6 +130,15 @@ public partial class ToolSelection : MSGComponentBase
     private static ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => item.MinimumProviderConfidence;
 
     private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
+
+    /// <summary>
+    /// Whether the mailboxes the chat read from keep every tool of this entry back.
+    /// </summary>
+    /// <remarks>
+    /// Only then is there nothing left to select. Should a mailbox keep back some tools of a
+    /// collection, the others still run, and the request leaves out the rest on its own.
+    /// </remarks>
+    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => item.Tools.All(tool => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, tool.Implementation));
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
@@ -138,7 +160,7 @@ public partial class ToolSelection : MSGComponentBase
     /// </remarks>
     private string GetWarningText(ToolCatalogItem item)
     {
-        var warnings = new List<string>(3);
+        var warnings = new List<string>(4);
         if (!item.ConfigurationState.IsConfigured)
             warnings.Add(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message);
 
@@ -149,14 +171,17 @@ public partial class ToolSelection : MSGComponentBase
         if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
             warnings.Add(providerConfidenceHint);
 
+        if (this.IsBlockedByOutboundDataRestriction(item))
+            warnings.Add(this.RequiredOutboundDataRestriction.GetToolBlockedMessage(this.SettingsManager.ConfigurationData.Mailboxes));
+
         return string.Join(' ', warnings);
     }
 
-    private async Task OpenSettings(string toolId)
+    private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, toolId },
+            { x => x.CollectionId, item.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);

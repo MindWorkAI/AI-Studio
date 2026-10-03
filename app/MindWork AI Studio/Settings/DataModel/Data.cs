@@ -42,7 +42,20 @@ public sealed class Data
     /// A collection of data sources configured.
     /// </summary>
     public List<IDataSource> DataSources { get; set; } = [];
-    
+
+    /// <summary>
+    /// A collection of mailboxes configured.
+    /// </summary>
+    /// <remarks>
+    /// A list of its own rather than a part of DataSources: classic RAG, Semantic Search and the
+    /// agents read DataSources, and none of them is meant to see a mailbox. It also keeps the
+    /// settings readable for older versions of AI Studio, so the settings version stays the same.
+    /// An older version skips a property it does not know, but would fail to read the whole file
+    /// over a data source type it does not know. It drops the list, though, the next time it stores
+    /// the settings. The numbers come from NextDataSourceNum, which the data sources use as well.
+    /// </remarks>
+    public List<DataSourceMailbox> Mailboxes { get; set; } = [];
+
     /// <summary>
     /// List of configured profiles.
     /// </summary>

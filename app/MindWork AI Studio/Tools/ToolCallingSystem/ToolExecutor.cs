@@ -1,10 +1,12 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -12,16 +14,14 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
 {
     private const string INVALID_TOOL_CALL_ERROR = "The tool call was invalid.";
 
-    public (string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence, IReadOnlyList<Source> Sources) CreateInvalidToolCallResult(
-        string toolCallId,
-        int order)
+    public ToolCallOutcome CreateInvalidToolCallResult(string toolCallId, int order)
     {
         logger.LogWarning(
             "Rejected invalid tool call. ToolCallId={ToolCallId}, Order={Order}, Status={Status}",
             toolCallId,
             order,
             ToolInvocationTraceStatus.ERROR);
-        return (INVALID_TOOL_CALL_ERROR, new ToolInvocationTrace
+        return new ToolCallOutcome(INVALID_TOOL_CALL_ERROR, new ToolInvocationTrace
         {
             Order = order,
             ToolName = "Invalid tool call",
@@ -29,7 +29,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
             Status = ToolInvocationTraceStatus.ERROR,
             StatusMessage = INVALID_TOOL_CALL_ERROR,
             Result = INVALID_TOOL_CALL_ERROR,
-        }, ConfidenceLevel.NONE, []);
+        });
     }
 
     public static bool IsValidArgumentsJson(string? argumentsJson)
@@ -48,7 +48,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         }
     }
 
-    public async Task<(string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence, DataSourceSecurity RequiredDataSecurity, IReadOnlyList<Source> Sources)> ExecuteAsync(
+    public async Task<ToolCallOutcome> ExecuteAsync(
         string toolCallId,
         string toolName,
         string argumentsJson,
@@ -85,7 +85,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         {
             var error = this.CreateError(toolName);
             logger.LogWarning("Completed tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.BLOCKED);
-            return (error, new ToolInvocationTrace
+            return new ToolCallOutcome(error, new ToolInvocationTrace
             {
                 Order = order,
                 ToolId = toolName,
@@ -95,7 +95,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 StatusMessage = "Tool is not available in the current context.",
                 Arguments = formattedArguments,
                 Result = error,
-            }, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
+            });
         }
 
         var definition = runnableTool.Definition;
@@ -103,8 +103,19 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         try
         {
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
-            var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
             var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+
+            //
+            // Asked again here, although the request only offers what was allowed: the tools of a
+            // request are chosen once, before its first round, and a tool which reads a mailbox may
+            // restrict the chat in the middle of it. The model can then still call a tool it was
+            // offered, with the mail content in its arguments.
+            //
+            var outboundDataRestriction = chatThread.RequiredOutboundDataRestriction;
+            if (!ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction.Restriction, implementation))
+                throw new ToolExecutionBlockedException(outboundDataRestriction.GetToolBlockedMessage(settingsManager.ConfigurationData.Mailboxes));
+
+            var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
             var result = await implementation.ExecuteAsync(document.RootElement, new ToolExecutionContext
             {
                 Definition = definition,
@@ -133,7 +144,14 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 JsonResult = result.JsonContent,
             };
 
-            return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence, result.RequiredDataSecurity, result.Sources);
+            return new ToolCallOutcome(resultModelContent, toolInvocationTrace)
+            {
+                RequiredProviderConfidence = result.RequiredProviderConfidence,
+                RequiredDataSecurity = result.RequiredDataSecurity,
+                RequiredOutboundDataRestriction = result.RequiredOutboundDataRestriction,
+                Sources = result.Sources,
+                ReturnedWebAddresses = FindReturnedWebAddresses(result, document.RootElement),
+            };
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -157,7 +175,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = exception.Message,
             };
 
-            return (exception.Message, toolInvocationTrace, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
+            return new ToolCallOutcome(exception.Message, toolInvocationTrace);
         }
         catch (Exception exception)
         {
@@ -177,7 +195,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = error,
             };
 
-            return (error, toolInvocationTrace, ConfidenceLevel.NONE, DataSourceSecurity.NOT_SPECIFIED, []);
+            return new ToolCallOutcome(error, toolInvocationTrace);
         }
     }
 
@@ -187,6 +205,90 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
     }
 
     private string CreateError(string toolName) => $"Tool '{toolName}' is not available.";
+
+    /// <summary>
+    /// The web addresses in a result which did not come from the model.
+    /// </summary>
+    /// <remarks>
+    /// An address which stands in one of the arguments, even as a part of one, is an echo of what
+    /// the model wrote and is left out. Case does not matter for that, so a tool which writes the
+    /// host in lower case does not slip one through, and neither does a tool which writes the same
+    /// request in another encoding, since an address in the arguments also counts by its request
+    /// key. The texts are compared as the JSON values read, so an escape in the JSON cannot hide an
+    /// echo either.
+    /// </remarks>
+    private static HashSet<string> FindReturnedWebAddresses(ToolExecutionResult result, JsonElement arguments)
+    {
+        var argumentTexts = new List<string>();
+        CollectStrings(arguments, argumentTexts);
+
+        var argumentRequestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in argumentTexts.SelectMany(WebAddresses.Find))
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                argumentRequestKeys.Add(requestKey);
+
+        var resultTexts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(result.TextContent))
+            resultTexts.Add(result.TextContent);
+
+        CollectStrings(result.JsonContent, resultTexts);
+
+        var requestKeys = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var address in resultTexts.SelectMany(WebAddresses.Find))
+        {
+            if (argumentTexts.Any(argument => argument.Contains(address, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            if (WebAddresses.TryCreateRequestKey(address, out var requestKey) && !argumentRequestKeys.Contains(requestKey))
+                requestKeys.Add(requestKey);
+        }
+
+        return requestKeys;
+    }
+
+    private static void CollectStrings(JsonElement element, List<string> texts)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                texts.Add(element.GetString() ?? string.Empty);
+                break;
+
+            case JsonValueKind.Object:
+                foreach (var property in element.EnumerateObject())
+                    CollectStrings(property.Value, texts);
+
+                break;
+
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    CollectStrings(item, texts);
+
+                break;
+        }
+    }
+
+    private static void CollectStrings(JsonNode? node, List<string> texts)
+    {
+        switch (node)
+        {
+            case JsonObject jsonObject:
+                foreach (var property in jsonObject)
+                    CollectStrings(property.Value, texts);
+
+                break;
+
+            case JsonArray jsonArray:
+                foreach (var item in jsonArray)
+                    CollectStrings(item, texts);
+
+                break;
+
+            case JsonValue jsonValue when jsonValue.GetValueKind() is JsonValueKind.String:
+                texts.Add(jsonValue.GetValue<string>());
+                break;
+        }
+    }
 
     private static Dictionary<string, string> FormatArguments(JsonElement rootElement, IReadOnlySet<string> sensitiveNames)
     {

@@ -217,7 +217,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         {
             description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={RetrievalPaging.GetLastPage(dataSource.MaxMatches)}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
-                description.Append($", description='{Shorten(dataSourceDescription.Trim())}'");
+                description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
             description.AppendLine();
         }
@@ -244,21 +244,15 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         _ => "data source",
     };
 
-    private static string Shorten(string description)
-    {
-        if (description.Length <= MAX_DESCRIPTION_CHARACTERS)
-            return description;
-
-        // Never between the two halves of a surrogate pair, which no JSON writer takes:
-        var end = char.IsHighSurrogate(description[MAX_DESCRIPTION_CHARACTERS - 1]) ? MAX_DESCRIPTION_CHARACTERS - 1 : MAX_DESCRIPTION_CHARACTERS;
-        return $"{description[..end].TrimEnd()}...";
-    }
-
     public string Icon => Icons.Material.Filled.ManageSearch;
 
     // An ERI data source is a server somebody else runs, and even a local document may hold text
     // written to steer a model:
     public bool ReturnsUntrustedExternalContent => true;
+
+    // The query goes to the ERI servers and to the embedding providers of the data sources, all of
+    // them configured in AI Studio:
+    public ToolOutboundData OutboundData => ToolOutboundData.CONFIGURED_SERVICE;
 
     //
     // Unlike the query of a Confluence search, this one stays visible in the tool log: seeing

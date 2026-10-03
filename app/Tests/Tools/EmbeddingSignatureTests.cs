@@ -88,12 +88,64 @@ public sealed class EmbeddingSignatureTests
     }
 
     [Test]
+    public void AnIndexedDataSourceOutsideDataSourcesIsCutByItsOwnSettings()
+    {
+        var directory = DataSource(ConfidenceLevel.LOW);
+        var elsewhere = new IndexedElsewhere
+        {
+            EmbeddingId = directory.EmbeddingId,
+            MaxChunkTokenLength = directory.MaxChunkTokenLength,
+            ChunkOverlapTokenLength = directory.ChunkOverlapTokenLength,
+        };
+
+        Assert.That(
+            DataSourceEmbeddingService.BuildEmbeddingSignature(elsewhere, EmbeddingProviderFor("text-embedding-3-small")),
+            Is.EqualTo(Signature(directory)),
+            "The chunking follows the indexed settings alone. Asking for IInternalDataSource instead would cut such a data source at the token limit of the provider, without anybody noticing.");
+    }
+
+    [Test]
     public void TheSignatureOfAKnownConfigurationIsPinned()
     {
         Assert.That(
             Signature(DataSource(ConfidenceLevel.LOW)),
             Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100"),
             "Reordering or extending the signature throws away every index anybody has. This test makes that a decision somebody takes rather than something which happens on the way past.");
+    }
+
+    [Test]
+    public void TheSignatureOfAMailboxIsPinned()
+    {
+        var mailbox = new DataSourceMailbox
+        {
+            Id = "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40",
+            EmbeddingId = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01",
+            MaxChunkTokenLength = 512,
+            ChunkOverlapTokenLength = 100,
+        };
+
+        Assert.That(
+            DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox, EmbeddingProviderFor("text-embedding-3-small")),
+            Is.EqualTo("2|b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01|OPEN_AI|text-embedding-3-small|NONE|http://localhost:1234|NONE||8192|512|100|mail:2|attachments:10"),
+            "The text of a mail has a version of its own, which rebuilds the mailboxes and nothing else. Every other data source keeps the signature pinned above.");
+    }
+
+    [Test]
+    public void ReadingOtherAttachmentsRebuildsAMailbox()
+    {
+        var embeddingProvider = EmbeddingProviderFor("text-embedding-3-small");
+        var mailbox = new DataSourceMailbox { EmbeddingId = embeddingProvider.Id, MaxAttachmentSizeMegabytes = 10 };
+        var signature = DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox, embeddingProvider);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { MaxAttachmentSizeMegabytes = 20 }, embeddingProvider), Is.Not.EqualTo(signature), "The mails indexed before would never get their larger attachments.");
+            Assert.That(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider), Does.EndWith("|attachments:none"));
+            Assert.That(
+                DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false, MaxAttachmentSizeMegabytes = 20 }, embeddingProvider),
+                Is.EqualTo(DataSourceEmbeddingService.BuildEmbeddingSignature(mailbox with { IndexAttachments = false }, embeddingProvider)),
+                "A limit which reads nothing threw the index away for nothing.");
+        });
     }
 
     /// <summary>
@@ -130,4 +182,30 @@ public sealed class EmbeddingSignatureTests
 
     private static EmbeddingProvider EmbeddingProviderFor(string modelId) =>
         new(1, "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "Test embeddings", LLMProviders.OPEN_AI, new(modelId, modelId));
+
+    /// <summary>
+    /// A data source which is embedded but not kept in DataSources, the way mailboxes are.
+    /// </summary>
+    private readonly record struct IndexedElsewhere() : IIndexedDataSource
+    {
+        public string Id => "0c3f9b52-7d4e-4a1b-9e6f-2b8c5d7a1e40";
+
+        public uint Num => 2;
+
+        public string Name => "Indexed elsewhere";
+
+        public bool IsEnterpriseConfiguration => false;
+
+        public Guid EnterpriseConfigurationPluginId => Guid.Empty;
+
+        public DataSourceType Type { get; init; } = DataSourceType.NONE;
+
+        public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.LOW;
+
+        public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+
+        public int MaxChunkTokenLength { get; init; }
+
+        public int ChunkOverlapTokenLength { get; init; }
+    }
 }

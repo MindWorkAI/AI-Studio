@@ -278,7 +278,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.EnableTools, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DisabledToolIds, this.Id, settingsTable, dryRun);
 
-        // Config: minimum provider confidence per tool
+        // Config: minimum provider confidence per tool collection; a tool outside of one forms its own
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
 
         //
@@ -415,7 +415,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (configuredValue.Type is not LuaValueType.Table || !configuredValue.TryRead<LuaTable>(out var configuredTable))
         {
-            message = $"The setting '{SETTING_NAME}' must be a table of tool IDs and confidence levels.";
+            message = $"The setting '{SETTING_NAME}' must be a table of tool or collection IDs and confidence levels.";
             return false;
         }
 
@@ -429,7 +429,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 !Enum.IsDefined(confidenceLevel) ||
                 confidenceLevel is ConfidenceLevel.UNKNOWN)
             {
-                message = $"The setting '{SETTING_NAME}' contains an invalid tool ID or confidence level. Allowed confidence levels are NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, and HIGH.";
+                message = $"The setting '{SETTING_NAME}' contains an invalid tool or collection ID or confidence level. Allowed confidence levels are NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, and HIGH.";
                 return false;
             }
         }

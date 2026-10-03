@@ -7,11 +7,11 @@ namespace AIStudio.Tools.Services;
 
 internal static class DataSourceEmbeddingProviders
 {
-    public static bool TryResolve(SettingsManager settingsManager, IDataSource dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
+    public static bool TryResolve(SettingsManager settingsManager, IDataSourceBase dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
     {
         embeddingProvider = settingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(provider =>
-            dataSource is IInternalDataSource internalDataSource &&
-            provider.Id.Equals(internalDataSource.EmbeddingId, StringComparison.OrdinalIgnoreCase));
+            dataSource is IIndexedDataSource indexedDataSource &&
+            provider.Id.Equals(indexedDataSource.EmbeddingId, StringComparison.OrdinalIgnoreCase));
 
         return embeddingProvider != default && embeddingProvider.UsedLLMProvider is not LLMProviders.NONE;
     }
