@@ -18,7 +18,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     private List<PluginConfigurationObject> configObjects = [];
     private List<DataMandatoryInfo> mandatoryInfos = [];
     private List<DataIntroduction> introductions = [];
-    
+    private List<DataMailboxProvider> mailboxProviders = [];
+
     /// <summary>
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
     /// </summary>
@@ -35,6 +36,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// Introductions are live plugin content and are not persisted to ConfigurationData.
     /// </summary>
     public IReadOnlyList<DataIntroduction> Introductions => this.introductions;
+
+    /// <summary>
+    /// The mail servers this configuration plugin offers for new mailboxes.
+    /// Mail servers are live plugin content and are not persisted to ConfigurationData.
+    /// </summary>
+    public IReadOnlyList<DataMailboxProvider> MailboxProviders => this.mailboxProviders;
 
     /// <summary>
     /// True/false when explicitly configured in the plugin, otherwise null.
@@ -194,7 +201,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         this.configObjects.Clear();
         this.mandatoryInfos.Clear();
         this.introductions.Clear();
-        
+        this.mailboxProviders.Clear();
+
         // Ensure that the main CONFIG table exists and is a valid Lua table:
         if (!this.State.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
         {
@@ -359,6 +367,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Handle configured introductions:
         this.TryReadIntroductions(mainTable);
+
+        // Handle configured mail servers:
+        this.TryReadMailboxProviders(mainTable);
         
         // Config: preselected provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -788,6 +799,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 this.introductions.Add(introduction);
             else
                 LOG.LogWarning("The table 'INTRODUCTIONS' entry at index {Index} does not contain a valid introduction (config plugin id: {ConfigPluginId}).", i, this.Id);
+        }
+    }
+
+    private void TryReadMailboxProviders(LuaTable mainTable)
+    {
+        if (!mainTable.TryGetValue("MAILBOX_PROVIDERS", out var mailboxProvidersValue) || !mailboxProvidersValue.TryRead<LuaTable>(out var mailboxProvidersTable))
+            return;
+
+        for (var i = 1; i <= mailboxProvidersTable.ArrayLength; i++)
+        {
+            var luaMailboxProviderValue = mailboxProvidersTable[i];
+            if (!luaMailboxProviderValue.TryRead<LuaTable>(out var luaMailboxProviderTable))
+            {
+                LOG.LogWarning("The table 'MAILBOX_PROVIDERS' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", i, this.Id);
+                continue;
+            }
+
+            if (DataMailboxProvider.TryParseConfiguration(i, luaMailboxProviderTable, this.Id, LOG, out var mailboxProvider))
+                this.mailboxProviders.Add(mailboxProvider);
+            else
+                LOG.LogWarning("The table 'MAILBOX_PROVIDERS' entry at index {Index} does not contain a valid mail server (config plugin id: {ConfigPluginId}).", i, this.Id);
         }
     }
 }

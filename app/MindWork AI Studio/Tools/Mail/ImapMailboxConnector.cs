@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net.Sockets;
 
 using AIStudio.Settings.DataModel;
@@ -100,7 +99,7 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
     public async Task ConnectAsync(DataSourceMailbox mailbox, string password, CancellationToken token)
     {
-        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
+        if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
 
         this.client.ServerCertificateValidationCallback = ExternalHttpClientTimeout.CreateServerCertificateValidationCallback(idnHost, ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
@@ -500,34 +499,6 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
         };
 
         return socketOptions is not SecureSocketOptions.None;
-    }
-
-    /// <summary>
-    /// The host in the form certificates and the allowed hosts for root certificates use.
-    /// </summary>
-    private static bool TryGetIdnHost(string host, out string idnHost)
-    {
-        idnHost = host.Trim();
-        switch (Uri.CheckHostName(idnHost))
-        {
-            case UriHostNameType.IPv4:
-            case UriHostNameType.IPv6:
-                return true;
-
-            case UriHostNameType.Dns:
-                try
-                {
-                    idnHost = new IdnMapping().GetAscii(idnHost);
-                    return true;
-                }
-                catch (ArgumentException)
-                {
-                    return false;
-                }
-
-            default:
-                return false;
-        }
     }
 
     private static MailServerFolder ToServerFolder(IMailFolder folder) => new(

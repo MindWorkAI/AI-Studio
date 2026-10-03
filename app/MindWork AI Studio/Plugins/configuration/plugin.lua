@@ -303,6 +303,37 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["MaxMatches"] = 10,
 -- }
 
+-- Mail servers of your organization, offered for new mailboxes:
+-- The mailbox dialog lists them before the well-known public providers. Choosing one fills in
+-- the host, the port, and the encryption; username and password stay with each user. Large
+-- organizations run more than one mail system, so a configuration may define several mail
+-- servers, and those of all configurations are offered together.
+--
+-- Fields:
+--   Id                 Required GUID, which stays the same across versions of your configuration.
+--   Name               Required name shown to the user, e.g., the name of the mail system.
+--   Host               Required host name or IP address of the IMAP server, without a scheme
+--                      or a port.
+--   TransportSecurity  SSL_ON_CONNECT (the default, TLS from the first byte on) or STARTTLS.
+--                      There is no way without encryption.
+--   Port               The default is 993 with SSL_ON_CONNECT and 143 with STARTTLS.
+--   UsernameHint       Optional text telling users what to enter as their username.
+--   HelpUrl            Optional http or https address of your instructions, e.g., on how to
+--                      enable IMAP for a mailbox.
+-- An entry with an invalid field is left out as a whole, and the log names the field.
+CONFIG["MAILBOX_PROVIDERS"] = {}
+
+-- An example mail server:
+-- CONFIG["MAILBOX_PROVIDERS"][#CONFIG["MAILBOX_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "Exchange (headquarters)",
+--     ["Host"] = "imap.example.org",
+--     ["TransportSecurity"] = "SSL_ON_CONNECT",
+--     ["Port"] = 993,
+--     ["UsernameHint"] = "Your account as DOMAIN\\username",
+--     ["HelpUrl"] = "https://intranet.example.org/mail/imap",
+-- }
+
 CONFIG["SETTINGS"] = {}
 
 -- ------
