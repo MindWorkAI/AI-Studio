@@ -79,10 +79,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         Id = ToolSelectionRules.SEARCH_MAILS_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEARCH_MAILS_TOOL_ID,
 
-        // Each mailbox states the confidence it needs, and only a provider which meets it may read
-        // the mailbox. A provider below the lowest level a mailbox may ask for cannot read any:
-        MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
-
+        // No minimum confidence of its own: the mailbox collection states it, see MailboxToolCollection.
         SystemPromptInstructions = """
                                    Use `search_mails` to find mails in the mailboxes of the user. AI Studio keeps them in a local index, and the description of the tool lists the mailboxes you may search.
                                    - Search whenever a question concerns the mails of the user: what somebody wrote, what arrived, or what is still open.

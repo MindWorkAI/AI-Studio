@@ -2,7 +2,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Mail;
@@ -61,9 +60,7 @@ public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetriev
         Id = ToolSelectionRules.READ_MAIL_TOOL_ID,
         ImplementationKey = ToolSelectionRules.READ_MAIL_TOOL_ID,
 
-        // As for Search Mails: each mailbox asks for its own level, and none may ask for less:
-        MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
-
+        // No minimum confidence of its own: the mailbox collection states it, see MailboxToolCollection.
         SystemPromptInstructions = """
                                    Use `read_mail` to read a mail which `search_mails` found, by its `mail_id`.
                                    - Read a mail before you answer from it whenever its passage in the search does not suffice.

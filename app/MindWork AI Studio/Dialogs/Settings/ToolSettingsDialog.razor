@@ -18,7 +18,7 @@
                 @this.implementation?.GetDescription()
             </MudJustifiedText>
 
-            @if (!this.SettingsManager.IsToolActive(this.toolDefinition.Id))
+            @if (!this.ToolRegistry.IsToolActive(this.toolDefinition.Id))
             {
                 <MudAlert Severity="Severity.Warning" Class="mb-4">@T("This tool has been disabled by your organization.")</MudAlert>
             }

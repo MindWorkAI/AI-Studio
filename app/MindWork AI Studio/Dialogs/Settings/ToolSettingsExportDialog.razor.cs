@@ -164,7 +164,8 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
                 IncludeMinimumProviderConfidence = this.includeMinimumProviderConfidence,
             };
 
-            var result = await this.ToolSettingsService.ExportAsync(this.toolDefinition, this.implementation, options);
+            var collectionId = this.ToolRegistry.GetCollectionId(this.toolDefinition.Id);
+            var result = await this.ToolSettingsService.ExportAsync(this.toolDefinition, this.implementation, options, collectionId, this.ToolRegistry.GetMinimumProviderConfidence(collectionId));
             if (this.isDisposed || !this.IsAdmin)
                 return;
 

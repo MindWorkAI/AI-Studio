@@ -60,7 +60,9 @@ public abstract class ToolRegistryTestBase
         this.rustService.Dispose();
     }
 
-    protected ToolRegistry CreateRegistry(params TestTool[] tools) => new(tools, [new CodeToolDefinitionSource(tools)], this.SettingsManager, this.CreateToolSettingsService(), NullLogger<ToolRegistry>.Instance);
+    protected ToolRegistry CreateRegistry(params TestTool[] tools) => this.CreateRegistry([], tools);
+
+    protected ToolRegistry CreateRegistry(IReadOnlyList<IToolCollection> collections, params TestTool[] tools) => new(tools, [new CodeToolDefinitionSource(tools)], collections, this.SettingsManager, this.CreateToolSettingsService(), NullLogger<ToolRegistry>.Instance);
 
     protected ToolSettingsService CreateToolSettingsService() => new(this.SettingsManager, this.rustService, NullLogger<ToolSettingsService>.Instance);
 
@@ -140,5 +142,27 @@ public abstract class ToolRegistryTestBase
         public IReadOnlySet<string> SensitiveTraceArgumentNames { get; } = new HashSet<string>(StringComparer.Ordinal);
 
         public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default) => Task.FromResult(execute is null ? new ToolExecutionResult() : execute(context));
+    }
+
+    /// <summary>
+    /// A tool collection which gathers the tools it is told to.
+    /// </summary>
+    /// <param name="id">The ID of the collection.</param>
+    /// <param name="minimumConfidence">The confidence the collection asks for itself.</param>
+    /// <param name="toolIds">The IDs of its tools.</param>
+    protected sealed class TestCollection(string id, ConfidenceLevel minimumConfidence, params string[] toolIds) : IToolCollection
+    {
+        public ToolCollectionDefinition GetDefinition() => new()
+        {
+            Id = id,
+            ToolIds = toolIds,
+            MinimumProviderConfidence = minimumConfidence,
+        };
+
+        public string Icon => string.Empty;
+
+        public string GetDisplayName() => id;
+
+        public string GetDescription() => id;
     }
 }

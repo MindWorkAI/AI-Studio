@@ -186,6 +186,7 @@ internal sealed class Program
         builder.Services.AddSingleton<IToolImplementation, SearchMailsTool>();
         builder.Services.AddSingleton<IToolImplementation, ReadMailTool>();
         builder.Services.AddSingleton<IToolImplementation, CountMailsTool>();
+        builder.Services.AddSingleton<IToolCollection, MailboxToolCollection>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();

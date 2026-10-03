@@ -119,7 +119,7 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
         Assert.Multiple(() =>
         {
             Assert.That(tool.IsAvailable, Is.False, "Without the previews, the tool does not exist.");
-            Assert.That(tool.GetDefinition().MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.VERY_LOW), "Each mailbox asks for its own level, and none may ask for less.");
+            Assert.That(new MailboxToolCollection().GetDefinition().ToolIds, Does.Contain(ToolSelectionRules.COUNT_MAILS_TOOL_ID), "The mailbox collection states the confidence the tool needs.");
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.NONE), "Counting sends no query anywhere.");
             Assert.That(tool.ReturnsUntrustedExternalContent, Is.True, "The names of senders and folders were written by others.");
         });

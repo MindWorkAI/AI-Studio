@@ -38,7 +38,7 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         this.Component is not AIStudio.Tools.Components.CHAT &&
         !this.SettingsManager.IsToolSelectionVisible(this.Component);
 
-    private bool IsToolDisabled(string toolId) => !this.SettingsManager.IsToolActive(toolId);
+    private bool IsToolDisabled(string toolId) => !this.ToolRegistry.IsToolActive(toolId);
 
     protected override async Task OnInitializedAsync()
     {

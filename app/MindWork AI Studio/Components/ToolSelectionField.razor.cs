@@ -67,7 +67,7 @@ public partial class ToolSelectionField : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
-    private bool IsToolLocked(string toolId) => !this.SettingsManager.IsToolActive(toolId);
+    private bool IsToolLocked(string toolId) => !this.ToolRegistry.IsToolActive(toolId);
 
     private async Task OptionChangedAsync(HashSet<string> updatedToolIds)
     {

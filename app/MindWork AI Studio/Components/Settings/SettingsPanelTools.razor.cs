@@ -85,7 +85,8 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
     private async Task ChangeMinimumProviderConfidence(ToolCatalogItem item, ConfidenceLevel confidenceLevel)
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(item.Definition.Id, confidenceLevel, item.Definition.MinimumProviderConfidence);
+        // Stored for the tool's collection, so the other tools of a collection show the new level as well:
+        this.ToolRegistry.SetMinimumProviderConfidence(item.Definition.Id, confidenceLevel);
         await this.SettingsManager.StoreSettings();
         this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);

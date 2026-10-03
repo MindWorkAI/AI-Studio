@@ -26,14 +26,20 @@ public sealed partial class ToolSettingsService
     /// Only explicitly selected areas are included. Missing values stay absent, explicitly empty
     /// non-secret values stay empty, and runtime defaults are not filled in. Secrets require
     /// opt-in and enterprise encryption, and are always locked, even in a default-value export.
-    /// The optional minimum provider confidence is also always a fixed requirement.
+    /// The optional minimum provider confidence is also always a fixed requirement.<br/><br/>
+    /// That confidence belongs to the collection of the tool, which only the tool registry knows.
+    /// The registry depends on this service, so the caller asks it and passes both in.
     /// </remarks>
-    public async Task<ToolSettingsExportResult> ExportAsync(ToolDefinition definition, IToolImplementation implementation, ToolSettingsExportOptions options)
+    /// <param name="definition">The tool to export.</param>
+    /// <param name="implementation">The implementation of the tool, which divides its settings into areas.</param>
+    /// <param name="options">What the administrator chose to export.</param>
+    /// <param name="collectionId">The ID of the tool's collection, under which the confidence is exported.</param>
+    /// <param name="minimumProviderConfidence">The confidence the collection needs, as the tool registry resolves it.</param>
+    public async Task<ToolSettingsExportResult> ExportAsync(ToolDefinition definition, IToolImplementation implementation, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence)
     {
         var areas = implementation.GetExportableSettings(definition);
         var values = await this.GetSettingsAsync(definition);
-        var confidence = settingsManager.GetMinimumProviderConfidenceForTool(definition.Id, definition.MinimumProviderConfidence);
-        return BuildConfigurationSection(definition, areas, values, options, confidence, PluginFactory.EnterpriseEncryption);
+        return BuildConfigurationSection(definition, areas, values, options, collectionId, minimumProviderConfidence, PluginFactory.EnterpriseEncryption);
     }
 
     /// <summary>
@@ -54,7 +60,7 @@ public sealed partial class ToolSettingsService
     /// Builds a fragment from one snapshot. A failed encryption returns no Lua, even when other
     /// fields have already been processed, so the caller cannot copy a partial export by accident.
     /// </summary>
-    private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
+    private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
     {
         var lockedValues = new Dictionary<string, string>(StringComparer.Ordinal);
         var defaultValues = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -97,7 +103,7 @@ public sealed partial class ToolSettingsService
         {
             AppendSettings(lua, MINIMUM_CONFIDENCE, new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                [definition.Id] = minimumProviderConfidence.ToString(),
+                [collectionId] = minimumProviderConfidence.ToString(),
             });
 
             //

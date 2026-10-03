@@ -112,7 +112,7 @@ public partial class ToolSelection : MSGComponentBase
 
     private async Task ChangeSelection(string toolId, bool isSelected)
     {
-        if (isSelected && !this.SettingsManager.IsToolActive(toolId))
+        if (isSelected && !this.ToolRegistry.IsToolActive(toolId))
             return;
 
         var updated = new HashSet<string>(this.SelectedToolIds, StringComparer.Ordinal);

@@ -13,7 +13,10 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// <remarks>
 /// Definitions arrive through tool definition sources — the app's own tools from code, later the
 /// ones plugin authors write. Every definition passes the same validation regardless of where it
-/// came from, which matters most for the ones AI Studio does not control.
+/// came from, which matters most for the ones AI Studio does not control.<br/><br/>
+/// Every tool belongs to exactly one collection, see ToolCollectionDefinition: a declared one, or
+/// one of its own under its own ID. Whether a tool is switched off and which confidence it needs
+/// are questions about its collection, so they are answered here, where the collections are known.
 /// </remarks>
 public sealed class ToolRegistry
 {
@@ -22,6 +25,15 @@ public sealed class ToolRegistry
     private readonly ToolSettingsService toolSettingsService;
     private readonly Dictionary<string, ToolDefinition> definitionsById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IToolImplementation> implementationsByKey = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RegisteredCollection> collectionsById = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> collectionIdsByToolId = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// A declared collection as registered, holding only the tools which are registered themselves.
+    /// </summary>
+    /// <param name="Definition">The definition, reduced to the registered tools.</param>
+    /// <param name="Collection">The collection, which presents the definition.</param>
+    private sealed record RegisteredCollection(ToolCollectionDefinition Definition, IToolCollection Collection);
 
     /// <summary>
     /// What the checks of a single tool found.
@@ -34,6 +46,7 @@ public sealed class ToolRegistry
     public ToolRegistry(
         IEnumerable<IToolImplementation> implementations,
         IEnumerable<IToolDefinitionSource> definitionSources,
+        IEnumerable<IToolCollection> collections,
         SettingsManager settingsManager,
         ToolSettingsService toolSettingsService,
         ILogger<ToolRegistry> logger)
@@ -88,6 +101,66 @@ public sealed class ToolRegistry
                 }
             }
         }
+
+        // After the tools, since a collection can only gather tools which are registered:
+        foreach (var collection in collections)
+            this.RegisterCollection(collection);
+    }
+
+    /// <summary>
+    /// Registers a declared tool collection, with those of its tools which are registered.
+    /// </summary>
+    /// <remarks>
+    /// A tool belongs to one collection at most, or switching one collection off would take a tool
+    /// of another one along. A collection may not take the ID of a tool either, since a tool which
+    /// belongs to no collection forms one under its own ID. A tool which offers itself from the
+    /// context of a chat stays out, because nobody selects it, see ToolActivation.CONTEXT.<br/><br/>
+    /// A tool the collection names but which is not registered is left out with a warning, so the
+    /// others still work as one. A collection left without any tool is skipped.
+    /// </remarks>
+    private void RegisterCollection(IToolCollection collection)
+    {
+        var definition = collection.GetDefinition();
+        if (string.IsNullOrWhiteSpace(definition.Id))
+        {
+            this.logger.LogWarning("Skipping a tool collection with an empty ID.");
+            return;
+        }
+
+        if (this.definitionsById.ContainsKey(definition.Id))
+        {
+            this.logger.LogWarning("Skipping tool collection '{CollectionId}' because a tool has the same ID.", definition.Id);
+            return;
+        }
+
+        if (this.collectionsById.ContainsKey(definition.Id))
+        {
+            this.logger.LogWarning("Skipping duplicate tool collection ID '{CollectionId}'.", definition.Id);
+            return;
+        }
+
+        var toolIds = new List<string>(definition.ToolIds.Count);
+        foreach (var toolId in definition.ToolIds.Distinct(StringComparer.Ordinal))
+        {
+            if (this.definitionsById.GetValueOrDefault(toolId) is not { } toolDefinition)
+                this.logger.LogWarning("Leaving tool '{ToolId}' out of tool collection '{CollectionId}' because the tool is not registered.", toolId, definition.Id);
+            else if (toolDefinition.Activation is not ToolActivation.SELECTION)
+                this.logger.LogWarning("Leaving tool '{ToolId}' out of tool collection '{CollectionId}' because nobody selects the tool.", toolId, definition.Id);
+            else if (this.collectionIdsByToolId.TryGetValue(toolId, out var otherCollectionId))
+                this.logger.LogWarning("Leaving tool '{ToolId}' out of tool collection '{CollectionId}' because it belongs to tool collection '{OtherCollectionId}' already.", toolId, definition.Id, otherCollectionId);
+            else
+                toolIds.Add(toolId);
+        }
+
+        if (toolIds.Count == 0)
+        {
+            this.logger.LogWarning("Skipping tool collection '{CollectionId}' because none of its tools is registered.", definition.Id);
+            return;
+        }
+
+        this.collectionsById[definition.Id] = new(definition with { ToolIds = toolIds }, collection);
+        foreach (var toolId in toolIds)
+            this.collectionIdsByToolId[toolId] = definition.Id;
     }
 
     /// <summary>
@@ -238,19 +311,91 @@ public sealed class ToolRegistry
     public IToolImplementation? GetImplementation(string implementationKey) => this.implementationsByKey.GetValueOrDefault(implementationKey);
 
     /// <summary>
-    /// The provider confidence a tool needs: its own minimum, unless the user or an administrator
-    /// raised or lowered it.
+    /// The ID of the collection a tool belongs to.
     /// </summary>
     /// <remarks>
-    /// This is the place that knows both halves — the definition's own minimum and the stored
+    /// A tool which belongs to no declared collection forms one of its own, so this is its own ID
+    /// then. The ID of a collection stays as it is, and so does an ID the registry does not know,
+    /// such as one of a tool from another installation.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    /// <returns>The ID of the collection.</returns>
+    public string GetCollectionId(string toolOrCollectionId) => this.collectionIdsByToolId.GetValueOrDefault(toolOrCollectionId, toolOrCollectionId);
+
+    /// <summary>
+    /// Whether a tool may be used at all: tools are switched on, and the organization did not switch its collection off.
+    /// </summary>
+    /// <remarks>
+    /// An organization switches a collection off by its ID or by the ID of any of its tools. A
+    /// single tool of a collection cannot be switched off: the others would stop making sense, and
+    /// an administrator who names one tool would rather lose the collection than keep the tool.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    /// <returns>True when the tool may be used.</returns>
+    public bool IsToolActive(string toolOrCollectionId)
+    {
+        if (!this.settingsManager.AreToolsEnabled())
+            return false;
+
+        var disabledIds = this.settingsManager.ConfigurationData.Tools.DisabledToolIds;
+        return !this.GetSettingsIds(this.GetCollectionId(toolOrCollectionId)).Any(disabledIds.Contains);
+    }
+
+    /// <summary>
+    /// The provider confidence a tool needs: the minimum of its collection, unless the user or an
+    /// administrator raised or lowered it.
+    /// </summary>
+    /// <remarks>
+    /// This is the place that knows both halves — the collection's own minimum and the stored
     /// overrides — so callers holding only a tool ID come here instead of to the settings.
     /// </remarks>
-    public ConfidenceLevel GetMinimumProviderConfidence(string toolId) => this.GetDefinition(toolId) is { } definition
-        ? this.GetMinimumProviderConfidence(definition)
-        : ConfidenceLevel.NONE;
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    public ConfidenceLevel GetMinimumProviderConfidence(string toolOrCollectionId) => this.GetMinimumProviderConfidenceResolution(toolOrCollectionId).ConfidenceLevel;
 
-    public ConfidenceLevel GetMinimumProviderConfidence(ToolDefinition definition) =>
-        this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id, definition.MinimumProviderConfidence);
+    public ConfidenceLevel GetMinimumProviderConfidence(ToolDefinition definition) => this.GetMinimumProviderConfidence(definition.Id);
+
+    /// <summary>
+    /// Stores which provider confidence the collection of a tool needs, as the user chose it.
+    /// </summary>
+    /// <remarks>
+    /// Whatever tool of a collection the level is chosen for, it is stored for the collection, so
+    /// all of its tools need the same level afterward.
+    /// </remarks>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    /// <param name="confidenceLevel">The level the user chose. Choosing the collection's own minimum removes the override.</param>
+    public void SetMinimumProviderConfidence(string toolOrCollectionId, ConfidenceLevel confidenceLevel)
+    {
+        var collectionId = this.GetCollectionId(toolOrCollectionId);
+        this.settingsManager.SetMinimumProviderConfidence(this.GetSettingsIds(collectionId), confidenceLevel, this.GetDefaultMinimumProviderConfidence(collectionId));
+    }
+
+    private SettingsManager.ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolution(string toolOrCollectionId)
+    {
+        var collectionId = this.GetCollectionId(toolOrCollectionId);
+        return this.settingsManager.GetMinimumProviderConfidenceResolution(this.GetSettingsIds(collectionId), this.GetDefaultMinimumProviderConfidence(collectionId));
+    }
+
+    /// <summary>
+    /// The minimum a collection asks for itself: the one it declares, or that of the tool which forms it.
+    /// </summary>
+    private ConfidenceLevel GetDefaultMinimumProviderConfidence(string collectionId)
+    {
+        if (this.collectionsById.TryGetValue(collectionId, out var collection))
+            return collection.Definition.MinimumProviderConfidence;
+
+        return this.GetDefinition(collectionId)?.MinimumProviderConfidence ?? ConfidenceLevel.NONE;
+    }
+
+    /// <summary>
+    /// The IDs which stand for a collection in the settings: its own first, then those of its tools.
+    /// </summary>
+    /// <remarks>
+    /// The ID of a tool stands for its collection, so an entry made for the tool before it joined
+    /// the collection, or by an administrator who named the tool, still counts.
+    /// </remarks>
+    private IReadOnlyList<string> GetSettingsIds(string collectionId) => this.collectionsById.TryGetValue(collectionId, out var collection)
+        ? [collectionId, ..collection.Definition.ToolIds]
+        : [collectionId];
 
     /// <summary>
     /// Narrows a selection of tool IDs to those the given provider may actually use in this chat.
@@ -279,7 +424,7 @@ public sealed class ToolRegistry
         var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
         foreach (var toolId in filtered.ToList())
         {
-            if (!this.settingsManager.IsToolActive(toolId))
+            if (!this.IsToolActive(toolId))
             {
                 filtered.Remove(toolId);
                 continue;
@@ -355,7 +500,7 @@ public sealed class ToolRegistry
                 Definition = definition,
                 Implementation = implementation,
                 ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
-                IsActive = this.settingsManager.IsToolActive(definition.Id),
+                IsActive = this.IsToolActive(definition.Id),
                 MinimumProviderConfidence = this.GetMinimumProviderConfidence(definition),
             });
         }
@@ -531,7 +676,7 @@ public sealed class ToolRegistry
     /// </remarks>
     private async Task<ToolCheck> CheckToolAsync(ToolDefinition definition, ConfidenceLevel providerConfidence, OutboundDataRestriction outboundDataRestriction)
     {
-        if (!this.settingsManager.IsToolActive(definition.Id))
+        if (!this.IsToolActive(definition.Id))
             return new(ToolOfferBlockReason.TOOL_SWITCHED_OFF, null, null);
 
         if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) || !implementation.IsAvailable)
@@ -541,7 +686,7 @@ public sealed class ToolRegistry
         if (!configurationState.IsConfigured)
             return new(ToolOfferBlockReason.NOT_CONFIGURED, implementation, null);
 
-        var minimumConfidence = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id, definition.MinimumProviderConfidence);
+        var minimumConfidence = this.GetMinimumProviderConfidenceResolution(definition.Id);
         if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumConfidence.ConfidenceLevel))
             return new(ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, implementation, minimumConfidence);
 

@@ -101,7 +101,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
 
         Assert.Multiple(() =>
         {
-            Assert.That(tool.GetDefinition().MinimumProviderConfidence, Is.EqualTo(ConfidenceLevel.VERY_LOW), "Each mailbox asks for its own level, and none may ask for less.");
+            Assert.That(new MailboxToolCollection().GetDefinition().ToolIds, Does.Contain(ToolSelectionRules.SEARCH_MAILS_TOOL_ID), "The mailbox collection states the confidence the tool needs.");
             Assert.That(tool.OutboundData, Is.EqualTo(ToolOutboundData.CONFIGURED_SERVICE), "The query goes to the embedding provider, so a restricted chat may still search.");
             Assert.That(tool.ReturnsUntrustedExternalContent, Is.True, "Mails are written by others.");
         });

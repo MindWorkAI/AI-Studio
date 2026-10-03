@@ -56,9 +56,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         Id = ToolSelectionRules.COUNT_MAILS_TOOL_ID,
         ImplementationKey = ToolSelectionRules.COUNT_MAILS_TOOL_ID,
 
-        // As for Search Mails: each mailbox asks for its own level, and none may ask for less:
-        MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
-
+        // No minimum confidence of its own: the mailbox collection states it, see MailboxToolCollection.
         SystemPromptInstructions = """
                                    Use `count_mails` when a question asks how many mails meet some conditions, e.g., how many are unread, or who wrote the most, instead of listing and counting them yourself.
                                    - It takes the same conditions as `search_mails`, so `search_mails` with the same conditions lists the mails counted.

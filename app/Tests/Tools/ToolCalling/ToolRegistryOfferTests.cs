@@ -87,7 +87,7 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     [Test]
     public async Task ARaisedRequirementCountsAsWell()
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(TOOL_ID, ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
+        this.SettingsManager.SetMinimumProviderConfidence([TOOL_ID], ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
 
         await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), LessTrustedProvider(), ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, "The tool asks for nothing itself, but its requirement was raised in the settings.");
     }

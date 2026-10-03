@@ -857,10 +857,6 @@ public sealed class SettingsManager
 
     public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
 
-    public bool IsToolActive(string toolId) =>
-        this.AreToolsEnabled() &&
-        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
-
     /// <remarks>
     /// The document analysis is deliberately absent: there its policy names the tools, so the user
     /// has nothing to select.
@@ -889,66 +885,85 @@ public sealed class SettingsManager
     }
 
     /// <summary>
-    /// Resolves which provider confidence a tool needs, and where that value came from.
+    /// Resolves which provider confidence a tool collection needs, and where that value came from.
     /// </summary>
     /// <remarks>
-    /// The default is passed in rather than looked up here. It belongs to the tool definition,
-    /// and the definitions live in the tool registry — which already depends on this class, so
-    /// asking it back would be a circle. Every caller has the definition at hand anyway.
+    /// Which IDs stand for the collection and its default are passed in rather than looked up here.
+    /// Both belong to the definitions, and the definitions live in the tool registry — which already
+    /// depends on this class, so asking it back would be a circle.<br/><br/>
+    /// When several of the IDs carry a level, the strictest one wins: an administrator who raised
+    /// the level of one tool of a collection must not find it lowered by the entry of another one.
+    /// For the same reason, an invalid managed level anywhere among them asks for HIGH.
     /// </remarks>
-    /// <param name="toolId">The tool to resolve the confidence for.</param>
-    /// <param name="defaultLevel">The tool's own minimum, used when nothing overrides it.</param>
-    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId, ConfidenceLevel defaultLevel)
+    /// <param name="settingsIds">The IDs which stand for the collection: its own, then those of its tools.</param>
+    /// <param name="defaultLevel">The collection's own minimum, used when nothing overrides it.</param>
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolution(IReadOnlyList<string> settingsIds, ConfidenceLevel defaultLevel)
     {
         if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
         {
             var managedValues = configMeta.GetValue();
-            if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
-                Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
-                Enum.IsDefined(managedConfidenceLevel) &&
-                managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
+            ConfidenceLevel? strictestManagedLevel = null;
+            foreach (var settingsId in settingsIds)
             {
-                return new(managedConfidenceLevel, "managed config");
+                if (!managedValues.TryGetValue(settingsId, out var configuredManagedLevel))
+                    continue;
+
+                if (!TryParseMinimumProviderConfidence(configuredManagedLevel, out var managedConfidenceLevel))
+                {
+                    this.logger.LogError(
+                        "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                        configuredManagedLevel,
+                        settingsId);
+                    return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
+                }
+
+                if (strictestManagedLevel is null || managedConfidenceLevel > strictestManagedLevel)
+                    strictestManagedLevel = managedConfidenceLevel;
             }
 
-            if (managedValues.ContainsKey(toolId))
-            {
-                this.logger.LogError(
-                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
-                    configuredManagedLevel,
-                    toolId);
-                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
-            }
+            if (strictestManagedLevel is { } managedLevel)
+                return new(managedLevel, "managed config");
         }
 
-        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
-            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
-            Enum.IsDefined(confidenceLevel) &&
-            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        ConfidenceLevel? strictestStoredLevel = null;
+        foreach (var settingsId in settingsIds)
         {
-            return new(confidenceLevel, "stored override");
+            if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(settingsId, out var configuredLevel) &&
+                TryParseMinimumProviderConfidence(configuredLevel, out var confidenceLevel) &&
+                (strictestStoredLevel is null || confidenceLevel > strictestStoredLevel))
+            {
+                strictestStoredLevel = confidenceLevel;
+            }
         }
+
+        if (strictestStoredLevel is { } storedLevel)
+            return new(storedLevel, "stored override");
 
         return new(defaultLevel, "default fallback");
     }
 
-    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel defaultLevel) => this.GetMinimumProviderConfidenceResolutionForTool(toolId, defaultLevel).ConfidenceLevel;
+    private static bool TryParseMinimumProviderConfidence(string? configuredLevel, out ConfidenceLevel confidenceLevel) =>
+        Enum.TryParse(configuredLevel, true, out confidenceLevel) &&
+        Enum.IsDefined(confidenceLevel) &&
+        confidenceLevel is not ConfidenceLevel.UNKNOWN;
 
     /// <summary>
-    /// Stores which provider confidence a tool needs.
+    /// Stores which provider confidence a tool collection needs.
     /// </summary>
-    /// <param name="toolId">The tool to store the confidence for.</param>
+    /// <remarks>
+    /// Stored under the ID of the collection. Entries under the IDs of its tools are removed, since
+    /// the strictest entry wins and an older one would otherwise outvote the level just chosen.
+    /// </remarks>
+    /// <param name="settingsIds">The IDs which stand for the collection: its own, then those of its tools.</param>
     /// <param name="confidenceLevel">The level the user chose.</param>
-    /// <param name="defaultLevel">The tool's own minimum. Choosing it again removes the override.</param>
-    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
+    /// <param name="defaultLevel">The collection's own minimum. Choosing it again removes the override.</param>
+    public void SetMinimumProviderConfidence(IReadOnlyList<string> settingsIds, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
     {
-        if (confidenceLevel == defaultLevel)
-        {
-            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
-            return;
-        }
+        foreach (var settingsId in settingsIds)
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(settingsId);
 
-        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
+        if (confidenceLevel != defaultLevel)
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[settingsIds[0]] = confidenceLevel.ToString();
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
