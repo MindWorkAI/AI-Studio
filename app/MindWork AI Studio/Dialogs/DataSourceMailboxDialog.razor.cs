@@ -106,6 +106,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private bool revalidateAfterRender;
 
     private IReadOnlyList<DataMailboxProvider> organizationProviders = [];
+    private MailServerPolicy mailServerPolicy = MailServerPolicy.ANY_SERVER;
     private DataMailboxProvider? selectedOrganizationProvider;
     private MailboxProviderTemplate? selectedTemplate;
     private MailboxAuthFailure? authFailure;
@@ -150,6 +151,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
         // The mail servers of the organization come from the running configuration plugins:
         this.organizationProviders = PluginFactory.GetMailboxProviders();
+        this.mailServerPolicy = MailServerPolicy.Read(this.SettingsManager);
 
         // A mailbox and a data source must not share a name:
         this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
@@ -178,7 +180,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataMaxMatches = this.DataSource.MaxMatches;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
             this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(provider => MailServerHosts.AreSame(provider.Host, this.DataSource.Host));
-            if (this.selectedOrganizationProvider is null)
+            if (this.selectedOrganizationProvider is null && !this.AllowsOnlyOrganizationMailServers)
                 this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
 
             var requestedSecret = await this.RustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
@@ -193,6 +195,10 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             var indexStore = await this.DatabaseClientProvider.GetIndexStoreAsync();
             this.authFailure = await indexStore.GetMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
         }
+
+        // A new mailbox with a single mail server to choose from has nothing to choose:
+        if (!this.IsEditing && this.AllowsOnlyOrganizationMailServers && this.organizationProviders.Count == 1)
+            this.SelectProvider(GetProviderKey(this.organizationProviders[0]));
 
         // A level the organization ruled out after the mailbox was saved is not offered anymore, so
         // the dialog starts with the one which applies anyway, see MailToolResults.GetRequirements:
@@ -257,12 +263,28 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         ? GetProviderKey(organizationProvider)
         : this.selectedTemplate is { } template ? GetProviderKey(template) : string.Empty;
 
-    private string SelectedProviderText => this.selectedOrganizationProvider?.Name ?? this.selectedTemplate?.Name ?? T("Another provider");
+    private string SelectedProviderText => this.selectedOrganizationProvider?.Name
+        ?? (this.AllowsOnlyOrganizationMailServers ? string.Empty : this.selectedTemplate?.Name ?? T("Another provider"));
 
     /// <summary>
     /// Whether the organization offers any mail servers of its own.
     /// </summary>
     private bool HasOrganizationProviders => this.organizationProviders.Count > 0;
+
+    /// <summary>
+    /// Whether the organization allows mailboxes only on its own mail servers. The user then picks
+    /// one of them and enters nothing about the server.
+    /// </summary>
+    private bool AllowsOnlyOrganizationMailServers => this.mailServerPolicy.AllowsOnlyOrganizationMailServers;
+
+    /// <summary>
+    /// Whether the edited mailbox is on a server the organization does not allow.
+    /// </summary>
+    private bool IsOnServerNotAllowed => this.IsEditing && !this.mailServerPolicy.IsAllowed(this.DataSource.Host);
+
+    private string? ValidateOrganizationProvider(string providerKey) => this.AllowsOnlyOrganizationMailServers && this.organizationProviders.All(provider => GetProviderKey(provider) != providerKey)
+        ? T("Please choose one of the mail servers of your organization.")
+        : null;
 
     private string SignInGroupClass => this.authFailure is null
         ? "border-dashed border rounded-lg pa-3 mb-6"

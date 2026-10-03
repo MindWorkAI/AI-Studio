@@ -8,6 +8,15 @@
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
+            @if (this.IsOnServerNotAllowed)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription()
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
             @if (this.authFailure is not null)
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
@@ -43,7 +52,11 @@
             @if (this.CanChangeSource)
             {
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                    @if (this.HasOrganizationProviders)
+                    @if (this.AllowsOnlyOrganizationMailServers)
+                    {
+                        @T("Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.")
+                    }
+                    else if (this.HasOrganizationProviders)
                     {
                         @T("Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.")
                     }
@@ -52,10 +65,19 @@
                         @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
                     }
                 </MudJustifiedText>
-                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business">
-                    <MudSelectItem T="string" Value="@string.Empty">
-                        @T("Another provider")
-                    </MudSelectItem>
+                @if (this.AllowsOnlyOrganizationMailServers && !this.HasOrganizationProviders)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+                        @T("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
+                    </MudAlert>
+                }
+                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business" Validation="@this.ValidateOrganizationProvider">
+                    @if (!this.AllowsOnlyOrganizationMailServers)
+                    {
+                        <MudSelectItem T="string" Value="@string.Empty">
+                            @T("Another provider")
+                        </MudSelectItem>
+                    }
                     @foreach (var organizationProvider in this.organizationProviders)
                     {
                         <MudSelectItem T="string" Value="@GetProviderKey(organizationProvider)">
@@ -65,11 +87,14 @@
                             </MudStack>
                         </MudSelectItem>
                     }
-                    @foreach (var template in MailboxProviderTemplates.ALL)
+                    @if (!this.AllowsOnlyOrganizationMailServers)
                     {
-                        <MudSelectItem T="string" Value="@GetProviderKey(template)">
-                            @template.Name
-                        </MudSelectItem>
+                        foreach (var template in MailboxProviderTemplates.ALL)
+                        {
+                            <MudSelectItem T="string" Value="@GetProviderKey(template)">
+                                @template.Name
+                            </MudSelectItem>
+                        }
                     }
                 </MudSelect>
             }
@@ -123,7 +148,7 @@
                         @bind-Text="@this.dataHost"
                         Label="@T("IMAP server host")"
                         Immediate="@true"
-                        ReadOnly="@(!this.CanChangeSource)"
+                        ReadOnly="@(!this.CanChangeSource || this.AllowsOnlyOrganizationMailServers)"
                         Validation="@DataSourceValidation.ValidateMailboxHost"
                         Adornment="Adornment.Start"
                         AdornmentIcon="@Icons.Material.Filled.Dns"
@@ -137,12 +162,13 @@
                         @bind-Value="@this.dataPort"
                         Label="@T("Port")"
                         Immediate="@true"
+                        ReadOnly="@this.AllowsOnlyOrganizationMailServers"
                         Min="1" Max="65535"
                         Validation="@this.dataSourceValidation.ValidatePort"
                         Variant="Variant.Outlined"/>
                 </MudStack>
 
-                <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
+                <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
                     @foreach (var transportSecurity in ConfigurationSelectDataFactory.GetMailboxTransportSecurityData())
                     {
                         <MudSelectItem T="MailboxTransportSecurity" Value="@transportSecurity.Value">
