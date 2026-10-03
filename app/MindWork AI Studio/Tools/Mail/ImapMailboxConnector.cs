@@ -95,12 +95,16 @@ public sealed class ImapMailboxConnector : IAsyncDisposable
     /// </summary>
     /// <param name="mailbox">The mailbox to connect to.</param>
     /// <param name="password">The password, as stored in the OS keyring or just typed in.</param>
+    /// <param name="policy">Which mail servers the organization allows. Every connection passes here, so this is where a server it does not allow is refused.</param>
     /// <param name="token">The cancellation token.</param>
     /// <exception cref="MailboxConnectionException">The connection or the sign-in failed.</exception>
-    public async Task ConnectAsync(DataSourceMailbox mailbox, string password, CancellationToken token)
+    public async Task ConnectAsync(DataSourceMailbox mailbox, string password, MailServerPolicy policy, CancellationToken token)
     {
         if (!TryGetSocketOptions(mailbox.TransportSecurity, out var socketOptions) || mailbox.AuthMethod is not MailboxAuthMethod.PASSWORD || !MailServerHosts.TryGetIdnHost(mailbox.Host, out var idnHost) || mailbox.Port is < 1 or > 65535 || string.IsNullOrWhiteSpace(mailbox.Username) || string.IsNullOrEmpty(password))
             throw new MailboxConnectionException(MailboxConnectionFailure.INVALID_SETTINGS, "The mailbox settings are incomplete, or this version of AI Studio does not know them.");
+
+        if (!policy.IsAllowed(mailbox.Host))
+            throw new MailboxConnectionException(MailboxConnectionFailure.SERVER_NOT_ALLOWED, "The organization allows only its own mail servers, and the server of this mailbox is none of them.");
 
         this.client.ServerCertificateValidationCallback = ExternalHttpClientTimeout.CreateServerCertificateValidationCallback(idnHost, ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
         try

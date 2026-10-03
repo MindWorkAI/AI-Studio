@@ -68,6 +68,30 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void AMailboxOnAServerTheOrganizationDoesNotAllowIsNotOffered()
+    {
+        //
+        // Readable in every other respect, so that only the rule of the organization can keep it out:
+        //
+        var embeddingProvider = new EmbeddingProvider(1, "6c3f9e2a-4b1d-4e8f-a7c5-2d0b8e1f3a96", "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
+        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(embeddingProvider);
+        this.SettingsManager.ConfigurationData.Mailboxes.Add(WORK with { Host = "imap.example.com", EmbeddingId = embeddingProvider.Id, ConfidenceLevel = ConfidenceLevel.VERY_LOW });
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_RAG_2024);
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_MAILBOXES_2026);
+        var retrievalService = new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance);
+
+        var withoutRule = retrievalService.GetReadableMailboxes(ConfidenceLevel.HIGH);
+        this.SettingsManager.ConfigurationData.MailboxSettings.AllowOnlyOrganizationMailServers = true;
+        var withRule = retrievalService.GetReadableMailboxes(ConfidenceLevel.HIGH);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(withoutRule.Select(mailbox => mailbox.Id), Is.EqualTo(new[] { WORK.Id }));
+            Assert.That(withRule, Is.Empty, "The organization offers no mail server here, so no mailbox is on one of them.");
+        });
+    }
+
+    [Test]
     public async Task WithoutAMailboxTheToolAsksForOne()
     {
         var tool = this.Tool();

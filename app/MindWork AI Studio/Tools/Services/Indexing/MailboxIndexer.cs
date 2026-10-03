@@ -42,12 +42,16 @@ namespace AIStudio.Tools.Services.Indexing;
 /// Starting AI Studio asks no server anything: the run at startup shows what the index holds. Logs
 /// name the mailbox by its id, never by a subject, an address, a folder, an attachment or what a
 /// server answered.
+///
+/// An organization may allow only its own mail servers, cf. MailServerPolicy. A mailbox on another
+/// server is then not even signed in to, and its index stays as it is.
 /// </remarks>
+/// <param name="settingsManager">The settings, which say which mail servers the organization allows.</param>
 /// <param name="rustService">The runtime, which holds the password in the OS keyring and reads the text of attachments.</param>
 /// <param name="guardService">The prompt injection filter, which every mail passes before it is embedded.</param>
 /// <param name="textChunker">Cuts the text of a mail into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed partial class MailboxIndexer(RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class MailboxIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
     /// <summary>
     /// How many mails are fetched at once, before their text is read one after the other.
@@ -108,6 +112,19 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         if (context.DataSource is not DataSourceMailbox mailbox)
             throw new ArgumentException("The mailbox indexer reads mailboxes only.", nameof(context));
 
+        //
+        // A server the organization does not allow comes before everything else the mailbox might
+        // wait for: no sign-in will be tried, so neither a refused one nor a held-back removal can
+        // be dealt with. Checked at startup as well, which needs no server:
+        //
+        var policy = MailServerPolicy.Read(settingsManager);
+        if (!policy.IsAllowed(mailbox.Host))
+        {
+            logger.LogInformation("Not connecting to mailbox '{MailboxId}' because the organization allows only its own mail servers, and this one is none of them.", mailbox.Id);
+            (await this.CreateStoredStateProgressAsync(context, token)).PublishRunFailure(MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription(), DataSourceAttention.SERVER_NOT_ALLOWED);
+            return IndexedRunOutcome.DONE;
+        }
+
         if (refreshMode is DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK)
         {
             logger.LogInformation("Showing the stored index of mailbox '{MailboxId}' without asking its server, since AI Studio is starting.", mailbox.Id);
@@ -137,7 +154,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
         await using var connector = new ImapMailboxConnector();
         try
         {
-            await connector.ConnectAsync(mailbox, password, token);
+            await connector.ConnectAsync(mailbox, password, policy, token);
         }
         catch (MailboxConnectionException e)
         {
@@ -156,7 +173,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
                 progress.PublishRunFailure(GetAuthFailureMessage(failure), DataSourceAttention.AUTH_FAILED);
             }
             else
-                progress.PublishRunFailure(e.Failure.GetDescription());
+                progress.PublishRunFailure(e.Failure.GetDescription(), e.Failure is MailboxConnectionFailure.SERVER_NOT_ALLOWED ? DataSourceAttention.SERVER_NOT_ALLOWED : DataSourceAttention.NONE);
 
             return IndexedRunOutcome.DONE;
         }
@@ -310,7 +327,8 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     /// <remarks>
     /// A server out of reach is tried again soon, since a VPN tunnel is often up only a little
     /// later. A server which answered, even with a refusal, waits for the next round; settings
-    /// which never let a connection start say nothing about the server.
+    /// which never let a connection start, and a server the organization does not allow, say
+    /// nothing about the server.
     /// </remarks>
     /// <param name="mailboxId">The id of the mailbox.</param>
     /// <param name="failure">Why the connection failed.</param>
@@ -318,7 +336,7 @@ internal sealed partial class MailboxIndexer(RustService rustService, PromptInje
     {
         if (failure is MailboxConnectionFailure.NETWORK_UNAVAILABLE)
             this.syncRequester.RecordServerOutOfReach(mailboxId);
-        else if (failure is not MailboxConnectionFailure.INVALID_SETTINGS)
+        else if (failure is not (MailboxConnectionFailure.INVALID_SETTINGS or MailboxConnectionFailure.SERVER_NOT_ALLOWED))
             this.syncRequester.RecordServerReached(mailboxId);
     }
 

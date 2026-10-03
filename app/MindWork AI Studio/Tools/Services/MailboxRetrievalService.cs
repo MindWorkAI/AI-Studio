@@ -47,7 +47,8 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
     /// <remarks>
     /// The same mailboxes always come in the same order, by their number and then by their id: the
     /// providers cache a request from its beginning, and the tools describing the mailboxes are part
-    /// of it, cf. SemanticSearchTool.InOfferOrder.
+    /// of it, cf. SemanticSearchTool.InOfferOrder. A mailbox on a server the organization does not
+    /// allow is left out, although its index is still there, cf. MailServerPolicy.
     /// </remarks>
     /// <param name="chatProviderConfidence">How much the provider of the chat is trusted.</param>
     /// <returns>The mailboxes, none while one of the previews is switched off.</returns>
@@ -56,7 +57,9 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
         if (!this.AreMailboxesEnabled)
             return [];
 
+        var policy = MailServerPolicy.Read(settingsManager);
         return settingsManager.ConfigurationData.Mailboxes
+            .Where(mailbox => policy.IsAllowed(mailbox.Host))
             .Where(mailbox => IsReadable(mailbox.ConfidenceLevel, chatProviderConfidence, this.GetEmbeddingProviderConfidence(mailbox)))
             .OrderBy(mailbox => mailbox.Num)
             .ThenBy(mailbox => mailbox.Id, StringComparer.Ordinal)
@@ -390,7 +393,7 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
             if (mailbox.Id == mailboxId)
                 return mailbox;
 
-        logger.LogWarning("The mailbox '{MailboxId}' is not configured, or the provider of the chat may not read it. Its mails stay closed.", mailboxId);
+        logger.LogWarning("The mailbox '{MailboxId}' is not configured, the provider of the chat may not read it, or the organization does not allow its server. Its mails stay closed.", mailboxId);
         throw new MailboxNotReadableException(mailboxId);
     }
 

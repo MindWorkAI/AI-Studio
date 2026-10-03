@@ -29,4 +29,9 @@ public enum MailboxConnectionFailure
     /// The settings of the mailbox are incomplete, or this version of AI Studio does not know them. Nothing was sent to the server.
     /// </summary>
     INVALID_SETTINGS,
+
+    /// <summary>
+    /// The organization allows only its own mail servers, and the server of the mailbox is none of them. Nothing was sent to the server.
+    /// </summary>
+    SERVER_NOT_ALLOWED,
 }

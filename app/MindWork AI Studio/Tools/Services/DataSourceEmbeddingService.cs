@@ -66,7 +66,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return
         [
             new FileSourceIndexer(settingsManager, rustService, guardService, textChunker, logger),
-            new MailboxIndexer(rustService, guardService, textChunker, logger),
+            new MailboxIndexer(settingsManager, rustService, guardService, textChunker, logger),
         ];
     }
 

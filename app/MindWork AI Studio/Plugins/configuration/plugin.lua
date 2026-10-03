@@ -321,6 +321,7 @@ CONFIG["DATA_SOURCES"] = {}
 --   HelpUrl            Optional http or https address of your instructions, e.g., on how to
 --                      enable IMAP for a mailbox.
 -- An entry with an invalid field is left out as a whole, and the log names the field.
+-- To allow mailboxes on these mail servers only, see DataMailboxes.AllowOnlyOrganizationMailServers.
 CONFIG["MAILBOX_PROVIDERS"] = {}
 
 -- An example mail server:
@@ -1050,6 +1051,15 @@ CONFIG["SETTINGS"] = {}
 -- the level it got then, until it reads mails again. The default is UNRESTRICTED, which leaves
 -- the choice to the user. New mailboxes start with ONLY_CONFIGURED_SERVICES either way.
 -- CONFIG["SETTINGS"]["DataMailboxes.MinimumOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT"
+
+-- Configure whether mailboxes may only be on the mail servers your configurations offer in
+-- CONFIG["MAILBOX_PROVIDERS"]. The default is false. When set to true, AI Studio connects to no
+-- other IMAP server: before every connection, it compares the host of the mailbox with the hosts
+-- of those mail servers; port and encryption make no difference. A mailbox a user added on another
+-- server before stops synchronizing at once, and the AI no longer reads it. Its local index stays,
+-- so the mailbox comes back as it was, should you allow its server again. Without any mail server
+-- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
+-- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.

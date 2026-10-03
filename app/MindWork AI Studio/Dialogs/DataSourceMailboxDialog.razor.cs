@@ -402,7 +402,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         {
             using var timeout = new CancellationTokenSource(CONNECTION_TEST_TIMEOUT);
             await using var connector = new ImapMailboxConnector();
-            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, timeout.Token);
+            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), timeout.Token);
             this.serverFolders = await connector.GetFoldersAsync(timeout.Token);
             this.testFailure = null;
             this.Logger.LogInformation($"Tested the connection of the mailbox '{this.dataId}' successfully.");
@@ -441,7 +441,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         {
             using var timeout = new CancellationTokenSource(CONNECTION_TEST_TIMEOUT);
             await using var connector = new ImapMailboxConnector();
-            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, timeout.Token);
+            await connector.ConnectAsync(this.CreateDataSource(), settings.Password, MailServerPolicy.Read(this.SettingsManager), timeout.Token);
             var createdFolder = await connector.CreateFolderAsync(parentFullName, name, timeout.Token);
 
             this.serverFolders = [..this.serverFolders, createdFolder];

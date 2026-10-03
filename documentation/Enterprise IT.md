@@ -744,13 +744,18 @@ When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/READ
 
 Mailboxes are still a preview: enable `PRE_MAILBOXES_2026` together with `PRE_RAG_2024` in `DataApp.EnabledPreviewFeatures`. Users add a mailbox as a data source, with their own username and password for its IMAP server. AI Studio synchronizes it every 16 minutes and keeps a local index of it, which the tool collection `mailboxes` searches, reads, and counts.
 
-Three settings decide how your organization uses them:
+These settings decide how your organization uses them:
 
 | Setting | Effect |
 |---|---|
 | `DataApp.AllowUserToAddMailbox` | `false` keeps users from adding mailboxes. Mailboxes they added before stay. |
 | `DataMailboxes.MinimumOutboundDataRestriction` | The least strict outbound data restriction a mailbox may have, see below. |
+| `DataMailboxes.AllowOnlyOrganizationMailServers` | `true` allows mailboxes only on the mail servers you offer, see below. |
 | `DataTools.DisabledToolIds` with `mailboxes` | Keeps the AI from reading any mailbox. |
+
+Every mailbox also requires a provider confidence of its own, from `VERY_LOW` to `HIGH`. The chat provider and the embedding provider have to meet it before they see a mail. An IMAP server whose certificate chains to your private root CA works with the same settings as HTTPS, see [Custom root certificates for Flatpak deployments](#custom-root-certificates-for-flatpak-deployments).
+
+### Where a chat may send data
 
 Mails come from strangers and may contain instructions meant for the AI. That is why each mailbox decides where a chat may still send data once it has read mails from it:
 
@@ -762,7 +767,11 @@ Mails come from strangers and may contain instructions meant for the AI. That is
 
 With `DataMailboxes.MinimumOutboundDataRestriction`, you rule out the less strict levels. A mailbox set to one of them gets your level whenever its mails reach a chat, and its dialog no longer offers them. A chat which read mails before keeps the level it got then, until it reads mails again.
 
-Every mailbox also requires a provider confidence of its own, from `VERY_LOW` to `HIGH`. The chat provider and the embedding provider have to meet it before they see a mail. An IMAP server whose certificate chains to your private root CA works with the same settings as HTTPS, see [Custom root certificates for Flatpak deployments](#custom-root-certificates-for-flatpak-deployments).
+### Mail servers of your organization
+
+`CONFIG["MAILBOX_PROVIDERS"]` offers your own mail servers in the mailbox dialog, ahead of the well-known public providers. Each entry names the server with its host, port, and encryption, and may add a hint on the username and a link to your instructions; users still sign in with their own username and password. A configuration may define several mail servers, and those of all your configurations are offered together. `plugin.lua` lists the fields.
+
+With `DataMailboxes.AllowOnlyOrganizationMailServers`, AI Studio connects to no other IMAP server. Before every connection, it compares the host of the mailbox with the hosts of your mail servers; port and encryption make no difference. A mailbox somebody added on another server before stops synchronizing at once, the embeddings page says why, and the AI no longer reads it. Its local index stays, so the mailbox comes back as it was, should you allow its server again. Switch it on together with your first mail servers, and nobody gets to add a mailbox elsewhere at all.
 
 ## Letting users provide their own API key
 

@@ -90,8 +90,21 @@ public sealed class ImapMailboxConnectorTests
         // failure instead of this one.
         //
         await using var connector = new ImapMailboxConnector();
-        var exception = Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, CancellationToken.None));
+        var exception = Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(mailbox, password, MailServerPolicy.ANY_SERVER, CancellationToken.None));
         Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.INVALID_SETTINGS));
+    }
+
+    [Test]
+    public async Task AServerTheOrganizationDoesNotAllowIsNeverContacted()
+    {
+        //
+        // As above, the host of the mailbox does not exist. Were anything sent, the failure would be
+        // a network failure instead of this one.
+        //
+        await using var connector = new ImapMailboxConnector();
+        var policy = new MailServerPolicy(true, ["imap.intra.example.org"]);
+        var exception = Assert.ThrowsAsync<MailboxConnectionException>(() => connector.ConnectAsync(MAILBOX, PASSWORD, policy, CancellationToken.None));
+        Assert.That(exception?.Failure, Is.EqualTo(MailboxConnectionFailure.SERVER_NOT_ALLOWED));
     }
 
     [TestCase("Projects", '/', ExpectedResult = true)]
