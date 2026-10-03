@@ -130,6 +130,9 @@ public abstract class ToolRegistryTestBase
 
         public ToolDefinition GetDefinition() => definition;
 
+        // Named after its ID, so a test can tell the tools apart wherever their names appear:
+        public string GetDisplayName() => definition.Id;
+
         public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition registeredDefinition, ToolResolutionContext context, CancellationToken token = default)
         {
             this.ResolveCount++;

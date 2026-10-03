@@ -554,6 +554,20 @@ public sealed class ToolRegistry
     }
 
     /// <summary>
+    /// The entry of one collection as people see it, with all of its tools which exist here.
+    /// </summary>
+    /// <param name="toolOrCollectionId">The ID of the collection, or of one of its tools.</param>
+    /// <returns>The entry, or null when none of its tools exists here.</returns>
+    public async Task<ToolCatalogItem?> GetCatalogItemAsync(string toolOrCollectionId)
+    {
+        var definitions = this.GetToolIdsOfCollection(this.GetCollectionId(toolOrCollectionId))
+            .Select(this.GetDefinition)
+            .OfType<ToolDefinition>();
+
+        return (await this.GetCatalogAsync(definitions)).SingleOrDefault();
+    }
+
+    /// <summary>
     /// The entries for these tools as people see them: one per collection, ordered by name.
     /// </summary>
     /// <remarks>

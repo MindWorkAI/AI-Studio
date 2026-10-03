@@ -177,14 +177,11 @@ public partial class ToolSelection : MSGComponentBase
         return string.Join(' ', warnings);
     }
 
-    /// <remarks>
-    /// The settings dialog shows one tool so far, so an entry opens the settings of its first tool.
-    /// </remarks>
     private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, item.Tools[0].Definition.Id },
+            { x => x.CollectionId, item.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);

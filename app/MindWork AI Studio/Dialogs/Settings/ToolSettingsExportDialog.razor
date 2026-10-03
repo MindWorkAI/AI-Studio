@@ -22,7 +22,7 @@
                 <MudProgressCircular Indeterminate="@true" Size="Size.Small" />
                 <MudText>@T("Loading tool configuration...")</MudText>
             }
-            else if (this.toolDefinition is null || this.implementation is null)
+            else if (this.item is null)
             {
                 @if (string.IsNullOrWhiteSpace(this.message))
                 {
@@ -31,7 +31,7 @@
             }
             else
             {
-                <MudText Typo="Typo.subtitle1" Class="mb-2">@this.implementation.GetDisplayName()</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-2">@this.item.DisplayName</MudText>
                 <MudText Typo="Typo.body2" Class="mb-4">
                     @T("Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it.")
                 </MudText>

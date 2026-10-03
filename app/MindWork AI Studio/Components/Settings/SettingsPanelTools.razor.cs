@@ -21,15 +21,11 @@ public partial class SettingsPanelTools : SettingsPanelBase
         await base.OnInitializedAsync();
     }
 
-    /// <remarks>
-    /// The settings dialog shows one tool so far, so an entry opens the settings of its first tool.
-    /// The same goes for the export below.
-    /// </remarks>
     private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, item.Tools[0].Definition.Id },
+            { x => x.CollectionId, item.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);
@@ -45,7 +41,7 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
         var parameters = new DialogParameters<ToolSettingsExportDialog>
         {
-            { x => x.ToolId, item.Tools[0].Definition.Id },
+            { x => x.CollectionId, item.Id },
         };
 
         await this.DialogService.ShowAsync<ToolSettingsExportDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);

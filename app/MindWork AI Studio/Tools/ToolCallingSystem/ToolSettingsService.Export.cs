@@ -16,6 +16,32 @@ public sealed partial class ToolSettingsService
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ToolSettingsService).Namespace, nameof(ToolSettingsService));
 
     /// <summary>
+    /// The areas an administrator can choose from when exporting a tool collection: those of each of its tools.
+    /// </summary>
+    /// <remarks>
+    /// Each tool divides its settings itself, see IToolImplementation.GetExportableSettings. The ID
+    /// of an area is unique only within its tool, so the ID here adds the tool's. The label names the
+    /// tool as soon as more than one tool of the collection has settings to export.
+    /// </remarks>
+    /// <param name="tools">The tools of the collection.</param>
+    public static IReadOnlyList<ToolSettingsExportArea> GetExportAreas(IReadOnlyList<ToolCatalogTool> tools)
+    {
+        var areasByTool = tools
+            .Select(tool => (Tool: tool, Areas: tool.Implementation.GetExportableSettings(tool.Definition)))
+            .Where(entry => entry.Areas.Count > 0)
+            .ToList();
+
+        var namesTheTool = areasByTool.Count > 1;
+        return areasByTool
+            .SelectMany(entry => entry.Areas.Select(area => new ToolSettingsExportArea(
+                $"{entry.Tool.Definition.Id}/{area.Id}",
+                namesTheTool ? $"{entry.Tool.Implementation.GetDisplayName()}: {area.Label}" : area.Label,
+                entry.Tool,
+                area)))
+            .ToList();
+    }
+
+    /// <summary>
     /// Reads the saved, effective configuration and exports the selected areas. Incomplete tools
     /// may be exported too: administrators can finish the configuration in their Lua plugin.
     /// </summary>
@@ -23,33 +49,45 @@ public sealed partial class ToolSettingsService
     /// Uses the same organization overrides and keyring values as tool execution, without saving
     /// settings or writing to the keyring. The caller provides the admin-only UI and copies a
     /// successful, nonempty result to the clipboard.<br/><br/>
-    /// Only explicitly selected areas are included. Missing values stay absent, explicitly empty
-    /// non-secret values stay empty, and runtime defaults are not filled in. Secrets require
-    /// opt-in and enterprise encryption, and are always locked, even in a default-value export.
-    /// The optional minimum provider confidence is also always a fixed requirement.<br/><br/>
-    /// That confidence belongs to the collection of the tool, which only the tool registry knows.
-    /// The registry depends on this service, so the caller asks it and passes both in.
+    /// Only explicitly selected areas are included, see GetExportAreas. Missing values stay absent,
+    /// explicitly empty non-secret values stay empty, and runtime defaults are not filled in.
+    /// Secrets require opt-in and enterprise encryption, and are always locked, even in a
+    /// default-value export. The optional minimum provider confidence is also always a fixed
+    /// requirement.<br/><br/>
+    /// That confidence belongs to the collection, which only the tool registry knows. The registry
+    /// depends on this service, so the caller asks it and passes it in.
     /// </remarks>
-    /// <param name="definition">The tool to export.</param>
-    /// <param name="implementation">The implementation of the tool, which divides its settings into areas.</param>
+    /// <param name="tools">The tools of the collection.</param>
     /// <param name="options">What the administrator chose to export.</param>
-    /// <param name="collectionId">The ID of the tool's collection, under which the confidence is exported.</param>
+    /// <param name="collectionId">The ID of the collection, under which the confidence is exported.</param>
     /// <param name="minimumProviderConfidence">The confidence the collection needs, as the tool registry resolves it.</param>
-    public async Task<ToolSettingsExportResult> ExportAsync(ToolDefinition definition, IToolImplementation implementation, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence)
+    public async Task<ToolSettingsExportResult> ExportAsync(IReadOnlyList<ToolCatalogTool> tools, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence)
     {
-        var areas = implementation.GetExportableSettings(definition);
-        var values = await this.GetSettingsAsync(definition);
-        return BuildConfigurationSection(definition, areas, values, options, collectionId, minimumProviderConfidence, PluginFactory.EnterpriseEncryption);
+        var lockedValues = new Dictionary<string, string>(StringComparer.Ordinal);
+        var defaultValues = new Dictionary<string, string>(StringComparer.Ordinal);
+        var selectedAreas = GetExportAreas(tools).Where(area => options.SelectedAreaIds.Contains(area.Id)).ToList();
+        foreach (var tool in tools)
+        {
+            var areasOfTool = selectedAreas.Where(area => area.Tool.Definition.Id == tool.Definition.Id).Select(area => area.Area).ToList();
+            if (areasOfTool.Count == 0)
+                continue;
+
+            var values = await this.GetSettingsAsync(tool.Definition);
+            var issue = CollectSettings(tool.Definition, areasOfTool, values, options, PluginFactory.EnterpriseEncryption, lockedValues, defaultValues);
+            if (issue is not null)
+                return new(ErrorMessage: issue);
+        }
+
+        return BuildConfigurationSection(lockedValues, defaultValues, options, collectionId, minimumProviderConfidence);
     }
 
     /// <summary>
     /// Resolves selected areas to known fields in schema order. Overlapping areas include a
     /// field only once; unknown field names are ignored. Form visibility does not limit exports.
     /// </summary>
-    private static IReadOnlyList<string> GetSelectedFieldNames(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlySet<string> selectedAreaIds)
+    private static IReadOnlyList<string> GetSelectedFieldNames(ToolDefinition definition, IEnumerable<ExportableSettings> selectedAreas)
     {
-        var selectedIds = new HashSet<string>(selectedAreaIds, StringComparer.Ordinal);
-        var selectedFields = areas.Where(area => selectedIds.Contains(area.Id))
+        var selectedFields = selectedAreas
             .SelectMany(area => area.FieldNames)
             .ToHashSet(StringComparer.Ordinal);
 
@@ -57,14 +95,12 @@ public sealed partial class ToolSettingsService
     }
 
     /// <summary>
-    /// Builds a fragment from one snapshot. A failed encryption returns no Lua, even when other
-    /// fields have already been processed, so the caller cannot copy a partial export by accident.
+    /// Adds the selected settings of one tool to the values to export, by their managed key.
     /// </summary>
-    private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
+    /// <returns>Why the export failed, or null when it may go on.</returns>
+    private static string? CollectSettings(ToolDefinition definition, IEnumerable<ExportableSettings> selectedAreas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, EnterpriseEncryption? encryption, Dictionary<string, string> lockedValues, Dictionary<string, string> defaultValues)
     {
-        var lockedValues = new Dictionary<string, string>(StringComparer.Ordinal);
-        var defaultValues = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var fieldName in GetSelectedFieldNames(definition, areas, options.SelectedAreaIds))
+        foreach (var fieldName in GetSelectedFieldNames(definition, selectedAreas))
         {
             if (!values.TryGetValue(fieldName, out var value))
                 continue;
@@ -76,10 +112,10 @@ public sealed partial class ToolSettingsService
                     continue;
 
                 if (encryption?.IsAvailable is not true)
-                    return new(ErrorMessage: TB("Cannot export encrypted tool secrets: No enterprise encryption secret is configured."));
+                    return TB("Cannot export encrypted tool secrets: No enterprise encryption secret is configured.");
 
                 if (!encryption.TryEncrypt(value, out var encrypted))
-                    return new(ErrorMessage: TB("The tool secrets could not be encrypted. Nothing was exported."));
+                    return TB("The tool secrets could not be encrypted. Nothing was exported.");
 
                 lockedValues[key] = encrypted;
             }
@@ -89,6 +125,16 @@ public sealed partial class ToolSettingsService
                 defaultValues[key] = value;
         }
 
+        return null;
+    }
+
+    /// <summary>
+    /// Builds a fragment from the collected values. A failed encryption returned before this, even
+    /// when other fields had already been processed, so the caller cannot copy a partial export by
+    /// accident.
+    /// </summary>
+    private static ToolSettingsExportResult BuildConfigurationSection(IReadOnlyDictionary<string, string> lockedValues, IReadOnlyDictionary<string, string> defaultValues, ToolSettingsExportOptions options, string collectionId, ConfidenceLevel minimumProviderConfidence)
+    {
         if (lockedValues.Count is 0 && defaultValues.Count is 0 && !options.IncludeMinimumProviderConfidence)
             return new();
 
