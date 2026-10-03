@@ -51,16 +51,16 @@ public partial class ToolSelectionField : MSGComponentBase
 
     protected override void OnParametersSet()
     {
-        // Like ToolSelection, the field shows the tools which will actually run, also when the
-        // selection is read-only. See ToolSelectionRules.NormalizeSelection:
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        // Like ToolSelection, the field shows the collections which will actually run, also when the
+        // selection is read-only. See ToolRegistry.NormalizeSelection:
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(this.SelectedToolIds);
         base.OnParametersSet();
     }
 
     protected override async Task OnInitializedAsync()
     {
         this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))
-            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
+            .Select(x => new ConfigurationSelectData<string>(x.DisplayName, x.Id))
             .ToList();
 
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
@@ -71,7 +71,7 @@ public partial class ToolSelectionField : MSGComponentBase
 
     private async Task OptionChangedAsync(HashSet<string> updatedToolIds)
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
         await this.SelectedToolIdsChanged.InvokeAsync(this.SelectedToolIds);
     }
 
@@ -81,7 +81,7 @@ public partial class ToolSelectionField : MSGComponentBase
         {
             case Event.CONFIGURATION_CHANGED:
                 this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))
-                    .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
+                    .Select(x => new ConfigurationSelectData<string>(x.DisplayName, x.Id))
                     .ToList();
 
                 await this.InvokeAsync(this.StateHasChanged);

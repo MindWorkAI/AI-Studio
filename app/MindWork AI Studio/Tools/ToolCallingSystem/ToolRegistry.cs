@@ -393,25 +393,92 @@ public sealed class ToolRegistry
     /// The ID of a tool stands for its collection, so an entry made for the tool before it joined
     /// the collection, or by an administrator who named the tool, still counts.
     /// </remarks>
-    private IReadOnlyList<string> GetSettingsIds(string collectionId) => this.collectionsById.TryGetValue(collectionId, out var collection)
-        ? [collectionId, ..collection.Definition.ToolIds]
+    private IReadOnlyList<string> GetSettingsIds(string collectionId) => [collectionId, ..this.GetToolIdsOfCollection(collectionId).Where(toolId => toolId != collectionId)];
+
+    /// <summary>
+    /// The IDs of the tools of a collection: those of a declared one, or the ID of the tool which forms it.
+    /// </summary>
+    private IReadOnlyList<string> GetToolIdsOfCollection(string collectionId) => this.collectionsById.TryGetValue(collectionId, out var collection)
+        ? collection.Definition.ToolIds
         : [collectionId];
 
     /// <summary>
-    /// Narrows a selection of tool IDs to those the given provider may actually use in this chat.
+    /// Whether this installation knows a tool or a tool collection by this ID.
+    /// </summary>
+    /// <param name="toolOrCollectionId">The ID of a tool, or of a collection.</param>
+    public bool IsKnown(string toolOrCollectionId) => this.definitionsById.ContainsKey(toolOrCollectionId) || this.collectionsById.ContainsKey(toolOrCollectionId);
+
+    /// <summary>
+    /// Turns a selection into the collections which actually run.
+    /// </summary>
+    /// <remarks>
+    /// Every ID turns into the ID of its collection: a selection which names one tool of a
+    /// collection, such as one stored before the tool joined it, selects the whole collection.
+    /// Duplicates go, and so do the tools nobody selects. Semantic Search offers itself whenever the
+    /// data sources of a chat call for it, see ToolActivation.CONTEXT; kept in a selection, it would
+    /// appear on the security card of a plugin and in its audit without the selection having any
+    /// say in whether it runs. An ID this installation does not know stays, because the tool may
+    /// arrive with a plugin installed later.<br/><br/>
+    /// It also adds what a collection depends on: Search Confluence only finds pages, so it brings
+    /// Read Web Page along to open them. An added collection keeps its own rules. It is still
+    /// dropped when it is switched off or the provider's confidence is too low, and Read Web Page
+    /// reaches a wiki on a private or VPN address only when its host is allowed there.<br/><br/>
+    /// Every place which shows or stores a selection normalizes it, the tool selection fields
+    /// included. That way a chat, a template, a policy, or an assistant plugin shows the collections
+    /// which will actually run.
+    /// </remarks>
+    /// <param name="selectedIds">The IDs of the selected tools or collections.</param>
+    /// <returns>The IDs of the collections, as a new set.</returns>
+    public HashSet<string> NormalizeSelection(IEnumerable<string> selectedIds)
+    {
+        var normalized = selectedIds.Select(this.GetCollectionId).ToHashSet(StringComparer.Ordinal);
+        if (normalized.Contains(this.GetCollectionId(ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID)))
+            normalized.Add(this.GetCollectionId(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID));
+
+        normalized.RemoveWhere(id => this.GetDefinition(id) is { Activation: ToolActivation.CONTEXT });
+        return normalized;
+    }
+
+    /// <summary>
+    /// The tools a selection runs: each tool of each collection it selects.
+    /// </summary>
+    /// <remarks>
+    /// The one place where a collection turns into its tools. People select and configure
+    /// collections, but the model sees every tool on its own, so whatever prepares or counts a
+    /// request, and whatever shows what a plugin will run, comes here. An ID this installation does
+    /// not know stays as it is.
+    /// </remarks>
+    /// <param name="selectedIds">The IDs of the selected tools or collections.</param>
+    /// <returns>The IDs of the tools, as a new set.</returns>
+    public HashSet<string> ExpandSelection(IEnumerable<string> selectedIds) => this.NormalizeSelection(selectedIds)
+        .SelectMany(this.GetToolIdsOfCollection)
+        .ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The collections preselected in a component, as the user chose them in the settings.
+    /// </summary>
+    public HashSet<string> GetDefaultToolIds(Components component) => this.settingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(component.ToString(), out var toolIds)
+        ? this.NormalizeSelection(toolIds)
+        : [];
+
+    /// <summary>
+    /// Narrows a selection to the tools the given provider may actually use in this chat.
     /// </summary>
     /// <remarks>
     /// Used before a request is sent, so the chat records what will really be available rather
     /// than what the user once ticked, and by the token count below the message field, so a tool
     /// the request leaves out does not count. Lives here because judging a tool needs its
-    /// definition: the settings know the overrides, the definition knows the tool's own minimum.
+    /// collection: the settings know the overrides, the collection knows its own minimum.
     /// Where the chat may still send data is judged with the rule the preparation of a request
-    /// uses, see CheckToolAsync.
+    /// uses, see CheckToolAsync.<br/><br/>
+    /// Returns tools rather than collections, since a collection may lose some of its tools here,
+    /// e.g., one which a mailbox read by the chat keeps back. Handed to a request again, they turn
+    /// into their whole collection once more, and the request leaves out the same tools again.
     /// </remarks>
     /// <param name="provider">The provider the request goes to.</param>
-    /// <param name="selectedToolIds">The tools the user selected.</param>
+    /// <param name="selectedToolIds">The tools or collections the user selected.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
-    /// <returns>The subset that is enabled, active, available, allowed by the provider's confidence, and allowed by the outbound data restriction.</returns>
+    /// <returns>The IDs of the selected tools that are enabled, active, available, allowed by the provider's confidence, and allowed by the outbound data restriction.</returns>
     public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds, OutboundDataRestriction outboundDataRestriction)
     {
         if (!this.settingsManager.AreToolsEnabled())
@@ -421,7 +488,7 @@ public sealed class ToolRegistry
             return [];
 
         var providerConfidence = provider.UsedLLMProvider.GetConfidence(this.settingsManager).Level;
-        var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
+        var filtered = this.ExpandSelection(selectedToolIds);
         foreach (var toolId in filtered.ToList())
         {
             if (!this.IsToolActive(toolId))
@@ -447,7 +514,7 @@ public sealed class ToolRegistry
     }
 
     /// <summary>
-    /// The tools somebody can select in this component.
+    /// The collections somebody can select in this component.
     /// </summary>
     /// <remarks>
     /// Every selection in the app is built from this list: the one below the message field, the
@@ -463,7 +530,7 @@ public sealed class ToolRegistry
     }
 
     /// <summary>
-    /// Reduces a set of tool IDs to the tools a user could switch on themselves in this component.
+    /// Reduces a set of IDs to the collections a user could switch on themselves in this component.
     /// </summary>
     /// <remarks>
     /// For preselecting tools on someone's behalf, such as when a launcher opens a chat. A tool
@@ -475,37 +542,70 @@ public sealed class ToolRegistry
     /// </remarks>
     public async Task<HashSet<string>> FilterSelectableToolIdsAsync(Components component, IEnumerable<string> toolIds)
     {
-        var wantedToolIds = ToolSelectionRules.NormalizeSelection(toolIds);
-        if (wantedToolIds.Count is 0 || !this.settingsManager.AreToolsEnabled())
+        var wantedIds = this.NormalizeSelection(toolIds);
+        if (wantedIds.Count is 0 || !this.settingsManager.AreToolsEnabled())
             return [];
 
         var catalog = await this.GetCatalogAsync(component);
         return catalog
-            .Where(x => wantedToolIds.Contains(x.Definition.Id) && x is { IsActive: true, ConfigurationState.IsConfigured: true })
-            .Select(x => x.Definition.Id)
+            .Where(x => wantedIds.Contains(x.Id) && x is { IsActive: true, ConfigurationState.IsConfigured: true })
+            .Select(x => x.Id)
             .ToHashSet(StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// The entries for these tools as people see them: one per collection, ordered by name.
+    /// </summary>
+    /// <remarks>
+    /// A collection holds only those of its tools which are among the given ones and exist right
+    /// now, so it disappears with the last of them, e.g., while the preview of its tools is off.
+    /// </remarks>
     public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(IEnumerable<ToolDefinition> definitions)
     {
-        var definitionList = definitions.ToList();
-        var items = new List<ToolCatalogItem>(definitionList.Count);
-        foreach (var definition in definitionList)
+        var toolsByCollectionId = new Dictionary<string, List<ToolCatalogTool>>(StringComparer.Ordinal);
+        foreach (var definition in definitions)
         {
             if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation) || !implementation.IsAvailable)
                 continue;
 
-            items.Add(new ToolCatalogItem
+            var collectionId = this.GetCollectionId(definition.Id);
+            if (!toolsByCollectionId.TryGetValue(collectionId, out var tools))
             {
-                Definition = definition,
-                Implementation = implementation,
-                ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
-                IsActive = this.IsToolActive(definition.Id),
-                MinimumProviderConfidence = this.GetMinimumProviderConfidence(definition),
-            });
+                tools = [];
+                toolsByCollectionId[collectionId] = tools;
+            }
+
+            tools.Add(new(definition, implementation, await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation)));
         }
 
-        return items;
+        return toolsByCollectionId
+            .Select(entry => this.CreateCatalogItem(entry.Key, entry.Value))
+            .OrderBy(item => item.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Describes one collection with the given tools: a declared one as it presents itself, otherwise the tool which forms it.
+    /// </summary>
+    private ToolCatalogItem CreateCatalogItem(string collectionId, List<ToolCatalogTool> tools)
+    {
+        var declaredCollection = this.collectionsById.GetValueOrDefault(collectionId);
+        if (declaredCollection is not null)
+            tools = declaredCollection.Definition.ToolIds.Join(tools, toolId => toolId, tool => tool.Definition.Id, (_, tool) => tool).ToList();
+
+        var firstTool = tools[0];
+        return new()
+        {
+            Id = collectionId,
+            Icon = declaredCollection?.Collection.Icon ?? firstTool.Implementation.Icon,
+            DisplayName = declaredCollection?.Collection.GetDisplayName() ?? firstTool.Implementation.GetDisplayName(),
+            Description = declaredCollection?.Collection.GetDescription() ?? firstTool.Implementation.GetDescription(),
+            DescriptionForLLM = declaredCollection?.Definition.DescriptionForLLM ?? firstTool.Definition.Function.DescriptionForLLM,
+            Tools = tools,
+            ConfigurationState = tools.FirstOrDefault(tool => !tool.ConfigurationState.IsConfigured)?.ConfigurationState ?? new() { IsConfigured = true },
+            IsActive = this.IsToolActive(collectionId),
+            MinimumProviderConfidence = this.GetMinimumProviderConfidence(collectionId),
+        };
     }
 
     /// <summary>
@@ -515,13 +615,13 @@ public sealed class ToolRegistry
     /// Model capabilities are not a parameter on purpose: they are read from the given provider,
     /// which carries the user's expert capability overrides. Passing them in separately allowed a
     /// caller to gate tools on capabilities that differed from the ones the availability check saw.<br/><br/>
-    /// The candidates are the selected tools and every tool which offers itself from the context of
-    /// the chat, see ToolActivation. Each one passes the same checks, and only then is it asked what
-    /// it offers in this request, see IToolImplementation.ResolveFunctionAsync and
-    /// IToolImplementation.ResolveSystemPromptInstructionsAsync.
+    /// The candidates are the tools of the selected collections and every tool which offers itself
+    /// from the context of the chat, see ToolActivation. Each one passes the same checks, and only
+    /// then is it asked what it offers in this request, see IToolImplementation.ResolveFunctionAsync
+    /// and IToolImplementation.ResolveSystemPromptInstructionsAsync.
     /// </remarks>
     /// <param name="context">The request being prepared.</param>
-    /// <param name="selectedToolIds">The tools selected for the request.</param>
+    /// <param name="selectedToolIds">The tools or collections selected for the request.</param>
     /// <param name="mayRunTools">Whether the request may run tools at all, as its caller decides.</param>
     /// <param name="token">The cancellation token of the request.</param>
     /// <returns>The runnable tools, with their definitions as offered in this request.</returns>
@@ -554,7 +654,7 @@ public sealed class ToolRegistry
             return [];
         }
 
-        var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
+        var selectedToolIdSet = this.ExpandSelection(selectedToolIds);
         this.logger.LogDebug("Resolving runnable tools for provider '{Provider}' with model '{ModelId}'. Selected tool IDs: [{ToolIds}].", provider.InstanceName, provider.Model.Id, string.Join(", ", selectedToolIdSet.OrderBy(x => x, StringComparer.Ordinal)));
 
         var definitions = this.GetDefinitionsForComponent(component)

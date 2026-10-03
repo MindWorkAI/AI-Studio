@@ -3,7 +3,6 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -844,16 +843,6 @@ public sealed class SettingsManager
 
         return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
-
-    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
-    {
-        var key = component.ToString();
-        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
-            return ToolSelectionRules.NormalizeSelection(toolIds);
-
-        return [];
-    }
-
 
     public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
 

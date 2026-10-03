@@ -13105,6 +13105,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::COUNTMAILSTOOL::T658629658"] = "Lets the AI count the mails in your mailboxes, e.g., the unread ones or those in a project folder."
 
+-- Lets the AI search, read, and count the mails in your mailboxes, including their attachments.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILBOXTOOLCOLLECTION::T1374500312"] = "Lets the AI search, read, and count the mails in your mailboxes, including their attachments."
+
+-- Mailboxes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILBOXTOOLCOLLECTION::T2067506811"] = "Mailboxes"
+
 -- To use this tool, add a mailbox to your data sources first.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::MAILTOOLCONFIGURATION::T1547505353"] = "To use this tool, add a mailbox to your data sources first."
 

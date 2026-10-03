@@ -729,7 +729,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.currentChatTemplate.ToolIds is not { } templateToolIds)
         {
-            this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+            this.selectedToolIds = this.ToolRegistry.GetDefaultToolIds(Tools.Components.CHAT);
             return;
         }
 
@@ -1178,11 +1178,13 @@ public partial class ChatComponent : MSGComponentBase
     /// the footer would keep showing the tools of the chat before it.
     /// </remarks>
     private void ApplyToolSelectionOfLoadedChat() =>
-        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+        this.selectedToolIds = this.ChatThread?.SelectedToolIds is { } storedToolIds
+            ? this.ToolRegistry.NormalizeSelection(storedToolIds)
+            : this.ToolRegistry.GetDefaultToolIds(Tools.Components.CHAT);
 
     private void SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.selectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
 
         //
         // The thread keeps the selection so that reopening the chat tomorrow brings the same tools

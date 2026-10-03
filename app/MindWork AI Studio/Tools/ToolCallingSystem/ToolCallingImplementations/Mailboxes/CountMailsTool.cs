@@ -25,7 +25,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// It takes the same conditions as Search Mails, so the mails it counted are the ones a search
 /// with those conditions lists. A count tells something about the content of a mailbox as well,
 /// e.g., that a certain sender wrote, so it raises the requirements of the chat like a search.
-/// Selecting Search Mails brings this tool along, see ToolSelectionRules.NormalizeSelection.
+/// It belongs to the mailbox collection, so it is selected together with Search Mails, see MailboxToolCollection.
 /// </remarks>
 public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetrievalService retrievalService, PromptInjectionGuardService guardService, ILogger<CountMailsTool> logger) : IToolImplementation
 {

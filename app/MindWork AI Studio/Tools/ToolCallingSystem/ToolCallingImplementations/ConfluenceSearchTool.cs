@@ -21,7 +21,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// Confluence's REST API. The model only passes words and a space key; the tool builds the CQL
 /// itself, so a model cannot turn the search into another query.<br/><br/>
 /// The search page shows excerpts only. To read a result, the model opens it with Read Web Page,
-/// which is why selecting this tool also selects that one, see ToolSelectionRules.NormalizeSelection.<br/><br/>
+/// which is why selecting this tool also selects that one, see ToolRegistry.NormalizeSelection.<br/><br/>
 /// Whatever the wiki returns is internal to the organization. The tool is therefore offered to
 /// High-confidence providers only, checks that again before each search, and raises the chat's
 /// required confidence to High, so the results never reach a less trusted provider later on.

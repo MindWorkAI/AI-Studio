@@ -31,8 +31,8 @@ public sealed class ToolAvailabilityTests : ToolRegistryTestBase
         {
             Assert.That(registry.GetDefinitionsForComponent(AIStudio.Tools.Components.CHAT).Select(definition => definition.Id), Is.EqualTo(new[] { TOOL_ID }));
             Assert.That(registry.GetAllDefinitions().Select(definition => definition.Id), Is.EqualTo(new[] { TOOL_ID }));
-            Assert.That(forTheChat.Select(item => item.Definition.Id), Is.EqualTo(new[] { TOOL_ID }), "The selection below the message field.");
-            Assert.That(forTheSettings.Select(item => item.Definition.Id), Is.EqualTo(new[] { TOOL_ID }), "The tool list of the app settings.");
+            Assert.That(forTheChat.Select(item => item.Id), Is.EqualTo(new[] { TOOL_ID }), "The selection below the message field.");
+            Assert.That(forTheSettings.Select(item => item.Id), Is.EqualTo(new[] { TOOL_ID }), "The tool list of the app settings.");
             Assert.That(handedInDirectly, Is.Empty, "Whoever hands in the definition directly does not get it listed either.");
         });
     }

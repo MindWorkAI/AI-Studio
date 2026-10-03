@@ -49,7 +49,7 @@ public partial class ToolSelection : MSGComponentBase
 
     protected override void OnParametersSet()
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(this.SelectedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(this.SelectedToolIds);
         base.OnParametersSet();
     }
 
@@ -107,21 +107,21 @@ public partial class ToolSelection : MSGComponentBase
         if (this.IsRowDisabled(item))
             return;
 
-        await this.ChangeSelection(item.Definition.Id, !this.SelectedToolIds.Contains(item.Definition.Id));
+        await this.ChangeSelection(item.Id, !this.SelectedToolIds.Contains(item.Id));
     }
 
-    private async Task ChangeSelection(string toolId, bool isSelected)
+    private async Task ChangeSelection(string collectionId, bool isSelected)
     {
-        if (isSelected && !this.ToolRegistry.IsToolActive(toolId))
+        if (isSelected && !this.ToolRegistry.IsToolActive(collectionId))
             return;
 
         var updated = new HashSet<string>(this.SelectedToolIds, StringComparer.Ordinal);
         if (isSelected)
-            updated.Add(toolId);
+            updated.Add(collectionId);
         else
-            updated.Remove(toolId);
+            updated.Remove(collectionId);
 
-        updated = ToolSelectionRules.NormalizeSelection(updated);
+        updated = this.ToolRegistry.NormalizeSelection(updated);
         this.SelectedToolIds = updated;
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
     }
@@ -131,7 +131,14 @@ public partial class ToolSelection : MSGComponentBase
 
     private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
 
-    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, item.Implementation);
+    /// <summary>
+    /// Whether the mailboxes the chat read from keep every tool of this entry back.
+    /// </summary>
+    /// <remarks>
+    /// Only then is there nothing left to select. Should a mailbox keep back some tools of a
+    /// collection, the others still run, and the request leaves out the rest on its own.
+    /// </remarks>
+    private bool IsBlockedByOutboundDataRestriction(ToolCatalogItem item) => item.Tools.All(tool => !ToolSelectionRules.IsOutboundDataAllowed(this.RequiredOutboundDataRestriction.Restriction, tool.Implementation));
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
@@ -170,11 +177,14 @@ public partial class ToolSelection : MSGComponentBase
         return string.Join(' ', warnings);
     }
 
-    private async Task OpenSettings(string toolId)
+    /// <remarks>
+    /// The settings dialog shows one tool so far, so an entry opens the settings of its first tool.
+    /// </remarks>
+    private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, toolId },
+            { x => x.ToolId, item.Tools[0].Definition.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);

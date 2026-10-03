@@ -20,8 +20,8 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// A mail is found by its id among the mailboxes the provider of the chat may read, and nowhere
 /// else: a mail of a mailbox the provider may not read is not found, exactly like one nobody ever
 /// indexed. Reading raises the required confidence of the chat and its outbound data restriction to
-/// those of the mailbox, as a search does. Selecting Search Mails brings this tool along, see
-/// ToolSelectionRules.NormalizeSelection.
+/// those of the mailbox, as a search does. It belongs to the mailbox collection, so it is selected
+/// together with Search Mails, see MailboxToolCollection.
 /// </remarks>
 public sealed class ReadMailTool(SettingsManager settingsManager, MailboxRetrievalService retrievalService, PromptInjectionGuardService guardService, ILogger<ReadMailTool> logger) : IToolImplementation
 {
