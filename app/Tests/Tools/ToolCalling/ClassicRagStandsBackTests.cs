@@ -69,5 +69,8 @@ public sealed class ClassicRagStandsBackTests : ToolRegistryTestBase
     private static ChatThread ThreadSearching(DataSourceRetrievalMode preference) => new()
     {
         DataSourceOptions = new() { DisableDataSources = false, AutomaticDataSourceSelection = true, RetrievalMode = preference },
+
+        // A thread names no component until its sender does, and the chat does so before every message:
+        RuntimeComponent = AIStudio.Tools.Components.CHAT,
     };
 }

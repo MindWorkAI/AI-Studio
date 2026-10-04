@@ -110,7 +110,6 @@ public partial class AssistantBatchProcessing
             ChatId = Guid.NewGuid(),
             Name = this.Title,
             Blocks = [],
-            RuntimeComponent = this.Component,
 
             // A thread of its own, which has read no mailbox yet:
             RuntimeSelectedToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED),
@@ -120,6 +119,7 @@ public partial class AssistantBatchProcessing
             RuntimeToolsAreAssistantManaged = true,
         };
 
+        this.AssignRuntimeIdentity(chatThread);
         var userPrompt = new ContentText
         {
             Text = BuildUserPrompt(fileName, fileContent),

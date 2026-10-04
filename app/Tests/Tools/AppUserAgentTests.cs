@@ -92,5 +92,14 @@ public sealed class AppUserAgentTests
         Assert.That(request.Headers.UserAgent.Count, Is.EqualTo(3), "The header must still parse as product, platform comment, and component.");
     }
 
+    [Test]
+    public void AThreadWithoutAComponentDoesNotCountAsChat()
+    {
+        using var request = new HttpRequestMessage();
+        AppUserAgent.ApplyComponent(request.Headers, new ChatThread());
+
+        Assert.That(request.Headers.UserAgent.ToString(), Is.EqualTo(AppUserAgent.BASE), "A thread whose sender forgot to name its component must not be counted as chat, nor as anything else.");
+    }
+
     private static SettingsManager CreateSettingsManager() => new(NullLogger<SettingsManager>.Instance, null!);
 }
