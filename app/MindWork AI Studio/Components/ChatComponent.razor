@@ -136,7 +136,7 @@
 
             @if (this.SettingsManager.AreToolsEnabled())
             {
-                <ToolSelection Component="Components.CHAT" LLMProvider="@this.Provider" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsCurrentChatStreaming" />
+                <ToolSelection Component="Components.CHAT" LLMProvider="@this.Provider" RequiredOutboundDataRestriction="@(this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE)" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsCurrentChatStreaming" />
             }
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))

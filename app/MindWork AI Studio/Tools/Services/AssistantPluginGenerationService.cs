@@ -296,7 +296,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var builder = new StringBuilder();
         foreach (var tool in activeTools)
-            builder.AppendLine($"- {tool.Definition.Id}: {tool.Definition.Function.DescriptionForLLM}");
+            builder.AppendLine($"- {tool.Id}: {tool.DescriptionForLLM}");
 
         return builder.ToString().TrimEnd();
     }
@@ -868,7 +868,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         var alreadyRequested = RequestedToolIds(previousVersion).ToHashSet(StringComparer.Ordinal);
         return toolIds
-            .Where(toolId => !alreadyRequested.Contains(toolId) && toolRegistry.GetDefinition(toolId) is null)
+            .Where(toolId => !alreadyRequested.Contains(toolId) && !toolRegistry.IsKnown(toolId))
             .ToList();
     }
 

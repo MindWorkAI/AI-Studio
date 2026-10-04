@@ -59,6 +59,12 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AToolWhosePreviewIsSwitchedOff()
+    {
+        await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition()) { IsAvailable = false }), ToolCapableProvider(), ToolOfferBlockReason.NOT_AVAILABLE_HERE, "The tool belongs to a preview the user did not switch on.");
+    }
+
+    [Test]
     public async Task AToolSwitchedOffByTheOrganization()
     {
         this.SettingsManager.ConfigurationData.Tools.DisabledToolIds.Add(TOOL_ID);
@@ -81,7 +87,7 @@ public sealed class ToolRegistryOfferTests : ToolRegistryTestBase
     [Test]
     public async Task ARaisedRequirementCountsAsWell()
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(TOOL_ID, ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
+        this.SettingsManager.SetMinimumProviderConfidence([TOOL_ID], ConfidenceLevel.HIGH, ConfidenceLevel.NONE);
 
         await this.AssertBothAgree(this.CreateRegistry(new TestTool(Definition())), LessTrustedProvider(), ToolOfferBlockReason.PROVIDER_CONFIDENCE_TOO_LOW, "The tool asks for nothing itself, but its requirement was raised in the settings.");
     }

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text.Json;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -26,6 +27,12 @@ internal static class ToolArgumentReader
     /// only costs tokens.
     /// </remarks>
     private const int MAX_ARGUMENT_ECHO_LENGTH = 40;
+
+    private static readonly string[] DATE_TIME_FORMATS_WITH_OFFSET = ["yyyy-MM-dd'T'HH:mmzzz", "yyyy-MM-dd'T'HH:mm:sszzz", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFFzzz"];
+
+    private static readonly string[] DATE_TIME_FORMATS_IN_UTC = ["yyyy-MM-dd'T'HH:mm'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF'Z'"];
+
+    private static readonly string[] DATE_TIME_FORMATS_WITHOUT_OFFSET = ["yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.FFFFFFF"];
 
     /// <summary>
     /// Reads a string argument the model always has to pass.
@@ -63,6 +70,38 @@ internal static class ToolArgumentReader
     }
 
     /// <summary>
+    /// Reads an optional string argument which has to be a single line of limited length.
+    /// </summary>
+    /// <remarks>
+    /// For what ends up in a search, such as a part of an address. An empty string is refused
+    /// rather than read as leaving the argument out: it asks for nothing, and in a search it would
+    /// match everything.
+    /// </remarks>
+    /// <param name="arguments">The arguments the model passed.</param>
+    /// <param name="propertyName">The argument.</param>
+    /// <param name="maxCharacters">How long the line may be.</param>
+    /// <param name="whenLeftOut">What happens without the argument, completing "Leave it out ...".</param>
+    /// <returns>The line, trimmed and never empty, or null when the model left the argument out.</returns>
+    /// <exception cref="ArgumentException">The argument is no string, empty, too long, or holds a line break or another control character.</exception>
+    public static string? ReadOptionalLine(JsonElement arguments, string propertyName, int maxCharacters, string whenLeftOut)
+    {
+        var text = ReadOptionalString(arguments, propertyName, whenLeftOut);
+        if (text is null)
+            return null;
+
+        if (text.Length == 0)
+            throw Refusal($"Argument '{propertyName}' must not be empty.", whenLeftOut);
+
+        if (text.Length > maxCharacters)
+            throw Refusal($"Argument '{propertyName}' must be at most {maxCharacters} characters long, but had {text.Length}.", whenLeftOut);
+
+        if (text.Any(char.IsControl))
+            throw Refusal($"Argument '{propertyName}' must not contain control characters such as line breaks. Write it as a single line.", whenLeftOut);
+
+        return text;
+    }
+
+    /// <summary>
     /// Reads an optional argument which has to be a positive integer.
     /// </summary>
     /// <param name="arguments">The arguments the model passed.</param>
@@ -79,6 +118,77 @@ internal static class ToolArgumentReader
             throw InvalidArgument(propertyName, value, "a positive integer", whenLeftOut);
 
         return intValue;
+    }
+
+    /// <summary>
+    /// Reads an optional argument which has to be true or false.
+    /// </summary>
+    /// <remarks>
+    /// Only a JSON boolean counts. A string such as "true" is refused, since a model which writes
+    /// one may just as well write "yes", and guessing what it meant is what this reader avoids.
+    /// </remarks>
+    /// <param name="arguments">The arguments the model passed.</param>
+    /// <param name="propertyName">The argument.</param>
+    /// <param name="whenLeftOut">What happens without the argument, completing "Leave it out ...".</param>
+    /// <returns>The value, or null when the model left the argument out.</returns>
+    /// <exception cref="ArgumentException">The argument is no boolean.</exception>
+    public static bool? ReadOptionalBoolean(JsonElement arguments, string propertyName, string whenLeftOut)
+    {
+        if (!TryGetArgument(arguments, propertyName, out var value))
+            return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => throw InvalidArgument(propertyName, value, "true or false", whenLeftOut),
+        };
+    }
+
+    /// <summary>
+    /// Reads an optional argument which has to be a date, or a date with a time of day.
+    /// </summary>
+    /// <remarks>
+    /// The model writes the dates the user speaks of, and the user speaks of their own time zone.
+    /// So a date stands for its beginning there, and a time of day without an offset is a time
+    /// there as well. Only a time with an offset or a Z keeps the offset it states. Everything else,
+    /// such as "yesterday" or a date in another order, is refused.
+    /// </remarks>
+    /// <param name="arguments">The arguments the model passed.</param>
+    /// <param name="propertyName">The argument.</param>
+    /// <param name="timeZone">The time zone of the user.</param>
+    /// <param name="whenLeftOut">What happens without the argument, completing "Leave it out ...".</param>
+    /// <returns>The point in time, or null when the model left the argument out.</returns>
+    /// <exception cref="ArgumentException">The argument is no date in one of the accepted forms.</exception>
+    public static DateTimeOffset? ReadOptionalDateTime(JsonElement arguments, string propertyName, TimeZoneInfo timeZone, string whenLeftOut)
+    {
+        if (!TryGetArgument(arguments, propertyName, out var value))
+            return null;
+
+        var text = value.ValueKind is JsonValueKind.String ? value.GetString()?.Trim() : null;
+        if (text is null || !TryParseDateTime(text, timeZone, out var pointInTime))
+            throw InvalidArgument(propertyName, value, "a date such as 2026-09-01, or a date with a time of day such as 2026-09-01T14:30", whenLeftOut);
+
+        return pointInTime;
+    }
+
+    private static bool TryParseDateTime(string text, TimeZoneInfo timeZone, out DateTimeOffset pointInTime)
+    {
+        if (DateTimeOffset.TryParseExact(text, DATE_TIME_FORMATS_WITH_OFFSET, CultureInfo.InvariantCulture, DateTimeStyles.None, out pointInTime))
+            return true;
+
+        // Without AssumeUniversal, a Z would get the offset of this computer:
+        if (DateTimeOffset.TryParseExact(text, DATE_TIME_FORMATS_IN_UTC, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out pointInTime))
+            return true;
+
+        if (DateTime.TryParseExact(text, DATE_TIME_FORMATS_WITHOUT_OFFSET, CultureInfo.InvariantCulture, DateTimeStyles.None, out var localTime))
+        {
+            pointInTime = new DateTimeOffset(localTime, timeZone.GetUtcOffset(localTime));
+            return true;
+        }
+
+        pointInTime = default;
+        return false;
     }
 
     /// <summary>

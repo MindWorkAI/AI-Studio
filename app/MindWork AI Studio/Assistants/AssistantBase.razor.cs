@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -197,7 +198,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
@@ -408,7 +409,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.ToolRegistry.GetDefaultToolIds(this.Component);
     }
 
     /// <summary>
@@ -431,18 +432,20 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// always has the last word: a tool asking for more confidence than the selected provider has
     /// never reaches the model, no matter who put it on the list. That filter belongs here rather
     /// than into the stored selection, because a provider with too little confidence must not cost
-    /// the user a tool for good.
+    /// the user a tool for good. The same goes for a tool which a mailbox the thread read from
+    /// keeps back.
     /// </remarks>
-    protected HashSet<string> GetRunnableToolIds()
+    /// <param name="outboundDataRestriction">Where the thread the tools run in may still send data, see ChatThread.RequiredOutboundDataRestriction.</param>
+    protected HashSet<string> GetRunnableToolIds(OutboundDataRestriction outboundDataRestriction)
     {
         if (this.AssistantManagedToolIds is not null)
-            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds);
+            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds, outboundDataRestriction);
 
         // What the user cannot see, the assistant does not use:
         if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
             return [];
 
-        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds);
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds, outboundDataRestriction);
     }
 
     /// <summary>
@@ -454,7 +457,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </remarks>
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     
@@ -518,7 +521,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
+            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction);
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
@@ -1014,7 +1017,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
-        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(value));
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = this.ToolRegistry.NormalizeSelection(value));
         this.RestoreCustomAssistantSessionState(reader);
     }
 

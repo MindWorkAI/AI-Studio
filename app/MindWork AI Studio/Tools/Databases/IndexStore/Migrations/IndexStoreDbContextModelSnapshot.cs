@@ -315,6 +315,325 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.ToView("embedding_chunk_search_results");
         });
 
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailAddressEntity", entity =>
+        {
+            entity.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("INTEGER")
+                .HasColumnName("id")
+                .HasAnnotation("Sqlite:Autoincrement", true);
+
+            entity.Property<string>("Address")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("address")
+                .UseCollation("NOCASE");
+
+            entity.Property<string>("DisplayName")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("display_name");
+
+            entity.Property<string>("ParentFileId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("parent_file_id");
+
+            entity.Property<int>("Position")
+                .HasColumnType("INTEGER")
+                .HasColumnName("position");
+
+            entity.Property<string>("Role")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("role");
+
+            entity.HasKey("Id");
+
+            entity.HasIndex("Address")
+                .HasDatabaseName("idx_mail_addresses_address");
+
+            entity.HasIndex("ParentFileId", "Role", "Position")
+                .IsUnique()
+                .HasDatabaseName("idx_mail_addresses_parent_file_role_position");
+
+            entity.ToTable("mail_addresses");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailFolderEntity", entity =>
+        {
+            entity.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("INTEGER")
+                .HasColumnName("id")
+                .HasAnnotation("Sqlite:Autoincrement", true);
+
+            entity.Property<string>("DataSourceId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("data_source_id");
+
+            entity.Property<long?>("HighestModSeq")
+                .HasColumnType("INTEGER")
+                .HasColumnName("highest_mod_seq");
+
+            entity.Property<DateTimeOffset?>("InitialSyncCompletedUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("initial_sync_completed_utc");
+
+            entity.Property<string>("Path")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("path");
+
+            entity.Property<long?>("ServerMessageCount")
+                .HasColumnType("INTEGER")
+                .HasColumnName("server_message_count");
+
+            entity.Property<long?>("ServerUnseenCount")
+                .HasColumnType("INTEGER")
+                .HasColumnName("server_unseen_count");
+
+            entity.Property<string>("SpecialUse")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("special_use");
+
+            entity.Property<long?>("UidNext")
+                .HasColumnType("INTEGER")
+                .HasColumnName("uid_next");
+
+            entity.Property<long>("UidValidity")
+                .HasColumnType("INTEGER")
+                .HasColumnName("uid_validity");
+
+            entity.HasKey("Id");
+
+            entity.HasIndex("DataSourceId", "Path")
+                .IsUnique()
+                .HasDatabaseName("idx_mail_folders_data_source_path");
+
+            entity.ToTable("mail_folders");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailLocationEntity", entity =>
+        {
+            entity.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("INTEGER")
+                .HasColumnName("id")
+                .HasAnnotation("Sqlite:Autoincrement", true);
+
+            entity.Property<int>("FolderId")
+                .HasColumnType("INTEGER")
+                .HasColumnName("folder_id");
+
+            entity.Property<bool>("IsAnswered")
+                .HasColumnType("INTEGER")
+                .HasColumnName("is_answered");
+
+            entity.Property<bool>("IsFlagged")
+                .HasColumnType("INTEGER")
+                .HasColumnName("is_flagged");
+
+            entity.Property<bool>("IsSeen")
+                .HasColumnType("INTEGER")
+                .HasColumnName("is_seen");
+
+            entity.Property<string>("ParentFileId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("parent_file_id");
+
+            entity.Property<long>("Uid")
+                .HasColumnType("INTEGER")
+                .HasColumnName("uid");
+
+            entity.HasKey("Id");
+
+            entity.HasIndex("ParentFileId")
+                .HasDatabaseName("idx_mail_locations_parent_file");
+
+            entity.HasIndex("FolderId", "Uid")
+                .IsUnique()
+                .HasDatabaseName("idx_mail_locations_folder_uid");
+
+            entity.ToTable("mail_locations");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", entity =>
+        {
+            entity.Property<string>("ParentFileId")
+                .HasColumnType("TEXT")
+                .HasColumnName("parent_file_id");
+
+            entity.Property<string>("DataSourceId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("data_source_id");
+
+            entity.Property<string>("EncryptionKind")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("encryption_kind");
+
+            entity.Property<DateTimeOffset>("FirstSeenUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("first_seen_utc");
+
+            entity.Property<string>("Importance")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("importance");
+
+            entity.Property<string>("InReplyTo")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("in_reply_to");
+
+            entity.Property<string>("MailHash")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("mail_hash");
+
+            entity.Property<string>("MessageId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("message_id");
+
+            entity.Property<DateTimeOffset?>("OrphanedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("orphaned_at_utc");
+
+            entity.Property<DateTimeOffset>("ReceivedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("received_at_utc");
+
+            entity.Property<string>("ReferenceMessageIds")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("reference_message_ids");
+
+            entity.Property<DateTimeOffset?>("SentAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("sent_at_utc");
+
+            entity.HasKey("ParentFileId");
+
+            entity.HasIndex("DataSourceId", "MessageId")
+                .HasDatabaseName("idx_mail_messages_data_source_message_id");
+
+            entity.HasIndex("DataSourceId", "ReceivedAtUtc")
+                .HasDatabaseName("idx_mail_messages_data_source_received");
+
+            entity.ToTable("mail_messages");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailPartEntity", entity =>
+        {
+            entity.Property<int>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("INTEGER")
+                .HasColumnName("id")
+                .HasAnnotation("Sqlite:Autoincrement", true);
+
+            entity.Property<string>("ContentType")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("content_type");
+
+            entity.Property<string>("Kind")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("kind");
+
+            entity.Property<string>("Name")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("name");
+
+            entity.Property<string>("ParentFileId")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("parent_file_id");
+
+            entity.Property<long>("PartSize")
+                .HasColumnType("INTEGER")
+                .HasColumnName("part_size");
+
+            entity.Property<int>("Position")
+                .HasColumnType("INTEGER")
+                .HasColumnName("position");
+
+            entity.Property<string>("Text")
+                .HasColumnType("TEXT")
+                .HasColumnName("text");
+
+            entity.Property<string>("TextState")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("text_state");
+
+            entity.HasKey("Id");
+
+            entity.HasIndex("ParentFileId", "Kind", "Position")
+                .IsUnique()
+                .HasDatabaseName("idx_mail_parts_parent_file_kind_position");
+
+            entity.ToTable("mail_parts");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailboxAuthStateEntity", entity =>
+        {
+            entity.Property<string>("DataSourceId")
+                .HasColumnType("TEXT")
+                .HasColumnName("data_source_id");
+
+            entity.Property<DateTimeOffset>("FailedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("failed_at_utc");
+
+            entity.Property<string>("FailureMessage")
+                .IsRequired()
+                .HasColumnType("TEXT")
+                .HasColumnName("failure_message");
+
+            entity.HasKey("DataSourceId");
+
+            entity.ToTable("mailbox_auth_state");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailboxSyncStateEntity", entity =>
+        {
+            entity.Property<string>("DataSourceId")
+                .HasColumnType("TEXT")
+                .HasColumnName("data_source_id");
+
+            entity.Property<DateTimeOffset?>("LastSyncCompletedUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("last_sync_completed_utc");
+
+            entity.Property<DateTimeOffset?>("PendingRemovalApprovedUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
+                .HasColumnType("TEXT")
+                .HasColumnName("pending_removal_approved_utc");
+
+            entity.Property<int?>("PendingRemovalCount")
+                .HasColumnType("INTEGER")
+                .HasColumnName("pending_removal_count");
+
+            entity.HasKey("DataSourceId");
+
+            entity.ToTable("mailbox_sync_state");
+        });
+
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>
         {
             entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", "DataSource")
@@ -348,6 +667,80 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
             entity.Navigation("DataSource");
         });
 
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailAddressEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", "Message")
+                .WithMany("Addresses")
+                .HasForeignKey("ParentFileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.Navigation("Message");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailFolderEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", null)
+                .WithMany()
+                .HasForeignKey("DataSourceId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailLocationEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.MailFolderEntity", "Folder")
+                .WithMany("Locations")
+                .HasForeignKey("FolderId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", "Message")
+                .WithMany("Locations")
+                .HasForeignKey("ParentFileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.Navigation("Folder");
+
+            entity.Navigation("Message");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", null)
+                .WithMany()
+                .HasForeignKey("DataSourceId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", null)
+                .WithOne()
+                .HasForeignKey("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", "ParentFileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailPartEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", "Message")
+                .WithMany("Parts")
+                .HasForeignKey("ParentFileId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity.Navigation("Message");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailboxSyncStateEntity", entity =>
+        {
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", null)
+                .WithOne()
+                .HasForeignKey("AIStudio.Tools.Databases.IndexStore.MailboxSyncStateEntity", "DataSourceId")
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", entity =>
         {
             entity.Navigation("Files");
@@ -358,6 +751,20 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
         modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>
         {
             entity.Navigation("Chunks");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailFolderEntity", entity =>
+        {
+            entity.Navigation("Locations");
+        });
+
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.MailMessageEntity", entity =>
+        {
+            entity.Navigation("Addresses");
+
+            entity.Navigation("Locations");
+
+            entity.Navigation("Parts");
         });
 #pragma warning restore 612, 618
     }

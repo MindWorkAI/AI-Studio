@@ -3,7 +3,7 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Databases.IndexStore;
 
-public sealed class NoIndexStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : IndexStoreClient(name, string.Empty)
+public sealed partial class NoIndexStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : IndexStoreClient(name, string.Empty)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoIndexStoreClient).Namespace, nameof(NoIndexStoreClient));
 

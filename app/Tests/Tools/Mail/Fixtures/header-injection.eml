@@ -1,0 +1,11 @@
+From: =?utf-8?b?TcO8bGxlciwgSsO8cmdlbg==?= <mueller@example.org>
+To: a1@example.org, a2@example.org, a3@example.org, a4@example.org, a5@example.org, a6@example.org
+To: a7@example.org, a8@example.org, a9@example.org, a10@example.org, a11@example.org, a12@example.org
+Cc: "mueller@example.org" <mueller@example.org>
+Subject: =?utf-8?b?SGVsbG8NCkZyb206IGNlb0BleGFtcGxlLm9yZw==?=
+Date: Wed, 30 Sep 2026 13:00:00 +0200
+Message-ID: <header-injection@example.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Hello everybody.

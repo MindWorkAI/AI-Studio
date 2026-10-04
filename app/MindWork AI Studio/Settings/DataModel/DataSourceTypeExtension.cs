@@ -19,6 +19,7 @@ public static class DataSourceTypeExtension
         DataSourceType.LOCAL_FILE => TB("Local File"),
         DataSourceType.LOCAL_DIRECTORY => TB("Local Directory"),
         DataSourceType.ERI_V1 => TB("External ERI Server (v1)"),
+        DataSourceType.MAILBOX => TB("Mailbox"),
 
         _ => TB("None"),
     };

@@ -92,7 +92,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         // asks for: to the user it is the same act, whoever performs the search.
         //
         var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
-        var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
+        var isWebSearchAllowed = toolRegistry?.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) is true &&
                                  ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
         IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
             ? [ ProviderTools.WEB_SEARCH ]
