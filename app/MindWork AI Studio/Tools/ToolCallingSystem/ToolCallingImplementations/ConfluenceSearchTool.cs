@@ -261,7 +261,14 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     internal static Uri BuildSearchUrl(Uri baseUrl, string query, string? spaceKey)
     {
-        var cql = $"text ~ \"{EscapeCqlValue(query)}\"";
+        //
+        // siteSearch is the field Confluence's own search box sends to this page: it finds the
+        // pages holding any of the words and ranks them by relevance. The text field, the one
+        // Atlassian documents, requires every word on the page and so missed pages the search
+        // box finds. Atlassian's CQL field reference does not list siteSearch, but the search
+        // page itself depends on it, and the REST API documentation uses it in its examples.
+        //
+        var cql = $"siteSearch ~ \"{EscapeCqlValue(query)}\"";
         if (!string.IsNullOrWhiteSpace(spaceKey))
             cql += $" and space=\"{EscapeCqlValue(spaceKey)}\"";
 
