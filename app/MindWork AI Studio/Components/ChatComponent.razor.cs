@@ -729,7 +729,7 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.currentChatTemplate.ToolIds is not { } templateToolIds)
         {
-            this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+            this.selectedToolIds = this.ToolRegistry.GetDefaultToolIds(Tools.Components.CHAT);
             return;
         }
 
@@ -1150,7 +1150,7 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
         this.ChatThread.RuntimeAssistantName = string.Empty;
         this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
-        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
+        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, this.ChatThread.RequiredOutboundDataRestriction.Restriction);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
             ChatThread = this.ChatThread,
@@ -1179,11 +1179,13 @@ public partial class ChatComponent : MSGComponentBase
     /// the footer would keep showing the tools of the chat before it.
     /// </remarks>
     private void ApplyToolSelectionOfLoadedChat() =>
-        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+        this.selectedToolIds = this.ChatThread?.SelectedToolIds is { } storedToolIds
+            ? this.ToolRegistry.NormalizeSelection(storedToolIds)
+            : this.ToolRegistry.GetDefaultToolIds(Tools.Components.CHAT);
 
     private void SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.selectedToolIds = this.ToolRegistry.NormalizeSelection(updatedToolIds);
 
         //
         // The thread keeps the selection so that reopening the chat tomorrow brings the same tools
@@ -1668,8 +1670,9 @@ public partial class ChatComponent : MSGComponentBase
     /// The tools the next request would offer the model.
     /// </summary>
     /// <remarks>
-    /// Filtered for the provider the same way they are before sending, so that a tool the provider
-    /// is not trusted enough to receive does not count either.
+    /// Filtered for the provider and the chat the same way they are before sending, so that a tool
+    /// the provider is not trusted enough to receive does not count, and neither does one which a
+    /// mailbox the chat read from keeps back. A new chat read no mailbox, so nothing is kept back.
     ///
     /// Asked for once and used twice: their policy goes into the system prompt, and their schemas
     /// travel next to it in the request body. Both cost tokens, and both change the moment somebody
@@ -1680,14 +1683,18 @@ public partial class ChatComponent : MSGComponentBase
     /// the request asks for.
     ///
     /// Read Web Page likewise counts with its registered instructions, those of its default free
-    /// address choice. With the choice switched on, a request carries a shorter instruction, so the
-    /// count comes out a few tokens high.
+    /// address choice in a chat which read no mailbox. With the choice switched on, a request
+    /// carries a shorter instruction, and in a chat which read a mailbox a longer one, so the count
+    /// comes out a few tokens off. One case it gets wrong as a whole: a mailbox which allows the
+    /// configured services only, with no wiki configured, leaves Read Web Page nothing to offer, and
+    /// only the request finds that out, see ReadWebPageTool.ResolveFunctionAsync.
     /// </remarks>
     /// <param name="offersSemanticSearch">Whether the next request offers Semantic Search, see OffersSemanticSearchAsync.</param>
     /// <returns>The definitions of the selected tools, and of Semantic Search when it is offered.</returns>
     private IReadOnlyList<ToolDefinition> GetRunnableToolDefinitions(bool offersSemanticSearch)
     {
-        var definitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds)
+        var outboundDataRestriction = (this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE).Restriction;
+        var definitions = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, outboundDataRestriction)
             .Select(this.ToolRegistry.GetDefinition)
             .Where(definition => definition is not null)
             .Select(definition => definition!)

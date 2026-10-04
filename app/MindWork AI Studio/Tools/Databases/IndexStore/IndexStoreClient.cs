@@ -2,7 +2,7 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Databases.IndexStore;
 
-public abstract class IndexStoreClient(string name, string path) : DatabaseClient(name, path)
+public abstract partial class IndexStoreClient(string name, string path) : DatabaseClient(name, path)
 {
     public abstract Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token);
 

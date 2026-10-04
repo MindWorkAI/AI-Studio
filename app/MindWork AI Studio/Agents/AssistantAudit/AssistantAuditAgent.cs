@@ -343,12 +343,13 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// </summary>
     /// <remarks>
     /// The description is the one the tool gives a model, which is exactly what the assistant's
-    /// model would read. A tool this installation does not know is listed by its ID alone: the
-    /// plugin still asks for it, and a name nobody can resolve is itself worth seeing.
+    /// model would read. A collection is listed by its tools for the same reason. A tool this
+    /// installation does not know is listed by its ID alone: the plugin still asks for it, and a
+    /// name nobody can resolve is itself worth seeing.
     /// </remarks>
     private string FormatRequestedTools(PluginAssistants plugin)
     {
-        var toolIds = ToolSelectionRules.NormalizeSelection(plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? []);
+        var toolIds = toolRegistry.ExpandSelection(plugin.AssistantToolIds ?? plugin.ChatLaunchConfiguration?.ToolIds ?? []);
         if (toolIds.Count == 0)
             return "None. This plugin does not request any tools.";
 

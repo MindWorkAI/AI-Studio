@@ -38,17 +38,17 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         this.Component is not AIStudio.Tools.Components.CHAT &&
         !this.SettingsManager.IsToolSelectionVisible(this.Component);
 
-    private bool IsToolDisabled(string toolId) => !this.SettingsManager.IsToolActive(toolId);
+    private bool IsToolDisabled(string toolId) => !this.ToolRegistry.IsToolActive(toolId);
 
     protected override async Task OnInitializedAsync()
     {
         this.availableTools = (await this.ToolRegistry.GetCatalogAsync(this.Component))
-            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
+            .Select(x => new ConfigurationSelectData<string>(x.DisplayName, x.Id))
             .ToList();
         await base.OnInitializedAsync();
     }
 
-    private HashSet<string> GetSelectedValues() => this.SettingsManager.GetDefaultToolIds(this.Component);
+    private HashSet<string> GetSelectedValues() => this.ToolRegistry.GetDefaultToolIds(this.Component);
 
-    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..ToolSelectionRules.NormalizeSelection(values)];
+    private void UpdateSelection(HashSet<string> values) => this.SettingsManager.ConfigurationData.Tools.DefaultToolIdsByComponent[this.Component.ToString()] = [..this.ToolRegistry.NormalizeSelection(values)];
 }

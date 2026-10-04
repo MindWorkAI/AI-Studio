@@ -265,16 +265,29 @@ public sealed partial class RustService
 
     public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, null, token))
             yield return segment.Content;
     }
 
+    /// <summary>
+    /// Reads the content of a file for embedding, each piece together with its token count.
+    /// </summary>
+    /// <param name="path">The path of the file to read.</param>
+    /// <param name="embeddingProvider">The embedding provider whose tokenizer counts the pieces.</param>
+    /// <param name="reportAs">
+    /// The source the user is told about when passages were filtered out, or null for the file
+    /// itself. A file which only exists while it is read, e.g. the attachment of a mail, names
+    /// where its content came from instead.
+    /// </param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The pieces of the content, in order.</returns>
     public async IAsyncEnumerable<ArbitraryFileDataSegment> StreamArbitraryFileDataWithTokenCounts(
         string path,
         EmbeddingProvider embeddingProvider,
+        PromptInjectionSource? reportAs = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, reportAs, token))
         {
             if (segment.TokenCount is { } tokenCount)
             {
@@ -308,6 +321,7 @@ public sealed partial class RustService
         bool extractImages,
         bool includeTokenCount,
         string tokenizerPath,
+        PromptInjectionSource? reportAs,
         [EnumeratorCancellation] CancellationToken token)
     {
         var streamId = Guid.NewGuid().ToString();
@@ -447,7 +461,7 @@ public sealed partial class RustService
         // indexing run could filter documents without ever saying so.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+        await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
     }
 
     private bool TryLogSseErrorMessage(string jsonContent, string path)

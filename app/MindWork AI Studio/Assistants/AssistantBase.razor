@@ -1,4 +1,5 @@
 @using AIStudio.Chat
+@using AIStudio.Settings.DataModel
 @inherits AssistantLowerBase
 @typeparam TSettings
 
@@ -180,7 +181,7 @@
                 @* No selection where the assistant's own rules already name the tools: *@
                 @if (this.SettingsManager.AreToolsEnabled() && this.AssistantManagedToolIds is null && this.SettingsManager.IsToolSelectionVisible(this.Component))
                 {
-                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" RequiredOutboundDataRestriction="@(this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE)" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
                 }
 
                 <MudSpacer />

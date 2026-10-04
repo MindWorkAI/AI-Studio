@@ -9,7 +9,6 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.ToolCallingSystem;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -174,7 +173,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = pluginAssistant.SystemPrompt;
         this.submitText = pluginAssistant.SubmitText;
         this.allowProfiles = pluginAssistant.AllowProfiles;
-        this.assistantToolIds = ReadPluginToolIds(pluginAssistant);
+        this.assistantToolIds = this.ReadPluginToolIds(pluginAssistant);
         this.showFooterProfileSelection = !pluginAssistant.HasEmbeddedProfileSelection;
         this.pluginPath = pluginAssistant.PluginPath;
         var pluginHash = pluginAssistant.ComputeAuditHash();
@@ -369,7 +368,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = updatedPlugin.SystemPrompt;
         this.submitText = updatedPlugin.SubmitText;
         this.allowProfiles = updatedPlugin.AllowProfiles;
-        this.assistantToolIds = ReadPluginToolIds(updatedPlugin);
+        this.assistantToolIds = this.ReadPluginToolIds(updatedPlugin);
         this.showFooterProfileSelection = !updatedPlugin.HasEmbeddedProfileSelection;
         this.pluginPath = updatedPlugin.PluginPath;
         var pluginHash = updatedPlugin.ComputeAuditHash();
@@ -394,7 +393,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// a plugin installed later, and dropping it here would silently turn a plugin that names tools
     /// into one that lets the user choose.
     /// </remarks>
-    private static HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? ToolSelectionRules.NormalizeSelection(toolIds) : null;
+    private HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? this.ToolRegistry.NormalizeSelection(toolIds) : null;
 
     private string ResolveImageSource(AssistantImage image)
     {
