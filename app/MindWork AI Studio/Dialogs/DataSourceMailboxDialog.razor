@@ -71,13 +71,13 @@
                         @T("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
                     </MudAlert>
                 }
-                @* No adornment: the field shows the chosen entry together with its icon, see the entries below. *@
+                @* No adornment: the field shows the chosen entry together with its icon, see the entries below. They use the size and spacing of ProviderLabel, so a logo and a Material icon line up. *@
                 <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" Validation="@this.ValidateOrganizationProvider">
                     @if (!this.AllowsOnlyOrganizationMailServers)
                     {
                         <MudSelectItem T="string" Value="@string.Empty">
-                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudIcon Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"/>
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit" Color="Color.Info"/>
                                 <span>@T("Another provider")</span>
                             </MudStack>
                         </MudSelectItem>
@@ -85,8 +85,8 @@
                     @foreach (var organizationProvider in this.organizationProviders)
                     {
                         <MudSelectItem T="string" Value="@GetProviderKey(organizationProvider)">
-                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info" Size="Size.Small"/>
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info"/>
                                 <span>@organizationProvider.Name</span>
                             </MudStack>
                         </MudSelectItem>
@@ -96,8 +96,15 @@
                         foreach (var template in MailboxProviderTemplates.ALL)
                         {
                             <MudSelectItem T="string" Value="@GetProviderKey(template)">
-                                <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudIcon Icon="@Icons.Material.Filled.Public" Color="Color.Info" Size="Size.Small"/>
+                                <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                    @if (string.IsNullOrEmpty(template.IconUrl))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Info"/>
+                                    }
+                                    else
+                                    {
+                                        <img src="@template.IconUrl" alt="" aria-hidden="true" draggable="false" class="provider-icon"/>
+                                    }
                                     <span>@template.Name</span>
                                 </MudStack>
                             </MudSelectItem>

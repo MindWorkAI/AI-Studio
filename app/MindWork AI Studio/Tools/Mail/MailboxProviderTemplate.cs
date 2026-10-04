@@ -12,4 +12,5 @@ namespace AIStudio.Tools.Mail;
 /// <param name="UsernameFormat">What the provider expects as the username.</param>
 /// <param name="Requirements">What the provider requires before AI Studio can sign in.</param>
 /// <param name="HelpUrl">The page of the provider which explains what the user has to do first.</param>
-public sealed record MailboxProviderTemplate(string Name, string Host, int Port, MailboxTransportSecurity TransportSecurity, MailboxUsernameFormat UsernameFormat, MailboxProviderRequirements Requirements, string HelpUrl);
+/// <param name="IconUrl">The logo of the provider, shipped with AI Studio, or empty when there is none.</param>
+public sealed record MailboxProviderTemplate(string Name, string Host, int Port, MailboxTransportSecurity TransportSecurity, MailboxUsernameFormat UsernameFormat, MailboxProviderRequirements Requirements, string HelpUrl, string IconUrl);
