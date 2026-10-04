@@ -61,6 +61,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected abstract string SystemPrompt { get; }
 
     protected abstract Tools.Components Component { get; }
+
+    /// <summary>
+    /// The name of the assistant plugin, which is only set by plugin-provided assistants.
+    /// </summary>
+    protected virtual string RuntimeAssistantName => string.Empty;
     
     protected virtual Func<string> Result2Copy => () => this.ResultingContentBlock is null ? string.Empty : this.ResultingContentBlock.Content switch
     {
@@ -375,8 +380,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
+
+        this.AssignRuntimeIdentity(this.ChatThread);
     }
 
     protected Guid CreateChatThread(Guid workspaceId, string name)
@@ -392,10 +398,24 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
-            RuntimeComponent = this.Component,
         };
         
+        this.AssignRuntimeIdentity(this.ChatThread);
         return chatId;
+    }
+
+    /// <summary>
+    /// Sets who runs the given thread: this assistant's component and, for an assistant plugin, its name.
+    /// </summary>
+    /// <remarks>
+    /// Both decide which tools the thread may use and what its requests to self-hosted servers name. Every
+    /// way an assistant creates or sends a thread goes through here, so that none of them can forget one.
+    /// </remarks>
+    /// <param name="chatThread">The thread this assistant runs.</param>
+    protected void AssignRuntimeIdentity(ChatThread chatThread)
+    {
+        chatThread.RuntimeComponent = this.Component;
+        chatThread.RuntimeAssistantName = this.RuntimeAssistantName;
     }
 
     private Task RefreshProviderSelectionFromConfigurationAsync()
@@ -519,7 +539,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
-            this.ChatThread.RuntimeComponent = this.Component;
+            this.AssignRuntimeIdentity(this.ChatThread);
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
             this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds(this.ChatThread.RequiredOutboundDataRestriction.Restriction);
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
@@ -604,6 +624,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.ChatThread.Blocks.Add(this.ResultingContentBlock);
         this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+        this.AssignRuntimeIdentity(this.ChatThread);
 
         await this.CheckpointAssistantSession();
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest

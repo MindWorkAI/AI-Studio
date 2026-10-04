@@ -162,8 +162,21 @@ public sealed record ChatThread
     /// </summary>
     public List<ContentBlock> Blocks { get; init; } = [];
 
+    /// <summary>
+    /// The component running this thread, which decides the tools it may use and what its requests name.
+    /// </summary>
+    /// <remarks>
+    /// None until somebody sets it: whoever sends a thread states which component they are. A place
+    /// which forgets that shows up as a request without a component, instead of silently counting as chat.
+    /// </remarks>
     [JsonIgnore]
-    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.CHAT;
+    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.NONE;
+
+    /// <summary>
+    /// The name of the assistant plugin running this thread, or empty for any other component.
+    /// </summary>
+    [JsonIgnore]
+    public string RuntimeAssistantName { get; set; } = string.Empty;
 
     [JsonIgnore]
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];

@@ -20,6 +20,8 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     
     protected override Type Type => Type.SYSTEM;
 
+    protected override Tools.Components Component => Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT;
+
     public override string Id => "Assistant Plugin Security Audit";
 
     protected override string JobDescription =>
@@ -109,7 +111,7 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
             return EMPTY_BLOCK;
 
         var thread = this.CreateChatThread(this.SystemPrompt(string.Empty));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         return thread.Blocks[^1];
     }

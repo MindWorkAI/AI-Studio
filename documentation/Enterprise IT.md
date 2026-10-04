@@ -952,3 +952,95 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Feature usage statistics (telemetry)
+
+When your organization runs its own AI servers, for example behind a LiteLLM gateway, you may want
+to know which features of AI Studio your colleagues use: the chat, the assistants, the agents. AI
+Studio can name the feature in the `User-Agent` header of every request it sends to these servers.
+Your servers then log it like any other header; LiteLLM, for example, shows it as a tag of the
+request. This is off by default, and AI Studio then sends no `User-Agent` at all.
+
+### What your servers receive
+
+The `User-Agent` names the app, its version, the platform, and the feature which sent the request:
+
+| Request sent by | `User-Agent` |
+|---|---|
+| The chat | `MindWorkAIStudio/26.10.1 (win-x64) Component/CHAT` |
+| The translation assistant | `MindWorkAIStudio/26.10.1 (win-x64) Component/TRANSLATION_ASSISTANT` |
+| The data source selection agent | `MindWorkAIStudio/26.10.1 (win-x64) Component/AGENT_DATA_SOURCE_SELECTION` |
+| An assistant plugin of your organization | `MindWorkAIStudio/26.10.1 (win-x64) Component/DYNAMIC_ASSISTANT Assistant/Cafe-Menu-Writer-Beta` |
+| Transcription, embeddings, and model lists | `MindWorkAIStudio/26.10.1 (win-x64)` |
+
+The platform is one of `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and
+`osx-arm64`. The feature names are the values of the enumeration in
+`app/MindWork AI Studio/Tools/Components.cs`.
+
+Assistant plugins are named only when they come with AI Studio, when your organization deployed
+them, or when it approved them, see
+[Enterprise approval for assistant plugins](#enterprise-approval-for-assistant-plugins). Users can
+build assistants for themselves and name them as they like, possibly after a person or a private
+project; such a name never leaves the device, and the request shows up as
+`Component/DYNAMIC_ASSISTANT` only. For the header, a name is reduced to ASCII letters, digits,
+dots, underscores, and dashes, and cut after 64 characters: "Café Menu Writer (Beta)" becomes
+`Cafe-Menu-Writer-Beta`.
+
+The `User-Agent` names neither the user nor their device; the platform only says which operating
+system and processor architecture AI Studio runs on. The request itself carries what it always
+carries, such as the prompt and the API key; the `User-Agent` adds only which feature sent it.
+
+### Who receives it
+
+Only providers of the types "self-hosted" and "LiteLLM" receive it. AI Studio decides by the type
+of the provider, not by its address: a LiteLLM provider receives it wherever its server runs.
+
+- **Cloud providers never receive it**, such as OpenAI, Anthropic, Google, or Mistral, whatever the
+  setting says.
+- **Other services never learn which feature sent a request**, such as ERI servers, Confluence, or
+  web pages.
+- **AI Studio sends no usage data to its developers**, with or without this setting.
+
+### What the numbers mean
+
+- **They count requests, not uses.** A single message in the chat may cause several requests:
+  each round of tool calls is a request of its own, and the classic RAG process lets its agents
+  select and check the data sources before the answer. Some assistants work in several steps, and
+  the batch processing sends one request per file.
+- **Agents appear under their own name.** When the chat lets an agent select its data sources, the
+  request of the agent shows up as `Component/AGENT_DATA_SOURCE_SELECTION`, not as part of the chat.
+- **Transcription, embeddings, and model lists name the app only.** Which kind of request it was,
+  your server sees from the endpoint; which feature caused it is not sent.
+
+### Switching it on
+
+Switch it on for everybody, without a way to opt out:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+```
+
+Add `AllowUserOverride` to make it the default of your organization, which users may still change
+in the app settings:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators.AllowUserOverride"] = true
+```
+
+Set it to `false` without `AllowUserOverride` to keep everybody from switching it on. Either way,
+users find the setting in the app settings, together with an explanation of what is sent; when you
+lock it, they see your value there. A change applies to the requests which follow; an embedding
+run which is already underway finishes as it started.
+
+### Before you switch it on
+
+As long as your server cannot tell the users apart, the numbers say how often each feature is
+used, and nothing about anybody in particular. This changes as soon as it can: for example, when
+every user has an API key of their own, such as a virtual key in LiteLLM, or when your logs keep
+the IP addresses of the devices. The usage data then relates to persons, and data protection law
+applies to it. In some countries, such as Germany, evaluating it may also require the consent of
+your works council, because it could be used to monitor the behavior or performance of employees.
+
+Clarify this before you switch it on, evaluate the numbers per feature rather than per person, and
+tell your colleagues that their requests name the features they use.

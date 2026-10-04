@@ -17,6 +17,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     protected override Type Type => Type.WORKER;
     
     /// <inheritdoc />
+    protected override Tools.Components Component => Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION;
+
+    /// <inheritdoc />
     public override string Id => "Retrieval Context Validation";
 
     /// <inheritdoc />
@@ -97,7 +100,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             return EMPTY_BLOCK;
           
         var thread = this.CreateChatThread(this.SystemPrompt(retrievalContext));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
           
         return thread.Blocks[^1];

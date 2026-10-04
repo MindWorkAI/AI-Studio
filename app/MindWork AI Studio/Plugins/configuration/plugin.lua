@@ -938,6 +938,22 @@ CONFIG["SETTINGS"] = {}
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
 
+-- Configure whether requests to self-hosted servers name the feature of AI Studio which sent them.
+-- Only self-hosted providers and LiteLLM receive these details; cloud providers never do.
+-- When set to true, their requests carry a User-Agent such as
+-- "MindWorkAIStudio/26.10.1 (win-x64) Component/TRANSLATION_ASSISTANT", which lets the operators
+-- of these servers see which features are used. The default is false: AI Studio then sends no
+-- User-Agent at all. The Enterprise IT documentation describes what is sent, and what to clarify
+-- before you switch it on.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators.AllowUserOverride"] = true
+
 -- Configure additional root certificates for external HTTPS requests.
 --
 -- This is intended for managed Linux/Flatpak deployments where organization-internal
