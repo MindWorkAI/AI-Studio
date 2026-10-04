@@ -71,11 +71,15 @@
                         @T("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
                     </MudAlert>
                 }
-                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Business" Validation="@this.ValidateOrganizationProvider">
+                @* No adornment: the field shows the chosen entry together with its icon, see the entries below. *@
+                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" Validation="@this.ValidateOrganizationProvider">
                     @if (!this.AllowsOnlyOrganizationMailServers)
                     {
                         <MudSelectItem T="string" Value="@string.Empty">
-                            @T("Another provider")
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small"/>
+                                <span>@T("Another provider")</span>
+                            </MudStack>
                         </MudSelectItem>
                     }
                     @foreach (var organizationProvider in this.organizationProviders)
@@ -92,7 +96,10 @@
                         foreach (var template in MailboxProviderTemplates.ALL)
                         {
                             <MudSelectItem T="string" Value="@GetProviderKey(template)">
-                                @template.Name
+                                <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@Icons.Material.Filled.Public" Color="Color.Info" Size="Size.Small"/>
+                                    <span>@template.Name</span>
+                                </MudStack>
                             </MudSelectItem>
                         }
                     }
