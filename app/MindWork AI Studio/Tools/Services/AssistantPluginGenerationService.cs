@@ -658,6 +658,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             Name = threadName,
             SystemPrompt = systemPrompt,
             SelectedProvider = provider.Id,
+
+            // Generating and revising assistant plugins is the work of the Assistant Builder:
+            RuntimeComponent = Components.META_ASSISTANT,
             Blocks =
             [
                 new()
