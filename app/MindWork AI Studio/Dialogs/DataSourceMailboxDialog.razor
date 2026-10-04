@@ -160,46 +160,58 @@
                 </MudAlert>
             }
 
-            <MudText Typo="Typo.h6" Class="mb-1">
-                @T("Server")
-            </MudText>
-            <div class="border-dashed border rounded-lg pa-3 mb-6">
-                <MudStack Row="@true">
-                    @* ReSharper disable once CSharpWarnings::CS8974 *@
-                    <MudTextField
-                        T="string"
-                        @bind-Text="@this.dataHost"
-                        Label="@T("IMAP server host")"
-                        Immediate="@true"
-                        ReadOnly="@(!this.CanChangeSource || this.AllowsOnlyOrganizationMailServers)"
-                        Validation="@DataSourceValidation.ValidateMailboxHost"
-                        Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.Dns"
-                        AdornmentColor="Color.Info"
-                        Variant="Variant.Outlined"
-                        UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+            @* Settings AI Studio fills in wait behind a button, so the sign-in follows the choice of the provider directly: *@
+            @if (this.AreServerSettingsFilledIn)
+            {
+                <MudButton OnClick="@this.ToggleServerDetails" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Dns" Class="@this.ServerDetailsButtonClass">
+                    @(this.showServerDetails ? T("Hide Server Details") : T("Show Server Details"))
+                </MudButton>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6" Class="mb-1">
+                    @T("Server")
+                </MudText>
+            }
+            <MudCollapse Expanded="@this.AreServerDetailsShown">
+                <div class="border-dashed border rounded-lg pa-3 mb-6">
+                    <MudStack Row="@true">
+                        @* ReSharper disable once CSharpWarnings::CS8974 *@
+                        <MudTextField
+                            T="string"
+                            @bind-Text="@this.dataHost"
+                            Label="@T("IMAP server host")"
+                            Immediate="@true"
+                            ReadOnly="@(!this.CanChangeSource || this.AllowsOnlyOrganizationMailServers)"
+                            Validation="@this.ValidateHost"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Dns"
+                            AdornmentColor="Color.Info"
+                            Variant="Variant.Outlined"
+                            UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
 
-                    @* ReSharper disable once CSharpWarnings::CS8974 *@
-                    <MudNumericField
-                        T="int"
-                        @bind-Value="@this.dataPort"
-                        Label="@T("Port")"
-                        Immediate="@true"
-                        ReadOnly="@this.AllowsOnlyOrganizationMailServers"
-                        Min="1" Max="65535"
-                        Validation="@this.dataSourceValidation.ValidatePort"
-                        Variant="Variant.Outlined"/>
-                </MudStack>
+                        @* ReSharper disable once CSharpWarnings::CS8974 *@
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.dataPort"
+                            Label="@T("Port")"
+                            Immediate="@true"
+                            ReadOnly="@this.AllowsOnlyOrganizationMailServers"
+                            Min="1" Max="65535"
+                            Validation="@this.dataSourceValidation.ValidatePort"
+                            Variant="Variant.Outlined"/>
+                    </MudStack>
 
-                <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
-                    @foreach (var transportSecurity in ConfigurationSelectDataFactory.GetMailboxTransportSecurityData())
-                    {
-                        <MudSelectItem T="MailboxTransportSecurity" Value="@transportSecurity.Value">
-                            @transportSecurity.Name
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-            </div>
+                    <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
+                        @foreach (var transportSecurity in ConfigurationSelectDataFactory.GetMailboxTransportSecurityData())
+                        {
+                            <MudSelectItem T="MailboxTransportSecurity" Value="@transportSecurity.Value">
+                                @transportSecurity.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            </MudCollapse>
 
             <MudText Typo="Typo.h6" Class="mb-1">
                 @T("Sign-in")

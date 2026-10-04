@@ -103,6 +103,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private ushort dataMaxMatches = 10;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.NONE;
     private bool showExpertSettings;
+    private bool showServerDetails;
     private bool revalidateAfterRender;
 
     private IReadOnlyList<DataMailboxProvider> organizationProviders = [];
@@ -306,6 +307,25 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string? ValidateOrganizationProvider(string providerKey) => this.AllowsOnlyOrganizationMailServers && this.organizationProviders.All(provider => GetProviderKey(provider) != providerKey)
         ? T("Please choose one of the mail servers of your organization.")
         : null;
+
+    /// <summary>
+    /// Checks the host, unless it comes from the organization: then the choice of its mail server is
+    /// checked instead, and nobody is told about a host they cannot enter.
+    /// </summary>
+    private string? ValidateHost(string host) => this.AllowsOnlyOrganizationMailServers ? null : DataSourceValidation.ValidateMailboxHost(host);
+
+    /// <summary>
+    /// Whether AI Studio fills in the server settings, from a mail server of the organization or
+    /// from a public template which knows the host. They are hidden then, until the user asks for them.
+    /// </summary>
+    private bool AreServerSettingsFilledIn => this.AllowsOnlyOrganizationMailServers || this.selectedOrganizationProvider is not null || this.selectedTemplate is { Host.Length: > 0 };
+
+    private bool AreServerDetailsShown => !this.AreServerSettingsFilledIn || this.showServerDetails;
+
+    // While the details are hidden, the button stands in for the whole server section and keeps its distance:
+    private string ServerDetailsButtonClass => this.showServerDetails ? "mb-3" : "mb-6";
+
+    private void ToggleServerDetails() => this.showServerDetails = !this.showServerDetails;
 
     private string SignInGroupClass => this.authFailure is null
         ? "border-dashed border rounded-lg pa-3 mb-6"
