@@ -64,7 +64,6 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                            },
                            isTryingSecret: true,
                            requestPath: host.ChatURL(),
-                           headersAction: headers => AppUserAgent.ApplyComponent(headers, chatThread),
                            token: token))
             yield return content;
     }

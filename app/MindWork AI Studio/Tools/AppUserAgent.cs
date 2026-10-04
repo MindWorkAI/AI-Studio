@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Text;
 
 using AIStudio.Chat;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.Metadata;
 
 using SharedTools;
@@ -11,12 +13,14 @@ using SharedTools;
 namespace AIStudio.Tools;
 
 /// <summary>
-/// The User-Agent which AI Studio sends to LLM providers.
+/// The User-Agent which AI Studio sends to self-hosted servers, when the user allows it.
 /// </summary>
 /// <remarks>
-/// It lets operators of a gateway such as LiteLLM tell requests from AI Studio apart
-/// from other clients, e.g., in their logs. Requests to self-hosted providers additionally
-/// name the assistant which sent them; other providers never learn about it.
+/// It lets the operators of a self-hosted server or a gateway such as LiteLLM tell requests from
+/// AI Studio apart from other clients, e.g., in their logs, and see which feature sent them.<br/><br/>
+/// Who receives it is decided in IsAllowedFor, and nowhere else: only self-hosted servers, and only
+/// when the user or their organization switched on sharing the feature usage. Without that, AI Studio
+/// sends no User-Agent at all, the same as before this existed. Cloud providers never receive it.
 /// </remarks>
 public static class AppUserAgent
 {
@@ -26,6 +30,15 @@ public static class AppUserAgent
     /// The User-Agent naming the app, its version, and the platform, e.g., <c>MindWorkAIStudio/26.9.1 (osx-arm64)</c>.
     /// </summary>
     public static readonly string BASE = CreateBase();
+
+    /// <summary>
+    /// Whether requests to the given provider may carry the User-Agent.
+    /// </summary>
+    /// <param name="provider">The provider which receives the requests.</param>
+    /// <param name="settingsManager">The settings, which say whether the user shares the feature usage.</param>
+    /// <returns>True when the provider runs on a self-hosted server and sharing is switched on; otherwise, false.</returns>
+    public static bool IsAllowedFor(LLMProviders provider, SettingsManager settingsManager) =>
+        provider.RunsOnSelfHostedServer() && settingsManager.ConfigurationData.App.ShareFeatureUsageWithSelfHostedServerOperators;
 
     /// <summary>
     /// Sets the User-Agent as default header of the given HTTP client.
