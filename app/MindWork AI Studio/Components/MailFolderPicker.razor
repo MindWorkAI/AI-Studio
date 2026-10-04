@@ -1,0 +1,28 @@
+@using AIStudio.Tools.Mail
+@inherits MSGComponentBase
+
+<MudTreeView T="string" Items="@this.treeItems" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@this.SelectedFolder" SelectedValueChanged="@this.SelectFolder" Hover="@true" Dense="@true" Disabled="@this.Disabled" Class="mb-3">
+    <ItemTemplate Context="item">
+        <MudTreeViewItem T="string" Value="@item.Value" Text="@item.Text" Icon="@item.Icon" @bind-Expanded="@item.Expanded" CanExpand="@item.Expandable" Items="@item.Children" Disabled="@(!this.CanBeSelected(item.Value))"/>
+    </ItemTemplate>
+</MudTreeView>
+
+@if (this.CreateFolder is not null && !this.Disabled)
+{
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudTextField
+            T="string"
+            @bind-Text="@this.newFolderName"
+            Label="@T("New folder")"
+            Immediate="@true"
+            MaxLength="@ImapMailboxConnector.MAX_FOLDER_NAME_LENGTH"
+            HelperText="@this.NewFolderHelperText"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@Icons.Material.Filled.CreateNewFolder"
+            AdornmentColor="Color.Info"
+            Variant="Variant.Outlined"/>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CreateNewFolder" Disabled="@(!this.CanCreateFolder)" OnClick="@this.CreateNewFolder">
+            @T("Create")
+        </MudButton>
+    </MudStack>
+}

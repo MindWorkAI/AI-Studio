@@ -1,0 +1,22 @@
+From: Erin <erin@example.org>
+To: Bob <bob@example.org>
+Subject: Board report due today
+Date: Wed, 30 Sep 2026 16:10:00 +0200
+Message-ID: <priority-with-attachment@example.org>
+X-Priority: 1 (Highest)
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed"
+
+--mixed
+Content-Type: text/plain; charset=utf-8
+
+Please review the attached report before the board meeting.
+
+--mixed
+Content-Type: application/pdf; name="board-report.pdf"
+Content-Disposition: attachment; filename="board-report.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSPj4Kc3RyZWFtCg==
+
+--mixed--

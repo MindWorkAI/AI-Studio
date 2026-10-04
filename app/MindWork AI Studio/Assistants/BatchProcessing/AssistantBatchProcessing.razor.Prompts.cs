@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Assistants.BatchProcessing;
@@ -110,7 +111,9 @@ public partial class AssistantBatchProcessing
             Name = this.Title,
             Blocks = [],
             RuntimeComponent = this.Component,
-            RuntimeSelectedToolIds = this.GetRunnableToolIds(),
+
+            // A thread of its own, which has read no mailbox yet:
+            RuntimeSelectedToolIds = this.GetRunnableToolIds(OutboundDataRestriction.UNRESTRICTED),
 
             // Always true here, unlike in the assistant base: a batch run takes its tools from the
             // selected policy or from its own field, never from the tool selection in the footer.

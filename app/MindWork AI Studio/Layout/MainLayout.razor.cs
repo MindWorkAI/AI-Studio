@@ -487,15 +487,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }
     
+    /// <remarks>
+    /// Speaks of neither files nor mails: the overview sums up data sources of every kind.
+    /// </remarks>
     private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
     {
         DataSourceEmbeddingState.QUEUED => T("Embeddings are waiting to be processed."),
         DataSourceEmbeddingState.RUNNING => string.Format(
-            T("Embeddings are running: {0} of {1} files are indexed."),
-            this.embeddingOverview.IndexedFiles,
-            this.embeddingOverview.TotalFiles),
-        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
-            ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
+            T("Embeddings are running: {0} of {1} are indexed."),
+            this.embeddingOverview.IndexedDocuments.CompactCount(),
+            this.embeddingOverview.TotalDocuments.CompactCount()),
+        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedDocuments > 0
+            ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
             : T("Some embeddings failed and need attention."),
 
         // The entry is always visible, so its resting state needs words as well. An empty tooltip
