@@ -303,6 +303,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: timeout for external HTTP requests
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HttpClientTimeoutSeconds, this.Id, settingsTable, dryRun);
 
+        // Config: share the feature usage with the operators of self-hosted servers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShareFeatureUsageWithSelfHostedServerOperators, this.Id, settingsTable, dryRun);
+
         // Config: custom root certificates for external HTTP requests
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificateBundlePath, this.Id, settingsTable, dryRun);
