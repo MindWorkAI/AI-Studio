@@ -51,7 +51,7 @@ public sealed class ConfluenceSearchToolTests
         var parameters = HttpUtility.ParseQueryString(searchUrl.Query);
 
         Assert.That(searchUrl.GetLeftPart(UriPartial.Path), Is.EqualTo("https://wiki.example.org/confluence/dosearchsite.action"), "The search page lies below the context path of the wiki, even when the configured address lacks the final slash.");
-        Assert.That(parameters["cql"], Is.EqualTo("siteSearch ~ \"release plan\""));
+        Assert.That(parameters["cql"], Is.EqualTo("siteSearch ~ \"release plan\""), "The search box of the wiki sends the same field, so the tool finds the pages the user would find there.");
         Assert.That(parameters["queryString"], Is.EqualTo("release plan"), "Confluence shows these words in its search field, so the page reads like a search the user made.");
         Assert.That(ConfluenceSearchTool.IsWithinWiki(WIKI, searchUrl), Is.True);
     }
