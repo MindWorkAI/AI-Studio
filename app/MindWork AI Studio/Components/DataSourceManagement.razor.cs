@@ -496,6 +496,17 @@ public partial class DataSourceManagement : MSGComponentBase
             return;
 
         var mailbox = (DataSourceMailbox)dialogResult.Data!;
+
+        //
+        // The dialog refuses to add a mailbox once the organization rules them out, but the rule
+        // may change while it stores the password. Then the password goes again, as far as possible:
+        //
+        if (!this.MayAddMailbox)
+        {
+            await this.RustService.DeleteSecret(mailbox, SecretStoreType.DATA_SOURCE);
+            return;
+        }
+
         mailbox = mailbox with { Num = this.SettingsManager.ConfigurationData.NextDataSourceNum++ };
 
         this.SettingsManager.ConfigurationData.Mailboxes.Add(mailbox);

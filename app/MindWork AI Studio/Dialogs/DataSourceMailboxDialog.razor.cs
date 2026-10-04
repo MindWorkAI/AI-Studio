@@ -120,7 +120,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
 
-    // The fields whose rules read other fields, see RevalidateDependentFields:
+    // The fields whose rules read other fields, see RevalidateDependentFields. The provider is only
+    // rendered while the source can be changed:
+    private MudSelect<string>? providerSelect;
     private MudSelect<string> embeddingSelect = null!;
     private MudSelect<ConfidenceLevel> confidenceLevelSelect = null!;
     private MudNumericField<int> maxChunkTokenLengthField = null!;
@@ -149,10 +151,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
 
-        // The mail servers of the organization come from the running configuration plugins:
-        this.organizationProviders = PluginFactory.GetMailboxProviders();
-        this.mailServerPolicy = MailServerPolicy.Read(this.SettingsManager);
-
         // A mailbox and a data source must not share a name:
         this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
             .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Select(x => x.Name.ToLowerInvariant()))
@@ -179,9 +177,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
-            this.selectedOrganizationProvider = this.organizationProviders.FirstOrDefault(provider => MailServerHosts.AreSame(provider.Host, this.DataSource.Host));
-            if (this.selectedOrganizationProvider is null && !this.AllowsOnlyOrganizationMailServers)
-                this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            // A mail server of the organization goes first, see FitProviderSelection:
+            this.selectedTemplate = MailboxProviderTemplates.ALL.FirstOrDefault(template => template.Host.Length > 0 && template.Host.Equals(this.DataSource.Host.Trim(), StringComparison.OrdinalIgnoreCase));
 
             var requestedSecret = await this.RustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
             if (requestedSecret.Success)
@@ -196,15 +194,12 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.authFailure = await indexStore.GetMailboxAuthFailureAsync(this.dataId, CancellationToken.None);
         }
 
-        // A new mailbox with a single mail server to choose from has nothing to choose:
-        if (!this.IsEditing && this.AllowsOnlyOrganizationMailServers && this.organizationProviders.Count == 1)
-            this.SelectProvider(GetProviderKey(this.organizationProviders[0]));
-
-        // A level the organization ruled out after the mailbox was saved is not offered anymore, so
-        // the dialog starts with the one which applies anyway, see MailToolResults.GetRequirements:
-        this.dataOutboundDataRestriction = this.dataOutboundDataRestriction.StricterOf(this.MinimumOutboundDataRestriction);
+        this.ApplyOrganizationRules();
 
         await base.OnInitializedAsync();
+
+        // A configuration plugin may change what the organization allows while the dialog is open:
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -222,6 +217,27 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         }
 
         await base.OnAfterRenderAsync(firstRender);
+    }
+
+    #endregion
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                this.ApplyOrganizationRules();
+
+                // A choice the organization does not offer anymore shows its error, once the fields hold the new values:
+                this.revalidateAfterRender = true;
+                this.StateHasChanged();
+                break;
+        }
+
+        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     #endregion
@@ -281,6 +297,11 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// Whether the edited mailbox is on a server the organization does not allow.
     /// </summary>
     private bool IsOnServerNotAllowed => this.IsEditing && !this.mailServerPolicy.IsAllowed(this.DataSource.Host);
+
+    /// <summary>
+    /// Whether the organization stopped allowing new mailboxes while the dialog was open to add one.
+    /// </summary>
+    private bool IsAddingNotAllowed => !this.IsEditing && !this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
     private string? ValidateOrganizationProvider(string providerKey) => this.AllowsOnlyOrganizationMailServers && this.organizationProviders.All(provider => GetProviderKey(provider) != providerKey)
         ? T("Please choose one of the mail servers of your organization.")
@@ -379,6 +400,59 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private static string GetProviderKey(DataMailboxProvider organizationProvider) => $"organization:{organizationProvider.Id}";
 
     private static string GetProviderKey(MailboxProviderTemplate template) => $"template:{template.Name}";
+
+    /// <summary>
+    /// Reads what the organization decides about mailboxes and fits the dialog to it.
+    /// </summary>
+    /// <remarks>
+    /// Runs when the dialog opens and again whenever a configuration plugin changes while it is
+    /// open. Either way, the dialog offers what it would offer when opened anew, and keeps what the
+    /// user entered as far as the organization allows it.
+    /// </remarks>
+    private void ApplyOrganizationRules()
+    {
+        // The mail servers of the organization come from the running configuration plugins:
+        this.organizationProviders = PluginFactory.GetMailboxProviders();
+        this.mailServerPolicy = MailServerPolicy.Read(this.SettingsManager);
+        this.FitProviderSelection();
+
+        // A level the organization ruled out is not offered anymore, so the dialog switches to the
+        // one which applies anyway, see MailToolResults.GetRequirements:
+        this.dataOutboundDataRestriction = this.dataOutboundDataRestriction.StricterOf(this.MinimumOutboundDataRestriction);
+    }
+
+    /// <summary>
+    /// Fits the chosen provider to the mail servers the organization offers right now.
+    /// </summary>
+    private void FitProviderSelection()
+    {
+        //
+        // While the source can be changed, a chosen mail server of the organization is followed by
+        // its id: when the organization changed how to reach it, its new settings apply. A locked
+        // source keeps its host, so only the host tells which server of the organization it is on:
+        //
+        if (this.selectedOrganizationProvider is { } chosenOrganizationProvider && this.CanChangeSource)
+        {
+            var currentOrganizationProvider = this.organizationProviders.FirstOrDefault(provider => provider.Id == chosenOrganizationProvider.Id);
+            if (currentOrganizationProvider is not null && (currentOrganizationProvider.Host != chosenOrganizationProvider.Host || currentOrganizationProvider.Port != chosenOrganizationProvider.Port || currentOrganizationProvider.TransportSecurity != chosenOrganizationProvider.TransportSecurity))
+                this.SelectProvider(GetProviderKey(currentOrganizationProvider));
+            else
+                this.selectedOrganizationProvider = currentOrganizationProvider;
+        }
+        else
+            this.selectedOrganizationProvider = null;
+
+        this.selectedOrganizationProvider ??= this.organizationProviders.FirstOrDefault(provider => MailServerHosts.AreSame(provider.Host, this.dataHost));
+
+        // The mail servers of the organization go before the public templates, which are not offered
+        // at all while the organization allows its own mail servers only:
+        if (this.selectedOrganizationProvider is not null || this.AllowsOnlyOrganizationMailServers)
+            this.selectedTemplate = null;
+
+        // A new mailbox with a single mail server to choose from has nothing to choose:
+        if (!this.IsEditing && this.AllowsOnlyOrganizationMailServers && this.selectedOrganizationProvider is null && this.organizationProviders.Count == 1)
+            this.SelectProvider(GetProviderKey(this.organizationProviders[0]));
+    }
 
     private void SelectProvider(string providerKey)
     {
@@ -526,6 +600,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
     private async Task Store()
     {
+        if (this.IsAddingNotAllowed)
+            return;
+
         await this.form.Validate();
 
         if (this.RequiresConnectionTest && this.dataSourceValidation.ValidateTestedConnection() is { } testIssue)
@@ -593,8 +670,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider
     /// and the required confidence level, and the token limits, which depend on the embedding provider.
+    /// The provider joins them, because its rule reads what the organization allows.
     /// </summary>
-    private Task RevalidateDependentFields(IFormComponent? changedField) => DependentFieldValidation.RevalidateAsync(changedField, this.embeddingSelect, this.confidenceLevelSelect, this.maxChunkTokenLengthField, this.chunkOverlapTokenLengthField);
+    private Task RevalidateDependentFields(IFormComponent? changedField) => DependentFieldValidation.RevalidateAsync(changedField, this.providerSelect, this.embeddingSelect, this.confidenceLevelSelect, this.maxChunkTokenLengthField, this.chunkOverlapTokenLengthField);
 
     private Task RevalidateAfterFieldChange(FormFieldChangedEventArgs change) => this.RevalidateDependentFields(change.Field);
 

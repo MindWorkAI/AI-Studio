@@ -8,6 +8,15 @@
 <MudDialog>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
+            @if (this.IsAddingNotAllowed)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @T("Your organization no longer allows adding mailboxes, so this one cannot be added.")
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
             @if (this.IsOnServerNotAllowed)
             {
                 <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
@@ -72,7 +81,7 @@
                     </MudAlert>
                 }
                 @* No adornment: the field shows the chosen entry together with its icon, see the entries below. They use the size and spacing of ProviderLabel, so a logo and a Material icon line up. *@
-                <MudSelect T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" Validation="@this.ValidateOrganizationProvider">
+                <MudSelect @ref="@this.providerSelect" T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" Validation="@this.ValidateOrganizationProvider">
                     @if (!this.AllowsOnlyOrganizationMailServers)
                     {
                         <MudSelectItem T="string" Value="@string.Empty">
@@ -417,7 +426,7 @@
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.IsAddingNotAllowed">
             @if(this.IsEditing)
             {
                 @T("Update")
