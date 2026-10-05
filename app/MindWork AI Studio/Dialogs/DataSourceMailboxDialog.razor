@@ -1,0 +1,452 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Mail
+@using AIStudio.Tools.Validation
+@using AIStudio.Provider
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
+            @if (this.IsAddingNotAllowed)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @T("Your organization no longer allows adding mailboxes, so this one cannot be added.")
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
+            @if (this.IsOnServerNotAllowed)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @MailboxConnectionFailure.SERVER_NOT_ALLOWED.GetDescription()
+                    </MudJustifiedText>
+                </MudAlert>
+            }
+
+            @if (this.authFailure is not null)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body1">
+                        @this.AuthFailureText
+                    </MudJustifiedText>
+                    @if (!string.IsNullOrWhiteSpace(this.authFailure.FailureMessage))
+                    {
+                        <MudJustifiedText Typo="Typo.body2" Class="mt-2">
+                            @string.Format(T("The server answered: {0}"), this.authFailure.FailureMessage)
+                        </MudJustifiedText>
+                    }
+                </MudAlert>
+            }
+
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataName"
+                Label="@T("Data Source Name")"
+                Class="mb-6"
+                MaxLength="@DataSourceValidation.MAX_NAME_LENGTH"
+                Counter="@DataSourceValidation.MAX_NAME_LENGTH"
+                Immediate="@true"
+                Validation="@this.dataSourceValidation.ValidatingName"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Lightbulb"
+                AdornmentColor="Color.Info"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+            />
+
+            @if (this.CanChangeSource)
+            {
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @if (this.AllowsOnlyOrganizationMailServers)
+                    {
+                        @T("Your organization allows mailboxes only on its own mail servers. Choose one of them here, and AI Studio fills in the server settings for you.")
+                    }
+                    else if (this.HasOrganizationProviders)
+                    {
+                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. The mail servers of your organization come first, marked with a building. Alternatively, you can enter the technical details yourself.")
+                    }
+                    else
+                    {
+                        @T("Choose your mail provider here, and AI Studio fills in the server settings for you. Alternatively, e.g., for a mail server of your organization, you can enter the technical details yourself.")
+                    }
+                </MudJustifiedText>
+                @if (this.AllowsOnlyOrganizationMailServers && !this.HasOrganizationProviders)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+                        @T("Your organization has not set up any of its mail servers here yet. Please ask your IT department.")
+                    </MudAlert>
+                }
+                @* No adornment: the field shows the chosen entry together with its icon, see the entries below. They use the size and spacing of ProviderLabel, so a logo and a Material icon line up. *@
+                <MudSelect @ref="@this.providerSelect" T="string" Value="@this.SelectedProviderKey" ValueChanged="@this.SelectProvider" Text="@this.SelectedProviderText" Placeholder="@T("Please choose a mail server")" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" Validation="@this.ValidateOrganizationProvider">
+                    @if (!this.AllowsOnlyOrganizationMailServers)
+                    {
+                        <MudSelectItem T="string" Value="@string.Empty">
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Edit" Color="Color.Info"/>
+                                <span>@T("Another provider")</span>
+                            </MudStack>
+                        </MudSelectItem>
+                    }
+                    @foreach (var organizationProvider in this.organizationProviders)
+                    {
+                        <MudSelectItem T="string" Value="@GetProviderKey(organizationProvider)">
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Info"/>
+                                <span>@organizationProvider.Name</span>
+                            </MudStack>
+                        </MudSelectItem>
+                    }
+                    @if (!this.AllowsOnlyOrganizationMailServers)
+                    {
+                        foreach (var template in MailboxProviderTemplates.ALL)
+                        {
+                            <MudSelectItem T="string" Value="@GetProviderKey(template)">
+                                <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                                    @if (string.IsNullOrEmpty(template.IconUrl))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Email" Color="Color.Info"/>
+                                    }
+                                    else
+                                    {
+                                        <img src="@template.IconUrl" alt="" aria-hidden="true" draggable="false" class="provider-icon"/>
+                                    }
+                                    <span>@template.Name</span>
+                                </MudStack>
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            }
+
+            @if (this.selectedOrganizationProvider is { } chosenOrganizationProvider)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-6">
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                        @T("Your organization offers this mail server. Sign in with your own username and password.")
+                    </MudJustifiedText>
+                    @if (!string.IsNullOrEmpty(chosenOrganizationProvider.UsernameHint))
+                    {
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                            @string.Format(T("Username: {0}"), chosenOrganizationProvider.UsernameHint)
+                        </MudJustifiedText>
+                    }
+                    @if (!string.IsNullOrEmpty(chosenOrganizationProvider.HelpUrl))
+                    {
+                        <MudLink Href="@chosenOrganizationProvider.HelpUrl" Target="_blank" Typo="Typo.body2">
+                            @string.Format(T("Instructions of {0}"), chosenOrganizationProvider.Name)
+                        </MudLink>
+                    }
+                </MudAlert>
+            }
+            else if (this.selectedTemplate is not null)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-6">
+                    @foreach (var requirement in this.selectedTemplate.Requirements.GetDescriptions())
+                    {
+                        <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                            @requirement
+                        </MudJustifiedText>
+                    }
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                        @string.Format(T("Username: {0}"), this.selectedTemplate.UsernameFormat.GetDescription())
+                    </MudJustifiedText>
+                    <MudLink Href="@this.selectedTemplate.HelpUrl" Target="_blank" Typo="Typo.body2">
+                        @string.Format(T("Instructions of {0}"), this.selectedTemplate.Name)
+                    </MudLink>
+                </MudAlert>
+            }
+
+            @* Settings AI Studio fills in wait behind a button, so the sign-in follows the choice of the provider directly: *@
+            @if (this.AreServerSettingsFilledIn)
+            {
+                <MudButton OnClick="@this.ToggleServerDetails" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Dns" Class="@this.ServerDetailsButtonClass">
+                    @(this.showServerDetails ? T("Hide Server Details") : T("Show Server Details"))
+                </MudButton>
+            }
+            else
+            {
+                <MudText Typo="Typo.h6" Class="mb-1">
+                    @T("Server")
+                </MudText>
+            }
+            <MudCollapse Expanded="@this.AreServerDetailsShown">
+                <div class="border-dashed border rounded-lg pa-3 mb-6">
+                    <MudStack Row="@true">
+                        @* ReSharper disable once CSharpWarnings::CS8974 *@
+                        <MudTextField
+                            T="string"
+                            @bind-Text="@this.dataHost"
+                            Label="@T("IMAP server host")"
+                            Immediate="@true"
+                            ReadOnly="@(!this.CanChangeSource || this.AllowsOnlyOrganizationMailServers)"
+                            Validation="@this.ValidateHost"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Dns"
+                            AdornmentColor="Color.Info"
+                            Variant="Variant.Outlined"
+                            UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+
+                        @* ReSharper disable once CSharpWarnings::CS8974 *@
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.dataPort"
+                            Label="@T("Port")"
+                            Immediate="@true"
+                            ReadOnly="@this.AllowsOnlyOrganizationMailServers"
+                            Min="1" Max="65535"
+                            Validation="@this.dataSourceValidation.ValidatePort"
+                            Variant="Variant.Outlined"/>
+                    </MudStack>
+
+                    <MudSelect T="MailboxTransportSecurity" Value="@this.dataTransportSecurity" ValueChanged="@this.SelectTransportSecurity" Text="@this.dataTransportSecurity.GetName()" Label="@T("Encryption")" Class="mt-3" ReadOnly="@this.AllowsOnlyOrganizationMailServers" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Validation="@DataSourceValidation.ValidateMailboxTransportSecurity">
+                        @foreach (var transportSecurity in ConfigurationSelectDataFactory.GetMailboxTransportSecurityData())
+                        {
+                            <MudSelectItem T="MailboxTransportSecurity" Value="@transportSecurity.Value">
+                                @transportSecurity.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            </MudCollapse>
+
+            <MudText Typo="Typo.h6" Class="mb-1">
+                @T("Sign-in")
+            </MudText>
+            <div class="@this.SignInGroupClass">
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudTextField
+                    T="string"
+                    @bind-Text="@this.dataUsername"
+                    Label="@T("Username")"
+                    Class="mb-3"
+                    Immediate="@true"
+                    ReadOnly="@(!this.CanChangeSource)"
+                    Validation="@DataSourceValidation.ValidateMailboxUsername"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Person2"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Outlined"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+
+                <SecretInputField @bind-Secret="@this.dataPassword" Label="@T("Password")" Validation="@this.dataSourceValidation.ValidateMailboxPassword" Class="mb-3"/>
+
+                <MudStack Row="@true" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Filled" Color="@this.TestResultColor" StartIcon="@this.TestResultIcon" Disabled="@(!this.CanTestConnection)" OnClick="@this.TestConnection">
+                        @T("Test connection & load folders")
+                    </MudButton>
+                    @if (this.isTestingConnection)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
+                    }
+                    <MudText Typo="Typo.body1">
+                        @this.TestResultText
+                    </MudText>
+                </MudStack>
+            </div>
+
+            <MudText Typo="Typo.h6" Class="mb-1">
+                @T("Folder")
+            </MudText>
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.")
+            </MudJustifiedText>
+            @if (!this.CanChangeSource)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                    @T("The mails of this mailbox are already prepared, so its server, its username, and its folder cannot be changed. Another account or folder holds other mails, which makes it another mailbox: please add one for it. The embedding provider below can be changed.")
+                </MudAlert>
+            }
+            @if (this.CanChangeSource && this.ConnectionTestSucceeded)
+            {
+                <MailFolderPicker Folders="@this.serverFolders" @bind-SelectedFolder="@this.dataRootFolder" CreateFolder="@this.CreateFolder"/>
+            }
+            else
+            {
+                <MudTextField
+                    T="string"
+                    Text="@this.RootFolderText"
+                    Label="@T("Selected folder")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    HelperText="@(this.CanChangeSource ? T("Test the connection to select another folder.") : string.Empty)"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Folder"
+                    Variant="Variant.Outlined"/>
+            }
+            @if (!string.IsNullOrWhiteSpace(this.folderIssue))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+                    @this.folderIssue
+                </MudAlert>
+            }
+
+            <MudSelect T="MailboxMaxAge" @bind-Value="@this.dataMaxAge" Text="@this.dataMaxAge.GetName()" Label="@T("Period")" Class="mb-1 mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DateRange">
+                @foreach (var maxAge in ConfigurationSelectDataFactory.GetMailboxMaxAgeData())
+                {
+                    <MudSelectItem T="MailboxMaxAge" Value="@maxAge.Value">
+                        @maxAge.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-6">
+                @T("AI Studio indexes the newest mails first. Flagged mails are always indexed, however old they are.")
+            </MudJustifiedText>
+
+            <MudTextSwitch @bind-Value="@this.dataIndexAttachments" Color="Color.Primary" Label="@T("Index the text of attachments?")" LabelOn="@T("Yes, index the text of attached documents")" LabelOff="@T("No, only list the names of attachments")"/>
+            @if (this.dataIndexAttachments)
+            {
+                @* ReSharper disable once CSharpWarnings::CS8974 *@
+                <MudNumericField
+                    T="int"
+                    @bind-Value="@this.dataMaxAttachmentSizeMegabytes"
+                    Label="@T("Largest attachment to index, in MB")"
+                    Class="mb-6"
+                    Min="@DataSourceValidation.MIN_ATTACHMENT_SIZE_MEGABYTES"
+                    Max="@DataSourceValidation.MAX_ATTACHMENT_SIZE_MEGABYTES"
+                    Immediate="@true"
+                    Validation="@DataSourceValidation.ValidateMailboxMaxAttachmentSize"
+                    HelperText="@T("Of a larger attachment, only the name is indexed.")"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Outlined"/>
+            }
+
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3 mt-3">
+                @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
+            </MudJustifiedText>
+            <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
+                @foreach (var embedding in this.AvailableEmbeddings)
+                {
+                    <MudSelectItem Value="@embedding.Value">
+                        @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
+                        {
+                            <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
+                        }
+                        else
+                        {
+                            @embedding.Name
+                        }
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
+            {
+                if (this.SelectedCloudEmbedding)
+                {
+                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.MAILBOX" SourcePath="@this.dataUsername" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                }
+                else
+                {
+                    <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                        @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
+                    </MudJustifiedText>
+                }
+            }
+
+            <MudSelect @ref="@this.confidenceLevelSelect" T="ConfidenceLevel" @bind-Value="@this.dataConfidenceLevel" Text="@this.ConfidenceLevelText" Placeholder="@T("Please select a level")" Label="@T("Required provider confidence level")" Class="mb-1 mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateMailboxConfidenceLevel">
+                @foreach (var level in ConfigurationSelectDataFactory.GetMailboxConfidenceLevelsData())
+                {
+                    <MudSelectItem T="ConfidenceLevel" Value="@level.Value">
+                        @level.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-6">
+                @T("Only providers with at least this confidence level see the content of your mails: the chat provider, the embedding provider, and every provider which checks a mail for you.")
+            </MudJustifiedText>
+
+            <MudSelect T="OutboundDataRestriction" @bind-Value="@this.dataOutboundDataRestriction" Text="@this.dataOutboundDataRestriction.GetName()" Label="@T("Where a chat may send data after reading mails")" Class="mb-1" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Shield">
+                @foreach (var restriction in ConfigurationSelectDataFactory.GetOutboundDataRestrictionData(this.MinimumOutboundDataRestriction))
+                {
+                    <MudSelectItem T="OutboundDataRestriction" Value="@restriction.Value">
+                        @restriction.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                @this.dataOutboundDataRestriction.GetDescription()
+            </MudJustifiedText>
+            @if (this.IsOutboundDataRestrictionLimited)
+            {
+                <MudJustifiedText Typo="Typo.body2" Class="mb-1">
+                    @T("Your organization does not allow less strict settings than the ones offered here.")
+                </MudJustifiedText>
+            }
+            <MudJustifiedText Typo="Typo.body2" Class="mb-6">
+                @T("Mails come from strangers and may contain instructions meant for the AI. This setting decides where a chat may still send data once it has read from this mailbox. Mind that opening a link can be enough to set something off, e.g., to confirm a subscription, an order, or a payment.")
+            </MudJustifiedText>
+
+            <MudStack Class="mb-3">
+                <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+                    @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                </MudButton>
+                <MudDivider/>
+                <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                        @T("Optional expert settings for how this data source is split before embedding.")
+                    </MudJustifiedText>
+                    <MudNumericField
+                        @ref="@this.maxChunkTokenLengthField"
+                        T="int"
+                        @bind-Value="@this.dataMaxChunkTokenLength"
+                        Label="@T("Token limit")"
+                        Class="mb-3"
+                        Min="1"
+                        Immediate="@true"
+                        Validation="@this.ValidateMaxChunkTokenLength"
+                        HelperText="@this.MaxChunkTokenLengthHelperText"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        @ref="@this.chunkOverlapTokenLengthField"
+                        T="int"
+                        @bind-Value="@this.dataChunkOverlapTokenLength"
+                        Label="@T("Token overlap")"
+                        Class="mb-3"
+                        Min="0"
+                        Immediate="@true"
+                        Validation="@this.ValidateChunkOverlapTokenLength"
+                        HelperText="@this.ChunkOverlapTokenLengthHelperText"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.CompareArrows"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        T="ushort"
+                        Min="10"
+                        @bind-Value="@this.dataMaxMatches"
+                        Label="@T("How many mails do you want at most per search?")"
+                        Variant="Variant.Outlined"
+                        Step="10"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        AdornmentColor="Color.Info"/>
+                </MudCollapse>
+            </MudStack>
+        </MudForm>
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.IsAddingNotAllowed">
+            @if(this.IsEditing)
+            {
+                @T("Update")
+            }
+            else
+            {
+                @T("Add")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

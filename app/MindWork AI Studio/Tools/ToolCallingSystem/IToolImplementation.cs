@@ -67,6 +67,17 @@ public interface IToolImplementation
 
     public string Icon => Icons.Material.Filled.Build;
 
+    /// <summary>
+    /// Whether this tool exists in this installation right now.
+    /// </summary>
+    /// <remarks>
+    /// For a tool which belongs to a preview feature. While the preview is switched off, the tool
+    /// appears nowhere, neither in a selection nor in the settings, and no request offers it. A
+    /// selection which names it keeps it all the same, so it comes back with the preview. Asked
+    /// whenever tools are listed, so it has to be cheap.
+    /// </remarks>
+    public bool IsAvailable => true;
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
 
     /// <summary>
@@ -82,6 +93,29 @@ public interface IToolImplementation
     /// can act on for them.
     /// </remarks>
     public bool ReturnsUntrustedExternalContent => false;
+
+    /// <summary>
+    /// Where this tool sends data when it runs, beyond AI Studio and the provider of the model.
+    /// </summary>
+    /// <remarks>
+    /// A chat which read from a mailbox keeps the tools whose data goes further than the mailbox
+    /// allows from being offered and from running, see ToolSelectionRules.IsOutboundDataAllowed.
+    /// A tool which says nothing counts as one which contacts addresses the model chooses, the most
+    /// open kind: a tool which forgot to say, or one written by a plugin author, is kept back rather
+    /// than let through.
+    /// </remarks>
+    public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
+    /// <summary>
+    /// Whether this tool keeps to the outbound data restriction of the chat itself.
+    /// </summary>
+    /// <remarks>
+    /// For a tool whose kind of outbound data would be kept back, but which can tell allowed
+    /// destinations from others on its own. Such a tool is offered whatever the chat demands, and
+    /// it has to read ToolExecutionContext.ChatThread.RequiredOutboundDataRestriction on every call
+    /// and refuse what goes too far.
+    /// </remarks>
+    public bool EnforcesOutboundDataRestriction => false;
 
     public string GetDisplayName() => TB("Tool");
 

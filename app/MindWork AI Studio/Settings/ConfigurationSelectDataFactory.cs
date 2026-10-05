@@ -306,7 +306,46 @@ public static class ConfigurationSelectDataFactory
             yield return new(level.GetName(), level);
         }
     }
-    
+
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetMailboxConfidenceLevelsData()
+    {
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+        {
+            if (!level.IsAllowedMailboxConfidence())
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
+    }
+
+    public static IEnumerable<ConfigurationSelectData<MailboxTransportSecurity>> GetMailboxTransportSecurityData()
+    {
+        foreach (var transportSecurity in Enum.GetValues<MailboxTransportSecurity>())
+        {
+            if (transportSecurity is MailboxTransportSecurity.UNKNOWN)
+                continue;
+
+            yield return new(transportSecurity.GetName(), transportSecurity);
+        }
+    }
+
+    public static IEnumerable<ConfigurationSelectData<MailboxMaxAge>> GetMailboxMaxAgeData()
+    {
+        foreach (var maxAge in Enum.GetValues<MailboxMaxAge>())
+            yield return new(maxAge.GetName(), maxAge);
+    }
+
+    /// <summary>
+    /// The restrictions a mailbox may have.
+    /// </summary>
+    /// <param name="minimumRestriction">The least strict restriction the organization allows, see DataMailboxes.MinimumOutboundDataRestriction.</param>
+    public static IEnumerable<ConfigurationSelectData<OutboundDataRestriction>> GetOutboundDataRestrictionData(OutboundDataRestriction minimumRestriction)
+    {
+        foreach (var restriction in Enum.GetValues<OutboundDataRestriction>())
+            if (restriction.StricterOf(minimumRestriction) == restriction)
+                yield return new(restriction.GetName(), restriction);
+    }
+
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {
         foreach (var theme in Enum.GetValues<Themes>())

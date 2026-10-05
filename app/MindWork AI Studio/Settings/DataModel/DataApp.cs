@@ -147,6 +147,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
+    /// Should requests to self-hosted servers, i.e., self-hosted providers and LiteLLM, name the feature that sent them?
+    /// </summary>
+    /// <remarks>
+    /// Whoever operates such a server learns about it, which usually is an organization. Off by default:
+    /// AI Studio then sends no User-Agent at all. Cloud providers never learn about it either way.
+    /// </remarks>
+    public bool ShareFeatureUsageWithSelfHostedServerOperators { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShareFeatureUsageWithSelfHostedServerOperators, false);
+
+    /// <summary>
     /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
     /// </summary>
     public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
@@ -180,6 +189,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add transcription providers?
     /// </summary>
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add mailboxes?
+    /// </summary>
+    /// <remarks>
+    /// Independent of AllowUserToAddProvider, because a mailbox is a data source, not a provider.
+    /// Mailboxes the user added before stay, and the user may still edit or delete them.
+    /// </remarks>
+    public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
 
     /// <summary>
     /// Should the user be allowed to import plugin archives from disk?

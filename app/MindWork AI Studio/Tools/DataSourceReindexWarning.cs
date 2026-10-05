@@ -48,7 +48,7 @@ public static class DataSourceReindexWarning
 
         var candidates = GetDataSourcesUsing(settingsManager, before.Id)
             .Where(dataSource => EmbeddingChangeImpact.AffectsStoredIndex(dataSource, before, after))
-            .Cast<IDataSource>()
+            .Cast<IDataSourceBase>()
             .ToList();
 
         if (candidates.Count == 0)
@@ -69,7 +69,7 @@ public static class DataSourceReindexWarning
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the edit may be saved.</returns>
     public static async Task<bool> ConfirmDataSourceChangeAsync(IDialogService dialogService, SettingsManager settingsManager, DataSourceEmbeddingService embeddingService,
-        IInternalDataSource before, IInternalDataSource after, CancellationToken token = default)
+        IIndexedDataSource before, IIndexedDataSource after, CancellationToken token = default)
     {
         // Without a provider nothing is embedded at all, so nothing can be lost:
         if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, after, out var afterProvider))
@@ -112,7 +112,7 @@ public static class DataSourceReindexWarning
         if (embeddingProvider == EmbeddingProvider.NONE)
             return string.Empty;
 
-        var affected = GetDataSourcesUsing(settingsManager, embeddingProvider.Id).Cast<IDataSource>().ToList();
+        var affected = GetDataSourcesUsing(settingsManager, embeddingProvider.Id).Cast<IDataSourceBase>().ToList();
         if (affected.Count == 0)
             return string.Empty;
 
@@ -129,14 +129,15 @@ public static class DataSourceReindexWarning
     }
 
     /// <summary>
-    /// The data sources which are indexed with a given embedding provider.
+    /// The data sources and mailboxes which are indexed with a given embedding provider.
     /// </summary>
-    /// <param name="settingsManager">The settings holding the data sources.</param>
+    /// <param name="settingsManager">The settings holding the data sources and the mailboxes.</param>
     /// <param name="embeddingProviderId">The id of the embedding provider.</param>
-    /// <returns>The data sources pointing at that embedding provider.</returns>
-    private static IReadOnlyList<IInternalDataSource> GetDataSourcesUsing(SettingsManager settingsManager, string embeddingProviderId) =>
+    /// <returns>The data sources and mailboxes pointing at that embedding provider.</returns>
+    private static IReadOnlyList<IIndexedDataSource> GetDataSourcesUsing(SettingsManager settingsManager, string embeddingProviderId) =>
         settingsManager.ConfigurationData.DataSources
             .OfType<IInternalDataSource>()
+            .Concat(settingsManager.ConfigurationData.Mailboxes.Cast<IIndexedDataSource>())
             .Where(dataSource => embeddingProviderId.Equals(dataSource.EmbeddingId, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
@@ -145,7 +146,7 @@ public static class DataSourceReindexWarning
     /// </summary>
     /// <param name="dataSources">The data sources to name.</param>
     /// <returns>The Markdown list.</returns>
-    private static string FormatDataSourceNames(IReadOnlyList<IDataSource> dataSources)
+    private static string FormatDataSourceNames(IReadOnlyList<IDataSourceBase> dataSources)
     {
         var names = dataSources
             .Select(dataSource => dataSource.Name)
@@ -159,7 +160,7 @@ public static class DataSourceReindexWarning
         return string.Join(Environment.NewLine, lines);
     }
 
-    private static async Task<bool> ConfirmAsync(IDialogService dialogService, IReadOnlyList<IDataSource> affected, bool usesCloudEmbedding)
+    private static async Task<bool> ConfirmAsync(IDialogService dialogService, IReadOnlyList<IDataSourceBase> affected, bool usesCloudEmbedding)
     {
         if (affected.Count == 0)
             return true;

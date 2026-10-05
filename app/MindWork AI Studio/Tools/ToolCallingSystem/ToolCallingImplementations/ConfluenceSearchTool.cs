@@ -21,7 +21,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// Confluence's REST API. The model only passes words and a space key; the tool builds the CQL
 /// itself, so a model cannot turn the search into another query.<br/><br/>
 /// The search page shows excerpts only. To read a result, the model opens it with Read Web Page,
-/// which is why selecting this tool also selects that one, see ToolSelectionRules.NormalizeSelection.<br/><br/>
+/// which is why selecting this tool also selects that one, see ToolRegistry.NormalizeSelection.<br/><br/>
 /// Whatever the wiki returns is internal to the organization. The tool is therefore offered to
 /// High-confidence providers only, checks that again before each search, and raises the chat's
 /// required confidence to High, so the results never reach a less trusted provider later on.
@@ -43,7 +43,23 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string ImplementationKey => ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID;
 
-    public ToolDefinition GetDefinition() => new()
+    public ToolDefinition GetDefinition() => CreateDefinition();
+
+    /// <summary>
+    /// The wiki configured for this tool, or null when no valid one is.
+    /// </summary>
+    /// <remarks>
+    /// A service configured in AI Studio, so a chat restricted by a mailbox may still read its
+    /// pages through Read Web Page. Whether the tool itself is switched on does not matter for that:
+    /// the wiki is no less configured, and Read Web Page reaches the same pages in any other chat.
+    /// </remarks>
+    internal static async Task<Uri?> ReadConfiguredWikiAsync(ToolSettingsService toolSettingsService)
+    {
+        var settingsValues = await toolSettingsService.GetSettingsAsync(CreateDefinition());
+        return TryParseBaseUrl(settingsValues.GetValueOrDefault(BASE_URL_SETTING), out var baseUrl) ? baseUrl : null;
+    }
+
+    private static ToolDefinition CreateDefinition() => new()
     {
         Id = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
         ImplementationKey = ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID,
@@ -77,6 +93,9 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     public string Icon => "<image href=\"images/tool-icons/confluence.svg\" width=\"24\" height=\"24\" />";
 
     public bool ReturnsUntrustedExternalContent => true;
+
+    // Only the configured wiki gets the query, and a redirect out of it is refused:
+    public ToolOutboundData OutboundData => ToolOutboundData.CONFIGURED_SERVICE;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal) { QUERY_ARGUMENT };
 
@@ -242,7 +261,14 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     internal static Uri BuildSearchUrl(Uri baseUrl, string query, string? spaceKey)
     {
-        var cql = $"text ~ \"{EscapeCqlValue(query)}\"";
+        //
+        // siteSearch is the field Confluence's own search box sends to this page: it finds the
+        // pages holding any of the words and ranks them by relevance. The text field, the one
+        // Atlassian documents, requires every word on the page and so missed pages the search
+        // box finds. Atlassian's CQL field reference does not list siteSearch, but the search
+        // page itself depends on it, and the REST API documentation uses it in its examples.
+        //
+        var cql = $"siteSearch ~ \"{EscapeCqlValue(query)}\"";
         if (!string.IsNullOrWhiteSpace(spaceKey))
             cql += $" and space=\"{EscapeCqlValue(spaceKey)}\"";
 

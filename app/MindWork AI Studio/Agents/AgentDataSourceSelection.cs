@@ -19,6 +19,9 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
     protected override Type Type => Type.SYSTEM;
     
     /// <inheritdoc />
+    protected override Tools.Components Component => Tools.Components.AGENT_DATA_SOURCE_SELECTION;
+
+    /// <inheritdoc />
     public override string Id => "Data Source Selection";
 
     /// <inheritdoc />
@@ -110,7 +113,7 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
             return EMPTY_BLOCK;
         
         var thread = this.CreateChatThread(this.SystemPrompt(availableDataSources));
-        var userRequest = this.AddUserRequest(thread, text.Text);
+        var userRequest = AddUserRequest(thread, text.Text);
         await this.AddAIResponseAsync(thread, userRequest.UserPrompt, userRequest.Time);
         
         var answer = thread.Blocks[^1];

@@ -34,7 +34,9 @@ public sealed record ToolDefinition
     /// </summary>
     /// <remarks>
     /// Belongs to the tool, because only the tool knows what it exposes: a web search sends the
-    /// user's question to a search engine, so it asks for more trust than a calculator would.
+    /// user's question to a search engine, so it asks for more trust than a calculator would. A tool
+    /// in a declared collection leaves this to the collection, whose minimum applies instead, see
+    /// ToolCollectionDefinition.MinimumProviderConfidence.
     /// </remarks>
     public ConfidenceLevel MinimumProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
