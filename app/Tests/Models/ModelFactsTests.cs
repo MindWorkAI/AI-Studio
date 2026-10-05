@@ -3,7 +3,7 @@ using AIStudio.Models;
 namespace AIStudio.Tests.Models;
 
 /// <summary>
-/// Checks the three types which have to be able to say "nobody knows".
+/// Checks the four types which have to be able to say "nobody knows".
 /// </summary>
 /// <remarks>
 /// They are tested together because they are tested for the same thing. Each of them is a value
@@ -97,5 +97,17 @@ public sealed class ModelFactsTests
             Assert.That(noImages.IsKnown, Is.True, "Zero images is a statement an operator can make.");
             Assert.That(noImages.MaxPerMessage, Is.EqualTo(0));
         });
+    }
+
+    [Test]
+    public void ASystemPromptRoleNobodyWroteDownIsUnknown()
+    {
+        //
+        // Not the system role, although that is the oldest one: an unknown role is what lets the
+        // provider decide, and a default reading as a statement would take that away.
+        //
+        SystemPromptRole untouched = default;
+
+        Assert.That(untouched, Is.EqualTo(SystemPromptRole.UNKNOWN));
     }
 }

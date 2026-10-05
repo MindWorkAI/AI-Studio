@@ -18,6 +18,9 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
+    [Inject]
+    private ToolRegistry ToolRegistry { get; init; } = null!;
+
     private PluginAssistantSecurityState SecurityState => this.Plugin is null
         ? new PluginAssistantSecurityState()
         : PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.Plugin);
@@ -29,9 +32,10 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
     /// Tools are a capability, not a detail: an assistant allowed to search the web or read a page
     /// can carry what a user typed out of the app. Whoever decides whether to enable this plugin
     /// should see that beforehand, which is why the count sits in the header next to the audit
-    /// level and the tools themselves are named in the details.
+    /// level and the tools themselves are named in the details. A collection is named by its
+    /// tools, since each of them is a capability of its own, see ToolRegistry.ExpandSelection.
     /// </remarks>
-    private IReadOnlyList<string> PluginToolIds => ToolSelectionRules.NormalizeSelection(this.Plugin?.AssistantToolIds ?? this.Plugin?.ChatLaunchConfiguration?.ToolIds ?? [])
+    private IReadOnlyList<string> PluginToolIds => this.ToolRegistry.ExpandSelection(this.Plugin?.AssistantToolIds ?? this.Plugin?.ChatLaunchConfiguration?.ToolIds ?? [])
         .OrderBy(x => x, StringComparer.Ordinal)
         .ToList();
 

@@ -57,9 +57,10 @@ public partial class ManagedToolsWarning : MSGComponentBase
             if (this.ToolIds.Count is 0 || !this.SettingsManager.AreToolsEnabled())
                 return [];
 
+            var collectionIds = this.ToolRegistry.NormalizeSelection(this.ToolIds);
             return this.availableTools
-                .Where(x => this.ToolIds.Contains(x.Definition.Id) && x.IsActive && !x.ConfigurationState.IsConfigured)
-                .Select(x => x.Implementation.GetDisplayName())
+                .Where(x => collectionIds.Contains(x.Id) && x.IsActive && !x.ConfigurationState.IsConfigured)
+                .Select(x => x.DisplayName)
                 .ToList();
         }
     }
@@ -82,10 +83,11 @@ public partial class ManagedToolsWarning : MSGComponentBase
                 ? ConfidenceLevel.NONE
                 : this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level;
 
+            var collectionIds = this.ToolRegistry.NormalizeSelection(this.ToolIds);
             return this.availableTools
-                .Where(x => this.ToolIds.Contains(x.Definition.Id) && x.IsActive)
+                .Where(x => collectionIds.Contains(x.Id) && x.IsActive)
                 .Where(x => !ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, x.MinimumProviderConfidence))
-                .Select(x => x.Implementation.GetDisplayName())
+                .Select(x => x.DisplayName)
                 .ToList();
         }
     }

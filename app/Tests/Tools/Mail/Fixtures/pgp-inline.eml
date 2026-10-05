@@ -1,0 +1,13 @@
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Access codes
+Date: Wed, 30 Sep 2026 15:30:00 +0200
+Message-ID: <pgp-inline@example.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+-----BEGIN PGP MESSAGE-----
+
+hQEMA0Ld7lJbBHmOAQf/WvN0mJx2Y7k1dq3Z8x0mJx2Y7k1dq3Z8x0mJx2Y7k1dq
+=abcd
+-----END PGP MESSAGE-----

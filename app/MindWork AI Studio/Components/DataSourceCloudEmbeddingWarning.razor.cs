@@ -39,6 +39,7 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
             {
                 DataSourceType.LOCAL_DIRECTORY => T("All files in this folder and its subfolders"),
                 DataSourceType.LOCAL_FILE => T("The selected file"),
+                DataSourceType.MAILBOX => T("Every mail of this mailbox in the selected folder and period, together with the text of its attachments,"),
                 _ => T("The selected data")
             };
 
@@ -46,6 +47,7 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
         {
             DataSourceType.LOCAL_DIRECTORY => string.Format(T("All files in the folder '{0}' and its subfolders"), this.SourcePath),
             DataSourceType.LOCAL_FILE => string.Format(T("The file '{0}'"), this.SourcePath),
+            DataSourceType.MAILBOX => string.Format(T("Every mail of the mailbox '{0}' in the selected folder and period, together with the text of its attachments,"), this.SourcePath),
             _ => string.Format(T("The data source '{0}'"), this.SourcePath)
         };
     }

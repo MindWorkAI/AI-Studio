@@ -303,6 +303,38 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["MaxMatches"] = 10,
 -- }
 
+-- Mail servers of your organization, offered for new mailboxes:
+-- The mailbox dialog lists them before the well-known public providers. Choosing one fills in
+-- the host, the port, and the encryption; username and password stay with each user. Large
+-- organizations run more than one mail system, so a configuration may define several mail
+-- servers, and those of all configurations are offered together.
+--
+-- Fields:
+--   Id                 Required GUID, which stays the same across versions of your configuration.
+--   Name               Required name shown to the user, e.g., the name of the mail system.
+--   Host               Required host name or IP address of the IMAP server, without a scheme
+--                      or a port.
+--   TransportSecurity  SSL_ON_CONNECT (the default, TLS from the first byte on) or STARTTLS.
+--                      There is no way without encryption.
+--   Port               The default is 993 with SSL_ON_CONNECT and 143 with STARTTLS.
+--   UsernameHint       Optional text telling users what to enter as their username.
+--   HelpUrl            Optional http or https address of your instructions, e.g., on how to
+--                      enable IMAP for a mailbox.
+-- An entry with an invalid field is left out as a whole, and the log names the field.
+-- To allow mailboxes on these mail servers only, see DataMailboxes.AllowOnlyOrganizationMailServers.
+CONFIG["MAILBOX_PROVIDERS"] = {}
+
+-- An example mail server:
+-- CONFIG["MAILBOX_PROVIDERS"][#CONFIG["MAILBOX_PROVIDERS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "Exchange (headquarters)",
+--     ["Host"] = "imap.example.org",
+--     ["TransportSecurity"] = "SSL_ON_CONNECT",
+--     ["Port"] = 993,
+--     ["UsernameHint"] = "Your account as DOMAIN\\username",
+--     ["HelpUrl"] = "https://intranet.example.org/mail/imap",
+-- }
+
 CONFIG["SETTINGS"] = {}
 
 -- ------
@@ -395,6 +427,12 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
+-- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
+-- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
+-- adding a mailbox stays visible but is disabled. Mailboxes the user added before stay; to keep
+-- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
@@ -478,6 +516,20 @@ CONFIG["SETTINGS"] = {}
 -- Controls whether data sources are off by default:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
 
+-- Controls how the data sources are searched. Allowed values are:
+--   SEMANTIC_SEARCH -> the AI searches the data sources itself, through the tool
+--                      semantic_search, whenever a question calls for it. This is the default.
+--   EVERY_MESSAGE   -> AI Studio searches the data sources with every message, before the AI
+--                      answers.
+-- SEMANTIC_SEARCH works only where semantic_search can be offered: the model has to be able to
+-- call tools, neither the tools nor semantic_search may be switched off, and the provider has
+-- to meet a minimum confidence you set for semantic_search, see DataTools. Otherwise, AI Studio
+-- searches with every message instead.
+-- With SEMANTIC_SEARCH, no agent takes part: DataChat.PreselectedDataSourcesAutomaticSelection
+-- then lets the AI itself choose among all data sources it may use, and
+-- DataChat.PreselectedDataSourcesAutomaticValidation has no effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode"] = "EVERY_MESSAGE"
+
 -- Controls whether AI Studio asks an agent to choose data sources:
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
 
@@ -506,6 +558,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesRetrievalMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
@@ -745,25 +798,50 @@ CONFIG["SETTINGS"] = {}
 -- but the global tool settings remain available to administrators.
 -- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
 
--- Disable individual tools by their stable tool ID. The default is an empty set.
+-- Tools and tool collections:
+-- Some tools only make sense together, e.g., searching, reading, and counting mails. They form a
+-- tool collection: users select it as one, it needs one minimum provider confidence, and you
+-- switch it off as one. The model still calls each of its tools by name. Wherever the settings
+-- below, chat templates, or document analysis policies ask for a tool ID, use the ID of the
+-- collection for such tools. A tool which belongs to no collection keeps its own ID.
+-- The ID of a tool in a collection stands for its whole collection: naming it switches off the
+-- whole collection or sets its confidence, and of several levels set for a collection and its
+-- tools, the highest applies.
+-- Collection IDs include: mailboxes (search_mails, read_mail, and count_mails; while the mailbox
+-- preview is enabled)
+
+-- Disable individual tools or tool collections by their stable ID. The default is an empty set.
 -- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- semantic_search lets the model search the data sources of a chat itself. Nobody selects it:
+-- it offers itself whenever a chat has data sources to search. Disabling it makes AI Studio
+-- search the data sources with every message instead, the way it does for models without
+-- tool usage.
 -- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
 
--- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page, search_confluence
+-- Configure the minimum provider confidence level required for individual tools or tool
+-- collections.
+-- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
+-- Collection IDs include: mailboxes
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
+-- semantic_search = NONE, mailboxes = VERY_LOW
 -- search_confluence always searches with a HIGH-confidence provider only, whatever value is
 -- set here.
+-- semantic_search offers a provider only the data sources whose own confidence level it meets,
+-- so it needs no minimum of its own. A provider below a minimum set here has the data sources
+-- searched with every message instead.
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
---     ["search_confluence"] = "HIGH"
+--     ["search_confluence"] = "HIGH",
+--     ["semantic_search"] = "NONE",
+--     ["mailboxes"] = "VERY_LOW"
 -- }
 
 -- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
 -- always strings. This works for every tool, including tools added by plugins, because nothing
--- here needs to be known to AI Studio in advance.
+-- here needs to be known to AI Studio in advance. Settings belong to the tool, also when it is
+-- part of a tool collection, so these keys always start with the tool ID.
 --
 -- Two tables decide how firmly a value applies:
 --   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
@@ -824,13 +902,18 @@ CONFIG["SETTINGS"] = {}
 -- Field names of the Read Web Page tool:
 --   timeoutSeconds        Page-loading timeout in seconds.
 --   maxContentCharacters  Content-character limit.
+--   freeAddressChoice     Whether the AI may read web addresses it chose itself. Allowed values are:
+--                           OFF -> the AI reads only addresses which appear in the chat, such as in
+--                                  a message, an attached document, or a data source, or which a
+--                                  tool returned, such as a search hit. AI Studio refuses every
+--                                  other address. This is the default.
+--                           ON  -> the AI may also choose addresses itself.
 --   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
 --                         listed. Wildcards match subdomains only, so add the root domain
 --                         separately. Allowed private hosts require a provider with HIGH
---                         confidence or one trusted by the organization. AI Studio only tries the
---                         current user's operating-system sign-in for explicitly allowed HTTPS
---                         targets when those provider requirements are met, and it never reuses
---                         browser cookies.
+--                         confidence. AI Studio only tries the current user's operating-system
+--                         sign-in for explicitly allowed HTTPS targets when that provider
+--                         requirement is met, and it never reuses browser cookies.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -849,6 +932,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
 --     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
@@ -864,6 +948,22 @@ CONFIG["SETTINGS"] = {}
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
+
+-- Configure whether requests to self-hosted servers name the feature of AI Studio which sent them.
+-- Only self-hosted providers and LiteLLM receive these details; cloud providers never do.
+-- When set to true, their requests carry a User-Agent such as
+-- "MindWorkAIStudio/26.10.1 (win-x64) Component/TRANSLATION_ASSISTANT", which lets the operators
+-- of these servers see which features are used. The default is false: AI Studio then sends no
+-- User-Agent at all. The Enterprise IT documentation describes what is sent, and what to clarify
+-- before you switch it on.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators.AllowUserOverride"] = true
 
 -- Configure additional root certificates for external HTTPS requests.
 --
@@ -963,6 +1063,30 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the least strict outbound data restriction a mailbox may have. Mails come from
+-- strangers and may contain instructions meant for the AI, so each mailbox decides where a chat
+-- may still send data once it has read mails from it:
+--   ONLY_CONFIGURED_SERVICES  Only services configured in AI Studio, such as the mailbox itself
+--                             or your Confluence. No web pages, no web search.
+--   ONLY_LINKS_FROM_CHAT      Also web pages whose addresses stand in the chat, written by the
+--                             user or returned by a tool. No web search, and no addresses the AI
+--                             chooses itself.
+--   UNRESTRICTED              Every tool the user selected.
+-- A mailbox set to a less strict level gets this one whenever its mails reach a chat, and the
+-- mailbox dialog no longer offers the less strict levels. A chat which read mails before keeps
+-- the level it got then, until it reads mails again. The default is UNRESTRICTED, which leaves
+-- the choice to the user. New mailboxes start with ONLY_CONFIGURED_SERVICES either way.
+-- CONFIG["SETTINGS"]["DataMailboxes.MinimumOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT"
+
+-- Configure whether mailboxes may only be on the mail servers your configurations offer in
+-- CONFIG["MAILBOX_PROVIDERS"]. The default is false. When set to true, AI Studio connects to no
+-- other IMAP server: before every connection, it compares the host of the mailbox with the hosts
+-- of those mail servers; port and encryption make no difference. A mailbox a user added on another
+-- server before stops synchronizing at once, and the AI no longer reads it. Its local index stays,
+-- so the mailbox comes back as it was, should you allow its server again. Without any mail server
+-- in CONFIG["MAILBOX_PROVIDERS"], this blocks every mailbox.
+-- CONFIG["SETTINGS"]["DataMailboxes.AllowOnlyOrganizationMailServers"] = true
 
 -- Configure the data source selection agent.
 -- This agent is used when chat data source options enable AI-based data source selection.
@@ -1079,23 +1203,34 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     ["SystemPrompt"] = "You are <Company Name>'s research assistant. Answer from our own documents and say where each answer comes from.",
 --     ["AllowProfileUsage"] = true,
 --
---     -- Optional: the tools a chat with this template starts with, by tool ID.
+--     -- Optional: the tools a chat with this template starts with, by tool or collection ID.
 --     -- A tool ID unknown to the installation is ignored, and so is a tool your
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
---     -- Selecting search_confluence also selects read_web_page.
+--     -- Collection IDs include: mailboxes
+--     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
 --         "read_web_page",
 --     },
 --
 --     -- Optional: the data source options a chat with this template starts with.
 --     -- Every field inside is optional as well. DisableDataSources defaults to false here,
---     -- because writing this table at all says that the template wants data sources; the
---     -- other three default to false and an empty list.
+--     -- because writing this table at all says that the template wants data sources;
+--     -- RetrievalMode defaults to SEMANTIC_SEARCH, and the other three default to false and
+--     -- an empty list.
 --     ["DataSourceOptions"] = {
 --         -- Set to true to start the chat with data sources switched off.
 --         ["DisableDataSources"] = false,
+--
+--         -- How the data sources are searched, with the same values and the same fallback
+--         -- as DataChat.PreselectedDataSourcesRetrievalMode: SEMANTIC_SEARCH lets the AI
+--         -- search them itself whenever a question calls for it, EVERY_MESSAGE lets AI Studio
+--         -- search them with every message. With SEMANTIC_SEARCH, no agent takes part:
+--         -- AutomaticDataSourceSelection then lets the AI itself choose among all data
+--         -- sources it may use, and AutomaticValidation has no effect.
+--         ["RetrievalMode"] = "EVERY_MESSAGE",
 --
 --         -- Let an agent choose the fitting data sources for each question. When true,
 --         -- PreselectedDataSourceIds is not used.
@@ -1184,12 +1319,13 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --     ["MinimumProviderConfidence"] = "MEDIUM",
 --
---     -- Optional: the tools an analysis with this policy may use, by tool ID.
+--     -- Optional: the tools an analysis with this policy may use, by tool or collection ID.
 --     -- This is a limit, not a preselection: a tool which is not listed here cannot be
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
 --     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Collection IDs include: mailboxes
 --     -- Allowing search_confluence also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --

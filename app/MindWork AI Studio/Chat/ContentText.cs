@@ -8,6 +8,7 @@ using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat;
 
@@ -165,7 +166,7 @@ public sealed class ContentText : IContent
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, token);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -386,9 +387,23 @@ public sealed class ContentText : IContent
 
     #endregion
 
+    /// <summary>
+    /// The web addresses in the documents attached to this message, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// The documents are read from disk only when a message is sent, so their addresses are
+    /// collected right then, see PrepareTextContentForAI, and count as given to the model, see
+    /// ChatThread.IsWebAddressGivenToTheModel. Not stored: every request reads the documents anew,
+    /// and a document changed or gone since no longer gives an address.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlySet<string> RuntimeAttachmentWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
     public async Task<string> PrepareTextContentForAI()
     {
         var sb = new StringBuilder();
+        var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
         sb.AppendLine(this.Text);
 
         if(this.FileAttachments.Count > 0)
@@ -492,6 +507,10 @@ public sealed class ContentText : IContent
                     documentBlocks.AppendLine("````");
                     documentBlocks.AppendLine(extraction.Content);
                     documentBlocks.AppendLine("````");
+
+                    foreach (var address in WebAddresses.Find(extraction.Content))
+                        if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                            attachmentWebAddresses.Add(requestKey);
                 }
 
                 if (documentBlocks.Length > 0)
@@ -510,7 +529,8 @@ public sealed class ContentText : IContent
                 }
             }
         }
-        
+
+        this.RuntimeAttachmentWebAddresses = attachmentWebAddresses;
         return sb.ToString();
     }
     

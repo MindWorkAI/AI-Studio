@@ -1,108 +1,131 @@
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Databases.IndexStore;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
-namespace AIStudio.Tools.Services;
+namespace AIStudio.Tools.Services.Indexing;
 
-public sealed partial class DataSourceEmbeddingService
+/// <summary>
+/// Cuts a text into chunks which fit the embedding provider, with some overlap between them.
+/// </summary>
+/// <remarks>
+/// Knows nothing about where the text came from. Whoever reads a document hands in its text in the
+/// pieces the source delivered, together with the strategy which suits that kind of text, and gets
+/// the chunks back one by one. Every size is measured with the tokenizer of the embedding provider,
+/// since only its count decides whether a chunk fits.
+/// </remarks>
+/// <param name="rustService">The runtime, which counts the tokens.</param>
+/// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
+internal sealed partial class TextChunker(RustService rustService, ILogger logger)
 {
-    private const string OFFICE_LOCK_FILE_PREFIX = "~$";
-    internal const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
-    private const bool IMAGE_EMBEDDING_ENABLED = false;
+    /// <summary>
+    /// For documents: pages, then headings, paragraphs, lines and words.
+    /// </summary>
+    public static readonly ChunkingStrategy DOCUMENT_STRATEGY = new("document", [
+        new("Page or extracted section", SplitBySourceSegments, true),
+        new("Heading", SplitByDocumentHeadings),
+        new("Paragraph", SplitByParagraphs),
+        new("Line break", SplitByLineBreaks),
+        new("Whitespace", SplitByWhitespace),
+        new("Hard cut", null),
+    ]);
 
     /// <summary>
-    /// What this build writes next to a chunk besides its text. Raise it whenever that changes.
+    /// For presentations: slides, then lines and words.
     /// </summary>
-    /// <remarks>
-    /// A stored chunk keeps the metadata of the run which wrote it, and nothing recomputes it: the
-    /// fingerprint of a file says whether the file changed, not whether we got better at reading
-    /// it. Raising this number makes the embedding signature differ, which drops the index and
-    /// builds it again — the only way corrected page numbers reach a data source somebody indexed
-    /// earlier.
-    ///
-    /// Version 2: the page of a chunk is taken from the runtime metadata instead of being read back
-    /// out of the chunk text, which is what left Word and OpenDocument files, and passages
-    /// continuing across a page break, without a page.
-    /// </remarks>
-    private const string CHUNK_METADATA_VERSION = "2";
-
-    private enum RagFileIndexingDecision
-    {
-        INDEXABLE,
-        EXCLUDED,
-        UNSUPPORTED,
-    }
-
-    private sealed record ExtractedFileSegment(string Text, int? TokenCount, int? PageNumber);
-
-    private sealed record ExtractedFileContent(string Text, IReadOnlyList<ExtractedFileSegment> SourceSegments);
+    public static readonly ChunkingStrategy PRESENTATION_STRATEGY = new("presentation", [
+        new("Slide", SplitBySourceSegments, true),
+        new("Line break", SplitByLineBreaks),
+        new("Whitespace", SplitByWhitespace),
+        new("Hard cut", null),
+    ]);
 
     /// <summary>
-    /// One chunk as the chunking produced it, together with the page it starts on.
+    /// For tables and spreadsheets: rows or sheets, then lines and words.
+    /// </summary>
+    public static readonly ChunkingStrategy TABLE_STRATEGY = new("table", [
+        new("Row or sheet", SplitBySourceSegments, true),
+        new("Line break", SplitByLineBreaks),
+        new("Whitespace", SplitByWhitespace),
+        new("Hard cut", null),
+    ]);
+
+    /// <summary>
+    /// For source code: extracted sections, then lines and words.
+    /// </summary>
+    public static readonly ChunkingStrategy SOURCE_CODE_STRATEGY = new("source-code", [
+        new("Extracted section", SplitBySourceSegments, true),
+        new("Line break", SplitByLineBreaks),
+        new("Whitespace", SplitByWhitespace),
+        new("Hard cut", null),
+    ]);
+
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(TextChunker).Namespace, nameof(TextChunker));
+
+    /// <summary>
+    /// Brings the line breaks of one piece of text into the form the chunking expects.
+    /// </summary>
+    /// <param name="input">The piece as the source delivered it.</param>
+    /// <returns>The piece with Unix line breaks and without surrounding whitespace.</returns>
+    public static string NormalizeSegment(string input)
+    {
+        return input
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
+    }
+
+    /// <summary>
+    /// Picks the strategy which suits a file, by its type.
     /// </summary>
     /// <remarks>
-    /// The page is carried rather than read back out of the chunk text. The runtime states it, and
-    /// the chunking knows which source segment a chunk begins in, so nothing has to be derived from
-    /// a marker in the text — which is what used to leave Word files and continued passages without
-    /// a page.
+    /// For every reader of files alike, be the file on disk or attached to a mail. HTML counts as a
+    /// document, not as source code: the runtime turns it into text before it gets here.
     /// </remarks>
-    /// <param name="Text">The chunk itself, overlap prefix included.</param>
-    /// <param name="PageNumber">The page the chunk's own content starts on, or null when it has none.</param>
-    private sealed record EmbeddingChunk(string Text, int? PageNumber);
-
-    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
-
-    internal sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
-
-    private sealed record ChunkingStrategy(string Name, IReadOnlyList<ChunkingRule> Rules);
-
-    private sealed record ChunkingRule(string Name, Func<string, IReadOnlyList<string>, IReadOnlyList<string>>? Split, bool UsesSourceSegmentCounts = false);
-
-    private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
-
-    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    /// <param name="filePath">The path or the name of the file.</param>
+    /// <returns>The strategy to cut its text by.</returns>
+    public static ChunkingStrategy GetStrategyForFile(string filePath)
     {
-        var options = GetChunkingOptions(dataSource, embeddingProvider);
-        var strategy = this.GetChunkingStrategy(filePath);
-        var content = await this.ReadExtractedFileContentAsync(filePath, embeddingProvider, token);
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.POWER_POINT))
+            return PRESENTATION_STRATEGY;
 
-        await foreach (var chunk in this.SplitByChunkingStrategyAsync(content, strategy, options, embeddingProvider, token))
-            yield return chunk;
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.TABULAR, FileTypes.SPREADSHEET))
+            return TABLE_STRATEGY;
+
+        if (!FileTypes.IsAllowedPath(filePath, FileTypes.HTML) && FileTypes.IsAllowedPath(filePath, FileTypes.SOURCE_CODE))
+            return SOURCE_CODE_STRATEGY;
+
+        return DOCUMENT_STRATEGY;
     }
 
-    private async Task<ExtractedFileContent> ReadExtractedFileContentAsync(string filePath, EmbeddingProvider embeddingProvider, CancellationToken token)
-    {
-        var segments = new List<ExtractedFileSegment>();
-
-        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider, token))
-        {
-            var normalized = NormalizeChunkSegment(segment.Content);
-            if (!string.IsNullOrWhiteSpace(normalized))
-                segments.Add(new(normalized, segment.TokenCount, segment.PageNumber));
-        }
-
-        return new(string.Join("\n", segments.Select(segment => segment.Text)).Trim(), segments);
-    }
-
-    private async IAsyncEnumerable<EmbeddingChunk> SplitByChunkingStrategyAsync(ExtractedFileContent content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    /// <summary>
+    /// Cuts a text into chunks.
+    /// </summary>
+    /// <param name="content">The text, in the pieces its source delivered it in.</param>
+    /// <param name="strategy">The rules to cut it by.</param>
+    /// <param name="options">How large a chunk may become, and how much the next one repeats.</param>
+    /// <param name="embeddingProvider">The embedding provider whose tokenizer measures the chunks.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <param name="heading">
+    /// A line the first chunk starts with, e.g. which attachment of a mail the text comes from, or
+    /// empty for none. It counts against the size of that chunk, like the overlap of every later one.
+    /// </param>
+    /// <returns>The chunks, in the order of the text.</returns>
+    public async IAsyncEnumerable<EmbeddingChunk> SplitAsync(SegmentedText content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token, string heading = "")
     {
         var estimatedTokenCount = SumTokenCounts(content.SourceSegments);
 
         // The whole text starts where the first segment starts, so that is the page it is on until
         // the splitting reaches a segment boundary:
         var firstPageNumber = content.SourceSegments.Count > 0 ? content.SourceSegments[0].PageNumber : null;
-        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, estimatedTokenCount: estimatedTokenCount))
+        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, firstPageNumber, token, heading, estimatedTokenCount))
             yield return chunk;
     }
 
     private async IAsyncEnumerable<EmbeddingChunk> SplitTextByRulesAsync(
         string text,
-        IReadOnlyList<ExtractedFileSegment> sourceSegments,
+        IReadOnlyList<TextSegment> sourceSegments,
         ChunkingStrategy strategy,
         int ruleIndex,
         ChunkingOptions options,
@@ -296,7 +319,7 @@ public sealed partial class DataSourceEmbeddingService
         return largestValidUnitCount;
     }
 
-    private static int? SumTokenCounts(IReadOnlyList<ExtractedFileSegment> segments)
+    private static int? SumTokenCounts(IReadOnlyList<TextSegment> segments)
     {
         var result = 0L;
         foreach (var segment in segments)
@@ -312,7 +335,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private static IReadOnlyList<int>? EstimateSplitUnitTokenCounts(
         IReadOnlyList<string> units,
-        IReadOnlyList<ExtractedFileSegment> sourceSegments,
+        IReadOnlyList<TextSegment> sourceSegments,
         bool usesSourceSegmentCounts,
         int? sourceTokenCount)
     {
@@ -582,74 +605,6 @@ public sealed partial class DataSourceEmbeddingService
         throw new InvalidOperationException(string.Format(TB("The tokens of the text could not be counted for the embedding provider '{0}'. {1}"), embeddingProvider.Name, message));
     }
 
-    /// <summary>
-    /// Works out how the text of a data source is cut for a given embedding provider.
-    /// </summary>
-    /// <remarks>
-    /// Static, because the answer follows from its two arguments alone. That lets the embedding
-    /// signature be built for a configuration which is not stored yet, which is what the dialogs ask
-    /// before they save a change.
-    /// </remarks>
-    /// <param name="dataSource">The data source whose own chunk settings apply.</param>
-    /// <param name="embeddingProvider">The embedding provider whose token limit caps them.</param>
-    /// <returns>The chunk size and overlap which are actually used.</returns>
-    internal static ChunkingOptions GetChunkingOptions(IDataSource dataSource, EmbeddingProvider embeddingProvider)
-    {
-        var providerMaxChunkTokenLength = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
-        var dataSourceMaxChunkTokenLength = dataSource is IInternalDataSource { MaxChunkTokenLength: > 0 } internalDataSource
-            ? internalDataSource.MaxChunkTokenLength
-            : 0;
-        var maxChunkTokenLength = dataSourceMaxChunkTokenLength > 0
-            ? Math.Min(dataSourceMaxChunkTokenLength, providerMaxChunkTokenLength)
-            : providerMaxChunkTokenLength;
-
-        var configuredOverlapTokenLength = dataSource is IInternalDataSource overlapDataSource
-            ? overlapDataSource.ChunkOverlapTokenLength
-            : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
-        var overlapTokenLength = Math.Clamp(configuredOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
-
-        return new(maxChunkTokenLength, overlapTokenLength);
-    }
-
-    private ChunkingStrategy GetChunkingStrategy(string filePath)
-    {
-        if (this.IsPresentationFilePath(filePath))
-            return new("presentation", [
-                new("Slide", SplitBySourceSegments, true),
-                new("Line break", SplitByLineBreaks),
-                new("Whitespace", SplitByWhitespace),
-                new("Hard cut", null),
-            ]);
-
-        if (this.IsDelimitedTableFilePath(filePath) || this.IsSpreadsheetFilePath(filePath))
-            return new("table", [
-                new("Row or sheet", SplitBySourceSegments, true),
-                new("Line break", SplitByLineBreaks),
-                new("Whitespace", SplitByWhitespace),
-                new("Hard cut", null),
-            ]);
-
-        if (this.IsSourceCodeFilePath(filePath))
-            return GetSourceCodeChunkingStrategy();
-
-        return new("document", [
-            new("Page or extracted section", SplitBySourceSegments, true),
-            new("Heading", SplitByDocumentHeadings),
-            new("Paragraph", SplitByParagraphs),
-            new("Line break", SplitByLineBreaks),
-            new("Whitespace", SplitByWhitespace),
-            new("Hard cut", null),
-        ]);
-    }
-
-    private static ChunkingStrategy GetSourceCodeChunkingStrategy() =>
-        new("source-code", [
-            new("Extracted section", SplitBySourceSegments, true),
-            new("Line break", SplitByLineBreaks),
-            new("Whitespace", SplitByWhitespace),
-            new("Hard cut", null),
-        ]);
-
     private static List<string> NormalizeSplitUnits(IReadOnlyList<string> units, string fallbackText)
     {
         var result = units
@@ -699,7 +654,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private static IReadOnlyList<string> SplitByParagraphs(string text, IReadOnlyList<string> sourceSegments)
     {
-        var matches = Regex.Matches(text, @"\n[ \t]*\n", RegexOptions.CultureInvariant);
+        var matches = ParagraphBreakRegex().Matches(text);
         if (matches.Count == 0)
             return [text];
 
@@ -740,7 +695,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private static IReadOnlyList<string> SplitByWhitespace(string text, IReadOnlyList<string> sourceSegments)
     {
-        var matches = Regex.Matches(text, @"\S+\s*", RegexOptions.CultureInvariant);
+        var matches = WordWithTrailingWhitespaceRegex().Matches(text);
         if (matches.Count == 0)
             return [text];
 
@@ -773,7 +728,7 @@ public sealed partial class DataSourceEmbeddingService
         if (string.IsNullOrWhiteSpace(trimmed))
             return false;
 
-        if (Regex.IsMatch(trimmed, @"^#{1,6}\s+\S", RegexOptions.CultureInvariant))
+        if (MarkdownHeadingRegex().IsMatch(trimmed))
             return true;
 
         if (!string.IsNullOrWhiteSpace(previousLine) || !string.IsNullOrWhiteSpace(nextLine))
@@ -785,415 +740,21 @@ public sealed partial class DataSourceEmbeddingService
         if (trimmed.Contains("|", StringComparison.Ordinal) || trimmed.EndsWith(".", StringComparison.Ordinal))
             return false;
 
-        return Regex.IsMatch(trimmed, @"^(\d+(\.\d+)*\.?\s+\S|(?i:chapter|section)\s+\S|[A-Z0-9][A-Z0-9 ,:;'/&()_-]{2,})$", RegexOptions.CultureInvariant);
+        return PlainHeadingRegex().IsMatch(trimmed);
     }
 
-    private FileEnumerationResult GetInputFiles(IDataSource dataSource)
-    {
-        var result = new FileEnumerationResult();
+    [GeneratedRegex(@"\n[ \t]*\n", RegexOptions.CultureInvariant)]
+    private static partial Regex ParagraphBreakRegex();
 
-        switch (dataSource)
-        {
-            case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
-                var file = new FileInfo(localFile.FilePath);
-                switch (this.GetRagFileIndexingDecision(file))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(file);
-                        break;
+    [GeneratedRegex(@"\S+\s*", RegexOptions.CultureInvariant)]
+    private static partial Regex WordWithTrailingWhitespaceRegex();
 
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
-                        break;
-
-                    default:
-                        result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' has a type AI Studio cannot index."), localFile.FilePath));
-                        break;
-                }
-
-                return result;
-
-            case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
-                this.EnumerateAccessibleFiles(localDirectory.Path, result);
-                return result;
-        }
-
-        switch (dataSource)
-        {
-            case DataSourceLocalFile localFile:
-                result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' does not exist."), localFile.FilePath));
-                break;
-
-            case DataSourceLocalDirectory localDirectory:
-                result.AddFailure(localDirectory.Path, string.Format(TB("The folder '{0}' does not exist."), localDirectory.Path));
-                break;
-        }
-
-        return result;
-    }
-
-    private void EnumerateAccessibleFiles(string rootPath, FileEnumerationResult result)
-    {
-        var pendingDirectories = new Stack<string>();
-        pendingDirectories.Push(rootPath);
-
-        while (pendingDirectories.Count > 0)
-        {
-            var currentPath = pendingDirectories.Pop();
-            IEnumerable<string> subDirectories;
-            IEnumerable<string> files;
-
-            try
-            {
-                subDirectories = Directory.EnumerateDirectories(currentPath);
-                files = Directory.EnumerateFiles(currentPath);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
-                result.AddFailure(currentPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), currentPath));
-                continue;
-            }
-
-            foreach (var filePath in files)
-            {
-                FileInfo fileInfo;
-                try
-                {
-                    fileInfo = new FileInfo(filePath);
-                    if (!fileInfo.Exists)
-                        continue;
-                }
-                catch (Exception exception)
-                {
-                    logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                    result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
-                    continue;
-                }
-
-                switch (this.GetRagFileIndexingDecision(fileInfo))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(fileInfo);
-                        break;
-
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
-                        break;
-                }
-            }
-
-            foreach (var subDirectory in subDirectories)
-            {
-                if (this.IsSkippedRagDirectory(subDirectory))
-                    continue;
-
-                pendingDirectories.Push(subDirectory);
-            }
-        }
-    }
-
-    private string TryGetRelativePath(IDataSource dataSource, FileInfo file) => dataSource switch
-    {
-        DataSourceLocalDirectory localDirectory => Path.GetRelativePath(localDirectory.Path, file.FullName),
-        _ => file.Name
-    };
-
-    private static string NormalizeChunkSegment(string input)
-    {
-        return input
-            .Replace("\r\n", "\n", StringComparison.Ordinal)
-            .Replace('\r', '\n')
-            .Trim();
-    }
-
-    private bool IsImageFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
-    }
-
-    private bool IsPresentationFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.POWER_POINT);
-    }
-
-    private bool IsDelimitedTableFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.TABULAR);
-    }
-
-    private bool IsSpreadsheetFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.SPREADSHEET);
-    }
-
-    private bool IsSourceCodeFilePath(string filePath)
-    {
-        return !this.IsHtmlFilePath(filePath) && FileTypes.IsAllowedPath(filePath, FileTypes.SOURCE_CODE);
-    }
-
-    private bool IsHtmlFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.HTML);
-    }
-
-    private bool IsSupportedRagFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
-    }
-
-    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
-    {
-        if (this.IsSkippedRagFile(file))
-            return RagFileIndexingDecision.EXCLUDED;
-
-        if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
-            return RagFileIndexingDecision.EXCLUDED;
-
-        return this.IsSupportedRagFilePath(file.FullName)
-            ? RagFileIndexingDecision.INDEXABLE
-            : RagFileIndexingDecision.UNSUPPORTED;
-    }
-
-    private bool IsSkippedRagFile(FileInfo file)
-    {
-        if (IsSkippedRagFileName(file.Name))
-            return true;
-
-        try
-        {
-            return file.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                   || file.Attributes.HasFlag(FileAttributes.Offline)
-                   || file.Attributes.HasFlag(FileAttributes.Temporary)
-                   || file.Attributes.HasFlag(FileAttributes.System);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
-            return true;
-        }
-    }
-
-    private static bool IsSkippedRagFileName(string fileName)
-    {
-        return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
-               || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
-    }
-
-    private bool IsSkippedRagDirectory(string path)
-    {
-        try
-        {
-            var directory = new DirectoryInfo(path);
-            return directory.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                   || directory.Attributes.HasFlag(FileAttributes.Offline)
-                   || directory.Attributes.HasFlag(FileAttributes.System);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
-            return true;
-        }
-    }
+    [GeneratedRegex(@"^#{1,6}\s+\S", RegexOptions.CultureInvariant)]
+    private static partial Regex MarkdownHeadingRegex();
 
     /// <summary>
-    /// Describes how the vectors of a data source were made.
+    /// A heading without Markdown: a numbered one, a chapter or section, or a line in capitals.
     /// </summary>
-    /// <remarks>
-    /// What appears here decides when stored embeddings are thrown away: a signature differing from
-    /// the persisted one drops the whole index and builds it again. So it names the embedding model,
-    /// where it runs, how the text was cut for it, and the chunk metadata version — the things a
-    /// vector actually depends on.
-    ///
-    /// Two of them are less obvious than they look. The Hugging Face inference provider belongs to
-    /// where the model runs: the same model name served by another backend is another vector source.
-    /// And a custom tokenizer enters through its content, not through its path, because a tokenizer
-    /// is stored under the name it came with — almost always tokenizer.json — so swapping one for
-    /// another lands on the identical path, while moving the data directory changes every path
-    /// without changing a single tokenizer.
-    ///
-    /// The chunk settings enter only as what they amount to, never as what somebody typed. A data
-    /// source storing 0 means "follow the embedding provider", and writing that provider's own limit
-    /// into the field changes nothing about how the text is cut. Carrying the typed numbers as well
-    /// made that a different signature, so opening the expert settings of a data source — which
-    /// fills an empty limit with the provider's — threw the whole index away for nothing.
-    ///
-    /// The confidence level a data source asks of a provider is deliberately not among them. It
-    /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks
-    /// it against the participating chat providers and against the embedding provider, and this
-    /// service checks it again before each indexing run. It was part of this signature once, which
-    /// re-embedded every file of a data source whenever somebody raised or lowered it — real money
-    /// at a cloud embedding provider, for nothing.
-    /// </remarks>
-    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
-    {
-        return string.Join('|',
-            CHUNK_METADATA_VERSION,
-            embeddingProvider.Id,
-            embeddingProvider.UsedLLMProvider,
-            embeddingProvider.Model.Id,
-            embeddingProvider.Host,
-            embeddingProvider.Hostname,
-            embeddingProvider.HFInferenceProvider,
-            embeddingProvider.TokenizerFingerprint,
-            embeddingProvider.EffectiveTokenLimit,
-            chunkingOptions.MaxChunkTokenLength,
-            chunkingOptions.OverlapTokenLength);
-    }
-
-    /// <summary>
-    /// Describes how the vectors of a data source were made, working the chunking out along the way.
-    /// </summary>
-    /// <param name="dataSource">The data source the vectors belong to.</param>
-    /// <param name="embeddingProvider">The embedding provider which makes them.</param>
-    /// <returns>The signature of this pairing.</returns>
-    internal static string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider) =>
-        BuildEmbeddingSignature(dataSource, embeddingProvider, GetChunkingOptions(dataSource, embeddingProvider));
-
-    private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
-    {
-        var fileHashes = indexedFiles
-            .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(file => file.FullName, BuildFileMetadataHash, StringComparer.OrdinalIgnoreCase);
-
-        var sourceHash = dataSource switch
-        {
-            DataSourceLocalFile localFile => indexedFiles.Count > 0
-                ? fileHashes[indexedFiles[0].FullName]
-                : BuildMetadataHash("file", localFile.FilePath, Path.GetFileName(localFile.FilePath), "missing", "0"),
-
-            DataSourceLocalDirectory localDirectory => this.BuildDirectoryMetadataHash(localDirectory, indexedFiles, fileHashes),
-
-            _ => BuildMetadataHash(dataSource.Type.ToString(), dataSource.Id, dataSource.Name)
-        };
-
-        return new(sourceHash, fileHashes);
-    }
-
-    private string BuildDirectoryMetadataHash(DataSourceLocalDirectory dataSource, IReadOnlyList<FileInfo> indexedFiles, IReadOnlyDictionary<string, string> fileHashes)
-    {
-        var directory = new DirectoryInfo(dataSource.Path);
-        directory.Refresh();
-
-        var totalSize = 0L;
-        var latestFileWriteTicks = 0L;
-        foreach (var file in indexedFiles)
-        {
-            file.Refresh();
-            if (!file.Exists)
-                continue;
-
-            totalSize += file.Length;
-            latestFileWriteTicks = Math.Max(latestFileWriteTicks, file.LastWriteTimeUtc.Ticks);
-        }
-
-        var latestWriteTicks = Math.Max(directory.LastWriteTimeUtc.Ticks, latestFileWriteTicks);
-        var parts = new List<string>
-        {
-            "directory",
-            directory.FullName,
-            directory.Name,
-            latestWriteTicks.ToString(),
-            totalSize.ToString(),
-            indexedFiles.Count.ToString()
-        };
-
-        foreach (var file in indexedFiles.OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase))
-        {
-            parts.Add(this.TryGetRelativePath(dataSource, file));
-            parts.Add(fileHashes[file.FullName]);
-        }
-
-        return BuildMetadataHash(parts);
-    }
-
-    private static string BuildFileMetadataHash(FileInfo file)
-    {
-        file.Refresh();
-        if (!file.Exists)
-        {
-            return BuildMetadataHash(
-                "file",
-                file.FullName,
-                file.Name,
-                "missing",
-                "0");
-        }
-
-        return BuildMetadataHash(
-            "file",
-            file.FullName,
-            file.Name,
-            file.LastWriteTimeUtc.Ticks.ToString(),
-            file.Length.ToString());
-    }
-
-    private static string BuildMetadataHash(params string[] parts)
-    {
-        return BuildMetadataHash((IEnumerable<string>)parts);
-    }
-
-    private static string BuildMetadataHash(IEnumerable<string> parts)
-    {
-        var fingerprintSource = new StringBuilder();
-        foreach (var part in parts)
-            fingerprintSource.Append(part.Length).Append(':').Append(part).Append('|');
-
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprintSource.ToString()));
-        return Convert.ToHexString(bytes);
-    }
-
-    private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
-    {
-        file.Refresh();
-        var absolutePath = Path.GetFullPath(file.FullName);
-        return new(
-            this.CreateParentFileId(dataSource.Id, absolutePath),
-            absolutePath,
-            file.Name,
-            this.TryGetRelativePath(dataSource, file),
-            GetFileType(file),
-            fingerprint,
-            file.Exists ? file.Length : 0,
-            file.Exists ? new DateTimeOffset(file.CreationTimeUtc) : DateTimeOffset.UnixEpoch,
-            file.Exists ? new DateTimeOffset(file.LastWriteTimeUtc) : DateTimeOffset.UnixEpoch,
-            embeddedAtUtc,
-            chunkCount);
-    }
-
-    private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTimeOffset embeddedAtUtc)
-    {
-        return batch
-            .Select(chunk => new EmbeddingStateChunk(
-                chunk.ChunkId,
-                parentFile.ParentFileId,
-                chunk.PageNumber,
-                chunk.ChunkIndex,
-                chunk.Text,
-                embeddedAtUtc))
-            .ToList();
-    }
-
-    private static string GetFileType(FileInfo file)
-    {
-        var extension = file.Extension.TrimStart('.').ToLowerInvariant();
-        return string.IsNullOrWhiteSpace(extension) ? "unknown" : extension;
-    }
-
-    private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
-        CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");
-
-    private string CreateParentFileId(string dataSourceId, string absolutePath) =>
-        CreateStableGuid($"{dataSourceId}:parent-file:{absolutePath}");
-
-    private static string CreateStableGuid(string source)
-    {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
-        var guidBytes = hash[..16].ToArray();
-
-        guidBytes[6] = (byte)((guidBytes[6] & 0x0F) | 0x40);
-        guidBytes[8] = (byte)((guidBytes[8] & 0x3F) | 0x80);
-
-        return new Guid(guidBytes).ToString();
-    }
+    [GeneratedRegex(@"^(\d+(\.\d+)*\.?\s+\S|(?i:chapter|section)\s+\S|[A-Z0-9][A-Z0-9 ,:;'/&()_-]{2,})$", RegexOptions.CultureInvariant)]
+    private static partial Regex PlainHeadingRegex();
 }

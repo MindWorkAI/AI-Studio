@@ -5,8 +5,8 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use tauri::Url;
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri::{Manager, Url};
+use tauri_plugin_shell::process::{CommandChild, CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
 use crate::api_token::APIToken;
 use crate::runtime_api_token::API_TOKEN;
@@ -39,8 +39,14 @@ static DOTNET_INITIALIZED: Lazy<Mutex<bool>> = Lazy::new(|| Mutex::new(false));
 pub const PID_FILE_NAME: &str = "mindwork_ai_studio.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Dotnet;
 
-/// Removes ANSI escape sequences and non-printable control chars from stdout lines.
-fn sanitize_stdout_line(line: &str) -> String {
+/// Tells the .NET host where to extract the native libraries bundled into the server.
+const DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR: &str = "DOTNET_BUNDLE_EXTRACT_BASE_DIR";
+
+/// The directory below the app's cache directory where the .NET host extracts them.
+const DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME: &str = "dotnet";
+
+/// Removes ANSI escape sequences and non-printable control chars from stdout and stderr lines.
+fn sanitize_output_line(line: &str) -> String {
     let mut sanitized = String::with_capacity(line.len());
     let mut chars = line.chars().peekable();
 
@@ -92,6 +98,15 @@ fn sanitize_stdout_line(line: &str) -> String {
     sanitized
 }
 
+/// Describes how a process ended, for the log.
+fn describe_termination(payload: &TerminatedPayload) -> String {
+    match (payload.code, payload.signal) {
+        (Some(code), _) => format!("exit code {code}"),
+        (None, Some(signal)) => format!("signal {signal}"),
+        (None, None) => String::from("neither an exit code nor a signal"),
+    }
+}
+
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
 pub async fn dotnet_port(_token: APIToken) -> String {
@@ -111,6 +126,45 @@ fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, St
         (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH), policy.bundle_path),
         (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS), policy.allowed_hosts),
     ]
+}
+
+/// Returns the directory where the .NET host extracts the native libraries of the server.
+///
+/// The server is a single-file bundle, and the native libraries inside it -- SQLite above all --
+/// have to be written to disk before the .NET host can load them. That happens before any of our
+/// own .NET code runs. Left to itself, the host picks `$HOME/.net` or `%TEMP%\.net` and exits at
+/// once when that location is not writable. The Flatpak sandbox mounts the home directory
+/// read-only, so the server never started there. Our own cache directory is writable wherever
+/// the app runs, which is why we choose the location on every platform instead of trusting the
+/// default.
+///
+/// Returns `None` when the directory is not available. The host then falls back to its default,
+/// and should that fail as well, its message shows up in our log as stderr of the .NET server.
+fn dotnet_bundle_extraction_directory<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) -> Option<String> {
+    let cache_directory = match app_handle.path().app_cache_dir() {
+        Ok(path) => path,
+        Err(e) => {
+            error!(Source = "Bootloader .NET"; "Failed to resolve the app cache directory for extracting the native libraries of the .NET server: {e}");
+            return None;
+        }
+    };
+
+    let extraction_directory = cache_directory.join(DOTNET_BUNDLE_EXTRACTION_DIRECTORY_NAME);
+    if let Err(e) = std::fs::create_dir_all(&extraction_directory) {
+        error!(Source = "Bootloader .NET"; "Failed to create the directory '{}' for extracting the native libraries of the .NET server: {e}", extraction_directory.display());
+        return None;
+    }
+
+    match extraction_directory.to_str() {
+        Some(path) => {
+            info!(Source = "Bootloader .NET"; "The .NET server extracts its native libraries to '{path}'.");
+            Some(path.to_string())
+        }
+        None => {
+            error!(Source = "Bootloader .NET"; "The directory '{}' for extracting the native libraries of the .NET server is not valid UTF-8.", extraction_directory.display());
+            None
+        }
+    }
 }
 
 /// Creates the startup environment file for the .NET server in the development
@@ -164,6 +218,9 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
     ]);
     dotnet_server_environment.extend(external_http_custom_root_certificate_policy_environment());
+    if let Some(extraction_directory) = dotnet_bundle_extraction_directory(&app_handle) {
+        dotnet_server_environment.insert(String::from(DOTNET_ENV_BUNDLE_EXTRACT_BASE_DIR), extraction_directory);
+    }
 
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
@@ -185,13 +242,45 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
         // Log the output of the .NET server:
         // NOTE: Log events are sent via structured HTTP API calls.
         // This loop serves for fundamental output (e.g., startup errors).
+        //
+        // The .NET host writes its own failures to stderr, before any of our .NET code runs.
+        // Without stderr and the termination, a server that cannot even start leaves no trace.
         while let Some(event) = rx.recv().await {
-            if let CommandEvent::Stdout(line) = event {
-                let line_utf8 = String::from_utf8_lossy(&line).to_string();
-                let line = sanitize_stdout_line(line_utf8.trim_end());
-                if !line.trim().is_empty() {
-                    info!(Source = ".NET Server (stdout)"; "{line}");
+            match event {
+                CommandEvent::Stdout(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        info!(Source = ".NET Server (stdout)"; "{line}");
+                    }
                 }
+
+                CommandEvent::Stderr(line) => {
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = sanitize_output_line(line_utf8.trim_end());
+                    if !line.trim().is_empty() {
+                        error!(Source = ".NET Server (stderr)"; "{line}");
+                    }
+                }
+
+                CommandEvent::Error(e) => {
+                    error!(Source = "Bootloader .NET"; "Failed to read the output of the .NET server: {e}");
+                }
+
+                CommandEvent::Terminated(payload) => {
+                    //
+                    // stop_dotnet_server() takes the child out before killing it. When the child is
+                    // still here, nobody asked the server to stop.
+                    //
+                    let termination = describe_termination(&payload);
+                    if server_spawn_clone.lock().unwrap().is_some() {
+                        error!(Source = "Bootloader .NET"; "The .NET server process terminated unexpectedly with {termination}.");
+                    } else {
+                        info!(Source = "Bootloader .NET"; "The .NET server process terminated with {termination}.");
+                    }
+                }
+
+                _ => (),
             }
         }
     });

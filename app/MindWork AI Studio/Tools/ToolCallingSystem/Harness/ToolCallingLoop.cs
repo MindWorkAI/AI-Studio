@@ -130,10 +130,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (round.Calls.Any(call => string.IsNullOrWhiteSpace(call.CallId)))
             {
                 toolCallCount++;
-                var (unanswerableContent, unanswerableTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
-                await context.AddToolInvocationAsync(unanswerableTrace);
+                var unanswerable = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
+                await context.AddToolInvocationAsync(unanswerable.Trace);
                 await context.ResetToolRuntimeStatusAsync();
-                yield return new ContentStreamChunk(unanswerableContent, [..toolSources]);
+                yield return new ContentStreamChunk(unanswerable.Content, [..toolSources]);
                 yield break;
             }
 
@@ -202,10 +202,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     if (!call.IsValid)
                     {
                         toolCallCount++;
-                        var (invalidContent, invalidTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
-                        toolResultCharacterCount += invalidContent.Length;
-                        await context.AddToolInvocationAsync(invalidTrace);
-                        adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
+                        var invalid = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
+                        toolResultCharacterCount += invalid.Content.Length;
+                        await context.AddToolInvocationAsync(invalid.Trace);
+                        adapter.RecordToolResult(call.CallId, invalid.Content, isError: true);
                         await context.PublishPendingToolConversationAsync(adapter);
                         continue;
                     }
@@ -223,23 +223,27 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     }
 
                     toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence, sources) = await context.ToolExecutor.ExecuteAsync(
+                    var outcome = await context.ToolExecutor.ExecuteAsync(
                         call.CallId,
                         call.ToolName,
                         call.ArgumentsJson,
                         context.RunnableTools,
                         context.Provider,
+                        context.ChatThread,
                         toolCallCount,
                         token);
 
-                    toolResultCharacterCount += toolContent.Length;
-                    context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
-                    toolSources.MergeSources(sources);
-                    await context.AddToolInvocationAsync(trace);
+                    toolResultCharacterCount += outcome.Content.Length;
+                    context.ChatThread.RequireProviderConfidence(outcome.RequiredProviderConfidence);
+                    context.ChatThread.RequireDataSecurity(outcome.RequiredDataSecurity);
+                    context.ChatThread.RequireOutboundDataRestriction(outcome.RequiredOutboundDataRestriction);
+                    context.ChatThread.RuntimeWebAddressesFromTools.UnionWith(outcome.ReturnedWebAddresses);
+                    toolSources.MergeSources(outcome.Sources);
+                    await context.AddToolInvocationAsync(outcome.Trace);
 
                     // A blocked call counts as a failure towards the model as much as an errored
                     // one does: in both cases it did not get the data it asked for.
-                    adapter.RecordToolResult(call.CallId, toolContent, trace.Status is not ToolInvocationTraceStatus.SUCCESS);
+                    adapter.RecordToolResult(call.CallId, outcome.Content, outcome.Trace.Status is not ToolInvocationTraceStatus.SUCCESS);
                     await context.PublishPendingToolConversationAsync(adapter);
                 }
             }

@@ -14,6 +14,8 @@ using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.SemanticSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
@@ -180,6 +182,11 @@ internal sealed class Program
         builder.Services.AddSingleton<IWebSearchBackend, StaanSearchBackend>();
         builder.Services.AddSingleton<IWebSearchBackend, TavilySearchBackend>();
         builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SemanticSearchTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearchMailsTool>();
+        builder.Services.AddSingleton<IToolImplementation, ReadMailTool>();
+        builder.Services.AddSingleton<IToolImplementation, CountMailsTool>();
+        builder.Services.AddSingleton<IToolCollection, MailboxToolCollection>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
@@ -201,8 +208,11 @@ internal sealed class Program
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
+        builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
+        builder.Services.AddSingleton<MailboxRetrievalService>();
         builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         

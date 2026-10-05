@@ -275,7 +275,7 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
                 var rag = new AISrcSelWithRetCtxVal();
                 if (request.LastUserPrompt is not null)
                 {
-                    chatThread = await rag.ProcessAsync(provider, request.LastUserPrompt, chatThread, token);
+                    chatThread = await rag.ProcessAsync(provider, request.ProviderSettings.Model, request.LastUserPrompt, chatThread, token);
                     request.ChatThread = chatThread;
                 }
             }
