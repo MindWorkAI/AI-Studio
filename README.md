@@ -1,4 +1,4 @@
-# MindWork AI Studio
+# MindWork AI Studio 🤖
 <img src="app/MindWork%20AI%20Studio/wwwroot/svg/banner.svg" alt="MindWork AI Studio Banner"/>
 
 Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
