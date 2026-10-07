@@ -41,6 +41,12 @@ public static class AssistantVisibilityExtensions
             return true;
         }
 
+        // Dynamic assistants are controlled through plugin activation and their security state.
+        // The Assistant Builder is controlled through its preview feature. Neither belongs to the
+        // built-in assistant visibility list, so both are expected to be visible at this point.
+        if (component is Components.DYNAMIC_ASSISTANT or Components.META_ASSISTANT)
+            return true;
+
         // Map Components enum to ConfigurableAssistant enum:
         var configurableAssistant = component switch
         {

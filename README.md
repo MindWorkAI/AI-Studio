@@ -4,73 +4,6 @@
 Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 ## News
-<details>
-    <summary> 
-    <h3 style="display:inline-block">
-        Things we are currently working on
-    </h3>
-    </summary>
-
-<details>
-    <summary>
-    <h4 style="display:inline-block">
-        RAG (Retrieval-Augmented Generation)
-    </h4>
-    </summary>
-
-Since November 2024: Work on RAG (integration of your data and files) has begun. We will support the integration of local and external data sources. We need to implement the following runtime (Rust) and app (.NET) steps:
-
-- [x] ~~Runtime: Restructuring the code into meaningful modules (PR [#192](https://github.com/MindWorkAI/AI-Studio/pull/192))~~
-- [x] ~~Define the [External Retrieval Interface (ERI)](https://github.com/MindWorkAI/ERI) as a contract for integrating arbitrary external data (PR [#1](https://github.com/MindWorkAI/ERI/pull/1))~~
-- [x] ~~App: Metadata for providers (which provider offers embeddings?) (PR [#205](https://github.com/MindWorkAI/AI-Studio/pull/205))~~
-- [x] ~~App: Add an option to show preview features (PR [#222](https://github.com/MindWorkAI/AI-Studio/pull/222))~~
-- [x] ~~App: Configure embedding providers (PR [#224](https://github.com/MindWorkAI/AI-Studio/pull/224))~~
-- [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
-- [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
-- [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
-- [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
-- [x] ~~App: Implement external embedding providers ([PR #654](https://github.com/MindWorkAI/AI-Studio/pull/654))~~
-- [ ] App: Implement the process to vectorize one local file using embeddings (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
-- [x] ~~Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant) ([PR #580](https://github.com/MindWorkAI/AI-Studio/pull/580))~~
-- [ ] App: Implement the continuous process of vectorizing data (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
-- [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
-- [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
-- [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
-
-</details>
-
-<details>
-    <summary>
-    <h4 style="display:inline-block">
-        Writer Mode
-    </h4>
-    </summary>
-
-Since September 2024: Experiments have been started on how we can work on long texts with AI Studio. Let's say you want to write a fantasy novel or create a complex project proposal and use LLM for support. The initial experiments were promising, but not yet satisfactory. We are testing further approaches until a satisfactory solution is found. The current state of our experiment is available as an experimental preview feature through your app configuration. Related PR: ~~[PR #167](https://github.com/MindWorkAI/AI-Studio/pull/167), [PR #226](https://github.com/MindWorkAI/AI-Studio/pull/226)~~, [PR #376](https://github.com/MindWorkAI/AI-Studio/pull/376).
-
-</details>
-
-<details>
-    <summary>
-    <h4 style="display:inline-block">
-        Plugin System
-    </h4>
-    </summary>
-
-Since March 2025: We have started developing the plugin system. There will be language plugins to offer AI Studio in other languages, configuration plugins to centrally manage certain providers and rules within an organization, and assistant plugins that allow anyone to develop their own assistants. We are using Lua as the plugin language:
-- [x] ~~Plan & implement the base plugin system ([PR #322](https://github.com/MindWorkAI/AI-Studio/pull/322))~~
-- [x] ~~Start the plugin system ([PR #372](https://github.com/MindWorkAI/AI-Studio/pull/372))~~
-- [x] ~~Added hot-reload support for plugins ([PR #377](https://github.com/MindWorkAI/AI-Studio/pull/377), [PR #391](https://github.com/MindWorkAI/AI-Studio/pull/391))~~
-- [x] ~~Add support for other languages (I18N) to AI Studio ([PR #381](https://github.com/MindWorkAI/AI-Studio/pull/381), [PR #400](https://github.com/MindWorkAI/AI-Studio/pull/400), [PR #404](https://github.com/MindWorkAI/AI-Studio/pull/404), [PR #429](https://github.com/MindWorkAI/AI-Studio/pull/429), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
-- [x] ~~Add an I18N assistant to translate all AI Studio texts to a certain language & culture ([PR #422](https://github.com/MindWorkAI/AI-Studio/pull/422))~~
-- [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
-- [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
-- [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
-- [x] ~~Add assistant plugins ([PR #659](https://github.com/MindWorkAI/AI-Studio/pull/659))~~
-
-</details>
-</details>
-
 <details open>
     <summary>
     <h3 style="display:inline-block">
@@ -78,6 +11,9 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.9.1: Added local RAG as a beta feature, so the AI can answer from the documents in your own folders and files; added Semantic Search, so a model searches your data sources itself whenever a question calls for it; added tools that AI models can use on their own, starting with Web Search, Read Web Page, and Search Confluence, available in chats, assistants, batch runs, document analysis policies, chat templates, and assistant plugins; added a token count below the message field and knowledge about each model's context window; added support for OpenAI's GPT-6 Astra, Sol, and Luna, and model plugins for organizations that run their own models; you can now copy an entire chat or roll it back to an earlier answer; and expanded enterprise IT support with organization-wide management of tools and of how data sources are searched.
+- v26.8.2: Added protection against prompt injection, so hidden instructions in documents, web pages, and retrieved content are removed before a model reads them; added IONOS' AI Model Hub and LiteLLM as providers, along with speech-to-text and embeddings for Hugging Face, Helmholtz Blablador, GroqCloud, and GWDG SAIA; added knowledge about the latest AI models like Claude Opus 5 & Sonnet 5, Gemini 3.6 & 3.7, and Grok 4, and corrected the abilities shown for many models across all providers; added provider logos throughout the app; AI answers can now be exported as Word, OpenDocument, LaTeX, Markdown, or a webpage, with tables saved separately as spreadsheets; greatly reduced memory usage when working with large documents; and expanded enterprise rollouts to cover every kind of plugin.
+- v26.8.1: Added Hetzner's EU-hosted inference API as a provider, along with support for the latest open-source models like DeepSeek V4, GLM 5.2, Kimi K2.7 & K3, and Qwen 3.6 & 3.8; added the Visual Briefing Assistant as a preview feature and the Batch Processing Assistant to process entire folders of documents in one run; you can now share, import, and delete plugins; greatly improved working with files, including much better Word and OpenDocument support; expanded enterprise IT support with configuration priorities, test configurations before rollout, and policies for plugin sharing and imports.
 - v26.7.3: Added support for the latest OpenAI, Anthropic, and Google models; introduced audio and video transcription, a log viewer assistant, and AI-assisted editing and code management in the Assistant Builder; expanded presentation support with OpenDocument files, speaker notes, comments, and metadata; and improved Linux integration, enterprise update controls, and reliability after waking from sleep.
 - v26.7.1: Added the assistant builder as a beta preview for creating assistant plugins without coding; assistants can now keep running in the background; improved provider capability visibility and expert overrides, expanded enterprise controls for data source behavior and trusted assistant plugins, and made chats, assistants, and source links more reliable.
 - v26.6.2: Expanded enterprise configuration options with chat defaults, custom introduction panels, trust settings for data security, and managed confidence levels; added auto-backups for app settings & the possibility to view managed profiles and chat templates.
@@ -87,9 +23,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v26.2.2: Added Qdrant as a building block for our local RAG preview, added an embedding test option to validate embedding providers, and improved enterprise and configuration plugins with preselected providers, additive preview features, support for multiple configurations, and more reliable synchronization.
 - v26.1.1: Added the option to attach files, including images, to chat templates; added support for source code file attachments in chats and document analysis; added a preview feature for recording your own voice for transcription; fixed various bugs in provider dialogs and profile selection.
 - v0.10.0: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, the possibility to use file attachments in chats, and support for images as input.
-- v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
-- v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
-- v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
  
 </details>
 
@@ -98,7 +31,7 @@ Since March 2025: We have started developing the plugin system. There will be la
 ![MindWork AI Studio - Home](documentation/mindworks_homepage.png)
 ![MindWork AI Studio - Assistants](documentation/mindworks_assistants_complete.png)
 
-MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI o1, or even your own local AI models.
+MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI GPT-6, or even your own local AI models.
 
 **Ready to get started 🤩?** [Download the appropriate setup for your operating system here](documentation/Setup.md).
 
@@ -106,7 +39,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
 - **Free of charge**: The app is free to use, both for personal and commercial purposes.
 - **Democratization of AI**: We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 € such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.
 - **Independence**: You are not tied to any single provider. Instead, you can choose the providers that best suit your needs. Right now, we support:
-  - [OpenAI](https://openai.com/) (GPT5, GPT4.1, o1, o3, o4, etc.)
+  - [OpenAI](https://openai.com/) (GPT-6, GPT-5, o3, etc.)
   - [Perplexity](https://www.perplexity.ai/)
   - [Mistral](https://mistral.ai/)
   - [Anthropic](https://www.anthropic.com/) (Claude)
@@ -115,15 +48,21 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [DeepSeek](https://www.deepseek.com/en)
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
   - [OpenRouter](https://openrouter.ai/)
+  - [Hetzner](https://experiments.hetzner.com) (experimental inference API running open-source models in the EU)
+  - [IONOS](https://cloud.ionos.com/managed/ai-model-hub) (AI Model Hub running open-source models in Germany)
+  - [LiteLLM](https://www.litellm.ai/) (an AI gateway you run yourself, in front of models from many providers)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
   - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)
   - [Fireworks](https://fireworks.ai/)
   - For scientists and employees of research institutions, we also support [Helmholtz](https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570) and [GWDG](https://gwdg.de/services/application-services/ai-services/) AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
 - **Assistants**: You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.
+- **Tools**: AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work.
+- **Voice input**: Dictate your messages instead of typing them, and have your recordings as well as audio and video files transcribed. You choose the transcription provider, including one you host yourself.
 - **Unrestricted usage**: Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 - **Cost-effective**: You only pay for what you use, which can be cheaper than monthly subscription services like ChatGPT Plus, especially if used infrequently. But beware, here be dragons: For extremely intensive usage, the API costs can be significantly higher. Unfortunately, providers currently do not offer a way to display current costs in the app. Therefore, check your account with the respective provider to see how your costs are developing. When available, use prepaid and set a cost limit.
 - **Privacy**: You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.
+- **Enterprise IT**: Your IT department can manage AI Studio centrally: roll out providers, assistants, chat templates, and tools, set defaults, or lock settings for the whole organization. [Here's how it works.](documentation/Enterprise%20IT.md)
 - **Flexibility**: Choose the provider and model best suited for your current task.
 - **No bloatware**: The app requires minimal storage for installation and operates with low memory usage. Additionally, it has a minimal impact on system resources, which is beneficial for battery life.
 
@@ -144,7 +83,7 @@ We offer various ways you can support the project:
 
 - **One-Time Contributions**: Make a one-time donation and have your name or company logo included in the app as a gesture of our gratitude.
 
-For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
+For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise. [Our sponsoring guide](documentation/Sponsoring.md) explains how it works, from delivering your logo to what sponsoring includes.
 
 To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
@@ -184,6 +123,23 @@ If you're interested in learning more about future plans, check out our [roadmap
 
 You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
+Do you want to add or maintain model-driven tools? [Read the tool development guide here](documentation/Tools.md).
+
+Do you want to teach AI Studio what a model can do? [Read the model capabilities guide here](documentation/Models.md).
+
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Contributing
+    </h2>
+    </summary>
+
+Would you like to contribute to AI Studio? We welcome pull requests. We build AI Studio with AI coding agents, and we recommend that you do the same. Please read our [contribution guidelines](CONTRIBUTING.md) before you start: they explain when to ask us first, what a pull request needs, and what you agree to when you submit one.
+
+Did you find a security vulnerability? Please follow our [security policy](SECURITY.md) and never report it publicly. Everyone taking part in our community follows our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 </details>
 
 <details>
@@ -210,6 +166,25 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **No Warranties**: The software is provided "as is", without any promises from us about it working perfectly for your needs. While we strive to make it great, we can't guarantee it will be free of bugs or issues.
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
 
+Contributions from outside the core team are licensed to us under the MIT License, see our [contribution guidelines](CONTRIBUTING.md#licensing-of-your-contribution) and the [NOTICE](NOTICE.md) file.
+
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
+
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Trademarks
+    </h2>
+    </summary>
+
+The license above covers our own software. It says nothing about the trademarks of other companies, so here is where AI Studio stands on those.
+
+AI Studio ships the logos of the AI providers it supports and shows them next to the matching provider entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
+
+Some of these logos come from the [Simple Icons](https://github.com/simple-icons/simple-icons) project, which publishes them under [CC0-1.0](https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md); the trademarks themselves are not part of that release. The remaining ones were taken from the official brand resources of the respective provider. The source of every single file is documented in [the provider icon notes](app/MindWork%20AI%20Studio/wwwroot/images/provider-icons/README.md). All logos ship with AI Studio and are loaded from your device, so showing one never sends a request to the provider.
+
+Organizations can replace these logos with their own icons through a configuration plugin. When an organization does so, it is responsible for holding the rights to the icons it provides.
 
 </details>

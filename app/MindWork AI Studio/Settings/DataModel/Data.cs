@@ -42,7 +42,25 @@ public sealed class Data
     /// A collection of data sources configured.
     /// </summary>
     public List<IDataSource> DataSources { get; set; } = [];
-    
+
+    /// <summary>
+    /// A collection of mailboxes configured.
+    /// </summary>
+    /// <remarks>
+    /// A list of its own rather than a part of DataSources: classic RAG, Semantic Search and the
+    /// agents read DataSources, and none of them is meant to see a mailbox. It also keeps the
+    /// settings readable for older versions of AI Studio, so the settings version stays the same.
+    /// An older version skips a property it does not know, but would fail to read the whole file
+    /// over a data source type it does not know. It drops the list, though, the next time it stores
+    /// the settings. The numbers come from NextDataSourceNum, which the data sources use as well.
+    /// </remarks>
+    public List<DataSourceMailbox> Mailboxes { get; set; } = [];
+
+    /// <summary>
+    /// Settings which apply to all mailboxes.
+    /// </summary>
+    public DataMailboxes MailboxSettings { get; init; } = new(x => x.MailboxSettings);
+
     /// <summary>
     /// List of configured profiles.
     /// </summary>
@@ -84,6 +102,19 @@ public sealed class Data
     /// Cached audit results for assistant plugins.
     /// </summary>
     public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
+
+    /// <summary>
+    /// The assistant plugin hashes whose organization default for the activation was already applied.
+    /// </summary>
+    /// <remarks>
+    /// An organization may enable an assistant plugin it approved while still letting the user switch
+    /// it off again. That is a default, not a rule, so it must be applied exactly once: applying it on
+    /// every start would keep switching the assistant back on against the user's decision. We remember
+    /// the hashes it was applied for, and forget one as soon as no approval asks for it anymore, so a
+    /// later rollout of the same plugin takes effect again. Activations the user may not override are
+    /// not listed here: those are decided live and never touch the list of enabled plugins.
+    /// </remarks>
+    public List<string> AppliedEnterpriseAssistantActivations { get; set; } = [];
 
     /// <summary>
     /// The next provider number to use.
@@ -181,4 +212,6 @@ public sealed class Data
     public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
     
     public DataI18N I18N { get; init; } = new();
-}   
+
+    public DataTools Tools { get; init; } = new(x => x.Tools);
+}

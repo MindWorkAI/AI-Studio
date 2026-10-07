@@ -21,6 +21,8 @@ namespace AIStudio.Settings;
 /// <param name="IsSelfHosted">Whether the provider is self-hosted.</param>
 /// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
+/// <param name="AllowUserProvidedAPIKey">When set by a configuration plugin, the user may set their own API key for this otherwise locked, enterprise-managed provider.</param>
+/// <param name="CustomIconDataUrl">The validated custom SVG icon supplied by a configuration plugin.</param>
 public sealed record Provider(
     uint Num,
     string Id,
@@ -34,21 +36,16 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
-    ProviderCapabilityOverrides? CapabilityOverrides = null) : ConfigurationBaseObject, ISecretId
+    string TokenizerPath = "",
+    ProviderCapabilityOverrides? CapabilityOverrides = null,
+    bool AllowUserProvidedAPIKey = false,
+    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
     public static readonly Provider NONE = new();
 
-    public Provider() : this(
-        0,
-        Guid.Empty.ToString(),
-        string.Empty,
-        LLMProviders.NONE,
-        default, 
-        false,
-        false,
-        Guid.Empty)
+    public Provider() : this(0, Guid.Empty.ToString(), string.Empty, LLMProviders.NONE, default, false, false, Guid.Empty)
     {
     }
     
@@ -91,7 +88,7 @@ public sealed record Provider(
 
     #endregion
     
-    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject provider)
+    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -153,7 +150,26 @@ public sealed record Provider(
             additionalJsonApiParameters = string.Empty;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
         var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
+
+        var allowUserProvidedApiKey = false;
+        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
+            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+
+        var customIconDataUrl = string.Empty;
+        if (table.TryGetValue("IconPath", out var iconPathValue))
+        {
+            if (!iconPathValue.TryRead<string>(out var iconPath))
+                LOGGER.LogWarning($"The configured provider {idx} does not contain a valid icon path. Falling back to the built-in provider icon. (Plugin ID: {configPluginId})");
+            else if (!PluginIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
+                LOGGER.LogWarning($"The configured provider {idx} contains an invalid icon path. Falling back to the built-in provider icon. Issue: {iconIssue} (Plugin ID: {configPluginId})");
+        }
 
         provider = new Provider
         {
@@ -169,11 +185,21 @@ public sealed record Provider(
             Host = host,
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
+            TokenizerPath = tokenizerPath,
             CapabilityOverrides = capabilityOverrides,
+            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            CustomIconDataUrl = customIconDataUrl,
         };
 
-        // Handle encrypted API key if present:
-        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        // Handle an encrypted API key if present. When the user manages their own key for this
+        // provider, we must never enqueue an embedded key: doing so would overwrite the user's
+        // key in the OS keyring on every configuration reload.
+        if (allowUserProvidedApiKey)
+        {
+            if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
+                LOGGER.LogWarning($"The configured provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");
+        }
+        else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
                 LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
@@ -252,6 +278,8 @@ public sealed record Provider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                    
+                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

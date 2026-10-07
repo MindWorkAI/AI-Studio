@@ -1,0 +1,14 @@
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Contract draft
+Date: Wed, 30 Sep 2026 15:00:00 +0200
+Message-ID: <smime-enveloped@example.org>
+MIME-Version: 1.0
+Content-Type: application/pkcs7-mime; smime-type=enveloped-data; name="smime.p7m"
+Content-Disposition: attachment; filename="smime.p7m"
+Content-Transfer-Encoding: base64
+
+zlGMgNELl9LKl3ZqEAZiUb2iQ0gjGWstE4xBJhJRHlmvLDc8a+h2ljICBmaQ6GRh+qSEQeV5fRY8
+RjDYkPRT0uCnCqPfwM2xrSumLBJ3QOZjW/v/+tnRHH5CvZTQC97kYoVV3/BOxB3afekiMIY+RnrZ
+KOUeWKQP6kQdR72L6XoENYiSJzz/afpsirNUQMpvOwJLtkMLsJMFop63KxFFJ8pbXPI8LjTb/HEK
+q3D4pEF5Et39

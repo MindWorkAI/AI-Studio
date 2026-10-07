@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using AIStudio.Settings;
@@ -142,11 +143,11 @@ public sealed record PluginConfigurationObject
 
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
+                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
@@ -204,6 +205,43 @@ public sealed record PluginConfigurationObject
         }
         
         return true;
+    }
+
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Tokenizer synchronization needs indexed access to update enterprise-managed providers in place.")]
+    public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath)
+    {
+        var wasConfigurationChanged = false;
+        var localSettingsManager = SettingsManagerAccess;
+
+        for (var i = 0; i < localSettingsManager.ConfigurationData.Providers.Count; i++)
+        {
+            var provider = localSettingsManager.ConfigurationData.Providers[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var syncedProvider = await SyncProviderTokenizerAsync(provider, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            localSettingsManager.ConfigurationData.Providers[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        for (var i = 0; i < localSettingsManager.ConfigurationData.EmbeddingProviders.Count; i++)
+        {
+            var provider = localSettingsManager.ConfigurationData.EmbeddingProviders[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var syncedProvider = await SyncEmbeddingTokenizerAsync(provider, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            localSettingsManager.ConfigurationData.EmbeddingProviders[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        return wasConfigurationChanged;
     }
 
     /// <summary>
@@ -396,6 +434,19 @@ public sealed record PluginConfigurationObject
         var wasConfigurationChanged = leftOverObjects.Count > 0;
         foreach (var item in leftOverObjects.Distinct())
         {
+            if (item is Settings.Provider provider)
+            {
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise provider '{ProviderName}': {Issue}", provider.InstanceName, deleteTokenizerResult.Message);
+            }
+            else if (item is EmbeddingProvider embeddingProvider)
+            {
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(embeddingProvider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise embedding provider '{ProviderName}': {Issue}", embeddingProvider.Name, deleteTokenizerResult.Message);
+            }
+
             configuredObjects.Remove(item);
         
             // Delete the API key from the OS keyring if the removed object has one:
@@ -406,6 +457,13 @@ public sealed record PluginConfigurationObject
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else
                     LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+            else if(item is IUserProvidedAPIKey { AllowUserProvidedAPIKey: true })
+            {
+                // The user manages their own key for this provider. Keep it in the OS keyring
+                // in case the organization's configuration comes back later, instead of forcing
+                // the user to re-enter it:
+                LOG.LogInformation($"Preserving the user-provided API key for removed enterprise provider '{item.Name}' in the OS keyring.");
             }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {
@@ -418,5 +476,100 @@ public sealed record PluginConfigurationObject
         }
 
         return wasConfigurationChanged;
+    }
+
+    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(Settings.Provider provider, string pluginPath)
+    {
+        var syncedTokenizerPath = await SyncTokenizerAsync(
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForProvider(provider),
+            $"provider '{provider.InstanceName}'");
+
+        return provider with { TokenizerPath = syncedTokenizerPath };
+    }
+
+    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(EmbeddingProvider provider, string pluginPath)
+    {
+        var syncedTokenizerPath = await SyncTokenizerAsync(
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForEmbeddingProvider(provider),
+            $"embedding provider '{provider.Name}'");
+
+        //
+        // The embedding signature is built from the tokenizer's content, so the fingerprint travels
+        // with the provider. An unreadable file yields nothing, and writing that would look like
+        // another tokenizer and cost every data source of this provider its index -- so in that case
+        // the previous fingerprint is kept rather than cleared.
+        //
+        var syncedTokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(syncedTokenizerPath);
+        if (string.IsNullOrEmpty(syncedTokenizerFingerprint) && !string.IsNullOrWhiteSpace(syncedTokenizerPath))
+            syncedTokenizerFingerprint = provider.TokenizerFingerprint;
+
+        return provider with { TokenizerPath = syncedTokenizerPath, TokenizerFingerprint = syncedTokenizerFingerprint };
+    }
+
+    private static async Task<string> SyncTokenizerAsync(string configuredTokenizerPath, string pluginPath, string modelId, string logName)
+    {
+        if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
+        {
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            return string.Empty;
+        }
+
+        var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
+        if (resolvedPath is null)
+        {
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer path '{TokenizerPath}' for {LogName} is invalid. The tokenizer path must stay within the plugin directory '{PluginPath}'.", configuredTokenizerPath, logName, pluginPath);
+            return string.Empty;
+        }
+
+        var validateResult = await RustService.ValidateTokenizer(resolvedPath);
+        if (!validateResult.Success)
+        {
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer for {LogName} is invalid. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, validateResult.Message);
+            return string.Empty;
+        }
+
+        var storeResult = await RustService.StoreTokenizer(modelId, resolvedPath);
+        if (!storeResult.Success)
+        {
+            LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);
+            return string.Empty;
+        }
+
+        return storeResult.StoredPath;
+    }
+
+    private static string? ResolvePluginTokenizerPath(string configuredTokenizerPath, string pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath))
+            return null;
+
+        var fullPluginPath = Path.GetFullPath(pluginPath);
+        var candidatePath = Path.GetFullPath(Path.Combine(fullPluginPath, configuredTokenizerPath));
+
+        if (candidatePath.Equals(fullPluginPath, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var pluginPrefix = fullPluginPath.EndsWith(Path.DirectorySeparatorChar)
+            ? fullPluginPath
+            : fullPluginPath + Path.DirectorySeparatorChar;
+
+        return candidatePath.StartsWith(pluginPrefix, StringComparison.OrdinalIgnoreCase)
+            ? candidatePath
+            : null;
     }
 }

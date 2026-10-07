@@ -6,3 +6,4 @@
 ---------|------------------|----------|--------------------------
  MBI001  | SourceGeneration | Info     | MappingRegistryGenerator
  MBI002  | SourceGeneration | Warning  | MappingRegistryGenerator
+ MDR001  | SourceGeneration | Warning  | ModelRegistryGenerator

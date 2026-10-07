@@ -1,0 +1,100 @@
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@this.item?.Icon" Class="mr-2" />
+            @(this.item?.DisplayName ?? T("Tool Settings"))
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (this.item is null)
+        {
+            <MudText Typo="Typo.body1">@T("The selected tool could not be loaded.")</MudText>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-4">
+                @this.item.Description
+            </MudJustifiedText>
+
+            @if (!this.ToolRegistry.IsToolActive(this.item.Id))
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">@T("This tool has been disabled by your organization.")</MudAlert>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(this.validationMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@this.validationMessage</MudAlert>
+            }
+
+            @foreach (var warning in this.GetSettingsWarnings())
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">@warning</MudAlert>
+            }
+
+            @foreach (var toolSection in this.sections)
+            {
+                var visibleGroups = BuildVisibleFieldGroups(toolSection);
+                @if (this.ShowsToolHeaders && visibleGroups.Count > 0)
+                {
+                    <MudText Typo="Typo.subtitle1" Class="d-flex align-center mb-2">
+                        <MudIcon Icon="@toolSection.Implementation.Icon" Class="mr-2" />
+                        @toolSection.Implementation.GetDisplayName()
+                    </MudText>
+                }
+
+                @foreach (var group in visibleGroups)
+                {
+                    <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
+                    @if (ShowsGroupHeader(toolSection, group))
+                    {
+                        <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Class="mb-3">
+                            <MudText Typo="Typo.subtitle2">@this.GetGroupLabel(toolSection, group.Key)</MudText>
+                            <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                                @foreach (var link in GetGroupLinks(toolSection, group.Key))
+                                {
+                                    <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@link.Icon" Href="@link.Url" Target="_blank">
+                                        @link.Label
+                                    </MudButton>
+                                }
+                            </MudStack>
+                        </MudStack>
+                    }
+                    @foreach (var property in group.Fields)
+                    {
+                        var fieldName = property.Key;
+                        var field = property.Value;
+                        var fieldOptions = field.GetOptions();
+                        if (fieldOptions.Count > 0)
+                        {
+                            <MudSelect T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" Class="mb-3 configuration-help-justified" Disabled="@this.IsFieldDisabled(toolSection, fieldName)">
+                                @if (!toolSection.Definition.SettingsSchema.Required.Contains(fieldName))
+                                {
+                                    <MudSelectItem T="string" Value="@string.Empty">@T("Not set")</MudSelectItem>
+                                }
+                                @foreach (var option in fieldOptions)
+                                {
+                                    <MudSelectItem T="string" Value="@option.Value">@option.Label</MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
+                        else
+                        {
+                            <MudTextField T="string" Label="@GetFieldLabel(toolSection, fieldName, field)" Value="@GetValue(toolSection, fieldName)" ValueChanged="@(value => this.UpdateValue(toolSection, fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 configuration-help-justified" HelperText="@this.GetFieldDescription(toolSection, fieldName, field)" Placeholder="@GetFieldPlaceholder(toolSection, fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(toolSection, fieldName)" />
+                        }
+                    }
+                    </MudPaper>
+                }
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Text">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Save" Variant="Variant.Filled" Disabled="@(this.item is null)">
+            @T("Save")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

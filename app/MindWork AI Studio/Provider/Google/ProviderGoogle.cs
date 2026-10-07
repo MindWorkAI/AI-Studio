@@ -31,10 +31,10 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -47,6 +47,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -78,16 +79,16 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             if (string.IsNullOrWhiteSpace(modelName))
             {
                 LOGGER.LogError("No model name provided for embedding request.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.MODEL_NOT_FOUND, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.MODEL_NOT_FOUND));
             }
 
             if (modelName.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
-                modelName = modelName.Substring("models/".Length);
+                modelName = modelName["models/".Length..];
 
             if (!requestedSecret.Success)
             {
                 LOGGER.LogError("No valid API key available for embedding request.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_OR_MISSING_API_KEY));
             }
             
             // Prepare the Google Gemini embedding request:
@@ -115,7 +116,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             if (!response.IsSuccessStatusCode)
             {
                 LOGGER.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return [];
+                throw this.CreateEmbeddingRequestException(response.StatusCode, response.ReasonPhrase ?? string.Empty, responseBody, embeddingModel);
             }
 
             var embeddingResponse = JsonSerializer.Deserialize<GoogleEmbeddingResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -129,31 +130,57 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             else
             {
                 LOGGER.LogError("Was not able to deserialize the embedding response.");
-                return [];
+                throw new ProviderRequestException(ProviderRequestFailureReason.INVALID_RESPONSE, this.GetProviderRequestFailureUserMessage(ProviderRequestFailureReason.INVALID_RESPONSE));
             }
-            
+
+        }
+        catch (ProviderRequestException)
+        {
+            // Already classified and carrying its user message. Wrapping it again would only
+            // replace what we know with the fact that something went wrong:
+            throw;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            //
+            // The caller stopped the work, e.g. because the user removed the data source while it
+            // was being indexed. That is not a failure of the provider and must not be recorded
+            // as one:
+            //
+            throw;
         }
         catch (Exception e)
         {
-            if (this.IsTimeoutException(e, token))
+            var isTimeout = this.IsTimeoutException(e, token);
+            if (isTimeout)
                 await this.SendTimeoutError("creating embeddings");
 
             LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
-            return [];
+            throw this.CreateEmbeddingRequestException(e, isTimeout);
         }
     }
 
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             Models =
             [
-                ..result.Models.Where(model =>
-                        model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                        !this.IsEmbeddingModel(model.Id))
+                //
+                // Asking what a model is made for, rather than only ruling out the embedding ones.
+                // Google names everything after the chat model it grew out of, so the catalog is
+                // full of names which look like something to talk to and are not: the image models,
+                // the computer use model whose API refuses a request without its tool, and the live
+                // line which wants a connection held open in both directions.
+                //
+                // The question used to be asked of names beginning with "gemini" alone, and that
+                // cost the two Gemma models Google serves on this very route. What the prefix kept
+                // out besides them -- Lyria, Imagen, Veo, the research and coding agents, AQA --
+                // is kept out by a rule now, where the reason is written down.
+                //
+                ..result.Models.Where(model => model.IsChatModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -167,12 +194,12 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
 
     public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             Models =
             [
-                ..result.Models.Where(model => this.IsEmbeddingModel(model.Id))
+                ..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))
                     .Select(this.WithDisplayNameFallback)
             ]
         };
@@ -186,7 +213,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
@@ -194,7 +221,6 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             modelResponse => modelResponse.Data
                 .Where(model => !string.IsNullOrWhiteSpace(model.Id))
                 .Select(model => new Model(this.NormalizeModelId(model.Id), model.DisplayName)),
-            token,
             apiKeyProvisional,
             failureReasonSelector: (response, _) => response.StatusCode switch
             {
@@ -202,13 +228,8 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                 System.Net.HttpStatusCode.Unauthorized => ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY,
                 System.Net.HttpStatusCode.TooManyRequests => ModelLoadFailureReason.TOO_MANY_REQUESTS,
                 _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
-            });
-    }
-
-    private bool IsEmbeddingModel(string modelId)
-    {
-        return modelId.Contains("embedding", StringComparison.OrdinalIgnoreCase) ||
-               modelId.Contains("embed", StringComparison.OrdinalIgnoreCase);
+            },
+            token: token);
     }
 
     private Model WithDisplayNameFallback(Model model)

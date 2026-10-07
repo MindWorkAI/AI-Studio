@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -35,15 +36,15 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                            effectiveChatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages. The image format depends on the host:
                                // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
                                // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
                                var messages = host switch
                                {
-                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, effectiveChatModel),
-                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, effectiveChatModel),
+                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
+                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
                                };
 
                                return new ChatCompletionAPIRequest
@@ -57,6 +58,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -95,12 +97,16 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             switch (host)
             {
                 case Host.LLAMA_CPP:
-                    return await this.LoadLlamaCppTextModels(["embed"], [], token, apiKeyProvisional);
-            
+                    return await this.LoadLlamaCppTextModels(apiKeyProvisional, token);
+
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], token, apiKeyProvisional);
+                    var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
+                    return result with
+                    {
+                        Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
+                    };
             }
 
             return ModelLoadResult.FromModels([]);
@@ -127,14 +133,18 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], token, apiKeyProvisional);
+                    var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
+                    return result with
+                    {
+                        Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))]
+                    };
             }
 
             return ModelLoadResult.FromModels([]);
         }
         catch(Exception e)
         {
-            LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
+            LOGGER.LogError($"Failed to load embedding models from self-hosted provider: {e.Message}");
             return ModelLoadResult.Failure(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
     }
@@ -152,10 +162,22 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                         new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
                     ]);
                 
+                //
+                // These two answer the models endpoint with everything they serve, and nothing in
+                // that answer says which of them listens. Asking what each model is made for is the
+                // only thing standing between this list and every chat and embedding model of the
+                // installation, which is what it used to hold. An engine running no speech model at
+                // all therefore offers nothing here, and says so, rather than offering models which
+                // would fail the moment audio reaches them.
+                //
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
-                
+                    var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+                    return result with
+                    {
+                        Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
+                    };
+
                 default:
                     return ModelLoadResult.FromModels([]);
             }
@@ -169,14 +191,33 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     
     #endregion
 
-    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    /// <summary>
+    /// Everything the engine lists, in the order it listed it.
+    /// </summary>
+    /// <remarks>
+    /// What kind of model each of these is stays unanswered here. It used to be answered right in
+    /// this method, by looking for the word "embed" in the name: the text models were the ones
+    /// without it, the embedding models the ones with it. That reading lost bge-m3 and all-minilm,
+    /// which say what they are through another word, and handed them to the chat list instead. The
+    /// callers ask the shared model kind detection now, the way every other provider does.
+    /// </remarks>
+    /// <param name="storeType">Which key to send along.</param>
+    /// <param name="apiKeyProvisional">A key from a dialog which has not stored it yet.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The models the engine named, unsorted and unfiltered.</returns>
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
-        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, true);
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret: true);
 
         try
         {
             using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
-            if(secretKey is not null)
+
+            // An empty token is worse than none at all: a proxy which enforces authentication
+            // rejects an empty bearer with 401, where it would have let a request without any
+            // authorization header through. The dialogs hand us their key field as it stands, so
+            // an empty string arrives here whenever the user stored no key:
+            if(!string.IsNullOrWhiteSpace(secretKey))
                 lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
             using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
@@ -187,12 +228,25 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 return FailedModelLoadResult(this.GetModelLoadFailureReason(lmStudioResponse, responseBody), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}; Body='{responseBody}'");
             }
 
-            var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            //
+            // Read with the shared options, the way every other model list of this app is read.
+            // This one route did without them, which quietly cost it every field an engine spells
+            // in snake case: owned_by has been arriving as nothing all along, and the next field
+            // somebody adds here would have gone the same way without anything failing.
+            //
+            var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(JSON_SERIALIZER_OPTIONS, token);
             var models = lmStudioModelResponse.Data ?? [];
-            return SuccessfulModelLoadResult(models.
-                Where(model => !string.IsNullOrWhiteSpace(model.Id) &&
-                               !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
-                               filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
+
+            //
+            // What the engine said about its own models, taken from the whole list rather than
+            // from what is offered below: a model filtered out here as an embedding model is still
+            // a model somebody may have configured this instance with, and this list is the only
+            // place its window is ever stated.
+            //
+            ListedModels.Shared.Report(this.ConfiguredProviderId, ListingsOf(models));
+
+            return SuccessfulModelLoadResult(models
+                .Where(model => !string.IsNullOrWhiteSpace(model.Id))
                 .Select(n => new Provider.Model(n.Id, null)));
         }
         catch (Exception e) when (this.IsTimeoutException(e, token))
@@ -202,13 +256,12 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
         }
     }
-
     private async Task<Provider.Model> ResolveChatModelForRequest(Provider.Model chatModel, CancellationToken token)
     {
         if (host is not Host.LLAMA_CPP || !chatModel.IsSystemModel)
             return chatModel;
 
-        var modelLoadResult = await this.LoadLlamaCppTextModels(["embed"], [], token);
+        var modelLoadResult = await this.LoadLlamaCppTextModels(null, token);
         if (!modelLoadResult.Success)
             return chatModel;
 
@@ -245,7 +298,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         return chatModel;
     }
 
-    private async Task<ModelLoadResult> LoadLlamaCppTextModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadLlamaCppTextModels(string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, true);
 
@@ -277,7 +330,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                     return LlamaCppLegacyModelResult();
 
                 var models = responseModels
-                    .Where(model => IsMatchingLlamaCppTextModel(model, ignorePhrases, filterPhrases))
+                    .Where(this.IsMatchingLlamaCppTextModel)
                     .Select(model => new Provider.Model(model.Id, null))
                     .ToList();
 
@@ -302,15 +355,30 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         }
     }
 
-    private static bool IsMatchingLlamaCppTextModel(Model model, string[] ignorePhrases, string[] filterPhrases)
+    /// <summary>
+    /// What an engine stated about the models it serves.
+    /// </summary>
+    /// <param name="models">The models exactly as the engine listed them.</param>
+    /// <returns>One listing per model, which says nothing for the models the engine was silent about.</returns>
+    private static IEnumerable<ModelListing> ListingsOf(IEnumerable<Model> models) => models.Select(model => ModelListing.For(model.Id, model.ContextWindowTokens));
+
+    /// <summary>
+    /// Whether this is a model somebody can chat with, as far as llama.cpp and the rules say.
+    /// </summary>
+    /// <remarks>
+    /// Two sources, and both have to agree. What a model is made for comes from the shared rules,
+    /// the same answer the other engines get. What the running build of it puts out comes from
+    /// llama.cpp itself, which states the modalities on this route: an engine serving a model that
+    /// answers in something other than text knows that before any rule about the name could.
+    /// </remarks>
+    /// <param name="model">The model as llama.cpp listed it.</param>
+    /// <returns>True when both agree that it answers a chat in text.</returns>
+    private bool IsMatchingLlamaCppTextModel(Model model)
     {
         if (string.IsNullOrWhiteSpace(model.Id))
             return false;
 
-        if (ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCultureIgnoreCase)))
-            return false;
-
-        if (!filterPhrases.All(filter => model.Id.Contains(filter, StringComparison.InvariantCultureIgnoreCase)))
+        if (!new Provider.Model(model.Id, null).IsChatModel(this.Provider))
             return false;
 
         var outputModalities = model.Architecture?.OutputModalities;

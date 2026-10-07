@@ -77,7 +77,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.timer.Elapsed += async (_, _) => await this.InvokeAsync(async () => await this.OptionChanged(this.internalText));
+        this.timer.Elapsed += (_, _) => this.InvokeAsync(async () => await this.OptionChanged(this.internalText)).Observe($"{nameof(ConfigurationText)}: applying the changed text");
         await base.OnInitializedAsync();
     }
 

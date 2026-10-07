@@ -5,7 +5,14 @@
     @foreach (var data in this.Data)
     {
         <MudSelectItem Value="@data.Value">
-            @data.Name
+            @if (this.ItemTemplate is null)
+            {
+                @data.Name
+            }
+            else
+            {
+                @this.ItemTemplate(data)
+            }
         </MudSelectItem>
     }
 </MudSelect>

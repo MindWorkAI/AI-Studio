@@ -1,3 +1,5 @@
+using AIStudio.Tools.Security;
+
 namespace AIStudio.Tools;
 
 /// <summary>
@@ -17,6 +19,34 @@ namespace AIStudio.Tools;
 public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome, string Content, FileExtractionErrorCode ErrorCode, string? ErrorMessage, IReadOnlyList<int> FailedPages, string? DetectedFormat)
 {
     private static readonly int[] NO_FAILED_PAGES = [];
+    private static readonly PromptInjectionFinding[] NO_FINDINGS = [];
+
+    private readonly IReadOnlyList<PromptInjectionFinding>? promptInjectionFindings;
+
+    /// <summary>
+    /// The prompt-injection attempts the runtime filtered out of the content, if any.
+    /// </summary>
+    /// <remarks>
+    /// This is a notice, not a failure: the passages were removed and the content around them
+    /// is intact, which is why it does not affect the outcome. The findings exist so the app
+    /// can tell the user what was removed from their document.
+    /// </remarks>
+    public IReadOnlyList<PromptInjectionFinding> PromptInjectionFindings
+    {
+        get => this.promptInjectionFindings ?? NO_FINDINGS;
+        init => this.promptInjectionFindings = value;
+    }
+
+    /// <summary>
+    /// How many passages were filtered out. May exceed the number of findings, because the
+    /// runtime caps how many it reports in detail while it filters every single one.
+    /// </summary>
+    public int PromptInjectionRedactedCount { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether prompt injections were filtered out of the content.
+    /// </summary>
+    public bool HasFilteredPromptInjections => this.PromptInjectionRedactedCount > 0;
 
     public static FileExtractionResult Success(string content, string? detectedFormat = null) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES, detectedFormat);
 

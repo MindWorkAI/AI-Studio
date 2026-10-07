@@ -1,6 +1,9 @@
 @attribute [Route(Routes.ASSISTANT_PROMPT_OPTIMIZER)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogPromptOptimizer>
 
+@* No default target in this assistant: the prompt guide below is a zone of its own, so a drop has
+   to be aimed at the one it belongs to. *@
+<ReadFileContent Text="@T("Load the prompt from file")" @bind-FileContent="@this.inputPrompt" EnableDragDrop="true"/>
 <MudTextField T="string"
               @bind-Text="@this.inputPrompt"
               Validation="@this.ValidateInputPrompt"
@@ -95,7 +98,6 @@
     @if (this.useCustomPromptGuide)
     {
         <AttachDocuments Name="Custom Prompt Guide"
-                         Layer="@DropLayers.ASSISTANTS"
                          @bind-DocumentPaths="@this.customPromptGuideFiles"
                          OnChange="@this.OnCustomPromptGuideFilesChanged"
                          CatchAllDocuments="false"

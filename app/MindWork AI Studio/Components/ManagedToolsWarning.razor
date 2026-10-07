@@ -1,0 +1,26 @@
+@inherits MSGComponentBase
+
+@if (this.NeedsToolCallingProvider)
+{
+    @* Nothing runs at all, so the other two would only add noise: *@
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+        @T("Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.")
+    </MudAlert>
+}
+else
+{
+    @* Two independent reasons a tool stays out of reach, so both may show at once: *@
+    @if (this.ToolsNeedingConfiguration.Count > 0)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+            @(string.Format(T("Some tools selected for this run are not fully configured and stay unused: {0}. Please complete their settings."), string.Join(", ", this.ToolsNeedingConfiguration)))
+        </MudAlert>
+    }
+
+    @if (this.ToolsBeyondProviderConfidence.Count > 0)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+            @(string.Format(T("Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them."), string.Join(", ", this.ToolsBeyondProviderConfidence)))
+        </MudAlert>
+    }
+}

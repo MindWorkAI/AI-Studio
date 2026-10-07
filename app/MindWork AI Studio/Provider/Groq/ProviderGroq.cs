@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -29,13 +30,13 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopIntParameter(apiParameters, "seed", out var parsedSeed))
                                    apiParameters["seed"] = parsedSeed;
 
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -48,6 +49,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -64,21 +66,26 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(TranscriptionResult.Failure());
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
     /// <inhertidoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        throw this.CreateEmbeddingsNotSupportedException();
     }
 
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
+        };
     }
 
     /// <inheritdoc />
@@ -94,23 +101,25 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
+        };
     }
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
-        return this.LoadModelsResponse<ModelsResponse>(
+        return this.LoadModelsResponse<GroqModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(n =>
-                !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase)),
-            token,
-            apiKeyProvisional);
+            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, null)),
+            apiKeyProvisional,
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
     }
 }

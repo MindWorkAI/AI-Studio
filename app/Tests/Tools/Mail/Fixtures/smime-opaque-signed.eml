@@ -1,0 +1,13 @@
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Signed order confirmation
+Date: Wed, 30 Sep 2026 15:10:00 +0200
+Message-ID: <smime-opaque-signed@example.org>
+MIME-Version: 1.0
+Content-Type: application/pkcs7-mime; smime-type=signed-data; name="smime.p7m"
+Content-Disposition: attachment; filename="smime.p7m"
+Content-Transfer-Encoding: base64
+
+QpgZ3Q00wdROMyHNjF61DLD9xOY4DRtWDWDde4r2cH7A8/dJR4dcDDIm88rSk70qMdWIH1i1vWwf
+w1GiYhIOpI6rh4qyurOLUvhQksRAEHlrdMbBXke955drMFurqRiGlKPOzKAOOlvJaqTAkRq+kXSL
+HauNpgcA

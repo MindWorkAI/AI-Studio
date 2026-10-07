@@ -1,0 +1,128 @@
+@using AIStudio.Tools.Security
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudPaper Class="pa-6 mb-4" Elevation="0" Outlined="true">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                <MudAvatar Size="Size.Large" Color="Color.Warning" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.GppMaybe"/>
+                </MudAvatar>
+
+                <MudStack Spacing="0">
+                    <MudJustifiedText  Typo="Typo.h5">
+                        @T("Suspicious content was removed")
+                    </MudJustifiedText>
+
+                    <MudJustifiedText  Typo="Typo.body2">
+                        @T("AI Studio found instructions aimed at the AI inside your content and removed them. Everything around them was kept, so you can continue working with the content. Please review what was removed below.")
+                    </MudJustifiedText>
+                </MudStack>
+            </MudStack>
+
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                <MudJustifiedText Typo="Typo.body2">
+                    @T("Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.")
+                </MudJustifiedText>
+            </MudAlert>
+        </MudPaper>
+
+        <MudDivider />
+        <MudStack Row="true" Justify="Justify.Center" Class="my-2">
+            <MudButton Variant="Variant.Text"
+                       EndIcon="@(this.showPromptInjectionInformation ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                       OnClick="@this.TogglePromptInjectionInformation">
+
+                @(this.showPromptInjectionInformation ? T("Hide more information") : T("More information"))
+            </MudButton>
+        </MudStack>
+
+        <MudCollapse Expanded="@this.showPromptInjectionInformation">
+            <MudPaper Outlined="true"
+                      Class="pa-4 mb-4">
+                @foreach (var result in this.Alert.Results)
+                {
+                    <MudGrid Class="mb-2">
+                        <MudItem xs="12" md="3">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Filled.Source" />
+                                <MudJustifiedText Typo="Typo.subtitle2">
+                                    @T("Source type")
+                                </MudJustifiedText>
+
+                                <MudJustifiedText Typo="Typo.body2">
+                                    @result.Source.Kind.GetDisplayName()
+                                </MudJustifiedText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Outlined.Description"/>
+                                <MudJustifiedText Typo="Typo.subtitle2">
+                                    @T("Content source")
+                                </MudJustifiedText>
+
+                                <MudJustifiedText Typo="Typo.body2" Style="word-break:break-all;">
+                                    @result.Source.Label
+                                </MudJustifiedText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" md="5">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Outlined.WarningAmber"/>
+                                <MudJustifiedText Typo="Typo.subtitle2">
+                                    @T("Removed content")
+                                </MudJustifiedText>
+
+                                @foreach (var finding in result.Findings)
+                                {
+                                    <MudStack Spacing="0">
+                                        <MudJustifiedText Typo="Typo.body2">
+                                            <b>
+                                                @finding.Category.GetDisplayName()
+                                            </b>
+                                        </MudJustifiedText>
+
+                                        <MudJustifiedText Typo="Typo.body2" Class="ml-4 mt-1">
+                                            @finding.Snippet
+                                        </MudJustifiedText>
+                                    </MudStack>
+                                }
+
+                                @* The runtime caps how many passages it describes, while it removes every one of them. *@
+                                @if (result.RedactedCount > result.Findings.Count)
+                                {
+                                    <MudJustifiedText Typo="Typo.body2" Class="mt-1">
+                                        @string.Format(T("And {0} more passages of the same kind."), result.RedactedCount - result.Findings.Count)
+                                    </MudJustifiedText>
+                                }
+                            </MudStack>
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudPaper>
+
+            <MudPaper Class="pa-4 mt-2" Outlined="true">
+                <MudJustifiedText  Typo="Typo.body2" Class="mb-3">
+                    @T("Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.")
+                </MudJustifiedText>
+                <MudLink Href="@PromptInjectionGuardService.WIKI_URL" Target="_blank">
+                    @PromptInjectionGuardService.WIKI_URL
+                </MudLink>
+            </MudPaper>
+        </MudCollapse>
+    </DialogContent>
+    <DialogActions>
+        @if (CanDisableFutureAlerts)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@this.CloseAndDisableFutureAlertsAsync">
+                @T("Close and don't show again")
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@this.Close">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

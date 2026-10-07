@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Gemini logo</title>
+  <desc id="desc">A four-point curved star with a red, yellow, green, and blue gradient on a transparent background.</desc>
+
+  <defs>
+    <path id="spark" d="M 255.5 20.5 C 256.83 20.5 258.92 21.42 260 22 C 261.08 22.58 261.17 23 262 24 C 262.83 25 264.33 26.67 265 28 C 265.67 29.33 265.5 30 266 32 C 266.5 34 267 37 268 40 C 269 43 270.5 46 272 50 C 273.5 54 275 59 277 64 C 279 69 281.17 74 284 80 C 286.83 86 290.33 93.33 294 100 C 297.67 106.67 301.67 113.33 306 120 C 310.33 126.67 314.83 133.33 320 140 C 325.17 146.67 330.67 153.33 337 160 C 343.33 166.67 350.17 173.33 358 180 C 365.83 186.67 375.5 194 384 200 C 392.5 206 400.17 211 409 216 C 417.83 221 427.83 226 437 230 C 446.17 234 457.33 237.67 464 240 C 470.67 242.33 473.33 242.67 477 244 C 480.67 245.33 484 246.67 486 248 C 488 249.33 488.25 250.75 489 252 C 489.75 253.25 490.5 254.17 490.5 255.5 C 490.5 256.83 489.58 258.92 489 260 C 488.42 261.08 488 261.17 487 262 C 486 262.83 484.33 264.33 483 265 C 481.67 265.67 481 265.5 479 266 C 477 266.5 474 267 471 268 C 468 269 465 270.5 461 272 C 457 273.5 452 275 447 277 C 442 279 437 281.17 431 284 C 425 286.83 417.67 290.33 411 294 C 404.33 297.67 397.67 301.67 391 306 C 384.33 310.33 377.67 314.83 371 320 C 364.33 325.17 357.67 330.67 351 337 C 344.33 343.33 337.67 350.17 331 358 C 324.33 365.83 317 375.5 311 384 C 305 392.5 300 400.17 295 409 C 290 417.83 285 427.83 281 437 C 277 446.17 273.33 457.33 271 464 C 268.67 470.67 268.33 473.33 267 477 C 265.67 480.67 264.33 484 263 486 C 261.67 488 260.25 488.25 259 489 C 257.75 489.75 256.83 490.5 255.5 490.5 C 254.17 490.5 252.08 489.58 251 489 C 249.92 488.42 249.83 488 249 487 C 248.17 486 246.67 484.33 246 483 C 245.33 481.67 245.5 481 245 479 C 244.5 477 244 474 243 471 C 242 468 240.5 465 239 461 C 237.5 457 236 452 234 447 C 232 442 229.83 437 227 431 C 224.17 425 220.67 417.67 217 411 C 213.33 404.33 209.33 397.67 205 391 C 200.67 384.33 196.17 377.67 191 371 C 185.83 364.33 180.33 357.67 174 351 C 167.67 344.33 160.83 337.67 153 331 C 145.17 324.33 135.5 317 127 311 C 118.5 305 110.83 300 102 295 C 93.17 290 83.17 285 74 281 C 64.83 277 53.67 273.33 47 271 C 40.33 268.67 37.67 268.33 34 267 C 30.33 265.67 27 264.33 25 263 C 23 261.67 22.75 260.25 22 259 C 21.25 257.75 20.5 256.83 20.5 255.5 C 20.5 254.17 21.42 252.08 22 251 C 22.58 249.92 23 249.83 24 249 C 25 248.17 26.67 246.67 28 246 C 29.33 245.33 30 245.5 32 245 C 34 244.5 37 244 40 243 C 43 242 46 240.5 50 239 C 54 237.5 59 236 64 234 C 69 232 74 229.83 80 227 C 86 224.17 93.33 220.67 100 217 C 106.67 213.33 113.33 209.33 120 205 C 126.67 200.67 133.33 196.17 140 191 C 146.67 185.83 153.33 180.33 160 174 C 166.67 167.67 173.33 160.83 180 153 C 186.67 145.17 194 135.5 200 127 C 206 118.5 211 110.83 216 102 C 221 93.17 226 83.17 230 74 C 234 64.83 237.67 53.67 240 47 C 242.33 40.33 242.67 37.67 244 34 C 245.33 30.33 246.67 27 248 25 C 249.33 23 250.75 22.75 252 22 C 253.25 21.25 254.17 20.5 255.5 20.5 Z"/>
+
+    <linearGradient id="vertical" x1="0" y1="20" x2="0" y2="491" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FA4342"/>
+      <stop offset="0.10" stop-color="#F64848"/>
+      <stop offset="0.21" stop-color="#DD586B"/>
+      <stop offset="0.31" stop-color="#A476AE"/>
+      <stop offset="0.42" stop-color="#628AE6"/>
+      <stop offset="0.51" stop-color="#3F8FF2"/>
+      <stop offset="0.64" stop-color="#3B9AD3"/>
+      <stop offset="0.81" stop-color="#30B18C"/>
+      <stop offset="1" stop-color="#0ABA62"/>
+    </linearGradient>
+
+    <radialGradient id="warm" cx="145" cy="135" r="230" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F34A47" stop-opacity="0.84"/>
+      <stop offset="0.45" stop-color="#F34A47" stop-opacity="0.52"/>
+      <stop offset="0.88" stop-color="#F34A47" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="yellow" cx="21" cy="256" r="235" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC414"/>
+      <stop offset="0.35" stop-color="#FFC414" stop-opacity="0.92"/>
+      <stop offset="0.72" stop-color="#C9D72E" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#C9D72E" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="blue" cx="491" cy="256" r="365" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3186FF"/>
+      <stop offset="0.38" stop-color="#3186FF" stop-opacity="0.96"/>
+      <stop offset="0.72" stop-color="#3186FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3186FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="green" cx="256" cy="491" r="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#08B966"/>
+      <stop offset="0.38" stop-color="#10B66B" stop-opacity="0.72"/>
+      <stop offset="0.72" stop-color="#22B47B" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#22B47B" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="sparkClip">
+      <use href="#spark"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#sparkClip)">
+    <rect width="512" height="512" fill="url(#vertical)"/>
+    <rect width="512" height="512" fill="url(#blue)"/>
+    <rect width="512" height="512" fill="url(#warm)"/>
+    <rect width="512" height="512" fill="url(#yellow)"/>
+    <rect width="512" height="512" fill="url(#green)"/>
+  </g>
+</svg>

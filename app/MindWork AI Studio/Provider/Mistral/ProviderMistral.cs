@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -29,7 +30,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
                                    apiParameters["safe_prompt"] = parsedSafePrompt;
@@ -38,7 +39,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                                    apiParameters["random_seed"] = parsedRandomSeed;
 
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -51,6 +52,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -91,10 +93,13 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         {
             Models =
             [
-                ..modelResponse.Models.Where(n =>
-                    !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("embed", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase))
+                //
+                // Codestral is a fill-in-the-middle model, which we cannot use for chats. Its own
+                // family says so now, bound to this provider, so the word "code" no longer has to
+                // be tested for here -- and testing for it never reached mistral-code-fim-latest,
+                // which does the same job under a name that begins differently.
+                //
+                ..modelResponse.Models.Where(n => n.IsChatModel(this.Provider))
             ]
         };
     }
@@ -108,7 +113,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         
         return modelResponse with
         {
-            Models = [..modelResponse.Models.Where(n => n.Id.Contains("embed", StringComparison.InvariantCulture))]
+            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel(this.Provider))]
         };
     }
     
@@ -119,13 +124,16 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        // Source: https://docs.mistral.ai/capabilities/audio_transcription
-        return Task.FromResult(ModelLoadResult.FromModels(
-        [
-            new Provider.Model("voxtral-mini-latest", "Voxtral Mini Latest"),
-        ]));
+        var modelResponse = await this.LoadModelList(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+        if (!modelResponse.Success)
+            return modelResponse;
+
+        return modelResponse with
+        {
+            Models = [..modelResponse.Models.Where(n => n.IsTranscriptionModel(this.Provider))]
+        };
     }
     
     #endregion
@@ -136,7 +144,8 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
             storeType,
             "models",
             modelResponse => modelResponse.Data.Select(n => new Provider.Model(n.Id, null)),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional,
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
     }
 }

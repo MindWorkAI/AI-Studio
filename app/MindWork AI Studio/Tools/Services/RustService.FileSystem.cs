@@ -168,4 +168,66 @@ public sealed partial class RustService
             result.Dispose();
         }
     }
+
+    /// <summary>
+    /// Opens a document in the program the system uses for it, on the given page where possible.
+    /// </summary>
+    /// <remarks>
+    /// The page is best effort and never decides whether this succeeded. Which programs can be
+    /// told a page is the runtime's business, and it says afterwards whether it managed to.
+    /// </remarks>
+    /// <param name="path">The document to open.</param>
+    /// <param name="pageNumber">The page to show, counted from one, or null when there is none.</param>
+    /// <returns>Whether the document was opened, whether the page was applied, and what went wrong.</returns>
+    public async Task<OpenDocumentResponse> TryOpenDocumentInSystemViewer(string path, int? pageNumber)
+    {
+        HttpResponseMessage result;
+        try
+        {
+            result = await this.http.PostAsJsonAsync("/open/document", new OpenDocumentRequest(path, pageNumber), this.jsonRustSerializerOptions);
+        }
+        catch (HttpRequestException e)
+        {
+            this.logger!.LogWarning(e, "Failed to reach the Rust runtime document endpoint.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+        }
+        catch (TaskCanceledException e)
+        {
+            this.logger!.LogWarning(e, "Timed out while reaching the Rust runtime document endpoint.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+        }
+
+        try
+        {
+            if (!result.IsSuccessStatusCode)
+            {
+                this.logger!.LogWarning("Failed to open a document through the Rust runtime: '{StatusCode}'", result.StatusCode);
+                return new OpenDocumentResponse(false, false, string.Format(TB("The runtime document endpoint returned '{0}'."), result.StatusCode));
+            }
+
+            var response = await result.Content.ReadFromJsonAsync<OpenDocumentResponse>(this.jsonRustSerializerOptions);
+            if (response.Success)
+            {
+                //
+                // A page which was asked for but not applied is noted here and nowhere else: the
+                // document is open, and the source the user clicked names the page anyway.
+                //
+                if (pageNumber is > 0 && !response.PageApplied)
+                    this.logger!.LogInformation("Opened a document without the requested page {PageNumber}, because the system uses a program which cannot be told one.", pageNumber);
+
+                return response;
+            }
+
+            return new OpenDocumentResponse(false, false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime document endpoint failed without details.") : response.Issue);
+        }
+        catch (Exception e)
+        {
+            this.logger!.LogWarning(e, "Failed to process the Rust runtime document endpoint response.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint failed without details."));
+        }
+        finally
+        {
+            result.Dispose();
+        }
+    }
 }

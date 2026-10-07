@@ -136,7 +136,7 @@ public partial class VisualBriefingAssistant
             !Guid.TryParse(owner.Id, out var briefingId))
             return;
 
-        _ = this.InvokeAsync(async () =>
+        this.InvokeAsync(async () =>
         {
             await this.ConsumeMediaOutcomeAsync(owner);
             if (!this.MediaTranscriptionService.IsBusy(owner))
@@ -152,7 +152,7 @@ public partial class VisualBriefingAssistant
             }
 
             this.StateHasChanged();
-        });
+        }).Observe($"{nameof(VisualBriefingAssistant)}: consuming a media import outcome");
     }
 
     /// <summary>

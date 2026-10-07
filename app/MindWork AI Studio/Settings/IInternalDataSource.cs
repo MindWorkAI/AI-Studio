@@ -1,9 +1,6 @@
 namespace AIStudio.Settings;
 
-public interface IInternalDataSource : IDataSource
-{
-    /// <summary>
-    /// The unique identifier of the embedding method used by this internal data source.
-    /// </summary>
-    public string EmbeddingId { get; init; }
-}
+/// <summary>
+/// A data source in DataSources whose content AI Studio embeds and indexes itself.
+/// </summary>
+public interface IInternalDataSource : IDataSource, IIndexedDataSource;

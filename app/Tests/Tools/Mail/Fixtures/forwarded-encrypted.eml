@@ -1,0 +1,28 @@
+From: Bob <bob@example.org>
+To: Carol <carol@example.net>
+Subject: Fwd: Contract draft
+Date: Wed, 30 Sep 2026 16:00:00 +0200
+Message-ID: <forwarded-encrypted@example.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed"
+
+--mixed
+Content-Type: text/plain; charset=utf-8
+
+Carol, see the attached mail from Alice. I cannot open it either.
+
+--mixed
+Content-Type: message/rfc822; name="Contract draft.eml"
+Content-Disposition: attachment; filename="Contract draft.eml"
+
+From: Alice <alice@example.org>
+To: Bob <bob@example.org>
+Subject: Contract draft
+Date: Wed, 30 Sep 2026 15:00:00 +0200
+MIME-Version: 1.0
+Content-Type: application/pkcs7-mime; smime-type=enveloped-data; name="smime.p7m"
+Content-Transfer-Encoding: base64
+
+zlGMgNELl9LKl3ZqEAZiUb2iQ0gjGWstE4xBJhJRHlmvLDc8a+h2ljICBmaQ6GRh+qSEQeV5fRY8
+
+--mixed--

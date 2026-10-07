@@ -45,6 +45,7 @@ public partial class ConfigurationPluginDeleteDialog : MSGComponentBase
         Add(summary.DocumentAnalysisPolicies, this.T("{0} document analysis policy"), this.T("{0} document analysis policies"));
         Add(summary.MandatoryInfos, this.T("{0} mandatory information"), this.T("{0} mandatory informations"));
         Add(summary.Introductions, this.T("{0} introduction on the welcome page"), this.T("{0} introductions on the welcome page"));
+        Add(summary.MailboxProviders, this.T("{0} mail server offered for new mailboxes"), this.T("{0} mail servers offered for new mailboxes"));
 
         // Data sources are called out separately: removing them also deletes their credentials from
         // the operating system's keychain, which the user cannot undo by reinstalling the plugin.

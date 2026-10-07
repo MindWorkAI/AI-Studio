@@ -59,7 +59,7 @@ public sealed partial class VisualBriefingStore
                 committedBuild.Failure = null;
                 committedBuild.UpdatedAtUtc = DateTimeOffset.UtcNow;
                 
-                await this.StoreBuildAtomicAsync(committedBuild, token);
+                await this.StoreBuildAtomicAsync(committedBuild, overwrite: true, token);
             }
             
             foreach (var interruptedBuild in builds.Where(build => build.Status is VisualBriefingBuildStatus.ACTIVE))
@@ -99,7 +99,7 @@ public sealed partial class VisualBriefingStore
                 interruptedBuild.Status = VisualBriefingBuildStatus.FAILED;
                 interruptedBuild.Failure = interruptedFailure;
                 interruptedBuild.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                await this.StoreBuildAtomicAsync(interruptedBuild, token);
+                await this.StoreBuildAtomicAsync(interruptedBuild, overwrite: true, token);
             }
 
             var changed = manifest.Versions.RemoveAll(version =>
@@ -166,7 +166,7 @@ public sealed partial class VisualBriefingStore
                     matchingBuild.Status = VisualBriefingBuildStatus.COMPLETED;
                     matchingBuild.Failure = null;
                     matchingBuild.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                    await this.StoreBuildAtomicAsync(matchingBuild, token);
+                    await this.StoreBuildAtomicAsync(matchingBuild, overwrite: true, token);
                 }
                 
                 changed = true;

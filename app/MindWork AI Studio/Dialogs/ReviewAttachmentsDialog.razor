@@ -2,13 +2,26 @@
 
 <MudDialog>
     <DialogContent>
+        @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
+        <PathDropZone IsArea="@true"
+                      IdPrefix="review-attachments"
+                      OnPathsDropped="@this.DropCallback"
+                      Disabled="@this.IsZoneDisabled"
+                      Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
         </MudJustifiedText>
 
+        @if (this.CanAttach)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("You can drag more files into this window to attach them right away.")
+            </MudJustifiedText>
+        }
+
         <MudDivider Class="mt-3 mb-3"/>
 
-        <div style="max-height: 50vh; overflow-y: auto; overflow-x: hidden; padding-right: 8px;">
+        <div class="@this.AttachmentListClass(isDropTarget)" style="max-height: 50vh; overflow-y: auto; overflow-x: hidden;">
             @if (!this.DocumentPaths.Any())
             {
                 <MudJustifiedText Typo="Typo.body1" Class="mt-3">
@@ -18,7 +31,7 @@
 
             @{
                 var currentFolder = string.Empty;
-                foreach (var fileAttachment in this.DocumentPaths)
+                foreach (var fileAttachment in this.OrderedAttachments)
                 {
                     var folderPath = Path.GetDirectoryName(fileAttachment.FilePath);
                     if (folderPath != currentFolder)
@@ -91,6 +104,7 @@
                 }
             }
         </div>
+        </PathDropZone>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">

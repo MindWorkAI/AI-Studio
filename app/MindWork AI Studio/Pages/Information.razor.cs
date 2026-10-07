@@ -4,7 +4,6 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -22,6 +21,9 @@ public partial class Information : MSGComponentBase
 {
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<Information> Logger { get; init; } = null!;
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -65,10 +67,24 @@ public partial class Information : MSGComponentBase
 
     private string LinuxPackageTypeDisplayName => this.RuntimeInfo.LinuxPackageType switch
     {
-        "appimage" => "AppImage",
-        "flatpak" => "Flatpak",
-        "unknown" => T("unknown"),
+        Tools.Rust.LinuxPackageType.APP_IMAGE => "AppImage",
+        Tools.Rust.LinuxPackageType.FLATPAK => "Flatpak",
+        Tools.Rust.LinuxPackageType.UNKNOWN => T("unknown"),
         _ => T("not applicable")
+    };
+
+    private string InstallationKind => $"{T("Installation")}: {this.InstallationKindDisplayName}";
+
+    private string InstallationKindDisplayName => this.RuntimeInfo.LinuxPackageType switch
+    {
+        Tools.Rust.LinuxPackageType.FLATPAK => T("Flatpak installation, updates are handled outside of AI Studio"),
+        _ => this.RuntimeInfo.InstallationKind switch
+        {
+            Tools.Rust.InstallationKind.MANAGED => T("managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates"),
+            Tools.Rust.InstallationKind.UNSUPPORTED_LOCATION => T("current installation location does not support automatic updates"),
+            Tools.Rust.InstallationKind.DEVELOPMENT => T("development build, no support for automatic updates"),
+            _ => T("standard; automatic updates supported")
+        }
     };
 
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
@@ -81,22 +97,40 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionVectorStore
+    /// <summary>
+    /// Builds the headline of one database block.
+    /// </summary>
+    /// <remarks>
+    /// The vector store names the version from the build metadata, which is what this page always
+    /// showed. The index store names the one its client read from the running database instead:
+    /// there, which SQLite build actually got loaded is the whole point of showing it.
+    /// </remarks>
+    private string DatabaseHeaderText(DatabaseSection section)
     {
-        get
+        var nameLabel = section.Role switch
         {
-            if (this.vectorStore is null)
-                return $"{T("Vector store")}: {T("checking availability")}";
+            DatabaseRole.VECTOR_STORE => T("Vector database"),
+            _ => T("Index database"),
+        };
 
-            return this.vectorStore.Status switch
-            {
-                DatabaseClientStatus.AVAILABLE => $"{T("Vector store version")}: {this.vectorStore.Name} v{META_DATA_VECTOR_STORE.VectorStoreVersion}",
-                DatabaseClientStatus.STARTING => $"{T("Vector store")}: {this.vectorStore.Name} - {T("starting")}",
-                _ => $"{T("Vector store")}: {this.vectorStore.Name} - {T("not available")}"
-            };
-        }
+        if (section.Client is null)
+            return $"{nameLabel}: {T("checking availability")}";
+
+        var version = section.Role switch
+        {
+            DatabaseRole.VECTOR_STORE => META_DATA_VECTOR_STORE.VectorStoreVersion,
+            _ => section.Client.Version
+        };
+
+        return section.Client.Status switch
+        {
+            DatabaseClientStatus.AVAILABLE when !string.IsNullOrWhiteSpace(version) => $"{nameLabel}: {section.Client.Name} v{version}",
+            DatabaseClientStatus.AVAILABLE => $"{nameLabel}: {section.Client.Name}",
+            DatabaseClientStatus.STARTING => $"{nameLabel}: {section.Client.Name} - {T("starting")}",
+            _ => $"{nameLabel}: {section.Client.Name} - {T("not available")}"
+        };
     }
-    
+
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
 
@@ -104,7 +138,6 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
-    private bool showVectorStoreDetails;
     private bool showExternalHttpCustomRootCertificateDetails;
 
     private List<IAvailablePlugin> configPlugins = [];
@@ -124,10 +157,30 @@ public partial class Information : MSGComponentBase
 
     private sealed record MandatoryInfoPanelData(string HeaderText, string PluginName, DataMandatoryInfo Info, DataMandatoryInfoAcceptance? Acceptance);
     
-    private sealed record VectorStoreDisplayInfo(string Label, string Value);
-    private readonly List<VectorStoreDisplayInfo> vectorStoreDisplayInfo = new();
-    private DatabaseClient? vectorStore;
-    private CancellationTokenSource? vectorStoreRefreshCancellationTokenSource;
+    private sealed record DatabaseDisplayInfo(string Label, string Value);
+
+    /// <summary>
+    /// Everything one database block on this page needs to show itself.
+    /// </summary>
+    /// <remarks>
+    /// Both blocks work the same way, so they share their state and their methods and differ only
+    /// in their role. Whoever adds a third database adds one field here, not another set of methods.
+    /// </remarks>
+    private sealed class DatabaseSection(DatabaseRole role)
+    {
+        public DatabaseRole Role => role;
+
+        public DatabaseClient? Client { get; set; }
+
+        public bool ShowDetails { get; set; }
+
+        public List<DatabaseDisplayInfo> DisplayInfo { get; } = [];
+
+        public CancellationTokenSource? RefreshCancellationTokenSource { get; set; }
+    }
+
+    private readonly DatabaseSection vectorStoreSection = new(DatabaseRole.VECTOR_STORE);
+    private readonly DatabaseSection indexStoreSection = new(DatabaseRole.INDEX_STORE);
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -174,13 +227,20 @@ public partial class Information : MSGComponentBase
         this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await this.RefreshVectorStoreInfo(CancellationToken.None);
-        if (this.vectorStore?.Status is DatabaseClientStatus.STARTING)
-            this.StartShortVectorStoreRefreshLoop();
+        // The index store goes first: the vector store asks it for the number of stored vectors,
+        // and this way that client is already cached when it does.
+        await this.RefreshDatabaseInfo(this.indexStoreSection, CancellationToken.None);
+        await this.RefreshDatabaseInfo(this.vectorStoreSection, CancellationToken.None);
+
+        if (this.indexStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop(this.indexStoreSection);
+
+        if (this.vectorStoreSection.Client?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop(this.vectorStoreSection);
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
-        _ = this.DeterminePandocVersion();
+        this.DeterminePandocVersion().Observe($"{nameof(Information)}: determining the Pandoc version");
     }
 
     #endregion
@@ -284,22 +344,31 @@ public partial class Information : MSGComponentBase
         this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
     }
     
-    private void ToggleVectorStoreDetails()
+    private void ToggleDatabaseDetails(DatabaseSection section)
     {
-        this.showVectorStoreDetails = !this.showVectorStoreDetails;
+        section.ShowDetails = !section.ShowDetails;
     }
 
-    private async Task RefreshVectorStoreInfo(CancellationToken cancellationToken)
+    private IReadOnlyList<ConfigInfoRowItem> BuildDatabaseInfoItems(DatabaseSection section) => section.DisplayInfo
+        .Select((item, index) => new ConfigInfoRowItem(
+            Icons.Material.Filled.ArrowRightAlt,
+            $"{item.Label}: {item.Value}",
+            item.Value,
+            $"{T("Copies the following to the clipboard")}: {item.Value}",
+            index == 0 ? string.Empty : "margin-top: 4px;"))
+        .ToList();
+
+    private async Task RefreshDatabaseInfo(DatabaseSection section, CancellationToken cancellationToken)
     {
-        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
-        this.vectorStore = refreshedClient;
-        this.vectorStoreDisplayInfo.Clear();
+        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(section.Role, cancellationToken);
+        section.Client = refreshedClient;
+        section.DisplayInfo.Clear();
 
         try
         {
             await foreach (var (label, value) in refreshedClient.GetDisplayInfo().WithCancellation(cancellationToken))
             {
-                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+                section.DisplayInfo.Add(new DatabaseDisplayInfo(label, value));
             }
         }
         catch (OperationCanceledException)
@@ -308,22 +377,26 @@ public partial class Information : MSGComponentBase
         }
         catch (Exception e)
         {
-            this.vectorStore = new NoVectorStoreClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
-            await foreach (var (label, value) in this.vectorStore.GetDisplayInfo().WithCancellation(cancellationToken))
+            // Drop whatever came in before the failure: those lines would otherwise stand next to
+            // the status and reason of the stand-in client and read like current values.
+            section.DisplayInfo.Clear();
+
+            section.Client = DatabaseClientProvider.CreateUnavailableClient(section.Role, refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            await foreach (var (label, value) in section.Client.GetDisplayInfo().WithCancellation(cancellationToken))
             {
-                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+                section.DisplayInfo.Add(new DatabaseDisplayInfo(label, value));
             }
         }
     }
 
-    private void StartShortVectorStoreRefreshLoop()
+    private void StartShortDatabaseRefreshLoop(DatabaseSection section)
     {
-        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
-        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
-        this.vectorStoreRefreshCancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = this.vectorStoreRefreshCancellationTokenSource.Token;
+        section.RefreshCancellationTokenSource?.Cancel();
+        section.RefreshCancellationTokenSource?.Dispose();
+        section.RefreshCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = section.RefreshCancellationTokenSource.Token;
 
-        _ = Task.Run(async () =>
+        Task.Run(async () =>
         {
             const int MAX_TRIES = 12;
             for (var attempt = 0; attempt < MAX_TRIES; attempt++)
@@ -333,11 +406,11 @@ public partial class Information : MSGComponentBase
                     await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
                     await this.InvokeAsync(async () =>
                     {
-                        await this.RefreshVectorStoreInfo(cancellationToken);
+                        await this.RefreshDatabaseInfo(section, cancellationToken);
                         this.StateHasChanged();
                     });
 
-                    if (this.vectorStore?.Status is not DatabaseClientStatus.STARTING)
+                    if (section.Client?.Status is not DatabaseClientStatus.STARTING)
                         return;
                 }
                 catch (OperationCanceledException)
@@ -349,7 +422,14 @@ public partial class Information : MSGComponentBase
                     return;
                 }
             }
-        }, cancellationToken);
+        }, cancellationToken).Observe($"{nameof(Information)}: refreshing the {section.Role} info");
+    }
+
+    private void CancelDatabaseRefreshLoop(DatabaseSection section)
+    {
+        section.RefreshCancellationTokenSource?.Cancel();
+        section.RefreshCancellationTokenSource?.Dispose();
+        section.RefreshCancellationTokenSource = null;
     }
 
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
@@ -508,8 +588,8 @@ public partial class Information : MSGComponentBase
 
     protected override void DisposeResources()
     {
-        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
-        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
+        this.CancelDatabaseRefreshLoop(this.vectorStoreSection);
+        this.CancelDatabaseRefreshLoop(this.indexStoreSection);
         base.DisposeResources();
     }
 
@@ -521,6 +601,36 @@ public partial class Information : MSGComponentBase
     private async Task CopyAppLogPath()
     {
         await this.RustService.CopyText2Clipboard(this.logPaths.LogAppPath);
+    }
+
+    private async Task OpenLogInFileManager(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            return;
+        }
+
+        OpenPathResponse response;
+        try
+        {
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            return;
+        }
+
+        if (response.Success)
+        {
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            return;
+        }
+
+        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
+        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
     
     private const string LICENSE = """
@@ -654,6 +764,21 @@ public partial class Information : MSGComponentBase
         {
             parameters.Add(x => x.Message, T("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
             parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.MANAGED_INSTALLATION)
+        {
+            // No release link here: the app cannot tell how this installation receives updates,
+            // and installing a second copy from GitHub next to it is exactly what we want to avoid.
+            parameters.Add(x => x.Message, T("This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions."));
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION)
+        {
+            parameters.Add(x => x.Message, T("AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
+            parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.DEVELOPMENT)
+        {
+            parameters.Add(x => x.Message, T("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
         }
         else
             return;
