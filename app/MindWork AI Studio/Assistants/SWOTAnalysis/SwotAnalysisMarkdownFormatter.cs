@@ -8,6 +8,13 @@ internal static class SwotAnalysisMarkdownFormatter
     {
         var markdown = new StringBuilder();
 
+        AppendHeading(markdown, result.MatrixHeading);
+        markdown.AppendLine($"| | {EscapeTableCell(result.PositiveLabel)} | {EscapeTableCell(result.NegativeLabel)} |");
+        markdown.AppendLine("|---|---|---|");
+        markdown.AppendLine($"| **{EscapeTableCell(result.InternalLabel)}** | {FormatCategoryCell(result.Strengths)} | {FormatCategoryCell(result.Weaknesses)} |");
+        markdown.AppendLine($"| **{EscapeTableCell(result.ExternalLabel)}** | {FormatCategoryCell(result.Opportunities)} | {FormatCategoryCell(result.Threats)} |");
+        markdown.AppendLine();
+
         foreach (var category in result.Categories)
         {
             AppendHeading(markdown, category.Label);
@@ -31,13 +38,6 @@ internal static class SwotAnalysisMarkdownFormatter
                 markdown.AppendLine($"{index + 1}. **{Tools.Markdown.EscapeInlineText(action.Action)}** — {Tools.Markdown.EscapeInlineText(action.Rationale)}  ");
                 markdown.AppendLine($"   *{factors}*");
             }
-
-        markdown.AppendLine();
-        AppendHeading(markdown, result.MatrixHeading);
-        markdown.AppendLine($"| | {EscapeTableCell(result.PositiveLabel)} | {EscapeTableCell(result.NegativeLabel)} |");
-        markdown.AppendLine("|---|---|---|");
-        markdown.AppendLine($"| **{EscapeTableCell(result.InternalLabel)}** | {FormatCategoryCell(result.Strengths)} | {FormatCategoryCell(result.Weaknesses)} |");
-        markdown.AppendLine($"| **{EscapeTableCell(result.ExternalLabel)}** | {FormatCategoryCell(result.Opportunities)} | {FormatCategoryCell(result.Threats)} |");
 
         return markdown.ToString().TrimEnd();
     }

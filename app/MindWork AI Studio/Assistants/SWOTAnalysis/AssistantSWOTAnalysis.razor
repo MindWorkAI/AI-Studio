@@ -37,7 +37,68 @@
 </div>
 
 @code {
+    private protected override RenderFragment? BelowSubmitContent =>
+        this.categoryAnalysisProgress.Count > 0 && this.analysisResult is null
+            ? @<div class="swot-live-progress" aria-live="polite">
+                  <SwotCategoryGrid>
+                      <Strengths>
+                          @this.RenderCategoryProgress(SwotAnalysisCategory.STRENGTHS, T("Strengths"))
+                      </Strengths>
+                      <Weaknesses>
+                          @this.RenderCategoryProgress(SwotAnalysisCategory.WEAKNESSES, T("Weaknesses"))
+                      </Weaknesses>
+                      <Opportunities>
+                          @this.RenderCategoryProgress(SwotAnalysisCategory.OPPORTUNITIES, T("Opportunities"))
+                      </Opportunities>
+                      <Threats>
+                          @this.RenderCategoryProgress(SwotAnalysisCategory.THREATS, T("Threats"))
+                      </Threats>
+                  </SwotCategoryGrid>
+
+                  @if (this.isFinalizingAnalysis)
+                  {
+                      <div class="swot-finalization-status">
+                          <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                          <MudText Typo="Typo.body2">@T("Creating prioritized actions...")</MudText>
+                      </div>
+                  }
+              </div>
+            : null;
+
     private protected override RenderFragment? CustomResultTextContent => this.analysisResult is null
         ? null
         : @<SwotAnalysisResultView Result="@this.analysisResult"/>;
+
+    private RenderFragment RenderCategoryProgress(SwotAnalysisCategory category, string label) => @<text>
+        <MudText Typo="Typo.h5" Class="mb-2">@label</MudText>
+        @if (!this.categoryAnalysisProgress.TryGetValue(category, out var progress) || progress.Status is SwotCategoryAnalysisStatus.RUNNING)
+        {
+            <div class="swot-category-status" aria-busy="true">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                <MudText Typo="Typo.body2">@T("Analyzing this category...")</MudText>
+            </div>
+        }
+        else if (progress.Status is SwotCategoryAnalysisStatus.COMPLETED && progress.Result is not null)
+        {
+            @if (progress.Result.Findings.Count == 0)
+            {
+                <MudText Typo="Typo.body1">@progress.Result.EmptyMessage</MudText>
+            }
+            else
+            {
+                <ul class="swot-live-findings">
+                    @foreach (var finding in progress.Result.Findings)
+                    {
+                        <li>@finding.Summary</li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="@(progress.Status is SwotCategoryAnalysisStatus.FAILED ? Severity.Error : Severity.Warning)" Dense="true">
+                @progress.Message
+            </MudAlert>
+        }
+    </text>;
 }

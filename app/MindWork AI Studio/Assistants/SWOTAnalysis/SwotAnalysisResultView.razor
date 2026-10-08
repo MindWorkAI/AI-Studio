@@ -1,4 +1,43 @@
 <div class="swot-result">
+    <section class="swot-matrix-section" aria-labelledby="swot-matrix-heading">
+        <MudText Typo="Typo.h5" Class="mb-3" id="swot-matrix-heading">@this.Result.MatrixHeading</MudText>
+        <div class="swot-matrix-scroll">
+            <table class="swot-matrix">
+                <thead>
+                    <tr>
+                        <th class="swot-corner"></th>
+                        <th scope="col">@this.Result.PositiveLabel</th>
+                        <th scope="col">@this.Result.NegativeLabel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">@this.Result.InternalLabel</th>
+                        <td class="swot-strengths">
+                            <strong class="swot-cell-heading">@this.Result.Strengths.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Strengths"/>
+                        </td>
+                        <td class="swot-weaknesses">
+                            <strong class="swot-cell-heading">@this.Result.Weaknesses.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Weaknesses"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">@this.Result.ExternalLabel</th>
+                        <td class="swot-opportunities">
+                            <strong class="swot-cell-heading">@this.Result.Opportunities.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Opportunities"/>
+                        </td>
+                        <td class="swot-threats">
+                            <strong class="swot-cell-heading">@this.Result.Threats.Label</strong>
+                            <SwotMatrixFindings Category="@this.Result.Threats"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     @foreach (var category in this.Result.Categories)
     {
         <section class="swot-detail-section">
@@ -46,45 +85,6 @@
                 }
             </ol>
         }
-    </section>
-
-    <section class="swot-matrix-section" aria-labelledby="swot-matrix-heading">
-        <MudText Typo="Typo.h5" Class="mb-3" id="swot-matrix-heading">@this.Result.MatrixHeading</MudText>
-        <div class="swot-matrix-scroll">
-            <table class="swot-matrix">
-                <thead>
-                    <tr>
-                        <th class="swot-corner"></th>
-                        <th scope="col">@this.Result.PositiveLabel</th>
-                        <th scope="col">@this.Result.NegativeLabel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th scope="row">@this.Result.InternalLabel</th>
-                        <td class="swot-strengths">
-                            <strong class="swot-cell-heading">@this.Result.Strengths.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Strengths"/>
-                        </td>
-                        <td class="swot-weaknesses">
-                            <strong class="swot-cell-heading">@this.Result.Weaknesses.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Weaknesses"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">@this.Result.ExternalLabel</th>
-                        <td class="swot-opportunities">
-                            <strong class="swot-cell-heading">@this.Result.Opportunities.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Opportunities"/>
-                        </td>
-                        <td class="swot-threats">
-                            <strong class="swot-cell-heading">@this.Result.Threats.Label</strong>
-                            <SwotMatrixFindings Category="@this.Result.Threats"/>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
     </section>
 </div>
 

@@ -2587,20 +2587,47 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T101
 -- Create a SWOT analysis of my content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1113304215"] = "Create a SWOT analysis of my content"
 
+-- The model response for this category did not have the expected structure.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1128030601"] = "The model response for this category did not have the expected structure."
+
+-- Strengths
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1245493657"] = "Strengths"
+
 -- SWOT Analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1864542518"] = "SWOT Analysis"
 
 -- Please describe the goal the SWOT analysis should support.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2136978542"] = "Please describe the goal the SWOT analysis should support."
 
+-- Weaknesses
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2279747526"] = "Weaknesses"
+
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237828418"] = "Target language"
+
+-- Opportunities
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2409493450"] = "Opportunities"
+
+-- The prioritized actions could not be displayed because the model response did not have the expected structure.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2523185581"] = "The prioritized actions could not be displayed because the model response did not have the expected structure."
 
 -- Input
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2677268763"] = "Input"
 
 -- Analysis goal
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2718020690"] = "Analysis goal"
+
+-- This category could not be created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2855208826"] = "This category could not be created."
+
+-- Creating prioritized actions...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3093364112"] = "Creating prioritized actions..."
+
+-- Analyzing this category...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3114892934"] = "Analyzing this category..."
+
+-- At least one SWOT category could not be created. The completed categories remain visible below.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3160246784"] = "At least one SWOT category could not be created. The completed categories remain visible below."
 
 -- To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3485401617"] = "To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment."
@@ -2623,11 +2650,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T388
 -- This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4072390012"] = "This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues."
 
--- The model response could not be displayed as a SWOT matrix because it did not have the expected structure. The unprocessed response is shown instead.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T50304522"] = "The model response could not be displayed as a SWOT matrix because it did not have the expected structure. The unprocessed response is shown instead."
+-- The category analysis was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T476307744"] = "The category analysis was canceled."
 
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysis focus"
+
+-- Threats
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T592141878"] = "Threats"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Please provide a custom language."

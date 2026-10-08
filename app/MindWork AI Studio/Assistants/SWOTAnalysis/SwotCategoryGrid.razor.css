@@ -1,0 +1,38 @@
+.swot-category-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.swot-category-card {
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: var(--mud-default-borderradius);
+    min-height: 10rem;
+    padding: 1rem;
+}
+
+.swot-strengths {
+    border-top: 0.3rem solid var(--mud-palette-success);
+    background: color-mix(in srgb, var(--mud-palette-success) 8%, transparent);
+}
+
+.swot-weaknesses {
+    border-top: 0.3rem solid var(--mud-palette-warning);
+    background: color-mix(in srgb, var(--mud-palette-warning) 8%, transparent);
+}
+
+.swot-opportunities {
+    border-top: 0.3rem solid var(--mud-palette-info);
+    background: color-mix(in srgb, var(--mud-palette-info) 8%, transparent);
+}
+
+.swot-threats {
+    border-top: 0.3rem solid var(--mud-palette-error);
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent);
+}
+
+@media (max-width: 700px) {
+    .swot-category-grid {
+        grid-template-columns: 1fr;
+    }
+}

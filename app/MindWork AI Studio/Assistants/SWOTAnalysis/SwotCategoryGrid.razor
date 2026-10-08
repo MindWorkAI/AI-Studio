@@ -1,0 +1,28 @@
+<div class="swot-category-grid">
+    <section class="swot-category-card swot-strengths">
+        @this.Strengths
+    </section>
+    <section class="swot-category-card swot-weaknesses">
+        @this.Weaknesses
+    </section>
+    <section class="swot-category-card swot-opportunities">
+        @this.Opportunities
+    </section>
+    <section class="swot-category-card swot-threats">
+        @this.Threats
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public RenderFragment Strengths { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment Weaknesses { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment Opportunities { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment Threats { get; set; } = null!;
+}

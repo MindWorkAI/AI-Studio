@@ -82,8 +82,10 @@ public sealed class SwotAnalysisResponseTests
             Assert.That(Count(markdown, "Experienced team"), Is.GreaterThanOrEqualTo(2));
             Assert.That(Count(markdown, "Strength 6"), Is.EqualTo(2), "The matrix must not cap the number of findings.");
             Assert.That(Count(markdown, "Evidence 6"), Is.EqualTo(1), "Explanations belong to the detailed section, not the matrix.");
-            Assert.That(markdown.LastIndexOf("## SWOT Matrix", StringComparison.Ordinal), Is.GreaterThan(markdown.IndexOf("## Prioritized Actions", StringComparison.Ordinal)));
-            Assert.That(markdown, Does.EndWith("| **External** | **Opportunities:** Growing market | **Threats:** New competitor |"));
+            Assert.That(markdown, Does.StartWith("## SWOT Matrix"));
+            Assert.That(markdown.IndexOf("## SWOT Matrix", StringComparison.Ordinal), Is.LessThan(markdown.IndexOf("## Strengths", StringComparison.Ordinal)));
+            Assert.That(markdown.IndexOf("## SWOT Matrix", StringComparison.Ordinal), Is.LessThan(markdown.IndexOf("## Prioritized Actions", StringComparison.Ordinal)));
+            Assert.That(markdown, Does.Contain("| **External** | **Opportunities:** Growing market | **Threats:** New competitor |"));
         });
     }
 
