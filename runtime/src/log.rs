@@ -541,9 +541,7 @@ mod tests {
 
         store_startup_log_path(&storage, &log_path);
 
-        assert_eq!(
-            storage.get().unwrap(),
-            "/tmp/org.mindworkai.AIStudio/data/.AI Studio Events.log",
-        );
+        let expected = absolute(temporary.join(".AI Studio Events.log")).unwrap();
+        assert_eq!(PathBuf::from(storage.get().unwrap()), expected);
     }
 }

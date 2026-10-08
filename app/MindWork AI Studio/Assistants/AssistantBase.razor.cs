@@ -137,6 +137,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private protected virtual RenderFragment? HeaderActions => null;
 
+    /// <summary>
+    /// Replaces the rendered body of the dedicated result card while preserving its content for
+    /// copying, exporting, sources, and sending to another assistant.
+    /// </summary>
+    private protected virtual RenderFragment? CustomResultTextContent => null;
+
     private protected virtual RenderFragment? AfterResultContent => null;
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
