@@ -1104,7 +1104,39 @@ jobs:
 
           echo "Cleaning up ..."
           rm -fr "$TMP"
-          
+
+      - name: Sign PDFium (macOS)
+        if: startsWith(matrix.platform, 'macos') && needs.determine_run_mode.outputs.signing_mode != 'none'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          # Tauri signs the sidecar and the app, but none of the resources. Apple's notary
+          # service rejects every library inside the app which does not carry our Developer ID
+          # and a secure timestamp, so PDFium gets signed here, before Tauri bundles it. The
+          # keychain is set up the same way Tauri sets up its own one for the app:
+          keychain="${RUNNER_TEMP}/pdfium-signing.keychain-db"
+          keychain_password=$(openssl rand -hex 32)
+          certificate="${RUNNER_TEMP}/pdfium-signing.p12"
+          trap 'security delete-keychain "$keychain" 2>/dev/null || true; rm -f "$certificate"' EXIT
+
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate"
+          current_keychains=$(security list-keychains -d user | tr -d '"')
+
+          security create-keychain -p "$keychain_password" "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -k "$keychain"
+          security set-keychain-settings -t 3600 -u "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s $current_keychains "$keychain"
+
+          library="runtime/resources/libraries/libpdfium.dylib"
+          codesign --force --timestamp --options runtime --keychain "$keychain" --sign "$APPLE_SIGNING_IDENTITY" "$library"
+          codesign --verify --strict --verbose=2 "$library"
+
       - name: Deploy PDFium (Windows)
         if: matrix.platform == 'windows-latest'
         env:
@@ -1280,6 +1312,12 @@ jobs:
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          SECRET_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          SECRET_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          SECRET_APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          SECRET_APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          SECRET_APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          SECRET_APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           bundles="${{ matrix.tauri_bundle }}"
           tauri_config_args=()
@@ -1291,6 +1329,21 @@ jobs:
           else
             export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
             export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+          fi
+
+          # Only builds which may sign hand Tauri the Developer ID and the key for Apple's notary
+          # service. Every other build keeps the ad-hoc signature from tauri.conf.json, which an
+          # exported but empty APPLE_SIGNING_IDENTITY would override:
+          sign_for_macos=false
+          if [ "${{ needs.determine_run_mode.outputs.signing_mode }}" != "none" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
+            sign_for_macos=true
+            export APPLE_CERTIFICATE="$SECRET_APPLE_CERTIFICATE"
+            export APPLE_CERTIFICATE_PASSWORD="$SECRET_APPLE_CERTIFICATE_PASSWORD"
+            export APPLE_SIGNING_IDENTITY="$SECRET_APPLE_SIGNING_IDENTITY"
+            export APPLE_API_ISSUER="$SECRET_APPLE_API_ISSUER"
+            export APPLE_API_KEY="$SECRET_APPLE_API_KEY"
+            export APPLE_API_KEY_PATH="${RUNNER_TEMP}/AuthKey_${APPLE_API_KEY}.p8"
+            (umask 077 && printf '%s\n' "$SECRET_APPLE_API_PRIVATE_KEY" > "$APPLE_API_KEY_PATH")
           fi
 
           cd runtime
@@ -1315,7 +1368,24 @@ jobs:
               exit 1
             fi
           fi
-          
+
+          if [ "$sign_for_macos" = "true" ]; then
+            app_path=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app' | head -n 1)
+            dmg_path=$(find target/${{ matrix.rust_target }}/release/bundle/dmg -maxdepth 1 -name 'MindWork AI Studio_*.dmg' | head -n 1)
+
+            codesign --verify --deep --strict --verbose=2 "$app_path"
+            codesign --verify --verbose=2 "$dmg_path"
+            xcrun stapler validate "$app_path"
+
+            # Gatekeeper has to accept the app as notarized, not just as signed:
+            assessment=$(spctl --assess --type execute --verbose=4 "$app_path" 2>&1) || true
+            echo "$assessment"
+            if [[ "$assessment" != *"source=Notarized Developer ID"* ]]; then
+              echo "Gatekeeper does not accept the app as notarized."
+              exit 1
+            fi
+          fi
+
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
         env:
