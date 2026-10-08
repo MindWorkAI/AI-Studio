@@ -39,6 +39,7 @@ jobs:
       is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
       is_pr_build: ${{ steps.determine.outputs.is_pr_build }}
       is_internal_pr: ${{ steps.determine.outputs.is_internal_pr }}
+      signing_mode: ${{ steps.determine.outputs.signing_mode }}
       build_enabled: ${{ steps.determine.outputs.build_enabled }}
       artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
       skip_reason: ${{ steps.determine.outputs.skip_reason }}
@@ -60,6 +61,7 @@ jobs:
           is_labeled_pr=false
           is_pr_build=false
           is_internal_pr=false
+          signing_mode=none
           build_enabled=false
           artifact_retention_days=0
           skip_reason="Build disabled: event did not match main push, release tag, or labeled internal PR."
@@ -73,15 +75,17 @@ jobs:
             has_run_pipeline_label=true
           fi
 
+          # Pushes to main only check that every platform still builds. They neither sign
+          # anything nor upload their artifacts, so they need no retention period either:
           if [[ "$REF" == refs/tags/v* ]]; then
             is_release=true
+            signing_mode=release
             build_enabled=true
             artifact_retention_days=${{ env.RETENTION_INTERMEDIATE_ASSETS }}
             skip_reason=""
           elif [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
             is_main_push=true
             build_enabled=true
-            artifact_retention_days=7
             skip_reason=""
           elif [[ "$EVENT_NAME" == "pull_request" && "$PR_ACTION" == "labeled" && "$ACTION_LABEL_NAME" == "run-pipeline" ]]; then
             is_labeled_pr=true
@@ -101,11 +105,18 @@ jobs:
             skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
           fi
 
+          # Pull requests from forks never receive secrets, so only the labeled pull
+          # requests of this repository get signed builds:
+          if [[ "$is_pr_build" == "true" && "$is_internal_pr" == "true" ]]; then
+            signing_mode=pr
+          fi
+
           echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
           echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
           echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
           echo "is_pr_build=${is_pr_build}" >> "$GITHUB_OUTPUT"
           echo "is_internal_pr=${is_internal_pr}" >> "$GITHUB_OUTPUT"
+          echo "signing_mode=${signing_mode}" >> "$GITHUB_OUTPUT"
           echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
           echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
           echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
@@ -122,6 +133,7 @@ jobs:
           IS_LABELED_PR: ${{ steps.determine.outputs.is_labeled_pr }}
           IS_PR_BUILD: ${{ steps.determine.outputs.is_pr_build }}
           IS_INTERNAL_PR: ${{ steps.determine.outputs.is_internal_pr }}
+          SIGNING_MODE: ${{ steps.determine.outputs.signing_mode }}
           BUILD_ENABLED: ${{ steps.determine.outputs.build_enabled }}
           ARTIFACT_RETENTION_DAYS: ${{ steps.determine.outputs.artifact_retention_days }}
           SKIP_REASON: ${{ steps.determine.outputs.skip_reason }}
@@ -136,6 +148,7 @@ jobs:
           echo "is_labeled_pr: ${IS_LABELED_PR}"
           echo "is_pr_build: ${IS_PR_BUILD}"
           echo "is_internal_pr: ${IS_INTERNAL_PR}"
+          echo "signing_mode: ${SIGNING_MODE}"
           echo "build_enabled: ${BUILD_ENABLED}"
           echo "artifact_retention_days: ${ARTIFACT_RETENTION_DAYS}"
           echo "skip_reason: ${SKIP_REASON}"
@@ -155,6 +168,7 @@ jobs:
             echo "| is_labeled_pr | ${IS_LABELED_PR} |"
             echo "| is_pr_build | ${IS_PR_BUILD} |"
             echo "| is_internal_pr | ${IS_INTERNAL_PR} |"
+            echo "| signing_mode | ${SIGNING_MODE} |"
             echo "| build_enabled | ${BUILD_ENABLED} |"
             echo "| artifact_retention_days | ${ARTIFACT_RETENTION_DAYS} |"
             echo "| skip_reason | ${SKIP_REASON} |"
@@ -245,6 +259,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [determine_run_mode, read_metadata]
     if: needs.determine_run_mode.outputs.is_release == 'true'
+    environment: Release-Signing
     permissions:
       contents: read
     outputs:
@@ -500,6 +515,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [determine_run_mode, read_metadata, sync_flatpak_repo]
     if: needs.determine_run_mode.outputs.is_release == 'true'
+    environment: Release-Signing
     permissions:
       contents: read
 
@@ -813,6 +829,10 @@ jobs:
     name: Build app (${{ matrix.dotnet_runtime }})
     needs: [determine_run_mode, read_metadata, verify]
     if: needs.determine_run_mode.outputs.build_enabled == 'true'
+    # Releases need their environment on every platform, because Linux signs its updater
+    # artifacts as well. Pull requests sign only for macOS and Windows; their Linux builds
+    # run without an environment and do not wait for an approval:
+    environment: ${{ (needs.determine_run_mode.outputs.signing_mode == 'release' && 'Release-Signing') || (needs.determine_run_mode.outputs.signing_mode == 'pr' && !startsWith(matrix.platform, 'ubuntu') && 'PR-Signing') || '' }}
     permissions:
       contents: read
     
@@ -825,42 +845,42 @@ jobs:
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             tauri_bundle: 'dmg,app,updater'
-            tauri_bundle_pr: 'dmg'
+            tauri_bundle_without_updater: 'dmg'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg,app,updater'
-            tauri_bundle_pr: 'dmg'
+            tauri_bundle_without_updater: 'dmg'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage,updater'
-            tauri_bundle_pr: 'appimage'
+            tauri_bundle_without_updater: 'appimage'
             
           - platform: 'ubuntu-22.04-arm' # for ARM-based Linux
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
             tauri_bundle: 'appimage,updater'
-            tauri_bundle_pr: 'appimage'
+            tauri_bundle_without_updater: 'appimage'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis,updater'
-            tauri_bundle_pr: 'nsis'
+            tauri_bundle_without_updater: 'nsis'
 
           - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis,updater'
-            tauri_bundle_pr: 'nsis'
+            tauri_bundle_without_updater: 'nsis'
     
     runs-on: ${{ matrix.platform }}
     steps:
@@ -1264,9 +1284,9 @@ jobs:
           bundles="${{ matrix.tauri_bundle }}"
           tauri_config_args=()
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
-            echo "Running PR test build without updater bundle signing"
-            bundles="${{ matrix.tauri_bundle_pr }}"
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" != "true" ]; then
+            echo "Running a non-release build without updater artifacts"
+            bundles="${{ matrix.tauri_bundle_without_updater }}"
             tauri_config_args=(--config '{"bundle":{"createUpdaterArtifacts":false}}')
           else
             export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
@@ -1276,17 +1296,17 @@ jobs:
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles" "${tauri_config_args[@]}"
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" != "true" ]; then
             updater_artifact_count=$(find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \) | wc -l)
 
             if [ "$updater_artifact_count" -ne 0 ]; then
-              echo "PR builds must not generate updater artifacts."
+              echo "Only release builds may generate updater artifacts."
               find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \)
               exit 1
             fi
           fi
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" != "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" = "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
             app_update_archive_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz' | wc -l)
             app_update_signature_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz.sig' | wc -l)
 
@@ -1305,9 +1325,9 @@ jobs:
           $bundles = "${{ matrix.tauri_bundle }}"
           $tauriConfigArgs = @()
 
-          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
-            Write-Output "Running PR test build without updater bundle signing"
-            $bundles = "${{ matrix.tauri_bundle_pr }}"
+          if ("${{ needs.determine_run_mode.outputs.is_release }}" -ne "true") {
+            Write-Output "Running a non-release build without updater artifacts"
+            $bundles = "${{ matrix.tauri_bundle_without_updater }}"
             $tauriConfigArgs = @("--config", '{"bundle":{"createUpdaterArtifacts":false}}')
           } else {
             $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
@@ -1317,18 +1337,18 @@ jobs:
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles @tauriConfigArgs
 
-          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
+          if ("${{ needs.determine_run_mode.outputs.is_release }}" -ne "true") {
             $updaterArtifacts = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle" -Recurse -File -Include "*.app.tar.gz*", "*.AppImage.tar.gz*", "*nsis.zip*" -ErrorAction SilentlyContinue
 
             if ($updaterArtifacts.Count -ne 0) {
-              Write-Error "PR builds must not generate updater artifacts."
+              Write-Error "Only release builds may generate updater artifacts."
               $updaterArtifacts | ForEach-Object { Write-Error $_.FullName }
               exit 1
             }
           }
 
       - name: Upload artifact (macOS)
-        if: startsWith(matrix.platform, 'macos')
+        if: startsWith(matrix.platform, 'macos') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
@@ -1339,7 +1359,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - MSI)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
@@ -1350,7 +1370,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - NSIS)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -1361,7 +1381,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - AppImage)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
@@ -1585,7 +1605,8 @@ jobs:
       runs-on: ubuntu-latest
       needs: [read_metadata, create_release]
       if: startsWith(github.ref, 'refs/tags/v')
-      
+      environment: Release-Signing
+
       permissions:
         contents: write
       
