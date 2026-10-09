@@ -12,6 +12,18 @@ public static partial class PluginFactory
     private static readonly List<PluginBase> RUNNING_PLUGINS = [];
     
     /// <summary>
+    /// From this duration on, the start of a single plugin is reported as slow.
+    /// </summary>
+    /// <remarks>
+    /// The plugins start one after another, so every plugin after a slow one has to wait. A plugin
+    /// usually starts within milliseconds. A configuration plugin takes longer, because it applies its
+    /// configuration, stores its secrets in the OS keyring, and loads tokenizers, but seconds are
+    /// still far beyond that. The time limit per plugin covers only running its Lua code, so this
+    /// warning is the only sign of a plugin which spends its time elsewhere.
+    /// </remarks>
+    private static readonly TimeSpan SLOW_PLUGIN_START_THRESHOLD = TimeSpan.FromSeconds(2);
+
+    /// <summary>
     /// A list of all running plugins.
     /// </summary>
     public static IReadOnlyCollection<PluginBase> RunningPlugins => RUNNING_PLUGINS;
@@ -201,7 +213,12 @@ public static partial class PluginFactory
         var startingStartedAt = Stopwatch.GetTimestamp();
         try
         {
-            return await Start(meta, pluginTimeout.Token);
+            var plugin = await Start(meta, pluginTimeout.Token);
+            var startingDuration = Stopwatch.GetElapsedTime(startingStartedAt);
+            if (startingDuration >= SLOW_PLUGIN_START_THRESHOLD)
+                LOG.LogWarning($"Starting the plugin took {startingDuration.TotalMilliseconds:F0} ms, which is unusually long: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. All plugins after it had to wait for it.");
+
+            return plugin;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
