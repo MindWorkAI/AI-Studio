@@ -22,8 +22,9 @@ namespace AIStudio.Tests.Provider.ToolCalling;
 /// which rejects the question fails the whole request, so it is not asked at all.
 ///
 /// What a round sends back of the model's calls is what the provider accepts. A broken call is
-/// answered all the same, but under a name the provider takes, since vLLM rejects the whole
-/// request over a single name in its history which breaks the rule for function names.
+/// answered all the same, but with a name and arguments the provider takes, since vLLM rejects the
+/// whole request over a single call in its history whose name breaks the rule for function names
+/// or whose arguments are not JSON.
 /// </remarks>
 [TestFixture]
 public sealed class ChatCompletionToolCallingAdapterTests
@@ -138,6 +139,26 @@ public sealed class ChatCompletionToolCallingAdapterTests
             Assert.That(call.IsValid, Is.True);
             Assert.That(call.ToolName, Is.EqualTo("web_lookup"));
             Assert.That(nextRequest, Does.Contain("\"name\":\"web_lookup\""));
+        });
+    }
+
+    [Test]
+    public async Task BrokenArgumentsAreAnsweredButNeverSentBack()
+    {
+        //
+        // Up to v0.28, vLLM parses the arguments of every call in the history, and a single one
+        // which is not JSON fails the whole request:
+        //
+        const string BROKEN_ARGUMENTS = """{"query": "weather in Berl""";
+
+        var (call, nextRequest) = await AnswerOneCall("web_search", BROKEN_ARGUMENTS, "The tool call was invalid.");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(call.IsValid, Is.False, "The call is answered as invalid instead of being run.");
+            Assert.That(nextRequest, Does.Not.Contain("weather in Berl"), "The provider would reject the whole request over these arguments.");
+            Assert.That(nextRequest, Does.Contain("\"arguments\":\"{}\""), "The call itself still goes back, with arguments the provider can read.");
+            Assert.That(nextRequest, Does.Contain("\"name\":\"web_search\""), "A valid name goes back as it came, even when the arguments next to it are broken.");
         });
     }
 

@@ -28,6 +28,11 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     /// </summary>
     private const string INVALID_FUNCTION_NAME = "invalid_tool_call";
 
+    /// <summary>
+    /// The arguments an invalid call goes back with when its own arguments may not go back.
+    /// </summary>
+    private const string EMPTY_ARGUMENTS = "{}";
+
     private readonly List<IMessageBase> internalMessages = [];
     private readonly List<string> recordedRequestTexts = [];
     private ChatCompletionResponseMessage? lastResponseMessage;
@@ -203,7 +208,13 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
                 Function = new ChatCompletionToolFunction
                 {
                     Name = canonicalName ?? (hasValidName ? returnedFunctionName : INVALID_FUNCTION_NAME),
-                    Arguments = returnedArguments ?? "{}",
+
+                    //
+                    // Broken arguments go back as an empty object, for the same reason: up to
+                    // v0.28, vLLM parses the arguments of every call in the history and rejects
+                    // the whole request when one of them is not JSON.
+                    //
+                    Arguments = hasValidArguments ? returnedArguments : EMPTY_ARGUMENTS,
                 },
             };
 
