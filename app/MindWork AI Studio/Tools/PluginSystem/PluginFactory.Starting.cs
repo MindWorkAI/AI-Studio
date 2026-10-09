@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using AIStudio.Models.Registry;
 using AIStudio.Settings;
@@ -41,7 +42,7 @@ public static partial class PluginFactory
         {
             try
             {
-                var startedBasePlugin = await Start(baseLanguagePluginMetaData, cancellationToken);
+                var startedBasePlugin = await StartWithTimeout(baseLanguagePluginMetaData, cancellationToken);
                 if (startedBasePlugin is NoPlugin noPlugin)
                     LOG.LogError($"Was not able to start the base language plugin: Id='{baseLanguagePluginId}'. Reason: {noPlugin.Issues.First()}");
         
@@ -84,7 +85,7 @@ public static partial class PluginFactory
         {
             if(cancellationToken.IsCancellationRequested)
             {
-                LOG.LogWarning("Cancellation requested while starting plugins. Stopping the plugin startup process. Probably due to a timeout.");
+                LOG.LogWarning("Cancellation requested while starting plugins. Stopping the plugin startup process.");
                 break;
             }
 
@@ -100,7 +101,7 @@ public static partial class PluginFactory
                 // differently from the other half for no reason anyone could see.
                 //
                 if (availablePlugin.IsInternal || SettingsManagerAccess.IsPluginEnabled(availablePlugin) || availablePlugin.Type is PluginType.CONFIGURATION or PluginType.ASSISTANT or PluginType.MODEL)
-                    if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
+                    if(await StartWithTimeout(availablePlugin, cancellationToken) is { IsValid: true } plugin)
                     {
                         if (plugin is PluginConfiguration configPlugin)
                             configObjects.AddRange(configPlugin.ConfigObjects);
@@ -184,6 +185,32 @@ public static partial class PluginFactory
         }
     }
     
+    /// <summary>
+    /// Starts a plugin within the time limit each plugin gets on its own.
+    /// </summary>
+    /// <remarks>
+    /// A plugin which runs out of time is not started, and the next plugin gets the full limit
+    /// again. Only the caller's token stops the start of all plugins.
+    /// </remarks>
+    /// <param name="meta">The plugin to start.</param>
+    /// <param name="cancellationToken">The token of the whole start.</param>
+    /// <returns>The started plugin, or a NoPlugin when it could not be started in time.</returns>
+    private static async Task<PluginBase> StartWithTimeout(IAvailablePlugin meta, CancellationToken cancellationToken)
+    {
+        using var pluginTimeout = CreatePluginTimeout(cancellationToken);
+        var startingStartedAt = Stopwatch.GetTimestamp();
+        try
+        {
+            return await Start(meta, pluginTimeout.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            var reason = $"It did not finish within the limit of {PLUGIN_TIMEOUT.TotalSeconds:0} seconds and was stopped after {Stopwatch.GetElapsedTime(startingStartedAt).TotalSeconds:0.0} seconds.";
+            LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reason: {reason} The remaining plugins start regardless.");
+            return new NoPlugin(reason);
+        }
+    }
+
     private static async Task<PluginBase> Start(IAvailablePlugin meta, CancellationToken cancellationToken = default)
     {
         var pluginMainFile = Path.Join(meta.LocalPath, "plugin.lua");

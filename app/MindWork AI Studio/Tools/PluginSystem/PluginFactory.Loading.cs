@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text;
 using AIStudio.Settings;
@@ -13,6 +14,18 @@ public static partial class PluginFactory
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
     private static readonly SemaphoreSlim PLUGIN_LOAD_SEMAPHORE = new(1, 1);
     
+    /// <summary>
+    /// How long a single plugin may take to load, and again to start.
+    /// </summary>
+    /// <remarks>
+    /// The limit applies to each plugin on its own, never to all plugins together. A shared budget
+    /// let a slow machine spend it on the first plugins, so the ones at the end of the line never
+    /// started: the language plugin among them, and configuration plugins of the organization,
+    /// whose objects the clean-up then removed. The limit holds in every build, so a developer sees
+    /// the same start as a user does.
+    /// </remarks>
+    private static readonly TimeSpan PLUGIN_TIMEOUT = TimeSpan.FromSeconds(10);
+
     /// <summary>
     /// A list of all available plugins.
     /// </summary>
@@ -65,11 +78,13 @@ public static partial class PluginFactory
             IEnumerable<string> pluginMainFiles = pluginsDirectoryExists ? Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories) : [];
             foreach (var pluginMainFile in pluginMainFiles)
             {
+                using var pluginTimeout = CreatePluginTimeout(cancellationToken);
+                var loadingStartedAt = Stopwatch.GetTimestamp();
                 try
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled. It seems to be a timeout.");
+                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled.");
                         break;
                     }
 
@@ -79,11 +94,11 @@ public static partial class PluginFactory
                     await using(var fileStream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
                         using var reader = new StreamReader(fileStream, Encoding.UTF8);
-                        code = await reader.ReadToEndAsync(cancellationToken);
+                        code = await reader.ReadToEndAsync(pluginTimeout.Token);
                     }
                     
                     var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
-                    var plugin = await Load(pluginPath, code, cancellationToken: cancellationToken);
+                    var plugin = await Load(pluginPath, code, cancellationToken: pluginTimeout.Token);
             
                     switch (plugin)
                     {
@@ -188,6 +203,10 @@ public static partial class PluginFactory
                     }
 
                     AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId, configurationPriority));
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    LOG.LogError($"Was not able to load plugin '{pluginMainFile}'. Reason: It did not finish within the limit of {PLUGIN_TIMEOUT.TotalSeconds:0} seconds and was stopped after {Stopwatch.GetElapsedTime(loadingStartedAt).TotalSeconds:0.0} seconds. The remaining plugins load regardless.");
                 }
                 catch (Exception e)
                 {
@@ -352,6 +371,23 @@ public static partial class PluginFactory
         }
 
         return deployedEnterpriseConfigPluginIds;
+    }
+
+    /// <summary>
+    /// Creates the time limit for loading or starting a single plugin.
+    /// </summary>
+    /// <remarks>
+    /// The limit is linked to the token of the caller, so cancelling the whole operation still stops
+    /// the plugin at hand. Tell the two apart by that token: when it is not cancelled, the plugin ran
+    /// out of time, and only this plugin is affected.
+    /// </remarks>
+    /// <param name="cancellationToken">The token of the whole operation.</param>
+    /// <returns>A token source that cancels after PLUGIN_TIMEOUT or together with the caller's token.</returns>
+    private static CancellationTokenSource CreatePluginTimeout(CancellationToken cancellationToken)
+    {
+        var pluginTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        pluginTimeout.CancelAfter(PLUGIN_TIMEOUT);
+        return pluginTimeout;
     }
 
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
