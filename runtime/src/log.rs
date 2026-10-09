@@ -47,7 +47,17 @@ pub fn init_logging(bundle_identifier: &str) {
     log_config.push_str("rustls=info, ");
     log_config.push_str("tokio_rustls=info, ");
     log_config.push_str("symphonia_format_mkv=info, ");
-    log_config.push_str("reqwest=info");
+    log_config.push_str("reqwest=info, ");
+
+    // Hide harmless Qdrant Edge messages. Qdrant initializes its feature flags and the
+    // multi-mmap check only in its own binaries; the module is private in the crate, so
+    // we cannot do it. Qdrant Edge then falls back to its defaults, which are correct
+    // for us, but warns on every load and every optimization. On Windows, it logs every
+    // ignored madvise call at debug level. Check these modules again for new warnings
+    // whenever qdrant-edge gets updated:
+    log_config.push_str("qdrant_edge::common::flags=error, ");
+    log_config.push_str("qdrant_edge::common::mmap::ops=error, ");
+    log_config.push_str("qdrant_edge::common::mmap::advice=info");
 
     // Configure the initial filename. On Unix systems, the file should start
     // with a dot to be hidden.
