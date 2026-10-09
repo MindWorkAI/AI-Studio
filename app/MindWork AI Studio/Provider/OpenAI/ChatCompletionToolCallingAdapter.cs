@@ -23,6 +23,16 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     ILogger logger)
     : IToolCallingProviderAdapter where TRequest : ChatCompletionAPIRequest
 {
+    /// <summary>
+    /// The name an invalid call goes back under when its own name may not go back.
+    /// </summary>
+    private const string INVALID_FUNCTION_NAME = "invalid_tool_call";
+
+    /// <summary>
+    /// The arguments an invalid call goes back with when its own arguments may not go back.
+    /// </summary>
+    private const string EMPTY_ARGUMENTS = "{}";
+
     private readonly List<IMessageBase> internalMessages = [];
     private readonly List<string> recordedRequestTexts = [];
     private ChatCompletionResponseMessage? lastResponseMessage;
@@ -140,10 +150,17 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     /// Normalizes the tool calls of one response.
     /// </summary>
     /// <remarks>
-    /// Models get this wrong in several ways: a missing call ID, a missing function name, or
-    /// arguments that are not valid JSON. None of that may reach a tool, but none of it may be
-    /// dropped either — a call the model never hears about again leaves it waiting. So each call
-    /// is either marked invalid and answered with an error, or corrected where that is safe.
+    /// Models get this wrong in several ways: a missing call ID, a missing function name, a name
+    /// which is no function name at all, or arguments that are not valid JSON. None of that may
+    /// reach a tool, but none of it may be dropped either — a call the model never hears about
+    /// again leaves it waiting. So each call is either marked invalid and answered with an error,
+    /// or corrected where that is safe.<br/><br/>
+    /// What goes back with the next round has to be something the provider accepts, because this
+    /// adapter writes the model's turn itself instead of returning what the provider sent. And a
+    /// provider may check the history more strictly than its model writes it: vLLM serving a
+    /// Mistral model rejects the whole request over a single function name which breaks the rule
+    /// of our own definitions. So what is valid goes back as it came, and only what is not gets
+    /// replaced.
     /// </remarks>
     private List<PreparedChatCompletionToolCall> PrepareToolCalls(IEnumerable<ChatCompletionToolCall?> toolCalls)
     {
@@ -161,9 +178,27 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
 
             var returnedFunctionName = returnedToolCall?.Function?.Name;
             var returnedArguments = returnedToolCall?.Function?.Arguments;
-            var isValid = returnedToolCall?.Function is not null &&
-                          !string.IsNullOrWhiteSpace(returnedFunctionName) &&
-                          ToolExecutor.IsValidArgumentsJson(returnedArguments);
+
+            //
+            // Blanks around the name of one of our tools are the one mistake in a name which is
+            // corrected. Looked up first, because blanks break the rule for function names, and
+            // that rule decides below whether a name may go back at all.
+            //
+            var trimmedFunctionName = returnedFunctionName?.Trim();
+            var canonicalName = runnableTools
+                .Select(x => x.Definition.Function.Name)
+                .FirstOrDefault(x => x.Equals(trimmedFunctionName, StringComparison.Ordinal));
+
+            if (canonicalName is not null && !canonicalName.Equals(returnedFunctionName, StringComparison.Ordinal))
+                logger.LogWarning("Canonicalized tool call function name '{ReturnedFunctionName}' to '{CanonicalFunctionName}'.", returnedFunctionName, canonicalName);
+
+            //
+            // A well-formed name of a tool we do not offer stays valid: the executor answers that
+            // this tool is not available, which tells the model more than an invalid call does.
+            //
+            var hasValidName = canonicalName is not null || ToolExecutor.IsValidFunctionName(returnedFunctionName);
+            var hasValidArguments = ToolExecutor.IsValidArgumentsJson(returnedArguments);
+            var isValid = returnedToolCall?.Function is not null && hasValidName && hasValidArguments;
 
             var normalizedToolCall = new ChatCompletionToolCall
             {
@@ -172,32 +207,30 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
                 AdditionalMetadata = returnedToolCall?.AdditionalMetadata ?? new Dictionary<string, JsonElement>(),
                 Function = new ChatCompletionToolFunction
                 {
-                    Name = string.IsNullOrWhiteSpace(returnedFunctionName) ? "invalid_tool_call" : returnedFunctionName,
-                    Arguments = returnedArguments ?? "{}",
+                    Name = canonicalName ?? (hasValidName ? returnedFunctionName : INVALID_FUNCTION_NAME),
+
+                    //
+                    // Broken arguments go back as an empty object, for the same reason: up to
+                    // v0.28, vLLM parses the arguments of every call in the history and rejects
+                    // the whole request when one of them is not JSON.
+                    //
+                    Arguments = hasValidArguments ? returnedArguments : EMPTY_ARGUMENTS,
                 },
             };
 
             if (!isValid)
             {
-                logger.LogWarning("Received an invalid Chat Completions tool call. ToolCallId={ToolCallId}", toolCallId);
+                //
+                // The reason, but neither the name nor the arguments: what the model wrote into
+                // a broken call may be anything, its arguments included, and those may carry secrets.
+                //
+                var reason = returnedToolCall?.Function is null ? "the call names no function"
+                    : !hasValidName ? "the function name is missing or not a valid function name"
+                    : "the arguments are not a JSON object";
+
+                logger.LogWarning("Received an invalid Chat Completions tool call. ToolCallId={ToolCallId}, Reason={Reason}", toolCallId, reason);
                 preparedToolCalls.Add(new PreparedChatCompletionToolCall(normalizedToolCall, false));
                 continue;
-            }
-
-            var canonicalName = runnableTools
-                .Select(x => x.Definition.Function.Name)
-                .FirstOrDefault(x => x.Equals(returnedFunctionName!.Trim(), StringComparison.Ordinal));
-
-            if (canonicalName is not null && !canonicalName.Equals(returnedFunctionName, StringComparison.Ordinal))
-            {
-                logger.LogWarning("Canonicalized tool call function name '{ReturnedFunctionName}' to '{CanonicalFunctionName}'.", returnedFunctionName, canonicalName);
-                normalizedToolCall = normalizedToolCall with
-                {
-                    Function = normalizedToolCall.Function! with
-                    {
-                        Name = canonicalName,
-                    },
-                };
             }
 
             preparedToolCalls.Add(new PreparedChatCompletionToolCall(normalizedToolCall, true));
