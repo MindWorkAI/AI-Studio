@@ -22,8 +22,13 @@ public sealed class PluginTimeoutTests
     [Test]
     public async Task ALoopWhichNeverEndsIsStopped()
     {
+        //
+        // The loop runs on its own, and when the runtime ignores the token, it outlives this test.
+        // It therefore gets the token alone, never the source, which is disposed at the end:
+        //
         using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-        var loading = Task.Run(() => PluginFactory.Load(null, ENDLESS_PLUGIN, cancellationToken: timeout.Token));
+        var token = timeout.Token;
+        var loading = Task.Run(() => PluginFactory.Load(null, ENDLESS_PLUGIN, cancellationToken: token));
 
         var finishedInTime = await Task.WhenAny(loading, Task.Delay(TimeSpan.FromSeconds(10))) == loading;
 
