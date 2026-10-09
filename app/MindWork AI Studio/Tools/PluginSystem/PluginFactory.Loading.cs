@@ -56,6 +56,7 @@ public static partial class PluginFactory
 
         var configObjectList = new List<PluginConfigurationObject>();
         var hasStartedConfigurationPlugins = false;
+        var notStartedConfigPluginIds = new HashSet<Guid>();
         
         try
         {
@@ -227,6 +228,19 @@ public static partial class PluginFactory
                 // them stored the change. We store all of it once, at the end of this method:
                 //
                 hasStartedConfigurationPlugins = RUNNING_PLUGINS.OfType<PluginConfiguration>().Any();
+
+                //
+                // A configuration plugin which loaded but did not start has contributed nothing to
+                // the configuration objects. To the clean-up below, it would look as if the plugin
+                // had dropped all of its objects, and they would be deleted, secrets included. That
+                // is what a slow machine did to the configuration of an organization, once the
+                // time ran out before its plugin got its turn:
+                //
+                foreach (var notStartedConfigPlugin in AVAILABLE_PLUGINS.Where(plugin => plugin.Type is PluginType.CONFIGURATION && RUNNING_PLUGINS.All(runningPlugin => runningPlugin.Id != plugin.Id)))
+                {
+                    notStartedConfigPluginIds.Add(notStartedConfigPlugin.Id);
+                    LOG.LogWarning($"The configuration plugin '{notStartedConfigPlugin.Name}' (Id='{notStartedConfigPlugin.Id}') was loaded, but did not start. Everything it manages stays unchanged until it starts again. Please check the errors above.");
+                }
             }
         }
         finally
@@ -284,35 +298,39 @@ public static partial class PluginFactory
         var wasConfigurationChanged = hasStartedConfigurationPlugins;
 
         // Check LLM providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check transcription providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check embedding providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
             wasConfigurationChanged = true;
 
         // Check chat templates:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check profiles:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check document analysis policies:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
-        // Check left-over mandatory info acceptances:
-        if (SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
+        //
+        // Check left-over mandatory info acceptances. The mandatory infos come from the running
+        // configuration plugins only, so we skip this while one of them did not start: the user
+        // would have to accept its infos again, although nothing about them changed:
+        //
+        if (notStartedConfigPluginIds.Count == 0 && SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
         // Check all managed settings, i.e. settings which a configuration plugin can lock,
@@ -323,11 +341,12 @@ public static partial class PluginFactory
         //
         // The enterprise approvals of all configuration plugins add up. Now that every plugin has
         // contributed and the clean-up above has dropped the removed ones, we rebuild the effective
-        // list. We skip that while a configuration plugin is deployed but could not be loaded: its
-        // approvals are missing from the contributions, and withdrawing them would demand a new
-        // security audit for assistant plugins the organization has approved:
+        // list. We skip that while a configuration plugin is deployed but could not be loaded, or
+        // was loaded but did not start: its approvals are missing from the contributions, and
+        // withdrawing them would demand a new security audit for assistant plugins the
+        // organization has approved:
         //
-        if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
+        if(unloadedEnterpriseConfigPluginIds.Count == 0 && notStartedConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
             wasConfigurationChanged = true;
 
         //
@@ -339,7 +358,7 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
 
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
-        if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0))
+        if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0 || notStartedConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;
 
         if (wasConfigurationChanged)
@@ -509,17 +528,17 @@ public static partial class PluginFactory
     /// This is only valid as long as none of these settings gets a user interface. When you add
     /// one, remove the setting from this method and from the shim's document.
     /// </remarks>
-    /// <param name="hasUnloadedConfigPlugins" >
-    /// True when at least one configuration plugin is deployed but could not be loaded. In that case,
-    /// we cannot tell whether a value comes from that plugin or from a removed one, so we repair
-    /// nothing at all.
+    /// <param name="hasMissingConfigPlugins" >
+    /// True when at least one configuration plugin is deployed but could not be loaded, or was loaded
+    /// but did not start. In that case, we cannot tell whether a value comes from that plugin or from
+    /// a removed one, so we repair nothing at all.
     /// </param>
     /// <returns>True when at least one setting was repaired, otherwise false.</returns>
-    private static bool RepairLegacyConfigOnlySettings(bool hasUnloadedConfigPlugins)
+    private static bool RepairLegacyConfigOnlySettings(bool hasMissingConfigPlugins)
     {
-        if (hasUnloadedConfigPlugins)
+        if (hasMissingConfigPlugins)
         {
-            LOG.LogWarning("Skipping the repair of configuration-only settings: at least one configuration plugin is deployed, but could not be loaded. We try again the next time AI Studio starts.");
+            LOG.LogWarning("Skipping the repair of configuration-only settings: at least one configuration plugin could not be loaded or did not start. We try again the next time AI Studio starts.");
             return false;
         }
 
