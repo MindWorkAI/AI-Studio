@@ -428,6 +428,16 @@ impl QdrantEdgeDatabase {
             info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
         }
         shard.flush()?;
+
+        // Temporary compatibility shim, see compact_wal: without this, the WAL of a long session
+        // keeps growing until the next start. The store has to be unloaded first, because Windows
+        // cannot delete memory-mapped files. The next request loads it again.
+        let path = self.store_path(store_name)?;
+        if has_obsolete_wal_segments(&path) {
+            drop(self.shards.remove(store_name));
+            compact_wal(&path, store_name);
+        }
+
         Ok(())
     }
 
@@ -796,11 +806,31 @@ fn compact_wal(store_path: &Path, store_name: &str) {
     }
 }
 
+/// Whether the store's WAL holds segments which `compact_wal` would remove.
+fn has_obsolete_wal_segments(store_path: &Path) -> bool {
+    wal_file_names(&store_path.join(WAL_DIRECTORY))
+        .is_ok_and(|file_names| !obsolete_wal_segments(&file_names).is_empty())
+}
+
 /// Removes the obsolete closed segments, oldest first, and returns their number and size. When a
 /// removal fails, the segments left over are still contiguous, so Qdrant Edge can open the WAL.
 fn remove_obsolete_wal_segments(wal_path: &Path) -> std::io::Result<(usize, u64)> {
+    let mut removed_segments = 0;
+    let mut removed_bytes = 0;
+    for file_name in obsolete_wal_segments(&wal_file_names(wal_path)?) {
+        let segment_path = wal_path.join(file_name);
+        let segment_size = fs::metadata(&segment_path)?.len();
+        fs::remove_file(&segment_path)?;
+        removed_segments += 1;
+        removed_bytes += segment_size;
+    }
+
+    Ok((removed_segments, removed_bytes))
+}
+
+fn wal_file_names(wal_path: &Path) -> std::io::Result<Vec<String>> {
     if !wal_path.is_dir() {
-        return Ok((0, 0));
+        return Ok(Vec::new());
     }
 
     // Every file counts: a closed segment missing from this list would leave a gap behind.
@@ -812,17 +842,7 @@ fn remove_obsolete_wal_segments(wal_path: &Path) -> std::io::Result<(usize, u64)
         }
     }
 
-    let mut removed_segments = 0;
-    let mut removed_bytes = 0;
-    for file_name in obsolete_wal_segments(&file_names) {
-        let segment_path = wal_path.join(file_name);
-        let segment_size = fs::metadata(&segment_path)?.len();
-        fs::remove_file(&segment_path)?;
-        removed_segments += 1;
-        removed_bytes += segment_size;
-    }
-
-    Ok((removed_segments, removed_bytes))
+    Ok(file_names)
 }
 
 /// The closed WAL segments which may go, oldest first. That is all of them except the newest:
@@ -1201,6 +1221,34 @@ mod tests {
             .unwrap();
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].text, "Updated text.");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn optimize_removes_obsolete_wal_segments_of_a_loaded_store() {
+        let test_directory = test_directory("wal-optimize");
+        let (mut database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+
+        database.optimize_store(SEARCH_STORE).unwrap();
+        assert_eq!(closed_wal_segments(&store_path).len(), 1);
+
+        // The next request loads the store again, with all its points and still taking updates.
+        let newest_point_id = point_ids.last().unwrap();
+        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
+        updated_point.text = "Updated text.".to_string();
+        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None).unwrap();
+        assert_eq!(
+            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
+            point_ids.iter().map(String::as_str).collect::<HashSet<_>>()
+        );
+
+        let updated = found.iter().find(|result| &result.point_id == newest_point_id).unwrap();
+        assert_eq!(updated.text, "Updated text.");
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
