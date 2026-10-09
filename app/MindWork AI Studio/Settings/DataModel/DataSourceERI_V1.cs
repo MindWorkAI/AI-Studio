@@ -186,7 +186,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         return null;
     }
 
-    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
+    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, bool dryRun, out DataSourceERI_V1 dataSource)
     {
         dataSource = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -301,7 +301,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             EnterpriseConfigurationPluginId = configPluginId,
         };
 
-        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
+        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource, dryRun);
     }
 
     /// <summary>
@@ -360,7 +360,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 """;
     }
 
-    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
+    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource, bool dryRun)
     {
         var secretFieldName = dataSource.AuthMethod switch
         {
@@ -396,6 +396,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             LOGGER.LogWarning($"Failed to decrypt the {secretFieldName} for data source {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
             return false;
         }
+
+        //
+        // A dry run only checks the configuration, so it queues nothing: the start which follows it
+        // would otherwise store the secret once more for every dry run before it:
+        //
+        if (dryRun)
+            return true;
 
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",
