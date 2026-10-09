@@ -155,6 +155,26 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask in the next message to open the link.");
     }
 
+    [TestCase("web_search", ExpectedResult = true)]
+    [TestCase("read-web-page_2", ExpectedResult = true)]
+    [TestCase(null, ExpectedResult = false)]
+    [TestCase("", ExpectedResult = false)]
+    [TestCase(" web_search", ExpectedResult = false)]
+    [TestCase("web search", ExpectedResult = false)]
+    [TestCase("1,2,3,4,5,6,7,8,9,10,11,12,13,14,15", ExpectedResult = false)]
+    [TestCase("größe", ExpectedResult = false)]
+    public bool AFunctionNameFollowsTheRuleOfTheProviders(string? functionName) => ToolExecutor.IsValidFunctionName(functionName);
+
+    [Test]
+    public void AFunctionNameHasAtMost64Characters()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 64)), Is.True);
+            Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 65)), Is.False);
+        });
+    }
+
     private static void AssertDemandsNothing(ToolCallOutcome outcome)
     {
         const string REASON = "Nothing reached the model, so there is nothing the chat has to keep.";
