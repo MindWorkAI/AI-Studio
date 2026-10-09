@@ -792,7 +792,7 @@ jobs:
           key: verify-linux-x64-rust-${{ env.RUST_VERSION }}
 
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
@@ -1228,7 +1228,7 @@ jobs:
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
             
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
@@ -1795,7 +1795,7 @@ jobs:
             
           - name: Scan for threats
             id: virus_total
-            uses: crazy-max/ghaction-virustotal@v4
+            uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f # v4.2.0
             with:
               vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
               files: release/assets/*
@@ -1852,7 +1852,7 @@ jobs:
               echo "EOOOF" >> $GITHUB_ENV
             
           - name: Create release
-            uses: softprops/action-gh-release@v2
+            uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
             with:
               prerelease: true
               draft: false
