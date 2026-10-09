@@ -143,11 +143,11 @@ public sealed record PluginConfigurationObject
 
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
+                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
@@ -278,7 +278,7 @@ public sealed record PluginConfigurationObject
                 continue;
             }
 
-            if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, out var configObject))
+            if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, dryRun, out var configObject))
             {
                 LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
                 continue;
@@ -372,6 +372,11 @@ public sealed record PluginConfigurationObject
     /// those which could not be loaded. Objects of a deployed plugin are never removed, because the
     /// plugin was not removed either.
     /// </param>
+    /// <param name="notStartedConfigPluginIds">
+    /// The IDs of the configuration plugins which were loaded, but did not start. Their objects are
+    /// never removed either: such a plugin contributed nothing to the list of configuration objects,
+    /// so all of its objects would look as if the plugin had dropped them.
+    /// </param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
@@ -381,6 +386,7 @@ public sealed record PluginConfigurationObject
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
         IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds,
+        IReadOnlySet<Guid> notStartedConfigPluginIds,
         IList<PluginConfigurationObject> configObjectList,
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
@@ -408,6 +414,15 @@ public sealed record PluginConfigurationObject
             // organization still manages this AI Studio instance:
             //
             if(deployedEnterpriseConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
+                continue;
+
+            //
+            // Was the source plugin loaded, but did not start? Then it is not broken, it could not
+            // run this time, e.g., because it ran out of time on a slow machine. It contributed no
+            // objects, so every one of its objects would look removed from the plugin. They stay
+            // until the plugin starts again and tells us which ones it still defines:
+            //
+            if(notStartedConfigPluginIds.Contains(configObjectSourcePluginId))
                 continue;
 
             // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left

@@ -338,13 +338,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
 
-                            // Load (but not start) all plugins without waiting for them:
-                            #if DEBUG
-                            var pluginLoadingTimeout = new CancellationTokenSource();
-                            #else
-                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            #endif
-                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+                            // Load and start all plugins. Each plugin has a time limit of its own,
+                            // so a slow one cannot keep the others from starting:
+                            await PluginFactory.LoadAll();
 
                             // Set up hot reloading for plugins:
                             PluginFactory.SetUpHotReloading();

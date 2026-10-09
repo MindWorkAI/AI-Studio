@@ -12,7 +12,6 @@ namespace AIStudio.Tools.PluginSystem;
 public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type), ILivePluginContentSource
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
-    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
 
     private List<PluginConfigurationObject> configObjects = [];
@@ -83,8 +82,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             await StoreEnterpriseApiKeysAsync();
             await StoreEnterpriseSecretsAsync();
 
-            await SettingsManagerAccess.StoreSettings();
-            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+            //
+            // The settings are not stored here: PluginFactory.LoadAll does that once, after all
+            // plugins have started. Storing them per configuration plugin wrote the whole settings
+            // file again for each one, which made the start of every further plugin wait for it.
+            //
         }
     }
 

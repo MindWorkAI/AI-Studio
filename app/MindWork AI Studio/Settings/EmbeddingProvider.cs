@@ -61,7 +61,7 @@ public sealed record EmbeddingProvider(
 
     #endregion
 
-    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
+    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -189,13 +189,20 @@ public sealed record EmbeddingProvider(
                 {
                     if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
                     {
-                        // Queue the API key for storage in the OS keyring:
-                        PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
-                            name,
-                            decryptedApiKey,
-                            SecretStoreType.EMBEDDING_PROVIDER));
-                        LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        //
+                        // Queue the API key for storage in the OS keyring. A dry run only checks the
+                        // configuration, so it queues nothing: the start which follows it would
+                        // otherwise store the key once more for every dry run before it:
+                        //
+                        if (!dryRun)
+                        {
+                            PendingEnterpriseApiKeys.Add(new(
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
+                                name,
+                                decryptedApiKey,
+                                SecretStoreType.EMBEDDING_PROVIDER));
+                            LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for embedding provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
