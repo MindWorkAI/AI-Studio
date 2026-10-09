@@ -1031,7 +1031,7 @@ internal static partial class VisualBriefingValidation
             rule,
             new()
             {
-                IssueKind = VisualBriefingStructuredResponseIssueKind.SEMANTIC_CONTRACT_INVALID,
+                IssueKind = StructuredResponseIssueKind.SEMANTIC_CONTRACT_INVALID,
                 JsonPath = jsonPath,
                 FieldName = fieldName,
 

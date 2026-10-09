@@ -39,5 +39,5 @@ public sealed class VisualBriefingFailure
     /// <summary>
     /// Gets or sets the safe structured-response diagnostic.
     /// </summary>
-    public VisualBriefingStructuredResponseDiagnostic? StructuredResponse { get; set; }
+    public StructuredResponseDiagnostic? StructuredResponse { get; set; }
 }

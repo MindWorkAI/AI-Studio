@@ -18,7 +18,7 @@ internal sealed record StructuredLlmStageResult<T>(
     string Issue,
     VisualBriefingFailureCode FailureCode,
     VisualBriefingValidationRule ValidationRule,
-    VisualBriefingStructuredResponseDiagnostic? Diagnostic,
+    StructuredResponseDiagnostic? Diagnostic,
     int Attempts,
     int ResponseLength)
     where T : class;

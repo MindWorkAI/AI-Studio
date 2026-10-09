@@ -265,7 +265,7 @@ internal sealed class StructuredLlmStageRunner(
                Expected shape: {(string.IsNullOrEmpty(diagnostic.Expected) ? "the active contract" : diagnostic.Expected)}
                """;
         
-        var truncation = diagnostic?.IssueKind is VisualBriefingStructuredResponseIssueKind.UNEXPECTED_END
+        var truncation = diagnostic?.IssueKind is StructuredResponseIssueKind.UNEXPECTED_END
             ? "The preceding response ended before the root object was closed. Regenerate it completely and shorten non-essential prose values if necessary."
             : string.Empty;
         

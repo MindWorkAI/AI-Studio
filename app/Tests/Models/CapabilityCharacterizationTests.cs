@@ -61,6 +61,14 @@ public sealed class CapabilityCharacterizationTests
         Assert.Fail($"The capabilities of {DescribeDifference(recorded, current)}{Environment.NewLine}{Environment.NewLine}The full result was written to {CapabilitySnapshot.ACTUAL_FILE_PATH}.");
     }
 
+    [Test]
+    public void TheRenderedSnapshotAlwaysUsesLfLineEndings()
+    {
+        var rendered = CapabilitySnapshot.Render([]);
+
+        Assert.That(rendered, Does.Not.Contain("\r"));
+    }
+
     /// <summary>
     /// Describes how two snapshots differ, in the words of the lines that differ.
     /// </summary>

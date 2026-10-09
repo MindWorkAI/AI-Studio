@@ -185,7 +185,7 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
         throw new VisualBriefingBuildException(failure.Code, failure.Stage, failure.UserMessage, failure.TechnicalDetails);
     }
 
-    private static string BuildTechnicalDetails(VisualBriefingValidationRule rule, int attempts, int responseLength, VisualBriefingStructuredResponseDiagnostic? diagnostic)
+    private static string BuildTechnicalDetails(VisualBriefingValidationRule rule, int attempts, int responseLength, StructuredResponseDiagnostic? diagnostic)
     {
         var details = $"Rule={rule}; Attempts={attempts}; ResponseLength={responseLength}";
         return diagnostic is null
