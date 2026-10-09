@@ -1493,9 +1493,11 @@ jobs:
               exit 1
             }
 
+            # The main binary is missing here on purpose: after bundling, Tauri puts the unpatched,
+            # unsigned original back in place. The installer holds the signed one, and our signing
+            # script has already checked that signature right after signing:
             $signedFiles = @(
               $installer.FullName,
-              "target/${{ matrix.rust_target }}/release/MindWork AI Studio.exe",
               "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}",
               "resources/libraries/pdfium.dll"
             )
