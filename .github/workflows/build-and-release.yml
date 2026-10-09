@@ -26,7 +26,9 @@ env:
   FLATPAK_UV_VERSION: 0.11.28
   FLATPAK_UV_SHA256: e490a6464492183c5d4534a5527fb4440f7f2bb2f228162ad7e4afe076dc0224
   FLATPAK_FREEDESKTOP_VERSION: "25.08"
-    
+  SSIGN_VERSION: 0.1.7
+  SSIGN_SHA256: 4ee5389a74ddbeb67e18fe8c8b963734ca13de7b24beffbe430c3f427ecc5e40
+
 jobs:
   determine_run_mode:
     name: Determine run mode
@@ -1273,7 +1275,27 @@ jobs:
           } else {
             Write-Output "Tauri CLI v2 is already installed"
           }
-          
+
+      - name: Install ssign (Windows)
+        if: matrix.platform == 'windows-latest' && needs.determine_run_mode.outputs.signing_mode != 'none'
+        run: |
+          $ssignDir = Join-Path $env:RUNNER_TEMP "ssign"
+          New-Item -ItemType Directory -Force -Path $ssignDir | Out-Null
+          $archive = Join-Path $ssignDir "ssign.zip"
+
+          Invoke-WebRequest -Uri "https://github.com/Le-Syl21/ssign/releases/download/v$($env:SSIGN_VERSION)/ssign-windows-x86_64.zip" -OutFile $archive
+
+          # ssign gets the secrets of our code signing certificate, so only the exact build we
+          # checked may run. Both Windows builds run on x64, the ARM one cross-compiles:
+          $hash = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne $env:SSIGN_SHA256) {
+            Write-Error "The SHA-256 of ssign is '$hash', but '$($env:SSIGN_SHA256)' was expected."
+            exit 1
+          }
+
+          Expand-Archive -Path $archive -DestinationPath $ssignDir -Force
+          $ssignDir >> $env:GITHUB_PATH
+
       - name: Delete previous artifact, which may exist due to caching (macOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
@@ -1300,6 +1322,10 @@ jobs:
         run: |
           rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe" -ErrorAction SilentlyContinue
           rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*" -ErrorAction SilentlyContinue
+
+          # A main binary from the cache may carry the signature of an earlier build, which turns
+          # invalid as soon as Tauri patches the binary. Cargo links a fresh one when it is missing:
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/MindWork AI Studio.exe" -ErrorAction SilentlyContinue
           
       - name: Delete previous artifact, which may exist due to caching (Linux - AppImage)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
@@ -1407,6 +1433,8 @@ jobs:
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          SECRET_CERTUM_EMAIL: ${{ secrets.CERTUM_EMAIL }}
+          SECRET_CERTUM_OTP: ${{ secrets.CERTUM_OTP }}
         run: |
           $bundles = "${{ matrix.tauri_bundle }}"
           $tauriConfigArgs = @()
@@ -1420,8 +1448,26 @@ jobs:
             $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
           }
 
+          # Only builds which may sign hand Tauri a sign command, which in turn hands every file
+          # to our script for ssign. The forward slashes keep the path intact while Tauri passes
+          # the command on to NSIS for signing the uninstaller:
+          $signForWindows = "${{ needs.determine_run_mode.outputs.signing_mode }}" -ne "none"
+          if ($signForWindows) {
+            $env:CERTUM_EMAIL = $env:SECRET_CERTUM_EMAIL
+            $env:CERTUM_OTP = $env:SECRET_CERTUM_OTP
+
+            $signScript = (Join-Path $env:GITHUB_WORKSPACE ".github/scripts/sign-windows.ps1") -replace '\\', '/'
+            $signConfigPath = Join-Path $env:RUNNER_TEMP "tauri-windows-signing.json"
+            $signConfig = @{ bundle = @{ windows = @{ signCommand = @{ cmd = "pwsh"; args = @("-NoProfile", "-NonInteractive", "-File", $signScript, "%1") } } } }
+            $signConfig | ConvertTo-Json -Depth 6 | Set-Content -Path $signConfigPath -Encoding utf8
+            $tauriConfigArgs += @("--config", $signConfigPath)
+          }
+
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles @tauriConfigArgs
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
 
           if ("${{ needs.determine_run_mode.outputs.is_release }}" -ne "true") {
             $updaterArtifacts = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle" -Recurse -File -Include "*.app.tar.gz*", "*.AppImage.tar.gz*", "*nsis.zip*" -ErrorAction SilentlyContinue
@@ -1430,6 +1476,31 @@ jobs:
               Write-Error "Only release builds may generate updater artifacts."
               $updaterArtifacts | ForEach-Object { Write-Error $_.FullName }
               exit 1
+            }
+          }
+
+          if ($signForWindows) {
+            $installer = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle/nsis" -Filter "MindWork AI Studio_*.exe" | Select-Object -First 1
+            if (-not $installer) {
+              Write-Error "The installer to check was not found."
+              exit 1
+            }
+
+            $signedFiles = @(
+              $installer.FullName,
+              "target/${{ matrix.rust_target }}/release/MindWork AI Studio.exe",
+              "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}",
+              "resources/libraries/pdfium.dll"
+            )
+
+            foreach ($file in $signedFiles) {
+              $signature = Get-AuthenticodeSignature -FilePath $file
+              Write-Output "$($signature.Status) | $($signature.SignerCertificate.Subject) | timestamp: $($null -ne $signature.TimeStamperCertificate) | $file"
+
+              if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike '*O=Open Source Developer*' -or $null -eq $signature.TimeStamperCertificate) {
+                Write-Error "'$file' is not signed with our certificate and a timestamp."
+                exit 1
+              }
             }
           }
 
