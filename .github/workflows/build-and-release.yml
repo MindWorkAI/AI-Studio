@@ -1370,11 +1370,25 @@ jobs:
           fi
 
           if [ "$sign_for_macos" = "true" ]; then
-            app_path=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app' | head -n 1)
+            # Check what people download: the app inside the disk image. Builds of the disk image
+            # alone do not even keep the app next to it, because Tauri removes it afterwards:
             dmg_path=$(find target/${{ matrix.rust_target }}/release/bundle/dmg -maxdepth 1 -name 'MindWork AI Studio_*.dmg' | head -n 1)
+            if [ -z "$dmg_path" ]; then
+              echo "The disk image to check was not found."
+              exit 1
+            fi
+
+            codesign --verify --verbose=2 "$dmg_path"
+
+            mount_point="${RUNNER_TEMP}/dmg-check"
+            hdiutil attach "$dmg_path" -readonly -nobrowse -mountpoint "$mount_point"
+            app_path=$(find "$mount_point" -maxdepth 1 -name '*.app' | head -n 1)
+            if [ -z "$app_path" ]; then
+              echo "The disk image contains no app."
+              exit 1
+            fi
 
             codesign --verify --deep --strict --verbose=2 "$app_path"
-            codesign --verify --verbose=2 "$dmg_path"
             xcrun stapler validate "$app_path"
 
             # Gatekeeper has to accept the app as notarized, not just as signed:
@@ -1384,6 +1398,8 @@ jobs:
               echo "Gatekeeper does not accept the app as notarized."
               exit 1
             fi
+
+            hdiutil detach "$mount_point"
           fi
 
       - name: Build Tauri project (Windows)
