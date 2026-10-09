@@ -424,7 +424,7 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
             this.T("Transcribe media files"),
             dialogParameters,
-            DialogOptions.FULLSCREEN);
+            DialogOptions.BLOCKING_FULLSCREEN);
 
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)

@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::env::{current_dir, temp_dir};
+use std::env::{current_dir, home_dir, temp_dir};
 use std::error::Error;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, OpenOptions};
@@ -47,7 +47,18 @@ pub fn init_logging(bundle_identifier: &str) {
     log_config.push_str("rustls=info, ");
     log_config.push_str("tokio_rustls=info, ");
     log_config.push_str("symphonia_format_mkv=info, ");
-    log_config.push_str("reqwest=info");
+    log_config.push_str("reqwest=info, ");
+
+    // Hide harmless Qdrant Edge messages. Qdrant initializes its feature flags and the
+    // multi-mmap check only in its own binaries; the module is private in the crate, so
+    // we cannot do it. Qdrant Edge then falls back to its defaults, which are correct
+    // for us, but warns on every load and every optimization. On Windows, it logs every
+    // ignored madvise call at debug level. Check these modules again for new warnings
+    // whenever qdrant-edge gets updated, and drop the first two filters once
+    // https://github.com/qdrant/qdrant/issues/11069 is solved:
+    log_config.push_str("qdrant_edge::common::flags=error, ");
+    log_config.push_str("qdrant_edge::common::mmap::ops=error, ");
+    log_config.push_str("qdrant_edge::common::mmap::advice=info");
 
     // Configure the initial filename. On Unix systems, the file should start
     // with a dot to be hidden.
@@ -130,16 +141,10 @@ fn get_startup_log_path(bundle_identifier: &str) -> (PathBuf, Option<String>) {
     }
 
     (get_non_flatpak_startup_log_path(
-        home_directory(),
+        home_dir(),
         current_dir().ok(),
         temp_dir(),
     ), None)
-}
-
-// Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
-#[allow(deprecated)]
-fn home_directory() -> Option<PathBuf> {
-    std::env::home_dir()
 }
 
 fn get_non_flatpak_startup_log_path(

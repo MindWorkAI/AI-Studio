@@ -83,7 +83,7 @@ We offer various ways you can support the project:
 
 - **One-Time Contributions**: Make a one-time donation and have your name or company logo included in the app as a gesture of our gratitude.
 
-For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise.
+For companies, sponsoring MindWork AI Studio is not only a way to support innovation but also a valuable opportunity for public relations and marketing. Your company's name and logo will be featured prominently, showcasing your commitment to using cutting-edge AI tools and enhancing your reputation as an innovative enterprise. [Our sponsoring guide](documentation/Sponsoring.md) explains how it works, from delivering your logo to what sponsoring includes.
 
 To view all available tiers, please visit our [GitHub Sponsors page](https://github.com/sponsors/MindWorkAI).
 Your support, whether big or small, keeps the wheels turning and is deeply appreciated ❤️.
@@ -132,6 +132,19 @@ Do you want to teach AI Studio what a model can do? [Read the model capabilities
 <details>
     <summary>
     <h2 style="display:inline-block">
+        Contributing
+    </h2>
+    </summary>
+
+Would you like to contribute to AI Studio? We welcome pull requests. We build AI Studio with AI coding agents, and we recommend that you do the same. Please read our [contribution guidelines](CONTRIBUTING.md) before you start: they explain when to ask us first, what a pull request needs, and what you agree to when you submit one.
+
+Did you find a security vulnerability? Please follow our [security policy](SECURITY.md) and never report it publicly. Everyone taking part in our community follows our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
         Enterprise IT
     </h2>
     </summary>
@@ -152,6 +165,8 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **Competing Use**: Our only request is that you don't create commercial products or services that replace or compete with MindWork AI Studio or any of our other offerings.
 - **No Warranties**: The software is provided "as is", without any promises from us about it working perfectly for your needs. While we strive to make it great, we can't guarantee it will be free of bugs or issues.
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
+
+Contributions from outside the core team are licensed to us under the MIT License, see our [contribution guidelines](CONTRIBUTING.md#licensing-of-your-contribution) and the [NOTICE](NOTICE.md) file.
 
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
 
