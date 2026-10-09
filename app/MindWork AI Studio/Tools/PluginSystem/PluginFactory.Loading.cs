@@ -55,6 +55,7 @@ public static partial class PluginFactory
         await PLUGIN_LOAD_SEMAPHORE.WaitAsync(cancellationToken);
 
         var configObjectList = new List<PluginConfigurationObject>();
+        var hasStartedConfigurationPlugins = false;
         
         try
         {
@@ -220,6 +221,12 @@ public static partial class PluginFactory
             {
                 var configObjects = await RestartAllPlugins(cancellationToken);
                 configObjectList.AddRange(configObjects);
+
+                //
+                // Each configuration plugin which started has changed the settings, but none of
+                // them stored the change. We store all of it once, at the end of this method:
+                //
+                hasStartedConfigurationPlugins = RUNNING_PLUGINS.OfType<PluginConfiguration>().Any();
             }
         }
         finally
@@ -274,8 +281,11 @@ public static partial class PluginFactory
             LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
         }
 
+        var wasConfigurationChanged = hasStartedConfigurationPlugins;
+
         // Check LLM providers:
-        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER))
+            wasConfigurationChanged = true;
 
         // Check transcription providers:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
