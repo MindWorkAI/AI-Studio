@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::env::{current_dir, temp_dir};
+use std::env::{current_dir, home_dir, temp_dir};
 use std::error::Error;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, OpenOptions};
@@ -130,16 +130,10 @@ fn get_startup_log_path(bundle_identifier: &str) -> (PathBuf, Option<String>) {
     }
 
     (get_non_flatpak_startup_log_path(
-        home_directory(),
+        home_dir(),
         current_dir().ok(),
         temp_dir(),
     ), None)
-}
-
-// Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
-#[allow(deprecated)]
-fn home_directory() -> Option<PathBuf> {
-    std::env::home_dir()
 }
 
 fn get_non_flatpak_startup_log_path(
