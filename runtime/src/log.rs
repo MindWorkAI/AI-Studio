@@ -54,7 +54,8 @@ pub fn init_logging(bundle_identifier: &str) {
     // we cannot do it. Qdrant Edge then falls back to its defaults, which are correct
     // for us, but warns on every load and every optimization. On Windows, it logs every
     // ignored madvise call at debug level. Check these modules again for new warnings
-    // whenever qdrant-edge gets updated:
+    // whenever qdrant-edge gets updated, and drop the first two filters once
+    // https://github.com/qdrant/qdrant/issues/11069 is solved:
     log_config.push_str("qdrant_edge::common::flags=error, ");
     log_config.push_str("qdrant_edge::common::mmap::ops=error, ");
     log_config.push_str("qdrant_edge::common::mmap::advice=info");
