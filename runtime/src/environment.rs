@@ -1,4 +1,5 @@
 use crate::api_token::APIToken;
+use axum::http::StatusCode;
 use axum::Json;
 use log::{debug, error, info, warn};
 use serde::Serialize;
@@ -641,35 +642,59 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-pub async fn read_enterprise_env_config_id(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_id(_token: APIToken) -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration ID.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.id)
-        .unwrap_or_default()
+    read_enterprise_sources(|| {
+        resolve_effective_enterprise_config_source()
+            .configs
+            .into_iter()
+            .next()
+            .map(|config| config.id)
+            .unwrap_or_default()
+    }).await
 }
 
-pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration server URL.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.server_url)
-        .unwrap_or_default()
+    read_enterprise_sources(|| {
+        resolve_effective_enterprise_config_source()
+            .configs
+            .into_iter()
+            .next()
+            .map(|config| config.server_url)
+            .unwrap_or_default()
+    }).await
 }
 
-pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
-    resolve_effective_enterprise_secret_source().encryption_secret
+    read_enterprise_sources(|| resolve_effective_enterprise_secret_source().encryption_secret).await
 }
 
 /// Returns all enterprise configurations from the effective source.
-pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+pub async fn read_enterprise_configs(_token: APIToken) -> Result<Json<Vec<EnterpriseConfig>>, (StatusCode, String)> {
     info!("Trying to read the effective enterprise configurations.");
-    Json(resolve_effective_enterprise_config_source().configs)
+    read_enterprise_sources(|| Json(resolve_effective_enterprise_config_source().configs)).await
+}
+
+/// Reads the enterprise sources on the blocking pool.
+///
+/// Every call reads the policy files and, on Windows, the registry again. That is quick most of
+/// the time, but a slow disk must not hold up every other call of the app, because they all share
+/// one HTTP/2 connection.
+///
+/// A failure is answered as an error, never as an empty value: the app would read an empty value
+/// as "no configuration of your organization" and act on it.
+async fn read_enterprise_sources<T, F>(read: F) -> Result<T, (StatusCode, String)>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    tokio::task::spawn_blocking(read).await.map_err(|error| {
+        let issue = format!("The enterprise configuration worker failed: {error}");
+        error!("{issue}");
+        (StatusCode::INTERNAL_SERVER_ERROR, issue)
+    })
 }
 
 pub fn resolve_external_http_custom_root_certificate_policy() -> ExternalHttpCustomRootCertificatePolicy {
