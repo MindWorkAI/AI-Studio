@@ -27,7 +27,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.Mailboxes;
 /// e.g., that a certain sender wrote, so it raises the requirements of the chat like a search.
 /// It belongs to the mailbox collection, so it is selected together with Search Mails, see MailboxToolCollection.
 /// </remarks>
-public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetrievalService retrievalService, PromptInjectionGuardService guardService, ILogger<CountMailsTool> logger) : IToolImplementation
+public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetrievalService retrievalService, DataSourceEmbeddingService embeddingService, PromptInjectionGuardService guardService, ILogger<CountMailsTool> logger) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(CountMailsTool).Namespace, nameof(CountMailsTool));
 
@@ -157,7 +157,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         var contributingMailboxes = counts.Where((count, index) => count.Outcome.Count is not null || listedFolders[index] is { Count: > 0 }).Select(count => count.Mailbox).ToList();
         var requirements = MailToolResults.GetRequirements(contributingMailboxes, settingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction);
 
-        logger.LogInformation("Mail count finished. ToolCallId={ToolCallId}, MailboxCount={MailboxCount}, Grouping={Grouping}, CountedMailboxes={CountedMailboxes}", context.ToolCallId, counts.Length, request.Grouping, contributingMailboxes.Count);
+        logger.LogInformation("Mail count finished. ToolCallId={ToolCallId}, MailboxCount={MailboxCount}, Grouping={Grouping}, CountedMailboxes={CountedMailboxes}, DraftSyncsRequested={DraftSyncsRequested}", context.ToolCallId, counts.Length, request.Grouping, contributingMailboxes.Count, counts.Count(count => count.DraftSync is MailDraftSyncDecision.SYNC_REQUESTED));
 
         return new ToolExecutionResult
         {
@@ -220,17 +220,18 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         {
             var coverage = await retrievalService.GetCoverageAsync(providerConfidence, mailbox.Id, token);
             var filter = request.Conditions.ForMailbox(coverage?.Folders ?? []);
+            var draftSync = coverage is null ? MailDraftSyncDecision.NOT_NEEDED : await MailDraftSync.RequestIfNeededAsync(embeddingService, settingsManager, mailbox, request.Conditions, filter, coverage);
             if (coverage is not null && request.Conditions.NamesFolder && filter.FolderPaths is { Count: 0 })
-                return new(mailbox, coverage, new(null, []), filter.FolderPaths, FolderIsMissing: true);
+                return new(mailbox, coverage, new(null, []), filter.FolderPaths, FolderIsMissing: true, draftSync);
 
             // One group more than shown tells whether there are others:
             var outcome = await retrievalService.CountAsync(providerConfidence, mailbox.Id, filter, request.Grouping, MAX_GROUPS + 1, token);
-            return new(mailbox, coverage, outcome, filter.FolderPaths, FolderIsMissing: false);
+            return new(mailbox, coverage, outcome, filter.FolderPaths, FolderIsMissing: false, draftSync);
         }
         catch (MailboxNotReadableException)
         {
             // It could be read when the call began, so it changed only a moment ago:
-            return new(mailbox, null, new(null, [RetrievalGap.NOT_SEARCHED]), null, FolderIsMissing: false);
+            return new(mailbox, null, new(null, [RetrievalGap.NOT_SEARCHED]), null, FolderIsMissing: false, MailDraftSyncDecision.NOT_NEEDED);
         }
     }
 
@@ -263,6 +264,7 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
         }
 
         MailToolResults.DescribeCoverage(description, issues, count.Coverage, timeZone);
+        MailDraftSync.Describe(description, issues, count.DraftSync);
         if (count.FolderIsMissing && listedFolders is not null)
             MailToolResults.DescribeMissingFolder(description, issues, specialFolder, listedFolders, count.Coverage?.Folders.Count ?? listedFolders.Count);
 
@@ -325,5 +327,6 @@ public sealed class CountMailsTool(SettingsManager settingsManager, MailboxRetri
     /// <param name="Outcome">The count.</param>
     /// <param name="FolderPaths">The folders the count was restricted to, or null for all of them.</param>
     /// <param name="FolderIsMissing">Whether the mailbox has none of the folders the model named, so nothing was counted.</param>
-    private sealed record MailboxCount(DataSourceMailbox Mailbox, MailboxCoverage? Coverage, MailCountOutcome Outcome, IReadOnlyCollection<string>? FolderPaths, bool FolderIsMissing);
+    /// <param name="DraftSync">What was done about drafts which may have changed since the last sync.</param>
+    private sealed record MailboxCount(DataSourceMailbox Mailbox, MailboxCoverage? Coverage, MailCountOutcome Outcome, IReadOnlyCollection<string>? FolderPaths, bool FolderIsMissing, MailDraftSyncDecision DraftSync);
 }

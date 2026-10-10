@@ -299,7 +299,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool searches with:
-    private SearchMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, NullLogger<SearchMailsTool>.Instance);
+    private SearchMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, null!, NullLogger<SearchMailsTool>.Instance);
 
     private static MailFolderRecord Folder(string path, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, null, null, null, null, null);
 

@@ -152,7 +152,7 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool counts with:
-    private CountMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, NullLogger<CountMailsTool>.Instance);
+    private CountMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, null!, NullLogger<CountMailsTool>.Instance);
 
     private static MailFolderRecord Folder(string path, long? messageCount, long? unseenCount, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, 100, null, messageCount, unseenCount, null);
 
