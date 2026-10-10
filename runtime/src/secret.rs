@@ -78,8 +78,37 @@ pub fn init_secret_store() {
     }
 }
 
+/// Runs one request against the credential store on the blocking pool.
+///
+/// The credential store of the operating system may take a moment to answer, and on macOS and Linux
+/// it may wait until the user unlocks it, which can take minutes. On a runtime worker, that would
+/// hold up every other call of the app, because they all share one HTTP/2 connection.
+async fn run_secret_store_request<T, F>(request: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    tokio::task::spawn_blocking(request).await.map_err(|error| {
+        let issue = format!("The secret store worker failed: {error}");
+        error!(Source = "Secret Store"; "{issue}");
+        issue
+    })
+}
+
 /// Stores a secret in the secret store using the operating system's keyring.
 pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+    match run_secret_store_request(move || store_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(StoreSecretResponse {
+            success: false,
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`store_secret`].
+fn store_secret_sync(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
     let user_name = request.user_name.as_str();
     let decrypted_text = match ENCRYPTION.decrypt(&request.secret) {
         Ok(text) => text,
@@ -145,6 +174,19 @@ pub struct StoreSecretResponse {
 
 /// Retrieves a secret from the secret store using the operating system's keyring.
 pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
+    match run_secret_store_request(move || get_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(RequestedSecret {
+            success: false,
+            secret: EncryptedText::new(String::from("")),
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`get_secret`].
+fn get_secret_sync(request: Json<RequestSecret>) -> Json<RequestedSecret> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = match Entry::new(service.as_str(), user_name) {
@@ -227,6 +269,19 @@ pub struct RequestedSecret {
 
 /// Deletes a secret from the secret store using the operating system's keyring.
 pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+    match run_secret_store_request(move || delete_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(DeleteSecretResponse {
+            success: false,
+            was_entry_found: false,
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`delete_secret`].
+fn delete_secret_sync(request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = match Entry::new(service.as_str(), user_name) {
