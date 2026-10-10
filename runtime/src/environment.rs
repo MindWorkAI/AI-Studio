@@ -642,30 +642,6 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-pub async fn read_enterprise_env_config_id(_token: APIToken) -> Result<String, (StatusCode, String)> {
-    debug!("Trying to read the effective enterprise configuration ID.");
-    read_enterprise_sources(|| {
-        resolve_effective_enterprise_config_source()
-            .configs
-            .into_iter()
-            .next()
-            .map(|config| config.id)
-            .unwrap_or_default()
-    }).await
-}
-
-pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> Result<String, (StatusCode, String)> {
-    debug!("Trying to read the effective enterprise configuration server URL.");
-    read_enterprise_sources(|| {
-        resolve_effective_enterprise_config_source()
-            .configs
-            .into_iter()
-            .next()
-            .map(|config| config.server_url)
-            .unwrap_or_default()
-    }).await
-}
-
 pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
     read_enterprise_sources(|| resolve_effective_enterprise_secret_source().encryption_secret).await
