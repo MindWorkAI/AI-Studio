@@ -33,6 +33,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
+    private const int MAX_LOGGED_EXCLUDED_FILE_EXAMPLES = 3;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileSourceIndexer).Namespace, nameof(FileSourceIndexer));
 
@@ -402,6 +403,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var pendingDirectories = new Stack<string>();
         pendingDirectories.Push(rootPath);
 
+        //
+        // Every log line travels to the runtime as a request of its own. A folder full of icons
+        // would flood the log with one line per file, so the excluded files get one line in total:
+        //
+        var excludedFiles = 0;
+        var excludedFileExamples = new List<string>(MAX_LOGGED_EXCLUDED_FILE_EXAMPLES);
+
         while (pendingDirectories.Count > 0)
         {
             var currentPath = pendingDirectories.Pop();
@@ -443,7 +451,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                         break;
 
                     case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
+                        excludedFiles++;
+                        if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
+                            excludedFileExamples.Add(Path.GetRelativePath(rootPath, fileInfo.FullName));
                         break;
                 }
             }
@@ -456,6 +466,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 pendingDirectories.Push(subDirectory);
             }
         }
+
+        if (excludedFiles > 0)
+            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, rootPath, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
     }
 
     private string TryGetRelativePath(IDataSource dataSource, FileInfo file) => dataSource switch
