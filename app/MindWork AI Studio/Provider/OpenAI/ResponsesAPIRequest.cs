@@ -9,7 +9,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Input">The chat messages and Responses API input items.</param>
 /// <param name="Stream">Whether to stream the response.</param>
 /// <param name="Store">Whether to store the response on the server (usually OpenAI's infrastructure).</param>
-/// <param name="Tools">The provider-side tools and local function tools to use for the request.</param>
+/// <param name="Tools">The local function tools to use for the request.</param>
 public record ResponsesAPIRequest(
     string Model,
     IList<object> Input,
