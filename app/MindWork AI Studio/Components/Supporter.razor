@@ -1,13 +1,13 @@
-<MudListItem T="string" Icon="@this.Icon">
+<MudListItem T="string" Icon="@this.Icon" Style="text-align: justify; hyphens: auto;">
     @if (string.IsNullOrWhiteSpace(this.URL))
     {
-        <MudText Typo="Typo.body1" Inline="@true">
+        <MudText Typo="Typo.body1" Inline="@true" Style="hyphens: none;">
             @this.Name
         </MudText>
     }
     else
     {
-        <MudLink Href="@this.URL" Target="_blank">
+        <MudLink Href="@this.URL" Target="_blank" Style="hyphens: none;">
             @this.Name
         </MudLink>
     }
