@@ -4,7 +4,9 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, OpenOptions};
 use std::path::{absolute, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
+use chrono::{DateTime, Utc};
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
 use log::{kv, Level};
@@ -16,11 +18,27 @@ use crate::environment::{is_dev, is_flatpak};
 
 const FLATPAK_PERSISTENT_DATA_DIRECTORY: &str = "/var/data";
 
+/// The key under which a log record carries the time its event happened, in microseconds
+/// since the Unix epoch. A record without it happened when it reached the logger. The
+/// formatters start the line with this time and never write the key itself.
+const CREATED_AT_KEY: &str = "created_at_micros";
+
+/// The key under which a line shows how late its record reached the logger.
+const DELAY_KEY: &str = "Delay";
+
+/// From this many milliseconds on, a line shows how late its record reached the logger.
+/// Below it lies the usual transport time, which would only be noise.
+const DELAY_THRESHOLD_MS: i64 = 100;
+
 static LOGGER: OnceLock<RuntimeLoggerHandle> = OnceLock::new();
 
 static LOG_STARTUP_PATH: OnceLock<String> = OnceLock::new();
 
 static LOG_APP_PATH: OnceLock<String> = OnceLock::new();
+
+/// Whether we already warned that the .NET server sent a timestamp we cannot read.
+/// Once is enough: when one is unreadable, all of them are.
+static WARNED_ABOUT_UNREADABLE_DOTNET_TIMESTAMP: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the logging system.
 pub fn init_logging(bundle_identifier: &str) {
@@ -270,15 +288,24 @@ struct LogKVCollect<'kvs>(BTreeMap<Key<'kvs>, Value<'kvs>>);
 
 impl<'kvs> VisitSource<'kvs> for LogKVCollect<'kvs> {
     fn visit_pair(&mut self, key: Key<'kvs>, value: Value<'kvs>) -> Result<(), kv::Error> {
-        self.0.insert(key, value);
+        // The creation time is the timestamp of the line, not one of its pairs:
+        if key.as_str() != CREATED_AT_KEY {
+            self.0.insert(key, value);
+        }
+
         Ok(())
     }
 }
 
-fn write_kv_pairs(w: &mut dyn std::io::Write, record: &log::Record) -> Result<(), std::io::Error> {
-    if record.key_values().count() > 0 {
-        let mut visitor = LogKVCollect(BTreeMap::new());
-        record.key_values().visit(&mut visitor).unwrap();
+fn write_kv_pairs(w: &mut dyn std::io::Write, record: &log::Record, delay_ms: Option<i64>) -> Result<(), std::io::Error> {
+    let delay = delay_ms.map(|delay_ms| format!("{delay_ms} ms"));
+    let mut visitor = LogKVCollect(BTreeMap::new());
+    record.key_values().visit(&mut visitor).unwrap();
+    if let Some(delay) = &delay {
+        visitor.0.insert(Key::from_str(DELAY_KEY), Value::from_display(delay));
+    }
+
+    if !visitor.0.is_empty() {
         write!(w, "[")?;
         let mut index = 0;
         for (key, value) in visitor.0 {
@@ -295,6 +322,41 @@ fn write_kv_pairs(w: &mut dyn std::io::Write, record: &log::Record) -> Result<()
     Ok(())
 }
 
+/// When the event of a log record happened, and how late the record reached the logger.
+struct LogTime {
+    timestamp: String,
+    delay_ms: Option<i64>,
+}
+
+fn get_log_time(now: &mut DeferredNow, record: &log::Record) -> LogTime {
+    let created_at = record
+        .key_values()
+        .get(Key::from_str(CREATED_AT_KEY))
+        .and_then(|value| value.to_i64())
+        .and_then(DateTime::<Utc>::from_timestamp_micros);
+
+    match created_at {
+        // Case: The event happened when its record reached the logger:
+        None => LogTime {
+            timestamp: now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string(),
+            delay_ms: None,
+        },
+
+        // Case: The event happened earlier, e.g., in the .NET server. The logger
+        // runs in UTC (see init_logging), so this time is written in UTC as well:
+        Some(created_at) => LogTime {
+            timestamp: created_at.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string(),
+            delay_ms: get_notable_delay_ms(created_at, now.now_utc_owned()),
+        },
+    }
+}
+
+/// Returns how late a record reached the logger, but only when the delay is notable.
+fn get_notable_delay_ms(created_at: DateTime<Utc>, arrived_at: DateTime<Utc>) -> Option<i64> {
+    let delay_ms = (arrived_at - created_at).num_milliseconds();
+    (delay_ms >= DELAY_THRESHOLD_MS).then_some(delay_ms)
+}
+
 // Custom LOGGER format for the terminal:
 fn terminal_colored_logger_format(
     w: &mut dyn std::io::Write,
@@ -302,18 +364,19 @@ fn terminal_colored_logger_format(
     record: &log::Record,
 ) -> Result<(), std::io::Error> {
     let level = record.level();
+    let log_time = get_log_time(now, record);
 
     // Write the timestamp, log level, and module path:
     write!(
         w,
         "[{}] {} [{}] ",
-        flexi_logger::style(level).paint(now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).to_string()),
+        flexi_logger::style(level).paint(log_time.timestamp),
         flexi_logger::style(level).paint(record.level().to_string()),
         record.module_path().unwrap_or("<unnamed>"),
     )?;
 
     // Write all key-value pairs:
-    write_kv_pairs(w, record)?;
+    write_kv_pairs(w, record, log_time.delay_ms)?;
 
     // Write the log message:
     write!(w, "{}", flexi_logger::style(level).paint(record.args().to_string()))
@@ -325,18 +388,19 @@ fn file_logger_format(
     now: &mut DeferredNow,
     record: &log::Record,
 ) -> Result<(), std::io::Error> {
+    let log_time = get_log_time(now, record);
 
     // Write the timestamp, log level, and module path:
     write!(
         w,
         "[{}] {} [{}] ",
-        now.format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK),
+        log_time.timestamp,
         record.level(),
         record.module_path().unwrap_or("<unnamed>"),
     )?;
 
     // Write all key-value pairs:
-    write_kv_pairs(w, record)?;
+    write_kv_pairs(w, record, log_time.delay_ms)?;
 
     // Write the log message:
     write!(w, "{}", record.args())
@@ -361,26 +425,37 @@ fn parse_dotnet_log_level(level: &str) -> Level {
     }
 }
 
+/// Reads the timestamp of a .NET log event, e.g., `2026-10-09T17:53:54.5629130+00:00`,
+/// and returns it in microseconds since the Unix epoch.
+fn parse_dotnet_timestamp(timestamp: &str) -> Option<i64> {
+    DateTime::parse_from_rfc3339(timestamp)
+        .ok()
+        .map(|timestamp| timestamp.timestamp_micros())
+}
+
 /// Logs a message with the specified level, including optional exception and stack trace.
+/// When the time the event happened is known, every line carries it.
 fn log_with_level(
+    logger: &dyn log::Log,
     level: Level,
     category: &str,
+    created_at: Option<i64>,
     message: &str,
     exception: Option<&String>,
     stack_trace: Option<&String>
 ) {
     // Log the main message:
-    log::log!(level, Source = ".NET Server", Comp = category; "{message}");
+    log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "{message}");
 
     // Log exception if present:
     if let Some(ex) = exception {
-        log::log!(level, Source = ".NET Server", Comp = category; "  Exception: {ex}");
+        log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "  Exception: {ex}");
     }
 
     // Log stack trace if present:
     if let Some(stack_trace) = stack_trace {
         for line in stack_trace.lines() {
-            log::log!(level, Source = ".NET Server", Comp = category; "    {line}");
+            log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "    {line}");
         }
     }
 }
@@ -390,10 +465,13 @@ pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<Lo
     let level = parse_dotnet_log_level(&event.level);
     let message = event.message.as_str();
     let category = event.category.as_str();
+    let created_at = parse_dotnet_timestamp(&event.timestamp);
 
     log_with_level(
+        log::logger(),
         level,
         category,
+        created_at,
         message,
         event.exception.as_ref(),
         event.stack_trace.as_ref()
@@ -402,6 +480,11 @@ pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<Lo
     // Log warning for unknown levels:
     if !matches!(event.level.as_str(), "Trace" | "Debug" | "Information" | "Warning" | "Error" | "Critical") {
         log::warn!(Source = ".NET Server", Comp = category; "Unknown log level '{}' received.", event.level);
+    }
+
+    // Log warning for unreadable timestamps, but only once:
+    if created_at.is_none() && !WARNED_ABOUT_UNREADABLE_DOTNET_TIMESTAMP.swap(true, Ordering::Relaxed) {
+        log::warn!(Source = ".NET Server", Comp = category; "Could not read the timestamp '{}' of a log event. Such events show the time they arrived instead. This warning appears only once.", event.timestamp);
     }
 
     Json(LogEventResponse { success: true, issue: String::new() })
@@ -416,8 +499,9 @@ pub struct LogPathsResponse {
 
 /// A log event from the .NET server.
 #[derive(Deserialize)]
-#[allow(unused)]
 pub struct LogEvent {
+    /// When the event happened, in the round-trip format of .NET,
+    /// e.g., `2026-10-09T17:53:54.5629130+00:00`.
     timestamp: String,
     level: String,
     category: String,
@@ -436,8 +520,175 @@ pub struct LogEventResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+    use chrono::{TimeDelta, TimeZone};
+    use flexi_logger::FormatFunction;
+    use log::kv::{Source, ToValue};
+    use log::LevelFilter;
 
     const BUNDLE_IDENTIFIER: &str = "org.mindworkai.AIStudio";
+
+    const MODULE_PATH: &str = "mindwork_ai_studio::log";
+
+    fn write_line(format: FormatFunction, key_values: &dyn Source) -> String {
+        let mut line = Vec::new();
+        format(
+            &mut line,
+            &mut DeferredNow::new(),
+            &log::Record::builder()
+                .args(format_args!("Hello"))
+                .level(Level::Info)
+                .module_path(Some(MODULE_PATH))
+                .key_values(key_values)
+                .build(),
+        ).unwrap();
+
+        String::from_utf8(line).unwrap()
+    }
+
+    fn micros_ago(milliseconds: i64) -> i64 {
+        (Utc::now() - TimeDelta::milliseconds(milliseconds)).timestamp_micros()
+    }
+
+    fn format_micros(micros: i64) -> String {
+        DateTime::<Utc>::from_timestamp_micros(micros)
+            .unwrap()
+            .format(flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK)
+            .to_string()
+    }
+
+    #[test]
+    fn late_line_starts_with_the_time_its_event_happened() {
+        let created_at = micros_ago(2_000);
+        let line = write_line(file_logger_format, &[
+            ("Source", ".NET Server".to_value()),
+            (CREATED_AT_KEY, Some(created_at).to_value()),
+        ]);
+
+        let prefix = format!("[{}] INFO [{MODULE_PATH}] [Delay = ", format_micros(created_at));
+        assert!(line.starts_with(&prefix), "{line}");
+        assert!(line.ends_with(" ms, Source = .NET Server] Hello"), "{line}");
+
+        let delay_ms: i64 = line[prefix.len()..].split(" ms").next().unwrap().parse().unwrap();
+        assert!((2_000..60_000).contains(&delay_ms), "{line}");
+    }
+
+    #[test]
+    fn usual_transport_time_shows_no_delay() {
+        let created_at = micros_ago(0);
+        let line = write_line(file_logger_format, &[
+            ("Source", ".NET Server".to_value()),
+            (CREATED_AT_KEY, Some(created_at).to_value()),
+        ]);
+
+        assert_eq!(line, format!("[{}] INFO [{MODULE_PATH}] [Source = .NET Server] Hello", format_micros(created_at)));
+    }
+
+    #[test]
+    fn line_without_creation_time_shows_its_arrival_time() {
+        let missing_created_at: Option<i64> = None;
+        let without_key: [(&str, Value); 1] = [("Source", ".NET Server".to_value())];
+        let without_value: [(&str, Value); 2] = [
+            ("Source", ".NET Server".to_value()),
+            (CREATED_AT_KEY, missing_created_at.to_value()),
+        ];
+
+        for key_values in [&without_key as &dyn Source, &without_value] {
+            let before = Utc::now().timestamp_micros();
+            let line = write_line(file_logger_format, key_values);
+            let after = Utc::now().timestamp_micros();
+
+            let timestamp = &line[1..line.find(']').unwrap()];
+            let arrived_at = DateTime::parse_from_str(timestamp, flexi_logger::TS_DASHES_BLANK_COLONS_DOT_BLANK).unwrap().timestamp_micros();
+            assert!((before..=after).contains(&arrived_at), "{line}");
+            assert!(line.ends_with(&format!("INFO [{MODULE_PATH}] [Source = .NET Server] Hello")), "{line}");
+        }
+    }
+
+    #[test]
+    fn creation_time_is_never_written_as_a_pair() {
+        let formats: [FormatFunction; 2] = [file_logger_format, terminal_colored_logger_format];
+        for format in formats {
+            let late_line = write_line(format, &[(CREATED_AT_KEY, micros_ago(2_000))]);
+            assert!(late_line.contains("[Delay = "), "{late_line}");
+            assert!(!late_line.contains(CREATED_AT_KEY), "{late_line}");
+
+            let line = write_line(format, &[(CREATED_AT_KEY, micros_ago(0))]);
+            assert!(!line.contains(CREATED_AT_KEY), "{line}");
+            assert!(!line.contains("[] "), "{line}");
+        }
+    }
+
+    #[test]
+    fn delay_counts_only_from_the_threshold_on() {
+        let created_at = Utc::now();
+        let arrived_after = |milliseconds| created_at + TimeDelta::milliseconds(milliseconds);
+
+        assert_eq!(get_notable_delay_ms(created_at, arrived_after(DELAY_THRESHOLD_MS - 1)), None);
+        assert_eq!(get_notable_delay_ms(created_at, arrived_after(DELAY_THRESHOLD_MS)), Some(DELAY_THRESHOLD_MS));
+        assert_eq!(get_notable_delay_ms(created_at, arrived_after(1_583)), Some(1_583));
+
+        // A record that seems to arrive before its event happened shows no delay:
+        assert_eq!(get_notable_delay_ms(created_at, arrived_after(-5)), None);
+    }
+
+    #[test]
+    fn dotnet_timestamps_are_read_in_microseconds() {
+        let expected = (Utc.with_ymd_and_hms(2026, 10, 9, 17, 53, 54).unwrap() + TimeDelta::microseconds(562_913)).timestamp_micros();
+
+        assert_eq!(parse_dotnet_timestamp("2026-10-09T17:53:54.5629130+00:00"), Some(expected));
+        assert_eq!(parse_dotnet_timestamp("2026-10-09T19:53:54.5629130+02:00"), Some(expected));
+    }
+
+    #[test]
+    fn unreadable_dotnet_timestamps_are_rejected() {
+        // The format .NET sent before, with the time separator of the current culture:
+        assert_eq!(parse_dotnet_timestamp("2026-10-09 17:53:54.562"), None);
+        assert_eq!(parse_dotnet_timestamp("2026-10-09 17.53.54.562"), None);
+        assert_eq!(parse_dotnet_timestamp(""), None);
+    }
+
+    /// Remembers the message and the creation time of every record it receives.
+    #[derive(Default)]
+    struct CapturingLogger(Mutex<Vec<(String, Option<i64>)>>);
+
+    impl log::Log for CapturingLogger {
+        fn enabled(&self, _: &log::Metadata) -> bool {
+            true
+        }
+
+        fn log(&self, record: &log::Record) {
+            let created_at = record
+                .key_values()
+                .get(Key::from_str(CREATED_AT_KEY))
+                .and_then(|value| value.to_i64());
+
+            self.0.lock().unwrap().push((record.args().to_string(), created_at));
+        }
+
+        fn flush(&self) {}
+    }
+
+    #[test]
+    fn every_line_of_a_dotnet_event_carries_its_time() {
+        // Without a global logger, the log macros would drop every record before it reaches ours:
+        log::set_max_level(LevelFilter::Info);
+
+        let logger = CapturingLogger::default();
+        let created_at = parse_dotnet_timestamp("2026-10-09T17:53:54.5629130+00:00");
+        let exception = String::from("Boom");
+        let stack_trace = String::from("at First()\nat Second()");
+        assert!(created_at.is_some());
+
+        log_with_level(&logger, Level::Info, "Tests", created_at, "Hello", Some(&exception), Some(&stack_trace));
+
+        assert_eq!(logger.0.into_inner().unwrap(), vec![
+            (String::from("Hello"), created_at),
+            (String::from("  Exception: Boom"), created_at),
+            (String::from("    at First()"), created_at),
+            (String::from("    at Second()"), created_at),
+        ]);
+    }
 
     #[test]
     fn flatpak_standard_path_matches_tauri_local_data_path() {
