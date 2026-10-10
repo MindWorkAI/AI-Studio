@@ -4,6 +4,7 @@ use std::error::Error;
 use std::fmt::Debug;
 use std::fs::{create_dir_all, OpenOptions};
 use std::path::{absolute, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
 use chrono::{DateTime, Utc};
 use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
@@ -34,6 +35,10 @@ static LOGGER: OnceLock<RuntimeLoggerHandle> = OnceLock::new();
 static LOG_STARTUP_PATH: OnceLock<String> = OnceLock::new();
 
 static LOG_APP_PATH: OnceLock<String> = OnceLock::new();
+
+/// Whether we already warned that the .NET server sent a timestamp we cannot read.
+/// Once is enough: when one is unreadable, all of them are.
+static WARNED_ABOUT_UNREADABLE_DOTNET_TIMESTAMP: AtomicBool = AtomicBool::new(false);
 
 /// Initialize the logging system.
 pub fn init_logging(bundle_identifier: &str) {
@@ -420,26 +425,37 @@ fn parse_dotnet_log_level(level: &str) -> Level {
     }
 }
 
+/// Reads the timestamp of a .NET log event, e.g., `2026-10-09T17:53:54.5629130+00:00`,
+/// and returns it in microseconds since the Unix epoch.
+fn parse_dotnet_timestamp(timestamp: &str) -> Option<i64> {
+    DateTime::parse_from_rfc3339(timestamp)
+        .ok()
+        .map(|timestamp| timestamp.timestamp_micros())
+}
+
 /// Logs a message with the specified level, including optional exception and stack trace.
+/// When the time the event happened is known, every line carries it.
 fn log_with_level(
+    logger: &dyn log::Log,
     level: Level,
     category: &str,
+    created_at: Option<i64>,
     message: &str,
     exception: Option<&String>,
     stack_trace: Option<&String>
 ) {
     // Log the main message:
-    log::log!(level, Source = ".NET Server", Comp = category; "{message}");
+    log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "{message}");
 
     // Log exception if present:
     if let Some(ex) = exception {
-        log::log!(level, Source = ".NET Server", Comp = category; "  Exception: {ex}");
+        log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "  Exception: {ex}");
     }
 
     // Log stack trace if present:
     if let Some(stack_trace) = stack_trace {
         for line in stack_trace.lines() {
-            log::log!(level, Source = ".NET Server", Comp = category; "    {line}");
+            log::log!(logger: logger, level, Source = ".NET Server", Comp = category, (CREATED_AT_KEY) = created_at; "    {line}");
         }
     }
 }
@@ -449,10 +465,13 @@ pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<Lo
     let level = parse_dotnet_log_level(&event.level);
     let message = event.message.as_str();
     let category = event.category.as_str();
+    let created_at = parse_dotnet_timestamp(&event.timestamp);
 
     log_with_level(
+        log::logger(),
         level,
         category,
+        created_at,
         message,
         event.exception.as_ref(),
         event.stack_trace.as_ref()
@@ -461,6 +480,11 @@ pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<Lo
     // Log warning for unknown levels:
     if !matches!(event.level.as_str(), "Trace" | "Debug" | "Information" | "Warning" | "Error" | "Critical") {
         log::warn!(Source = ".NET Server", Comp = category; "Unknown log level '{}' received.", event.level);
+    }
+
+    // Log warning for unreadable timestamps, but only once:
+    if created_at.is_none() && !WARNED_ABOUT_UNREADABLE_DOTNET_TIMESTAMP.swap(true, Ordering::Relaxed) {
+        log::warn!(Source = ".NET Server", Comp = category; "Could not read the timestamp '{}' of a log event. Such events show the time they arrived instead. This warning appears only once.", event.timestamp);
     }
 
     Json(LogEventResponse { success: true, issue: String::new() })
@@ -475,8 +499,9 @@ pub struct LogPathsResponse {
 
 /// A log event from the .NET server.
 #[derive(Deserialize)]
-#[allow(unused)]
 pub struct LogEvent {
+    /// When the event happened, in the round-trip format of .NET,
+    /// e.g., `2026-10-09T17:53:54.5629130+00:00`.
     timestamp: String,
     level: String,
     category: String,
@@ -495,9 +520,11 @@ pub struct LogEventResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeDelta;
+    use std::sync::Mutex;
+    use chrono::{TimeDelta, TimeZone};
     use flexi_logger::FormatFunction;
     use log::kv::{Source, ToValue};
+    use log::LevelFilter;
 
     const BUNDLE_IDENTIFIER: &str = "org.mindworkai.AIStudio";
 
@@ -603,6 +630,64 @@ mod tests {
 
         // A record that seems to arrive before its event happened shows no delay:
         assert_eq!(get_notable_delay_ms(created_at, arrived_after(-5)), None);
+    }
+
+    #[test]
+    fn dotnet_timestamps_are_read_in_microseconds() {
+        let expected = (Utc.with_ymd_and_hms(2026, 10, 9, 17, 53, 54).unwrap() + TimeDelta::microseconds(562_913)).timestamp_micros();
+
+        assert_eq!(parse_dotnet_timestamp("2026-10-09T17:53:54.5629130+00:00"), Some(expected));
+        assert_eq!(parse_dotnet_timestamp("2026-10-09T19:53:54.5629130+02:00"), Some(expected));
+    }
+
+    #[test]
+    fn unreadable_dotnet_timestamps_are_rejected() {
+        // The format .NET sent before, with the time separator of the current culture:
+        assert_eq!(parse_dotnet_timestamp("2026-10-09 17:53:54.562"), None);
+        assert_eq!(parse_dotnet_timestamp("2026-10-09 17.53.54.562"), None);
+        assert_eq!(parse_dotnet_timestamp(""), None);
+    }
+
+    /// Remembers the message and the creation time of every record it receives.
+    #[derive(Default)]
+    struct CapturingLogger(Mutex<Vec<(String, Option<i64>)>>);
+
+    impl log::Log for CapturingLogger {
+        fn enabled(&self, _: &log::Metadata) -> bool {
+            true
+        }
+
+        fn log(&self, record: &log::Record) {
+            let created_at = record
+                .key_values()
+                .get(Key::from_str(CREATED_AT_KEY))
+                .and_then(|value| value.to_i64());
+
+            self.0.lock().unwrap().push((record.args().to_string(), created_at));
+        }
+
+        fn flush(&self) {}
+    }
+
+    #[test]
+    fn every_line_of_a_dotnet_event_carries_its_time() {
+        // Without a global logger, the log macros would drop every record before it reaches ours:
+        log::set_max_level(LevelFilter::Info);
+
+        let logger = CapturingLogger::default();
+        let created_at = parse_dotnet_timestamp("2026-10-09T17:53:54.5629130+00:00");
+        let exception = String::from("Boom");
+        let stack_trace = String::from("at First()\nat Second()");
+        assert!(created_at.is_some());
+
+        log_with_level(&logger, Level::Info, "Tests", created_at, "Hello", Some(&exception), Some(&stack_trace));
+
+        assert_eq!(logger.0.into_inner().unwrap(), vec![
+            (String::from("Hello"), created_at),
+            (String::from("  Exception: Boom"), created_at),
+            (String::from("    at First()"), created_at),
+            (String::from("    at Second()"), created_at),
+        ]);
     }
 
     #[test]
