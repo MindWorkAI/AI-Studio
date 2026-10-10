@@ -71,6 +71,55 @@ public sealed record PluginConfigurationObject
     };
 
     /// <summary>
+    /// The tokenizer file as the configuration plugin names it, relative to the plugin directory.
+    /// Empty for objects without a tokenizer.
+    /// </summary>
+    /// <remarks>
+    /// The provider in the settings does not keep this path: it points to the copy the runtime stored
+    /// of the file. The synchronization of the tokenizers needs both, this path to know which file the
+    /// plugin wants, and the copy to know what is stored already.
+    /// </remarks>
+    public string ConfiguredTokenizerPath { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Reads the tokenizer path of a configuration object just parsed from a configuration plugin.
+    /// </summary>
+    private static string DescribeConfiguredTokenizerPath(IConfigurationObject configObject) => configObject switch
+    {
+        Settings.Provider provider => provider.TokenizerPath,
+        EmbeddingProvider embeddingProvider => embeddingProvider.TokenizerPath,
+
+        _ => string.Empty,
+    };
+
+    /// <summary>
+    /// Hands the synchronized tokenizer of the stored provider over to the provider just parsed from
+    /// the configuration plugin.
+    /// </summary>
+    /// <remarks>
+    /// The plugin names its tokenizer by a path inside the plugin, while the stored provider points to
+    /// the copy the runtime made of it, along with the fingerprint of that copy. Until the tokenizers
+    /// are synchronized, the settings have to keep pointing to that copy: the embedding service does
+    /// not wait for the plugins, and an indexing run in between built the embedding signature from an
+    /// empty fingerprint. It took that for another tokenizer and reset the index of every data source
+    /// of the provider, without asking. A new provider starts without a tokenizer until the
+    /// synchronization stores one.
+    /// </remarks>
+    /// <param name="parsedObject">The configuration object just parsed from the plugin.</param>
+    /// <param name="storedObject">The configuration object stored so far, or null for a new one.</param>
+    /// <returns>The parsed configuration object, carrying the tokenizer of the stored one.</returns>
+    private static ConfigurationBaseObject KeepSynchronizedTokenizer(ConfigurationBaseObject parsedObject, ConfigurationBaseObject? storedObject) => (parsedObject, storedObject) switch
+    {
+        (Settings.Provider provider, Settings.Provider storedProvider) => provider with { TokenizerPath = storedProvider.TokenizerPath },
+        (Settings.Provider provider, _) => provider with { TokenizerPath = string.Empty },
+
+        (EmbeddingProvider provider, EmbeddingProvider storedProvider) => provider with { TokenizerPath = storedProvider.TokenizerPath, TokenizerFingerprint = storedProvider.TokenizerFingerprint },
+        (EmbeddingProvider provider, _) => provider with { TokenizerPath = string.Empty, TokenizerFingerprint = string.Empty },
+
+        _ => parsedObject,
+    };
+
+    /// <summary>
     /// Parses Lua table entries into configuration objects of the specified type, populating the
     /// provided list with results.
     /// </summary>
@@ -163,6 +212,7 @@ public sealed record PluginConfigurationObject
                     Type = configObjectType,
                     Name = configObject.Name,
                     Endpoint = DescribeEndpoint(configObject),
+                    ConfiguredTokenizerPath = DescribeConfiguredTokenizerPath(configObject),
                 });
 
                 if (dryRun)
@@ -177,13 +227,14 @@ public sealed record PluginConfigurationObject
                     if (!MayReplaceConfigurationObject(existingObject, configPluginId))
                         continue;
 
-                    configObject = configObject with { Num = existingObject.Num };
+                    configObject = KeepSynchronizedTokenizer(configObject, existingObject) with { Num = existingObject.Num };
                     storedObjects[objectIndex] = (TClass)configObject;
                 }
                 
                 // Case: The object does not exist, we have to add it
                 else
                 {
+                    configObject = KeepSynchronizedTokenizer(configObject, null);
                     if (nextConfigObjectNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
                     {
                         // Case: Increment the next number was successful
@@ -207,8 +258,16 @@ public sealed record PluginConfigurationObject
         return true;
     }
 
+    /// <summary>
+    /// Stores the tokenizers the providers of a configuration plugin name, and points these providers
+    /// in the settings to the stored copies.
+    /// </summary>
+    /// <param name="configPluginId">The configuration plugin whose providers to synchronize.</param>
+    /// <param name="pluginPath">The directory of the plugin, which the tokenizer paths are relative to.</param>
+    /// <param name="configObjects">The configuration objects the plugin defined while it started. They carry the tokenizer path of each provider.</param>
+    /// <returns>True when a provider in the settings changed; otherwise false.</returns>
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Tokenizer synchronization needs indexed access to update enterprise-managed providers in place.")]
-    public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath)
+    public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath, IList<PluginConfigurationObject> configObjects)
     {
         var wasConfigurationChanged = false;
         var localSettingsManager = SettingsManagerAccess;
@@ -219,7 +278,11 @@ public sealed record PluginConfigurationObject
             if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
                 continue;
 
-            var syncedProvider = await SyncProviderTokenizerAsync(provider, pluginPath);
+            var configuredTokenizerPath = FindConfiguredTokenizerPath(PluginConfigurationObjectType.LLM_PROVIDER, provider.Id);
+            if (configuredTokenizerPath is null)
+                continue;
+
+            var syncedProvider = await SyncProviderTokenizerAsync(provider, configuredTokenizerPath, pluginPath);
             if (syncedProvider == provider)
                 continue;
 
@@ -233,7 +296,11 @@ public sealed record PluginConfigurationObject
             if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
                 continue;
 
-            var syncedProvider = await SyncEmbeddingTokenizerAsync(provider, pluginPath);
+            var configuredTokenizerPath = FindConfiguredTokenizerPath(PluginConfigurationObjectType.EMBEDDING_PROVIDER, provider.Id);
+            if (configuredTokenizerPath is null)
+                continue;
+
+            var syncedProvider = await SyncEmbeddingTokenizerAsync(provider, configuredTokenizerPath, pluginPath);
             if (syncedProvider == provider)
                 continue;
 
@@ -242,6 +309,15 @@ public sealed record PluginConfigurationObject
         }
 
         return wasConfigurationChanged;
+
+        //
+        // A provider the plugin did not define this time is left as it is: the clean-up after the
+        // start of all plugins removes it, together with its tokenizer.
+        //
+        string? FindConfiguredTokenizerPath(PluginConfigurationObjectType configObjectType, string providerId) => configObjects.FirstOrDefault(configObject =>
+            configObject.Type == configObjectType &&
+            configObject.ConfigPluginId == configPluginId &&
+            configObject.Id.ToString() == providerId)?.ConfiguredTokenizerPath;
     }
 
     /// <summary>
@@ -493,10 +569,10 @@ public sealed record PluginConfigurationObject
         return wasConfigurationChanged;
     }
 
-    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(Settings.Provider provider, string pluginPath)
+    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(Settings.Provider provider, string configuredTokenizerPath, string pluginPath)
     {
         var syncedTokenizerPath = await SyncTokenizerAsync(
-            provider.TokenizerPath,
+            configuredTokenizerPath,
             pluginPath,
             TokenizerModelId.ForProvider(provider),
             $"provider '{provider.InstanceName}'");
@@ -504,10 +580,10 @@ public sealed record PluginConfigurationObject
         return provider with { TokenizerPath = syncedTokenizerPath };
     }
 
-    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(EmbeddingProvider provider, string pluginPath)
+    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(EmbeddingProvider provider, string configuredTokenizerPath, string pluginPath)
     {
         var syncedTokenizerPath = await SyncTokenizerAsync(
-            provider.TokenizerPath,
+            configuredTokenizerPath,
             pluginPath,
             TokenizerModelId.ForEmbeddingProvider(provider),
             $"embedding provider '{provider.Name}'");
