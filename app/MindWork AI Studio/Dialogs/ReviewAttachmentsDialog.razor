@@ -9,7 +9,14 @@
                       Disabled="@this.IsZoneDisabled"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-            @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            @if (this.CanRemove)
+            {
+                @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name. You can remove any attachment using the trash can icon.")
+            }
+            else
+            {
+                @T("Here you can see all attached files. Files that can no longer be found (deleted, renamed, or moved) are marked with a warning icon and a strikethrough name.")
+            }
         </MudJustifiedText>
 
         @if (this.CanAttach)
@@ -66,11 +73,14 @@
                                                    OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
                                 </MudTooltip>
                             
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }
@@ -93,11 +103,14 @@
                                                Color="Color.Primary"
                                                Disabled="true"/>
                             
-                                <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
-                                </MudTooltip>
+                                @if (this.CanRemove)
+                                {
+                                    <MudTooltip Text="@T("Remove this attachment.")" Placement="Placement.Bottom">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       OnClick="@(() => this.DeleteAttachment(fileAttachment))"/>
+                                    </MudTooltip>
+                                }
                             </MudToolBar>
                         </MudStack>
                     }

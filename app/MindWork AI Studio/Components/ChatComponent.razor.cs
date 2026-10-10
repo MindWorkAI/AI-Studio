@@ -673,6 +673,24 @@ public partial class ChatComponent : MSGComponentBase
 
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
 
+    /// <summary>
+    /// The files attached to the messages of this chat which were already sent, each one once.
+    /// </summary>
+    /// <remarks>
+    /// Told apart by their path rather than as records: a file which changed in size between two
+    /// messages would otherwise appear twice. The draft is left out, because the paperclip right
+    /// beside the overview already shows it.
+    /// </remarks>
+    private HashSet<FileAttachment> SentFileAttachments => this.ChatThread?.Blocks
+        .Where(block => !block.HideFromUser && block.Content is not null)
+        .SelectMany(block => block.Content!.FileAttachments)
+        .DistinctBy(attachment => attachment.FilePath)
+        .ToHashSet() ?? [];
+
+    private bool HasSentFileAttachments => this.ChatThread?.Blocks.Any(block => !block.HideFromUser && block.Content?.FileAttachments.Count > 0) ?? false;
+
+    private async Task ShowSentFileAttachments() => await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.SentFileAttachments, canRemove: false);
+
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
