@@ -1,0 +1,42 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("This is the complete system prompt the AI receives with your next message. AI Studio assembles it from the parts listed here.")
+        </MudJustifiedText>
+
+        @* In the order in which the parts appear in the prompt below: *@
+        <MudSimpleTable Dense="@true" Class="mb-6">
+            <tbody>
+                <tr>
+                    <td>@T("Date and time")</td>
+                    <td>@this.DateTimeText</td>
+                </tr>
+                <tr>
+                    <td>@T("Chat template")</td>
+                    <td>@this.ChatTemplateText</td>
+                </tr>
+                <tr>
+                    <td>@T("Data from your data sources")</td>
+                    <td>@this.RetrievedDataText</td>
+                </tr>
+                <tr>
+                    <td>@T("Profile")</td>
+                    <td>@this.ProfileText</td>
+                </tr>
+                <tr>
+                    <td>@T("Tool instructions")</td>
+                    <td>@this.ToolNamesText</td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+
+        <TextInfoLines Label="@T("Complete system prompt")" MaxLines="20" Value="@this.SystemPrompt" ClipboardTooltipSubject="@T("the complete system prompt")"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
