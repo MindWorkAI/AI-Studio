@@ -473,15 +473,25 @@ fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
 }
 
 pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
-    let status = QDRANT_EDGE_STATUS.lock().unwrap();
-    let current_status = status.status;
-    let unavailable_reason = status.unavailable_reason.clone();
-    drop(status);
+    let (current_status, mut unavailable_reason) = {
+        let status = QDRANT_EDGE_STATUS.lock().unwrap();
+        (status.status, status.unavailable_reason.clone())
+    };
 
-    let database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
-    let database_info = database_guard
-        .as_ref()
-        .and_then(|database| database.info().ok());
+    //
+    // The info needs the lock of the database, which another request may hold for seconds while
+    // it loads a store, and it reads the stores directory. Both belong on the blocking pool, see
+    // run_qdrant_edge_request.
+    //
+    let database_info = match tokio::task::spawn_blocking(read_qdrant_edge_info).await {
+        Ok(database_info) => database_info,
+        Err(error) => {
+            let reason = format!("The Qdrant Edge worker failed: {error}");
+            error!(Source = "Qdrant Edge"; "Reading the Qdrant Edge info failed: {reason}");
+            unavailable_reason = Some(reason);
+            None
+        },
+    };
 
     let is_available = current_status == QdrantEdgeStatus::Available && database_info.is_some();
     Json(QdrantEdgeServiceInfo {
@@ -495,40 +505,48 @@ pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
     })
 }
 
+fn read_qdrant_edge_info() -> Option<QdrantEdgeInfo> {
+    QDRANT_EDGE_DATABASE
+        .lock()
+        .unwrap()
+        .as_ref()
+        .and_then(|database| database.info().ok())
+}
+
 pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
-    })
+    }).await
 }
 
 pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.insert_embedding(&request.store_name, request.points)
-    })
+    }).await
 }
 
 pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids)
-    })
+    }).await
 }
 
 pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.delete_embedding_by_file(&request.store_name, &request.file_path)
-    })
+    }).await
 }
 
 pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.optimize_store(&request.store_name)
-    })
+    }).await
 }
 
 pub async fn delete_qdrant_edge_store(_token: APIToken, Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+    run_qdrant_edge_request(move |database| {
         database.delete_store(&request.store_name)
-    })
+    }).await
 }
 
 pub fn start_qdrant_edge_database<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
@@ -567,6 +585,32 @@ pub fn stop_qdrant_edge_database() {
     }
 
     set_qdrant_edge_unavailable("Qdrant Edge was stopped.".to_string());
+}
+
+/// Runs one request against the database on the blocking pool.
+///
+/// A request waits for the lock of the database and may load a store from disk, which together
+/// can take seconds. On a runtime worker, that would hold up every other call of the app as well:
+/// they all share one HTTP/2 connection, and the task driving it may be waiting in the LIFO slot of
+/// exactly this worker, where no other worker can take it over.
+async fn run_qdrant_edge_request<T, F>(operation: F) -> Json<QdrantEdgeResponse<T>>
+where
+    T: Serialize + Send + 'static,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T> + Send + 'static,
+{
+    match tokio::task::spawn_blocking(move || execute_qdrant_edge_request(operation)).await {
+        Ok(response) => response,
+        Err(error) => {
+            let issue = format!("The Qdrant Edge worker failed: {error}");
+            error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+            Json(QdrantEdgeResponse {
+                success: false,
+                issue,
+                issue_code: "",
+                data: None,
+            })
+        },
+    }
 }
 
 fn execute_qdrant_edge_request<T, F>(operation: F) -> Json<QdrantEdgeResponse<T>>
@@ -1032,6 +1076,8 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::time::{Duration, Instant};
+
     use super::*;
     use qdrant_edge::WalOptions;
 
@@ -1252,6 +1298,63 @@ mod tests {
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn a_request_waiting_for_the_database_leaves_the_runtime_free() {
+        let request = optimize_qdrant_edge_store(
+            APIToken::from_hex_text("test"),
+            Json(OptimizeQdrantEdgeStoreRequest { store_name: SEARCH_STORE.to_string() }),
+        );
+
+        let (probe_duration, response) = probe_runtime_while_the_database_is_locked(request).await;
+        assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
+
+        // No database runs in the tests, so the request ends as soon as it gets the lock.
+        assert!(!response.success);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn the_info_waiting_for_the_database_leaves_the_runtime_free() {
+        let request = qdrant_edge_info(APIToken::from_hex_text("test"));
+
+        let (probe_duration, info) = probe_runtime_while_the_database_is_locked(request).await;
+        assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
+        assert!(!info.is_available);
+    }
+
+    /// How long the lock of the database stays held while a request waits for it.
+    const DATABASE_LOCK_DURATION: Duration = Duration::from_secs(1);
+
+    /// How long a probe may wait for the runtime. Far below the lock duration, so a request which
+    /// blocks the worker while it waits fails the test every time.
+    const PROBE_LIMIT: Duration = Duration::from_millis(200);
+
+    /// Starts the request while another thread holds the lock of the database, as if a store were
+    /// loading, and measures how long a probe waits for the runtime meanwhile. The tests run with a
+    /// single worker, so a request which blocks it while waiting also holds up the probe.
+    async fn probe_runtime_while_the_database_is_locked<F>(request: F) -> (Duration, F::Output)
+    where
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let (locked_sender, locked_receiver) = std::sync::mpsc::channel();
+        let lock_holder = std::thread::spawn(move || {
+            let database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
+            locked_sender.send(()).unwrap();
+            std::thread::sleep(DATABASE_LOCK_DURATION);
+            drop(database_guard);
+        });
+
+        locked_receiver.recv().unwrap();
+        let request = tokio::spawn(request);
+
+        let probe_started = Instant::now();
+        tokio::spawn(async {}).await.unwrap();
+        let probe_duration = probe_started.elapsed();
+
+        lock_holder.join().unwrap();
+        (probe_duration, request.await.unwrap())
     }
 
     const SEARCH_STORE: &str = "rag_6cc665a82b1e4d42bc748015b7b391ec";
