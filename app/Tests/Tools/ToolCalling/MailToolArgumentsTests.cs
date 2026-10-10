@@ -61,7 +61,7 @@ public sealed class MailToolArgumentsTests
     }
 
     [TestCase("""{}""")]
-    [TestCase("""{"from":null,"to":null,"after":null,"before":null,"is_unread":null,"is_flagged":null,"is_encrypted":null,"importance":null,"has_attachments":null,"folder":null}""")]
+    [TestCase("""{"from":null,"to":null,"after":null,"before":null,"is_unread":null,"is_flagged":null,"is_encrypted":null,"importance":null,"has_attachments":null,"folder":null,"special_folder":null}""")]
     public void ConditionsLeftOutHoldForEveryMail(string json)
     {
         var conditions = MailToolArguments.ReadConditions(Arguments(json), UserTimeZone());
@@ -70,7 +70,32 @@ public sealed class MailToolArgumentsTests
         {
             Assert.That(conditions.Filter.HasConditions, Is.False, "A strict schema makes the model pass null for every condition it does not want.");
             Assert.That(conditions.Folder, Is.Null);
+            Assert.That(conditions.SpecialFolder, Is.Null);
+            Assert.That(conditions.NamesFolder, Is.False);
         });
+    }
+
+    [TestCase("sent", MailFolderSpecialUse.SENT)]
+    [TestCase("drafts", MailFolderSpecialUse.DRAFTS)]
+    public void ASpecialFolderIsReadAsWhatTheFolderIsFor(string value, MailFolderSpecialUse expected)
+    {
+        var conditions = MailToolArguments.ReadConditions(Arguments($$"""{"special_folder":"{{value}}"}"""), UserTimeZone());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(conditions.SpecialFolder, Is.EqualTo(expected));
+            Assert.That(conditions.Folder, Is.Null);
+            Assert.That(conditions.NamesFolder, Is.True);
+            Assert.That(MailToolArguments.ToArgumentValue(expected), Is.EqualTo(value), "Results mark the mails with the value the argument takes.");
+        });
+    }
+
+    [Test]
+    public void AFolderAndASpecialFolderCannotBeCombined()
+    {
+        var message = Refusal(() => MailToolArguments.ReadConditions(Arguments("""{"folder":"Sent Items","special_folder":"sent"}"""), UserTimeZone()));
+
+        Assert.That(message, Does.Contain("'folder' and 'special_folder' cannot be combined").And.Contain("Leave out 'folder'").And.Contain("or leave out 'special_folder'"), "Two folders would match no mail at all.");
     }
 
     [TestCase("2026-09-30", "2026-09-01")]
@@ -88,6 +113,8 @@ public sealed class MailToolArgumentsTests
     [TestCase("""{"after":"last week"}""", "'after' must be a date")]
     [TestCase("""{"from":""}""", "'from' must not be empty")]
     [TestCase("""{"folder":"INBOX\nArchive"}""", "'folder' must not contain control characters")]
+    [TestCase("""{"special_folder":"inbox"}""", "'special_folder' must be one of sent, drafts")]
+    [TestCase("""{"special_folder":"Sent"}""", "'special_folder' must be one of sent, drafts")]
     public void AConditionWhichCannotBeMeantAsWrittenIsRefused(string json, string expectedMessage)
     {
         var message = Refusal(() => MailToolArguments.ReadConditions(Arguments(json), UserTimeZone()));
@@ -121,8 +148,8 @@ public sealed class MailToolArgumentsTests
     {
         var folders = new[] { Folder("INBOX"), Folder("INBOX/Projects"), Folder("Archive"), Folder("archive") };
 
-        var inbox = new MailConditions(new MailFilter(), "Inbox").ForMailbox(folders);
-        var archive = new MailConditions(new MailFilter(), "ARCHIVE").ForMailbox(folders);
+        var inbox = new MailConditions(new MailFilter(), "Inbox", null).ForMailbox(folders);
+        var archive = new MailConditions(new MailFilter(), "ARCHIVE", null).ForMailbox(folders);
 
         Assert.Multiple(() =>
         {
@@ -134,7 +161,7 @@ public sealed class MailToolArgumentsTests
     [Test]
     public void AFolderTheMailboxDoesNotHaveMatchesNoMail()
     {
-        var filter = new MailConditions(new MailFilter { IsUnread = true }, "Projects").ForMailbox([Folder("INBOX")]);
+        var filter = new MailConditions(new MailFilter { IsUnread = true }, "Projects", null).ForMailbox([Folder("INBOX")]);
 
         Assert.Multiple(() =>
         {
@@ -144,9 +171,32 @@ public sealed class MailToolArgumentsTests
     }
 
     [Test]
+    public void ASpecialFolderIsFoundByWhatTheServerMarksItAsWhateverItsName()
+    {
+        var folders = new[] { Folder("INBOX"), Folder("Gesendete Elemente", MailFolderSpecialUse.SENT), Folder("Sent"), Folder("Entwürfe", MailFolderSpecialUse.DRAFTS) };
+
+        var sent = new MailConditions(new MailFilter(), null, MailFolderSpecialUse.SENT).ForMailbox(folders);
+        var drafts = new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS).ForMailbox(folders);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sent.FolderPaths, Is.EqualTo(new[] { "Gesendete Elemente" }), "A folder merely named like the sent mails is not theirs.");
+            Assert.That(drafts.FolderPaths, Is.EqualTo(new[] { "Entwürfe" }));
+        });
+    }
+
+    [Test]
+    public void ASpecialFolderTheMailboxDoesNotHaveMatchesNoMail()
+    {
+        var filter = new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS).ForMailbox([Folder("INBOX"), Folder("Drafts")]);
+
+        Assert.That(filter.FolderPaths, Is.Empty, "A mailbox which left out its drafts, or whose server does not mark them, must not get the whole mailbox back.");
+    }
+
+    [Test]
     public void WithoutAFolderEveryFolderCounts()
     {
-        Assert.That(new MailConditions(new MailFilter(), null).ForMailbox([Folder("INBOX")]).FolderPaths, Is.Null);
+        Assert.That(new MailConditions(new MailFilter(), null, null).ForMailbox([Folder("INBOX")]).FolderPaths, Is.Null);
     }
 
     [Test]
@@ -161,14 +211,15 @@ public sealed class MailToolArgumentsTests
             {
                 MailToolArguments.MAILBOX_IDS_ARGUMENT, MailToolArguments.FROM_ARGUMENT, MailToolArguments.TO_ARGUMENT, MailToolArguments.AFTER_ARGUMENT, MailToolArguments.BEFORE_ARGUMENT,
                 MailToolArguments.IS_UNREAD_ARGUMENT, MailToolArguments.IS_FLAGGED_ARGUMENT, MailToolArguments.IS_ENCRYPTED_ARGUMENT, MailToolArguments.IMPORTANCE_ARGUMENT,
-                MailToolArguments.HAS_ATTACHMENTS_ARGUMENT, MailToolArguments.FOLDER_ARGUMENT,
+                MailToolArguments.HAS_ATTACHMENTS_ARGUMENT, MailToolArguments.FOLDER_ARGUMENT, MailToolArguments.SPECIAL_FOLDER_ARGUMENT,
             }));
+            Assert.That(properties[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]!["enum"]!.AsArray().Select(value => value?.GetValue<string>()), Is.EqualTo(new[] { "sent", "drafts" }));
             Assert.That(properties[MailToolArguments.MAILBOX_IDS_ARGUMENT]!["items"]!["enum"]!.AsArray().Select(id => id!.GetValue<string>()), Is.EqualTo(new[] { WORK.Id, PRIVATE.Id }));
             Assert.That(schema["required"]!.AsArray(), Is.Empty, "Every condition may be left out.");
         });
     }
 
-    private static MailFolderRecord Folder(string path) => new(path, MailFolderSpecialUse.NONE, 1, null, null, null, null, null);
+    private static MailFolderRecord Folder(string path, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, null, null, null, null, null);
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 

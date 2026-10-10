@@ -87,7 +87,9 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                                    - Write a query only to find mails by their content: self-contained, naming the subject, in the language the mails are most likely written in.
                                    - The passage of a mail is only an excerpt. Read the whole mail and its attachments with `read_mail` and its `mail_id` before you answer from it. When `read_mail` is not available, answer from the passages and say so.
                                    - Dates without an offset are read in the time zone of the user. The `conditions` of the result show how they were read.
-                                   - Each mailbox reports how far its index reaches: flagged mails are always included, all others only since `indexed_since`. When a mailbox reports issues, such as a first sync which is still running or a refused sign-in, its results may be incomplete, and your answer has to say so.
+                                   - The index holds the mails the user sent and the drafts of the user as well, unless a mailbox leaves them out. `special_folder` searches only the sent mails or only the drafts, however the server names their folders, and a result marks every mail in one of them with `special_folder`. For mails the user wrote to somebody, combine `special_folder` set to `sent` with `to`.
+                                   - A draft has not been sent. When the user asks you to improve a draft, read it with `read_mail` and propose the improved text in your answer. You cannot save or send it.
+                                   - Each mailbox reports how far its index reaches: flagged mails and drafts are always included, all others only since `indexed_since`. When a mailbox reports issues, such as a first sync which is still running or a refused sign-in, its results may be incomplete, and your answer has to say so.
                                    - Encrypted mails are often important, but AI Studio cannot read their content, only their header. Tell the user about an encrypted mail which may matter instead of guessing what it says.
                                    - To get a further page, name exactly one mailbox. Rephrase the query or narrow the conditions before you turn pages.
                                    - To tell how many mails meet the conditions, use `count_mails` instead of paging through them.
@@ -204,7 +206,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         // hears once for the whole search what was filtered:
         //
         var texts = new MailTexts();
-        var pendingMails = searches.Select(search => search.Page.Hits.Select(hit => PendingMail.Register(hit, search.Mailbox, texts)).ToList()).ToArray();
+        var pendingMails = searches.Select(search => search.Page.Hits.Select(hit => PendingMail.Register(hit, search.Mailbox, search.Coverage?.Folders ?? [], texts)).ToList()).ToArray();
         var listedFolders = searches.Select(search => RegisterListedFolders(search, texts)).ToArray();
         await texts.SanitizeAsync(guardService);
 
@@ -244,7 +246,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
         var mailboxResults = new JsonArray();
         for (var index = 0; index < searches.Length; index++)
-            mailboxResults.Add(DescribeMailbox(searches[index], mails[index], leftOutCounts[index], listedFolders[index]?.Select(folder => texts[folder]).ToList(), timeZone));
+            mailboxResults.Add(DescribeMailbox(searches[index], mails[index], leftOutCounts[index], request.Conditions.SpecialFolder, listedFolders[index]?.Select(folder => texts[folder]).ToList(), timeZone));
 
         // Only the mailboxes whose content reached the model count, the folders they list included:
         var contributingMailboxes = searches.Where((_, index) => mails[index].Count > 0 || listedFolders[index] is { Count: > 0 }).Select(search => search.Mailbox).ToList();
@@ -318,7 +320,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
         {
             var coverage = await retrievalService.GetCoverageAsync(providerConfidence, mailbox.Id, token);
             var filter = request.Conditions.ForMailbox(coverage?.Folders ?? []);
-            if (coverage is not null && request.Conditions.Folder is not null && filter.FolderPaths is { Count: 0 })
+            if (coverage is not null && request.Conditions.NamesFolder && filter.FolderPaths is { Count: 0 })
                 return new(mailbox, coverage, MailSearchPage.EMPTY, FolderIsMissing: true);
 
             var page = await retrievalService.SearchAsync(providerConfidence, mailbox.Id, request.Query, filter, request.Page, token);
@@ -339,7 +341,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     /// sentences of its own. What came from the mails, the listed folders included, went through
     /// the filter.
     /// </remarks>
-    private static JsonObject DescribeMailbox(MailboxSearch search, JsonArray mails, int leftOutCount, IReadOnlyList<string>? listedFolders, TimeZoneInfo timeZone)
+    private static JsonObject DescribeMailbox(MailboxSearch search, JsonArray mails, int leftOutCount, MailFolderSpecialUse? specialFolder, IReadOnlyList<string>? listedFolders, TimeZoneInfo timeZone)
     {
         var description = new JsonObject
         {
@@ -363,7 +365,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
         MailToolResults.DescribeCoverage(description, issues, search.Coverage, timeZone);
         if (search.FolderIsMissing && listedFolders is not null)
-            MailToolResults.DescribeMissingFolder(description, issues, listedFolders, search.Coverage?.Folders.Count ?? listedFolders.Count);
+            MailToolResults.DescribeMissingFolder(description, issues, specialFolder, listedFolders, search.Coverage?.Folders.Count ?? listedFolders.Count);
 
         if (leftOutCount > 0)
             issues.Add($"{leftOutCount} further mails of this page were left out to keep the result within its size limit. Search this mailbox with narrower conditions or a narrower query to see them.");
@@ -385,15 +387,18 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
     /// <param name="Mailbox">The mailbox.</param>
     /// <param name="Coverage">How far its index reaches, or null when that cannot be read.</param>
     /// <param name="Page">The mails found.</param>
-    /// <param name="FolderIsMissing">Whether the mailbox has no folder with the path the model gave, so nothing was searched.</param>
+    /// <param name="FolderIsMissing">Whether the mailbox has none of the folders the model named, so nothing was searched.</param>
     private sealed record MailboxSearch(DataSourceMailbox Mailbox, MailboxCoverage? Coverage, MailSearchPage Page, bool FolderIsMissing);
 
     /// <summary>
     /// A mail found, with its texts waiting to be filtered.
     /// </summary>
-    private sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, IReadOnlyList<int> Attachments, int? Passage)
+    /// <remarks>
+    /// Whether the mail lies among the sent mails or the drafts is AI Studio's own value, so it needs no filtering.
+    /// </remarks>
+    private sealed record PendingMail(DataSourceMailbox Mailbox, MailSummary Summary, int Subject, int From, int Sender, IReadOnlyList<int> Recipients, int MoreRecipients, IReadOnlyList<int> Folders, string? SpecialFolder, IReadOnlyList<int> Attachments, int? Passage)
     {
-        public static PendingMail Register(MailSearchHit hit, DataSourceMailbox mailbox, MailTexts texts)
+        public static PendingMail Register(MailSearchHit hit, DataSourceMailbox mailbox, IReadOnlyList<MailFolderRecord> mailboxFolders, MailTexts texts)
         {
             var summary = hit.Summary;
             var sender = MailToolResults.FindSender(summary.Addresses);
@@ -408,6 +413,7 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
                 recipients.Take(MAX_LISTED_RECIPIENTS).Select(recipient => texts.Add(MailToolResults.FormatAddress(recipient), mailbox)).ToList(),
                 Math.Max(0, recipients.Count - MAX_LISTED_RECIPIENTS),
                 summary.FolderPaths.Select(folder => texts.Add(folder, mailbox)).ToList(),
+                MailToolResults.GetSpecialFolder(summary.FolderPaths, mailboxFolders),
                 summary.AttachmentNames.Select(name => texts.Add(name, mailbox)).ToList(),
                 hit.Passage is null ? null : texts.Add(hit.Passage.Shorten(MAX_PASSAGE_CHARACTERS), mailbox));
         }
@@ -430,6 +436,9 @@ public sealed class SearchMailsTool(SettingsManager settingsManager, MailboxRetr
 
             if (this.MoreRecipients > 0)
                 description["more_recipients"] = this.MoreRecipients;
+
+            if (this.SpecialFolder is { } specialFolder)
+                description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT] = specialFolder;
 
             if (this.Summary.EncryptionKind is not MailEncryptionKind.NONE)
                 description["encryption"] = MailToolResults.GetEncryptionName(this.Summary.EncryptionKind);
