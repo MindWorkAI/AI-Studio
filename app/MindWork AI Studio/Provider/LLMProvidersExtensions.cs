@@ -546,6 +546,7 @@ public static class LLMProvidersExtensions
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
                 case Host.VLLM:
+                case Host.LLMMAN:
                     return true;
             }
         }
