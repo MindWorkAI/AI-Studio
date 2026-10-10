@@ -11,4 +11,4 @@ internal sealed record VisualBriefingContractIssue(
     VisualBriefingFailureCode Code,
     string Issue,
     VisualBriefingValidationRule Rule = VisualBriefingValidationRule.NONE,
-    VisualBriefingStructuredResponseDiagnostic? Diagnostic = null);
+    StructuredResponseDiagnostic? Diagnostic = null);

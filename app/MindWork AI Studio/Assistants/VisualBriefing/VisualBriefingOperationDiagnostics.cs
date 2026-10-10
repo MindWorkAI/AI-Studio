@@ -60,7 +60,7 @@ public sealed class VisualBriefingOperationDiagnostics
     /// <summary>
     /// Gets or sets the safe structured-response diagnostic.
     /// </summary>
-    public VisualBriefingStructuredResponseDiagnostic? StructuredResponse { get; set; }
+    public StructuredResponseDiagnostic? StructuredResponse { get; set; }
 
     /// <summary>
     /// Gets or sets the operation start time.

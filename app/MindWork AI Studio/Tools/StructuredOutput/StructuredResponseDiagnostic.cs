@@ -1,19 +1,19 @@
-namespace AIStudio.Assistants.VisualBriefing;
+namespace AIStudio.Tools;
 
 /// <summary>
 /// Stores a safe structural diagnostic without model output or user content.
 /// </summary>
-public sealed class VisualBriefingStructuredResponseDiagnostic
+public sealed class StructuredResponseDiagnostic
 {
     /// <summary>
     /// Gets or sets the stable structural issue kind.
     /// </summary>
-    public VisualBriefingStructuredResponseIssueKind IssueKind { get; set; }
+    public StructuredResponseIssueKind IssueKind { get; set; }
 
     /// <summary>
     /// Gets or sets the envelope containing the selected candidate.
     /// </summary>
-    public VisualBriefingStructuredResponseEnvelope Envelope { get; set; }
+    public StructuredResponseEnvelope Envelope { get; set; }
 
     /// <summary>
     /// Gets or sets the one-based candidate index.
