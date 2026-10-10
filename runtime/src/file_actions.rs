@@ -123,26 +123,25 @@ pub async fn select_directory(
     Query(query): Query<SelectDirectoryQuery>,
     previous_directory: Option<Json<PreviousDirectory>>,
 ) -> Json<DirectorySelectionResponse> {
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
-            return Json(DirectorySelectionResponse {
-                user_cancelled: true,
-                selected_directory: String::from(""),
-            });
-        }
+    let dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&query.title));
+
+    let Some(mut dialog) = dialog else {
+        error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
+        return Json(DirectorySelectionResponse {
+            user_cancelled: true,
+            selected_directory: String::from(""),
+        });
     };
 
-    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(&query.title);
     if let Some(previous) = previous_directory {
         dialog = dialog.set_directory(previous.path.clone());
     }
 
-    drop(main_window_lock);
-
-    let folder_path = dialog.blocking_pick_folder();
+    let folder_path = await_dialog(|answer| dialog.pick_folder(answer)).await;
     match folder_path {
         Some(path) => {
             match path.into_path() {
@@ -203,7 +202,7 @@ pub async fn select_file(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_path = file_dialog.blocking_pick_file();
+    let file_path = await_dialog(|answer| file_dialog.pick_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -262,7 +261,7 @@ pub async fn select_files(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_paths = file_dialog.blocking_pick_files();
+    let file_paths = await_dialog(|answer| file_dialog.pick_files(answer)).await;
     match file_paths {
         Some(paths) => {
             let converted: Vec<String> = paths.into_iter().filter_map(|p| p.into_path().ok()).map(|pb| pb.to_string_lossy().to_string()).collect();
@@ -314,7 +313,7 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
     }
 
     // Displays the file dialogue box and select the file:
-    let file_path = file_dialog.blocking_save_file();
+    let file_path = await_dialog(|answer| file_dialog.save_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -882,6 +881,26 @@ fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &O
     }
 }
 
+/// Shows a file dialog and waits for the user's answer without holding up the runtime.
+///
+/// A dialog stays open until the user answers it, which can take minutes. The blocking variants of
+/// the dialog API would hold a runtime worker that long, and with it every other call of the app,
+/// because they all share one HTTP/2 connection. The plugin shows the dialog on the main thread and
+/// hands the answer to a callback, so this function awaits that callback instead.
+async fn await_dialog<T: Send + 'static>(show: impl FnOnce(Box<dyn FnOnce(Option<T>) + Send>)) -> Option<T> {
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    show(Box::new(move |answer| {
+        // The receiver is only gone when the request was dropped, and then nobody waits for the answer:
+        let _ = sender.send(answer);
+    }));
+
+    receiver.await.unwrap_or_else(|_| {
+        // The plugin drops the callback without calling it when it cannot reach the main thread:
+        error!(Source = "Tauri"; "The file dialog ended without an answer.");
+        None
+    })
+}
+
 fn split_save_file_path(file_path: &str) -> (Option<PathBuf>, Option<String>) {
     let path = Path::new(file_path);
     let directory = path
@@ -1046,6 +1065,21 @@ fn create_file_manager_command(target: &FileManagerTarget) -> Command {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[tokio::test]
+    async fn a_dialog_answer_arrives_through_its_callback() {
+        let answer = await_dialog(|answer| {
+            std::thread::spawn(move || answer(Some("Quarterly briefing.html")));
+        }).await;
+
+        assert_eq!(answer, Some("Quarterly briefing.html"));
+    }
+
+    #[tokio::test]
+    async fn a_dialog_without_an_answer_counts_as_cancelled() {
+        let answer = await_dialog::<String>(drop).await;
+        assert_eq!(answer, None);
+    }
 
     #[test]
     fn save_file_options_accept_the_previous_file_contract() {
