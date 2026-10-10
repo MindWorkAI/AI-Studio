@@ -271,6 +271,7 @@ public sealed record PluginConfigurationObject
     {
         var wasConfigurationChanged = false;
         var localSettingsManager = SettingsManagerAccess;
+        ITokenizerStorage tokenizerStorage = RustService;
 
         for (var i = 0; i < localSettingsManager.ConfigurationData.Providers.Count; i++)
         {
@@ -282,7 +283,7 @@ public sealed record PluginConfigurationObject
             if (configuredTokenizerPath is null)
                 continue;
 
-            var syncedProvider = await SyncProviderTokenizerAsync(provider, configuredTokenizerPath, pluginPath);
+            var syncedProvider = await SyncProviderTokenizerAsync(tokenizerStorage, provider, configuredTokenizerPath, pluginPath);
             if (syncedProvider == provider)
                 continue;
 
@@ -300,7 +301,7 @@ public sealed record PluginConfigurationObject
             if (configuredTokenizerPath is null)
                 continue;
 
-            var syncedProvider = await SyncEmbeddingTokenizerAsync(provider, configuredTokenizerPath, pluginPath);
+            var syncedProvider = await SyncEmbeddingTokenizerAsync(tokenizerStorage, provider, configuredTokenizerPath, pluginPath);
             if (syncedProvider == provider)
                 continue;
 
@@ -569,9 +570,10 @@ public sealed record PluginConfigurationObject
         return wasConfigurationChanged;
     }
 
-    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(Settings.Provider provider, string configuredTokenizerPath, string pluginPath)
+    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(ITokenizerStorage tokenizerStorage, Settings.Provider provider, string configuredTokenizerPath, string pluginPath)
     {
         var syncedTokenizerPath = await SyncTokenizerAsync(
+            tokenizerStorage,
             configuredTokenizerPath,
             pluginPath,
             TokenizerModelId.ForProvider(provider),
@@ -580,9 +582,10 @@ public sealed record PluginConfigurationObject
         return provider with { TokenizerPath = syncedTokenizerPath };
     }
 
-    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(EmbeddingProvider provider, string configuredTokenizerPath, string pluginPath)
+    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(ITokenizerStorage tokenizerStorage, EmbeddingProvider provider, string configuredTokenizerPath, string pluginPath)
     {
         var syncedTokenizerPath = await SyncTokenizerAsync(
+            tokenizerStorage,
             configuredTokenizerPath,
             pluginPath,
             TokenizerModelId.ForEmbeddingProvider(provider),
@@ -601,11 +604,21 @@ public sealed record PluginConfigurationObject
         return provider with { TokenizerPath = syncedTokenizerPath, TokenizerFingerprint = syncedTokenizerFingerprint };
     }
 
-    private static async Task<string> SyncTokenizerAsync(string configuredTokenizerPath, string pluginPath, string modelId, string logName)
+    /// <summary>
+    /// Stores the tokenizer a configuration plugin names for a model, or deletes what is stored for
+    /// the model when the plugin names none or an unusable one.
+    /// </summary>
+    /// <param name="tokenizerStorage">Where tokenizers are checked and stored, the runtime outside of tests.</param>
+    /// <param name="configuredTokenizerPath">The tokenizer path as the plugin names it, relative to the plugin directory.</param>
+    /// <param name="pluginPath">The directory of the plugin. The tokenizer has to lie inside it.</param>
+    /// <param name="modelId">The model the tokenizer belongs to, as TokenizerModelId builds it.</param>
+    /// <param name="logName">How the log names the provider, e.g., "provider 'Name'".</param>
+    /// <returns>The path of the stored copy, or an empty string when no tokenizer is stored.</returns>
+    internal static async Task<string> SyncTokenizerAsync(ITokenizerStorage tokenizerStorage, string configuredTokenizerPath, string pluginPath, string modelId, string logName)
     {
         if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
         {
-            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -615,7 +628,7 @@ public sealed record PluginConfigurationObject
         var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
         if (resolvedPath is null)
         {
-            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -623,10 +636,10 @@ public sealed record PluginConfigurationObject
             return string.Empty;
         }
 
-        var validateResult = await RustService.ValidateTokenizer(resolvedPath);
+        var validateResult = await tokenizerStorage.ValidateTokenizer(resolvedPath);
         if (!validateResult.Success)
         {
-            var deleteResult = await RustService.DeleteTokenizer(modelId);
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -634,7 +647,7 @@ public sealed record PluginConfigurationObject
             return string.Empty;
         }
 
-        var storeResult = await RustService.StoreTokenizer(modelId, resolvedPath);
+        var storeResult = await tokenizerStorage.StoreTokenizer(modelId, resolvedPath);
         if (!storeResult.Success)
         {
             LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);
