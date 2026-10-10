@@ -4267,6 +4267,7 @@ dependencies = [
  "cbc 0.2.1",
  "cfg-if",
  "chardetng",
+ "chrono",
  "dbus-secret-service",
  "dbus-secret-service-keyring-store",
  "dirs",
