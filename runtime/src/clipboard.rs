@@ -5,7 +5,6 @@ use axum::Json;
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
 use serde::Serialize;
-use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// The process-wide clipboard instance. On Linux, retaining this instance keeps the app's
@@ -76,7 +75,7 @@ fn release_clipboard<B>(clipboard: &mut Option<B>) -> bool {
 }
 
 /// Sets the clipboard text to the provided encrypted text.
-pub async fn set_clipboard(_token: APIToken, encrypted_text: String) -> Json<SetClipboardResponse> {
+pub async fn set_clipboard(encrypted_text: String) -> Json<SetClipboardResponse> {
     //
     // The clipboard backend of the operating system may take a moment to answer, a failed write is
     // retried with a fresh backend, and the lock waits for a write still running. None of this

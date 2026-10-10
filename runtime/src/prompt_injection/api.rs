@@ -9,7 +9,6 @@
 //! pages, each with its own content, title, description, and authors. Those go through the
 //! batch endpoint, which filters them in one request instead of one round trip per field.
 
-use crate::api_token::APIToken;
 use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
@@ -46,7 +45,6 @@ pub struct SanitizeBatchResponse {
 }
 
 pub async fn sanitize(
-    _token: APIToken,
     Json(request): Json<SanitizeRequest>,
 ) -> Result<Json<SanitizeResponse>, (StatusCode, String)> {
     //
@@ -73,7 +71,6 @@ pub async fn sanitize(
 }
 
 pub async fn sanitize_batch(
-    _token: APIToken,
     Json(request): Json<SanitizeBatchRequest>,
 ) -> Result<Json<SanitizeBatchResponse>, (StatusCode, String)> {
     //

@@ -27,10 +27,3 @@ where
         }
     }
 }
-
-/// The API token error types.
-#[derive(Debug)]
-pub enum APITokenError {
-    Missing,
-    Invalid,
-}

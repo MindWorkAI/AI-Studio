@@ -5,7 +5,6 @@ use file_format::FileFormat;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
-use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
 use crate::file_data::is_executable_content;
 
@@ -119,7 +118,6 @@ pub struct PreviousFile {
 
 /// Let the user select a directory.
 pub async fn select_directory(
-    _token: APIToken,
     Query(query): Query<SelectDirectoryQuery>,
     previous_directory: Option<Json<PreviousDirectory>>,
 ) -> Json<DirectorySelectionResponse> {
@@ -174,7 +172,6 @@ pub async fn select_directory(
 
 /// Let the user select a file.
 pub async fn select_file(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FileSelectionResponse> {
     // Create a new file dialog builder:
@@ -233,7 +230,6 @@ pub async fn select_file(
 
 /// Let the user select some files.
 pub async fn select_files(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FilesSelectionResponse> {
     // Create a new file dialog builder:
@@ -282,7 +278,7 @@ pub async fn select_files(
     }
 }
 
-pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
+pub async fn save_file(payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
     // Create a new file dialog builder:
     let file_dialog = MAIN_WINDOW
         .lock()
@@ -343,7 +339,6 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
 }
 
 pub async fn open_path_in_file_manager(
-    _token: APIToken,
     payload: Json<OpenPathOptions>,
 ) -> Json<OpenPathResponse> {
     let requested_path = PathBuf::from(payload.path.trim());
@@ -417,7 +412,6 @@ async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
 /// The page is best effort and never decides whether this succeeded: a viewer which cannot be told
 /// a page still shows the document, which is what the user asked for by clicking a source.
 pub async fn open_document(
-    _token: APIToken,
     payload: Json<OpenDocumentOptions>,
 ) -> Json<OpenDocumentResponse> {
     let requested_path = PathBuf::from(payload.path.trim());

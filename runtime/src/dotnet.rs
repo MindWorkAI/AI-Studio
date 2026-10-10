@@ -8,7 +8,6 @@ use once_cell::sync::Lazy;
 use tauri::{Manager, Url};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
-use crate::api_token::APIToken;
 use crate::runtime_api_token::API_TOKEN;
 use crate::app_window::change_location_to;
 use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
@@ -109,7 +108,7 @@ fn describe_termination(payload: &TerminatedPayload) -> String {
 
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
-pub async fn dotnet_port(_token: APIToken) -> String {
+pub async fn dotnet_port() -> String {
     let dotnet_server_port = *DOTNET_SERVER_PORT;
     format!("{dotnet_server_port}")
 }
@@ -287,7 +286,7 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
-pub async fn dotnet_ready(_token: APIToken) {
+pub async fn dotnet_ready() {
 
     // We create a manual scope for the lock to be released as soon as possible.
     // This is necessary because we cannot await any function while the lock is

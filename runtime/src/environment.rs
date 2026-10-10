@@ -1,4 +1,3 @@
-use crate::api_token::APIToken;
 use axum::http::StatusCode;
 use axum::Json;
 use log::{debug, error, info, warn};
@@ -58,7 +57,7 @@ static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 static INSTALLATION_KIND: OnceLock<InstallationKind> = OnceLock::new();
 
 /// Returns the config directory.
-pub async fn get_config_directory(_token: APIToken) -> String {
+pub async fn get_config_directory() -> String {
     match CONFIG_DIRECTORY.get() {
         Some(config_directory) => config_directory.clone(),
         None => String::from(""),
@@ -66,7 +65,7 @@ pub async fn get_config_directory(_token: APIToken) -> String {
 }
 
 /// Returns the data directory.
-pub async fn get_data_directory(_token: APIToken) -> String {
+pub async fn get_data_directory() -> String {
     match DATA_DIRECTORY.get() {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
@@ -74,7 +73,7 @@ pub async fn get_data_directory(_token: APIToken) -> String {
 }
 
 /// Returns the current user's username.
-pub async fn read_user_name(_token: APIToken) -> String {
+pub async fn read_user_name() -> String {
     whoami::username().unwrap_or_else(|e| {
         error!("Failed to read the current OS username: {e}.");
         String::new()
@@ -129,7 +128,7 @@ pub struct RuntimeInfo {
     pub installation_kind: InstallationKind,
 }
 
-pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
+pub async fn get_runtime_info() -> Json<RuntimeInfo> {
     Json(RuntimeInfo {
         working_directory: env::current_dir()
             .map(|path| path.to_string_lossy().into_owned())
@@ -545,7 +544,7 @@ fn detect_user_language() -> (String, LanguageDetectionSource) {
     )
 }
 
-pub async fn read_user_language(_token: APIToken) -> String {
+pub async fn read_user_language() -> String {
     USER_LANGUAGE
         .get_or_init(|| {
             let (user_language, source) = detect_user_language();
@@ -642,13 +641,13 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> Result<String, (StatusCode, String)> {
+pub async fn read_enterprise_env_config_encryption_secret() -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
     read_enterprise_sources(|| resolve_effective_enterprise_secret_source().encryption_secret).await
 }
 
 /// Returns all enterprise configurations from the effective source.
-pub async fn read_enterprise_configs(_token: APIToken) -> Result<Json<Vec<EnterpriseConfig>>, (StatusCode, String)> {
+pub async fn read_enterprise_configs() -> Result<Json<Vec<EnterpriseConfig>>, (StatusCode, String)> {
     info!("Trying to read the effective enterprise configurations.");
     read_enterprise_sources(|| Json(resolve_effective_enterprise_config_source().configs)).await
 }

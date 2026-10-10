@@ -94,9 +94,9 @@ fn create_router() -> Router {
 
 /// Requires a valid API token for every route of the given router.
 ///
-/// The handlers take an `APIToken` argument as well. This layer is the safety net: a new handler
-/// which forgets that argument would otherwise be open to every process on this machine, without
-/// any warning.
+/// This layer is the only place where the runtime API checks the token, so the handlers take no
+/// `APIToken` argument. Asking each handler for it left a route open to every process on this
+/// machine as soon as one handler forgot it.
 ///
 /// `route_layer` protects only the routes registered before it, so call this function after the
 /// last route. Unknown paths still answer 404 without checking the token.
