@@ -87,18 +87,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
 
-        //
-        // The provider-native web search is held to the same confidence the local web search tool
-        // asks for: to the user it is the same act, whoever performs the search.
-        //
-        var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
-        var isWebSearchAllowed = toolRegistry?.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) is true &&
-                                 ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
-        IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
-            ? [ ProviderTools.WEB_SEARCH ]
-            : [];
-        
-        
         // Parse the API parameters:
         var additionalApiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
@@ -220,7 +208,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 chatModel,
                 baseInput,
                 additionalApiParameters,
-                providerTools,
                 runnableTools,
                 (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
 
@@ -243,9 +230,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             yield break;
         }
 
-        if (runnableTools.Count > 0)
-            providerTools = [];
-        
         //
         // Create the request: either for the Responses API or the Chat Completion API
         //
@@ -277,10 +261,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 
                 // We do not want to store any data on OpenAI's servers:
                 Store = false,
-                
-                // Tools we want to use:
-                Tools = providerTools,
-                
+
                 // Additional API parameters:
                 AdditionalApiParameters = additionalApiParameters
                 

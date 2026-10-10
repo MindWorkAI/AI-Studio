@@ -96,7 +96,7 @@ public sealed class ResponsesToolCallingAdapterTests
     private static ResponsesToolCallingAdapter Adapter(params string[][] rounds)
     {
         var nextRound = 0;
-        return new(new Model("gpt-5", null), [], new Dictionary<string, object>(), [], [], (_, token) => Lines(rounds[nextRound++], token));
+        return new(new Model("gpt-5", null), [], new Dictionary<string, object>(), [], (_, token) => Lines(rounds[nextRound++], token));
     }
 
     private static async IAsyncEnumerable<ServerSentEvent> Lines(string[] data, [EnumeratorCancellation] CancellationToken token = default)
