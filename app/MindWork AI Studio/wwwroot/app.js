@@ -56,6 +56,10 @@ window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }
 
+window.setDocumentLanguage = function (ietfTag) {
+    document.documentElement.lang = ietfTag
+}
+
 window.formatChatInputMarkdown = function (inputId, formatType) {
     let input = document.getElementById(inputId)
     if (input && input.tagName !== 'TEXTAREA' && input.tagName !== 'INPUT')

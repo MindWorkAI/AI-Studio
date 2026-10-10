@@ -60,6 +60,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
@@ -153,7 +156,31 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //
+        // After a reload of the page, the plugins are already running and do not report
+        // again. The document would keep the language of the HTML template then:
+        //
+        if (firstRender)
+            await this.SetDocumentLanguageAsync(await this.SettingsManager.GetActiveLanguagePlugin());
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     #endregion
+
+    /// <summary>
+    /// Tells the browser in which language the user interface is written. The browser needs this, e.g.,
+    /// to hyphenate texts by the rules of that language, and screen readers need it to pronounce them.
+    /// </summary>
+    /// <param name="language">The active language plugin.</param>
+    private async Task SetDocumentLanguageAsync(ILanguagePlugin language)
+    {
+        // Without a language plugin, the user interface shows the English texts of the code:
+        var ietfTag = string.IsNullOrWhiteSpace(language.IETFTag) ? "en" : language.IETFTag;
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "setDocumentLanguage", ietfTag);
+    }
 
     private void ShowSettingsWriteProtectionWarning()
     {
@@ -352,6 +379,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    await this.SetDocumentLanguageAsync(this.Lang);
                     this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
                     this.LoadEmbeddingItem();
