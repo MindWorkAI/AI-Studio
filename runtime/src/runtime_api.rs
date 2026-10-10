@@ -184,10 +184,58 @@ pub(crate) mod test_support {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
     use axum::body::Body;
     use axum::http::{Request, StatusCode};
+    use regex::Regex;
+    use tokio::time::timeout;
     use tower::ServiceExt;
     use crate::runtime_api_token::API_TOKEN;
+
+    /// How long a route may take to refuse a request without the token. The refusal needs no work,
+    /// so a route which takes longer has passed the request on to its handler. In a test, some
+    /// handlers then never answer, for example one which waits for the main window, and others
+    /// panic because the app around them is missing.
+    const REFUSAL_LIMIT: Duration = Duration::from_secs(1);
+
+    /// One route which `create_router` registers.
+    struct RegisteredRoute {
+        method: String,
+        path: String,
+    }
+
+    /// Reads every route from the source of `create_router`, so that a new route is checked
+    /// without anybody having to add it to a test.
+    fn registered_routes() -> Vec<RegisteredRoute> {
+        let source = include_str!("runtime_api.rs");
+        let start = source.find("fn create_router()").unwrap();
+        let end = start + source[start..].find("\n}").unwrap();
+        let create_router_source = &source[start..end];
+
+        let route_pattern = Regex::new(r#"\.route\("([^"]+)",\s*(get|post|put|patch|delete)\("#).unwrap();
+        let path_parameter_pattern = Regex::new(r"\{[^}]+\}").unwrap();
+        let routes: Vec<RegisteredRoute> = route_pattern
+            .captures_iter(create_router_source)
+            .map(|route| RegisteredRoute {
+                method: route[2].to_uppercase(),
+                path: path_parameter_pattern.replace_all(&route[1], "x").into_owned(),
+            })
+            .collect();
+
+        //
+        // A route which the pattern cannot read would silently drop out of the check, for example
+        // one whose methods are not a plain get, post, put, patch, or delete call. Extend the
+        // pattern then.
+        //
+        assert_eq!(
+            routes.len(),
+            create_router_source.matches(".route(").count(),
+            "The test could not read every route of create_router.",
+        );
+
+        assert!(!routes.is_empty(), "The test found no route in create_router.");
+        routes
+    }
 
     /// Sends one request through the router, without a server, and returns the status of the response.
     async fn send(router: Router, request: Request<Body>) -> StatusCode {
@@ -209,7 +257,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn require_api_token_protects_a_handler_which_takes_no_token() {
+    async fn require_api_token_lets_only_the_valid_token_through() {
         let router = require_api_token(Router::new().route("/probe", get(|| async {})));
 
         assert_eq!(send(router.clone(), request("GET", "/probe", None, "")).await, StatusCode::UNAUTHORIZED);
@@ -218,11 +266,25 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn prepare_image_requires_the_api_token() {
-        assert_eq!(send(create_router(), request("POST", "/image/prepare", None, "{}")).await, StatusCode::UNAUTHORIZED);
+    async fn every_route_requires_the_api_token() {
+        let mut unprotected_routes = Vec::new();
+        for route in registered_routes() {
+            // A task of its own turns a panicking handler into a finding instead of ending the test.
+            let answer = tokio::spawn(send(create_router(), request(&route.method, &route.path, None, "")));
+            match timeout(REFUSAL_LIMIT, answer).await {
+                Ok(Ok(StatusCode::UNAUTHORIZED)) => {},
+                Ok(Ok(status)) => unprotected_routes.push(format!("{} {} answered {status}", route.method, route.path)),
+                Ok(Err(_)) => unprotected_routes.push(format!("{} {} panicked in its handler", route.method, route.path)),
+                Err(_) => unprotected_routes.push(format!("{} {} did not refuse within {REFUSAL_LIMIT:?}", route.method, route.path)),
+            }
+        }
 
-        // With the token, the request gets through to the handler and fails on its incomplete
-        // body, before any file is touched.
+        assert!(unprotected_routes.is_empty(), "These routes answer without the API token: {unprotected_routes:#?}");
+    }
+
+    #[tokio::test]
+    async fn a_valid_token_gets_through_to_the_handler() {
+        // The handler fails on the incomplete body, before it touches any file.
         let with_token = request("POST", "/image/prepare", Some(API_TOKEN.to_hex_text()), "{}");
         assert_eq!(send(create_router(), with_token).await, StatusCode::UNPROCESSABLE_ENTITY);
     }
