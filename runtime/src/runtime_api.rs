@@ -1,11 +1,13 @@
 use log::info;
 use once_cell::sync::Lazy;
 use axum::extract::DefaultBodyLimit;
+use axum::middleware;
 use axum::routing::{delete, get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;
 use std::sync::Once;
+use crate::api_token::APIToken;
 use crate::runtime_certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use crate::environment::is_dev;
 use crate::network::get_available_port;
@@ -28,13 +30,9 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
     }
 });
 
-/// Starts the runtime API server. The server is used to communicate with the .NET server and
-/// to provide additional functionality to the Tauri app.
-pub fn start_runtime_api() {
-    let api_port = *API_SERVER_PORT;
-    info!("Try to start the API server on 'http://localhost:{api_port}'...");
-
-    let app = Router::new()
+/// Creates the router with every route of the runtime API, each of which requires the API token.
+fn create_router() -> Router {
+    let router = Router::new()
         .route("/system/dotnet/port", get(crate::dotnet::dotnet_port))
         .route("/system/dotnet/ready", get(crate::dotnet::dotnet_ready))
         .route("/system/qdrant-edge/info", get(crate::qdrant_edge_database::qdrant_edge_info))
@@ -90,6 +88,29 @@ pub fn start_runtime_api() {
         .route("/shortcuts/validate", post(crate::app_window::validate_shortcut))
         .route("/shortcuts/suspend", post(crate::app_window::suspend_shortcuts))
         .route("/shortcuts/resume", post(crate::app_window::resume_shortcuts));
+
+    require_api_token(router)
+}
+
+/// Requires a valid API token for every route of the given router.
+///
+/// The handlers take an `APIToken` argument as well. This layer is the safety net: a new handler
+/// which forgets that argument would otherwise be open to every process on this machine, without
+/// any warning.
+///
+/// `route_layer` protects only the routes registered before it, so call this function after the
+/// last route. Unknown paths still answer 404 without checking the token.
+fn require_api_token(router: Router) -> Router {
+    router.route_layer(middleware::from_extractor::<APIToken>())
+}
+
+/// Starts the runtime API server. The server is used to communicate with the .NET server and
+/// to provide additional functionality to the Tauri app.
+pub fn start_runtime_api() {
+    let api_port = *API_SERVER_PORT;
+    info!("Try to start the API server on 'http://localhost:{api_port}'...");
+
+    let app = create_router();
 
     tauri::async_runtime::spawn(async move {
         install_rustls_crypto_provider();
@@ -157,5 +178,52 @@ pub(crate) mod test_support {
 
         assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
         response
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Request, StatusCode};
+    use tower::ServiceExt;
+    use crate::runtime_api_token::API_TOKEN;
+
+    /// Sends one request through the router, without a server, and returns the status of the response.
+    async fn send(router: Router, request: Request<Body>) -> StatusCode {
+        router.oneshot(request).await.unwrap().status()
+    }
+
+    /// Builds a request with the given token header, or without one.
+    fn request(method: &str, uri: &str, token: Option<&str>, body: &'static str) -> Request<Body> {
+        let mut builder = Request::builder()
+            .method(method)
+            .uri(uri)
+            .header("content-type", "application/json");
+
+        if let Some(token) = token {
+            builder = builder.header("token", token);
+        }
+
+        builder.body(Body::from(body)).unwrap()
+    }
+
+    #[tokio::test]
+    async fn require_api_token_protects_a_handler_which_takes_no_token() {
+        let router = require_api_token(Router::new().route("/probe", get(|| async {})));
+
+        assert_eq!(send(router.clone(), request("GET", "/probe", None, "")).await, StatusCode::UNAUTHORIZED);
+        assert_eq!(send(router.clone(), request("GET", "/probe", Some("0123abcd"), "")).await, StatusCode::UNAUTHORIZED);
+        assert_eq!(send(router, request("GET", "/probe", Some(API_TOKEN.to_hex_text()), "")).await, StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn prepare_image_requires_the_api_token() {
+        assert_eq!(send(create_router(), request("POST", "/image/prepare", None, "{}")).await, StatusCode::UNAUTHORIZED);
+
+        // With the token, the request gets through to the handler and fails on its incomplete
+        // body, before any file is touched.
+        let with_token = request("POST", "/image/prepare", Some(API_TOKEN.to_hex_text()), "{}");
+        assert_eq!(send(create_router(), with_token).await, StatusCode::UNPROCESSABLE_ENTITY);
     }
 }
