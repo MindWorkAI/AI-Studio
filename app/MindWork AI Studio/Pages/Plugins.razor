@@ -79,9 +79,20 @@
                 </MudTd>
                 <MudTd>
                     <MudStack Spacing="0">
-                        <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
-                            @context.Name
-                        </MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
+                                @context.Name
+                            </MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary ms-1">
+                                v@(context.Version)
+                            </MudText>
+                            @if (context is { IsInternal: false })
+                            {
+                                <MudTooltip Text="@T("Plugin information")">
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(context))"/>
+                                </MudTooltip>
+                            }
+                        </MudStack>
                         <MudText Typo="Typo.body1">
                             @context.Description
                         </MudText>
@@ -125,7 +136,7 @@
                                     </MudTooltip>
                                 }
                             }
-                            
+
                             @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
                             {
                                 <MudTooltip Text="@T("Edit assistant plugin")">

@@ -485,6 +485,17 @@ public partial class Plugins : MSGComponentBase
         await dialogReference.Result;
     }
 
+    private async Task ShowPluginInfoAsync(IPluginMetadata plugin)
+    {
+        var dialogParameters = new DialogParameters<PluginInfoDialog>
+        {
+            { x => x.Plugin, plugin },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<PluginInfoDialog>(string.Format(this.T("Plugin information: {0}"), plugin.Name), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+    }
+
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
 
     private PluginAssistants? TryGetAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == pluginId);
