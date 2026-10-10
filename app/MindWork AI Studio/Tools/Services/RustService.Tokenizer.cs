@@ -3,7 +3,7 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed partial class RustService
+public sealed partial class RustService : ITokenizerStorage
 {
     internal const int MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH = 200_000;
 
