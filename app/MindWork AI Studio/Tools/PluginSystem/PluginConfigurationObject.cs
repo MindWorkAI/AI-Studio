@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
@@ -572,49 +573,54 @@ public sealed record PluginConfigurationObject
 
     private static async Task<Settings.Provider> SyncProviderTokenizerAsync(ITokenizerStorage tokenizerStorage, Settings.Provider provider, string configuredTokenizerPath, string pluginPath)
     {
-        var syncedTokenizerPath = await SyncTokenizerAsync(
+        var syncedTokenizer = await SyncTokenizerAsync(
             tokenizerStorage,
             configuredTokenizerPath,
+            provider.TokenizerPath,
             pluginPath,
             TokenizerModelId.ForProvider(provider),
             $"provider '{provider.InstanceName}'");
 
-        return provider with { TokenizerPath = syncedTokenizerPath };
+        return provider with { TokenizerPath = syncedTokenizer.Path };
     }
 
     private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(ITokenizerStorage tokenizerStorage, EmbeddingProvider provider, string configuredTokenizerPath, string pluginPath)
     {
-        var syncedTokenizerPath = await SyncTokenizerAsync(
+        var syncedTokenizer = await SyncTokenizerAsync(
             tokenizerStorage,
             configuredTokenizerPath,
+            provider.TokenizerPath,
             pluginPath,
             TokenizerModelId.ForEmbeddingProvider(provider),
             $"embedding provider '{provider.Name}'");
 
         //
         // The embedding signature is built from the tokenizer's content, so the fingerprint travels
-        // with the provider. An unreadable file yields nothing, and writing that would look like
-        // another tokenizer and cost every data source of this provider its index -- so in that case
-        // the previous fingerprint is kept rather than cleared.
+        // with the provider. When neither the stored copy nor the file in the plugin could be read,
+        // there is nothing to build it from, and writing nothing would look like another tokenizer
+        // and cost every data source of this provider its index -- so in that case the previous
+        // fingerprint is kept rather than cleared.
         //
-        var syncedTokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(syncedTokenizerPath);
-        if (string.IsNullOrEmpty(syncedTokenizerFingerprint) && !string.IsNullOrWhiteSpace(syncedTokenizerPath))
+        var syncedTokenizerFingerprint = syncedTokenizer.Fingerprint;
+        if (string.IsNullOrEmpty(syncedTokenizerFingerprint) && !string.IsNullOrWhiteSpace(syncedTokenizer.Path))
             syncedTokenizerFingerprint = provider.TokenizerFingerprint;
 
-        return provider with { TokenizerPath = syncedTokenizerPath, TokenizerFingerprint = syncedTokenizerFingerprint };
+        return provider with { TokenizerPath = syncedTokenizer.Path, TokenizerFingerprint = syncedTokenizerFingerprint };
     }
 
     /// <summary>
     /// Stores the tokenizer a configuration plugin names for a model, or deletes what is stored for
-    /// the model when the plugin names none or an unusable one.
+    /// the model when the plugin names none or an unusable one. A stored copy with the same content
+    /// as the file in the plugin is kept as it is.
     /// </summary>
     /// <param name="tokenizerStorage">Where tokenizers are checked and stored, the runtime outside of tests.</param>
     /// <param name="configuredTokenizerPath">The tokenizer path as the plugin names it, relative to the plugin directory.</param>
+    /// <param name="storedTokenizerPath">The copy the provider points to so far, or an empty string when it has none.</param>
     /// <param name="pluginPath">The directory of the plugin. The tokenizer has to lie inside it.</param>
     /// <param name="modelId">The model the tokenizer belongs to, as TokenizerModelId builds it.</param>
     /// <param name="logName">How the log names the provider, e.g., "provider 'Name'".</param>
-    /// <returns>The path of the stored copy, or an empty string when no tokenizer is stored.</returns>
-    internal static async Task<string> SyncTokenizerAsync(ITokenizerStorage tokenizerStorage, string configuredTokenizerPath, string pluginPath, string modelId, string logName)
+    /// <returns>The stored copy and the fingerprint of its content, or StoredTokenizer.NONE when no tokenizer is stored.</returns>
+    internal static async Task<StoredTokenizer> SyncTokenizerAsync(ITokenizerStorage tokenizerStorage, string configuredTokenizerPath, string storedTokenizerPath, string pluginPath, string modelId, string logName)
     {
         if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
         {
@@ -622,7 +628,7 @@ public sealed record PluginConfigurationObject
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
 
-            return string.Empty;
+            return StoredTokenizer.NONE;
         }
 
         var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
@@ -633,7 +639,27 @@ public sealed record PluginConfigurationObject
                 LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
 
             LOG.LogWarning("The configured tokenizer path '{TokenizerPath}' for {LogName} is invalid. The tokenizer path must stay within the plugin directory '{PluginPath}'.", configuredTokenizerPath, logName, pluginPath);
-            return string.Empty;
+            return StoredTokenizer.NONE;
+        }
+
+        //
+        // Checking a tokenizer means the runtime builds it from the whole file, which takes most of
+        // a second for a common one, and every start of the plugin did that again for every
+        // tokenizer. A stored copy with the same content as the file in the plugin passed that check
+        // when it was stored, and storing it again would change nothing. Comparing the content also
+        // notices a copy which is gone or was changed since, and two files which cannot be read are
+        // not the same tokenizer.
+        //
+        var comparingStartedAt = Stopwatch.GetTimestamp();
+        var sourceFingerprint = await TokenizerFingerprint.ForFileAsync(resolvedPath);
+        if (!string.IsNullOrEmpty(sourceFingerprint) && !string.IsNullOrWhiteSpace(storedTokenizerPath))
+        {
+            var storedFingerprint = await TokenizerFingerprint.ForFileAsync(storedTokenizerPath);
+            if (storedFingerprint == sourceFingerprint)
+            {
+                LOG.LogInformation("The tokenizer for {LogName} is unchanged; kept the stored copy (checked in {Milliseconds:F0} ms).", logName, Stopwatch.GetElapsedTime(comparingStartedAt).TotalMilliseconds);
+                return new StoredTokenizer(storedTokenizerPath, storedFingerprint);
+            }
         }
 
         var validateResult = await tokenizerStorage.ValidateTokenizer(resolvedPath);
@@ -644,17 +670,25 @@ public sealed record PluginConfigurationObject
                 LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
 
             LOG.LogWarning("The configured tokenizer for {LogName} is invalid. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, validateResult.Message);
-            return string.Empty;
+            return StoredTokenizer.NONE;
         }
 
         var storeResult = await tokenizerStorage.StoreTokenizer(modelId, resolvedPath);
         if (!storeResult.Success)
         {
             LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);
-            return string.Empty;
+            return StoredTokenizer.NONE;
         }
 
-        return storeResult.StoredPath;
+        //
+        // The runtime copies the file as it is, so when the copy cannot be read right afterward, the
+        // file in the plugin still tells what is in it:
+        //
+        var storedTokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(storeResult.StoredPath);
+        if (string.IsNullOrEmpty(storedTokenizerFingerprint))
+            storedTokenizerFingerprint = sourceFingerprint;
+
+        return new StoredTokenizer(storeResult.StoredPath, storedTokenizerFingerprint);
     }
 
     private static string? ResolvePluginTokenizerPath(string configuredTokenizerPath, string pluginPath)
