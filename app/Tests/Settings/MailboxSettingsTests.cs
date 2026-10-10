@@ -42,6 +42,7 @@ public sealed class MailboxSettingsTests
         AuthMethod = MailboxAuthMethod.PASSWORD,
         Username = "someone@example.org",
         RootFolder = "INBOX/Projects",
+        IncludeSentAndDrafts = false,
         MaxAge = MailboxMaxAge.LAST_24_MONTHS,
         IndexAttachments = false,
         MaxAttachmentSizeMegabytes = 25,
@@ -126,6 +127,14 @@ public sealed class MailboxSettingsTests
             Assert.That(settingsManager.SettingsWriteBlockReason, Is.EqualTo(SettingsWriteBlockReason.NONE), "The settings without mailboxes were blocked from being written.");
             Assert.That(loaded?.Mailboxes, Is.Empty, "Mailboxes appeared out of nowhere.");
         });
+    }
+
+    [Test]
+    public void AMailboxStoredBeforeSentMailsAndDraftsWereChoosableIncludesThem()
+    {
+        // So the next sync of a mailbox limited to a root folder fetches what it was missing:
+        var mailbox = JsonSerializer.Deserialize<DataSourceMailbox>("""{"RootFolder": "INBOX"}""", SettingsManager.JSON_OPTIONS);
+        Assert.That(mailbox.IncludeSentAndDrafts, Is.True);
     }
 
     [Test]

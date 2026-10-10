@@ -87,6 +87,32 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void AFolderGroupTellsWhetherItHoldsTheSentMailsOrTheDrafts()
+    {
+        var coverage = new MailboxCoverage(null, null, null, null, [Folder("INBOX", 120, 4), Folder("Sent Items", 40, 0, MailFolderSpecialUse.SENT), Folder("Drafts", 3, 0, MailFolderSpecialUse.DRAFTS)]);
+
+        var sent = CountMailsTool.DescribeGroup(new MailCountGroup("Sent Items", string.Empty, 40), "Sent Items", MailCountGrouping.FOLDER, coverage);
+        var drafts = CountMailsTool.DescribeGroup(new MailCountGroup("Drafts", string.Empty, 3), "Drafts", MailCountGrouping.FOLDER, coverage);
+        var inbox = CountMailsTool.DescribeGroup(new MailCountGroup("INBOX", string.Empty, 12), "INBOX", MailCountGrouping.FOLDER, coverage);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sent[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]?.GetValue<string>(), Is.EqualTo("sent"));
+            Assert.That(sent["server_message_count"]?.GetValue<long>(), Is.EqualTo(40), "The numbers of the server stay.");
+            Assert.That(drafts[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]?.GetValue<string>(), Is.EqualTo("drafts"));
+            Assert.That(inbox.ContainsKey(MailToolArguments.SPECIAL_FOLDER_ARGUMENT), Is.False);
+        });
+    }
+
+    [Test]
+    public void TheSpecialFolderIsCountedLikeTheSearchFindsIt()
+    {
+        var request = CountMailsTool.ReadRequest(Arguments("""{"special_folder":"sent","to":"alice"}"""), [WORK], TimeZoneInfo.Utc);
+
+        Assert.That(request.Conditions.SpecialFolder, Is.EqualTo(MailFolderSpecialUse.SENT));
+    }
+
+    [Test]
     public void TheFunctionOffersExactlyTheMailboxesGiven()
     {
         var function = CountMailsTool.DescribeMailboxes(this.Tool().GetDefinition().Function, [WORK, PRIVATE]);
@@ -126,9 +152,9 @@ public sealed class CountMailsToolTests : ToolRegistryTestBase
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool counts with:
-    private CountMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, NullLogger<CountMailsTool>.Instance);
+    private CountMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, null!, NullLogger<CountMailsTool>.Instance);
 
-    private static MailFolderRecord Folder(string path, long? messageCount, long? unseenCount) => new(path, MailFolderSpecialUse.NONE, 1, 100, null, messageCount, unseenCount, null);
+    private static MailFolderRecord Folder(string path, long? messageCount, long? unseenCount, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, 100, null, messageCount, unseenCount, null);
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 

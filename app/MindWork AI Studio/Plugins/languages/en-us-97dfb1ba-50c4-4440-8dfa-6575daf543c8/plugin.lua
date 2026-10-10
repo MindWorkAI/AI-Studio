@@ -6597,9 +6597,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1317840926"] = "Ch
 -- Selected folder
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1319932168"] = "Selected folder"
 
--- AI Studio indexes the newest mails first. Flagged mails are always indexed, however old they are.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1324262823"] = "AI Studio indexes the newest mails first. Flagged mails are always indexed, however old they are."
-
 -- The server answered: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T14046206"] = "The server answered: {0}"
 
@@ -6656,9 +6653,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Te
 
 -- Your organization does not allow less strict settings than the ones offered here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Your organization does not allow less strict settings than the ones offered here."
-
--- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2256114537"] = "Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder."
 
 -- Period
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2267317284"] = "Period"
@@ -6738,6 +6732,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242233038"] = "Ho
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242265813"] = "Please enter 0 or a positive overlap length."
 
+-- Include sent mails and drafts?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3344811555"] = "Include sent mails and drafts?"
+
+-- No, only index the selected folder and its subfolders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3354365210"] = "No, only index the selected folder and its subfolders"
+
 -- Encryption
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3358927676"] = "Encryption"
 
@@ -6756,6 +6756,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3804576966"] = "Po
 -- Not tested yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T417002657"] = "Not tested yet."
 
+-- Yes, also index the sent mails and the drafts
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4209023132"] = "Yes, also index the sent mails and the drafts"
+
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T470340825"] = "Username"
 
@@ -6764,6 +6767,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T529871858"] = "In 
 
 -- Where a chat may send data after reading mails
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T591689002"] = "Where a chat may send data after reading mails"
+
+-- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T692644454"] = "Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder."
+
+-- AI Studio indexes the newest mails first. Flagged mails and drafts are always indexed, however old they are.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T739381248"] = "AI Studio indexes the newest mails first. Flagged mails and drafts are always indexed, however old they are."
 
 -- Password
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T750979128"] = "Password"

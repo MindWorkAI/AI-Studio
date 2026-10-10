@@ -252,7 +252,7 @@
                 @T("Folder")
             </MudText>
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.")
+                @T("Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {
@@ -283,6 +283,11 @@
                     @this.folderIssue
                 </MudAlert>
             }
+            @if (this.HasRootFolder)
+            {
+                @* Not part of the source: switching it only adds or removes folders, so it stays open once the mails are prepared. *@
+                <MudTextSwitch @bind-Value="@this.dataIncludeSentAndDrafts" Color="Color.Primary" Label="@T("Include sent mails and drafts?")" LabelOn="@T("Yes, also index the sent mails and the drafts")" LabelOff="@T("No, only index the selected folder and its subfolders")"/>
+            }
 
             <MudSelect T="MailboxMaxAge" @bind-Value="@this.dataMaxAge" Text="@this.dataMaxAge.GetName()" Label="@T("Period")" Class="mb-1 mt-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DateRange">
                 @foreach (var maxAge in ConfigurationSelectDataFactory.GetMailboxMaxAgeData())
@@ -293,7 +298,7 @@
                 }
             </MudSelect>
             <MudJustifiedText Typo="Typo.body2" Class="mb-6">
-                @T("AI Studio indexes the newest mails first. Flagged mails are always indexed, however old they are.")
+                @T("AI Studio indexes the newest mails first. Flagged mails and drafts are always indexed, however old they are.")
             </MudJustifiedText>
 
             <MudTextSwitch @bind-Value="@this.dataIndexAttachments" Color="Color.Primary" Label="@T("Index the text of attachments?")" LabelOn="@T("Yes, index the text of attached documents")" LabelOff="@T("No, only list the names of attachments")"/>

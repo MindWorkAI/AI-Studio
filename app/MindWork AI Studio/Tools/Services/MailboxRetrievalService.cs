@@ -381,7 +381,8 @@ public sealed class MailboxRetrievalService(SettingsManager settingsManager, Dat
                 continue;
 
             var inReplyToMailId = await indexStore.FindMailByMessageIdAsync(mailbox.Id, mail.InReplyTo, token);
-            return new(mailbox, summaries[0], mail, inReplyToMailId == mailId ? null : inReplyToMailId);
+            var folders = await indexStore.GetMailFoldersAsync(mailbox.Id, token);
+            return new(mailbox, summaries[0], mail, inReplyToMailId == mailId ? null : inReplyToMailId, folders);
         }
 
         return null;

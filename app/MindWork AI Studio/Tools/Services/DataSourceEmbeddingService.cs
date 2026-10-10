@@ -408,6 +408,32 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             : Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Syncs a mailbox soon, because a tool is about to read what may have changed on its server since the last sync.
+    /// </summary>
+    /// <remarks>
+    /// Runs like a sync at the interval: only while the user lets the data sources refresh on their
+    /// own, and never despite a refused sign-in. A sync which is running already gets one follow-up,
+    /// since it may have looked at the folder in question before the change. One which is queued
+    /// already stays the only one.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <returns>True when a sync is on its way; false when the user switched the automatic refresh off, the mailbox is not configured, or it waits for the user to sign in again.</returns>
+    public async Task<bool> RequestMailboxSyncAsync(string mailboxId)
+    {
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
+            return false;
+
+        if (!this.TryGetConfiguredIndexedSource(mailboxId, out var dataSource) || dataSource is not DataSourceMailbox || !this.IsSupportedIndexedSource(dataSource))
+            return false;
+
+        if (this.statuses.TryGetValue(mailboxId, out var status) && IsWaitingForSignIn(status))
+            return false;
+
+        await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.TOOL_REQUEST);
+        return true;
+    }
+
     private async Task QueueDataSourceAsync(IDataSourceBase dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
     {
         if (!this.IsSupportedIndexedSource(dataSource))

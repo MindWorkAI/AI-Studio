@@ -6597,9 +6597,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1317840926"] = "W�
 -- Selected folder
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1319932168"] = "Ausgewählter Ordner"
 
--- AI Studio indexes the newest mails first. Flagged mails are always indexed, however old they are.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T1324262823"] = "AI Studio indexiert zuerst die neuesten E-Mails. Gekennzeichnete E-Mails werden unabhängig von ihrem Alter immer indexiert."
-
 -- The server answered: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T14046206"] = "Der Server hat geantwortet: {0}"
 
@@ -6656,9 +6653,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2226748448"] = "Te
 
 -- Your organization does not allow less strict settings than the ones offered here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2255463475"] = "Ihre Organisation erlaubt keine weniger strengen Einstellungen als die hier angebotenen."
-
--- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2256114537"] = "Wählen Sie den Ordner aus, den AI Studio einschließlich seiner Unterordner indexiert. Die KI liest nur aus diesem Ordner. Wenn Sie keinen Ordner auswählen, indexiert AI Studio das gesamte Postfach – mit Ausnahme des Papierkorbs und des Spam-Ordners."
 
 -- Period
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T2267317284"] = "Zeitraum"
@@ -6738,6 +6732,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242233038"] = "Wi
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3242265813"] = "Bitte geben Sie 0 oder eine positive Überlappungslänge ein."
 
+-- Include sent mails and drafts?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3344811555"] = "Gesendete E-Mails und Entwürfe einbeziehen?"
+
+-- No, only index the selected folder and its subfolders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3354365210"] = "Nein, nur den ausgewählten Ordner und seine Unterordner indexieren"
+
 -- Encryption
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3358927676"] = "Verschlüsselung"
 
@@ -6756,6 +6756,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T3804576966"] = "Po
 -- Not tested yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T417002657"] = "Noch nicht getestet."
 
+-- Yes, also index the sent mails and the drafts
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T4209023132"] = "Ja, auch die gesendeten E-Mails und die Entwürfe indexieren"
+
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T470340825"] = "Benutzername"
 
@@ -6764,6 +6767,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T529871858"] = "Dam
 
 -- Where a chat may send data after reading mails
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T591689002"] = "Wohin ein Chat Daten senden darf, nachdem er E-Mails gelesen hat"
+
+-- Select the folder AI Studio indexes, together with its subfolders. The AI only reads from this folder, and from your sent mails and drafts when you include them below. Without a folder, AI Studio indexes the whole mailbox, apart from the trash and the junk folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T692644454"] = "Wählen Sie den Ordner aus, den AI Studio einschließlich seiner Unterordner indexiert. Die KI liest nur aus diesem Ordner und, wenn Sie sie unten einbeziehen, aus Ihren gesendeten E-Mails und Entwürfen. Wenn Sie keinen Ordner auswählen, indexiert AI Studio das gesamte Postfach – mit Ausnahme des Papierkorbs und des Spam-Ordners."
+
+-- AI Studio indexes the newest mails first. Flagged mails and drafts are always indexed, however old they are.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T739381248"] = "AI Studio indexiert zuerst die neuesten E-Mails. Gekennzeichnete E-Mails und Entwürfe werden unabhängig von ihrem Alter immer indexiert."
 
 -- Password
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEMAILBOXDIALOG::T750979128"] = "Passwort"

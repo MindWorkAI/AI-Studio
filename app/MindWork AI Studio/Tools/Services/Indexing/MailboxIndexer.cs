@@ -219,7 +219,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
 
         try
         {
-            var selection = MailFolderSelection.Select(await connector.GetFoldersAsync(token), mailbox.RootFolder);
+            var selection = MailFolderSelection.Select(await connector.GetFoldersAsync(token), mailbox.RootFolder, mailbox.IncludeSentAndDrafts);
             if (!selection.RootFolderFound)
             {
                 //
@@ -385,7 +385,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             var serverState = await connector.OpenFolderAsync(folder.FullName, token);
             var storedFolder = storedFolders.GetValueOrDefault(folder.FullName);
             var storedLocations = await context.IndexStore.GetMailLocationsAsync(mailbox.Id, folder.FullName, token);
-            var indexedUids = await connector.SearchIndexedMailsAsync(receivedSince, token);
+            var indexedUids = await connector.SearchIndexedMailsAsync(MailFolderSelection.GetReceivedSince(folder, receivedSince), token);
             var plan = MailFolderSyncPlan.Create(storedFolder, storedLocations, serverState, indexedUids);
 
             //
@@ -498,7 +498,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     /// </remarks>
     private static async Task<PlannedRemovals> CollectRemovalsAsync(IndexedRunContext context, DataSourceMailbox mailbox, IReadOnlyList<PlannedFolder> plannedFolders, IEnumerable<string> storedFolderPaths, CancellationToken token)
     {
-        // Folders which the server no longer lists, or which no longer lie below the root folder:
+        // Folders which the server no longer lists, or which the sync no longer selects, e.g. since the mailbox no longer includes sent mails and drafts:
         var plannedPaths = plannedFolders.Select(folder => folder.Folder.FullName).ToHashSet(StringComparer.Ordinal);
         var goneFolderPaths = storedFolderPaths.Where(path => !plannedPaths.Contains(path)).ToList();
 

@@ -92,6 +92,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string dataUsername = string.Empty;
     private string dataPassword = string.Empty;
     private string dataRootFolder = string.Empty;
+    private bool dataIncludeSentAndDrafts = true;
     private MailboxMaxAge dataMaxAge = MailboxMaxAge.LAST_12_MONTHS;
     private bool dataIndexAttachments = true;
     private int dataMaxAttachmentSizeMegabytes = 10;
@@ -169,6 +170,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataTransportSecurity = this.DataSource.TransportSecurity;
             this.dataUsername = this.DataSource.Username;
             this.dataRootFolder = this.DataSource.RootFolder;
+            this.dataIncludeSentAndDrafts = this.DataSource.IncludeSentAndDrafts;
             this.dataMaxAge = this.DataSource.MaxAge;
             this.dataIndexAttachments = this.DataSource.IndexAttachments;
             this.dataMaxAttachmentSizeMegabytes = this.DataSource.MaxAttachmentSizeMegabytes;
@@ -337,6 +339,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
     private string RootFolderText => string.IsNullOrEmpty(this.dataRootFolder) ? T("Whole mailbox") : this.dataRootFolder;
 
+    // Without a root folder, the sent mails and the drafts belong to the whole mailbox anyway:
+    private bool HasRootFolder => !string.IsNullOrEmpty(this.dataRootFolder);
+
     private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.GetName();
 
     private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
@@ -403,6 +408,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         Username = this.CanChangeSource ? this.dataUsername.Trim() : this.DataSource.Username,
         RootFolder = this.CanChangeSource ? this.dataRootFolder : this.DataSource.RootFolder,
 
+        IncludeSentAndDrafts = this.dataIncludeSentAndDrafts,
         Port = this.dataPort,
         TransportSecurity = this.dataTransportSecurity,
         AuthMethod = MailboxAuthMethod.PASSWORD,
