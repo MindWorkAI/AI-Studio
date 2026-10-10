@@ -113,3 +113,51 @@ fn install_rustls_crypto_provider() {
         let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
     });
 }
+
+#[cfg(test)]
+pub(crate) mod test_support {
+    use std::sync::Mutex;
+    use std::time::{Duration, Instant};
+
+    /// How long the lock stays held while the request waits for it.
+    const LOCK_DURATION: Duration = Duration::from_secs(1);
+
+    /// How long the probe may wait for the runtime. Far below the lock duration, so a request which
+    /// blocks the worker while it waits fails the test every time.
+    const PROBE_LIMIT: Duration = Duration::from_millis(200);
+
+    /// Starts a request while another thread holds the given lock, as if a long operation were
+    /// running, and checks that a probe still gets through the runtime meanwhile. Returns the
+    /// response once the lock is free again.
+    ///
+    /// Call it from a test with a single worker, `#[tokio::test(flavor = "multi_thread",
+    /// worker_threads = 1)]`. A request which blocks that worker while it waits then holds up the
+    /// probe, just as in the app it holds up the one HTTP/2 connection which all calls share.
+    pub(crate) async fn assert_runtime_stays_free<T, F>(lock: &'static Mutex<T>, request: F) -> F::Output
+    where
+        T: Send + 'static,
+        F: Future + Send + 'static,
+        F::Output: Send + 'static,
+    {
+        let (locked_sender, locked_receiver) = std::sync::mpsc::channel();
+        let lock_holder = std::thread::spawn(move || {
+            let guard = lock.lock().unwrap();
+            locked_sender.send(()).unwrap();
+            std::thread::sleep(LOCK_DURATION);
+            drop(guard);
+        });
+
+        locked_receiver.recv().unwrap();
+        let request = tokio::spawn(request);
+
+        let probe_started = Instant::now();
+        tokio::spawn(async {}).await.unwrap();
+        let probe_duration = probe_started.elapsed();
+
+        lock_holder.join().unwrap();
+        let response = request.await.unwrap();
+
+        assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
+        response
+    }
+}

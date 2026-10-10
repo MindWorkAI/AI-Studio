@@ -1076,9 +1076,8 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::time::{Duration, Instant};
-
     use super::*;
+    use crate::runtime_api::test_support::assert_runtime_stays_free;
     use qdrant_edge::WalOptions;
 
     #[test]
@@ -1307,8 +1306,7 @@ mod tests {
             Json(OptimizeQdrantEdgeStoreRequest { store_name: SEARCH_STORE.to_string() }),
         );
 
-        let (probe_duration, response) = probe_runtime_while_the_database_is_locked(request).await;
-        assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
+        let response = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
 
         // No database runs in the tests, so the request ends as soon as it gets the lock.
         assert!(!response.success);
@@ -1318,43 +1316,8 @@ mod tests {
     async fn the_info_waiting_for_the_database_leaves_the_runtime_free() {
         let request = qdrant_edge_info(APIToken::from_hex_text("test"));
 
-        let (probe_duration, info) = probe_runtime_while_the_database_is_locked(request).await;
-        assert!(probe_duration < PROBE_LIMIT, "The probe waited {probe_duration:?} for the runtime.");
+        let info = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
         assert!(!info.is_available);
-    }
-
-    /// How long the lock of the database stays held while a request waits for it.
-    const DATABASE_LOCK_DURATION: Duration = Duration::from_secs(1);
-
-    /// How long a probe may wait for the runtime. Far below the lock duration, so a request which
-    /// blocks the worker while it waits fails the test every time.
-    const PROBE_LIMIT: Duration = Duration::from_millis(200);
-
-    /// Starts the request while another thread holds the lock of the database, as if a store were
-    /// loading, and measures how long a probe waits for the runtime meanwhile. The tests run with a
-    /// single worker, so a request which blocks it while waiting also holds up the probe.
-    async fn probe_runtime_while_the_database_is_locked<F>(request: F) -> (Duration, F::Output)
-    where
-        F: Future + Send + 'static,
-        F::Output: Send + 'static,
-    {
-        let (locked_sender, locked_receiver) = std::sync::mpsc::channel();
-        let lock_holder = std::thread::spawn(move || {
-            let database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
-            locked_sender.send(()).unwrap();
-            std::thread::sleep(DATABASE_LOCK_DURATION);
-            drop(database_guard);
-        });
-
-        locked_receiver.recv().unwrap();
-        let request = tokio::spawn(request);
-
-        let probe_started = Instant::now();
-        tokio::spawn(async {}).await.unwrap();
-        let probe_duration = probe_started.elapsed();
-
-        lock_holder.join().unwrap();
-        (probe_duration, request.await.unwrap())
     }
 
     const SEARCH_STORE: &str = "rag_6cc665a82b1e4d42bc748015b7b391ec";

@@ -524,7 +524,7 @@ pub async fn extract_data(
                 // whole file, and a failure here means we cannot answer the request at all.
                 //
                 let tokenizer = if query.include_token_count {
-                    match crate::tokenizer::get_tokenizer(&query.tokenizer_path) {
+                    match crate::tokenizer::get_tokenizer_off_worker(query.tokenizer_path.clone()).await {
                         Ok(tokenizer) => Some(tokenizer),
                         Err(e) => {
                             let error = ExtractionError::new(ExtractionErrorCode::InvalidRequest, format!("The tokenizer could not be loaded: {e}"));
