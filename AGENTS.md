@@ -130,6 +130,25 @@ Key modules:
 - `pandoc.rs` - Integration with Pandoc for document conversion
 - `log.rs` - Logging infrastructure using `flexi_logger`
 
+**Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
+task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
+blocking handler can hold up the whole app. Therefore:
+
+- File and disk access, the OS keyring, waiting for a `std::sync::Mutex`, and CPU-bound work such as
+  loading a tokenizer or scanning text run in `tokio::task::spawn_blocking`. Follow
+  `run_qdrant_edge_request` in `qdrant_edge_database.rs`, `prepare_image` and `prepare_image_sync` in
+  `image.rs`, or `sanitize_batch` in `prompt_injection/api.rs`.
+- When an API offers a callback, as the file dialogs do, await the callback instead of calling the
+  blocking variant; see `await_dialog` in `file_actions.rs`.
+- Short, bounded work, such as a single metadata lookup or writing a log line, may stay on the worker.
+- When the blocking task fails, answer with an error, never with an empty value the app could take
+  for a valid answer.
+- Never keep a `std::sync::MutexGuard` alive across an `.await`, not even with an explicit `drop`
+  before it: the future of the handler is then no longer `Send`, and Axum refuses it. Scope the guard
+  in a block instead.
+- `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
+  such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
+
 ### .NET App (`app/MindWork AI Studio/`)
 **Entry point:** `app/MindWork AI Studio/Program.cs`
 

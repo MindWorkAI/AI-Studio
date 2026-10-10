@@ -104,31 +104,56 @@ pub fn set_default_tokenizer_path(app_handle: tauri::AppHandle) {
 }
 
 pub async fn token_count(_token: APIToken, req: Json<SetTokenText>) -> Json<TokenizerResponse> {
-    match get_token_count(&req.tokenizer_path, &req.text) {
+    match run_tokenizer_work(move || get_token_count(&req.tokenizer_path, &req.text)).await {
         Ok(count) => Json(TokenizerResponse::available(count)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
 pub async fn validate_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
-    match handle_tokenizer_validate(&PathBuf::from(payload.file_path.clone())) {
+    match run_tokenizer_work(move || handle_tokenizer_validate(&PathBuf::from(payload.file_path.clone()))).await {
         Ok(count) => Json(TokenizerResponse::available(count)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
 pub async fn store_tokenizer(_token: APIToken, payload: Json<TokenizerStorage>) -> Json<TokenizerResponse> {
-    match handle_tokenizer_store(&payload) {
+    match run_tokenizer_work(move || handle_tokenizer_store(&payload).map_err(|e| e.to_string())).await {
         Ok(dest_path) => Json(TokenizerResponse::stored(dest_path)),
-        Err(e) => Json(TokenizerResponse::unavailable(e.to_string())),
+        Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
 pub async fn delete_tokenizer(_token: APIToken, payload: Json<TokenizerDelete>) -> Json<TokenizerResponse> {
-    match handle_tokenizer_delete(&payload) {
+    match run_tokenizer_work(move || handle_tokenizer_delete(&payload).map_err(|e| e.to_string())).await {
         Ok(_) => Json(TokenizerResponse::stored(String::new())),
-        Err(e) => Json(TokenizerResponse::unavailable(e.to_string())),
+        Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
+}
+
+/// Gets the tokenizer for the given path, loading it on the blocking pool when it is not cached yet.
+pub async fn get_tokenizer_off_worker(path: String) -> Result<Arc<Tokenizer>, String> {
+    run_tokenizer_work(move || get_tokenizer(&path)).await
+}
+
+/// Runs tokenizer work on the blocking pool.
+///
+/// Loading a tokenizer reads and parses its file, which takes most of a second for a large one, and
+/// it waits for the storage lock while another request copies or deletes a tokenizer. Encoding a
+/// long text is CPU-bound as well. On a runtime worker, any of this would hold up every other call
+/// of the app, because they all share one HTTP/2 connection.
+async fn run_tokenizer_work<T, F>(work: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, String> + Send + 'static,
+{
+    tokio::task::spawn_blocking(work)
+        .await
+        .unwrap_or_else(|error| {
+            let issue = format!("The tokenizer worker failed: {error}");
+            error!(Source = "Tokenizer"; "{issue}");
+            Err(issue)
+        })
 }
 
 fn handle_tokenizer_validate(path: &PathBuf) -> Result<usize, String> {
@@ -240,7 +265,7 @@ fn tokenizer_cache() -> &'static RwLock<HashMap<PathBuf, Arc<Tokenizer>>> {
     TOKENIZERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-pub fn get_tokenizer(path: &str) -> Result<Arc<Tokenizer>, String> {
+fn get_tokenizer(path: &str) -> Result<Arc<Tokenizer>, String> {
     let resolved_path = resolve_tokenizer_path(path)?;
     let tokenizer_path = fs::canonicalize(&resolved_path)
         .map_err(|e| format!("Could not resolve tokenizer file '{}': {e}", resolved_path.display()))?;
@@ -302,4 +327,32 @@ fn load_tokenizer_from_file(path: &PathBuf) -> Result<Tokenizer, String> {
 
     Tokenizer::from_file(path)
         .map_err(|e| format!("Failed to load tokenizer from '{}': {e}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::runtime_api::test_support::assert_runtime_stays_free;
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn a_token_count_waiting_for_the_storage_leaves_the_runtime_free() {
+        //
+        // Any file will do: the request waits for the storage lock before it reads the tokenizer.
+        // Since this file is no tokenizer, the request fails once it gets the lock.
+        //
+        let tokenizer_path = std::env::temp_dir().join(format!("ai-studio-tokenizer-{}.json", std::process::id()));
+        fs::write(&tokenizer_path, "This is not a tokenizer.").unwrap();
+
+        let request = token_count(
+            APIToken::from_hex_text("test"),
+            Json(SetTokenText {
+                text: "Hello, world!".to_string(),
+                tokenizer_path: tokenizer_path.to_string_lossy().to_string(),
+            }),
+        );
+
+        let response = assert_runtime_stays_free(&TOKENIZER_STORAGE_LOCK, request).await;
+        fs::remove_file(&tokenizer_path).unwrap();
+        assert!(!response.success);
+    }
 }
