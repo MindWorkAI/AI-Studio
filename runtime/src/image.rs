@@ -15,6 +15,8 @@ use image::imageops::FilterType;
 use image::{DynamicImage, ImageFormat, ImageReader};
 use serde::{Deserialize, Serialize};
 
+use crate::api_token::APIToken;
+
 /// The longest edge an optimized image may have. Larger images are scaled down proportionally.
 const MAX_EDGE_PIXELS: u32 = 2_560;
 
@@ -56,6 +58,7 @@ pub struct PrepareImageResponse {
 /// Decoding runs on a blocking worker because it is CPU-bound and would otherwise stall the
 /// async runtime for large images.
 pub async fn prepare_image(
+    _token: APIToken,
     Json(request): Json<PrepareImageRequest>,
 ) -> Result<Json<PrepareImageResponse>, (StatusCode, String)> {
     tokio::task::spawn_blocking(move || prepare_image_sync(&request))
