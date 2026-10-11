@@ -11,6 +11,7 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -69,6 +70,9 @@ public partial class ChatComponent : MSGComponentBase
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
+    [Inject]
+    private NavigationManager NavigationManager { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -94,6 +98,7 @@ public partial class ChatComponent : MSGComponentBase
     private Guid currentChatThreadId = Guid.Empty;
     private Guid loadedParameterChatId = Guid.Empty;
     private Guid loadedParameterWorkspaceId = Guid.Empty;
+    private bool hasAppliedChatParameter;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
     private ConversationTokens conversationTokens = ConversationTokens.UNAVAILABLE;
@@ -148,6 +153,25 @@ public partial class ChatComponent : MSGComponentBase
     /// Stores the open chat with the message being written, while chats are stored automatically.
     /// </summary>
     private ChatDraftAutosave? draftAutosave;
+
+    /// <summary>
+    /// A new chat which has not reached the disk yet, or null.
+    /// </summary>
+    /// <remarks>
+    /// Starting a new chat in a workspace creates its thread right away, so that it keeps the
+    /// workspace, but stores it only together with its first message. Until then, leaving the chat
+    /// stores it when the user started a message in it, see PreserveNewChatDraftAsync. Which chat
+    /// that is has to be noted here: once the chat is left, the component may show the next one
+    /// already. Nor does the disk tell, since a deleted chat is missing there as well, and storing
+    /// that one would bring it back. Hence, this is always the chat on the screen, and it is
+    /// forgotten as soon as the chat was stored or left.
+    /// </remarks>
+    private ChatThread? unstoredChat;
+
+    /// <summary>
+    /// Lets this component store a new chat before the user leaves the chat page.
+    /// </summary>
+    private IDisposable? locationChangingRegistration;
 
     /// <summary>
     /// How long to leave the token count alone after it ran.
@@ -268,6 +292,12 @@ public partial class ChatComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+
+        //
+        // Leaving the chat page takes the composer along. Registered before anything is awaited, so
+        // that a component which goes away while it starts can never leave its handler behind:
+        //
+        this.locationChangingRegistration = this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChangingAsync);
         await this.RefreshCulture();
 
         //
@@ -338,7 +368,7 @@ public partial class ChatComponent : MSGComponentBase
 
             // That draft is the message of the incoming chat now:
             if (this.ComposerState.HasUserDraft)
-                this.MirrorComposerIntoDraft();
+                this.MirrorComposerIntoDraft(this.ChatThread);
 
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             this.MarkCurrentChatAsLoadedParameter();
@@ -493,12 +523,7 @@ public partial class ChatComponent : MSGComponentBase
         if (firstRender && this.ChatThread is not null && this.mustStoreChat)
         {
             this.mustStoreChat = false;
-            
-            if(this.Workspaces is not null)
-                await this.Workspaces.StoreChatAsync(this.ChatThread);
-            else
-                await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
-
+            await this.StoreAndListChatAsync(this.ChatThread);
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
         }
         
@@ -577,6 +602,14 @@ public partial class ChatComponent : MSGComponentBase
         var chatId = this.ChatThread?.ChatId ?? Guid.Empty;
         var workspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
 
+        //
+        // The first chat of this component is no chat being left. The component appears anew, e.g.,
+        // whenever the workspace sidebar is shown or hidden, while the page keeps the chat and the
+        // composer:
+        //
+        var isFirstChat = !this.hasAppliedChatParameter;
+        this.hasAppliedChatParameter = true;
+
         if (this.loadedParameterChatId == chatId && this.loadedParameterWorkspaceId == workspaceId)
         {
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
@@ -593,11 +626,13 @@ public partial class ChatComponent : MSGComponentBase
             return;
         }
 
+        var leftChatHadNoThread = !isFirstChat && this.loadedParameterChatId == Guid.Empty;
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
 
         // The chat being left keeps the message the user started in it:
         await this.FlushDraftAsync();
+        await this.PreserveNewChatDraftAsync(leftChatHadNoThread);
         await this.LoadedChatChanged(notifyParent: false);
     }
 
@@ -894,6 +929,10 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProfile = this.currentProfile.Id,
             };
 
+            // The copy shares the draft, but storing the former thread would bring the former profile back:
+            if (this.unstoredChat?.ChatId == this.ChatThread.ChatId)
+                this.unstoredChat = this.ChatThread;
+
             this.draftAutosave?.Follow(this.ChatThread);
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
@@ -1075,21 +1114,19 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is null)
             return;
 
-        this.MirrorComposerIntoDraft();
+        this.MirrorComposerIntoDraft(this.ChatThread);
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
             this.draftAutosave?.Schedule(this.ChatThread);
     }
 
     /// <summary>
-    /// Puts the text and the attachments of the composer into the draft of the open chat.
+    /// Puts the text and the attachments of the composer into the draft of the given chat.
     /// </summary>
-    private void MirrorComposerIntoDraft()
+    /// <param name="chat">The chat the message in the composer belongs to.</param>
+    private void MirrorComposerIntoDraft(ChatThread chat)
     {
-        if (this.ChatThread is null)
-            return;
-
-        this.ChatThread.Draft.SetText(this.ComposerState.UserInput);
-        this.ChatThread.Draft.MirrorAttachments(this.ComposerState.FileAttachments);
+        chat.Draft.SetText(this.ComposerState.UserInput);
+        chat.Draft.MirrorAttachments(this.ComposerState.FileAttachments);
     }
 
     /// <summary>
@@ -1099,6 +1136,97 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.draftAutosave is not null)
             await this.draftAutosave.FlushAsync();
+    }
+
+    /// <summary>
+    /// Stores a new chat which is being left, when the user started a message in it.
+    /// </summary>
+    /// <remarks>
+    /// A new chat reaches the disk together with its first message. Whoever leaves it before would
+    /// lose the message, so the chat is stored now, with the message as its draft. That happens only
+    /// while chats are stored automatically, and only for a message of the user: the text of a chat
+    /// template alone is nobody's message, and storing it would fill the list with chats nobody
+    /// started.<br/><br/>
+    ///
+    /// A new chat comes in two kinds. Usually, it has no thread before its first message, and the
+    /// message lives in the composer only. It becomes a disappearing chat of its own then. Starting a
+    /// new chat in a workspace creates the thread right away instead, see unstoredChat. That one is
+    /// stored with whatever its draft holds, and also while a transcript is still being made for it,
+    /// since the transcript would otherwise arrive in a chat which is nowhere.<br/><br/>
+    ///
+    /// The composer is cleared before the chat is stored, since the message has moved into its chat.
+    /// Leaving twice in a row, e.g., with two quick clicks, therefore stores it only once.
+    /// </remarks>
+    /// <param name="hadNoThread">Whether the chat being left had no thread, so its message is in the composer only.</param>
+    private async Task PreserveNewChatDraftAsync(bool hadNoThread)
+    {
+        // Whatever happens below, the new chat is left now:
+        var unstoredChatBeingLeft = this.unstoredChat;
+        this.unstoredChat = null;
+
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            return;
+
+        ChatThread chat;
+        if (hadNoThread)
+        {
+            if (!this.ComposerState.HasVisibleUserDraft)
+                return;
+
+            this.RefreshCurrentProfileAndChatTemplate();
+            chat = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput));
+            this.MirrorComposerIntoDraft(chat);
+            this.ComposerState.Clear();
+        }
+        else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
+            chat = unstoredChatBeingLeft;
+        else
+            return;
+
+        try
+        {
+            await this.StoreAndListChatAsync(chat);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, $"The new chat '{chat.ChatId}' could not be stored with the message the user started in it.");
+        }
+    }
+
+    /// <summary>
+    /// Stores the given chat, through the workspace component whenever there is one.
+    /// </summary>
+    /// <remarks>
+    /// The workspace component updates its tree along with storing, so it lists a new chat right
+    /// away, and a changed one with its new name and time.
+    /// </remarks>
+    /// <param name="chat">The chat to store.</param>
+    private Task StoreAndListChatAsync(ChatThread chat) => this.Workspaces is not null ? this.Workspaces.StoreChatAsync(chat) : WorkspaceBehaviour.StoreChatAsync(chat);
+
+    /// <summary>
+    /// Stores a new chat before the user leaves the chat page, when the user started a message in it.
+    /// </summary>
+    /// <remarks>
+    /// The page takes the composer along when it goes, and with it the message of a chat which has
+    /// no thread yet. This is a handler of its own rather than a message of the bus: the navigation
+    /// waits for its handlers, while the bus hands a message over without waiting, so the page could
+    /// be gone before the chat is stored.<br/><br/>
+    ///
+    /// Only while chats are stored automatically. Otherwise, nothing is preserved anyway, and the
+    /// navigation may still be canceled after the user was asked about unsaved changes, so the new
+    /// chat has to stay as it is.
+    /// </remarks>
+    /// <param name="context">The navigation which is about to happen.</param>
+    private async ValueTask OnLocationChangingAsync(LocationChangingContext context)
+    {
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            return;
+
+        // Opening the chat page again keeps the page, and the composer with it:
+        if (string.Equals(this.NavigationManager.ToAbsoluteUri(context.TargetLocation).AbsolutePath, Routes.CHAT, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        await this.PreserveNewChatDraftAsync(this.ChatThread is null);
     }
 
     /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
@@ -1113,25 +1241,18 @@ public partial class ChatComponent : MSGComponentBase
             ? string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath))
             : promptName;
 
-        this.ChatThread = this.NewChatThread(threadName) with
-        {
-            DataSourceOptions = this.earlyDataSourceOptions,
-        };
+        this.ChatThread = this.NewChatThread(threadName);
 
         // A message the user started belongs to the new chat, so it is stored with it:
         if (this.ComposerState.HasUserDraft)
-            this.MirrorComposerIntoDraft();
+            this.MirrorComposerIntoDraft(this.ChatThread);
 
         //
         // Like saving, this goes through the workspace component whenever there is one, so its tree
         // lists the new chat right away, together with the progress of the transcription, instead
         // of only after the first message was sent:
         //
-        if (this.Workspaces is not null)
-            await this.Workspaces.StoreChatAsync(this.ChatThread);
-        else
-            await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
-
+        await this.StoreAndListChatAsync(this.ChatThread);
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         await this.SyncForegroundChatAsync();
@@ -1159,11 +1280,7 @@ public partial class ChatComponent : MSGComponentBase
         // Create a new chat thread if necessary:
         if (this.ChatThread is null)
         {
-            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput)) with
-            {
-                DataSourceOptions = this.earlyDataSourceOptions,
-            };
-
+            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput));
             this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
@@ -1275,6 +1392,9 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread.RuntimeAssistantName = string.Empty;
         this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
         this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds, this.ChatThread.RequiredOutboundDataRestriction.Restriction);
+
+        // From here on, the AI job stores the chat, in every storage mode:
+        this.unstoredChat = null;
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
             ChatThread = this.ChatThread,
@@ -1332,17 +1452,11 @@ public partial class ChatComponent : MSGComponentBase
         if (!this.CanThreadBeSaved)
             return;
 
-        //
-        // When the workspace component is visible, we store the chat
-        // through the workspace component. The advantage of this is that
-        // the workspace gets updated automatically when the chat is saved.
-        //
-        if (this.Workspaces is not null)
-            await this.Workspaces.StoreChatAsync(this.ChatThread);
-        else
-            await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
-        
+        await this.StoreAndListChatAsync(this.ChatThread);
         this.hasUnsavedChanges = false;
+
+        // A new chat is on the disk now, like any other:
+        this.unstoredChat = null;
     }
     
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
@@ -1366,9 +1480,14 @@ public partial class ChatComponent : MSGComponentBase
 
         //
         // The chat being left keeps the message the user started in it. This comes before deleting
-        // the chat, so that storing it can never bring it back afterward:
+        // the chat, so that storing it can never bring it back afterward. A new chat which never
+        // reached the disk is simply dropped when the user wants it deleted:
         //
+        if (deletePreviousChat)
+            this.unstoredChat = null;
+
         await this.FlushDraftAsync();
+        await this.PreserveNewChatDraftAsync(this.ChatThread is null);
 
         //
         // Delete the previous chat when desired and necessary:
@@ -1444,9 +1563,10 @@ public partial class ChatComponent : MSGComponentBase
             //
             // When the user wants to start a new chat in the same workspace, we have to
             // reset the chat thread only. The workspace id and the workspace name remain
-            // the same:
+            // the same. The new chat reaches the disk only once there is something to keep:
             //
             this.ChatThread = this.NewChatThread(string.Empty);
+            this.unstoredChat = this.ChatThread;
         }
 
         this.ComposerState.ApplyTemplate(this.currentChatTemplate);
@@ -1571,6 +1691,9 @@ public partial class ChatComponent : MSGComponentBase
         this.ChatThread = copy;
         this.hasUnsavedChanges = false;
 
+        // The copy carries the message along, so a new chat which never reached the disk stays that way:
+        this.unstoredChat = null;
+
         await this.SyncForegroundChatAsync();
         this.MarkCurrentChatAsLoadedParameter();
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
@@ -1633,6 +1756,7 @@ public partial class ChatComponent : MSGComponentBase
     private async Task ResetState()
     {
         await this.FlushDraftAsync();
+        await this.PreserveNewChatDraftAsync(this.ChatThread is null);
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
@@ -1911,13 +2035,14 @@ public partial class ChatComponent : MSGComponentBase
     /// the one which is then sent would be wrong in exactly the moment a person looks at it: before
     /// they send their first message.
     ///
-    /// The data source options are left out on purpose: two of the three callers set them and the
-    /// third replaces them right afterwards, so this stays the part they agree on.
+    /// The data source options are those chosen before the chat had a thread. Starting a new chat in
+    /// a workspace replaces them right afterward with those its chat template asks for.
     /// </remarks>
     /// <param name="name">The name of the thread.</param>
     /// <returns>The new thread.</returns>
     private ChatThread NewChatThread(string name) => new()
     {
+        DataSourceOptions = this.earlyDataSourceOptions,
         IncludeDateTime = true,
         SelectedProvider = this.Provider.Id,
         SelectedProfile = this.currentProfile.Id,
@@ -2010,6 +2135,7 @@ public partial class ChatComponent : MSGComponentBase
     protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.locationChangingRegistration?.Dispose();
 
         if (this.tokenTracker is not null)
             await this.tokenTracker.DisposeAsync();
@@ -2017,6 +2143,14 @@ public partial class ChatComponent : MSGComponentBase
         // Stores what is still pending, before the chat is left:
         if (this.draftAutosave is not null)
             await this.draftAutosave.DisposeAsync();
+
+        //
+        // So does a new chat started in a workspace, since the next component of the page, e.g.,
+        // after the workspace sidebar was shown or hidden, cannot tell it from a deleted one. A chat
+        // without a thread stays in the composer, though: the page keeps that, and its next
+        // component goes on with it. Leaving the page stores it, see OnLocationChangingAsync.
+        //
+        await this.PreserveNewChatDraftAsync(hadNoThread: false);
 
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {

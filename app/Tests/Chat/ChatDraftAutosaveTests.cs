@@ -172,7 +172,7 @@ public sealed class ChatDraftAutosaveTests
             }
         }
 
-        public ChatDraftAutosave CreateAutosave(TimeSpan delay) => new(delay, _ => this.isStored, _ => this.isBusy, this.StoreAsync, NullLogger.Instance);
+        public ChatDraftAutosave CreateAutosave(TimeSpan delay) => new(delay, _ => this.IsStored, _ => this.IsBusy, this.StoreAsync, NullLogger.Instance);
 
         public async Task WaitForStoreAsync()
         {
