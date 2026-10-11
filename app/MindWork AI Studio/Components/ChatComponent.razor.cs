@@ -1558,7 +1558,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
-        this.ChatThread.Remove(block);
+        this.ChatThread.RemoveForEditing(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
@@ -1574,7 +1574,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
-        this.ChatThread.Remove(block);
+        this.ChatThread.RemoveForEditing(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;
