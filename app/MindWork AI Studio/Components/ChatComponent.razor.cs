@@ -140,6 +140,16 @@ public partial class ChatComponent : MSGComponentBase
     private ConversationTokenTracker? tokenTracker;
 
     /// <summary>
+    /// How long the user has to pause before the open chat is stored with the message being written.
+    /// </summary>
+    private static readonly TimeSpan DRAFT_AUTOSAVE_DELAY = TimeSpan.FromSeconds(2);
+
+    /// <summary>
+    /// Stores the open chat with the message being written, while chats are stored automatically.
+    /// </summary>
+    private ChatDraftAutosave? draftAutosave;
+
+    /// <summary>
     /// How long to leave the token count alone after it ran.
     /// </summary>
     private TimeSpan TokenCountQuietTime() => this.IsCurrentChatStreaming ? TOKEN_COUNT_STREAMING_QUIET_TIME : TOKEN_COUNT_QUIET_TIME;
@@ -237,12 +247,20 @@ public partial class ChatComponent : MSGComponentBase
     /// This property serves as a bridge between the chat component and the
     /// underlying composer state, allowing user input to be dynamically updated
     /// and managed. The setter also triggers state changes within the composer
-    /// to track whether the user has drafted any input.
+    /// to track whether the user has drafted any input, and hands the input to
+    /// the draft of the open chat.
     /// </remarks>
     private string UserInput
     {
         get => this.ComposerState.UserInput;
-        set => this.ComposerState.SetUserInput(value);
+        set
+        {
+            this.ComposerState.SetUserInput(value);
+            this.KeepComposerInDraft();
+
+            // Also for text which arrives without a key, e.g., pasted with the mouse:
+            this.hasUnsavedChanges = true;
+        }
     }
 
     #region Overrides of ComponentBase
@@ -259,6 +277,13 @@ public partial class ChatComponent : MSGComponentBase
         //
         this.tokenTracker = new(this.RecountTokensAsync, this.TokenCountQuietTime, TOKEN_COUNT_HEARTBEAT);
         this.tokenTracker.Start();
+
+        this.draftAutosave = new(
+            DRAFT_AUTOSAVE_DELAY,
+            chat => WorkspaceBehaviour.IsChatExisting(new LoadChat(chat.WorkspaceId, chat.ChatId)),
+            chat => this.AIJobService.IsChatGenerationActive(chat.ChatId),
+            WorkspaceBehaviour.StoreChatAsync,
+            this.Logger);
 
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
@@ -310,7 +335,11 @@ public partial class ChatComponent : MSGComponentBase
             //
             if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
                 this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
-            
+
+            // That draft is the message of the incoming chat now:
+            if (this.ComposerState.HasUserDraft)
+                this.MirrorComposerIntoDraft();
+
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -566,6 +595,9 @@ public partial class ChatComponent : MSGComponentBase
 
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
+
+        // The chat being left keeps the message the user started in it:
+        await this.FlushDraftAsync();
         await this.LoadedChatChanged(notifyParent: false);
     }
 
@@ -862,6 +894,7 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProfile = this.currentProfile.Id,
             };
 
+            this.draftAutosave?.Follow(this.ChatThread);
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
     }
@@ -1012,6 +1045,7 @@ public partial class ChatComponent : MSGComponentBase
             this.dataSourceSelectionComponent.Hide();
 
         this.ComposerState.SetUserInput(await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType));
+        this.KeepComposerInDraft();
         this.hasUnsavedChanges = true;
     }
 
@@ -1021,7 +1055,50 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.ReplaceFileAttachments(attachments);
 
         this.ComposerState.MarkUserDraft();
+        this.KeepComposerInDraft();
         this.hasUnsavedChanges = true;
+    }
+
+    /// <summary>
+    /// Hands what the user changed in the composer to the draft of the open chat, and stores the chat
+    /// once the user paused.
+    /// </summary>
+    /// <remarks>
+    /// Only for changes of the user: a chat template fills the composer as well, but that is no message
+    /// anybody started, so it never reaches the draft on its own. The draft follows the composer in
+    /// every storage mode, so storing the chat by hand keeps the message, too. Storing it without being
+    /// asked happens only while chats are stored automatically, though, because it stores every other
+    /// change of the chat along with it.
+    /// </remarks>
+    private void KeepComposerInDraft()
+    {
+        if (this.ChatThread is null)
+            return;
+
+        this.MirrorComposerIntoDraft();
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+            this.draftAutosave?.Schedule(this.ChatThread);
+    }
+
+    /// <summary>
+    /// Puts the text and the attachments of the composer into the draft of the open chat.
+    /// </summary>
+    private void MirrorComposerIntoDraft()
+    {
+        if (this.ChatThread is null)
+            return;
+
+        this.ChatThread.Draft.SetText(this.ComposerState.UserInput);
+        this.ChatThread.Draft.MirrorAttachments(this.ComposerState.FileAttachments);
+    }
+
+    /// <summary>
+    /// Stores the chat being left with the message the user started in it, if that is still pending.
+    /// </summary>
+    private async Task FlushDraftAsync()
+    {
+        if (this.draftAutosave is not null)
+            await this.draftAutosave.FlushAsync();
     }
 
     /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
@@ -1040,6 +1117,10 @@ public partial class ChatComponent : MSGComponentBase
         {
             DataSourceOptions = this.earlyDataSourceOptions,
         };
+
+        // A message the user started belongs to the new chat, so it is stored with it:
+        if (this.ComposerState.HasUserDraft)
+            this.MirrorComposerIntoDraft();
 
         //
         // Like saving, this goes through the workspace component whenever there is one, so its tree
@@ -1168,12 +1249,16 @@ public partial class ChatComponent : MSGComponentBase
             Content = aiText,
         });
         
-        // Clear the input field:
-        await this.inputField.FocusAsync();
-
-        this.ComposerState.Clear();
-
-        await this.inputField.BlurAsync();
+        //
+        // Clear the input field, unless the answer is only generated again. The message the user
+        // has started to write in the meantime is no part of that, so it stays where it is:
+        //
+        if (!reuseLastUserPrompt)
+        {
+            await this.inputField.FocusAsync();
+            this.ComposerState.Clear();
+            await this.inputField.BlurAsync();
+        }
 
         // Enable the stream state for the chat component:
         this.hasUnsavedChanges = true;
@@ -1278,6 +1363,12 @@ public partial class ChatComponent : MSGComponentBase
             if (dialogResult is null || dialogResult.Canceled)
                 return;
         }
+
+        //
+        // The chat being left keeps the message the user started in it. This comes before deleting
+        // the chat, so that storing it can never bring it back afterward:
+        //
+        await this.FlushDraftAsync();
 
         //
         // Delete the previous chat when desired and necessary:
@@ -1494,6 +1585,9 @@ public partial class ChatComponent : MSGComponentBase
         if (this.ChatThread is not null)
         {
             this.ChatThread = this.AIJobService.TryGetLiveChatThread(this.ChatThread.ChatId) ?? this.ChatThread;
+
+            // The message the user had started in this chat comes back:
+            this.ComposerState.RestoreFromDraft(this.ChatThread.Draft);
             this.loadedParameterChatId = this.ChatThread.ChatId;
             this.loadedParameterWorkspaceId = this.ChatThread.WorkspaceId;
             if (notifyParent)
@@ -1538,6 +1632,7 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task ResetState()
     {
+        await this.FlushDraftAsync();
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
@@ -1622,7 +1717,7 @@ public partial class ChatComponent : MSGComponentBase
         if(this.ChatThread is null)
             return Task.CompletedTask;
 
-        if (block is not ContentText textBlock)
+        if (block is not ContentText)
             return Task.CompletedTask;
 
         var lastBlock = this.ChatThread.Blocks.Last();
@@ -1630,9 +1725,9 @@ public partial class ChatComponent : MSGComponentBase
         if(lastBlockContent is null)
             return Task.CompletedTask;
 
-        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.RemoveForEditing(block);
         this.ChatThread.Remove(lastBlockContent);
+        this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;
@@ -1643,19 +1738,28 @@ public partial class ChatComponent : MSGComponentBase
         if(this.ChatThread is null)
             return Task.CompletedTask;
 
-        if (block is not ContentText textBlock)
+        if (block is not ContentText)
             return Task.CompletedTask;
 
-        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.RemoveForEditing(block);
+        this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;
     }
 
-    private void RestoreComposerFromTextBlock(ContentText textBlock)
+    /// <summary>
+    /// Puts the message being edited into the composer, after the chat made it its draft again.
+    /// </summary>
+    /// <remarks>
+    /// Taken from the draft rather than from the message, so the composer also shows the transcripts
+    /// the draft held before. The chat is then stored like after any other change of the draft: who
+    /// edits a message and goes elsewhere finds it in the composer when coming back.
+    /// </remarks>
+    private void RestoreComposerForEditing()
     {
-        this.ComposerState.RestoreFromTextBlock(textBlock);
+        this.ComposerState.RestoreFromDraft(this.ChatThread!.Draft);
+        this.KeepComposerInDraft();
     }
     
     /// <summary>
@@ -1887,8 +1991,13 @@ public partial class ChatComponent : MSGComponentBase
 
                 if (this.IsCurrentChatStreaming)
                     return Task.FromResult((TResult?) (object) false);
-                
-                return Task.FromResult((TResult?)(object)(this.hasUnsavedChanges || this.ComposerState.HasVisibleUserDraft));
+
+                //
+                // A message the user started counts as unsaved on its own only while there is no chat
+                // to keep it. Otherwise, it is part of the chat: changing it counts as a change of the
+                // chat, and a message which came back from the disk with the chat is saved already.
+                //
+                return Task.FromResult((TResult?)(object)(this.hasUnsavedChanges || (this.ChatThread is null && this.ComposerState.HasVisibleUserDraft)));
         }
         
         return Task.FromResult(default(TResult));
@@ -1904,6 +2013,10 @@ public partial class ChatComponent : MSGComponentBase
 
         if (this.tokenTracker is not null)
             await this.tokenTracker.DisposeAsync();
+
+        // Stores what is still pending, before the chat is left:
+        if (this.draftAutosave is not null)
+            await this.draftAutosave.DisposeAsync();
 
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {

@@ -63,9 +63,9 @@ public sealed class ChatThreadEditTests
         var composer = new ChatComposerState();
 
         // What the chat does when the user stops the answer and edits the question:
-        composer.RestoreFromTextBlock((ContentText)question.Content!);
         thread.RemoveForEditing(question.Content!);
         thread.Remove(answer.Content!);
+        composer.RestoreFromDraft(thread.Draft);
 
         Assert.Multiple(() =>
         {
