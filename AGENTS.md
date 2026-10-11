@@ -158,42 +158,21 @@ Plugins are written in Lua and provide:
 
 **Example configuration plugin:** `app/MindWork AI Studio/Plugins/configuration/plugin.lua`
 
-Plugins can configure:
-- Self-hosted LLM providers
-- Update behavior
-- Preview features visibility
-- Preselected profiles
-- Chat templates
-- etc.
-
-Configuration plugins provide three kinds of values:
-- **Managed settings:** simple values such as booleans, numbers, strings, enums, lists, or sets handled through `ManagedConfiguration`. These values may be locked or used as organization defaults. Which configuration plugin owns a locked setting is persisted in `Data.ManagedLockedConfigurations`, and organization defaults are tracked in `Data.ManagedEditableDefaults`. Both are cleaned up generically by `ManagedConfiguration.CleanupLeftOverManagedConfigurations(...)` when the owning plugin is gone. The value a setting had before a configuration plugin took it over is kept in `Data.ManagedUserValueSnapshots` and restored by that same clean-up, so removing a plugin hands the user's own value back instead of the app default.
-- **Managed configuration objects:** complex Lua tables that are persisted into `SettingsManager.ConfigurationData`, implement `IConfigurationObject`, and are cleaned up through `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`. Examples include providers, profiles, chat templates, data sources, and document analysis policies.
-- **Live plugin content:** complex Lua tables that implement `ILivePluginContent` and are read live from running plugins instead of being persisted to `ConfigurationData`. Examples include `MANDATORY_INFOS` and `INTRODUCTIONS`. If live plugin content creates persistent side data, add a dedicated cleanup path for that side data, like mandatory-info acceptances.
-
-When adding configuration plugin capabilities:
-- For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)` and process the setting in `PluginConfiguration.TryProcessConfiguration`. Cleaning up the setting when its configuration plugin was removed needs no extra step: `ManagedConfiguration.CleanupLeftOverManagedConfigurations(...)` iterates all registered settings. Do not add per-setting cleanup calls to `PluginFactory.Loading.LoadAll`.
-- For managed configuration objects, update `PluginConfigurationObject.cs` and `PluginConfigurationObjectType.cs`, persist them in the appropriate `ConfigurationData` collection, and add cleanup via `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`.
-- For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
-- Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
+Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/PluginSystem/`, or add a
+capability to configuration plugins, read `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md` first. It
+explains the three kinds of values a configuration plugin provides and how to add each of them.
 
 ## Tool Calling System
 
 **Documentation:** `documentation/Tools.md`
 
-When adding, changing, or removing model-driven tools, keep these parts in sync:
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class, which states its own `ToolDefinition` through `GetDefinition()`, written with `ToolSettingsSchemaBuilder` for its settings and `ToolParameterSchemaBuilder` for the arguments the model passes. There are no tool definition files; a tool arriving from elsewhere brings an `IToolDefinitionSource` instead.
-- `app/MindWork AI Studio/Program.cs` for DI registration of the implementation. Registering it as an `IToolImplementation` is enough, because `CodeToolDefinitionSource` collects the definitions of all of them.
-- An `IToolCollection` next to the tools, registered in `Program.cs`, when tools only make sense together. Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when the shared tool-call limits change. A tool's own minimum provider confidence belongs in its definition, or in the definition of its collection, not here.
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over spelling the values out in the settings schema; it keeps the list in one place and gives the user translated names.
-- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document each setting's field name, meaning, and data type. Tool settings need no code to be centrally manageable: an organization addresses them by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`.
+Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence name tool collections; a tool outside a declared collection forms one under its own ID, and the ID of a tool inside one stands for its whole collection. Normalize a selection with `ToolRegistry.NormalizeSelection`, and expand it into tools with `ToolRegistry.ExpandSelection` only where the view of the model counts.
 
-Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
+Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
 
-A tool which belongs to a preview feature returns false from `IToolImplementation.IsAvailable` while the preview is switched off; the registry then leaves it out of every list, every request, and the token count, so no component has to check that preview for the tool. Every tool declares in `IToolImplementation.OutboundData` where its arguments go: a chat which read from a mailbox keeps the tools whose data goes further than the mailbox allows from being offered and from running, see `ToolSelectionRules.IsOutboundDataAllowed`. A tool which brings content of a mailbox into the chat raises `ToolExecutionResult.RequiredOutboundDataRestriction`, next to `RequiredProviderConfidence` and `RequiredDataSecurity`. "Searching Mailboxes" in `documentation/Tools.md` explains the mail tools.
-
-A tool which offers itself from the context of a chat instead of being selected, such as `semantic_search`, sets `Activation = ToolActivation.CONTEXT` and tailors its function to each request in `ResolveFunctionAsync`. Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
+Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/ToolCallingSystem/`, read
+`app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md` first. It explains how to add, change, or remove
+a tool and the rules every tool implementation follows.
 
 ## Model Capabilities
 
@@ -201,14 +180,9 @@ A tool which offers itself from the context of a chat instead of being selected,
 
 What a model can do is answered in `app/MindWork AI Studio/Models/`, through `provider.GetModelProfile()`. Never ask `ModelRegistry` directly from a component: the extension method is what adds the expert settings and what a provider's model list reported, and the registry alone answers neither.
 
-When adding, changing, or removing model knowledge, keep these parts in sync:
-- `app/MindWork AI Studio/Models/<Vendor>/<Family>.cs` for the family itself. Creating the class is enough — the source generator in `app/SourceGeneratedMappings/` collects every non-abstract `ModelFamily` and `IModelHost` at compile time, so there is no registration list. Do not add reflection here; `PublishTrimmed` is on.
-- `app/Tests/Models/Corpus/` for the model IDs the family covers, marked as either unchanged or expected to change. A porting difference which nobody declared is what the corpus exists to catch.
-- `app/MindWork AI Studio/Models/Kinds/` when the change is about what kind of model something is, rather than what it can do. These are ordinary rules of the same engine.
-- `app/MindWork AI Studio/Models/Hosting/Hosts/` when a provider wraps model names or cannot pass an API through. A host unwraps and trims the transport; it states nothing about the model itself.
-- `app/MindWork AI Studio/Plugins/models/plugin.lua` when a new field can be declared by an organization, and `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when it can be overridden per provider instance.
-
-Rules are never tried in order: specificity is computed from the rule, and two rules of equal specificity on one name fail the test suite. State how a model reasons with `Reasoning(...)` — the three reasoning capabilities are override vocabulary and must never appear in a profile. Every family and every host has to name the page it was read from and the day somebody read it; `dotnet run verify-models` reports the ones which have gone stale.
+Before you plan, read, or change anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/`,
+read `app/MindWork AI Studio/Models/AGENTS.md` first. It explains how to add, change, or remove model
+knowledge.
 
 ## RAG (Retrieval-Augmented Generation)
 
@@ -228,84 +202,26 @@ Everything AI Studio embeds itself runs through one pipeline in `app/MindWork AI
 driven by `DataSourceEmbeddingService`, which queues the runs, prepares each one and owns the statuses. A new
 kind of data source plugs into this pipeline instead of building its own.
 
-The parts:
-- **`IIndexedDataSource`** (`Settings/`) - what indexing needs to know about a data source: confidence level,
-  embedding provider and chunk settings. `IDataSourceBase` is what every data source has. Implement
-  `IDataSource` on top only when classic RAG, Semantic Search and the agents should see the data source. A data
-  source kept in a list of its own implements `IIndexedDataSource` alone, and the compiler keeps it out of
-  `DataSources`.
-- **`IIndexedSourceIndexer`** - one per kind of data source. `Supports` claims the data sources, `ProcessAsync`
-  finds and reads the documents of one run, and `TrackChanges` / `StopTracking` notice changes on their own.
-  `FileSourceIndexer` is the reference: a file system watcher per data source, fingerprints over path, size and
-  write time.
-- **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest and the
-  collection. `IndexDocumentAsync` embeds and stores one document; the cleanup methods remove what a failed
-  attempt left behind.
-- **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
-- **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
-  status and completes the run.
-- **`TextChunker`** - cuts text into chunks the embedding provider accepts. Pick one of its strategies; do not
-  write a chunker of your own.
+**Every content path goes through the prompt injection filter.** Files pass the sanitizer of the runtime while
+their text is extracted; a new kind of data source needs its own pass through `PromptInjectionGuardService`.
 
-To add a kind of data source:
-1. Write its indexer in `Tools/Services/Indexing/` and create it in `DataSourceEmbeddingService.CreateIndexers`,
-   which hands every indexer the same `TextChunker`.
-2. Gate it in `IsSupportedIndexedSource`, behind a preview feature of its own while it is new.
-3. When the data source is not kept in `DataSources`, add its list to `GetConfiguredIndexedSources`. Every lookup
-   by id and every pass over all data sources goes through it: the startup hash check,
-   `QueueAllInternalDataSourcesAsync` and `RefreshWatchers`.
-4. Keep whatever the kind has to remember beyond its documents in tables of its own in the index store, added
-   by an EF Core migration (see "Databases").
-5. Report every status through `DocumentRunProgress`, so all rows of the embedding page behave alike.
-
-Rules which are easy to break:
-- **A document key is not a path.** Only files use their full path as the key. Never pass a key through the
-  `Path` APIs: on Windows, `Path.GetFullPath` reads a key like `mail:…` as a file with an alternate data stream.
-- **Ids and signature are pinned.** The formats in `IndexedDocumentIds` and the embedding signature
-  (`DataSourceEmbeddingService.BuildEmbeddingSignature`) are fixed by tests, because every stored chunk and every
-  index depends on them. When the metadata stored next to a chunk changes, raise `CHUNK_METADATA_VERSION`
-  deliberately: that rebuilds every index.
-- **Every content path goes through the prompt injection filter.** Files pass the sanitizer of the runtime while
-  their text is extracted; a new kind of data source needs its own pass through `PromptInjectionGuardService`.
-- **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
-  automatic refresh setting and the startup hash check, and only the embedding service decides that.
-- **Moving a `TB()` text into another class gives it a new I18N key**, so its translation is made anew during
-  the next localization run.
+Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/Services/Indexing/` or in
+`DataSourceEmbeddingService`, read `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` first. It
+describes the parts of the pipeline, how to add a kind of data source, and the rules which are easy to
+break.
 
 ## Databases
-
-Local RAG runs on two databases, addressed through `DatabaseRole`:
-
-- **`VECTOR_STORE`** — Qdrant Edge through the `qdrant-edge` crate, running **in-process inside the
-  Rust runtime**. There is no sidecar process, no port 6333 and no Qdrant API key; .NET reaches it
-  over the internal runtime API (`/system/qdrant-edge/*`, see `runtime/src/qdrant_edge_database.rs`),
-  secured by the same TLS and API token as every other runtime call. One store per data source,
-  named `rag_<data source guid>`, holding a single named vector `embedding` per point.
-- **`INDEX_STORE`** — SQLite at `<data directory>/databases/sqlite/rag-index.sqlite3`, reached
-  through EF Core. It holds the data sources, the file fingerprints, the chunk texts and an FTS5
-  index over them, plus the files which permanently failed to index.
 
 `DatabaseClientProvider` is the only way to a client. It caches one per role and guards each role
 with its own semaphore, so never construct a client yourself.
 
-When working on these, keep in mind:
+**Counts in the UI go through `long.CompactCount()` / `int.CompactCount()`** (`Tools/LongExtensions.cs`),
+which shortens anything above 999 to `1.46k` or `4.51M` and formats it with the culture of the
+active language plugin. Storage sizes are the exception: they keep using the byte formatters.
 
-- **`GetDisplayInfo()` feeds the information page.** A new diagnostic value belongs in the client
-  that knows it, not in `Pages/Information.razor.cs`. The page renders whatever label-value pairs it
-  receives and stays free of per-database knowledge.
-- **Let every probe in `GetDisplayInfo()` catch its own failure.** When the method throws, the page
-  replaces the *entire* block with the fallback client, so one unreadable value costs all the others
-  as well.
-- **Raw SQL against SQLite goes through `context.Database.GetDbConnection()`**, not through
-  `SqlQueryRaw<T>`: that one expects a column named `Value` and wraps the statement, so a `PRAGMA`
-  never works with it.
-- **A new EF Core migration needs a `[DynamicDependency]`** in `IndexStoreSchemaMigrator`, because
-  `PublishTrimmed` is on and the migration type would otherwise be trimmed away. The "Schema version"
-  line on the information page shows the applied and pending counts, so a forgotten entry becomes
-  visible there.
-- **Counts in the UI go through `long.CompactCount()` / `int.CompactCount()`** (`Tools/LongExtensions.cs`),
-  which shortens anything above 999 to `1.46k` or `4.51M` and formats it with the culture of the
-  active language plugin. Storage sizes are the exception: they keep using the byte formatters.
+Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/Databases/`, read
+`app/MindWork AI Studio/Tools/Databases/AGENTS.md` first. It describes both stores and what to keep in mind
+when working on them, EF Core migrations included.
 
 ## Enterprise IT Support
 
@@ -372,6 +288,9 @@ The app's texts are localized in two steps, and the developer always does the fi
    de-de `plugin.lua` with `main`, check them against the wording already established there, and
    correct or improve them directly in that file. `allTexts.lua` and the en-us `plugin.lua` stay as
    the assistant wrote them.
+
+**Moving a `TB()` text into another class gives it a new I18N key**, so its translation is made anew during
+the next localization run.
 
 ## Important Development Notes
 
