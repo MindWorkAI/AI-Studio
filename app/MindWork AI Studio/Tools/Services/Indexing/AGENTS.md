@@ -21,7 +21,14 @@ The parts:
   attempt left behind.
 - **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
 - **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
-  status and completes the run.
+  status, and completes or pauses the run.
+- **`RunShare`** - how much one run may do before the other data sources get their turn: five minutes, and for
+  a mailbox at most 500 mails. A large data source is indexed in steps, one run each. A run which returns
+  `MORE_TO_DO` gets its next step in the back lane of `DataSourceRunQueue`, behind every data source which begins
+  a pass, so a mailbox waits for one step at most.
+- **`IndexingPass`** - the steps of one data source, from its first step until one of them is done. It remembers
+  which documents failed during an earlier step, so the next steps do not read them again, and which failures
+  were reported to the user already.
 - **`TextChunker`** - cuts text into chunks the embedding provider accepts. Pick one of its strategies; do not
   write a chunker of your own.
 
@@ -35,6 +42,13 @@ To add a kind of data source:
 4. Keep whatever the kind has to remember beyond its documents in tables of its own in the index store, added
    by an EF Core migration (see `app/MindWork AI Studio/Tools/Databases/AGENTS.md`).
 5. Report every status through `DocumentRunProgress`, so all rows of the embedding page behave alike.
+6. Work in steps. Give the indexer its `Share`, and ask `DocumentRunProgress.HasDoneItsShare` before every
+   document. Leave out the documents which failed during an earlier step of the pass: either ask
+   `SkipIfFailedEarlierInPass` per document, or sort them out up front like `FileSourceIndexer.PartitionFiles`
+   and count them with `RecordFailedEarlierInPass`. Once the share is done, return what `PauseRunAsync`
+   returns: it decides whether the data source carries on in another run, or stops because its embedding
+   provider failed for everything. A run which takes more than twice its share without asking once ends up as
+   a warning in the log, while every other data source waits.
 
 Rules which are easy to break:
 - **A document key is not a path.** Only files use their full path as the key. Never pass a key through the
@@ -45,3 +59,11 @@ Rules which are easy to break:
   deliberately: that rebuilds every index.
 - **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
   automatic refresh setting and the startup hash check, and only the embedding service decides that.
+- **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the
+  data source selection that a run got through the whole data source (`IsIndexAwaitingRebuild`). Files pass
+  `null` to `PauseRunAsync`, so a folder stays out of the selection until its first indexing or its rebuild is
+  complete. The mailbox passes its hash, since every mail it indexed can be searched right away.
+- **A pass lives only while the last step left more to do.** The service drops the pass of a data source after
+  every other outcome and every exception, and when the stored index is reset. A retry the user asks for, and a
+  step with other embedding settings, begin a new pass (`IndexingPass.ContinueOrBegin`). A pass kept beyond that
+  leaves out documents which would work by now, for example once the embedding provider is reachable again.

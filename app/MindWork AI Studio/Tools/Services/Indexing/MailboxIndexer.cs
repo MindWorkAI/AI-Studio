@@ -28,10 +28,10 @@ namespace AIStudio.Tools.Services.Indexing;
 /// had its chance to link a mail which merely moved there. Even then, a mail is only orphaned, and
 /// deleted one run later, should it not turn up again by then.
 ///
-/// A run reads a limited number of mails, for a limited time, and leaves the rest to the next run.
-/// The first sync of a large mailbox takes hours, and the other data sources wait in the same
-/// queue. Nothing is removed before a run got through the whole mailbox, and a removal of a large
-/// part of it waits for the user to agree, cf. MailRemovalGuard.
+/// A run reads a limited number of mails, for a limited time, cf. Share, and leaves the rest to the
+/// next run. The first sync of a large mailbox takes hours, and the other data sources wait in the
+/// same queue. Nothing is removed before a run got through the whole mailbox, and a removal of a
+/// large part of it waits for the user to agree, cf. MailRemovalGuard.
 ///
 /// Signing in is guarded, because every refused attempt brings an account closer to being locked.
 /// A refused sign-in is stored, and no run signs in again until the user saves a new password,
@@ -57,16 +57,6 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     /// How many mails are fetched at once, before their text is read one after the other.
     /// </summary>
     private const int SUMMARY_BATCH_SIZE = 100;
-
-    /// <summary>
-    /// How many mails one run reads at most, whether embedding them works or not.
-    /// </summary>
-    private const int MAX_READ_MAILS_PER_RUN = 500;
-
-    /// <summary>
-    /// How long one run takes at most, before it leaves the rest to the next one.
-    /// </summary>
-    private static readonly TimeSpan MAX_RUN_DURATION = TimeSpan.FromMinutes(5);
 
     /// <summary>
     /// How often every mailbox is synced while AI Studio runs. It goes by the clock, so a computer
@@ -105,6 +95,13 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
 
     /// <inheritdoc />
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceMailbox;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Besides the time, a run reads at most 500 mails, whether embedding them works or not.
+    /// Linking a mail the index holds already costs next to nothing, so only the time limits that.
+    /// </remarks>
+    public RunShare Share => new(RunShare.DEFAULT_DURATION, 500);
 
     /// <inheritdoc />
     public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
@@ -257,7 +254,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             {
                 foreach (var folder in plannedFolders)
                 {
-                    if (await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, runStartedUtc, token))
+                    if (await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, token))
                         continue;
 
                     workedThrough = false;
@@ -278,7 +275,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             {
                 logger.LogWarning("Syncing mailbox '{MailboxId}' would remove {RemovalCount} of {IndexedCount} location(s) from the index at once. The removal waits for the user to agree.", mailbox.Id, removals.Count, removals.IndexedCount);
                 await context.IndexStore.HoldBackMailRemovalAsync(mailbox.Id, removals.Count, token);
-                await progress.PauseRunAsync(sourceHash, "mailbox sync waits for a removal to be approved", token);
+                await progress.StoreSourceHashAsync(sourceHash, "mailbox sync waits for a removal to be approved", token);
                 progress.PublishRunFailure(GetRemovalMessage(removals.Count), DataSourceAttention.MASS_REMOVAL_PENDING, removals.Count);
                 return IndexedRunOutcome.DONE;
             }
@@ -344,21 +341,16 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     /// Ends a run which did its share of the work before it got through the mailbox.
     /// </summary>
     /// <remarks>
-    /// Only a run which got something done hands on to another one. When every mail it read
-    /// failed, e.g. because the embedding provider is down, the next run would fail all the same,
-    /// and the one after it, without end. Such a run ends with its failures instead, and waits for
-    /// the next time the mailbox is queued.
+    /// The hash goes along, so the mails indexed so far can be searched right away. Whether another
+    /// run carries on is decided by DocumentRunProgress.PauseRunAsync, the same for every kind of
+    /// data source.
     /// </remarks>
     private async Task<IndexedRunOutcome> PauseAsync(DataSourceMailbox mailbox, DocumentRunProgress progress, string sourceHash, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
-        if (progress.IndexedDocuments is 0 && progress.FailedDocuments > 0)
-        {
-            logger.LogWarning("Syncing mailbox '{MailboxId}' stops without carrying on, since none of the {FailedMails} mail(s) it read could be indexed.", mailbox.Id, progress.FailedDocuments);
-            await progress.CompleteRunAsync(sourceHash, "mailbox sync stopped without progress", token);
-            return IndexedRunOutcome.DONE;
-        }
+        var outcome = await progress.PauseRunAsync(sourceHash, "mailbox sync paused", token);
+        if (outcome is not IndexedRunOutcome.MORE_TO_DO)
+            return outcome;
 
-        await progress.PauseRunAsync(sourceHash, "mailbox sync paused", token);
         logger.LogInformation(
             "Syncing mailbox '{MailboxId}' carries on in another run. RefreshMode={RefreshMode}, Embedded={EmbeddedMails}, Failed={FailedMails}, Done={DoneMails}/{TotalMails}.",
             mailbox.Id,
@@ -433,7 +425,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     /// The second pass through one folder: links or indexes the mails the index does not hold there yet.
     /// </summary>
     /// <returns>True when the folder is through, false when the run did its share of the work before.</returns>
-    private async Task<bool> SyncNewMailsAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, PlannedFolder folder, DocumentRunProgress progress, ISet<string> encounteredKeys, DateTimeOffset runStartedUtc, CancellationToken token)
+    private async Task<bool> SyncNewMailsAsync(IndexedRunContext context, DataSourceMailbox mailbox, ImapMailboxConnector connector, PlannedFolder folder, DocumentRunProgress progress, ISet<string> encounteredKeys, CancellationToken token)
     {
         if (folder.Plan.NewUids.Count > 0)
         {
@@ -451,13 +443,13 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             foreach (var uidBatch in folder.Plan.NewUids.Chunk(SUMMARY_BATCH_SIZE))
             {
                 token.ThrowIfCancellationRequested();
-                if (HasDoneItsShare(progress, runStartedUtc))
+                if (progress.HasDoneItsShare(DateTimeOffset.UtcNow))
                     return false;
 
                 var summaries = await connector.FetchSummariesAsync(uidBatch, token);
                 foreach (var summary in summaries.OrderByDescending(summary => summary.UniqueId.Id))
                 {
-                    if (HasDoneItsShare(progress, runStartedUtc))
+                    if (progress.HasDoneItsShare(DateTimeOffset.UtcNow))
                         return false;
 
                     await this.SyncNewMailAsync(context, mailbox, connector, folder.Folder.FullName, summary, progress, encounteredKeys, token);
@@ -478,16 +470,6 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
 
         return true;
     }
-
-    /// <summary>
-    /// Whether a run did its share of the work, so other data sources get their turn.
-    /// </summary>
-    /// <remarks>
-    /// Counted are the mails which were read, whether embedding them worked or not. Linking a mail
-    /// the index holds already costs next to nothing, so only the time limits that.
-    /// </remarks>
-    private static bool HasDoneItsShare(DocumentRunProgress progress, DateTimeOffset runStartedUtc) =>
-        progress.IndexedDocuments + progress.FailedDocuments >= MAX_READ_MAILS_PER_RUN || DateTimeOffset.UtcNow - runStartedUtc >= MAX_RUN_DURATION;
 
     /// <summary>
     /// Works out what a run which got through the whole mailbox would remove.

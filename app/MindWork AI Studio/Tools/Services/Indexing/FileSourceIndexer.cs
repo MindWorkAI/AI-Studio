@@ -23,6 +23,12 @@ namespace AIStudio.Tools.Services.Indexing;
 ///
 /// Changes are noticed by a file system watcher per data source. A burst of changes is waited out
 /// before a run is asked for, so saving a document twice in a row costs one run, not two.
+///
+/// A run reads files for its share of the time, cf. Share, and leaves the rest to the next one, so
+/// a folder which takes hours does not hold up every other data source. Every such step lists the
+/// folder anew, and counts what needs no reading before it reads the first file. A step stores no
+/// hash, so a folder which is indexed for the first time stays out of every search until its index
+/// is complete, cf. DocumentRunProgress.PauseRunAsync.
 /// </remarks>
 /// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
@@ -50,6 +56,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
 
     /// <inheritdoc />
+    public RunShare Share => new(RunShare.DEFAULT_DURATION);
+
+    /// <inheritdoc />
     public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not IDataSource dataSource || !this.Supports(dataSource))
@@ -57,7 +66,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var manifest = context.Manifest;
 
+        var enumerationStartedUtc = DateTimeOffset.UtcNow;
         var inputFiles = this.GetInputFiles(dataSource);
+        var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
 
@@ -71,12 +82,17 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 failure.Reason);
         }
 
+        //
+        // Listing the files is what every step of a large folder pays before it reads anything,
+        // hence the time it took:
+        //
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
             inputFiles.FailedFiles,
+            enumerationDuration.TotalMilliseconds,
             context.CollectionName);
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
@@ -116,60 +132,61 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         token.ThrowIfCancellationRequested();
+
+        //
+        // Everything which needs no reading is counted before the first file is read. Counted one
+        // by one, the progress of every step would start at zero, and climb through the files the
+        // steps before already did.
+        //
+        var partition = PartitionFiles(indexedFiles, metadataSnapshot.FileHashes, manifest, context.Pass);
+        progress.RecordUnchanged(partition.UnchangedCount);
+        foreach (var (filePath, permanentFailure) in partition.StillUnreadable)
+        {
+            logger.LogDebug(
+                "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
+                filePath,
+                dataSource.Name,
+                dataSource.Id,
+                permanentFailure.Code,
+                ShortHash(permanentFailure.Fingerprint),
+                permanentFailure.OccurredAtUtc);
+            progress.RecordStillUnreadable(filePath, permanentFailure);
+        }
+
+        foreach (var failure in partition.FailedEarlierInPass)
+            progress.RecordFailedEarlierInPass(failure);
+
+        logger.LogInformation(
+            "Sorted the files of data source '{DataSourceName}' ({DataSourceId}). Unchanged={UnchangedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, FailedEarlierInPass={FailedEarlierInPass}, ToRead={FilesToRead}.",
+            dataSource.Name,
+            dataSource.Id,
+            partition.UnchangedCount,
+            partition.StillUnreadable.Count,
+            partition.FailedEarlierInPass.Count,
+            partition.ToRead.Count);
         progress.Publish();
 
         //
-        // Everything the runtime filters out of these files is reported once for the whole data
-        // source. A run over a few thousand documents which removes something in forty of them
-        // is one thing that happened to the user, not forty. The scope ends with this method, so
-        // the report arrives when the run is finished rather than in the middle of it.
+        // Everything the runtime filters out of these files is reported once for the whole step.
+        // A step over a few thousand documents which removes something in forty of them is one
+        // thing that happened to the user, not forty. The scope ends with this method, so the
+        // report arrives when the step is over rather than in the middle of it.
         //
         await using var promptInjectionReportingScope = guardService.BeginAction();
 
-        foreach (var file in indexedFiles)
+        for (var fileIndex = 0; fileIndex < partition.ToRead.Count; fileIndex++)
         {
             token.ThrowIfCancellationRequested();
+            if (progress.HasDoneItsShare(DateTimeOffset.UtcNow))
+                return await this.PauseAsync(dataSource, progress, refreshMode, partition.ToRead.Count - fileIndex, token);
 
+            var file = partition.ToRead[fileIndex];
             var fingerprint = metadataSnapshot.FileHashes[file.FullName];
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) &&
-                string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because the persisted metadata hash matches. MetadataHashPrefix={MetadataHashPrefix}, LastWriteUtc={LastWriteUtc:O}, FileSize={FileSize}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    ShortHash(fingerprint),
-                    file.LastWriteTimeUtc,
-                    file.Length);
-                progress.RecordUnchanged();
-                progress.Publish();
-                continue;
-            }
-
-            //
-            // A file which failed for a reason of its own is not read again until it changes.
-            // Without this, a folder holding hundreds of scanned documents without a text layer
-            // would spend half an hour on every start to arrive at the result we already have:
-            //
-            if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) &&
-                string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    permanentFailure.Code,
-                    ShortHash(fingerprint),
-                    permanentFailure.OccurredAtUtc);
-                progress.RecordStillUnreadable(file.FullName, permanentFailure);
-                progress.Publish();
-                continue;
-            }
+            var existingRecord = manifest.Files.GetValueOrDefault(file.FullName);
 
             var document = this.CreateFileDocument(context, dataSource, file, fingerprint);
             var reportBlockProgress = progress.BeginDocument(document);
+            var startedAtUtc = DateTimeOffset.UtcNow;
 
             try
             {
@@ -182,7 +199,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     ShortHash(fingerprint),
                     progress.DoneDocuments + 1,
                     totalFiles);
-                var startedAtUtc = DateTimeOffset.UtcNow;
                 var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
@@ -215,6 +231,21 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             {
                 await progress.RecordDocumentFailureAsync(document, exception, token);
             }
+
+            //
+            // A file is read to its end, however long that takes: its text arrives as a stream from
+            // the runtime, which cannot pick up where it stopped. Every other data source waits
+            // for it, so it should at least show up in the log:
+            //
+            var fileDuration = DateTimeOffset.UtcNow - startedAtUtc;
+            if (fileDuration > context.Share.MaxDuration)
+                logger.LogWarning(
+                    "Reading file '{FilePath}' of data source '{DataSourceName}' ({DataSourceId}) took {FileMinutes:F0} minutes, longer than the share of a whole run, which is {ShareMinutes:F0} minutes. Every other data source waited for it.",
+                    file.FullName,
+                    dataSource.Name,
+                    dataSource.Id,
+                    fileDuration.TotalMinutes,
+                    context.Share.MaxDuration.TotalMinutes);
         }
 
         await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
@@ -234,6 +265,71 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             ShortHash(metadataSnapshot.SourceHash));
 
         return IndexedRunOutcome.DONE;
+    }
+
+    /// <summary>
+    /// Sorts the files of a data source by what one run does with them.
+    /// </summary>
+    /// <remarks>
+    /// A file which failed for a reason of its own is not read again until it changes. Without
+    /// that, a folder holding hundreds of scanned documents without a text layer would spend half
+    /// an hour on every start to arrive at the result we already have. A file which failed during
+    /// an earlier step of the pass waits for the next pass, unless it changed since, cf. IndexingPass.
+    /// </remarks>
+    /// <param name="files">The files of the data source, in the order they are read.</param>
+    /// <param name="fingerprints">The fingerprint of every one of them, by its full path.</param>
+    /// <param name="manifest">What the index stores about the data source.</param>
+    /// <param name="pass">The pass the run is a step of.</param>
+    /// <returns>The files, sorted.</returns>
+    internal static FilePartition PartitionFiles(IReadOnlyList<FileInfo> files, IReadOnlyDictionary<string, string> fingerprints, DataSourceEmbeddingManifest manifest, IndexingPass pass)
+    {
+        var unchangedCount = 0;
+        var stillUnreadable = new List<KeyValuePair<string, PermanentIndexingFailureRecord>>();
+        var failedEarlierInPass = new List<DataSourceEmbeddingFailure>();
+        var toRead = new List<FileInfo>();
+
+        foreach (var file in files)
+        {
+            var fingerprint = fingerprints[file.FullName];
+            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) && string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
+                unchangedCount++;
+            else if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) && string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
+                stillUnreadable.Add(new(file.FullName, permanentFailure));
+            else if (pass.TryGetEarlierFailure(file.FullName, fingerprint, out var earlierFailure))
+                failedEarlierInPass.Add(earlierFailure);
+            else
+                toRead.Add(file);
+        }
+
+        return new(unchangedCount, stillUnreadable, failedEarlierInPass, toRead);
+    }
+
+    /// <summary>
+    /// Ends a run which did its share of the work before it read every file.
+    /// </summary>
+    /// <remarks>
+    /// Without a hash, cf. DocumentRunProgress.PauseRunAsync: a folder which is indexed for the
+    /// first time must not count as complete, and one which was complete before keeps the hash of
+    /// back then, which no longer matches, so the next run reads on.
+    /// </remarks>
+    private async Task<IndexedRunOutcome> PauseAsync(IDataSource dataSource, DocumentRunProgress progress, DataSourceEmbeddingRefreshMode refreshMode, int filesLeftToRead, CancellationToken token)
+    {
+        var outcome = await progress.PauseRunAsync(null, "data source embedding run paused", token);
+        if (outcome is not IndexedRunOutcome.MORE_TO_DO)
+            return outcome;
+
+        logger.LogInformation(
+            "Embedding data source '{DataSourceName}' ({DataSourceId}) carries on in another run. RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, Failed={FailedFiles}, Done={DoneFiles}/{TotalFiles}, LeftToRead={FilesLeftToRead}.",
+            dataSource.Name,
+            dataSource.Id,
+            refreshMode,
+            progress.IndexedDocuments,
+            progress.FailedDocuments,
+            progress.DoneDocuments,
+            progress.TotalDocuments,
+            filesLeftToRead);
+
+        return IndexedRunOutcome.MORE_TO_DO;
     }
 
     /// <summary>
