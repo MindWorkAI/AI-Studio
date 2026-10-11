@@ -1062,6 +1062,21 @@ public static class WorkspaceBehaviour
                 };
             }
         }
+
+        //
+        // The transcripts of the message not sent yet live in the chat directory as well. Left with
+        // their old paths, the draft points at a directory which is gone after the move, and the
+        // transcripts would never reach the message.
+        //
+        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
+        {
+            var transcript = chat.PendingMediaTranscripts[index];
+            if (!Path.GetFullPath(transcript.FilePath).StartsWith(sourcePrefix, pathComparison))
+                continue;
+
+            var relativePath = Path.GetRelativePath(sourceDirectory, transcript.FilePath);
+            chat.PendingMediaTranscripts[index] = transcript with { FilePath = Path.Combine(targetDirectory, relativePath) };
+        }
     }
 
     private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)

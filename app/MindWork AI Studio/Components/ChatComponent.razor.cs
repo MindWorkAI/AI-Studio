@@ -1366,7 +1366,18 @@ public partial class ChatComponent : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
+        var transcriptsBeforeTheMove = this.ChatThread!.PendingMediaTranscripts.Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
         await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+
+        //
+        // The move took the transcripts of the message being written along and gave them their new
+        // paths. The composer stays as it is, though, since the chat counts as loaded already, so it
+        // would still send the old paths, which point at nothing now:
+        //
+        this.ComposerState.FileAttachments.RemoveWhere(attachment => transcriptsBeforeTheMove.Contains(attachment.FilePath));
+        foreach (var transcript in this.ChatThread!.PendingMediaTranscripts)
+            this.ComposerState.FileAttachments.Add(transcript);
+
         this.MarkCurrentChatAsLoadedParameter();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
