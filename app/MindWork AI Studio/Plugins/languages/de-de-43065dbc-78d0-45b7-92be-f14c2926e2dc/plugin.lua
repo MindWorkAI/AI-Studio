@@ -9564,6 +9564,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Der Speicherort d
 -- Failed: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1531389696"] = "Fehlgeschlagen: {0}"
 
+-- AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1545941101"] = "AI Studio indexiert große Datenquellen in Etappen von wenigen Minuten, damit zwischendurch auch Ihre anderen Datenquellen an die Reihe kommen."
+
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Einstellungen öffnen"
 

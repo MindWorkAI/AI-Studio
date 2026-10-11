@@ -9564,6 +9564,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1455637941"] = "Could not open th
 -- Failed: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1531389696"] = "Failed: {0}"
 
+-- AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1545941101"] = "AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between."
+
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Open the settings"
 
