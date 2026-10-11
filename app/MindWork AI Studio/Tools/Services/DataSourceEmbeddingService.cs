@@ -40,6 +40,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private readonly ConcurrentDictionary<string, DataSourceRunControl> activeRuns = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
     private readonly object queueStateLock = new();
+
+    /// <summary>
+    /// Guards the run signature of every active run, cf. DataSourceRunControl.RunSignature.
+    /// </summary>
+    private readonly Lock runSignatureLock = new();
+
     private int startupHashCheckStarted;
     private int startupHashCheckCompleted;
 
@@ -55,7 +61,17 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
 
-    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion);
+    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion)
+    {
+        /// <summary>
+        /// The embedding settings the run works for, as GetRunSignature describes them.
+        /// </summary>
+        /// <remarks>
+        /// Null until the run has resolved its embedding provider. Read and written under
+        /// runSignatureLock only.
+        /// </remarks>
+        public DataSourceRunSignature? RunSignature { get; set; }
+    }
 
     /// <summary>
     /// Creates one indexer per kind of data source, all of them cutting their text with the same chunker.
@@ -443,6 +459,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         logger.LogDebug("Refreshed watcher state for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
 
         var queueRequestResult = this.TryReserveDataSourceQueueSlot(dataSource.Id, queueAfterCurrentRun, refreshMode);
+
+        //
+        // Every change of the embedding settings ends up here, whichever dialog made it. A run
+        // started before would carry on with the old settings, possibly for hours, only for the
+        // next run to throw its work away. It stops after the reservation, so the run which
+        // starts over with the new settings is certain before the old one ends.
+        //
+        this.CancelOutdatedDataSourceRun(dataSource.Id);
+
         switch (queueRequestResult)
         {
             case DataSourceQueueRequestResult.ALREADY_QUEUED:
@@ -595,7 +620,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await this.ProcessDataSourceAsync(dataSource, refreshMode, runTokenSource.Token);
+            await this.ProcessDataSourceAsync(dataSource, refreshMode, runControl, runTokenSource.Token);
         }
         catch (OperationCanceledException) when (!parentToken.IsCancellationRequested && runTokenSource.IsCancellationRequested)
         {
@@ -624,9 +649,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </remarks>
     /// <param name="dataSource">The data source to index.</param>
     /// <param name="refreshMode">Why the run was started, for the log.</param>
+    /// <param name="runControl">The run, which records the embedding settings it works for.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The context of the run, or null when there is no run.</returns>
-    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
     {
         logger.LogInformation(
             "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
@@ -712,13 +738,21 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, indexStore, token);
+        //
+        // From here on, a change of the embedding settings stops this run, cf. CancelOutdatedDataSourceRun.
+        // The provider passed the confidence check above, so this is the run signature as well.
+        //
+        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider);
+        lock (this.runSignatureLock)
+            runControl.RunSignature = new(embeddingSignature);
+
+        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, embeddingSignature, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
         return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, this.UpsertStatus, logger);
     }
 
-    private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
     {
         if (!this.TryGetIndexer(dataSource, out var indexer))
         {
@@ -729,7 +763,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, token);
+        var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, runControl, token);
         if (context is null)
             return;
 
@@ -952,13 +986,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(
         IIndexedDataSource dataSource,
         EmbeddingProvider embeddingProvider,
+        string embeddingSignature,
         string collectionName,
         VectorStoreClient vectorStore,
         IndexStoreClient indexStore,
         CancellationToken token)
     {
-        var chunkingOptions = GetChunkingOptions(dataSource, embeddingProvider);
-        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
@@ -1143,16 +1176,75 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             "Canceling active embedding run for deleted data source '{DataSourceName}' ({DataSourceId}).",
             dataSource.Name,
             dataSource.Id);
+
+        return TryCancelRun(activeRun) ? activeRun : null;
+    }
+
+    /// <summary>
+    /// Stops the active run of a data source when it works for embedding settings which no longer apply.
+    /// </summary>
+    /// <remarks>
+    /// Only what the run signature covers counts, cf. GetRunSignature: another embedding model, other
+    /// chunk settings, a deleted embedding provider, or one which may no longer read the data source.
+    /// A changed name or a changed document leaves the run alone. Whoever calls this has to make sure
+    /// a run follows which starts over with the current settings.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    private void CancelOutdatedDataSourceRun(string dataSourceId)
+    {
+        if (!this.activeRuns.TryGetValue(dataSourceId, out var activeRun))
+            return;
+
+        var currentRunSignature = this.GetCurrentRunSignature(dataSourceId);
+        DataSourceRunSignature? runSignature;
+        lock (this.runSignatureLock)
+        {
+            runSignature = activeRun.RunSignature;
+            if (!IsRunOutdated(runSignature, currentRunSignature))
+                return;
+        }
+
+        logger.LogInformation(
+            "Canceling the active embedding run for data source '{DataSourceId}' because its embedding settings changed or its embedding provider may no longer read it. RunSignaturePrefix={RunSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
+            dataSourceId,
+            ShortHash(runSignature?.EmbeddingSignature ?? string.Empty),
+            currentRunSignature == DataSourceRunSignature.NONE ? "<no run would start>" : ShortHash(currentRunSignature.EmbeddingSignature));
+
+        TryCancelRun(activeRun);
+    }
+
+    /// <summary>
+    /// The embedding settings a run of a data source would start with now, as GetRunSignature describes them.
+    /// </summary>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>The run signature, or NONE when no run would start: the data source is gone, its embedding provider is, or that provider may not read it.</returns>
+    private DataSourceRunSignature GetCurrentRunSignature(string dataSourceId)
+    {
+        if (!this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
+            return DataSourceRunSignature.NONE;
+
+        if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
+            return DataSourceRunSignature.NONE;
+
+        return GetRunSignature(dataSource, embeddingProvider, embeddingProvider.GetConfidenceLevel(settingsManager));
+    }
+
+    /// <summary>
+    /// Asks a run to stop.
+    /// </summary>
+    /// <param name="run">The run.</param>
+    /// <returns>False when the run has ended already.</returns>
+    private static bool TryCancelRun(DataSourceRunControl run)
+    {
         try
         {
-            activeRun.TokenSource.Cancel();
+            run.TokenSource.Cancel();
+            return true;
         }
         catch (ObjectDisposedException)
         {
-            return null;
+            return false;
         }
-
-        return activeRun;
     }
 
     private async Task QueuePendingDataSourceRunAsync(string dataSourceId, CancellationToken token)
