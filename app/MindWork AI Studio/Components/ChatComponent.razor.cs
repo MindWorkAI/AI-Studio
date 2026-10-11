@@ -2106,26 +2106,26 @@ public partial class ChatComponent : MSGComponentBase
         }
     }
 
-    protected override Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TResult : default where TPayload : default
+    protected override Task<MessageBusAnswer<TResult>> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) where TPayload : default
     {
         switch (triggeredEvent)
         {
             case Event.HAS_CHAT_UNSAVED_CHANGES:
                 if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
-                    return Task.FromResult((TResult?) (object) false);
+                    return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
 
                 if (this.IsCurrentChatStreaming)
-                    return Task.FromResult((TResult?) (object) false);
+                    return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult) (object) false));
 
                 //
                 // A message the user started counts as unsaved on its own only while there is no chat
                 // to keep it. Otherwise, it is part of the chat: changing it counts as a change of the
                 // chat, and a message which came back from the disk with the chat is saved already.
                 //
-                return Task.FromResult((TResult?)(object)(this.hasUnsavedChanges || (this.ChatThread is null && this.ComposerState.HasVisibleUserDraft)));
+                return Task.FromResult(new MessageBusAnswer<TResult>(true, (TResult)(object)(this.hasUnsavedChanges || (this.ChatThread is null && this.ComposerState.HasVisibleUserDraft))));
         }
-        
-        return Task.FromResult(default(TResult));
+
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 
     #endregion
