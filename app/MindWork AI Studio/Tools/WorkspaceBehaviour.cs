@@ -1038,30 +1038,59 @@ public static class WorkspaceBehaviour
     /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
     private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
     {
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+                content.FileAttachments[index] = RelocateAttachment(content.FileAttachments[index], sourceDirectory, targetDirectory);
+        }
+
+        //
+        // The transcripts of the message not sent yet live in the chat directory as well. Left with
+        // their old paths, the draft points at a directory which is gone after the move, and the
+        // transcripts would never reach the message.
+        //
+        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
+            chat.PendingMediaTranscripts[index] = (ManagedTranscriptAttachment)RelocateAttachment(chat.PendingMediaTranscripts[index], sourceDirectory, targetDirectory);
+    }
+
+    /// <summary>
+    /// Gives an attachment the path it has after its chat moved into another workspace.
+    /// </summary>
+    /// <remarks>
+    /// Moving a chat moves its whole directory, and with it every file inside, such as the
+    /// transcripts of audio and video files. Whatever still refers to such a file needs its new path:
+    /// the messages and the draft of the chat, which the move takes care of itself, and the composer
+    /// of the open chat, which is what this is for. An attachment outside the chat directory stays as
+    /// it is.
+    /// </remarks>
+    /// <param name="attachment">The attachment as it was before the move.</param>
+    /// <param name="chatId">The chat which was moved.</param>
+    /// <param name="sourceWorkspaceId">The workspace the chat came from, or Guid.Empty for a temporary chat.</param>
+    /// <param name="targetWorkspaceId">The workspace the chat lives in now, or Guid.Empty for a temporary chat.</param>
+    /// <returns>The attachment with its new path, or the attachment itself when the move did not touch its file.</returns>
+    public static FileAttachment RelocateAttachmentAfterMove(FileAttachment attachment, Guid chatId, Guid sourceWorkspaceId, Guid targetWorkspaceId) =>
+        RelocateAttachment(attachment, GetChatDirectory(sourceWorkspaceId, chatId), GetChatDirectory(targetWorkspaceId, chatId));
+
+    /// <summary>Gives an attachment inside a moved directory its path in the target directory.</summary>
+    private static FileAttachment RelocateAttachment(FileAttachment attachment, string sourceDirectory, string targetDirectory)
+    {
         var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
             ? sourceDirectory
             : sourceDirectory + Path.DirectorySeparatorChar;
 
         var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
+            return attachment;
+
+        var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
+        var movedPath = Path.Combine(targetDirectory, relativePath);
+
+        return attachment switch
         {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                var attachment = content.FileAttachments[index];
-                if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
-                    continue;
-
-                var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
-                var movedPath = Path.Combine(targetDirectory, relativePath);
-
-                content.FileAttachments[index] = attachment switch
-                {
-                    ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
-                    FileAttachmentImage image => image with { FilePath = movedPath },
-                    _ => attachment with { FilePath = movedPath },
-                };
-            }
-        }
+            ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
+            FileAttachmentImage image => image with { FilePath = movedPath },
+            _ => attachment with { FilePath = movedPath },
+        };
     }
 
     private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)

@@ -549,6 +549,16 @@ public partial class ChatComponent : MSGComponentBase
             return;
         }
 
+        //
+        // The same chat in another workspace was moved there, e.g., through the workspace tree. Only
+        // a move changes the workspace of a chat; every other way to open one brings another chat ID:
+        //
+        if (chatId != Guid.Empty && this.loadedParameterChatId == chatId)
+        {
+            await this.FollowMovedChatAsync(this.loadedParameterWorkspaceId);
+            return;
+        }
+
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
         await this.LoadedChatChanged(notifyParent: false);
@@ -672,6 +682,21 @@ public partial class ChatComponent : MSGComponentBase
     private bool CanThreadBeSaved => this.ChatThread is not null && this.ChatThread.Blocks.Any(b => !b.HideFromUser);
 
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
+    /// <summary>
+    /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
+    /// </summary>
+    /// <remarks>
+    /// The tree lists every stored chat, even one without a message yet, such as a chat which was
+    /// stored right away to keep the transcript of an audio or video file. A chat not stored yet has
+    /// no directory to move. While an answer is generated or a transcript is made, the chat stays
+    /// where it is, just like in the tree. The directory check comes last, because this runs with
+    /// every render.
+    /// </remarks>
+    private bool CanThreadBeMoved => this.ChatThread is not null
+                                     && !this.IsCurrentChatStreaming
+                                     && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
+                                     && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
 
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
@@ -1366,9 +1391,35 @@ public partial class ChatComponent : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
+        var previousWorkspaceId = this.ChatThread!.WorkspaceId;
         await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
-        this.MarkCurrentChatAsLoadedParameter();
+        await this.FollowMovedChatAsync(previousWorkspaceId);
+    }
 
+    /// <summary>
+    /// Follows the open chat into the workspace it was moved to.
+    /// </summary>
+    /// <remarks>
+    /// A move is no other chat being opened, so the message being written stays in the composer,
+    /// whether the user moved the chat from here or through the workspace tree. What has to change are
+    /// the paths of its attachments: the move took the chat directory along, and with it the
+    /// transcripts of audio and video files. Left with their old paths, the composer would send
+    /// references to files which are gone.
+    /// </remarks>
+    /// <param name="previousWorkspaceId">The workspace the chat came from, or Guid.Empty for a temporary chat.</param>
+    private async Task FollowMovedChatAsync(Guid previousWorkspaceId)
+    {
+        var chatId = this.ChatThread!.ChatId;
+        var workspaceId = this.ChatThread.WorkspaceId;
+        var relocatedAttachments = this.ComposerState.FileAttachments
+            .Select(attachment => WorkspaceBehaviour.RelocateAttachmentAfterMove(attachment, chatId, previousWorkspaceId, workspaceId))
+            .ToList();
+
+        this.ComposerState.FileAttachments.Clear();
+        foreach (var attachment in relocatedAttachments)
+            this.ComposerState.FileAttachments.Add(attachment);
+
+        this.MarkCurrentChatAsLoadedParameter();
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
 
@@ -1558,7 +1609,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
-        this.ChatThread.Remove(block);
+        this.ChatThread.RemoveForEditing(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
@@ -1574,7 +1625,7 @@ public partial class ChatComponent : MSGComponentBase
             return Task.CompletedTask;
 
         this.RestoreComposerFromTextBlock(textBlock);
-        this.ChatThread.Remove(block);
+        this.ChatThread.RemoveForEditing(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         return Task.CompletedTask;

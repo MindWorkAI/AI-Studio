@@ -470,6 +470,39 @@ public sealed record ChatThread
     }
 
     /// <summary>
+    /// Removes a user message whose text and attachments went back into the composer for editing.
+    /// </summary>
+    /// <remarks>
+    /// Unlike Remove, this keeps the files of the managed transcripts. The composer still carries
+    /// them, so deleting the files would leave the edited message pointing at nothing, and the user
+    /// would have to transcribe the media all over again.<br/><br/>
+    ///
+    /// A transcript always belongs to exactly one owner: to a sent message, or to the draft in the
+    /// composer, which this thread keeps in PendingMediaTranscripts. Sending hands the transcripts of
+    /// the draft to the new message; editing is the way back. From then on, the rules of the draft
+    /// apply: removing the attachment from the composer deletes its file, and opening the chat again
+    /// brings it back into the composer.
+    /// </remarks>
+    /// <param name="content">The content of the user message to edit.</param>
+    public void RemoveForEditing(IContent content)
+    {
+        var block = this.Blocks.FirstOrDefault(x => x.Content == content);
+        if (block is null)
+            return;
+
+        if (block.Content is ContentText textContent)
+        {
+            foreach (var transcript in textContent.FileAttachments.OfType<ManagedTranscriptAttachment>())
+            {
+                if (this.PendingMediaTranscripts.All(existing => existing.FilePath != transcript.FilePath))
+                    this.PendingMediaTranscripts.Add(transcript);
+            }
+        }
+
+        this.Blocks.Remove(block);
+    }
+
+    /// <summary>
     /// Rolls this chat thread back, so that the given content becomes the last block of the conversation.
     /// </summary>
     /// <remarks>
