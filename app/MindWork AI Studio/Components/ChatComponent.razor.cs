@@ -1028,7 +1028,7 @@ public partial class ChatComponent : MSGComponentBase
         this.RefreshCurrentProfileAndChatTemplate();
         var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
         var threadName = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
-            ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
+            ? string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath))
             : promptName;
 
         this.ChatThread = this.NewChatThread(threadName) with
@@ -1036,7 +1036,16 @@ public partial class ChatComponent : MSGComponentBase
             DataSourceOptions = this.earlyDataSourceOptions,
         };
 
-        await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+        //
+        // Like saving, this goes through the workspace component whenever there is one, so its tree
+        // lists the new chat right away, together with the progress of the transcription, instead
+        // of only after the first message was sent:
+        //
+        if (this.Workspaces is not null)
+            await this.Workspaces.StoreChatAsync(this.ChatThread);
+        else
+            await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         await this.SyncForegroundChatAsync();
@@ -1391,8 +1400,16 @@ public partial class ChatComponent : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
+        //
+        // Like saving and copying, the move goes through the workspace component whenever there is
+        // one, so its tree shows the chat in the new place right away:
+        //
         var previousWorkspaceId = this.ChatThread!.WorkspaceId;
-        await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+        if (this.Workspaces is not null)
+            await this.Workspaces.MoveChatAsync(this.ChatThread!, workspaceId);
+        else
+            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+
         await this.FollowMovedChatAsync(previousWorkspaceId);
     }
 
