@@ -1036,7 +1036,16 @@ public partial class ChatComponent : MSGComponentBase
             DataSourceOptions = this.earlyDataSourceOptions,
         };
 
-        await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+        //
+        // Like saving, this goes through the workspace component whenever there is one, so its tree
+        // lists the new chat right away, together with the progress of the transcription, instead
+        // of only after the first message was sent:
+        //
+        if (this.Workspaces is not null)
+            await this.Workspaces.StoreChatAsync(this.ChatThread);
+        else
+            await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         await this.SyncForegroundChatAsync();
