@@ -208,6 +208,19 @@ public sealed class MessageBus
         return messages;
     }
     
+    /// <summary>
+    /// Asks the receivers a question and returns the first answer.
+    /// </summary>
+    /// <remarks>
+    /// Every receiver which never narrowed down its events gets the question as well, but only the ones
+    /// which handle it answer. All others return MessageBusAnswer.NONE and are passed over, cf. the remarks
+    /// on MessageBusAnswer for why a bare result cannot express that.
+    /// </remarks>
+    /// <param name="sendingComponent">That's you, the sender.</param>
+    /// <param name="triggeredEvent">The question to ask.</param>
+    /// <param name="data">What the question needs to be answered, if anything.</param>
+    /// <returns>The first answer, or the default of TResult when no receiver answers. Asking for unsaved
+    /// changes thus yields false when no chat is open.</returns>
     public async Task<TResult?> SendMessageUseFirstResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data = default)
     {
         foreach (var (receiver, componentFilter) in this.componentFilters)
@@ -218,9 +231,9 @@ public sealed class MessageBus
             var eventFilter = this.componentEvents[receiver];
             if (eventFilter.Length == 0 || eventFilter.Contains(triggeredEvent))
             {
-                var result = await receiver.ProcessMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
-                if (result is not null)
-                    return (TResult) result;
+                var answer = await receiver.ProcessMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
+                if (answer.IsAnswered)
+                    return answer.Value;
             }
         }
         
