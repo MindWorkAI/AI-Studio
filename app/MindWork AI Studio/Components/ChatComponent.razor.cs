@@ -683,6 +683,21 @@ public partial class ChatComponent : MSGComponentBase
 
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
 
+    /// <summary>
+    /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
+    /// </summary>
+    /// <remarks>
+    /// The tree lists every stored chat, even one without a message yet, such as a chat which was
+    /// stored right away to keep the transcript of an audio or video file. A chat not stored yet has
+    /// no directory to move. While an answer is generated or a transcript is made, the chat stays
+    /// where it is, just like in the tree. The directory check comes last, because this runs with
+    /// every render.
+    /// </remarks>
+    private bool CanThreadBeMoved => this.ChatThread is not null
+                                     && !this.IsCurrentChatStreaming
+                                     && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)
+                                     && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.ChatThread.WorkspaceId, this.ChatThread.ChatId));
+
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
     private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
