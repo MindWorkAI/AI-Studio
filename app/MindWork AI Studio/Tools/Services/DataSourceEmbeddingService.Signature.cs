@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Mail;
@@ -140,4 +141,40 @@ public sealed partial class DataSourceEmbeddingService
     /// <returns>The signature of this pairing.</returns>
     internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider) =>
         BuildEmbeddingSignature(dataSource, embeddingProvider, GetChunkingOptions(dataSource, embeddingProvider));
+
+    /// <summary>
+    /// Describes the indexing run a data source would get with a given embedding provider.
+    /// </summary>
+    /// <remarks>
+    /// The embedding signature, as long as the provider may read the data source at all. Comparing
+    /// what a run started with against what it would start with now tells whether the run is
+    /// outdated: either it embeds for an index the next run throws away, or it sends documents to a
+    /// provider which may no longer read them.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="embeddingProvider">The embedding provider the data source names.</param>
+    /// <param name="embeddingProviderConfidence">The confidence level of that embedding provider.</param>
+    /// <returns>The signature of the run, or NONE when the provider may not read the data source and no run would start.</returns>
+    internal static DataSourceRunSignature GetRunSignature(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, ConfidenceLevel embeddingProviderConfidence) =>
+        AllowsEmbedding(dataSource, embeddingProviderConfidence)
+            ? new(BuildEmbeddingSignature(dataSource, embeddingProvider))
+            : DataSourceRunSignature.NONE;
+
+    /// <summary>
+    /// Whether an indexing run works for embedding settings which no longer apply.
+    /// </summary>
+    /// <param name="runSignature">The signature the run started with, or null while the run has not resolved its embedding provider yet.</param>
+    /// <param name="currentRunSignature">The signature a run would start with now, or NONE when no run would start anymore.</param>
+    /// <returns>True when the run should stop.</returns>
+    internal static bool IsRunOutdated(DataSourceRunSignature? runSignature, DataSourceRunSignature currentRunSignature)
+    {
+        //
+        // Still preparing, so nothing was embedded or sent anywhere yet. The run checks for itself
+        // once it records its signature.
+        //
+        if (runSignature is null)
+            return false;
+
+        return currentRunSignature == DataSourceRunSignature.NONE || runSignature != currentRunSignature;
+    }
 }
