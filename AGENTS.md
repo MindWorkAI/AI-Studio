@@ -116,45 +116,9 @@ The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP 
 ## Architecture Details
 
 ### Rust Runtime (`runtime/`)
-**Entry point:** `runtime/src/main.rs`
-
-Key modules:
-- `app_window.rs` - Tauri window management, updater integration
-- `dotnet.rs` - Launches and manages the .NET sidecar process
-- `runtime_api.rs` - Axum-based HTTPS API for .NET ↔ Rust communication
-- `certificate.rs` - Generates self-signed TLS certificates for secure IPC
-- `secret.rs` - Secure secret storage using OS keyring (Keychain/Credential Manager)
-- `clipboard.rs` - Cross-platform clipboard operations
-- `file_data.rs` - File processing for RAG (extracts text from PDF, DOCX, XLSX, PPTX, etc.)
-- `encryption.rs` - AES-256-CBC encryption for sensitive data
-- `pandoc.rs` - Integration with Pandoc for document conversion
-- `log.rs` - Logging infrastructure using `flexi_logger`
-
-**Every runtime API route requires the API token.** `require_api_token` in `runtime_api.rs` checks it
-for all routes at once, so handlers take no `APIToken` argument. Register a new route in
-`create_router`, before that call: `route_layer` protects only the routes registered before it, and
-a route added afterward would be open to every process on the machine. The test
-`every_route_requires_the_api_token` reads the routes from `create_router` and fails for any route
-which answers without the token.
-
-**Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
-task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
-blocking handler can hold up the whole app. Therefore:
-
-- File and disk access, the OS keyring, waiting for a `std::sync::Mutex`, and CPU-bound work such as
-  loading a tokenizer or scanning text run in `tokio::task::spawn_blocking`. Follow
-  `run_qdrant_edge_request` in `qdrant_edge_database.rs`, `prepare_image` and `prepare_image_sync` in
-  `image.rs`, or `sanitize_batch` in `prompt_injection/api.rs`.
-- When an API offers a callback, as the file dialogs do, await the callback instead of calling the
-  blocking variant; see `await_dialog` in `file_actions.rs`.
-- Short, bounded work, such as a single metadata lookup or writing a log line, may stay on the worker.
-- When the blocking task fails, answer with an error, never with an empty value the app could take
-  for a valid answer.
-- Never keep a `std::sync::MutexGuard` alive across an `.await`, not even with an explicit `drop`
-  before it: the future of the handler is then no longer `Send`, and Axum refuses it. Scope the guard
-  in a block instead.
-- `runtime_api::test_support::assert_runtime_stays_free` tests a handler which waits for a lock. Run
-  such a test with `#[tokio::test(flavor = "multi_thread", worker_threads = 1)]`.
+Before you plan, read, or change anything under `runtime/`, read `runtime/AGENTS.md` first. It holds the
+key modules, the rules for runtime API routes and handlers, and the IPC communication flow between the
+runtime and the .NET app.
 
 ### .NET App (`app/MindWork AI Studio/`)
 **Entry point:** `app/MindWork AI Studio/Program.cs`
@@ -176,15 +140,6 @@ Key structure:
 - **Settings/** - Application settings and data models
 - **Components/** - Reusable Blazor components
 - **Pages/** - Top-level page components
-
-### IPC Communication Flow
-1. Rust runtime starts and generates TLS certificate
-2. Rust starts internal HTTPS API on random port
-3. Rust launches .NET sidecar, passing: API port, certificate fingerprint, API token, secret key
-4. .NET reads environment variables and establishes secure HTTPS connection to Rust
-5. .NET requests an app port from Rust, starts Blazor Server on that port
-6. Rust opens Tauri webview pointing to localhost:app_port
-7. Bi-directional communication: .NET ↔ Rust via HTTPS API
 
 ### Configuration and Metadata
 - `metadata.txt` - Build metadata (version, build time, component versions) read by both Rust and .NET
@@ -399,17 +354,8 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 ## Release Process
 
-1. Create changelog file: `app/MindWork AI Studio/wwwroot/changelog/vX.Y.Z.md`
-2. Check that every contribution in the release is credited, see "Crediting contributors" below. The
-   authors of all pull requests merged since the last release are listed by
-   `gh pr list -R MindWorkAI/AI-Studio --state merged --limit 1000 --search "merged:>=<YYYY-MM-DD>" --json author --jq '[.[].author.login] | unique | .[]'`,
-   with the date of the last release tag from `git log -1 --format=%cs <last release tag>`; skip bots
-3. Commit changelog
-4. Run from `app/Build`: `dotnet run release --action <build|month|year>`
-5. Create PR with version bump and changes
-6. After PR merge, maintainer creates git tag: `vX.Y.Z`
-7. GitHub Actions builds release binaries for all platforms
-8. Binaries uploaded to GitHub Releases
+Before you prepare a release, read `app/Build/AGENTS.md` first. It holds the release steps and the rules
+for crediting contributors.
 
 ## Localization
 
@@ -473,34 +419,6 @@ inside the entry instead, even when that repeats a few words from another one.
 **Split a topic into several short entries** rather than growing a single long one, and address the
 reader with "you".
 
-### Crediting contributors
-
-When a pull request is merged, or a release is prepared, check both places where we thank contributors.
-This holds for everybody except the maintainer, members of the core team included, not only for external
-contributors:
-
-- **The changelog entry of the change.** Thank the contributor at the end of the entry, in the form
-  ``<first name> <last name> (`<GitHub username>`)``, and call a first contribution out as such.
-- **The "Code Contributions" list on the supporters page** in `app/MindWork AI Studio/Pages/Supporters.razor`.
-  Add contributors who are not listed yet, one
-  `<Supporter Name="<GitHub username>" Type="SupporterType.INDIVIDUAL" URL="https://github.com/<GitHub username>" Acknowledgment="@T("…")"/>`
-  each, at the end of the list. The list is sorted by the first merged contribution of each person; someone
-  whom the changelog thanks for work inside another person's pull request counts from that pull request on.
-
-The acknowledgment calls the person by their first name, unless the credit choice below rules out their
-name, and says what they built. It never compares contributors or counts their contributions, and the
-order of the list is chronological only. Bug reports
-alone and commissioned work outside this repository get no entry on the supporters page; the changelog may
-still thank them.
-
-The credit choice in the pull request template is binding:
-
-- **"Credit me with my GitHub username only":** use the GitHub username alone. No real name, neither in
-  the changelog nor in the acknowledgment text.
-- **"Do not credit me":** neither a changelog mention nor an entry on the supporters page.
-- **No choice ticked, or a pull request from before the template:** the GitHub username plus the name, when
-  the contributor shows it publicly on their GitHub profile (`gh api users/<GitHub username> --jq .name`)
-  or an earlier changelog already thanked them by that name.
-
-Acknowledgments on the supporters page are `T()` texts, so the two steps of "Localization" above apply:
-remind the developer to run the localization, then review the German value.
+**Thanking contributors.** Before an entry thanks a contributor, and whenever a pull request is merged,
+read "Crediting contributors" in `app/Build/AGENTS.md` first: the credit choice in the pull request
+template decides whether and how we name somebody.
