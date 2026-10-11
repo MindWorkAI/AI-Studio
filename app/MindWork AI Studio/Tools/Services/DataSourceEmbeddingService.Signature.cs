@@ -168,7 +168,10 @@ public sealed partial class DataSourceEmbeddingService
     /// <returns>True when the run should stop.</returns>
     internal static bool IsRunOutdated(DataSourceRunSignature? runSignature, DataSourceRunSignature currentRunSignature)
     {
-        // Still preparing, so nothing was embedded or sent anywhere yet:
+        //
+        // Still preparing, so nothing was embedded or sent anywhere yet. The run checks for itself
+        // once it records its signature.
+        //
         if (runSignature is null)
             return false;
 

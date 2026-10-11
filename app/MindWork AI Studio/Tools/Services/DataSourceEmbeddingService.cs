@@ -625,10 +625,29 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         catch (OperationCanceledException) when (!parentToken.IsCancellationRequested && runTokenSource.IsCancellationRequested)
         {
             logger.LogInformation(
-                "Stopped background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the data source was removed or canceled. RefreshMode={RefreshMode}.",
+                "Stopped background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the data source was removed or canceled, or its embedding settings changed. RefreshMode={RefreshMode}.",
                 dataSource.Name,
                 dataSource.Id,
                 refreshMode);
+
+            //
+            // A data source which is still there has its next run queued already. Its row says so
+            // instead of showing this run as running: a run of the startup check would otherwise
+            // keep that row until the check has worked through every other data source.
+            //
+            if (this.TryGetConfiguredIndexedSource(dataSource.Id, out var configuredDataSource))
+            {
+                this.statuses.TryGetValue(configuredDataSource.Id, out var currentStatus);
+                this.UpsertStatus(this.CreateStatus(
+                    configuredDataSource,
+                    DataSourceEmbeddingState.QUEUED,
+                    currentStatus?.TotalDocuments ?? 0,
+                    currentStatus?.IndexedDocuments ?? 0,
+                    currentStatus?.FailedDocuments ?? 0,
+                    lastError: currentStatus?.LastError ?? string.Empty,
+                    failures: currentStatus?.Failures ?? [],
+                    lastSyncUtc: currentStatus?.LastSyncUtc));
+            }
         }
         finally
         {
@@ -743,8 +762,23 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         // The provider passed the confidence check above, so this is the run signature as well.
         //
         var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider);
+        var runSignature = new DataSourceRunSignature(embeddingSignature);
         lock (this.runSignatureLock)
-            runControl.RunSignature = new(embeddingSignature);
+            runControl.RunSignature = runSignature;
+
+        //
+        // A change which arrived while this run was still waiting for the databases found no
+        // signature to compare against, so nothing stopped it. Yet this run may have started from
+        // the data source as it was before the change. Recording above and the check in
+        // CancelOutdatedDataSourceRun take the same lock, so either that check saw the signature
+        // and stopped the run, or this check sees the change. Checked before the manifest, which
+        // would otherwise throw the stored index away for settings which no longer apply.
+        //
+        if (IsRunOutdated(runSignature, this.GetCurrentRunSignature(dataSource.Id)))
+        {
+            await this.StopOutdatedDataSourceRunAsync(dataSource.Id);
+            token.ThrowIfCancellationRequested();
+        }
 
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, embeddingSignature, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
@@ -1178,6 +1212,25 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Id);
 
         return TryCancelRun(activeRun) ? activeRun : null;
+    }
+
+    /// <summary>
+    /// Stops the outdated run of a data source, and queues the run which starts over with the current settings.
+    /// </summary>
+    /// <remarks>
+    /// For a run already found to be outdated. The queue checks again before it stops anything, so
+    /// a run whose settings were changed back in the meantime carries on.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    private Task StopOutdatedDataSourceRunAsync(string dataSourceId)
+    {
+        // Through the queue, which stops the run once the next one is certain:
+        if (this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
+            return this.QueueDataSourceAsync(dataSource);
+
+        // The data source is gone, so there is nothing to start over:
+        this.CancelOutdatedDataSourceRun(dataSourceId);
+        return Task.CompletedTask;
     }
 
     /// <summary>
