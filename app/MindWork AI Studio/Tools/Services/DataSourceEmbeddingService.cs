@@ -17,7 +17,7 @@ using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService
+    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
 {
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
@@ -530,6 +530,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Changes to the embedding settings which do not pass through the queue, cf. ProcessMessage:
+        MessageBus.INSTANCE.RegisterComponent(this);
+        this.ApplyFilters([], [Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED]);
+
         await this.WaitForInitialSettingsAndBootstrapAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -582,6 +586,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 await this.QueuePendingDataSourceRunAsync(dataSourceId, stoppingToken);
             }
         }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        MessageBus.INSTANCE.Unregister(this);
+        await base.StopAsync(cancellationToken);
     }
 
     public override void Dispose()
