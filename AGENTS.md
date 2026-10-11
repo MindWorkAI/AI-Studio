@@ -1,6 +1,7 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents, such as Claude Code and Codex, when working with code in this
+repository.
 
 ## Incremental implementation workflow
 
@@ -12,6 +13,28 @@ a time. After each item:
 3. Suggest a short, concise commit title in US English.
 4. Stop and wait until the developer has reviewed and committed the changes before continuing.
 5. Never push the changes; the developer performs all pushes.
+
+## Area guides
+
+Some areas of the code have instructions of their own, in an `AGENTS.md` next to the code. Claude Code
+loads such a guide by itself once it works in that directory; other agents, Codex among them, do not.
+Therefore, before you plan, read, or change anything in one of these areas, read its guide first:
+
+| Before you work on … | read first |
+|---|---|
+| anything under `runtime/` | `runtime/AGENTS.md` |
+| a release, or crediting a contributor in a changelog entry or after a merge | `app/Build/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/PluginSystem/`, or a new capability of configuration plugins | `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/ToolCallingSystem/` | `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/` | `app/MindWork AI Studio/Models/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/Services/Indexing/`, or `DataSourceEmbeddingService` | `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` |
+| anything under `app/MindWork AI Studio/Tools/Databases/` | `app/MindWork AI Studio/Tools/Databases/AGENTS.md` |
+
+This file keeps only what applies in every session or across the whole code base, such as the rules for
+code which calls into one of these areas. Add instructions about a single area to its guide instead. A new
+guide is an `AGENTS.md` plus a `CLAUDE.md` holding only `@AGENTS.md`, listed in the table above. Never place
+one below `app/MindWork AI Studio/wwwroot/` or `app/MindWork AI Studio/Plugins/`: both are embedded into
+the app and shipped to every user.
 
 ## Working for an external contributor
 
@@ -116,9 +139,8 @@ The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP 
 ## Architecture Details
 
 ### Rust Runtime (`runtime/`)
-Before you plan, read, or change anything under `runtime/`, read `runtime/AGENTS.md` first. It holds the
-key modules, the rules for runtime API routes and handlers, and the IPC communication flow between the
-runtime and the .NET app.
+**Area guide:** `runtime/AGENTS.md`, with the key modules, the rules for runtime API routes and handlers,
+and the IPC communication flow between the runtime and the .NET app.
 
 ### .NET App (`app/MindWork AI Studio/`)
 **Entry point:** `app/MindWork AI Studio/Program.cs`
@@ -158,9 +180,8 @@ Plugins are written in Lua and provide:
 
 **Example configuration plugin:** `app/MindWork AI Studio/Plugins/configuration/plugin.lua`
 
-Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/PluginSystem/`, or add a
-capability to configuration plugins, read `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md` first. It
-explains the three kinds of values a configuration plugin provides and how to add each of them.
+**Area guide:** `app/MindWork AI Studio/Tools/PluginSystem/AGENTS.md`, with the three kinds of values a
+configuration plugin provides and how to add each of them.
 
 ## Tool Calling System
 
@@ -170,9 +191,8 @@ Selections, `DataTools.DisabledToolIds`, and the minimum provider confidence nam
 
 Code which decides something on behalf of a request — whether the classic RAG process steps back, say — asks `ToolRegistry.GetOfferBlockReasonAsync` or `ToolRegistry.GetEffectiveRetrievalModeAsync` with the provider settings of the request (`IProvider.CreateSettingsProvider`), never a check of its own: two answers which drift apart leave a chat searching nothing or twice.
 
-Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/ToolCallingSystem/`, read
-`app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md` first. It explains how to add, change, or remove
-a tool and the rules every tool implementation follows.
+**Area guide:** `app/MindWork AI Studio/Tools/ToolCallingSystem/AGENTS.md`, with how to add, change, or
+remove a tool and the rules every tool implementation follows.
 
 ## Model Capabilities
 
@@ -180,8 +200,7 @@ a tool and the rules every tool implementation follows.
 
 What a model can do is answered in `app/MindWork AI Studio/Models/`, through `provider.GetModelProfile()`. Never ask `ModelRegistry` directly from a component: the extension method is what adds the expert settings and what a provider's model list reported, and the registry alone answers neither.
 
-Before you plan, read, or change anything under `app/MindWork AI Studio/Models/` or `app/Tests/Models/`,
-read `app/MindWork AI Studio/Models/AGENTS.md` first. It explains how to add, change, or remove model
+**Area guide:** `app/MindWork AI Studio/Models/AGENTS.md`, with how to add, change, or remove model
 knowledge.
 
 ## RAG (Retrieval-Augmented Generation)
@@ -205,10 +224,8 @@ kind of data source plugs into this pipeline instead of building its own.
 **Every content path goes through the prompt injection filter.** Files pass the sanitizer of the runtime while
 their text is extracted; a new kind of data source needs its own pass through `PromptInjectionGuardService`.
 
-Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/Services/Indexing/` or in
-`DataSourceEmbeddingService`, read `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md` first. It
-describes the parts of the pipeline, how to add a kind of data source, and the rules which are easy to
-break.
+**Area guide:** `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md`, with the parts of the
+pipeline, how to add a kind of data source, and the rules which are easy to break.
 
 ## Databases
 
@@ -219,9 +236,8 @@ with its own semaphore, so never construct a client yourself.
 which shortens anything above 999 to `1.46k` or `4.51M` and formats it with the culture of the
 active language plugin. Storage sizes are the exception: they keep using the byte formatters.
 
-Before you plan, read, or change anything under `app/MindWork AI Studio/Tools/Databases/`, read
-`app/MindWork AI Studio/Tools/Databases/AGENTS.md` first. It describes both stores and what to keep in mind
-when working on them, EF Core migrations included.
+**Area guide:** `app/MindWork AI Studio/Tools/Databases/AGENTS.md`, with both stores and what to keep in
+mind when working on them, EF Core migrations included.
 
 ## Enterprise IT Support
 
@@ -270,8 +286,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 ## Release Process
 
-Before you prepare a release, read `app/Build/AGENTS.md` first. It holds the release steps and the rules
-for crediting contributors.
+**Area guide:** `app/Build/AGENTS.md`, with the release steps and the rules for crediting contributors.
 
 ## Localization
 
@@ -297,9 +312,7 @@ the next localization run.
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **End of file formatting** - Do not append an extra empty line at the end of files.
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
-- **I18N resources are generated** - The developer produces the translations by running the localization assistant in the app; agents only review and correct the German values afterward. See "Localization" above.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
-- **Agent-run builds** - Never start `.NET` or Rust builds in the agent's own shell; it is sandboxed. Use the `rider` and `rustrover` MCP servers instead, which build in the IDE outside that sandbox. See "Running builds from an agent" above.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs
@@ -307,7 +320,6 @@ the next localization run.
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
 - **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
 - **Compatibility shims** - Temporary fallback or read-repair code must be documented in `documentation/compatibility-shims/` with an introduced date, remove-after date, code references, and removal checklist. Add a short code comment near the shim that references the document and remove-after date. Check this folder before adding similar fallback logic, and do not extend expired shims without explicit maintainer direction. Do not use this process for permanent settings schema migrations; those belong in `app/MindWork AI Studio/Settings/SettingsMigrations.cs`.
-- **Empty lines** - Avoid adding extra empty lines at the end of files.
 
 ## Changelogs
 Changelogs are located in `app/MindWork AI Studio/wwwroot/changelog/` with filenames `vX.Y.Z.md`. These changelogs are meant to be for normal end-users
