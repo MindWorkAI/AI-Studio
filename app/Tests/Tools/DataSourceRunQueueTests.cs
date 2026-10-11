@@ -10,7 +10,8 @@ namespace AIStudio.Tests.Tools;
 /// data source which runs twice embeds everything twice, at a cloud embedding provider for real
 /// money. One which never runs again goes out of date without anybody noticing. A run in the wrong
 /// mode is the subtle case: only a manual retry signs in to a mailbox again after its server refused
-/// a sign-in.
+/// a sign-in. The order counts as well: a mailbox which waits behind a large folder misses its new
+/// mails for hours.
 /// </remarks>
 [TestFixture]
 public sealed class DataSourceRunQueueTests
@@ -18,6 +19,8 @@ public sealed class DataSourceRunQueueTests
     private const string DATA_SOURCE_ID = "6f1d6a4e-6a5e-4c62-9a4f-0f2d2c8b7a11";
 
     private const string OTHER_DATA_SOURCE_ID = "5a1e7c3d-9b2f-4d8e-a6c4-3f0b9d2e1c75";
+
+    private const string MAILBOX_ID = "0c8e2b4f-3d7a-4e19-b5c6-8a2f1d9e7b30";
 
     [Test]
     public async Task RequestsForAWaitingDataSourceMergeIntoOneRun()
@@ -46,7 +49,7 @@ public sealed class DataSourceRunQueueTests
         var second = await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION);
         var requeue = queue.TryComplete(DATA_SOURCE_ID, true, out var pendingRefreshMode);
         if (requeue)
-            await queue.EnqueueAsync(DATA_SOURCE_ID);
+            await queue.EnqueueAsync(DATA_SOURCE_ID, DataSourceQueueLane.FRONT);
 
         Assert.Multiple(() =>
         {
@@ -159,7 +162,7 @@ public sealed class DataSourceRunQueueTests
         var second = await Request(queue, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
         var requeue = queue.TryComplete(DATA_SOURCE_ID, true, out var pendingRefreshMode);
         if (requeue)
-            await queue.EnqueueAsync(DATA_SOURCE_ID);
+            await queue.EnqueueAsync(DATA_SOURCE_ID, DataSourceQueueLane.BACK);
 
         Assert.Multiple(() =>
         {
@@ -206,16 +209,97 @@ public sealed class DataSourceRunQueueTests
         });
     }
 
+    [Test]
+    public async Task AMailboxWaitsForOneStepAtMost()
+    {
+        var queue = new DataSourceRunQueue();
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, OTHER_DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+        Assert.That(queue.TryDequeue(out var step), Is.True);
+
+        // The interval of the mailbox comes due while a large folder does its step:
+        await Request(queue, DataSourceEmbeddingRefreshMode.INTERVAL_CHECK, MAILBOX_ID);
+        await CarryOn(queue, step!.DataSourceId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(step.DataSourceId, Is.EqualTo(DATA_SOURCE_ID));
+            Assert.That(DequeueAll(queue).Select(run => run.DataSourceId), Is.EqualTo(new[] { MAILBOX_ID, OTHER_DATA_SOURCE_ID, DATA_SOURCE_ID }), "The mailbox must not wait behind every step of every large data source, which would add up to hours.");
+        });
+    }
+
+    [Test]
+    public async Task DataSourcesWhichCarryOnTakeTurns()
+    {
+        var queue = new DataSourceRunQueue();
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, OTHER_DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+
+        var steps = new List<string>();
+        for (var step = 0; step < 4; step++)
+        {
+            Assert.That(queue.TryDequeue(out var runRequest), Is.True);
+            steps.Add(runRequest!.DataSourceId);
+            await CarryOn(queue, runRequest.DataSourceId);
+        }
+
+        Assert.That(steps, Is.EqualTo(new[] { DATA_SOURCE_ID, OTHER_DATA_SOURCE_ID, DATA_SOURCE_ID, OTHER_DATA_SOURCE_ID }), "A data source which takes hours must not hold up another one which takes hours as well.");
+    }
+
+    [Test]
+    public async Task ADataSourceRepairedWhileItCarriedOnRunsOnceAndAtTheFront()
+    {
+        var queue = new DataSourceRunQueue();
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, OTHER_DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+
+        // What the repair does: forget the waiting run, which also drops the pass, then ask for a manual retry.
+        queue.Clear(DATA_SOURCE_ID);
+        await Request(queue, DataSourceEmbeddingRefreshMode.MANUAL_RETRY);
+
+        Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.MANUAL_RETRY), new DataSourceRunRequest(OTHER_DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.CONTINUATION) }), "The copy left behind in the back lane must not run the data source a second time.");
+    }
+
+    [Test]
+    public async Task ACopyLeftBehindInTheFrontLaneLetsNoLaterRunOvertake()
+    {
+        var queue = new DataSourceRunQueue();
+        await Request(queue, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, OTHER_DATA_SOURCE_ID, DataSourceQueueLane.BACK);
+
+        // The repair of a data source which waits in the front lane leaves a copy of its id behind there:
+        queue.Clear(DATA_SOURCE_ID);
+        await Request(queue, DataSourceEmbeddingRefreshMode.MANUAL_RETRY);
+        Assert.That(queue.TryDequeue(out var repair), Is.True);
+        await CarryOn(queue, repair!.DataSourceId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(repair, Is.EqualTo(new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.MANUAL_RETRY)));
+            Assert.That(DequeueAll(queue).Select(run => run.DataSourceId), Is.EqualTo(new[] { OTHER_DATA_SOURCE_ID, DATA_SOURCE_ID }), "The next step of the repaired data source carries on its pass, so it waits its turn in the back lane.");
+        });
+    }
+
     /// <summary>
     /// Asks for a run the way DataSourceEmbeddingService does: reserve a place, and enqueue the data source when it got one.
     /// </summary>
-    private static async Task<DataSourceQueueRequestResult> Request(DataSourceRunQueue queue, DataSourceEmbeddingRefreshMode refreshMode, string dataSourceId = DATA_SOURCE_ID)
+    private static async Task<DataSourceQueueRequestResult> Request(DataSourceRunQueue queue, DataSourceEmbeddingRefreshMode refreshMode, string dataSourceId = DATA_SOURCE_ID, DataSourceQueueLane lane = DataSourceQueueLane.FRONT)
     {
         var result = queue.TryReserve(dataSourceId, true, refreshMode);
         if (result is DataSourceQueueRequestResult.QUEUED)
-            await queue.EnqueueAsync(dataSourceId);
+            await queue.EnqueueAsync(dataSourceId, lane);
 
         return result;
+    }
+
+    /// <summary>
+    /// Ends the step of a running data source the way DataSourceEmbeddingService does when the step left more to do.
+    /// </summary>
+    private static async Task CarryOn(DataSourceRunQueue queue, string dataSourceId)
+    {
+        await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION, dataSourceId);
+        if (queue.TryComplete(dataSourceId, true, out _))
+            await queue.EnqueueAsync(dataSourceId, DataSourceQueueLane.BACK);
     }
 
     private static List<DataSourceRunRequest> DequeueAll(DataSourceRunQueue queue)

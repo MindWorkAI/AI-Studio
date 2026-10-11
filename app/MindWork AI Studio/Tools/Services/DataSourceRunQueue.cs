@@ -9,23 +9,37 @@ namespace AIStudio.Tools.Services;
 /// <remarks>
 /// A data source holds at most one place in the queue, and at most one follow-up run while it runs.
 ///
-/// The channel carries nothing but ids. Why a run was asked for is kept next to it, and taking a run
-/// out of the queue takes that along. Any other copy of the same id which is still in the channel
-/// then finds nothing and is skipped. That is how a data source which was deleted or repaired while
-/// it waited leaves nothing behind: no run in an outdated mode, and no second run circling through
-/// the queue next to the one which was queued anew.
+/// The queue has two lanes, cf. DataSourceQueueLane. Every run in the front lane comes out before
+/// any run in the back lane, and each lane hands out its runs in the order they came in. The data
+/// sources in the back lane therefore take turns.
+///
+/// The channel carries copies of ids, each with its lane and a number. Why a run was asked for is
+/// kept next to it, together with the number of the copy which counts, and taking a run out of the
+/// queue takes both along. Any other copy of the same id which is still in the channel then finds
+/// nothing, or another number, and is skipped. That is how a data source which was deleted or
+/// repaired while it waited leaves nothing behind: no run in an outdated mode, no second run
+/// circling through the queue next to the one which was queued anew, and no copy in the front lane
+/// which lets a later run of the data source overtake the back lane.
 ///
 /// Everything but the channel is guarded by one lock, so reserving, starting and completing a run
 /// never see each other halfway.
 /// </remarks>
 internal sealed class DataSourceRunQueue
 {
-    private readonly Channel<string> channel = Channel.CreateUnbounded<string>();
+    private readonly Channel<QueuedCopy> channel = Channel.CreateUnboundedPrioritized(new UnboundedPrioritizedChannelOptions<QueuedCopy> { Comparer = Comparer<QueuedCopy>.Create(CompareCopies) });
 
     /// <summary>
     /// The data sources which wait for a run, each with why it was asked for.
     /// </summary>
     private readonly Dictionary<string, DataSourceEmbeddingRefreshMode> queuedModes = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The data sources which wait in the channel, each with the number of the copy which counts.
+    /// </summary>
+    /// <remarks>
+    /// A data source whose place is reserved gets its number once it is enqueued.
+    /// </remarks>
+    private readonly Dictionary<string, long> queuedCopyNumbers = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// The data sources whose run has started and not completed yet.
@@ -38,6 +52,16 @@ internal sealed class DataSourceRunQueue
     private readonly Dictionary<string, DataSourceEmbeddingRefreshMode> pendingModes = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly Lock stateLock = new();
+
+    private long lastCopyNumber;
+
+    /// <summary>
+    /// One copy of the id of a data source in the channel.
+    /// </summary>
+    /// <param name="DataSourceId">The id of the data source.</param>
+    /// <param name="Lane">The lane the copy waits in.</param>
+    /// <param name="Number">Counts up with every copy. It keeps each lane in the order its copies came in, and tells the copy which counts from those left behind.</param>
+    private sealed record QueuedCopy(string DataSourceId, DataSourceQueueLane Lane, long Number);
 
     /// <summary>
     /// Reserves a place in the queue for a data source, or one follow-up run while it runs.
@@ -79,8 +103,23 @@ internal sealed class DataSourceRunQueue
     /// Puts a data source into the queue, once its place is reserved.
     /// </summary>
     /// <param name="dataSourceId">The id of the data source.</param>
+    /// <param name="lane">The lane the data source waits in.</param>
     /// <param name="token">The cancellation token.</param>
-    public ValueTask EnqueueAsync(string dataSourceId, CancellationToken token = default) => this.channel.Writer.WriteAsync(dataSourceId, token);
+    public ValueTask EnqueueAsync(string dataSourceId, DataSourceQueueLane lane, CancellationToken token = default)
+    {
+        QueuedCopy copy;
+        lock (this.stateLock)
+        {
+            // Cleared since its place was reserved, e.g. because the data source was deleted:
+            if (!this.queuedModes.ContainsKey(dataSourceId))
+                return ValueTask.CompletedTask;
+
+            copy = new(dataSourceId, lane, ++this.lastCopyNumber);
+            this.queuedCopyNumbers[dataSourceId] = copy.Number;
+        }
+
+        return this.channel.Writer.WriteAsync(copy, token);
+    }
 
     /// <summary>
     /// Waits for the next run, takes it out of the queue, and marks it as running.
@@ -106,16 +145,18 @@ internal sealed class DataSourceRunQueue
     /// <returns>True when a run was taken out of the queue.</returns>
     public bool TryDequeue([NotNullWhen(true)] out DataSourceRunRequest? runRequest)
     {
-        while (this.channel.Reader.TryRead(out var dataSourceId))
+        while (this.channel.Reader.TryRead(out var copy))
         {
             lock (this.stateLock)
             {
-                // Released or cleared while it waited, or taken already through another copy of the same id:
-                if (!this.queuedModes.Remove(dataSourceId, out var refreshMode))
+                // Released or cleared while it waited, or enqueued anew since, with another copy which counts instead:
+                if (!this.queuedCopyNumbers.TryGetValue(copy.DataSourceId, out var number) || number != copy.Number)
                     continue;
 
-                this.runningIds.Add(dataSourceId);
-                runRequest = new(dataSourceId, refreshMode);
+                this.queuedCopyNumbers.Remove(copy.DataSourceId);
+                this.queuedModes.Remove(copy.DataSourceId, out var refreshMode);
+                this.runningIds.Add(copy.DataSourceId);
+                runRequest = new(copy.DataSourceId, refreshMode);
                 return true;
             }
         }
@@ -172,7 +213,10 @@ internal sealed class DataSourceRunQueue
     public void Release(string dataSourceId)
     {
         lock (this.stateLock)
+        {
             this.queuedModes.Remove(dataSourceId);
+            this.queuedCopyNumbers.Remove(dataSourceId);
+        }
     }
 
     /// <summary>
@@ -188,8 +232,20 @@ internal sealed class DataSourceRunQueue
         lock (this.stateLock)
         {
             this.queuedModes.Remove(dataSourceId);
+            this.queuedCopyNumbers.Remove(dataSourceId);
             this.pendingModes.Remove(dataSourceId);
         }
+    }
+
+    /// <summary>
+    /// Orders the copies in the channel: the front lane before the back lane, and each lane in the order its copies came in.
+    /// </summary>
+    private static int CompareCopies(QueuedCopy x, QueuedCopy y)
+    {
+        if (x.Lane != y.Lane)
+            return x.Lane is DataSourceQueueLane.FRONT ? -1 : 1;
+
+        return x.Number.CompareTo(y.Number);
     }
 
     /// <summary>

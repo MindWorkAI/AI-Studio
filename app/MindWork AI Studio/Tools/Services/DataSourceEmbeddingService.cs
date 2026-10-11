@@ -479,16 +479,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return;
         }
 
+        var lane = this.GetQueueLane(dataSource.Id);
         logger.LogInformation(
-            "Queueing data source '{DataSourceName}' ({DataSourceId}) for background embedding hash check. RefreshMode={RefreshMode}.",
+            "Queueing data source '{DataSourceName}' ({DataSourceId}) for background embedding hash check. RefreshMode={RefreshMode}, Lane={Lane}.",
             dataSource.Name,
             dataSource.Id,
-            refreshMode);
+            refreshMode,
+            lane);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
             this.UpsertStatus(this.GetQueuedStatus(dataSource));
 
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-        await this.runQueue.EnqueueAsync(dataSource.Id);
+        await this.runQueue.EnqueueAsync(dataSource.Id, lane);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
@@ -868,10 +870,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     refreshMode);
 
             //
-            // Queued behind whatever else waits, so a data source which takes hours gives the
-            // others their turn. While this run is still active, that is the follow-up run every
-            // request during a run leaves behind. Should the user ask for a run of their own in the
-            // meantime, theirs comes first, and carries on just the same.
+            // While this run is still active, that is the follow-up run every request during a run
+            // leaves behind. It waits in the back lane, behind every data source which begins a
+            // pass and behind the other ones which carry on, so a data source which takes hours
+            // gives the others their turn, cf. GetQueueLane. Should the user ask for a run of their
+            // own in the meantime, the two merge into one.
             //
             if (outcome is IndexedRunOutcome.MORE_TO_DO)
                 await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
@@ -1346,19 +1349,36 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
+        var lane = this.GetQueueLane(dataSourceId);
+        logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run, or after it did its share of the work. RefreshMode={RefreshMode}, Lane={Lane}.", dataSource.Name, dataSource.Id, refreshMode, lane);
 
         this.UpsertStatus(this.GetQueuedStatus(dataSource));
 
         try
         {
-            await this.runQueue.EnqueueAsync(dataSourceId, token);
+            await this.runQueue.EnqueueAsync(dataSourceId, lane, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             this.runQueue.Release(dataSourceId);
         }
     }
+
+    /// <summary>
+    /// Picks the lane of the queue in which the next run of a data source waits.
+    /// </summary>
+    /// <remarks>
+    /// A data source which carries on a pass waits behind every data source which begins one. A
+    /// mailbox at its interval therefore waits for one step at most, rather than for hours behind a
+    /// large folder. Since a pass begins without one, every pass gets one step in the front lane at
+    /// most: no data source keeps the front lane to itself, however long it takes.
+    ///
+    /// Asked when the run is enqueued, and only then. For a follow-up run, that is after the run
+    /// before it ended, which kept or dropped the pass by then.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>The back lane while the data source has a pass, the front lane otherwise.</returns>
+    private DataSourceQueueLane GetQueueLane(string dataSourceId) => this.passes.ContainsKey(dataSourceId) ? DataSourceQueueLane.BACK : DataSourceQueueLane.FRONT;
 
     private void UpsertStatus(DataSourceEmbeddingStatus status)
     {
