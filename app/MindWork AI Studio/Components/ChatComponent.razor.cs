@@ -1391,8 +1391,16 @@ public partial class ChatComponent : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
+        //
+        // Like saving and copying, the move goes through the workspace component whenever there is
+        // one, so its tree shows the chat in the new place right away:
+        //
         var previousWorkspaceId = this.ChatThread!.WorkspaceId;
-        await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+        if (this.Workspaces is not null)
+            await this.Workspaces.MoveChatAsync(this.ChatThread!, workspaceId);
+        else
+            await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+
         await this.FollowMovedChatAsync(previousWorkspaceId);
     }
 
