@@ -125,6 +125,27 @@ internal sealed class DataSourceRunQueue
     }
 
     /// <summary>
+    /// Marks a data source as running which did not come out of the queue, unless it runs or waits in the queue already.
+    /// </summary>
+    /// <remarks>
+    /// For the startup check, which works through every data source on its own. Its runs have to
+    /// count as running as well: a request during one of them then leaves one follow-up run, instead
+    /// of a second run next to it.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>True when the caller runs the data source now, and completes the run with TryComplete.</returns>
+    public bool TryBeginRun(string dataSourceId)
+    {
+        lock (this.stateLock)
+        {
+            if (this.queuedModes.ContainsKey(dataSourceId))
+                return false;
+
+            return this.runningIds.Add(dataSourceId);
+        }
+    }
+
+    /// <summary>
     /// Marks the run of a data source as completed, and reserves the place of its follow-up run when it has one.
     /// </summary>
     /// <param name="dataSourceId">The id of the data source.</param>

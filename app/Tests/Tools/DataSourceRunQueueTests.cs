@@ -150,6 +150,44 @@ public sealed class DataSourceRunQueueTests
     }
 
     [Test]
+    public async Task ARunOfTheStartupCheckGetsExactlyOneFollowUpRun()
+    {
+        var queue = new DataSourceRunQueue();
+        var begun = queue.TryBeginRun(DATA_SOURCE_ID);
+
+        var first = await Request(queue, DataSourceEmbeddingRefreshMode.CONTINUATION);
+        var second = await Request(queue, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
+        var requeue = queue.TryComplete(DATA_SOURCE_ID, true, out var pendingRefreshMode);
+        if (requeue)
+            await queue.EnqueueAsync(DATA_SOURCE_ID);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(begun, Is.True);
+            Assert.That(first, Is.EqualTo(DataSourceQueueRequestResult.RUNNING_MARKED_PENDING), "The run began outside the queue, yet it runs all the same.");
+            Assert.That(second, Is.EqualTo(DataSourceQueueRequestResult.RUNNING));
+            Assert.That(requeue, Is.True);
+            Assert.That(pendingRefreshMode, Is.EqualTo(DataSourceEmbeddingRefreshMode.CONTINUATION));
+            Assert.That(DequeueAll(queue), Is.EqualTo(new[] { new DataSourceRunRequest(DATA_SOURCE_ID, DataSourceEmbeddingRefreshMode.CONTINUATION) }), "A data source which did its share of the work during the startup check must carry on afterward, exactly once.");
+        });
+    }
+
+    [Test]
+    public async Task TheStartupCheckLeavesOutADataSourceWhichRunsOrWaits()
+    {
+        var queue = new DataSourceRunQueue();
+        await Request(queue, DataSourceEmbeddingRefreshMode.HASH_CHECK);
+        var running = queue.TryBeginRun(OTHER_DATA_SOURCE_ID);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(running, Is.True);
+            Assert.That(queue.TryBeginRun(DATA_SOURCE_ID), Is.False, "The data source waits in the queue, so it would run twice in a row.");
+            Assert.That(queue.TryBeginRun(OTHER_DATA_SOURCE_ID), Is.False, "The data source runs already, so it would run twice at once.");
+        });
+    }
+
+    [Test]
     public async Task WaitingForTheNextRunSkipsWhatWasCleared()
     {
         var queue = new DataSourceRunQueue();

@@ -33,6 +33,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
 
     private readonly DataSourceRunQueue runQueue = new();
+
+    /// <summary>
+    /// Lets one run at a time embed, cf. ProcessDataSourceRunAsync.
+    /// </summary>
+    private readonly SemaphoreSlim runGate = new(1, 1);
+
     private readonly ConcurrentDictionary<string, DataSourceRunControl> activeRuns = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
 
@@ -474,16 +480,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Id,
             refreshMode);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
-        {
-            this.UpsertStatus(this.CreateStatus(
-                dataSource,
-                DataSourceEmbeddingState.QUEUED,
-                currentStatus?.TotalDocuments ?? 0,
-                currentStatus?.IndexedDocuments ?? 0,
-                currentStatus?.FailedDocuments ?? 0,
-                failures: currentStatus?.Failures ?? [],
-                lastSyncUtc: currentStatus?.LastSyncUtc));
-        }
+            this.UpsertStatus(this.GetQueuedStatus(dataSource));
+
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
         await this.runQueue.EnqueueAsync(dataSource.Id);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
@@ -524,51 +522,75 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         while (!stoppingToken.IsCancellationRequested)
         {
             var runRequest = await this.runQueue.DequeueAsync(stoppingToken);
-            var dataSourceId = runRequest.DataSourceId;
-
-            IIndexedDataSource? dataSource = null;
 
             try
             {
-                if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
-                    continue;
-
-                await this.ProcessDataSourceRunAsync(dataSource, runRequest.RefreshMode, stoppingToken);
+                await this.RunDataSourceAsync(runRequest.DataSourceId, runRequest.RefreshMode, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
-            catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+        }
+    }
+
+    /// <summary>
+    /// Runs a data source which the queue marked as running, and queues its follow-up run afterward.
+    /// </summary>
+    /// <remarks>
+    /// The one bracket around every run, whether it came out of the queue or from the startup check.
+    /// Whoever calls this has marked the run as running, cf. DataSourceRunQueue.DequeueAsync and
+    /// TryBeginRun. That is what turns every request during the run into exactly one follow-up run,
+    /// the next step of a data source which did its share of the work among them. It also shows the
+    /// data source as queued again once the run ends, instead of leaving it on running.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <param name="refreshMode">Why the run was asked for.</param>
+    /// <param name="token">The cancellation token.</param>
+    private async Task RunDataSourceAsync(string dataSourceId, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    {
+        IIndexedDataSource? dataSource = null;
+
+        try
+        {
+            if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
+                return;
+
+            await this.ProcessDataSourceRunAsync(dataSource, refreshMode, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+        {
+            //
+            // Nothing is deleted and nothing is rebuilt here. The data source says what is
+            // wrong with it, stays out of the selection while it says so, and waits for the
+            // user to ask for the repair.
+            //
+            logger.LogError(
+                exception,
+                "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                dataSource.Name,
+                dataSource.Id);
+            this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+        }
+        catch (Exception exception)
+        {
+            if (dataSource is null)
             {
-                //
-                // Nothing is deleted and nothing is rebuilt here. The data source says what is
-                // wrong with it, stays out of the selection while it says so, and waits for the
-                // user to ask for the repair.
-                //
-                logger.LogError(
-                    exception,
-                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
-                    dataSource.Name,
-                    dataSource.Id);
-                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+                logger.LogError(exception, "Background embedding failed for data source '{DataSourceId}'. RefreshMode={RefreshMode}.", dataSourceId, refreshMode);
             }
-            catch (Exception exception)
+            else
             {
-                if (dataSource is null)
-                {
-                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceId}'.", dataSourceId);
-                }
-                else
-                {
-                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                    this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
-                }
+                logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
+                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
             }
-            finally
-            {
-                await this.QueuePendingDataSourceRunAsync(dataSourceId, stoppingToken);
-            }
+        }
+        finally
+        {
+            await this.QueuePendingDataSourceRunAsync(dataSourceId, token);
         }
     }
 
@@ -582,6 +604,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     {
         this.DisposeWatchers();
         base.Dispose();
+        this.runGate.Dispose();
     }
 
     private async Task ProcessDataSourceRunAsync(IDataSourceBase requestedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
@@ -614,7 +637,21 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await this.ProcessDataSourceAsync(dataSource, refreshMode, runControl, runTokenSource.Token);
+            //
+            // One run at a time, whichever way it started: the startup check goes on next to the
+            // queue once the automatic refresh is switched on while the app runs. The wait counts as
+            // part of the run, so deleting or repairing the data source ends the wait as well,
+            // instead of waiting for the run before it to finish first.
+            //
+            await this.runGate.WaitAsync(runTokenSource.Token);
+            try
+            {
+                await this.ProcessDataSourceAsync(dataSource, refreshMode, runControl, runTokenSource.Token);
+            }
+            finally
+            {
+                this.runGate.Release();
+            }
         }
         catch (OperationCanceledException) when (!parentToken.IsCancellationRequested && runTokenSource.IsCancellationRequested)
         {
@@ -625,23 +662,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 refreshMode);
 
             //
-            // A data source which is still there has its next run queued already. Its row says so
-            // instead of showing this run as running: a run of the startup check would otherwise
-            // keep that row until the check has worked through every other data source.
+            // A data source which is still there has its next run asked for already, which starts
+            // over with the current settings. Its row says so instead of showing this run as running.
             //
             if (this.TryGetConfiguredIndexedSource(dataSource.Id, out var configuredDataSource))
-            {
-                this.statuses.TryGetValue(configuredDataSource.Id, out var currentStatus);
-                this.UpsertStatus(this.CreateStatus(
-                    configuredDataSource,
-                    DataSourceEmbeddingState.QUEUED,
-                    currentStatus?.TotalDocuments ?? 0,
-                    currentStatus?.IndexedDocuments ?? 0,
-                    currentStatus?.FailedDocuments ?? 0,
-                    lastError: currentStatus?.LastError ?? string.Empty,
-                    failures: currentStatus?.Failures ?? [],
-                    lastSyncUtc: currentStatus?.LastSyncUtc));
-            }
+                this.UpsertStatus(this.GetQueuedStatus(configuredDataSource));
         }
         finally
         {
@@ -873,15 +898,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             if (this.statuses.TryGetValue(dataSource.Id, out var knownStatus) && knownStatus.State is DataSourceEmbeddingState.RUNNING)
                 continue;
 
-            this.statuses[dataSource.Id] = this.CreateStatus(
-                dataSource,
-                DataSourceEmbeddingState.QUEUED,
-                knownStatus?.TotalDocuments ?? 0,
-                knownStatus?.IndexedDocuments ?? 0,
-                knownStatus?.FailedDocuments ?? 0,
-                failures: knownStatus?.Failures ?? [],
-                permanentlySkippedDocuments: knownStatus?.PermanentlySkippedDocuments ?? 0,
-                lastSyncUtc: knownStatus?.LastSyncUtc);
+            this.statuses[dataSource.Id] = this.GetQueuedStatus(dataSource);
         }
 
         // One message for the whole list, rather than one per data source:
@@ -890,28 +907,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         foreach (var dataSource in supportedDataSources)
         {
             token.ThrowIfCancellationRequested();
-            try
+
+            //
+            // A data source which runs, or waits in the queue, gets its run that way already.
+            // Running it here as well would run it twice in a row, or next to the run going on.
+            //
+            if (!this.runQueue.TryBeginRun(dataSource.Id))
             {
-                await this.ProcessDataSourceRunAsync(dataSource, DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK, token);
+                logger.LogDebug("Skipping the initial hash check of data source '{DataSourceName}' ({DataSourceId}) because it is running or queued already.", dataSource.Name, dataSource.Id);
+                continue;
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (VectorStoreUnreadableException exception)
-            {
-                logger.LogError(
-                    exception,
-                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
-                    dataSource.Name,
-                    dataSource.Id);
-                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "Initial embedding hash check failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
-            }
+
+            await this.RunDataSourceAsync(dataSource.Id, DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK, token);
         }
 
         if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
@@ -1101,6 +1108,44 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             LastSyncUtc: lastSyncUtc);
     }
 
+    /// <summary>
+    /// Shows a data source as waiting for its next run.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>Its status so far as a queued one, or an empty queued status when it has none yet.</returns>
+    private DataSourceEmbeddingStatus GetQueuedStatus(IDataSourceBase dataSource) => this.statuses.TryGetValue(dataSource.Id, out var status)
+        ? AsQueued(status, dataSource)
+        : this.CreateStatus(dataSource, DataSourceEmbeddingState.QUEUED, 0, 0, 0);
+
+    /// <summary>
+    /// Turns the status of a data source into one which waits for the next run.
+    /// </summary>
+    /// <remarks>
+    /// Keeps what the row showed of the runs so far: the counts, the documents skipped for good, the
+    /// failures with the sentence about the data source as a whole, and the last sync. A data source
+    /// which pauses after its share of the work shows its progress that way, instead of a bar which
+    /// jumps back with every step.
+    ///
+    /// Clears what belongs to a run going on: the current document, and whatever the user was asked
+    /// to decide. The next run asks that anew when it still applies. The name comes from the data
+    /// source, since it may have been renamed in the meantime.
+    /// </remarks>
+    /// <param name="status">The status so far.</param>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>The queued status.</returns>
+    internal static DataSourceEmbeddingStatus AsQueued(DataSourceEmbeddingStatus status, IDataSourceBase dataSource) => status with
+    {
+        DataSourceName = dataSource.Name,
+        DataSourceType = dataSource.Type,
+        State = DataSourceEmbeddingState.QUEUED,
+        CurrentDocument = string.Empty,
+        CurrentDocumentBlock = null,
+        CurrentDocumentPage = null,
+        VectorStoreUnreadable = false,
+        Attention = DataSourceAttention.NONE,
+        PendingRemovalCount = null,
+    };
+
     private DataSourceEmbeddingStatus GetFallbackStatus(IDataSourceBase dataSource, string errorMessage)
     {
         return this.CreateStatus(
@@ -1246,16 +1291,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
 
-        this.statuses.TryGetValue(dataSource.Id, out var currentStatus);
-        this.UpsertStatus(this.CreateStatus(
-            dataSource,
-            DataSourceEmbeddingState.QUEUED,
-            currentStatus?.TotalDocuments ?? 0,
-            currentStatus?.IndexedDocuments ?? 0,
-            currentStatus?.FailedDocuments ?? 0,
-            lastError: currentStatus?.LastError ?? string.Empty,
-            failures: currentStatus?.Failures ?? [],
-            lastSyncUtc: currentStatus?.LastSyncUtc));
+        this.UpsertStatus(this.GetQueuedStatus(dataSource));
 
         try
         {
