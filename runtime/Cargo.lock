@@ -4299,6 +4299,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "strum_macros",
+ "subtle",
  "symphonia",
  "sys-locale",
  "sysinfo",
