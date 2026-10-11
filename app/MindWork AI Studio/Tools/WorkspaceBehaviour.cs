@@ -895,13 +895,24 @@ public static class WorkspaceBehaviour
         if (dialogResult is null || dialogResult.Canceled)
             return null;
 
+        return await CopyChatAsync(sourceChat, (dialogResult.Data as string)!);
+    }
+
+    /// <summary>
+    /// Copies a chat into a new chat of the same workspace, including its managed transcript files.
+    /// </summary>
+    /// <param name="sourceChat">The chat to copy. Its own files and state stay untouched.</param>
+    /// <param name="name">The name of the copy.</param>
+    /// <returns>The persisted copy.</returns>
+    internal static async Task<ChatThread> CopyChatAsync(ChatThread sourceChat, string name)
+    {
         var serializedChat = JsonSerializer.Serialize(sourceChat, JSON_OPTIONS);
         var copiedChat = JsonSerializer.Deserialize<ChatThread>(serializedChat, JSON_OPTIONS)
                          ?? throw new InvalidOperationException("The chat could not be copied.");
         copiedChat = copiedChat with
         {
             ChatId = Guid.NewGuid(),
-            Name = (dialogResult.Data as string)!,
+            Name = name,
         };
 
         var targetDirectory = GetChatDirectory(copiedChat.WorkspaceId, copiedChat.ChatId);
@@ -944,8 +955,9 @@ public static class WorkspaceBehaviour
             }
         }
 
-        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
-            chat.PendingMediaTranscripts[index] = CopyManagedTranscriptAttachment(chat, chat.PendingMediaTranscripts[index], targetTranscriptDirectory, copiedPaths);
+        chat.Draft.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
+            ? CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths)
+            : attachment);
     }
 
     private static ManagedTranscriptAttachment CopyManagedTranscriptAttachment(
@@ -1127,8 +1139,7 @@ public static class WorkspaceBehaviour
         // their old paths, the draft points at a directory which is gone after the move, and the
         // transcripts would never reach the message.
         //
-        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
-            chat.PendingMediaTranscripts[index] = (ManagedTranscriptAttachment)RelocateAttachment(chat.PendingMediaTranscripts[index], sourceDirectory, targetDirectory);
+        chat.Draft.ReplaceAttachments(attachment => RelocateAttachment(attachment, sourceDirectory, targetDirectory));
     }
 
     /// <summary>

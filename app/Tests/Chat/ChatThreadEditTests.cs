@@ -63,16 +63,17 @@ public sealed class ChatThreadEditTests
         var composer = new ChatComposerState();
 
         // What the chat does when the user stops the answer and edits the question:
-        composer.RestoreFromTextBlock((ContentText)question.Content!);
         thread.RemoveForEditing(question.Content!);
         thread.Remove(answer.Content!);
+        composer.RestoreFromDraft(thread.Draft);
 
         Assert.Multiple(() =>
         {
             Assert.That(thread.Blocks, Is.Empty, "Both the question and the stopped answer leave the chat.");
             Assert.That(File.Exists(transcript.FilePath), Is.True, "The composer still carries the transcript, so its file has to stay.");
             Assert.That(composer.FileAttachments.Single().Exists, Is.True, "The edited message goes out with the transcript, not with a reference to a deleted file.");
-            Assert.That(thread.PendingMediaTranscripts.Select(x => x.FilePath), Is.EqualTo(new[] { transcript.FilePath }), "The draft owns the transcript now: opening the chat again brings it back, and removing it from the composer deletes the file.");
+            Assert.That(thread.Draft.MediaTranscripts.Select(x => x.FilePath), Is.EqualTo(new[] { transcript.FilePath }), "The draft owns the transcript now: opening the chat again brings it back, and removing it from the composer deletes the file.");
+            Assert.That(thread.Draft.Text, Is.EqualTo("Summarize the meeting"), "The message being edited is the draft now, its text included.");
         });
     }
 
@@ -82,16 +83,12 @@ public sealed class ChatThreadEditTests
         var chatId = Guid.NewGuid();
         var transcript = this.CreateTranscript(chatId, "meeting");
         var question = Block(ChatRole.USER, "Summarize the meeting", 1, transcript);
-        var thread = new ChatThread
-        {
-            ChatId = chatId,
-            PendingMediaTranscripts = [transcript],
-            Blocks = [question],
-        };
+        var thread = new ChatThread { ChatId = chatId, Blocks = [question] };
+        thread.Draft.AddAttachments([transcript]);
 
         thread.RemoveForEditing(question.Content!);
 
-        Assert.That(thread.PendingMediaTranscripts, Has.Count.EqualTo(1), "The composer would show the same transcript twice otherwise.");
+        Assert.That(thread.Draft.FileAttachments, Has.Count.EqualTo(1), "The composer would show the same transcript twice otherwise.");
     }
 
     [Test]
@@ -107,7 +104,7 @@ public sealed class ChatThreadEditTests
         Assert.Multiple(() =>
         {
             Assert.That(File.Exists(transcript.FilePath), Is.False, "Nothing refers to the transcript of a deleted message any longer, so its file has to go.");
-            Assert.That(thread.PendingMediaTranscripts, Is.Empty, "A deleted message hands nothing over to the draft.");
+            Assert.That(thread.Draft.IsEmpty, Is.True, "A deleted message hands nothing over to the draft.");
         });
     }
 
@@ -127,7 +124,7 @@ public sealed class ChatThreadEditTests
         Assert.Multiple(() =>
         {
             Assert.That(thread.Blocks, Has.Count.EqualTo(2), "The message to edit is not part of this chat, so no block goes.");
-            Assert.That(thread.PendingMediaTranscripts, Is.Empty, "A transcript of a message this chat does not hold never becomes part of its draft.");
+            Assert.That(thread.Draft.IsEmpty, Is.True, "A message this chat does not hold never becomes its draft.");
             Assert.That(File.Exists(transcript.FilePath), Is.True);
         });
     }
