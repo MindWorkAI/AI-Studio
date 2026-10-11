@@ -549,6 +549,16 @@ public partial class ChatComponent : MSGComponentBase
             return;
         }
 
+        //
+        // The same chat in another workspace was moved there, e.g., through the workspace tree. Only
+        // a move changes the workspace of a chat; every other way to open one brings another chat ID:
+        //
+        if (chatId != Guid.Empty && this.loadedParameterChatId == chatId)
+        {
+            await this.FollowMovedChatAsync(this.loadedParameterWorkspaceId);
+            return;
+        }
+
         this.loadedParameterChatId = chatId;
         this.loadedParameterWorkspaceId = workspaceId;
         await this.LoadedChatChanged(notifyParent: false);
@@ -1366,20 +1376,35 @@ public partial class ChatComponent : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        var transcriptsBeforeTheMove = this.ChatThread!.PendingMediaTranscripts.Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
+        var previousWorkspaceId = this.ChatThread!.WorkspaceId;
         await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
+        await this.FollowMovedChatAsync(previousWorkspaceId);
+    }
 
-        //
-        // The move took the transcripts of the message being written along and gave them their new
-        // paths. The composer stays as it is, though, since the chat counts as loaded already, so it
-        // would still send the old paths, which point at nothing now:
-        //
-        this.ComposerState.FileAttachments.RemoveWhere(attachment => transcriptsBeforeTheMove.Contains(attachment.FilePath));
-        foreach (var transcript in this.ChatThread!.PendingMediaTranscripts)
-            this.ComposerState.FileAttachments.Add(transcript);
+    /// <summary>
+    /// Follows the open chat into the workspace it was moved to.
+    /// </summary>
+    /// <remarks>
+    /// A move is no other chat being opened, so the message being written stays in the composer,
+    /// whether the user moved the chat from here or through the workspace tree. What has to change are
+    /// the paths of its attachments: the move took the chat directory along, and with it the
+    /// transcripts of audio and video files. Left with their old paths, the composer would send
+    /// references to files which are gone.
+    /// </remarks>
+    /// <param name="previousWorkspaceId">The workspace the chat came from, or Guid.Empty for a temporary chat.</param>
+    private async Task FollowMovedChatAsync(Guid previousWorkspaceId)
+    {
+        var chatId = this.ChatThread!.ChatId;
+        var workspaceId = this.ChatThread.WorkspaceId;
+        var relocatedAttachments = this.ComposerState.FileAttachments
+            .Select(attachment => WorkspaceBehaviour.RelocateAttachmentAfterMove(attachment, chatId, previousWorkspaceId, workspaceId))
+            .ToList();
+
+        this.ComposerState.FileAttachments.Clear();
+        foreach (var attachment in relocatedAttachments)
+            this.ComposerState.FileAttachments.Add(attachment);
 
         this.MarkCurrentChatAsLoadedParameter();
-
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
 

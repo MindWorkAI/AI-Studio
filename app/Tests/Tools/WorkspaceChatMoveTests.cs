@@ -109,6 +109,30 @@ public sealed class WorkspaceChatMoveTests
         Assert.That(chat.PendingMediaTranscripts.Single().FilePath, Is.EqualTo(staged.FilePath), "The move takes only the chat directory along, so a path elsewhere is still right.");
     }
 
+    [Test]
+    public async Task TheComposerOfTheOpenChatFollowsTheMove()
+    {
+        var chatId = Guid.NewGuid();
+        var workspaceId = Guid.NewGuid();
+        var transcript = this.CreateTranscript(chatId, "meeting", 1);
+        var document = FileAttachment.FromPath(Path.Combine(this.testDirectory, "documents", "agenda.pdf"));
+        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes", PendingMediaTranscripts = [transcript] };
+
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
+
+        // What the composer of the open chat holds: the transcript of the draft, and a document from elsewhere:
+        var relocatedTranscript = WorkspaceBehaviour.RelocateAttachmentAfterMove(transcript, chatId, Guid.Empty, workspaceId);
+        var relocatedDocument = WorkspaceBehaviour.RelocateAttachmentAfterMove(document, chatId, Guid.Empty, workspaceId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(relocatedTranscript, Is.EqualTo(chat.PendingMediaTranscripts.Single()), "The composer and the draft have to agree, or the composer shows the transcript twice.");
+            Assert.That(relocatedTranscript.Exists, Is.True, "The message being written has to go out with the transcript.");
+            Assert.That(relocatedTranscript, Is.InstanceOf<ManagedTranscriptAttachment>(), "The chat still manages the transcript, so removing it from the composer still deletes the file.");
+            Assert.That(relocatedDocument, Is.SameAs(document), "The move did not touch the document, so it keeps its path.");
+        });
+    }
+
     /// <summary>
     /// Writes a transcript where a temporary chat keeps its transcripts.
     /// </summary>

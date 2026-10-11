@@ -940,10 +940,16 @@ public partial class Workspaces : MSGComponentBase
     
     private async Task MoveChatAsync(string? chatPath)
     {
-        var chat = await this.LoadChatAsync(chatPath, false);
-        if (chat is null)
+        var storedChat = await this.LoadChatAsync(chatPath, false);
+        if (storedChat is null)
             return;
 
+        //
+        // The open chat moves as it stands on the screen, just like with the button in the chat
+        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
+        // edited, and the chat would continue with that copy afterward:
+        //
+        var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
         
@@ -964,11 +970,8 @@ public partial class Workspaces : MSGComponentBase
             return;
         
         await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
-        if (this.CurrentChatThread?.ChatId == chat.ChatId)
-        {
-            this.CurrentChatThread = chat;
+        if (ReferenceEquals(chat, this.CurrentChatThread))
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-        }
 
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
