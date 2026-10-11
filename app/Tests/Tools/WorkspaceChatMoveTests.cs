@@ -63,7 +63,6 @@ public sealed class WorkspaceChatMoveTests
         {
             ChatId = chatId,
             Name = "Meeting notes",
-            PendingMediaTranscripts = [draft],
             Blocks =
             [
                 new ContentBlock
@@ -75,11 +74,12 @@ public sealed class WorkspaceChatMoveTests
                 },
             ],
         };
+        chat.Draft.AddAttachments([draft]);
 
         await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
 
         var targetDirectory = Path.Combine(this.testDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
-        var movedDraft = chat.PendingMediaTranscripts.Single();
+        var movedDraft = chat.Draft.MediaTranscripts.Single();
         var movedSent = ((ContentText)chat.Blocks.Single().Content!).FileAttachments.Single();
         var stored = JsonSerializer.Deserialize<ChatThread>(await File.ReadAllTextAsync(Path.Combine(targetDirectory, "thread.json")), WorkspaceBehaviour.JSON_OPTIONS)!;
 
@@ -89,7 +89,7 @@ public sealed class WorkspaceChatMoveTests
             Assert.That(movedDraft.FilePath, Does.StartWith(targetDirectory), "The draft has to point into the directory the chat lives in now.");
             Assert.That(File.Exists(movedDraft.FilePath), Is.True, "Otherwise the transcript drops out of the message which is still being written.");
             Assert.That(File.Exists(movedSent.FilePath), Is.True, "The transcripts of the sent messages move along, as they always did.");
-            Assert.That(stored.PendingMediaTranscripts.Single().FilePath, Is.EqualTo(movedDraft.FilePath), "Opening the chat again brings the draft back from the stored chat, so that has to know the new path as well.");
+            Assert.That(stored.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(movedDraft.FilePath), "Opening the chat again brings the draft back from the stored chat, so that has to know the new path as well.");
         });
     }
 
@@ -102,11 +102,12 @@ public sealed class WorkspaceChatMoveTests
         // A transcript which is still waiting in the staging area, because its chat was not stored yet when it was made:
         var stagingDirectory = Path.Combine(this.testDirectory, "media-staging", Guid.NewGuid().ToString("N"));
         var staged = WriteTranscript(stagingDirectory, $"{Guid.NewGuid():N}.md", "meeting", isStaged: true);
-        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes", PendingMediaTranscripts = [staged] };
+        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes" };
+        chat.Draft.AddAttachments([staged]);
 
         await WorkspaceBehaviour.MoveChatAsync(chat, Guid.NewGuid());
 
-        Assert.That(chat.PendingMediaTranscripts.Single().FilePath, Is.EqualTo(staged.FilePath), "The move takes only the chat directory along, so a path elsewhere is still right.");
+        Assert.That(chat.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(staged.FilePath), "The move takes only the chat directory along, so a path elsewhere is still right.");
     }
 
     [Test]
@@ -116,7 +117,8 @@ public sealed class WorkspaceChatMoveTests
         var workspaceId = Guid.NewGuid();
         var transcript = this.CreateTranscript(chatId, "meeting", 1);
         var document = FileAttachment.FromPath(Path.Combine(this.testDirectory, "documents", "agenda.pdf"));
-        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes", PendingMediaTranscripts = [transcript] };
+        var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes" };
+        chat.Draft.AddAttachments([transcript]);
 
         await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
 
@@ -126,7 +128,7 @@ public sealed class WorkspaceChatMoveTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(relocatedTranscript, Is.EqualTo(chat.PendingMediaTranscripts.Single()), "The composer and the draft have to agree, or the composer shows the transcript twice.");
+            Assert.That(relocatedTranscript, Is.EqualTo(chat.Draft.MediaTranscripts.Single()), "The composer and the draft have to agree, or the composer shows the transcript twice.");
             Assert.That(relocatedTranscript.Exists, Is.True, "The message being written has to go out with the transcript.");
             Assert.That(relocatedTranscript, Is.InstanceOf<ManagedTranscriptAttachment>(), "The chat still manages the transcript, so removing it from the composer still deletes the file.");
             Assert.That(relocatedDocument, Is.SameAs(document), "The move did not touch the document, so it keeps its path.");

@@ -293,8 +293,13 @@ public partial class ChatComponent : MSGComponentBase
             // Yes, the user sent an assistant result to the chat.
             //
             
-            // Use chat thread sent by the user:
-            this.ChatThread = deferredRequest.ChatThread;
+            //
+            // Use chat thread sent by the user, with a draft of its own. The thread is a copy of
+            // the assistant's one, made with a with expression, which shares the draft. An assistant
+            // has no composer, so its draft is always empty, but the next chat it starts would
+            // otherwise begin with whatever the user writes in this one.
+            //
+            this.ChatThread = deferredRequest.ChatThread with { Draft = new() };
             this.ChatThread.IncludeDateTime = true;
             this.ApplyToolSelectionOfLoadedChat();
 
@@ -1112,7 +1117,7 @@ public partial class ChatComponent : MSGComponentBase
                 Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
-            this.ChatThread.PendingMediaTranscripts.Clear();
+            this.ChatThread.Draft.Clear();
 
             //
             // Add the user message to the thread:
@@ -1467,9 +1472,9 @@ public partial class ChatComponent : MSGComponentBase
         if (copy is null)
             return;
 
-        var transcriptsOfTheOriginal = sourceChat.PendingMediaTranscripts.Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
+        var transcriptsOfTheOriginal = sourceChat.Draft.MediaTranscripts.Select(transcript => transcript.FilePath).ToHashSet(StringComparer.Ordinal);
         this.ComposerState.FileAttachments.RemoveWhere(attachment => transcriptsOfTheOriginal.Contains(attachment.FilePath));
-        foreach (var transcript in copy.PendingMediaTranscripts)
+        foreach (var transcript in copy.Draft.MediaTranscripts)
             this.ComposerState.FileAttachments.Add(transcript);
 
         this.ChatThread = copy;

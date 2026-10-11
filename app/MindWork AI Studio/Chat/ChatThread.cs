@@ -34,10 +34,27 @@ public sealed record ChatThread
     public ulong LastMediaTranscriptNumber { get; set; }
 
     /// <summary>
-    /// Managed transcript attachments prepared for the composer but not sent yet.
-    /// Empty by default so older serialized threads require no migration.
+    /// The message the user is writing in this chat and has not sent yet.
     /// </summary>
-    public List<ManagedTranscriptAttachment> PendingMediaTranscripts { get; set; } = [];
+    /// <remarks>
+    /// Every copy of this thread made with a with expression shares the draft, because such a copy is
+    /// still the same chat. A copy which becomes another chat needs a draft of its own.
+    /// </remarks>
+    public ChatDraft Draft { get; init; } = new();
+
+    // Compatibility shim: until v26.9.1, a chat stored only the transcripts of its draft, in a list of their own. See documentation/compatibility-shims/2026-10-chat-pending-media-transcripts.md; remove after 2027-04-11.
+    [JsonInclude]
+    [JsonPropertyName("pending_media_transcripts")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    private List<ManagedTranscriptAttachment>? LegacyPendingMediaTranscripts
+    {
+        get => null;
+        init
+        {
+            if (value is not null)
+                this.Draft.AddAttachments(value);
+        }
+    }
 
     /// <summary>
     /// Specifies the provider selected for the chat thread.
@@ -478,10 +495,10 @@ public sealed record ChatThread
     /// would have to transcribe the media all over again.<br/><br/>
     ///
     /// A transcript always belongs to exactly one owner: to a sent message, or to the draft in the
-    /// composer, which this thread keeps in PendingMediaTranscripts. Sending hands the transcripts of
-    /// the draft to the new message; editing is the way back. From then on, the rules of the draft
-    /// apply: removing the attachment from the composer deletes its file, and opening the chat again
-    /// brings it back into the composer.
+    /// composer, which this thread keeps in Draft. Sending hands the attachments of the draft to the
+    /// new message; editing is the way back, so the message becomes the draft again. From then on, the
+    /// rules of the draft apply: removing the attachment from the composer deletes its file, and
+    /// opening the chat again brings it back into the composer.
     /// </remarks>
     /// <param name="content">The content of the user message to edit.</param>
     public void RemoveForEditing(IContent content)
@@ -491,13 +508,7 @@ public sealed record ChatThread
             return;
 
         if (block.Content is ContentText textContent)
-        {
-            foreach (var transcript in textContent.FileAttachments.OfType<ManagedTranscriptAttachment>())
-            {
-                if (this.PendingMediaTranscripts.All(existing => existing.FilePath != transcript.FilePath))
-                    this.PendingMediaTranscripts.Add(transcript);
-            }
-        }
+            this.Draft.RestoreFromMessage(textContent);
 
         this.Blocks.Remove(block);
     }
