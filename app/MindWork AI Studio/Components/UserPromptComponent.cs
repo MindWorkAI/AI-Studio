@@ -5,8 +5,8 @@ namespace AIStudio.Components;
 
 /// <summary>
 /// Debounced multi-line text input built on <see cref="MudTextField{T}"/>.
-/// Keeps the base API while adding a debounce timer.
-/// Callers can override any property as usual.
+/// Keeps the base API while adding a debounce timer, which calls WhenTextChangedAsync
+/// once the text has rested. Callers can override any property as usual.
 /// </summary>
 public class UserPromptComponent<T> : MudTextField<T>, IDisposable
 {
@@ -73,8 +73,15 @@ public class UserPromptComponent<T> : MudTextField<T>, IDisposable
         if (this.isDisposed || this.text == this.lastNotifiedText)
             return;
 
+        //
+        // TextChanged is not raised here. The field raises it itself for whatever the user types,
+        // while this timer only knows the text the parent passed in. Raising it here sent the
+        // parent's own text back, as if the user had typed it: a chat template's prompt then
+        // counted as a message the user had started. And since this runs on its own thread, the
+        // answer could arrive after the parent had moved on to another chat, and put the text of
+        // the former chat into the new one.
+        //
         this.lastNotifiedText = this.text;
-        this.InvokeAsync(async () => await this.TextChanged.InvokeAsync(this.text)).Observe($"{nameof(UserPromptComponent<T>)}: notifying about changed text");
         this.InvokeAsync(async () => await this.WhenTextChangedAsync(this.text)).Observe($"{nameof(UserPromptComponent<T>)}: handling changed text asynchronously");
     }
 
