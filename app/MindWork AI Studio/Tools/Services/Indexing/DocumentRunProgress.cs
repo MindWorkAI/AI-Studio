@@ -122,10 +122,19 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         if (!context.Pass.TryGetEarlierFailure(documentKey, fingerprint, out var failure))
             return false;
 
+        this.RecordFailedEarlierInPass(failure);
+        return true;
+    }
+
+    /// <summary>
+    /// Counts a document which was found to have failed during an earlier step of the same pass, cf. SkipIfFailedEarlierInPass.
+    /// </summary>
+    /// <param name="failure">Why it failed back then, as IndexingPass.TryGetEarlierFailure tells.</param>
+    public void RecordFailedEarlierInPass(DataSourceEmbeddingFailure failure)
+    {
         this.FailedDocuments++;
         this.LastError = failure.Reason;
         this.failures.Add(failure);
-        return true;
     }
 
     /// <summary>
