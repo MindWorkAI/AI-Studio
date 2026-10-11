@@ -82,6 +82,21 @@ public static class WorkspaceBehaviour
 
     private static readonly string TEMPORARY_CHATS_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "tempChats");
 
+    /// <summary>
+    /// Only for tests: the data directory which the roots of the workspaces and of the temporary chats are taken from.
+    /// </summary>
+    /// <remarks>
+    /// The app sets its data directory once at startup, and both roots stay fixed from then on. The
+    /// tests give every test a data directory of its own, though, while the fixed roots keep the one
+    /// of whichever test touched this class first. Null, the default and the only value the app ever
+    /// sees, keeps the fixed roots.
+    /// </remarks>
+    internal static string? TestDataDirectory { get; set; }
+
+    private static string WorkspaceRootDirectory => TestDataDirectory is null ? WORKSPACE_ROOT_DIRECTORY : Path.Join(TestDataDirectory, "workspaces");
+
+    private static string TemporaryChatsRootDirectory => TestDataDirectory is null ? TEMPORARY_CHATS_ROOT_DIRECTORY : Path.Join(TestDataDirectory, "tempChats");
+
     private static string ChatSemaphoreKey(Guid workspaceId, Guid chatId) => $"{workspaceId}_{chatId}";
 
     private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId) =>
@@ -170,9 +185,9 @@ public static class WorkspaceBehaviour
     private static async Task<List<WorkspaceChatCacheEntry>> ReadTemporaryChatsCoreAsync()
     {
         var chats = new List<WorkspaceChatCacheEntry>();
-        Directory.CreateDirectory(TEMPORARY_CHATS_ROOT_DIRECTORY);
+        Directory.CreateDirectory(TemporaryChatsRootDirectory);
 
-        foreach (var tempChatPath in Directory.EnumerateDirectories(TEMPORARY_CHATS_ROOT_DIRECTORY))
+        foreach (var tempChatPath in Directory.EnumerateDirectories(TemporaryChatsRootDirectory))
         {
             if (!Guid.TryParse(Path.GetFileName(tempChatPath), out var chatId))
                 continue;
@@ -202,8 +217,8 @@ public static class WorkspaceBehaviour
         WORKSPACE_TREE_CACHE.Workspaces.Clear();
         WORKSPACE_TREE_CACHE.WorkspaceOrder.Clear();
 
-        Directory.CreateDirectory(WORKSPACE_ROOT_DIRECTORY);
-        foreach (var workspacePath in Directory.EnumerateDirectories(WORKSPACE_ROOT_DIRECTORY))
+        Directory.CreateDirectory(WorkspaceRootDirectory);
+        foreach (var workspacePath in Directory.EnumerateDirectories(WorkspaceRootDirectory))
         {
             if (!Guid.TryParse(Path.GetFileName(workspacePath), out var workspaceId))
                 continue;
@@ -345,29 +360,35 @@ public static class WorkspaceBehaviour
             if (!WORKSPACE_TREE_CACHE.IsShellLoaded || WORKSPACE_TREE_CACHE_INVALIDATED)
                 return;
 
-            var chatCacheEntry = new WorkspaceChatCacheEntry
-            {
-                WorkspaceId = workspaceId,
-                ChatId = chatId,
-                ChatPath = chatDirectory,
-                ChatName = string.IsNullOrWhiteSpace(chatName) ? TB("Unnamed chat") : chatName,
-                LastEditTime = lastEditTime,
-                IsTemporary = workspaceId == Guid.Empty,
-            };
-
-            if (workspaceId == Guid.Empty)
-            {
-                UpsertChatInCache(WORKSPACE_TREE_CACHE.TemporaryChats, chatCacheEntry);
-                return;
-            }
-
-            if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace) && workspace.ChatsLoaded)
-                UpsertChatInCache(workspace.Chats, chatCacheEntry);
+            UpdateCacheAfterChatStoredCore(workspaceId, chatId, chatDirectory, chatName, lastEditTime);
         }
         finally
         {
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
+    }
+
+    /// <summary>Puts a stored chat into the cache. The caller holds the cache semaphore.</summary>
+    private static void UpdateCacheAfterChatStoredCore(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime)
+    {
+        var chatCacheEntry = new WorkspaceChatCacheEntry
+        {
+            WorkspaceId = workspaceId,
+            ChatId = chatId,
+            ChatPath = chatDirectory,
+            ChatName = string.IsNullOrWhiteSpace(chatName) ? TB("Unnamed chat") : chatName,
+            LastEditTime = lastEditTime,
+            IsTemporary = workspaceId == Guid.Empty,
+        };
+
+        if (workspaceId == Guid.Empty)
+        {
+            UpsertChatInCache(WORKSPACE_TREE_CACHE.TemporaryChats, chatCacheEntry);
+            return;
+        }
+
+        if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace) && workspace.ChatsLoaded)
+            UpsertChatInCache(workspace.Chats, chatCacheEntry);
     }
 
     private static async Task UpdateCacheAfterChatDeleted(Guid workspaceId, Guid chatId)
@@ -378,14 +399,61 @@ public static class WorkspaceBehaviour
             if (!WORKSPACE_TREE_CACHE.IsShellLoaded || WORKSPACE_TREE_CACHE_INVALIDATED)
                 return;
 
-            if (workspaceId == Guid.Empty)
+            UpdateCacheAfterChatDeletedCore(workspaceId, chatId);
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    /// <summary>Takes a deleted chat out of the cache. The caller holds the cache semaphore.</summary>
+    private static void UpdateCacheAfterChatDeletedCore(Guid workspaceId, Guid chatId)
+    {
+        if (workspaceId == Guid.Empty)
+        {
+            DeleteChatFromCache(WORKSPACE_TREE_CACHE.TemporaryChats, chatId);
+            return;
+        }
+
+        if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace) && workspace.ChatsLoaded)
+            DeleteChatFromCache(workspace.Chats, chatId);
+    }
+
+    /// <summary>
+    /// Moves the cache entry of a chat from the workspace it came from to the one it lives in now.
+    /// </summary>
+    /// <remarks>
+    /// Both happen within one hold of the cache semaphore, so no snapshot shows the chat twice or
+    /// not at all. Throwing the whole cache away would get this one chat right as well, but it also
+    /// forgets the chats of every workspace loaded so far: the workspace list then shows all of them
+    /// empty until the user clicks each one.<br/><br/>
+    ///
+    /// A target workspace the cache does not know yet is the exception. It appears only when the
+    /// workspaces are read from the disk again, which is why the cache is thrown away in that case.
+    /// </remarks>
+    /// <param name="sourceWorkspaceId">The workspace the chat came from, or Guid.Empty for a temporary chat.</param>
+    /// <param name="targetWorkspaceId">The workspace the chat lives in now, or Guid.Empty for a temporary chat.</param>
+    /// <param name="chatId">The chat which was moved.</param>
+    /// <param name="targetDirectory">The directory of the chat after the move.</param>
+    /// <param name="chatName">The name of the chat.</param>
+    /// <param name="lastEditTime">When the chat was written last, which orders the chats in the list.</param>
+    private static async Task UpdateCacheAfterChatMoved(Guid sourceWorkspaceId, Guid targetWorkspaceId, Guid chatId, string targetDirectory, string chatName, DateTimeOffset lastEditTime)
+    {
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            if (!WORKSPACE_TREE_CACHE.IsShellLoaded || WORKSPACE_TREE_CACHE_INVALIDATED)
+                return;
+
+            if (targetWorkspaceId != Guid.Empty && !WORKSPACE_TREE_CACHE.Workspaces.ContainsKey(targetWorkspaceId))
             {
-                DeleteChatFromCache(WORKSPACE_TREE_CACHE.TemporaryChats, chatId);
+                WORKSPACE_TREE_CACHE_INVALIDATED = true;
                 return;
             }
 
-            if (WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace) && workspace.ChatsLoaded)
-                DeleteChatFromCache(workspace.Chats, chatId);
+            UpdateCacheAfterChatDeletedCore(sourceWorkspaceId, chatId);
+            UpdateCacheAfterChatStoredCore(targetWorkspaceId, chatId, targetDirectory, chatName, lastEditTime);
         }
         finally
         {
@@ -683,19 +751,24 @@ public static class WorkspaceBehaviour
                 return new(false, default);
 
             var workspaceId = Guid.NewGuid();
-            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
+            var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
             Directory.CreateDirectory(workspacePath);
 
             var workspaceNamePath = Path.Join(workspacePath, "name");
             await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
 
+            //
+            // The workspace directory was created just now, so there are no chats to read from it.
+            // Counting them as loaded lets a chat moved into the new workspace show up there right
+            // away, instead of only after the user clicked the workspace:
+            //
             var workspace = new WorkspaceCacheEntry
             {
                 WorkspaceId = workspaceId,
                 WorkspacePath = workspacePath,
                 WorkspaceName = normalizedWorkspaceName,
                 Chats = [],
-                ChatsLoaded = false,
+                ChatsLoaded = true,
             };
             WORKSPACE_TREE_CACHE.Workspaces[workspaceId] = workspace;
             WORKSPACE_TREE_CACHE.WorkspaceOrder.Add(workspaceId);
@@ -985,6 +1058,9 @@ public static class WorkspaceBehaviour
             
             await FinalizeStagedTranscriptsAsync(chat, targetDirectory);
             await StoreMovedChatFilesAsync(chat, targetDirectory);
+
+            var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
+            await UpdateCacheAfterChatMoved(sourceWorkspaceId, targetWorkspaceId, chat.ChatId, targetDirectory, chat.Name, lastEditTime);
         }
         catch
         {
@@ -994,10 +1070,10 @@ public static class WorkspaceBehaviour
                 {
                     UpdateAttachmentPathsAfterMove(chat, targetDirectory, sourceDirectory);
                     chat.WorkspaceId = sourceWorkspaceId;
-                    
+
                     if (Directory.Exists(targetDirectory) && !Directory.Exists(sourceDirectory))
                         Directory.Move(targetDirectory, sourceDirectory);
-                    
+
                     if (Directory.Exists(sourceDirectory))
                         await StoreMovedChatFilesAsync(chat, sourceDirectory);
                 }
@@ -1006,13 +1082,15 @@ public static class WorkspaceBehaviour
                     LOG.LogError(rollbackError, "Could not roll back moving chat '{ChatId}' to workspace '{WorkspaceId}'.", chat.ChatId, targetWorkspaceId);
                 }
             }
+
+            // After a failed move, it is unclear where the chat ended up, so the cache reads it from the disk again:
+            InvalidateWorkspaceTreeCache();
             throw;
         }
         finally
         {
             orderedSemaphores[1].Release();
             orderedSemaphores[0].Release();
-            InvalidateWorkspaceTreeCache();
         }
     }
 
@@ -1205,7 +1283,7 @@ public static class WorkspaceBehaviour
 
             // Not in cache — read from disk and update cache in the same semaphore scope
             // to avoid a second semaphore acquisition via UpdateWorkspaceNameInCacheAsync:
-            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
+            var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
             var workspaceNamePath = Path.Join(workspacePath, "name");
             string workspaceName;
 
@@ -1311,7 +1389,7 @@ public static class WorkspaceBehaviour
 
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
     {
-        var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
+        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");
         
         if (!Path.Exists(workspacePath))
