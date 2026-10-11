@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -33,13 +32,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </summary>
     private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
 
-    private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
-    private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, DataSourceEmbeddingRefreshMode> pendingRefreshModes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly DataSourceRunQueue runQueue = new();
     private readonly ConcurrentDictionary<string, DataSourceRunControl> activeRuns = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object queueStateLock = new();
 
     /// <summary>
     /// Guards the run signature of every active run, cf. DataSourceRunControl.RunSignature.
@@ -50,16 +45,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private int startupHashCheckCompleted;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
-
-    private enum DataSourceQueueRequestResult
-    {
-        QUEUED,
-        ALREADY_QUEUED,
-        RUNNING,
-        RUNNING_MARKED_PENDING,
-    }
-
-    private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
 
     private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion)
     {
@@ -458,7 +443,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
         logger.LogDebug("Refreshed watcher state for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
 
-        var queueRequestResult = this.TryReserveDataSourceQueueSlot(dataSource.Id, queueAfterCurrentRun, refreshMode);
+        var queueRequestResult = this.runQueue.TryReserve(dataSource.Id, queueAfterCurrentRun, refreshMode);
 
         //
         // Every change of the embedding settings ends up here, whichever dialog made it. A run
@@ -471,11 +456,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         switch (queueRequestResult)
         {
             case DataSourceQueueRequestResult.ALREADY_QUEUED:
-                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already queued for background embeddings. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already queued for background embeddings. Merged the queue request into the queued run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
                 return;
 
             case DataSourceQueueRequestResult.RUNNING:
-                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. The queue request adds no further follow-up embedding run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
                 return;
 
             case DataSourceQueueRequestResult.RUNNING_MARKED_PENDING:
@@ -500,7 +485,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 lastSyncUtc: currentStatus?.LastSyncUtc));
         }
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-        await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSource.Id, refreshMode));
+        await this.runQueue.EnqueueAsync(dataSource.Id);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
@@ -511,7 +496,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.RemoveWatcher(dataSource.Id);
         var activeRun = this.CancelActiveDataSourceRun(dataSource);
-        this.ClearQueuedDataSourceState(dataSource.Id);
+        this.runQueue.Clear(dataSource.Id);
         this.statuses.TryRemove(dataSource.Id, out _);
         if (activeRun is not null)
         {
@@ -538,9 +523,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var queueItem = await this.queue.Reader.ReadAsync(stoppingToken);
-            var dataSourceId = queueItem.DataSourceId;
-            this.MarkDataSourceRunStarted(dataSourceId);
+            var runRequest = await this.runQueue.DequeueAsync(stoppingToken);
+            var dataSourceId = runRequest.DataSourceId;
 
             IIndexedDataSource? dataSource = null;
 
@@ -549,7 +533,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
                     continue;
 
-                await this.ProcessDataSourceRunAsync(dataSource, queueItem.RefreshMode, stoppingToken);
+                await this.ProcessDataSourceRunAsync(dataSource, runRequest.RefreshMode, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -1148,69 +1132,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             vectorStoreUnreadable: true);
     }
 
-    /// <remarks>
-    /// A request arriving while the data source is being embedded leaves a mark for one follow-up
-    /// run, and the mark keeps why it was asked for. The first request decides that: any later one
-    /// only confirms that a follow-up is needed, which it already is.
-    /// </remarks>
-    private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
-    {
-        lock (this.queueStateLock)
-        {
-            if (this.runningIds.ContainsKey(dataSourceId))
-            {
-                if (queueAfterCurrentRun && this.pendingRefreshModes.TryAdd(dataSourceId, refreshMode))
-                    return DataSourceQueueRequestResult.RUNNING_MARKED_PENDING;
-
-                return DataSourceQueueRequestResult.RUNNING;
-            }
-
-            if (!this.queuedIds.TryAdd(dataSourceId, 0))
-                return DataSourceQueueRequestResult.ALREADY_QUEUED;
-
-            return DataSourceQueueRequestResult.QUEUED;
-        }
-    }
-
-    private void MarkDataSourceRunStarted(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-            this.runningIds.TryAdd(dataSourceId, 0);
-        }
-    }
-
-    private bool TryCompleteDataSourceRun(string dataSourceId, bool allowPendingRequeue, out DataSourceEmbeddingRefreshMode pendingRefreshMode)
-    {
-        lock (this.queueStateLock)
-        {
-            this.runningIds.TryRemove(dataSourceId, out _);
-
-            if (!this.pendingRefreshModes.TryRemove(dataSourceId, out pendingRefreshMode))
-                return false;
-
-            return allowPendingRequeue && this.queuedIds.TryAdd(dataSourceId, 0);
-        }
-    }
-
-    private void ReleaseQueuedDataSourceRun(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-        }
-    }
-
-    private void ClearQueuedDataSourceState(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-            this.pendingRefreshModes.TryRemove(dataSourceId, out _);
-        }
-    }
-
     private DataSourceRunControl? CancelActiveDataSourceRun(IDataSourceBase dataSource)
     {
         if (!this.activeRuns.TryGetValue(dataSource.Id, out var activeRun))
@@ -1314,12 +1235,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     {
         IIndexedDataSource? dataSource = null;
         var isConfigured = !token.IsCancellationRequested && this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource);
-        if (!this.TryCompleteDataSourceRun(dataSourceId, isConfigured, out var refreshMode))
+        if (!this.runQueue.TryComplete(dataSourceId, isConfigured, out var refreshMode))
             return;
 
         if (dataSource is null)
         {
-            this.ReleaseQueuedDataSourceRun(dataSourceId);
+            this.runQueue.Release(dataSourceId);
             return;
         }
 
@@ -1338,11 +1259,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSourceId, refreshMode), token);
+            await this.runQueue.EnqueueAsync(dataSourceId, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            this.ReleaseQueuedDataSourceRun(dataSourceId);
+            this.runQueue.Release(dataSourceId);
         }
     }
 

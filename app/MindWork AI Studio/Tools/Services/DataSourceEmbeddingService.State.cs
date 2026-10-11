@@ -32,7 +32,7 @@ public sealed partial class DataSourceEmbeddingService
             dataSource.Id);
 
         var activeRun = this.CancelActiveDataSourceRun(dataSource);
-        this.ClearQueuedDataSourceState(dataSourceId);
+        this.runQueue.Clear(dataSourceId);
         if (activeRun is not null)
             await activeRun.Completion.Task;
 
