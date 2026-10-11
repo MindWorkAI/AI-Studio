@@ -50,6 +50,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
 
     /// <inheritdoc />
+    public RunShare Share => new(RunShare.DEFAULT_DURATION);
+
+    /// <inheritdoc />
     public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not IDataSource dataSource || !this.Supports(dataSource))

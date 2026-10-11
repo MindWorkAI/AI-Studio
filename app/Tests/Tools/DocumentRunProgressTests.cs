@@ -27,6 +27,8 @@ public sealed class DocumentRunProgressTests
 
     private const string EMBEDDING_ID = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01";
 
+    private static readonly DateTimeOffset NOW = new(2026, 10, 11, 9, 0, 0, TimeSpan.Zero);
+
     [Test]
     public async Task AProviderFailureKeepsTheDocumentsSkippedForGoodInTheStatus()
     {
@@ -100,13 +102,113 @@ public sealed class DocumentRunProgressTests
         var (progress, statuses, manifest) = CreateProgress(totalDocuments: 10);
 
         progress.RecordUnchanged(4);
-        await progress.PauseRunAsync("SOURCE-HASH", "test", CancellationToken.None);
+        var outcome = await progress.PauseRunAsync("SOURCE-HASH", "test", CancellationToken.None);
 
         Assert.Multiple(() =>
         {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.MORE_TO_DO));
             Assert.That(manifest.SourceHash, Is.EqualTo("SOURCE-HASH"), "Without the hash, a mailbox stays out of every search for the hours its first sync takes.");
             Assert.That(statuses, Is.Empty, "The status said the run is over, while the next one is about to carry on.");
         });
+    }
+
+    [Test]
+    public async Task APausedRunWithoutAHashLeavesTheStoredOneAsItIs()
+    {
+        var (progress, statuses, manifest) = CreateProgress(totalDocuments: 10);
+        manifest.SourceHash = "HASH-OF-THE-LAST-COMPLETE-RUN";
+
+        progress.RecordUnchanged(4);
+        var outcome = await progress.PauseRunAsync(null, "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.MORE_TO_DO));
+            Assert.That(manifest.SourceHash, Is.EqualTo("HASH-OF-THE-LAST-COMPLETE-RUN"), "The hash says that a run got through the whole folder. A half-indexed folder would count as complete, and the next run would skip it.");
+            Assert.That(statuses, Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task APauseWithoutAnythingIndexedEndsTheRunWithItsFailures()
+    {
+        var (progress, statuses, manifest) = CreateProgress(totalDocuments: 10);
+        var providerDown = new ProviderRequestException(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, "The embedding provider cannot be reached.");
+
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/a.pdf"), providerDown, CancellationToken.None);
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/b.pdf"), providerDown, CancellationToken.None);
+        var outcome = await progress.PauseRunAsync(null, "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE), "The next run would fail all the same, and the one after it, without end.");
+            Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED), "The run is over, so its row has to say so, and why.");
+            Assert.That(statuses[^1].LastError, Is.EqualTo("The embedding provider cannot be reached."));
+            Assert.That(manifest.SourceHash, Is.Empty, "A run which stopped halfway did not get through the folder.");
+        });
+    }
+
+    [Test]
+    public async Task InputsWhichCouldNotBeLookedAtDoNotEndAPausedRun()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 10, failedInputs: 1);
+
+        // A step which spent its share on a single scanned document without a text layer:
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/scan.pdf"), new FileExtractionException(FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text."), CancellationToken.None);
+        var outcome = await progress.PauseRunAsync(null, "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.MORE_TO_DO), "A locked subfolder fails in every run, however much the run gets done otherwise, and the scanned document is never read again. Ending here left the rest of the folder unindexed.");
+            Assert.That(statuses.Select(status => status.State), Has.None.EqualTo(DataSourceEmbeddingState.FAILED));
+        });
+    }
+
+    [Test]
+    public void TheShareCountsFromTheFirstQuestion()
+    {
+        var (progress, _, _) = CreateProgress(totalDocuments: 10, share: new RunShare(TimeSpan.FromMinutes(5)));
+
+        var first = progress.HasDoneItsShare(NOW);
+        var shortlyBefore = progress.HasDoneItsShare(NOW + TimeSpan.FromMinutes(5) - TimeSpan.FromSeconds(1));
+        var atTheEnd = progress.HasDoneItsShare(NOW + TimeSpan.FromMinutes(5));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first, Is.False, "However long finding the documents took, every run reads at least one. Otherwise, a folder whose files take longer to list than the share would never get anywhere.");
+            Assert.That(shortlyBefore, Is.False);
+            Assert.That(atTheEnd, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task TheShareEndsAfterItsDocumentsWhetherIndexingThemWorkedOrNot()
+    {
+        var (progress, _, _) = CreateProgress(totalDocuments: 10, share: new RunShare(RunShare.DEFAULT_DURATION, 3));
+        progress.HasDoneItsShare(NOW);
+
+        await progress.RecordDocumentIndexedAsync(Document("/tmp/test-data/a.pdf"), 4, true, CancellationToken.None);
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/b.pdf"), new IOException("The file changed."), CancellationToken.None);
+        var afterTwo = progress.HasDoneItsShare(NOW);
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/scan.pdf"), new FileExtractionException(FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text."), CancellationToken.None);
+        var afterThree = progress.HasDoneItsShare(NOW);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(afterTwo, Is.False);
+            Assert.That(afterThree, Is.True, "Reading a document costs its time, whether indexing it worked or not.");
+        });
+    }
+
+    [Test]
+    public void DocumentsWhichWereNotReadDoNotCountTowardsTheShare()
+    {
+        var (progress, _, _) = CreateProgress(totalDocuments: 1_000, share: new RunShare(RunShare.DEFAULT_DURATION, 3));
+
+        progress.RecordUnchanged(900);
+        progress.RecordStillUnreadable("/tmp/test-data/scan.pdf", new PermanentIndexingFailureRecord("AAAA", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text could be read.", DateTimeOffset.UtcNow));
+
+        Assert.That(progress.HasDoneItsShare(NOW), Is.False, "Leaving a document alone costs next to nothing. Counting it would end the step of a mailbox after its first few mails.");
     }
 
     [Test]
@@ -178,7 +280,7 @@ public sealed class DocumentRunProgressTests
         Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
     }
 
-    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null)
+    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null, RunShare? share = null, int failedInputs = 0)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest();
@@ -201,11 +303,12 @@ public sealed class DocumentRunProgressTests
             new NoVectorStoreClient("Test vector store", "Not available in tests."),
             new NoIndexStoreClient("Test index store", "Not available in tests."),
             manifest,
+            share ?? new RunShare(RunShare.DEFAULT_DURATION),
             new SettingsManager(NullLogger<SettingsManager>.Instance, null!),
             statuses.Add,
             NullLogger.Instance);
 
-        return (new DocumentRunProgress(context, totalDocuments, 0, string.Empty, [], NullLogger.Instance), statuses, manifest);
+        return (new DocumentRunProgress(context, totalDocuments, failedInputs, string.Empty, [], NullLogger.Instance), statuses, manifest);
     }
 
     private static EmbeddingDocument Document(string path) => Document(path, Path.GetFileName(path));

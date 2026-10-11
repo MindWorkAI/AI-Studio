@@ -687,10 +687,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </remarks>
     /// <param name="dataSource">The data source to index.</param>
     /// <param name="refreshMode">Why the run was started, for the log.</param>
+    /// <param name="share">How much work the run does at most, as its kind of data source says.</param>
     /// <param name="runControl">The run, which records the embedding settings it works for.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The context of the run, or null when there is no run.</returns>
-    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
+    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, RunShare share, DataSourceRunControl runControl, CancellationToken token)
     {
         logger.LogInformation(
             "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
@@ -802,7 +803,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, embeddingSignature, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
-        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, settingsManager, this.UpsertStatus, logger);
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, settingsManager, this.UpsertStatus, logger);
     }
 
     private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
@@ -816,9 +817,26 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, runControl, token);
+        var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, token);
         if (context is null)
             return;
+
+        var runStartedUtc = DateTimeOffset.UtcNow;
+        var outcome = await indexer.ProcessAsync(context, refreshMode, token);
+
+        //
+        // A kind of data source which never asks whether its run did its share holds up every other
+        // data source for as long as the run takes, and nothing fails to point that out:
+        //
+        var runDuration = DateTimeOffset.UtcNow - runStartedUtc;
+        if (context.ShareStartedUtc is null && runDuration > context.Share.MaxDuration * 2)
+            logger.LogWarning(
+                "The run of data source '{DataSourceName}' ({DataSourceId}) took {RunMinutes:F0} minutes without asking once whether it did its share of {ShareMinutes:F0} minutes, so every other data source waited that long. RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                runDuration.TotalMinutes,
+                context.Share.MaxDuration.TotalMinutes,
+                refreshMode);
 
         //
         // Queued behind whatever else waits, so a data source which takes hours gives the others
@@ -826,7 +844,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         // during a run leaves behind. Should the user ask for a run of their own in the meantime,
         // theirs comes first, and carries on just the same.
         //
-        if (await indexer.ProcessAsync(context, refreshMode, token) is IndexedRunOutcome.MORE_TO_DO)
+        if (outcome is IndexedRunOutcome.MORE_TO_DO)
             await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
     }
 

@@ -14,7 +14,8 @@ namespace AIStudio.Tools.Services.Indexing;
 /// Counts the documents, keeps the list of failures and turns both into the status the embedding
 /// page shows. What happens to a document after it was indexed, or after it failed, is the same for
 /// every kind of data source, so that is decided here as well: the stores learn about it, the
-/// manifest follows, and the user hears about it the way the failure deserves.
+/// manifest follows, and the user hears about it the way the failure deserves. So is when a run did
+/// its share of the work and leaves the rest to another one.
 /// </remarks>
 /// <param name="context">The run the documents are indexed in.</param>
 /// <param name="totalDocuments">How many documents the data source has, readable or not.</param>
@@ -37,6 +38,16 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     // is what it takes to send the user to the settings.
     //
     private readonly HashSet<ProviderRequestFailureReason> reportedFailureReasons = [];
+
+    /// <summary>
+    /// The documents which could not even be looked at, cf. PauseRunAsync.
+    /// </summary>
+    private readonly int failedInputCount = failedInputs;
+
+    /// <summary>
+    /// The documents this run read, whether indexing them worked or not, cf. HasDoneItsShare.
+    /// </summary>
+    private int readDocuments;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DocumentRunProgress).Namespace, nameof(DocumentRunProgress));
 
@@ -156,6 +167,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount);
         await context.ForgetPermanentFailureAsync(document.Key, token);
 
+        this.readDocuments++;
         this.IndexedDocuments++;
         if (isNew)
             this.NewDocuments++;
@@ -175,6 +187,9 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// <param name="token">The cancellation token.</param>
     public async Task RecordDocumentFailureAsync(EmbeddingDocument document, Exception exception, CancellationToken token)
     {
+        // Whichever way it failed, trying cost its time. A mail may even fail before its text was read:
+        this.readDocuments++;
+
         var dataSource = context.DataSource;
         switch (exception)
         {
@@ -273,6 +288,30 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     }
 
     /// <summary>
+    /// Whether the run did its share of the work, so other data sources get their turn.
+    /// </summary>
+    /// <remarks>
+    /// Asked before every document which is about to be read. The clock starts with the first
+    /// question, so every run reads at least one document. Counted are the documents which were
+    /// read, whether indexing them worked or not, cf. RunShare.
+    ///
+    /// The share only ends a run between two documents. A document which takes longer than the
+    /// whole share is read to its end, since its text arrives as a stream which cannot pick up where
+    /// it stopped.
+    /// </remarks>
+    /// <param name="nowUtc">The current time, passed in so the share can be tested.</param>
+    /// <returns>True when the run pauses now, cf. PauseRunAsync.</returns>
+    public bool HasDoneItsShare(DateTimeOffset nowUtc)
+    {
+        var shareStartedUtc = context.StartShareClock(nowUtc);
+        var share = context.Share;
+        if (share.MaxDocuments is { } maxDocuments && this.readDocuments >= maxDocuments)
+            return true;
+
+        return nowUtc - shareStartedUtc >= share.MaxDuration;
+    }
+
+    /// <summary>
     /// Finishes the run: the collection is tidied up, the data source is marked as worked through,
     /// and the user interface learns how it went.
     /// </summary>
@@ -286,40 +325,56 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     public async Task CompleteRunAsync(string sourceHash, string reason, CancellationToken token)
     {
         await this.StoreSourceHashAsync(sourceHash, reason, token);
-
-        //
-        // Documents which were skipped for good do not make a run unsuccessful: nothing is left to
-        // try, and a data source made of nothing but scanned images would otherwise ask for
-        // attention forever.
-        //
-        var hasFailures = this.FailedDocuments > 0;
-        var lastError = hasFailures
-            ? string.IsNullOrWhiteSpace(this.LastError)
-                ? context.DataSource is DataSourceMailbox
-                    ? TB("Some mails could not be indexed. The list below says which ones and why.")
-                    : TB("Some files could not be indexed. The list below says which ones and why.")
-                : this.LastError
-            : string.Empty;
-
-        context.PublishStatus(this.CreateStatus(hasFailures ? DataSourceEmbeddingState.FAILED : DataSourceEmbeddingState.COMPLETED, string.Empty, lastError, null, null));
+        this.PublishCompletion();
     }
 
     /// <summary>
-    /// Ends a run before it got through the whole data source, keeping what it did for the next one.
+    /// Ends a run which did its share of the work before it got through the whole data source, keeping what it did for the next one.
     /// </summary>
     /// <remarks>
-    /// Stores everything CompleteRunAsync stores, the hash included. For a data source which is
-    /// worked through in several runs, the hash therefore says that its index can be searched, not
-    /// that the data source was worked through as a whole: that is what LastSyncUtc tells. Without
-    /// it, a mailbox would stay out of every search for the hours its first sync takes.
+    /// Only a run which got something done hands on to another one. When every document it read
+    /// failed, e.g. because the embedding provider is down, the next run would fail all the same,
+    /// and the one after it, without end. Such a run is completed with its failures instead, and
+    /// waits for the next time the data source is queued.
     ///
-    /// The user interface learns nothing here. Whatever comes next tells it: the run being queued
-    /// again, or the question the user has to answer first.
+    /// The hash is stored only when one is given. It then says that the index of the data source can
+    /// be searched, not that the data source was worked through as a whole: that is what LastSyncUtc
+    /// tells. Without it, a mailbox would stay out of every search for the hours its first sync
+    /// takes. Without a hash, the stored one stays as it is, so a folder which is indexed for the
+    /// first time stays out of every search until its index is complete.
+    ///
+    /// When the run carries on, the user interface learns nothing here. Whatever comes next tells
+    /// it: the run being queued again, or the question the user has to answer first.
     /// </remarks>
-    /// <param name="sourceHash">The hash of the data source as this run found it.</param>
-    /// <param name="reason">Why the collection is optimized now, for the log.</param>
+    /// <param name="searchableSourceHash">The hash of the data source as this run found it, when its index may be searched before it is complete. Null otherwise.</param>
+    /// <param name="reason">Why the run pauses, for the log.</param>
     /// <param name="token">The cancellation token.</param>
-    public Task PauseRunAsync(string sourceHash, string reason, CancellationToken token) => this.StoreSourceHashAsync(sourceHash, reason, token);
+    /// <returns>MORE_TO_DO when another run carries on, or DONE when this one was completed instead.</returns>
+    public async Task<IndexedRunOutcome> PauseRunAsync(string? searchableSourceHash, string reason, CancellationToken token)
+    {
+        if (searchableSourceHash is null)
+            await context.OptimizeCollectionIfNeededAsync(reason, token);
+        else
+            await this.StoreSourceHashAsync(searchableSourceHash, reason, token);
+
+        //
+        // Not counted are the documents which could not even be looked at. They fail in every run,
+        // however much it gets done otherwise, and would stop a folder with a single locked
+        // subfolder after every step.
+        //
+        var failedInThisRun = this.FailedDocuments - this.failedInputCount;
+        if (this.IndexedDocuments > 0 || failedInThisRun is 0)
+            return IndexedRunOutcome.MORE_TO_DO;
+
+        logger.LogWarning(
+            "Indexing data source '{DataSourceName}' ({DataSourceId}) stops without carrying on, since none of the {FailedDocuments} document(s) it read could be indexed.",
+            context.DataSource.Name,
+            context.DataSource.Id,
+            failedInThisRun);
+
+        this.PublishCompletion();
+        return IndexedRunOutcome.DONE;
+    }
 
     /// <summary>
     /// Tells the user interface how the data source stands as the index holds it, without a run.
@@ -354,7 +409,15 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// <summary>
     /// Stores what a run found about the data source as a whole, and tidies up the collection.
     /// </summary>
-    private async Task StoreSourceHashAsync(string sourceHash, string reason, CancellationToken token)
+    /// <remarks>
+    /// For a run which stops for a reason of its own and leaves an index which may be searched,
+    /// e.g. the sync of a mailbox which waits for the user to agree to a removal. The user interface
+    /// learns nothing here.
+    /// </remarks>
+    /// <param name="sourceHash">The hash of the data source as this run found it.</param>
+    /// <param name="reason">Why the collection is optimized now, for the log.</param>
+    /// <param name="token">The cancellation token.</param>
+    public async Task StoreSourceHashAsync(string sourceHash, string reason, CancellationToken token)
     {
         context.Manifest.SourceHash = sourceHash;
         token.ThrowIfCancellationRequested();
@@ -363,6 +426,28 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         token.ThrowIfCancellationRequested();
         await context.IndexStore.UpdateDataSourceHashAsync(context.DataSource.Id, sourceHash, token);
         token.ThrowIfCancellationRequested();
+    }
+
+    /// <summary>
+    /// Tells the user interface that the run is over, and how it went.
+    /// </summary>
+    private void PublishCompletion()
+    {
+        //
+        // Documents which were skipped for good do not make a run unsuccessful: nothing is left to
+        // try, and a data source made of nothing but scanned images would otherwise ask for
+        // attention forever.
+        //
+        var hasFailures = this.FailedDocuments > 0;
+        var lastError = hasFailures
+            ? string.IsNullOrWhiteSpace(this.LastError)
+                ? context.DataSource is DataSourceMailbox
+                    ? TB("Some mails could not be indexed. The list below says which ones and why.")
+                    : TB("Some files could not be indexed. The list below says which ones and why.")
+                : this.LastError
+            : string.Empty;
+
+        context.PublishStatus(this.CreateStatus(hasFailures ? DataSourceEmbeddingState.FAILED : DataSourceEmbeddingState.COMPLETED, string.Empty, lastError, null, null));
     }
 
     /// <summary>

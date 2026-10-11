@@ -107,6 +107,9 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceMailbox;
 
     /// <inheritdoc />
+    public RunShare Share => new(MAX_RUN_DURATION, MAX_READ_MAILS_PER_RUN);
+
+    /// <inheritdoc />
     public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not DataSourceMailbox mailbox)
@@ -278,7 +281,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             {
                 logger.LogWarning("Syncing mailbox '{MailboxId}' would remove {RemovalCount} of {IndexedCount} location(s) from the index at once. The removal waits for the user to agree.", mailbox.Id, removals.Count, removals.IndexedCount);
                 await context.IndexStore.HoldBackMailRemovalAsync(mailbox.Id, removals.Count, token);
-                await progress.PauseRunAsync(sourceHash, "mailbox sync waits for a removal to be approved", token);
+                await progress.StoreSourceHashAsync(sourceHash, "mailbox sync waits for a removal to be approved", token);
                 progress.PublishRunFailure(GetRemovalMessage(removals.Count), DataSourceAttention.MASS_REMOVAL_PENDING, removals.Count);
                 return IndexedRunOutcome.DONE;
             }
@@ -358,7 +361,7 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             return IndexedRunOutcome.DONE;
         }
 
-        await progress.PauseRunAsync(sourceHash, "mailbox sync paused", token);
+        await progress.StoreSourceHashAsync(sourceHash, "mailbox sync paused", token);
         logger.LogInformation(
             "Syncing mailbox '{MailboxId}' carries on in another run. RefreshMode={RefreshMode}, Embedded={EmbeddedMails}, Failed={FailedMails}, Done={DoneMails}/{TotalMails}.",
             mailbox.Id,
