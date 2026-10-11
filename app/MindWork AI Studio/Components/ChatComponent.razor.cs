@@ -228,7 +228,7 @@ public partial class ChatComponent : MSGComponentBase
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
-    private UserPromptComponent<string> inputField = null!;
+    private MudTextField<string> inputField = null!;
 
     /// <summary>
     /// Represents the user's input in the chat interface.
