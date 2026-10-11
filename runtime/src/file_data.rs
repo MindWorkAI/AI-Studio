@@ -1,7 +1,6 @@
 ﻿use std::cmp::min;
 use std::collections::VecDeque;
 use std::convert::Infallible;
-use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::{with_pdfium_access, PdfiumInit};
 use crate::prompt_injection::{Finding as PromptInjectionFinding, Sanitizer};
@@ -504,7 +503,6 @@ fn filter_failed_error() -> ExtractionError {
 }
 
 pub async fn extract_data(
-    _token: APIToken,
     query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
 ) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>>> {
     let query = match query {

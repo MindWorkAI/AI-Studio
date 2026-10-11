@@ -10,7 +10,6 @@ use tauri::path::BaseDirectory;
 use tauri::Manager;
 use tokenizers::tokenizer::Tokenizer;
 
-use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 
 const DEFAULT_TOKENIZER_RESOURCE_PATH: &str = "resources/tokenizers/tokenizer.json";
@@ -103,28 +102,28 @@ pub fn set_default_tokenizer_path(app_handle: tauri::AppHandle) {
     }
 }
 
-pub async fn token_count(_token: APIToken, req: Json<SetTokenText>) -> Json<TokenizerResponse> {
+pub async fn token_count(req: Json<SetTokenText>) -> Json<TokenizerResponse> {
     match run_tokenizer_work(move || get_token_count(&req.tokenizer_path, &req.text)).await {
         Ok(count) => Json(TokenizerResponse::available(count)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
-pub async fn validate_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
+pub async fn validate_tokenizer(payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
     match run_tokenizer_work(move || handle_tokenizer_validate(&PathBuf::from(payload.file_path.clone()))).await {
         Ok(count) => Json(TokenizerResponse::available(count)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
-pub async fn store_tokenizer(_token: APIToken, payload: Json<TokenizerStorage>) -> Json<TokenizerResponse> {
+pub async fn store_tokenizer(payload: Json<TokenizerStorage>) -> Json<TokenizerResponse> {
     match run_tokenizer_work(move || handle_tokenizer_store(&payload).map_err(|e| e.to_string())).await {
         Ok(dest_path) => Json(TokenizerResponse::stored(dest_path)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
 }
 
-pub async fn delete_tokenizer(_token: APIToken, payload: Json<TokenizerDelete>) -> Json<TokenizerResponse> {
+pub async fn delete_tokenizer(payload: Json<TokenizerDelete>) -> Json<TokenizerResponse> {
     match run_tokenizer_work(move || handle_tokenizer_delete(&payload).map_err(|e| e.to_string())).await {
         Ok(_) => Json(TokenizerResponse::stored(String::new())),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
@@ -344,7 +343,6 @@ mod tests {
         fs::write(&tokenizer_path, "This is not a tokenizer.").unwrap();
 
         let request = token_count(
-            APIToken::from_hex_text("test"),
             Json(SetTokenText {
                 text: "Hello, world!".to_string(),
                 tokenizer_path: tokenizer_path.to_string_lossy().to_string(),

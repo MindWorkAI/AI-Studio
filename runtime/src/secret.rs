@@ -2,7 +2,6 @@ use axum::Json;
 use keyring_core::{Entry, Error as KeyringError};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
-use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// A structured issue reported by the native credential store.
@@ -96,7 +95,7 @@ where
 }
 
 /// Stores a secret in the secret store using the operating system's keyring.
-pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+pub async fn store_secret(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
     match run_secret_store_request(move || store_secret_sync(request)).await {
         Ok(response) => response,
         Err(issue) => Json(StoreSecretResponse {
@@ -173,7 +172,7 @@ pub struct StoreSecretResponse {
 }
 
 /// Retrieves a secret from the secret store using the operating system's keyring.
-pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
+pub async fn get_secret(request: Json<RequestSecret>) -> Json<RequestedSecret> {
     match run_secret_store_request(move || get_secret_sync(request)).await {
         Ok(response) => response,
         Err(issue) => Json(RequestedSecret {
@@ -268,7 +267,7 @@ pub struct RequestedSecret {
 }
 
 /// Deletes a secret from the secret store using the operating system's keyring.
-pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+pub async fn delete_secret(request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     match run_secret_store_request(move || delete_secret_sync(request)).await {
         Ok(response) => response,
         Err(issue) => Json(DeleteSecretResponse {

@@ -13,7 +13,6 @@ use log::{kv, Level};
 use log::kv::{Key, Value, VisitSource};
 use axum::Json;
 use serde::{Deserialize, Serialize};
-use crate::api_token::APIToken;
 use crate::environment::{is_dev, is_flatpak};
 
 const FLATPAK_PERSISTENT_DATA_DIRECTORY: &str = "/var/data";
@@ -406,7 +405,7 @@ fn file_logger_format(
     write!(w, "{}", record.args())
 }
 
-pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
+pub async fn get_log_paths() -> Json<LogPathsResponse> {
     Json(LogPathsResponse {
         log_startup_path: LOG_STARTUP_PATH.get().expect("No startup log path was set").clone(),
         log_app_path: LOG_APP_PATH.get().expect("No app log path was set").clone(),
@@ -461,7 +460,7 @@ fn log_with_level(
 }
 
 /// Logs an event from the .NET server.
-pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<LogEventResponse> {
+pub async fn log_event(Json(event): Json<LogEvent>) -> Json<LogEventResponse> {
     let level = parse_dotnet_log_level(&event.level);
     let message = event.message.as_str();
     let category = event.category.as_str();

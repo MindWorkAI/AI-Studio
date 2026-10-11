@@ -18,7 +18,6 @@ use qdrant_edge::{
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
-use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 use crate::metadata::META_DATA;
 
@@ -472,7 +471,7 @@ fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
         .join("vector_database"))
 }
 
-pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
+pub async fn qdrant_edge_info() -> Json<QdrantEdgeServiceInfo> {
     let (current_status, mut unavailable_reason) = {
         let status = QDRANT_EDGE_STATUS.lock().unwrap();
         (status.status, status.unavailable_reason.clone())
@@ -513,37 +512,37 @@ fn read_qdrant_edge_info() -> Option<QdrantEdgeInfo> {
         .and_then(|database| database.info().ok())
 }
 
-pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
+pub async fn ensure_qdrant_edge_store(Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
     run_qdrant_edge_request(move |database| {
         database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
     }).await
 }
 
-pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
+pub async fn insert_qdrant_edge_embedding(Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.insert_embedding(&request.store_name, request.points)
     }).await
 }
 
-pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
+pub async fn search_qdrant_edge_embeddings(Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
     run_qdrant_edge_request(move |database| {
         database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids)
     }).await
 }
 
-pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
+pub async fn delete_qdrant_edge_embedding_by_file(Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.delete_embedding_by_file(&request.store_name, &request.file_path)
     }).await
 }
 
-pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+pub async fn optimize_qdrant_edge_store(Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.optimize_store(&request.store_name)
     }).await
 }
 
-pub async fn delete_qdrant_edge_store(_token: APIToken, Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+pub async fn delete_qdrant_edge_store(Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.delete_store(&request.store_name)
     }).await
@@ -1302,7 +1301,6 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn a_request_waiting_for_the_database_leaves_the_runtime_free() {
         let request = optimize_qdrant_edge_store(
-            APIToken::from_hex_text("test"),
             Json(OptimizeQdrantEdgeStoreRequest { store_name: SEARCH_STORE.to_string() }),
         );
 
@@ -1314,7 +1312,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn the_info_waiting_for_the_database_leaves_the_runtime_free() {
-        let request = qdrant_edge_info(APIToken::from_hex_text("test"));
+        let request = qdrant_edge_info();
 
         let info = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
         assert!(!info.is_available);

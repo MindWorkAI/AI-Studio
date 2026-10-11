@@ -130,6 +130,13 @@ Key modules:
 - `pandoc.rs` - Integration with Pandoc for document conversion
 - `log.rs` - Logging infrastructure using `flexi_logger`
 
+**Every runtime API route requires the API token.** `require_api_token` in `runtime_api.rs` checks it
+for all routes at once, so handlers take no `APIToken` argument. Register a new route in
+`create_router`, before that call: `route_layer` protects only the routes registered before it, and
+a route added afterward would be open to every process on the machine. The test
+`every_route_requires_the_api_token` reads the routes from `create_router` and fails for any route
+which answers without the token.
+
 **Runtime API handlers never block.** All calls of the .NET app share one HTTP/2 connection, and the
 task driving it may wait on exactly the Tokio worker which a blocking handler occupies, so a single
 blocking handler can hold up the whole app. Therefore:
