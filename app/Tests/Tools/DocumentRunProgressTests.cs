@@ -7,6 +7,7 @@ using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools;
@@ -130,7 +131,7 @@ public sealed class DocumentRunProgressTests
     }
 
     [Test]
-    public async Task APauseWithoutAnythingIndexedEndsTheRunWithItsFailures()
+    public async Task APauseAfterTheProviderFailedForEveryDocumentEndsTheRun()
     {
         var (progress, statuses, manifest) = CreateProgress(totalDocuments: 10);
         var providerDown = new ProviderRequestException(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, "The embedding provider cannot be reached.");
@@ -145,6 +146,34 @@ public sealed class DocumentRunProgressTests
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED), "The run is over, so its row has to say so, and why.");
             Assert.That(statuses[^1].LastError, Is.EqualTo("The embedding provider cannot be reached."));
             Assert.That(manifest.SourceHash, Is.Empty, "A run which stopped halfway did not get through the folder.");
+        });
+    }
+
+    [Test]
+    public async Task DocumentsSkippedForGoodDoNotKeepARunWithAFailingProviderGoing()
+    {
+        var (progress, _, _) = CreateProgress(totalDocuments: 10);
+
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/scan.pdf"), new FileExtractionException(FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text."), CancellationToken.None);
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new ProviderRequestException(ProviderRequestFailureReason.PROVIDER_UNAVAILABLE, "The embedding provider cannot be reached."), CancellationToken.None);
+        var outcome = await progress.PauseRunAsync(null, "test", CancellationToken.None);
+
+        Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE), "A scanned document never gets as far as the provider, so it says nothing about whether the provider works.");
+    }
+
+    [Test]
+    public async Task APauseAfterFailuresOfTheDocumentsThemselvesCarriesOn()
+    {
+        var (progress, statuses, _) = CreateProgress(totalDocuments: 10);
+
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/a.pdf"), new IOException("The file changed."), CancellationToken.None);
+        await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/b.pdf"), new ProviderRequestException(ProviderRequestFailureReason.TOO_MANY_REQUESTS, "Too many requests."), CancellationToken.None);
+        var outcome = await progress.PauseRunAsync(null, "test", CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.MORE_TO_DO), "The pass skips both documents from now on, so the next step gets further. Ending here left every file behind a block of failing files unindexed.");
+            Assert.That(statuses.Select(status => status.State), Has.None.EqualTo(DataSourceEmbeddingState.FAILED));
         });
     }
 
@@ -209,6 +238,97 @@ public sealed class DocumentRunProgressTests
         progress.RecordStillUnreadable("/tmp/test-data/scan.pdf", new PermanentIndexingFailureRecord("AAAA", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text could be read.", DateTimeOffset.UtcNow));
 
         Assert.That(progress.HasDoneItsShare(NOW), Is.False, "Leaving a document alone costs next to nothing. Counting it would end the step of a mailbox after its first few mails.");
+    }
+
+    [Test]
+    public async Task AFailureOfAnEarlierStepKeepsItsPlaceInTheNextOne()
+    {
+        var pass = NewPass();
+        var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
+
+        var (nextStep, statuses, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        var skipped = nextStep.SkipIfFailedEarlierInPass("/tmp/test-data/report.pdf", "FINGERPRINT");
+        nextStep.Publish();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(skipped, Is.True, "Reading it once more costs time, with a cloud provider money as well, and ends the same way.");
+            Assert.That(statuses[^1].FailedDocuments, Is.EqualTo(1));
+            Assert.That(statuses[^1].Failures.Select(failure => failure.DocumentKey), Is.EquivalentTo(["/tmp/test-data/report.pdf"]), "The list lost the failures of every earlier step.");
+            Assert.That(statuses[^1].LastError, Is.Not.Empty);
+        });
+    }
+
+    [Test]
+    public async Task ADocumentWhichChangedSinceItFailedIsTriedAgain()
+    {
+        var pass = NewPass();
+        var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
+
+        var (nextStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+
+        Assert.That(nextStep.SkipIfFailedEarlierInPass("/tmp/test-data/report.pdf", "CHANGED-FINGERPRINT"), Is.False, "The change may well be what makes it readable, e.g. the program which wrote it is done now.");
+    }
+
+    [Test]
+    public async Task ADocumentIsTriedTwiceDuringAPassAtMost()
+    {
+        var pass = NewPass();
+        var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/app.log", "app.log", "FINGERPRINT-1"), new IOException("The file changed."), CancellationToken.None);
+        var (secondStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        await secondStep.RecordDocumentFailureAsync(Document("/tmp/test-data/app.log", "app.log", "FINGERPRINT-2"), new IOException("The file changed."), CancellationToken.None);
+
+        var (thirdStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+
+        Assert.That(thirdStep.SkipIfFailedEarlierInPass("/tmp/test-data/app.log", "FINGERPRINT-3"), Is.True, "A file which changes faster than it can be read would be read in every step, and the pass would never end.");
+    }
+
+    [Test]
+    public async Task ADocumentWhichWasIndexedAfterAllIsNoLongerSkipped()
+    {
+        var pass = NewPass();
+        var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+        await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
+        await firstStep.RecordDocumentIndexedAsync(Document("/tmp/test-data/report.pdf"), 4, false, CancellationToken.None);
+
+        var (nextStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+
+        Assert.That(nextStep.SkipIfFailedEarlierInPass("/tmp/test-data/report.pdf", "FINGERPRINT"), Is.False, "An indexed document showed up as failed for the rest of the pass.");
+    }
+
+    [Test]
+    public async Task AProviderFailureIsReportedOncePerPass()
+    {
+        var message = $"Too many requests. Test {Guid.NewGuid()}";
+        var collector = new ErrorCollector(message);
+        MessageBus.INSTANCE.RegisterComponent(collector);
+        MessageBus.INSTANCE.ApplyFilters(collector, [], [Event.SHOW_ERROR]);
+
+        try
+        {
+            var pass = NewPass();
+            var (firstStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+            await firstStep.RecordDocumentFailureAsync(Document("/tmp/test-data/a.pdf"), new ProviderRequestException(ProviderRequestFailureReason.TOO_MANY_REQUESTS, message), CancellationToken.None);
+            var (nextStep, _, _) = CreateProgress(totalDocuments: 10, pass: pass);
+            await nextStep.RecordDocumentFailureAsync(Document("/tmp/test-data/b.pdf"), new ProviderRequestException(ProviderRequestFailureReason.TOO_MANY_REQUESTS, message), CancellationToken.None);
+            var reportedDuringThePass = collector.Count;
+
+            var (nextPass, _, _) = CreateProgress(totalDocuments: 10, pass: NewPass());
+            await nextPass.RecordDocumentFailureAsync(Document("/tmp/test-data/a.pdf"), new ProviderRequestException(ProviderRequestFailureReason.TOO_MANY_REQUESTS, message), CancellationToken.None);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(reportedDuringThePass, Is.EqualTo(1), "A rate limit which lasts showed a message every five minutes.");
+                Assert.That(collector.Count, Is.EqualTo(2), "A new pass is a new attempt, which the user hears about should it fail again.");
+            });
+        }
+        finally
+        {
+            MessageBus.INSTANCE.Unregister(collector);
+        }
     }
 
     [Test]
@@ -280,7 +400,9 @@ public sealed class DocumentRunProgressTests
         Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
     }
 
-    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null, RunShare? share = null, int failedInputs = 0)
+    private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE"));
+
+    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null, RunShare? share = null, int failedInputs = 0, IndexingPass? pass = null)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest();
@@ -304,6 +426,7 @@ public sealed class DocumentRunProgressTests
             new NoIndexStoreClient("Test index store", "Not available in tests."),
             manifest,
             share ?? new RunShare(RunShare.DEFAULT_DURATION),
+            pass ?? NewPass(),
             new SettingsManager(NullLogger<SettingsManager>.Instance, null!),
             statuses.Add,
             NullLogger.Instance);
@@ -313,9 +436,9 @@ public sealed class DocumentRunProgressTests
 
     private static EmbeddingDocument Document(string path) => Document(path, Path.GetFileName(path));
 
-    private static EmbeddingDocument Document(string key, string displayName) => new(
+    private static EmbeddingDocument Document(string key, string displayName, string fingerprint = "FINGERPRINT") => new(
         key,
-        new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, key), key, displayName, displayName, "pdf", "FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 0),
+        new EmbeddingStateFile(IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, key), key, displayName, displayName, "pdf", fingerprint, 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 0),
         displayName,
         _ => NoChunks());
 
@@ -323,5 +446,25 @@ public sealed class DocumentRunProgressTests
     {
         await Task.CompletedTask;
         yield break;
+    }
+
+    /// <summary>
+    /// Counts the error messages with one text, out of whatever other tests send meanwhile.
+    /// </summary>
+    private sealed class ErrorCollector(string message) : IMessageBusReceiver
+    {
+        private int count;
+
+        public int Count => Volatile.Read(ref this.count);
+
+        public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
+        {
+            if (triggeredEvent is Event.SHOW_ERROR && data is DataErrorMessage error && error.Message == message)
+                Interlocked.Increment(ref this.count);
+
+            return Task.CompletedTask;
+        }
+
+        public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) => Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 }

@@ -25,10 +25,11 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="indexStore">The index store, known to be available.</param>
 /// <param name="manifest">What the index stores about the data source, made to match the current embedding configuration.</param>
 /// <param name="share">How much work the run does at most, as its kind of data source says.</param>
+/// <param name="pass">The pass the run is a step of, which knows what failed during the steps before.</param>
 /// <param name="settingsManager">The settings, which the provider reads when it embeds.</param>
 /// <param name="publishStatus">Hands a new status of the data source to the embedding service.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, RunShare share, SettingsManager settingsManager, Action<DataSourceEmbeddingStatus> publishStatus, ILogger logger)
+internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, RunShare share, IndexingPass pass, SettingsManager settingsManager, Action<DataSourceEmbeddingStatus> publishStatus, ILogger logger)
 {
     /// <summary>
     /// After how many stored chunks the collection is optimized while a run is still going.
@@ -60,6 +61,8 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public string CollectionName { get; } = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
 
     public RunShare Share => share;
+
+    public IndexingPass Pass => pass;
 
     /// <summary>
     /// When the run first asked whether it did its share of the work, or null while it never did.

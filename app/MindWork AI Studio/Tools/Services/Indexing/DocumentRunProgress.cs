@@ -32,22 +32,20 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
 
     private readonly List<DataSourceEmbeddingFailure> failures = inputFailures.ToList();
 
-    //
-    // Which kinds of provider failure the user was already told about in this run. A rejected
-    // API key is the same problem for every one of a few thousand documents, and one message
-    // is what it takes to send the user to the settings.
-    //
-    private readonly HashSet<ProviderRequestFailureReason> reportedFailureReasons = [];
-
-    /// <summary>
-    /// The documents which could not even be looked at, cf. PauseRunAsync.
-    /// </summary>
-    private readonly int failedInputCount = failedInputs;
-
     /// <summary>
     /// The documents this run read, whether indexing them worked or not, cf. HasDoneItsShare.
     /// </summary>
     private int readDocuments;
+
+    /// <summary>
+    /// The documents this run read which failed at the embedding provider, cf. PauseRunAsync.
+    /// </summary>
+    private int failedAtProvider;
+
+    /// <summary>
+    /// The documents this run read which failed for any other reason which may pass, cf. PauseRunAsync.
+    /// </summary>
+    private int failedOtherwise;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DocumentRunProgress).Namespace, nameof(DocumentRunProgress));
 
@@ -105,6 +103,29 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
 
         // The stored reason keeps its place in the list, so the user still sees why:
         this.failures.Add(new DataSourceEmbeddingFailure(documentKey, failure.Message, failure.OccurredAtUtc, ExtractionCode: failure.Code, IsPermanent: true));
+    }
+
+    /// <summary>
+    /// Skips a document which failed during an earlier step of the same pass, unless it changed since.
+    /// </summary>
+    /// <remarks>
+    /// Such a document counts as failed, and its failure keeps its place in the list, the same as in
+    /// the step which read it. The counts stay right even when documents were deleted in between,
+    /// since only what the step comes across is counted. Should the document still be there once the
+    /// pass is through, the next pass tries it again.
+    /// </remarks>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="fingerprint">The fingerprint of the document as it is now.</param>
+    /// <returns>True when the document is skipped, and the caller moves on to the next one.</returns>
+    public bool SkipIfFailedEarlierInPass(string documentKey, string fingerprint)
+    {
+        if (!context.Pass.TryGetEarlierFailure(documentKey, fingerprint, out var failure))
+            return false;
+
+        this.FailedDocuments++;
+        this.LastError = failure.Reason;
+        this.failures.Add(failure);
+        return true;
     }
 
     /// <summary>
@@ -166,6 +187,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
         context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount);
         await context.ForgetPermanentFailureAsync(document.Key, token);
+        context.Pass.Forget(document.Key);
 
         this.readDocuments++;
         this.IndexedDocuments++;
@@ -201,8 +223,11 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 // needs to offer the matching way out.
                 //
                 this.FailedDocuments++;
+                this.failedAtProvider++;
                 this.LastError = providerFailure.UserMessage;
-                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, providerFailure.UserMessage, DateTimeOffset.UtcNow, providerFailure.FailureReason, providerFailure.StatusCode, context.EmbeddingProvider.Name, DisplayName: document.DisplayName));
+                var failure = new DataSourceEmbeddingFailure(document.Key, providerFailure.UserMessage, DateTimeOffset.UtcNow, providerFailure.FailureReason, providerFailure.StatusCode, context.EmbeddingProvider.Name, DisplayName: document.DisplayName);
+                this.failures.Add(failure);
+                context.Pass.RecordFailure(document.Key, document.State.Fingerprint, failure);
                 context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
@@ -217,8 +242,8 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                     providerFailure.StatusCode);
                 this.Publish(document.DisplayName);
 
-                // Once per kind of failure, not once per document:
-                if (this.reportedFailureReasons.Add(providerFailure.FailureReason))
+                // Once per kind of failure and pass, not once per document or step:
+                if (context.Pass.TryMarkReported(providerFailure.FailureReason))
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, providerFailure.UserMessage));
 
                 break;
@@ -237,6 +262,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document);
                 this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
+                context.Pass.Forget(document.Key);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
 
                 var state = document.State;
@@ -267,6 +293,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 // which would interrupt whatever the user is doing right now.
                 //
                 this.FailedDocuments++;
+                this.failedOtherwise++;
                 var extractionCode = exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE;
 
                 //
@@ -275,7 +302,9 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 //
                 var failureMessage = this.GetFailureMessage(extractionCode, document);
                 this.LastError = failureMessage;
-                this.failures.Add(new DataSourceEmbeddingFailure(document.Key, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode, DisplayName: document.DisplayName));
+                var failure = new DataSourceEmbeddingFailure(document.Key, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: context.EmbeddingProvider.Name, ExtractionCode: extractionCode, DisplayName: document.DisplayName);
+                this.failures.Add(failure);
+                context.Pass.RecordFailure(document.Key, document.State.Fingerprint, failure);
                 context.Manifest.Files.Remove(document.Key);
                 await context.ForgetPermanentFailureAsync(document.Key, token);
                 await context.CleanupFailedDocumentAsync(document.Key, token);
@@ -332,10 +361,12 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// Ends a run which did its share of the work before it got through the whole data source, keeping what it did for the next one.
     /// </summary>
     /// <remarks>
-    /// Only a run which got something done hands on to another one. When every document it read
-    /// failed, e.g. because the embedding provider is down, the next run would fail all the same,
-    /// and the one after it, without end. Such a run is completed with its failures instead, and
-    /// waits for the next time the data source is queued.
+    /// A run hands on to another one unless it indexed nothing and every document it read failed at
+    /// the embedding provider. Then the provider is most likely down, or refuses the API key, and
+    /// every further run would fail the same way, one document after the other. Such a run is
+    /// completed with its failures instead, and waits for the next time the data source is queued.
+    /// Any other failure is about its document, which the pass skips from now on, so the next run
+    /// gets further all the same.
     ///
     /// The hash is stored only when one is given. It then says that the index of the data source can
     /// be searched, not that the data source was worked through as a whole: that is what LastSyncUtc
@@ -358,19 +389,19 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
             await this.StoreSourceHashAsync(searchableSourceHash, reason, token);
 
         //
-        // Not counted are the documents which could not even be looked at. They fail in every run,
-        // however much it gets done otherwise, and would stop a folder with a single locked
-        // subfolder after every step.
+        // Only what this run read counts. Documents which could not even be looked at fail in every
+        // run, and would stop a folder with a single locked subfolder after every step. Neither do
+        // documents which failed for a reason of their own: they are never read again anyway, and
+        // never got as far as the provider.
         //
-        var failedInThisRun = this.FailedDocuments - this.failedInputCount;
-        if (this.IndexedDocuments > 0 || failedInThisRun is 0)
+        if (this.IndexedDocuments > 0 || this.failedAtProvider is 0 || this.failedOtherwise > 0)
             return IndexedRunOutcome.MORE_TO_DO;
 
         logger.LogWarning(
-            "Indexing data source '{DataSourceName}' ({DataSourceId}) stops without carrying on, since none of the {FailedDocuments} document(s) it read could be indexed.",
+            "Indexing data source '{DataSourceName}' ({DataSourceId}) stops without carrying on, since it indexed nothing and the embedding provider failed for all {FailedDocuments} document(s) it was sent.",
             context.DataSource.Name,
             context.DataSource.Id,
-            failedInThisRun);
+            this.failedAtProvider);
 
         this.PublishCompletion();
         return IndexedRunOutcome.DONE;

@@ -43,6 +43,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// The pass of every data source whose last step left more to do, and of none else, cf. IndexingPass.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, IndexingPass> passes = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Guards the run signature of every active run, cf. DataSourceRunControl.RunSignature.
     /// </summary>
     private readonly Lock runSignatureLock = new();
@@ -554,7 +559,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         try
         {
             if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
+            {
+                // Deleted, or no longer indexed since a preview was switched off. Its pass would lead nowhere:
+                this.passes.TryRemove(dataSourceId, out _);
                 return;
+            }
 
             await this.ProcessDataSourceRunAsync(dataSource, refreshMode, token);
         }
@@ -663,8 +672,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
             //
             // A data source which is still there has its next run asked for already, which starts
-            // over with the current settings. Its row says so instead of showing this run as running.
+            // over with the current settings, in a pass of its own. Its row says so instead of
+            // showing this run as running.
             //
+            this.passes.TryRemove(dataSource.Id, out _);
             if (this.TryGetConfiguredIndexedSource(dataSource.Id, out var configuredDataSource))
                 this.UpsertStatus(this.GetQueuedStatus(configuredDataSource));
         }
@@ -803,7 +814,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, embeddingSignature, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
-        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, settingsManager, this.UpsertStatus, logger);
+        //
+        // Only now, with the run signature recorded and checked, and with whatever an outdated
+        // manifest threw away: a pass belongs to the embedding settings it began with.
+        //
+        var lastPass = this.passes.GetValueOrDefault(dataSource.Id);
+        var pass = IndexingPass.ContinueOrBegin(lastPass, refreshMode, runSignature);
+        this.passes[dataSource.Id] = pass;
+        if (pass == lastPass)
+            logger.LogInformation(
+                "Carrying on the indexing pass of data source '{DataSourceName}' ({DataSourceId}). FailedEarlierInPass={FailedEarlierInPass}, RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                pass.FailedDocumentCount,
+                refreshMode);
+
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, pass, settingsManager, this.UpsertStatus, logger);
     }
 
     private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
@@ -817,35 +843,48 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, token);
-        if (context is null)
-            return;
+        var outcome = IndexedRunOutcome.DONE;
+        try
+        {
+            var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, token);
+            if (context is null)
+                return;
 
-        var runStartedUtc = DateTimeOffset.UtcNow;
-        var outcome = await indexer.ProcessAsync(context, refreshMode, token);
+            var runStartedUtc = DateTimeOffset.UtcNow;
+            outcome = await indexer.ProcessAsync(context, refreshMode, token);
 
-        //
-        // A kind of data source which never asks whether its run did its share holds up every other
-        // data source for as long as the run takes, and nothing fails to point that out:
-        //
-        var runDuration = DateTimeOffset.UtcNow - runStartedUtc;
-        if (context.ShareStartedUtc is null && runDuration > context.Share.MaxDuration * 2)
-            logger.LogWarning(
-                "The run of data source '{DataSourceName}' ({DataSourceId}) took {RunMinutes:F0} minutes without asking once whether it did its share of {ShareMinutes:F0} minutes, so every other data source waited that long. RefreshMode={RefreshMode}.",
-                dataSource.Name,
-                dataSource.Id,
-                runDuration.TotalMinutes,
-                context.Share.MaxDuration.TotalMinutes,
-                refreshMode);
+            //
+            // A kind of data source which never asks whether its run did its share holds up every
+            // other data source for as long as the run takes, and nothing fails to point that out:
+            //
+            var runDuration = DateTimeOffset.UtcNow - runStartedUtc;
+            if (context.ShareStartedUtc is null && runDuration > context.Share.MaxDuration * 2)
+                logger.LogWarning(
+                    "The run of data source '{DataSourceName}' ({DataSourceId}) took {RunMinutes:F0} minutes without asking once whether it did its share of {ShareMinutes:F0} minutes, so every other data source waited that long. RefreshMode={RefreshMode}.",
+                    dataSource.Name,
+                    dataSource.Id,
+                    runDuration.TotalMinutes,
+                    context.Share.MaxDuration.TotalMinutes,
+                    refreshMode);
 
-        //
-        // Queued behind whatever else waits, so a data source which takes hours gives the others
-        // their turn. While this run is still active, that is the follow-up run every request
-        // during a run leaves behind. Should the user ask for a run of their own in the meantime,
-        // theirs comes first, and carries on just the same.
-        //
-        if (outcome is IndexedRunOutcome.MORE_TO_DO)
-            await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
+            //
+            // Queued behind whatever else waits, so a data source which takes hours gives the
+            // others their turn. While this run is still active, that is the follow-up run every
+            // request during a run leaves behind. Should the user ask for a run of their own in the
+            // meantime, theirs comes first, and carries on just the same.
+            //
+            if (outcome is IndexedRunOutcome.MORE_TO_DO)
+                await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
+        }
+        finally
+        {
+            //
+            // A pass lives only while the last step left more to do. Whatever else ended this run,
+            // the next one begins anew, and tries every document which failed so far once more:
+            //
+            if (outcome is not IndexedRunOutcome.MORE_TO_DO)
+                this.passes.TryRemove(dataSource.Id, out _);
+        }
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
