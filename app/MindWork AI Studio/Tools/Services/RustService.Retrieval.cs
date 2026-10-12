@@ -264,12 +264,6 @@ public sealed partial class RustService
         };
     }
 
-    public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
-    {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, null, null, token))
-            yield return segment.Content;
-    }
-
     /// <summary>
     /// Reads the content of a file for embedding, each piece together with its token count.
     /// </summary>
@@ -290,7 +284,7 @@ public sealed partial class RustService
         PromptInjectionReportingScope? reportingScope = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, reportAs, reportingScope, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, embeddingProvider.TokenizerPath, reportAs, reportingScope, token))
         {
             if (segment.TokenCount is { } tokenCount)
             {
@@ -321,15 +315,13 @@ public sealed partial class RustService
 
     private async IAsyncEnumerable<(string Content, int? TokenCount, int? PageNumber)> StreamArbitraryFileDataCore(
         string path,
-        bool extractImages,
-        bool includeTokenCount,
         string tokenizerPath,
         PromptInjectionSource? reportAs,
         PromptInjectionReportingScope? reportingScope,
         [EnumeratorCancellation] CancellationToken token)
     {
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count={includeTokenCount}&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images=false&include_token_count=true&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         using var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
 
@@ -343,10 +335,7 @@ public sealed partial class RustService
                 path,
                 responseBody);
 
-            if (includeTokenCount)
-                throw new InvalidOperationException($"Rust could not extract and count '{path}'. HTTP {(int)response.StatusCode} ({response.ReasonPhrase}): {responseBody}");
-
-            yield break;
+            throw new InvalidOperationException($"Rust could not extract and count '{path}'. HTTP {(int)response.StatusCode} ({response.ReasonPhrase}): {responseBody}");
         }
 
         var promptInjectionFindings = new List<PromptInjectionFinding>();
@@ -376,12 +365,7 @@ public sealed partial class RustService
                 catch (JsonException)
                 {
                     if (this.TryLogSseErrorMessage(jsonContent, path))
-                    {
-                        if (includeTokenCount)
-                            throw new InvalidOperationException($"Rust could not extract and count a segment from '{path}'. See the runtime log for details.");
-
-                        continue;
-                    }
+                        throw new InvalidOperationException($"Rust could not extract and count a segment from '{path}'. See the runtime log for details.");
 
                     this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent);
                 }
@@ -389,7 +373,7 @@ public sealed partial class RustService
                 if (sseEvent is null)
                     continue;
 
-                var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
+                var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages: false);
                 if (processedEvent.Error is { } error)
                 {
                     // A notice says something about the file without failing the read, so the
