@@ -173,7 +173,17 @@ public static class LLMProvidersExtensions
         // of a self-hosted model here and let the user assign the level themselves.
         LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
-        LLMProviders.REQUESTY => Confidence.UNKNOWN.WithSources("https://www.requesty.ai/privacy", "https://www.requesty.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        // Requesty Ltd is based in London and works under the UK GDPR and the EU GDPR. Unless logging
+        // is switched off, it keeps requests for up to 30 days, and it may use the content of free
+        // accounts for training. Where a model runs depends on the model rather than on Requesty:
+        // names ending in "@eu" or in another European region stay in Europe, the others may not.
+        // That is why we state the region but leave the trust level unknown.
+        LLMProviders.REQUESTY => Confidence.UNKNOWN.WithRegion("Europe, United Kingdom").WithSources(
+            "https://www.requesty.ai/privacy",
+            "https://www.requesty.ai/privacy/subprocessors",
+            "https://www.requesty.ai/dpa",
+            "https://www.requesty.ai/terms"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
