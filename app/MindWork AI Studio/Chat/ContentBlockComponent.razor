@@ -1,6 +1,7 @@
 @using AIStudio.Tools
 @using MudBlazor
 @using AIStudio.Components
+@using AIStudio.Assistants.SWOTAnalysis
 @inherits AIStudio.Components.MSGComponentBase
 
 <MudCard Class="@this.CardClasses" Outlined="@true">
@@ -217,6 +218,10 @@
                                 @if (this.CustomTextContent is not null)
                                 {
                                     @this.CustomTextContent
+                                }
+                                else if (SwotAnalysisContentPresentation.TryRead(textContent, out var swotAnalysisResult))
+                                {
+                                    <SwotAnalysisResultView Result="@swotAnalysisResult"/>
                                 }
                                 else
                                 {

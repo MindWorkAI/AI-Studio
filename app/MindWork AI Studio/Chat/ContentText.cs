@@ -53,6 +53,16 @@ public sealed class ContentText : IContent
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
 
     /// <summary>
+    /// Optional structured data for a specialized visual presentation of this text.
+    /// </summary>
+    /// <remarks>
+    /// The text remains the canonical content sent to providers, copied, and exported. A renderer
+    /// which understands the presentation may use its data instead, while every other consumer
+    /// safely continues to use the text.
+    /// </remarks>
+    public ContentPresentation? Presentation { get; set; }
+
+    /// <summary>
     /// What the provider said everything sent along with this answer cost, where it said anything.
     /// </summary>
     /// <remarks>
@@ -368,6 +378,7 @@ public sealed class ContentText : IContent
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
         FileAttachments = [..this.FileAttachments],
+        Presentation = this.Presentation?.DeepClone(),
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {
             Order = x.Order,

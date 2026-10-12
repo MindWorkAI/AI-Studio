@@ -136,7 +136,7 @@ public partial class AssistantSWOTAnalysis
             var time = this.AddUserRequest(
                 SwotAnalysisFinalization.BuildUserRequest(categoryResults),
                 hideContentFromUser: true);
-            var rawResponse = await this.AddAIResponseAsync(time, hideContentFromUser: true);
+            var rawResponse = await this.AddAIResponseAsync(time);
             if (token.IsCancellationRequested || string.IsNullOrWhiteSpace(rawResponse))
                 return;
 
@@ -148,7 +148,10 @@ public partial class AssistantSWOTAnalysis
 
             this.analysisResult = SwotAnalysisFinalization.Assemble(categoryResults, finalization);
             if (this.ResultingContentBlock?.Content is ContentText resultingText)
+            {
                 resultingText.Text = SwotAnalysisMarkdownFormatter.Format(this.analysisResult);
+                resultingText.Presentation = SwotAnalysisContentPresentation.Create(this.analysisResult);
+            }
         }
         finally
         {
