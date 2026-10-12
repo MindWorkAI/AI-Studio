@@ -11,7 +11,10 @@ namespace AIStudio.Tools.Security;
 /// The detection itself lives in the Rust runtime. File content is filtered while the runtime
 /// streams it, so it never passes through here; what this service adds is the path for content
 /// the runtime does not read itself — web pages and retrieval contexts — and the reporting the
-/// user sees.
+/// user sees.<br/><br/>
+/// The reporting works per user action, cf. BeginAction: each action tells the user once, when
+/// it ends, about what was filtered for it. One service serves the whole app, so the action has
+/// to travel with the content instead of being kept here.
 /// </remarks>
 public sealed class PromptInjectionGuardService(
     RustService rustService,
@@ -27,8 +30,6 @@ public sealed class PromptInjectionGuardService(
 
     private readonly ILogger detectionLogger = loggerFactory.CreateLogger(DETECTION_LOG_CATEGORY);
     private readonly Lock reportLock = new();
-    private readonly List<PromptInjectionScanResult> pendingResults = [];
-    private int openActions;
 
     /// <summary>
     /// Filters prompt injections out of a text the runtime did not read itself, such as a web
@@ -152,10 +153,13 @@ public sealed class PromptInjectionGuardService(
     /// Records what was filtered out of one piece of content and tells the user about it.
     /// </summary>
     /// <remarks>
-    /// Within a BeginAction scope the result is collected and reported together
-    /// with the rest of that action. Outside of one it is reported immediately: a result that
-    /// simply waited for the next scope would either never reach the user, or reach them as
-    /// part of an unrelated action later on.
+    /// Within an action, the result is collected and reported together with the rest of that
+    /// action once it ends. Without one it is reported right away, and so is a result whose
+    /// action has ended already: waiting for the next action would either never reach the user,
+    /// or reach them as part of an unrelated action later on.<br/><br/>
+    /// Only the action passed in counts, never what else is running. A run over a large data
+    /// source takes minutes, and a message sent meanwhile must not wait for it, nor end up in the
+    /// same report.
     /// </remarks>
     /// <param name="result">What was filtered out of the content.</param>
     /// <param name="reportingScope">The action the content belongs to, or null when it belongs to none.</param>
@@ -164,15 +168,16 @@ public sealed class PromptInjectionGuardService(
         if (!result.WasFiltered)
             return;
 
-        bool reportNow;
         lock (this.reportLock)
         {
-            this.pendingResults.Add(result);
-            reportNow = this.openActions is 0;
+            if (FindCollectingScope(reportingScope) is { } collectingScope)
+            {
+                collectingScope.PendingResults.Add(result);
+                return;
+            }
         }
 
-        if (reportNow)
-            await this.ReportPendingAsync();
+        await this.ReportNowAsync([result]);
     }
 
     /// <summary>
@@ -181,45 +186,65 @@ public sealed class PromptInjectionGuardService(
     /// </summary>
     /// <remarks>
     /// Results are collected until the action finishes, so the user gets one report about
-    /// twenty documents instead of twenty reports. Actions may nest: only the outermost one
-    /// reports.
+    /// twenty documents instead of twenty reports. An action begun within another one is part
+    /// of it, and only the outermost one reports. Unrelated actions report on their own, each
+    /// as soon as it ends, however much they overlap.<br/><br/>
+    /// The scope has to travel with the content: hand it to wherever that content is read or
+    /// filtered, such as ReportAsync, SanitizeAsync, or RustService.ReadArbitraryFileData.
     /// </remarks>
     /// <param name="within">The action this one is part of, or null when it is an action of its own.</param>
     /// <returns>A scope that reports what was filtered once it is disposed.</returns>
-    public PromptInjectionReportingScope BeginAction(PromptInjectionReportingScope? within = null)
-    {
-        lock (this.reportLock)
-            this.openActions++;
+    public PromptInjectionReportingScope BeginAction(PromptInjectionReportingScope? within = null) => new(this, within);
 
-        return new(this, within);
-    }
-
-    internal async Task EndActionAsync()
-    {
-        lock (this.reportLock)
-        {
-            this.openActions--;
-
-            // An inner scope reports nothing: the action the user started is still running.
-            if (this.openActions > 0)
-                return;
-        }
-
-        await this.ReportPendingAsync();
-    }
-
-    private async Task ReportPendingAsync()
+    /// <summary>
+    /// Ends an action and reports what was collected for it.
+    /// </summary>
+    /// <remarks>
+    /// A scope within an action which still runs has collected nothing, since its results went to
+    /// the outermost scope. It collects only once the outer one has ended before it, e.g., for work
+    /// which outlived the action that started it. Ending a scope a second time does nothing.
+    /// </remarks>
+    /// <param name="scope">The scope which ends.</param>
+    internal async Task EndActionAsync(PromptInjectionReportingScope scope)
     {
         List<PromptInjectionScanResult> results;
         lock (this.reportLock)
         {
-            if (this.pendingResults.Count is 0)
+            if (!scope.IsOpen)
                 return;
 
-            results = [..this.pendingResults];
-            this.pendingResults.Clear();
+            scope.IsOpen = false;
+            results = [..scope.PendingResults];
+            scope.PendingResults.Clear();
         }
 
+        if (results.Count > 0)
+            await this.ReportNowAsync(results);
+    }
+
+    /// <summary>
+    /// Finds the scope which collects a result of the given one: the outermost scope of its action
+    /// which is still running.
+    /// </summary>
+    /// <remarks>
+    /// Call under the report lock only.
+    /// </remarks>
+    /// <param name="scope">The scope the result was reported for, or null.</param>
+    /// <returns>The collecting scope, or null when the result has to be reported right away.</returns>
+    private static PromptInjectionReportingScope? FindCollectingScope(PromptInjectionReportingScope? scope)
+    {
+        PromptInjectionReportingScope? collectingScope = null;
+        for (; scope is not null; scope = scope.Parent)
+        {
+            if (scope.IsOpen)
+                collectingScope = scope;
+        }
+
+        return collectingScope;
+    }
+
+    private async Task ReportNowAsync(IReadOnlyList<PromptInjectionScanResult> results)
+    {
         var totalCount = results.Sum(result => result.RedactedCount);
         this.detectionLogger.LogWarning(
             "Detected and removed {PassageCount} potentially dangerous passage(s) in {SourceCount} content source(s).",

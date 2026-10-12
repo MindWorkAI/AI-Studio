@@ -16,5 +16,21 @@ public sealed class PromptInjectionReportingScope(PromptInjectionGuardService gu
     /// </summary>
     internal PromptInjectionReportingScope? Parent => parent;
 
-    public async ValueTask DisposeAsync() => await guardService.EndActionAsync();
+    /// <summary>
+    /// What was filtered while this scope was the outermost one of its action still running.
+    /// </summary>
+    /// <remarks>
+    /// Read and written under the lock of the guard service only.
+    /// </remarks>
+    internal List<PromptInjectionScanResult> PendingResults { get; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the action is still running.
+    /// </summary>
+    /// <remarks>
+    /// Read and written under the lock of the guard service only.
+    /// </remarks>
+    internal bool IsOpen { get; set; } = true;
+
+    public async ValueTask DisposeAsync() => await guardService.EndActionAsync(this);
 }
