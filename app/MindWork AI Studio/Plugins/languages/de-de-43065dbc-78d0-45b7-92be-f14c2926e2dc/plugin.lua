@@ -2610,6 +2610,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237
 -- Opportunities
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2409493450"] = "Chancen"
 
+-- Gathering shared research...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T245490562"] = "Geteilte Recherche wird gesammelt..."
+
 -- The prioritized actions could not be displayed because the model response did not have the expected structure.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2523185581"] = "Die priorisierten Aktionen konnten nicht angezeigt werden, weil die Antwort des Modells nicht die erwartete Struktur hatte."
 
@@ -2651,6 +2654,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T388
 
 -- This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4072390012"] = "Diese SWOT-Analyse kann nicht als vollständige oder belastbare Analyse betrachtet werden, da sie ausschließlich auf Basis der hochgeladenen Dokumente erstellt werden kann. Ohne entsprechende Unterlagen fehlt die Grundlage für eine fundierte strategische Bewertung. Die vorliegende Analyse ist daher als erste Version zu verstehen und wird von uns im weiteren Verlauf noch überarbeitet und verbessert."
+
+-- The shared research could not be created. The SWOT analysis will continue without it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4190150677"] = "Die gemeinsame Recherche konnte nicht erstellt werden. Die SWOT-Analyse wird ohne sie fortgesetzt."
 
 -- The category analysis was canceled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T476307744"] = "Die Kategorieanalyse wurde abgebrochen."

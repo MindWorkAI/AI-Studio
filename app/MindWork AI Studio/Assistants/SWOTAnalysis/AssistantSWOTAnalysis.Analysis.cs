@@ -15,8 +15,31 @@ public partial class AssistantSWOTAnalysis
         this.ClearInputIssues();
         this.ClearConversationState();
         this.analysisResult = null;
+        this.sharedResearchContext = string.Empty;
+        this.isGatheringSharedResearch = false;
         this.isFinalizingAnalysis = false;
+        this.categoryAnalysisProgress.Clear();
         this.CreateChatThread();
+
+        var token = this.CancellationTokenSource?.Token ?? CancellationToken.None;
+        var runnableToolIds = this.GetRunnableToolIds();
+        if (runnableToolIds.Count > 0)
+        {
+            this.isGatheringSharedResearch = true;
+            await this.PublishAnalysisProgressAsync();
+            try
+            {
+                this.sharedResearchContext = await this.GatherSharedResearchAsync(runnableToolIds, token);
+            }
+            finally
+            {
+                this.isGatheringSharedResearch = false;
+                await this.PublishAnalysisProgressAsync();
+            }
+
+            if (token.IsCancellationRequested)
+                return;
+        }
 
         var categories = Enum.GetValues<SwotAnalysisCategory>();
         this.categoryAnalysisProgress = categories.ToDictionary(
@@ -24,7 +47,6 @@ public partial class AssistantSWOTAnalysis
             _ => new SwotCategoryAnalysisProgress(SwotCategoryAnalysisStatus.RUNNING));
         await this.PublishAnalysisProgressAsync();
 
-        var token = this.CancellationTokenSource?.Token ?? CancellationToken.None;
         var categoryTasks = categories.ToDictionary(
             category => this.AnalyzeCategoryAsync(category, token),
             category => category);
@@ -62,7 +84,8 @@ public partial class AssistantSWOTAnalysis
                 this.inputText,
                 this.analysisGoal,
                 this.importantAspects,
-                this.contextMaterials.Count > 0),
+                this.contextMaterials.Count > 0,
+                this.sharedResearchContext),
             FileAttachments = [.. this.contextMaterials],
         };
         var thread = new ChatThread
@@ -77,7 +100,7 @@ public partial class AssistantSWOTAnalysis
             Name = $"{this.Title} - {category}",
             Blocks = [],
             RuntimeComponent = this.Component,
-            RuntimeSelectedToolIds = this.GetRunnableToolIds(),
+            RuntimeSelectedToolIds = [],
             RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
         };
         thread.Blocks.Add(CreateBlock(DateTimeOffset.Now, ChatRole.USER, userPrompt));
@@ -136,7 +159,7 @@ public partial class AssistantSWOTAnalysis
             var time = this.AddUserRequest(
                 SwotAnalysisFinalization.BuildUserRequest(categoryResults),
                 hideContentFromUser: true);
-            var rawResponse = await this.AddAIResponseAsync(time);
+            var rawResponse = await this.AddAIResponseAsync(time, useSelectedTools: false);
             if (token.IsCancellationRequested || string.IsNullOrWhiteSpace(rawResponse))
                 return;
 
@@ -158,6 +181,69 @@ public partial class AssistantSWOTAnalysis
             this.isFinalizingAnalysis = false;
             await this.PublishAnalysisProgressAsync();
         }
+    }
+
+    private async Task<string> GatherSharedResearchAsync(HashSet<string> runnableToolIds, CancellationToken token)
+    {
+        var userPrompt = new ContentText
+        {
+            Text = SwotSharedResearch.BuildUserRequest(
+                this.inputText,
+                this.analysisGoal,
+                this.importantAspects,
+                this.contextMaterials.Count > 0),
+            FileAttachments = [.. this.contextMaterials],
+        };
+        var thread = new ChatThread
+        {
+            IncludeDateTime = false,
+            SelectedProvider = this.ProviderSettings.Id,
+            SelectedProfile = Profile.NO_PROFILE.Id,
+            SelectedToolIds = [.. this.SelectedToolIds],
+            SystemPrompt = SwotSharedResearch.BuildSystemPrompt(this.OutputLanguageInstruction),
+            WorkspaceId = Guid.Empty,
+            ChatId = Guid.NewGuid(),
+            Name = $"{this.Title} - Shared Research",
+            Blocks = [],
+            RuntimeComponent = this.Component,
+            RuntimeSelectedToolIds = [.. runnableToolIds],
+            RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
+        };
+        thread.Blocks.Add(CreateBlock(DateTimeOffset.Now, ChatRole.USER, userPrompt));
+
+        var aiText = new ContentText { InitialRemoteWait = true };
+        thread.Blocks.Add(CreateBlock(DateTimeOffset.Now, ChatRole.AI, aiText));
+
+        try
+        {
+            await aiText.CreateFromProviderAsync(
+                this.ProviderSettings.CreateProvider(),
+                this.ProviderSettings.Model,
+                userPrompt,
+                thread,
+                token);
+
+            if (token.IsCancellationRequested)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(aiText.Text))
+                return aiText.Text.Trim();
+
+            this.Logger.LogWarning("The shared research for the SWOT analysis returned no usable content.");
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "The shared research for the SWOT analysis could not be created.");
+        }
+
+        await this.MessageBus.SendWarning(new(
+            Icons.Material.Filled.CloudOff,
+            T("The shared research could not be created. The SWOT analysis will continue without it.")));
+        return string.Empty;
     }
 
     private async Task PublishAnalysisProgressAsync()

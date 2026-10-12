@@ -9,7 +9,7 @@
 
 @if (!this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)
 {
-    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
+    <ReadWebContent @bind-Content="@this.inputText" @bind-URL="@this.webContentURL" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
 }
 <MudText Typo="Typo.h5" Class="mb-3">
     @T("Input")
@@ -40,29 +40,39 @@
 
 @code {
     private protected override RenderFragment? BelowSubmitContent =>
-        this.categoryAnalysisProgress.Count > 0 && this.analysisResult is null
+        (this.isGatheringSharedResearch || this.categoryAnalysisProgress.Count > 0) && this.analysisResult is null
             ? @<div class="swot-live-progress" aria-live="polite">
-                  <SwotCategoryGrid>
-                      <Strengths>
-                          @this.RenderCategoryProgress(SwotAnalysisCategory.STRENGTHS, T("Strengths"))
-                      </Strengths>
-                      <Weaknesses>
-                          @this.RenderCategoryProgress(SwotAnalysisCategory.WEAKNESSES, T("Weaknesses"))
-                      </Weaknesses>
-                      <Opportunities>
-                          @this.RenderCategoryProgress(SwotAnalysisCategory.OPPORTUNITIES, T("Opportunities"))
-                      </Opportunities>
-                      <Threats>
-                          @this.RenderCategoryProgress(SwotAnalysisCategory.THREATS, T("Threats"))
-                      </Threats>
-                  </SwotCategoryGrid>
-
-                  @if (this.isFinalizingAnalysis)
+                  @if (this.isGatheringSharedResearch)
                   {
-                      <div class="swot-finalization-status">
+                      <div class="swot-category-status" aria-busy="true">
                           <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
-                          <MudText Typo="Typo.body2">@T("Creating prioritized actions...")</MudText>
+                          <MudText Typo="Typo.body2">@T("Gathering shared research...")</MudText>
                       </div>
+                  }
+                  else
+                  {
+                      <SwotCategoryGrid>
+                          <Strengths>
+                              @this.RenderCategoryProgress(SwotAnalysisCategory.STRENGTHS, T("Strengths"))
+                          </Strengths>
+                          <Weaknesses>
+                              @this.RenderCategoryProgress(SwotAnalysisCategory.WEAKNESSES, T("Weaknesses"))
+                          </Weaknesses>
+                          <Opportunities>
+                              @this.RenderCategoryProgress(SwotAnalysisCategory.OPPORTUNITIES, T("Opportunities"))
+                          </Opportunities>
+                          <Threats>
+                              @this.RenderCategoryProgress(SwotAnalysisCategory.THREATS, T("Threats"))
+                          </Threats>
+                      </SwotCategoryGrid>
+
+                      @if (this.isFinalizingAnalysis)
+                      {
+                          <div class="swot-finalization-status">
+                              <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                              <MudText Typo="Typo.body2">@T("Creating prioritized actions...")</MudText>
+                          </div>
+                      }
                   }
               </div>
             : null;

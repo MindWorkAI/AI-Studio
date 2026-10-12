@@ -485,7 +485,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return time;
     }
 
-    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
+    protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false, bool useSelectedTools = true)
     {
         var manageCancellationLocally = this.CancellationTokenSource is null;
         this.CancellationTokenSource ??= new CancellationTokenSource();
@@ -524,7 +524,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
             this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
+            this.ChatThread.RuntimeSelectedToolIds = useSelectedTools ? this.GetRunnableToolIds() : [];
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
 
