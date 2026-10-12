@@ -363,6 +363,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - HtmlAgilityPack - HTML parsing
 - ReverseMarkdown - HTML to Markdown conversion
 - EF Core Sqlite + SQLitePCLRaw - the local RAG index
+- DocumentFormat.OpenXml - writing PowerPoint files for the slide planner
 
 ## Security
 
