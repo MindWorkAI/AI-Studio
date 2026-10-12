@@ -4,6 +4,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;
 
@@ -402,6 +403,12 @@ public sealed class DocumentRunProgressTests
 
     private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE"));
 
+    /// <summary>
+    /// The run as an action of a prompt injection filter which never meets the runtime: the progress
+    /// reads no document, so nothing ever reaches the filter.
+    /// </summary>
+    private static PromptInjectionReportingScope NewPromptInjectionScope() => new PromptInjectionGuardService(null!, new SettingsManager(NullLogger<SettingsManager>.Instance, null!), NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction();
+
     private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null, RunShare? share = null, int failedInputs = 0, IndexingPass? pass = null)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
@@ -427,6 +434,7 @@ public sealed class DocumentRunProgressTests
             manifest,
             share ?? new RunShare(RunShare.DEFAULT_DURATION),
             pass ?? NewPass(),
+            NewPromptInjectionScope(),
             new SettingsManager(NullLogger<SettingsManager>.Instance, null!),
             statuses.Add,
             NullLogger.Instance);

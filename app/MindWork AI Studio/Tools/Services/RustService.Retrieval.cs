@@ -265,7 +265,7 @@ public sealed partial class RustService
 
     public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, null, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, null, null, token))
             yield return segment.Content;
     }
 
@@ -279,15 +279,17 @@ public sealed partial class RustService
     /// itself. A file which only exists while it is read, e.g. the attachment of a mail, names
     /// where its content came from instead.
     /// </param>
+    /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The pieces of the content, in order.</returns>
     public async IAsyncEnumerable<ArbitraryFileDataSegment> StreamArbitraryFileDataWithTokenCounts(
         string path,
         EmbeddingProvider embeddingProvider,
         PromptInjectionSource? reportAs = null,
+        PromptInjectionReportingScope? reportingScope = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, reportAs, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, reportAs, reportingScope, token))
         {
             if (segment.TokenCount is { } tokenCount)
             {
@@ -322,6 +324,7 @@ public sealed partial class RustService
         bool includeTokenCount,
         string tokenizerPath,
         PromptInjectionSource? reportAs,
+        PromptInjectionReportingScope? reportingScope,
         [EnumeratorCancellation] CancellationToken token)
     {
         var streamId = Guid.NewGuid().ToString();
@@ -461,7 +464,7 @@ public sealed partial class RustService
         // indexing run could filter documents without ever saying so.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+        await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount), reportingScope);
     }
 
     private bool TryLogSseErrorMessage(string jsonContent, string path)

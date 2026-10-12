@@ -32,10 +32,9 @@ namespace AIStudio.Tools.Services.Indexing;
 /// </remarks>
 /// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
-/// <param name="guardService">The prompt injection filter, whose findings are reported once per run.</param>
 /// <param name="textChunker">Cuts the text of a file into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
@@ -165,14 +164,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             partition.FailedEarlierInPass.Count,
             partition.ToRead.Count);
         progress.Publish();
-
-        //
-        // Everything the runtime filters out of these files is reported once for the whole step.
-        // A step over a few thousand documents which removes something in forty of them is one
-        // thing that happened to the user, not forty. The scope ends with this method, so the
-        // report arrives when the step is over rather than in the middle of it.
-        //
-        await using var promptInjectionReportingScope = guardService.BeginAction();
 
         for (var fileIndex = 0; fileIndex < partition.ToRead.Count; fileIndex++)
         {
@@ -440,11 +431,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             : string.Join("; ", reasons);
     }
 
-    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, PromptInjectionReportingScope reportingScope, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = DataSourceEmbeddingService.GetChunkingOptions(dataSource, embeddingProvider);
         var strategy = TextChunker.GetStrategyForFile(filePath);
-        var content = await ExtractedFileText.ReadAsync(rustService, filePath, embeddingProvider, null, token);
+        var content = await ExtractedFileText.ReadAsync(rustService, filePath, embeddingProvider, null, reportingScope, token);
 
         await foreach (var chunk in textChunker.SplitAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
@@ -731,7 +722,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         file.FullName,
         this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow),
         file.Name,
-        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, token));
+        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 
     private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {

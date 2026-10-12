@@ -42,8 +42,9 @@ public sealed class PromptInjectionGuardService(
     /// </remarks>
     /// <param name="text">The content to filter.</param>
     /// <param name="source">Where the content came from, for the report shown to the user.</param>
+    /// <param name="reportingScope">The action the content belongs to, or null when it belongs to none.</param>
     /// <returns>The content with any suspicious passages removed.</returns>
-    public async Task<string> SanitizeAsync(string text, PromptInjectionSource source)
+    public async Task<string> SanitizeAsync(string text, PromptInjectionSource source, PromptInjectionReportingScope? reportingScope = null)
     {
         if (string.IsNullOrWhiteSpace(text))
             return text;
@@ -59,7 +60,7 @@ public sealed class PromptInjectionGuardService(
         }
 
         if (response.RedactedCount > 0)
-            await this.ReportAsync(new(source, response.Findings, response.RedactedCount));
+            await this.ReportAsync(new(source, response.Findings, response.RedactedCount), reportingScope);
 
         return response.SanitizedText;
     }
@@ -75,8 +76,9 @@ public sealed class PromptInjectionGuardService(
     /// the check cannot run, every text is passed through unchanged.
     /// </remarks>
     /// <param name="texts">The contents to filter, each with its source.</param>
+    /// <param name="reportingScope">The action the contents belong to, or null when they belong to none.</param>
     /// <returns>The contents with any suspicious passages removed, in the order they came in.</returns>
-    public async Task<IReadOnlyList<string>> SanitizeAsync(IReadOnlyList<PromptInjectionText> texts)
+    public async Task<IReadOnlyList<string>> SanitizeAsync(IReadOnlyList<PromptInjectionText> texts, PromptInjectionReportingScope? reportingScope = null)
     {
         if (texts.Count is 0)
             return [];
@@ -139,9 +141,9 @@ public sealed class PromptInjectionGuardService(
         // One scope around all sources, so a search across five pages reports once instead of
         // five times:
         //
-        await using var reportingScope = this.BeginAction();
+        await using var batchScope = this.BeginAction(within: reportingScope);
         foreach (var (source, aggregate) in findingsBySource)
-            await this.ReportAsync(new(source, aggregate.Findings, aggregate.RedactedCount));
+            await this.ReportAsync(new(source, aggregate.Findings, aggregate.RedactedCount), batchScope);
 
         return sanitizedTexts;
     }
@@ -155,7 +157,9 @@ public sealed class PromptInjectionGuardService(
     /// simply waited for the next scope would either never reach the user, or reach them as
     /// part of an unrelated action later on.
     /// </remarks>
-    public async Task ReportAsync(PromptInjectionScanResult result)
+    /// <param name="result">What was filtered out of the content.</param>
+    /// <param name="reportingScope">The action the content belongs to, or null when it belongs to none.</param>
+    public async Task ReportAsync(PromptInjectionScanResult result, PromptInjectionReportingScope? reportingScope = null)
     {
         if (!result.WasFiltered)
             return;
@@ -180,16 +184,17 @@ public sealed class PromptInjectionGuardService(
     /// twenty documents instead of twenty reports. Actions may nest: only the outermost one
     /// reports.
     /// </remarks>
+    /// <param name="within">The action this one is part of, or null when it is an action of its own.</param>
     /// <returns>A scope that reports what was filtered once it is disposed.</returns>
-    public ReportingScope BeginAction()
+    public PromptInjectionReportingScope BeginAction(PromptInjectionReportingScope? within = null)
     {
         lock (this.reportLock)
             this.openActions++;
 
-        return new(this);
+        return new(this, within);
     }
 
-    private async Task EndActionAsync()
+    internal async Task EndActionAsync()
     {
         lock (this.reportLock)
         {
@@ -229,13 +234,5 @@ public sealed class PromptInjectionGuardService(
 
         if (settingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
             await MessageBus.INSTANCE.SendMessage<PromptInjectionAlertMessage>(null, Event.SHOW_PROMPT_INJECTION_ALERT, new(results));
-    }
-
-    /// <summary>
-    /// Reports everything filtered during one user action when it goes out of scope.
-    /// </summary>
-    public sealed class ReportingScope(PromptInjectionGuardService guardService) : IAsyncDisposable
-    {
-        public async ValueTask DisposeAsync() => await guardService.EndActionAsync();
     }
 }
