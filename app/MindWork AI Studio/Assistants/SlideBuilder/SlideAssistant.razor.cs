@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
@@ -10,14 +11,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 {
     protected override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
     
-    protected override string Title => T("Slide Planner Assistant");
+    protected override string Title => T("PowerPoint Creator Assistant");
     
-    protected override string Description => T("This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.");
+    protected override string Description => T("This assistant creates a native PowerPoint presentation from your content and a PowerPoint template. The generated slides retain the template's masters, theme, and layouts. You can review the slide plan before exporting the .pptx file.");
     
     protected override string SystemPrompt =>
         $$$"""
         You are a professional presentation editor and writer.
-        Create a clear, single-slide outline from the user's inputs.
+        Create a concise slide-deck plan from the user's inputs. The application will render this plan into a native PowerPoint presentation.
         
         # Presentation title:
             - IGNORE the language of the PRESENTATION_TITLE.
@@ -29,32 +30,35 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         {{{this.GetDocumentTaskDescription()}}}
         {{{this.PromptImportantAspects()}}}
         
-        # Subheadings
-        - Rule for creating the individual subheadings:
-            - If {{{this.numberOfSheets}}} is NOT 0
-                - Generate exactly {{{this.numberOfSheets}}} precise subheadings, each heading represents one slide in a presentation.
-            - If {{{this.timeSpecification}}} is NOT 0
-                - Generate exactly {{{this.calculatedNumberOfSlides}}} precise subheadings, each heading represents one slide in a presentation.
-            - If either parameter is 0, ignore that rules.
-            - Each subheadings must have:
-                - A clear, concise, and thematically meaningful heading.
-                - Place *** on its own line immediately before each heading.
+        # Slides
+            - The title field represents the title slide.
+            - Each item in the slides array represents one content slide after the title slide.
+            - The requested total number of slides is {{{this.RequestedTotalSlides}}}, including the title slide.
+            - If the requested total is greater than 0, generate exactly that many total slides.
+            - If the requested total is 0, choose between 2 and 20 total slides, including the title slide.
+            - Every content slide needs a clear, concise, and thematically meaningful title.
             
         # Bullet points (per subheading)
-            - You MUST generate exactly this {{{this.numberOfBulletPoints}}} many bullet points per subheading:
+            - You MUST generate exactly this {{{this.numberOfBulletPoints}}} many bullet points per content slide:
                 - If {{{this.numberOfBulletPoints}}} == 0 → choose a number between 1 and 7 (your choice, but max 7).
             - Each bullet point must have:
                 - Each bullet point must be max 12 words.
                 - Clear and directly related to the subheading and summarizing the slide’s content.
 
         # Output requirements:
-            - Output only Markdown.
-            - Start with a single H1 title that contains the user's PRESENTATION_TITLE.
-            - Then add headings with own bullet lists based on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
+            - Set contractVersion to {{{SlideDeckPlanProcessor.CONTRACT_VERSION}}}.
+            - Use the title and slides fields based on the provided source material: PRESENTATION_CONTENT, DOCUMENTS, and attached images.
             - If both PRESENTATION_CONTENT and attached source material are provided, use all of them, while prioritizing direct user instructions from PRESENTATION_CONTENT when resolving ambiguity.
             - If PRESENTATION_CONTENT is empty but attached source material is available, create the slides from the attached source material.
-            - If neither PRESENTATION_CONTENT nor any attached source material is available, output the title and one bullet: "No content provided."
             - Do not mention these instructions or add commentary.
+
+        {{{SlideDeckPlanProcessor.ContractGrammar}}}
+
+        # JSON transport rules:
+            - Answer with the bare JSON object and nothing else: no explanation, Markdown, or code fence.
+            - Use double-quoted property names and string values.
+            - Do not use comments, trailing commas, ellipses, or unescaped multiline strings.
+            - Before sending, verify that the root object is closed and every property conforms to the grammar.
         
         # Audience:
         {{{this.PromptAudience()}}}
@@ -73,10 +77,23 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         """;
     
     protected override bool AllowProfiles => true;
+
+    protected override bool ShowResult => this.ResultingContentBlock is not { HideFromUser: true };
     
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new ButtonData
+        {
+            Text = T("Export PowerPoint"),
+            Icon = Icons.Material.Filled.Slideshow,
+            Color = Color.Primary,
+            Tooltip = T("Create a .pptx file from the reviewed slide plan and the selected template."),
+            AsyncAction = this.ExportPowerPoint,
+            DisabledActionParam = () => this.slideDeckPlan is null || string.IsNullOrWhiteSpace(this.powerPointTemplatePath) || this.IsProcessing,
+        },
+    ];
     
-    protected override string SubmitText => T("Create Slides");
+    protected override string SubmitText => T("Create presentation plan");
 
     protected override Func<Task> SubmitAction => this.CreateSlideBuilder;
 
@@ -156,6 +173,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         this.inputTitle = string.Empty;
         this.inputContent = string.Empty;
+        this.powerPointTemplatePath = string.Empty;
+        this.slideDeckPlan = null;
         this.loadedDocumentPaths.Clear();
         this.selectedAudienceProfile = AudienceProfile.UNSPECIFIED;
         this.selectedAudienceAgeGroup = AudienceAgeGroup.UNSPECIFIED;
@@ -187,6 +206,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     
     private string inputTitle = string.Empty;
     private string inputContent = string.Empty;
+    private string powerPointTemplatePath = string.Empty;
+    private SlideDeckPlan? slideDeckPlan;
     private string customTargetLanguage = string.Empty;
     private AudienceProfile selectedAudienceProfile;
     private AudienceAgeGroup selectedAudienceAgeGroup;
@@ -201,6 +222,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private static readonly AssistantSessionStateKey<string> INPUT_TITLE_STATE_KEY = new(nameof(inputTitle));
     private static readonly AssistantSessionStateKey<string> INPUT_CONTENT_STATE_KEY = new(nameof(inputContent));
+    private static readonly AssistantSessionStateKey<string> POWER_POINT_TEMPLATE_PATH_STATE_KEY = new(nameof(powerPointTemplatePath));
+    private static readonly AssistantSessionStateKey<SlideDeckPlan?> SLIDE_DECK_PLAN_STATE_KEY = new(nameof(slideDeckPlan));
     private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
     private static readonly AssistantSessionStateKey<AudienceProfile> SELECTED_AUDIENCE_PROFILE_STATE_KEY = new(nameof(selectedAudienceProfile));
     private static readonly AssistantSessionStateKey<AudienceAgeGroup> SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY = new(nameof(selectedAudienceAgeGroup));
@@ -219,6 +242,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         state.Set(INPUT_TITLE_STATE_KEY, this.inputTitle);
         state.Set(INPUT_CONTENT_STATE_KEY, this.inputContent);
+        state.Set(POWER_POINT_TEMPLATE_PATH_STATE_KEY, this.powerPointTemplatePath);
+        state.Set(SLIDE_DECK_PLAN_STATE_KEY, this.slideDeckPlan);
         state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
         state.Set(SELECTED_AUDIENCE_PROFILE_STATE_KEY, this.selectedAudienceProfile);
         state.Set(SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY, this.selectedAudienceAgeGroup);
@@ -238,6 +263,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         state.Restore(INPUT_TITLE_STATE_KEY, value => this.inputTitle = value);
         state.Restore(INPUT_CONTENT_STATE_KEY, value => this.inputContent = value);
+        state.Restore(POWER_POINT_TEMPLATE_PATH_STATE_KEY, value => this.powerPointTemplatePath = value);
+        state.Restore(SLIDE_DECK_PLAN_STATE_KEY, value => this.slideDeckPlan = value);
         state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
         state.Restore(SELECTED_AUDIENCE_PROFILE_STATE_KEY, value => this.selectedAudienceProfile = value);
         state.Restore(SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY, value => this.selectedAudienceAgeGroup = value);
@@ -280,6 +307,12 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         return null;
     }
 
+    private string? ValidatingPowerPointTemplate(string path)
+    {
+        var result = PowerPointTemplateAnalyzer.Analyze(path);
+        return result.Analysis is null ? this.LocalizePowerPointIssue(result.Issue) : null;
+    }
+
     private bool HasValidInputDocuments() => this.loadedDocumentPaths.Any(n => n is { Exists: true });
 
     private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
@@ -298,8 +331,15 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     private int CalculateNumberOfSlides()
     {
-        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
+        return this.calculatedNumberOfSlides = Math.Clamp(
+            (int)Math.Round(this.timeSpecification / 1.5),
+            2,
+            SlideDeckPlanProcessor.MAX_TOTAL_SLIDES);
     }
+
+    private int RequestedTotalSlides => this.numberOfSheets > 0
+        ? this.numberOfSheets
+        : this.calculatedNumberOfSlides;
     
     private string PromptImportantAspects()
     {
@@ -460,8 +500,16 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         await this.Form!.Validate();
         if (!this.InputIsValid)
             return;
+
+        var templateResult = PowerPointTemplateAnalyzer.Analyze(this.powerPointTemplatePath);
+        if (templateResult.Analysis is null)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, this.LocalizePowerPointIssue(templateResult.Issue)));
+            return;
+        }
         
         this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;
+        this.slideDeckPlan = null;
         
         this.CreateChatThread();
         var documentContent = await this.PromptLoadDocumentsContent();
@@ -485,6 +533,101 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         hideContentFromUser: true,
         imageAttachments);
 
-        await this.AddAIResponseAsync(time);
+        var answer = await this.AddAIResponseAsync(time, hideContentFromUser: true);
+        var processing = SlideDeckPlanProcessor.Process(answer, this.RequestedTotalSlides, this.numberOfBulletPoints);
+        if (processing.Plan is null)
+        {
+            var repairTime = this.AddUserRequest(
+                SlideDeckPlanProcessor.BuildRepairPrompt(processing),
+                hideContentFromUser: true);
+            answer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
+            processing = SlideDeckPlanProcessor.Process(answer, this.RequestedTotalSlides, this.numberOfBulletPoints);
+        }
+
+        if (processing.Plan is null)
+        {
+            this.ResultingContentBlock = null;
+            await this.MessageBus.SendError(new(
+                Icons.Material.Filled.DataObject,
+                T("The model did not return a valid presentation plan after one repair attempt. Please try again.")));
+            return;
+        }
+
+        this.slideDeckPlan = processing.Plan;
+        var preview = new ContentBlock
+        {
+            Time = DateTimeOffset.Now,
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            HideFromUser = false,
+            Content = new ContentText
+            {
+                Text = SlideDeckPlanProcessor.ToMarkdown(this.slideDeckPlan),
+            },
+        };
+        this.ChatThread!.Blocks.Add(preview);
+        this.ResultingContentBlock = preview;
     }
+
+    private async Task ExportPowerPoint()
+    {
+        if (this.slideDeckPlan is null)
+            return;
+
+        var templateResult = PowerPointTemplateAnalyzer.Analyze(this.powerPointTemplatePath);
+        if (templateResult.Analysis is null)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, this.LocalizePowerPointIssue(templateResult.Issue)));
+            return;
+        }
+
+        var response = await this.RustService.SaveFile(
+            T("Save PowerPoint presentation"),
+            [FileTypes.POWER_POINT_OPEN_XML],
+            $"{this.SafePresentationFileName()}.pptx");
+        if (response.UserCancelled)
+            return;
+
+        var renderResult = PowerPointPresentationRenderer.Render(
+            this.powerPointTemplatePath,
+            response.SaveFilePath,
+            this.slideDeckPlan,
+            templateResult.Analysis);
+        if (!renderResult.Success)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, this.LocalizePowerPointIssue(renderResult.Issue)));
+            return;
+        }
+
+        await this.MessageBus.SendSuccess(new(
+            Icons.Material.Filled.Slideshow,
+            string.Format(T("The PowerPoint presentation was saved to '{0}'."), renderResult.OutputPath)));
+    }
+
+    private string SafePresentationFileName()
+    {
+        var invalidCharacters = Path.GetInvalidFileNameChars().ToHashSet();
+        var safeName = new string(this.inputTitle.Select(character => invalidCharacters.Contains(character) ? '_' : character).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(safeName) ? T("Presentation") : safeName;
+    }
+
+    private string LocalizePowerPointIssue(string issue) => issue switch
+    {
+        "Please select a PowerPoint template." => T("Please select a PowerPoint template."),
+        "The selected PowerPoint template is no longer available." => T("The selected PowerPoint template is no longer available."),
+        "The template must be a PowerPoint .pptx file." => T("The template must be a PowerPoint .pptx file."),
+        "The selected file does not contain a PowerPoint presentation." => T("The selected file does not contain a PowerPoint presentation."),
+        "The PowerPoint template does not contain a title layout with a title placeholder." => T("The PowerPoint template does not contain a title layout with a title placeholder."),
+        "The PowerPoint template does not contain a layout with title and content placeholders." => T("The PowerPoint template does not contain a layout with title and content placeholders."),
+        "The selected file is not a readable PowerPoint presentation." => T("The selected file is not a readable PowerPoint presentation."),
+        "The selected PowerPoint template could not be read." => T("The selected PowerPoint template could not be read."),
+        "The selected PowerPoint template could not be accessed." => T("The selected PowerPoint template could not be accessed."),
+        "The generated presentation must not overwrite its template." => T("The generated presentation must not overwrite its template."),
+        "The selected output folder is not available." => T("The selected output folder is not available."),
+        "The generated PowerPoint presentation did not pass Open XML validation." => T("The generated PowerPoint presentation did not pass Open XML validation."),
+        "The PowerPoint presentation could not be generated from this template." => T("The PowerPoint presentation could not be generated from this template."),
+        "The PowerPoint presentation could not be written to the selected location." => T("The PowerPoint presentation could not be written to the selected location."),
+        "The PowerPoint presentation could not be written because access was denied." => T("The PowerPoint presentation could not be written because access was denied."),
+        _ => T("The PowerPoint presentation could not be created."),
+    };
 }

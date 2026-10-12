@@ -14,6 +14,15 @@
           "MudBlazor": "8.0.0"
         }
       },
+      "DocumentFormat.OpenXml": {
+        "type": "Direct",
+        "requested": "[3.5.1, )",
+        "resolved": "3.5.1",
+        "contentHash": "zxdOf5VVCe/uNklbRhj8dVBzQGj3DoqkUuqOp9cAZVuN8mNYDjof1lvSQA2OQNr8Ptc9d7pbA7Azq/ReaI3FpA==",
+        "dependencies": {
+          "DocumentFormat.OpenXml.Framework": "3.5.1"
+        }
+      },
       "HtmlAgilityPack": {
         "type": "Direct",
         "requested": "[1.12.4, )",
@@ -76,9 +85,9 @@
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "oPFydtjCgow3DXnL8z5gPbq3R1zGvBpcypgRhW172Hn8asJcI8oy7isudAnAAALIWyK+uRWCDP+/+om3s0PZHA=="
+        "requested": "[9.0.12, )",
+        "resolved": "9.0.12",
+        "contentHash": "StA3kyImQHqDo8A8ZHaSxgASbEuT5UIqgeCvK5SzUPj//xE1QSys421J9pEs4cYuIVwq7CJvWSKxtyH7aPr1LA=="
       },
       "MudBlazor": {
         "type": "Direct",
@@ -129,6 +138,14 @@
         "type": "Transitive",
         "resolved": "3.2.449",
         "contentHash": "uA9sYDy4VepL3xwzBTLcP2LyuVYMt0ZIT3gaSiXvGoX15Ob+rOP+hGydhevlSVd+rFo+Y+VQFEHDuWU8HBW+XA=="
+      },
+      "DocumentFormat.OpenXml.Framework": {
+        "type": "Transitive",
+        "resolved": "3.5.1",
+        "contentHash": "U5txtc3ORno73xQx9Lf2gWzfaSZnZwKHfLkTAslhlew9lxe5XbUiCt0dY1fHeAf8yRqszUAe5i/+xLC9R/Xfsw==",
+        "dependencies": {
+          "System.IO.Packaging": "8.0.1"
+        }
       },
       "LuaCSharp.Annotations": {
         "type": "Transitive",
@@ -393,6 +410,11 @@
         "resolved": "10.0.0",
         "contentHash": "0QCZNYeRswlUVyo9N3hXrt5X9dqqRup53loU4K4JatdoYPhXHLrK9PwRtg5vP0Sr9QbdCOKk2luEdip/kV5Sig=="
       },
+      "System.IO.Packaging": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "KYkIOAvPexQOLDxPO2g0BVoWInnQhPpkFzRqvNrNrMhVT6kqhVr0zEb6KCHlptLFukxnZrjuMVAnxK7pOGUYrw=="
+      },
       "System.Security.Cryptography.Pkcs": {
         "type": "Transitive",
         "resolved": "10.0.0",
@@ -411,7 +433,7 @@
         "type": "Project"
       }
     },
-    "net9.0/osx-arm64": {
+    "net9.0/win-x64": {
       "SQLite": {
         "type": "Transitive",
         "resolved": "3.53.4",

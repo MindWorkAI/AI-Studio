@@ -1,5 +1,18 @@
 @attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
+@using AIStudio.Tools.Rust
+
+<MudText Typo="Typo.h5" Class="mb-1 mt-3"> @T("PowerPoint template")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Select a .pptx file whose theme, masters, and layouts will be used for the generated presentation. Existing slides in the selected template are not copied into the result.")
+</MudJustifiedText>
+<SelectFile @bind-File="@this.powerPointTemplatePath"
+            Label="@T("PowerPoint template")"
+            FileDialogTitle="@T("Select PowerPoint template")"
+            Filter="@(new[] { FileTypes.POWER_POINT_OPEN_XML })"
+            Validation="@this.ValidatingPowerPointTemplate"
+            EnableDragDrop="true"
+            Disabled="@this.IsProcessing" />
 
 <MudText Typo="Typo.h5"  Class="mb-1 mt-3"> @T("Content to derive slide from")</MudText>
 <MudJustifiedText Typo="Typo.body1" Class="mb-2">
@@ -34,7 +47,8 @@
                          Label="@T("Number of slides")"
                          Variant="Variant.Outlined"
                          Class="mb-3"
-                         Min="0" />
+                         Min="0"
+                         Max="20" />
     </MudItem>
     
     <MudItem xs="4">
