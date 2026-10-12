@@ -1,5 +1,3 @@
-using AIStudio.Tools.Services;
-
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -9,10 +7,10 @@ namespace AIStudio.Components;
 /// program.
 /// </summary>
 /// <remarks>
-/// A support contact may also be plain text, such as a name or a phone number. For a text which is no
-/// link, the button does not appear at all. The Assistant Builder fills the support contact and the
-/// source URL with links to MindWork AI, because every plugin has to state both. Those links tell nothing
-/// about the plugin itself, so their button stays disabled.
+/// The button only appears when there is something to open. A support contact may be plain text, such as
+/// a name or a phone number, and the links which the Assistant Builder fills in for every plugin tell
+/// nothing about the plugin itself. A disabled button would only leave the user wondering why it cannot
+/// be clicked.
 /// </remarks>
 public partial class PluginLinkButton : MSGComponentBase
 {
@@ -27,6 +25,4 @@ public partial class PluginLinkButton : MSGComponentBase
     /// </summary>
     [Parameter]
     public Size Size { get; set; } = Size.Medium;
-
-    private static bool IsPlaceholder(Uri link) => link.OriginalString is AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT or AssistantPluginGenerationService.DEFAULT_SOURCE_URL;
 }

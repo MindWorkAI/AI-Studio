@@ -39,5 +39,32 @@ public partial class PluginInfoDialog : MSGComponentBase
     /// </summary>
     private string LastChangedText => this.Plugin.LastChanged?.ToLocalTime().ToString("g", I18N.I.Culture) ?? this.T("Not specified");
 
+    private string SupportContactText => this.GetLinkText(this.Plugin.SupportContact);
+
+    private string SourceText => this.GetLinkText(this.Plugin.SourceURL);
+
+    /// <summary>
+    /// The field SOURCE_URL holds a website, such as a repository or a wiki, or a mail address. The
+    /// label and the icon of its row name which of both it is, since "source" would fit neither a wiki
+    /// nor a mail address.
+    /// </summary>
+    private bool IsSourceAMail => PluginLinks.TryParse(this.Plugin.SourceURL, out var link) && PluginLinks.IsMail(link);
+
+    private string SourceLabel => this.IsSourceAMail ? this.T("Email contact") : this.T("Related link");
+
+    private string SourceIcon => this.IsSourceAMail ? Icons.Material.Filled.ContactMail : Icons.Material.Filled.Link;
+
+    /// <summary>
+    /// Shows a link the way the user recognizes it: a mail address without its scheme, and a placeholder
+    /// of the Assistant Builder as not stated. A text which is no link stays as it is.
+    /// </summary>
+    private string GetLinkText(string text)
+    {
+        if (PluginLinks.IsPlaceholder(text))
+            return this.T("Not specified");
+
+        return PluginLinks.TryParse(text, out var link) ? PluginLinks.GetDisplayText(link) : text;
+    }
+
     private void Close() => this.MudDialog.Close();
 }

@@ -26,16 +26,16 @@
                 {
                     <InfoTableRow Icon="@Icons.Material.Filled.SupportAgent" Label="@T("Support contact")">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.SupportContact</MudText>
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.SupportContactText</MudText>
                             <PluginLinkButton Url="@this.Plugin.SupportContact" Size="Size.Small"/>
                         </MudStack>
                     </InfoTableRow>
                 }
                 @if (!string.IsNullOrWhiteSpace(this.Plugin.SourceURL))
                 {
-                    <InfoTableRow Icon="@Icons.Material.Filled.Source" Label="@T("Source")">
+                    <InfoTableRow Icon="@this.SourceIcon" Label="@this.SourceLabel">
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.SourceURL</MudText>
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.SourceText</MudText>
                             <PluginLinkButton Url="@this.Plugin.SourceURL" Size="Size.Small"/>
                         </MudStack>
                     </InfoTableRow>
