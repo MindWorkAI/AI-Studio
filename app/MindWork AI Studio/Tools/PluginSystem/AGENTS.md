@@ -4,6 +4,23 @@ These instructions cover the plugin system in `app/MindWork AI Studio/Tools/Plug
 configuration plugins can provide. They add to the `AGENTS.md` in the repository root, which applies here
 as well.
 
+## Lua runtime
+
+Every plugin runs in a Lua runtime of its own, created by `PluginFactory.CreateLuaState`, whatever its type
+and whoever runs it: loading, starting, checking an import, and the assistant builder.
+
+- A plugin loads the files of its own directory with `require`, through `PluginLoader`, also from
+  subdirectories: `require("lib/helpers")` loads `lib/helpers.lua`. The dot notation `require("lib.helpers")`
+  is not supported.
+- No other file is within reach. The runtime gets `NoLuaFileSystem` as its file system, `dofile` and
+  `loadfile` are removed, and code without a directory gets `NoModuleLoader`. With the default file system
+  of Lua-CSharp, `require` would look for a module it does not find next to the plugin along `package.path`,
+  relative to the working directory of the app, and `dofile` and `loadfile` would open any path.
+- Do not open the `io`, `os`, or `debug` library, and do not give the runtime a file system. Whatever a
+  plugin needs to reach outside of Lua comes as a host function which checks every access.
+- `PluginModuleLoadingTests` checks both sides: what plugins must load, and what they must not reach. Run
+  it after every change to the runtime, the module loader, or the opened libraries.
+
 ## Configuration plugins
 
 Plugins can configure:
