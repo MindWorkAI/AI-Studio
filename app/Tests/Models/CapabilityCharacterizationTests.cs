@@ -27,11 +27,12 @@ public sealed class CapabilityCharacterizationTests
     /// How many columns a snapshot line carries after the model ID.
     /// </summary>
     /// <remarks>
-    /// The capabilities, the kind, the context window, the image limit, and the tokenizer. Adding a
-    /// column to the snapshot means raising this, and forgetting to would split a line inside its
-    /// last column instead of in front of it -- which makes every model look changed at once.
+    /// The capabilities, the kind, the context window, the image limit, the tokenizer, and the system
+    /// prompt role. Adding a column to the snapshot means raising this, and forgetting to would split
+    /// a line inside its last column instead of in front of it -- which makes every model look
+    /// changed at once.
     /// </remarks>
-    private const int TRAILING_COLUMNS = 5;
+    private const int TRAILING_COLUMNS = 6;
 
     [Test]
     public void TheCorpusStillGetsTheAnswersTheSnapshotRecorded()

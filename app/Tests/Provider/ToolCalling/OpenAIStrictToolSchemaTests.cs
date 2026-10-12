@@ -46,6 +46,21 @@ public sealed class OpenAIStrictToolSchemaTests
     }
 
     [Test]
+    public void AnOptionalListMayBeNullWhileItsEntriesKeepTheirChoice()
+    {
+        var dataSourceIds = Converted(ToolParameterSchemaBuilder.Create()
+            .RequiredString("query", "The search query.")
+            .OptionalStringArray("data_source_ids", "The data sources.", "first", "second"))["properties"]!["data_source_ids"]!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(Types(dataSourceIds), Is.EqualTo(["array", "null"]), "Leaving the list out is said by allowing null for the list itself.");
+            Assert.That(dataSourceIds["items"]!["enum"]!.AsArray().Select(value => value?.GetValue<string>()), Is.EqualTo(["first", "second"]), "Null is a way to leave the list out, not an entry it may hold.");
+            Assert.That(dataSourceIds["enum"], Is.Null, "The list itself names no values of its own.");
+        });
+    }
+
+    [Test]
     public void ARequiredArgumentStaysAsItIs()
     {
         var query = Converted(ToolParameterSchemaBuilder.Create()

@@ -38,28 +38,46 @@ public static class IRetrievalContextExtensions
             contextBuilder.AppendLine($"- {link}");
     }
 
-    public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, CancellationToken token = default)
+    /// <summary>
+    /// Writes what the AI is told about several retrieval contexts, filtered for prompt injections.
+    /// </summary>
+    /// <param name="retrievalContexts">The contexts to describe.</param>
+    /// <param name="sb">The builder to write into, or null for a new one.</param>
+    /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Everything written into the builder so far.</returns>
+    public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         sb ??= new StringBuilder();
         var index = 0;
-        
+
         //
         // One report for the whole retrieval run: a query may pull in dozens of contexts, and
         // the user wants to know that something was filtered, not to acknowledge it per context.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using var reportingScope = guardService.BeginAction();
+        await using var retrievalScope = guardService.BeginAction(within: reportingScope);
 
         foreach(var retrievalContext in retrievalContexts)
         {
             index++;
-            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, token);
+            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, retrievalScope, token);
         }
 
         return sb.ToString();
     }
-    
-    public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, CancellationToken token = default)
+
+    /// <summary>
+    /// Writes what the AI is told about one retrieval context, filtered for prompt injections.
+    /// </summary>
+    /// <param name="retrievalContext">The context to describe.</param>
+    /// <param name="sb">The builder to write into, or null for a new one.</param>
+    /// <param name="index">The number of the context among all of them, or -1 when it stands alone.</param>
+    /// <param name="numTotalRetrievalContexts">How many contexts there are, or -1 when that is unknown.</param>
+    /// <param name="reportingScope">The action the context is retrieved for, or null when it is retrieved for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Everything written into the builder so far.</returns>
+    public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         sb ??= new StringBuilder();
         var contextBuilder = new StringBuilder();
@@ -141,9 +159,80 @@ public static class IRetrievalContextExtensions
         //
         async Task FilterWhatWeHaveSoFar()
         {
-            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source);
+            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source, reportingScope);
             contextBuilder.Clear();
             contextBuilder.Append(sanitized);
         }
     }
+
+    /// <summary>
+    /// The sources a retrieval context lends to an answer, as they are listed below it.
+    /// </summary>
+    /// <remarks>
+    /// The reference comes first: the title and link of the passage itself where the data source
+    /// names them, e.g., a local file with its page, and otherwise the data source and the path.
+    /// The further links of the context follow. Only what can be opened becomes a source, i.e., a
+    /// web address or a file with an absolute path. A relative path would point elsewhere depending
+    /// on where it is opened from.
+    /// </remarks>
+    /// <param name="retrievalContext">The retrieval context.</param>
+    /// <returns>The sources, which may be none.</returns>
+    public static IReadOnlyList<Source> ToSources(this IRetrievalContext retrievalContext)
+    {
+        var sources = new List<Source>();
+        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
+        foreach (var link in retrievalContext.Links)
+            AddSource(sources, retrievalContext.DataSourceName, link);
+
+        return sources;
+    }
+
+    private static void AddSource(ICollection<Source> sources, string title, string link)
+    {
+        if (string.IsNullOrWhiteSpace(title) || !TryNormalizeSourceLink(link, out var normalizedLink))
+            return;
+
+        sources.Add(new Source(title, normalizedLink, SourceOrigin.RAG));
+    }
+
+    private static string GetReferenceTitle(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceTitle: { Length: > 0 } referenceTitle }
+            ? referenceTitle
+            : retrievalContext.DataSourceName;
+
+    private static string GetReferenceLink(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceLink: { Length: > 0 } referenceLink }
+            ? referenceLink
+            : retrievalContext.Path;
+
+    private static bool TryNormalizeSourceLink(string link, out string normalizedLink)
+    {
+        normalizedLink = string.Empty;
+        if (string.IsNullOrWhiteSpace(link))
+            return false;
+
+        if (Uri.TryCreate(link, UriKind.Absolute, out var absoluteUri) && IsSupportedSourceUri(absoluteUri))
+        {
+            normalizedLink = absoluteUri.AbsoluteUri;
+            return true;
+        }
+
+        try
+        {
+            if (!Path.IsPathRooted(link))
+                return false;
+
+            normalizedLink = new Uri(Path.GetFullPath(link)).AbsoluteUri;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsSupportedSourceUri(Uri uri) =>
+        string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase);
 }

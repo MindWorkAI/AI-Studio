@@ -8,6 +8,7 @@ using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat;
 
@@ -165,7 +166,7 @@ public sealed class ContentText : IContent
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, token);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -386,9 +387,28 @@ public sealed class ContentText : IContent
 
     #endregion
 
-    public async Task<string> PrepareTextContentForAI()
+    /// <summary>
+    /// The web addresses in the documents attached to this message, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// The documents are read from disk only when a message is sent, so their addresses are
+    /// collected right then, see PrepareTextContentForAI, and count as given to the model, see
+    /// ChatThread.IsWebAddressGivenToTheModel. Not stored: every request reads the documents anew,
+    /// and a document changed or gone since no longer gives an address.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlySet<string> RuntimeAttachmentWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Builds the text the AI gets for this message, with the content of its attached documents.
+    /// </summary>
+    /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
+    /// <returns>The text for the AI.</returns>
+    public async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope)
     {
         var sb = new StringBuilder();
+        var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
         sb.AppendLine(this.Text);
 
         if(this.FileAttachments.Count > 0)
@@ -433,13 +453,6 @@ public sealed class ContentText : IContent
                 }
 
                 //
-                // One report for the whole batch: attaching twenty documents must produce one
-                // dialog listing all of them, not twenty dialogs in a row.
-                //
-                var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-                await using var promptInjectionScope = guardService.BeginAction();
-
-                //
                 // The document blocks are collected separately, so we only announce attached
                 // files when at least one of them could actually be read. Announcing files we
                 // then hand over as empty blocks makes the AI answer about an empty document.
@@ -460,7 +473,7 @@ public sealed class ContentText : IContent
                         continue;
                     }
 
-                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
                     if (!extraction.HasUsableContent)
                     {
                         LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
@@ -492,6 +505,10 @@ public sealed class ContentText : IContent
                     documentBlocks.AppendLine("````");
                     documentBlocks.AppendLine(extraction.Content);
                     documentBlocks.AppendLine("````");
+
+                    foreach (var address in WebAddresses.Find(extraction.Content))
+                        if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                            attachmentWebAddresses.Add(requestKey);
                 }
 
                 if (documentBlocks.Length > 0)
@@ -510,7 +527,8 @@ public sealed class ContentText : IContent
                 }
             }
         }
-        
+
+        this.RuntimeAttachmentWebAddresses = attachmentWebAddresses;
         return sb.ToString();
     }
     

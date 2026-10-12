@@ -1,0 +1,65 @@
+name: Contribution gate
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Number of the pull request to check; leave empty to check all open pull requests"
+        required: false
+        type: string
+      dry_run:
+        description: "Only report what would change, without changing anything"
+        required: false
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || inputs.pr_number || 'all' }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  check:
+    name: Check contribution requirements
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      statuses: write
+
+    steps:
+      # pull_request_target runs with write permissions, so the code of the pull request must never
+      # be checked out or executed here. We only check out the gate script, and always from the
+      # default branch.
+      - name: Check out the gate script
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.repository.default_branch || '' }}
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+
+      # The script reads the description of the pull request through the API and handles it as
+      # data only. Never pass texts of the pull request into this step through ${{ }} expressions.
+      - name: Run the gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          EVENT_ACTION: ${{ github.event_name == 'pull_request_target' && github.event.action || '' }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            bash .github/scripts/contribution-gate.sh "$PR_NUMBER"
+          else
+            bash .github/scripts/contribution-gate.sh --all
+          fi

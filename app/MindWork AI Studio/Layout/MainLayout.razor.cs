@@ -60,6 +60,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
@@ -153,7 +156,31 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //
+        // After a reload of the page, the plugins are already running and do not report
+        // again. The document would keep the language of the HTML template then:
+        //
+        if (firstRender)
+            await this.SetDocumentLanguageAsync(await this.SettingsManager.GetActiveLanguagePlugin());
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     #endregion
+
+    /// <summary>
+    /// Tells the browser in which language the user interface is written. The browser needs this, e.g.,
+    /// to hyphenate texts by the rules of that language, and screen readers need it to pronounce them.
+    /// </summary>
+    /// <param name="language">The active language plugin.</param>
+    private async Task SetDocumentLanguageAsync(ILanguagePlugin language)
+    {
+        // Without a language plugin, the user interface shows the English texts of the code:
+        var ietfTag = string.IsNullOrWhiteSpace(language.IETFTag) ? "en" : language.IETFTag;
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "setDocumentLanguage", ietfTag);
+    }
 
     private void ShowSettingsWriteProtectionWarning()
     {
@@ -338,13 +365,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
 
-                            // Load (but not start) all plugins without waiting for them:
-                            #if DEBUG
-                            var pluginLoadingTimeout = new CancellationTokenSource();
-                            #else
-                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            #endif
-                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+                            // Load and start all plugins. Each plugin has a time limit of its own,
+                            // so a slow one cannot keep the others from starting:
+                            await PluginFactory.LoadAll();
 
                             // Set up hot reloading for plugins:
                             PluginFactory.SetUpHotReloading();
@@ -356,6 +379,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    await this.SetDocumentLanguageAsync(this.Lang);
                     this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
                     this.LoadEmbeddingItem();
@@ -405,9 +429,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         }
     }
 
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
-        return Task.FromResult<TResult?>(default);
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 
     #endregion
@@ -487,15 +511,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
     }
     
+    /// <remarks>
+    /// Speaks of neither files nor mails: the overview sums up data sources of every kind.
+    /// </remarks>
     private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
     {
         DataSourceEmbeddingState.QUEUED => T("Embeddings are waiting to be processed."),
         DataSourceEmbeddingState.RUNNING => string.Format(
-            T("Embeddings are running: {0} of {1} files are indexed."),
-            this.embeddingOverview.IndexedFiles,
-            this.embeddingOverview.TotalFiles),
-        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
-            ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
+            T("Embeddings are running: {0} of {1} are indexed."),
+            this.embeddingOverview.IndexedDocuments.CompactCount(),
+            this.embeddingOverview.TotalDocuments.CompactCount()),
+        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedDocuments > 0
+            ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
             : T("Some embeddings failed and need attention."),
 
         // The entry is always visible, so its resting state needs words as well. An empty tooltip

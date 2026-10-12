@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in AI Studio does not work as expected.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug! Please check the [open issues](https://github.com/MindWorkAI/AI-Studio/issues) first, in case somebody has already reported it.
+
+        Did you find a security vulnerability? Please do not report it here; follow our [security policy](https://github.com/MindWorkAI/AI-Studio/blob/main/SECURITY.md) instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version of AI Studio
+      description: You find it on the Information page of the app.
+      placeholder: e.g. v26.10.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux (Flatpak)
+        - Linux (AppImage)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: Version of the operating system
+      placeholder: e.g. Windows 11, macOS 26, Ubuntu 26.04
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem. Screenshots help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Click …
+        3. See …
+    validations:
+      required: true
+
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and model
+      description: When the problem concerns an LLM provider, name the provider and the model. Never share API keys.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log excerpt
+      description: The Information page of the app shows where the log files are. Paste the relevant part, ideally the lines around the error. The logs contain no passwords, but please check them for other information you do not want to share.
+      render: text
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you submit
+      options:
+        - label: I have seen this problem myself in the version named above, and this report says what I mean, whether I wrote it myself or with the help of AI.
+          required: true

@@ -31,7 +31,8 @@ public sealed class Gpt4Family : ModelFamily
             .Capabilities(TEXT_INPUT | TEXT_OUTPUT)
             .Apis(RESPONSES_API)
             .ContextWindow(8_192)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "cl100k_base")
+            .SystemPromptRole(SystemPromptRole.SYSTEM);
 
         builder.Rule("gpt-4-turbo").AsPrefix().Inherits()
             .Capabilities(MULTIPLE_IMAGE_INPUT | FUNCTION_CALLING)

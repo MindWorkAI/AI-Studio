@@ -16,13 +16,13 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd>
-                <MudIcon Icon="@context.Implementation.Icon" Color="Color.Info" />
+                <MudIcon Icon="@context.Icon" Color="Color.Info" />
             </MudTd>
             <MudTd>
-                <MudText Typo="Typo.body1">@context.Implementation.GetDisplayName()</MudText>
+                <MudText Typo="Typo.body1">@context.DisplayName</MudText>
             </MudTd>
             <MudTd>
-                <MudText Typo="Typo.body2">@context.Implementation.GetDescription()</MudText>
+                <MudText Typo="Typo.body2">@context.Description</MudText>
             </MudTd>
             <MudTd>
                 <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
@@ -55,9 +55,9 @@
             <MudTd>
                 <MudStack Row="true" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Spacing="0">
                     <MudTooltip Text="@T("Settings")">
-                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" aria-label="@T("Settings")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context))" aria-label="@T("Settings")" />
                     </MudTooltip>
-                    <AdminExportButton OnClick="@(() => this.OpenExport(context.Definition.Id))" />
+                    <AdminExportButton OnClick="@(() => this.OpenExport(context))" />
                 </MudStack>
             </MudTd>
         </RowTemplate>

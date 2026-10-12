@@ -67,7 +67,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
         });
     }
 
-    public async Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    public async Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
         return await this.ProcessIncomingMessageWithResult<TPayload, TResult>(sendingComponent, triggeredEvent, data);
     }
@@ -79,9 +79,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
         return Task.CompletedTask;
     }
 
-    protected virtual Task<TResult?> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    /// <summary>
+    /// Answers a question from the message bus. Override this for the questions your component handles,
+    /// and return MessageBusAnswer.NONE for every other one.
+    /// </summary>
+    protected virtual Task<MessageBusAnswer<TResult>> ProcessIncomingMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
-        return Task.FromResult<TResult?>(default);
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
     
     protected async Task SendMessage<T>(Event triggeredEvent, T? data = default)

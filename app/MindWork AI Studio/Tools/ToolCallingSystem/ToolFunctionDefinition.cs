@@ -2,7 +2,14 @@ using System.Text.Json;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
-public sealed class ToolFunctionDefinition
+/// <summary>
+/// The function a tool offers the model: its name, what it does, and the arguments it takes.
+/// </summary>
+/// <remarks>
+/// A record, so that a tool tailoring its function to a request changes only what it has to, e.g.
+/// definition.Function with { DescriptionForLLM = … }, see IToolImplementation.ResolveFunctionAsync.
+/// </remarks>
+public sealed record ToolFunctionDefinition
 {
     public string Name { get; init; } = string.Empty;
 

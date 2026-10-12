@@ -26,6 +26,13 @@
                             <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Size="Size.Small" OnClick="@(() => this.ShowInFileManager(document))"/>
                         </MudTooltip>
                     }
+                    else if (entry.IsMail)
+                    {
+                        @* Nothing opens a mail by its address yet, so a link would lead nowhere. *@
+                        <MudText Typo="Typo.body1" Inline="true">
+                            @entry.Title
+                        </MudText>
+                    }
                     else
                     {
                         <MudLink Href="@entry.Link" Target="_blank" Typo="Typo.body1">

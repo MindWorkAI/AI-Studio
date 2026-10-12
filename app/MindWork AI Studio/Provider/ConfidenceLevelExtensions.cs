@@ -24,7 +24,8 @@ public static class ConfidenceLevelExtensions
     
     public static string GetColor(this ConfidenceLevel level, SettingsManager settingsManager) => (level, settingsManager.IsDarkMode) switch
     {
-        (ConfidenceLevel.NONE, _) => "#cccccc",
+        (ConfidenceLevel.NONE, false) => "#cccccc",
+        (ConfidenceLevel.NONE, true) => "#666666",
 
         (ConfidenceLevel.UNKNOWN, false) => "#777777",
         (ConfidenceLevel.UNKNOWN, true) => "#aaaaaa",

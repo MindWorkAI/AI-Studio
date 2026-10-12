@@ -13,7 +13,7 @@ The first form is the one almost every caller wants because it includes what the
 
 ## What A Profile Says
 
-`ModelProfile` carries six things: the capabilities as a `[Flags]` enum, how the model reasons, what kind of model it is, its context window, its tokenizer, and its image limits.
+`ModelProfile` carries seven things: the capabilities as a `[Flags]` enum, how the model reasons, what kind of model it is, its context window, its tokenizer, its image limits, and the role its system prompt is sent in. Only the rules of OpenAI's own models state that role — `developer`, `system`, or, for the earliest reasoning models, a message of the person. For every other model it stays `UNKNOWN`, and the provider sends the system prompt the one way it knows.
 
 **No number ever means "unknown" by being zero.** `ContextWindow`, `TokenizerRef`, and `ImageLimits` each say so themselves — `IsKnown`, or a `null` in a nullable field. A window of zero tokens is not a thing, but zero images per message is: that is what a vLLM says before anybody raises `--limit-mm-per-prompt`. Read `ModelFactsTests` for what each of them promises.
 
@@ -74,7 +74,7 @@ public sealed class AcmeFamily : ModelFamily
 
 The source is abstract, so the compiler asks for it. That is deliberate: a rule without a page behind it is a guess, and a guess nobody can check ages into a defect. Where one page is not enough — capabilities here, the context window there, the tokenizer somewhere else — state the rest in `FurtherSources`; they are held to the same standard.
 
-What a rule can state: `Capabilities`, `Apis`, `Removes`, `Reasoning`, `Kind`, `ContextWindow`, `WithoutContextWindow`, `Tokenizer`, `Images`. What it matches: `AsExact`, `AsPrefix`, `AsSegment`, `AsSubstring`, `AlsoContains`, `NotContains`, `OnlyOn`, `OnlyFrom`.
+What a rule can state: `Capabilities`, `Apis`, `Removes`, `Reasoning`, `Kind`, `ContextWindow`, `WithoutContextWindow`, `Tokenizer`, `Images`, `SystemPromptRole`. What it matches: `AsExact`, `AsPrefix`, `AsSegment`, `AsSubstring`, `AlsoContains`, `NotContains`, `OnlyOn`, `OnlyFrom`.
 
 **Everything left unsaid stays unsaid.** A rule that says nothing about the context window does not claim that nobody knows it; it makes no statement, and whatever else does keeps its answer. `Inherits()` continues from the rule above, `InheritsFrom("<pattern>")` from a named one — worth reaching for as soon as a family has more than one generation, because "the rule above" changes when somebody inserts one.
 

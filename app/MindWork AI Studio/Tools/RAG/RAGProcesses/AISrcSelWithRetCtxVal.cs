@@ -6,6 +6,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.AugmentationProcesses;
 using AIStudio.Tools.RAG.DataSourceSelectionProcesses;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tools.RAG.RAGProcesses;
 
@@ -27,11 +28,25 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     public string Description => TB("This RAG process filters data sources, automatically selects appropriate sources, optionally allows manual source selection, retrieves data, and automatically validates the retrieval context.");
 
     /// <inheritdoc />
-    public async Task<ChatThread> ProcessAsync(IProvider provider, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
+    public async Task<ChatThread> ProcessAsync(IProvider provider, Model chatModel, IContent lastUserPrompt, ChatThread chatThread, CancellationToken token = default)
     {
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
         var dataSourceService = Program.SERVICE_PROVIDER.GetService<DataSourceService>()!;
         
+        //
+        // What an earlier message retrieved must not travel along with this one. The augmented
+        // data and the AI-selected data sources describe the last retrieval, not a certain
+        // message, and only the steps below ever write them. Without starting from empty, every
+        // message which retrieves nothing -- because the data sources were switched off, none of
+        // them can be used right now, or the search found nothing -- would still send the
+        // passages of the last message which did, cf. ChatThread.RollBackTo.
+        //
+        // The data security and the required provider confidence stay as they are: both only
+        // ever tighten, because the data which raised them was seen by this thread.
+        //
+        chatThread.AugmentedData = string.Empty;
+        chatThread.AISelectedDataSources = [];
+
         //
         // 1. Check if the user wants to bind any data sources to the chat:
         //
@@ -44,7 +59,17 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
         if (PreviewFeatures.PRE_RAG_2024.IsEnabled(settings) && chatThread.DataSourceOptions.IsEnabled())
         {
             LOGGER.LogInformation("Data sources are enabled for this chat.");
-            
+
+            //
+            // When the model searches the data sources itself, AI Studio does not search them as
+            // well. The reset above already dropped whatever an earlier message retrieved:
+            //
+            if (await IsSearchedByTheModelAsync(Program.SERVICE_PROVIDER.GetService<ToolRegistry>(), settings, provider, chatModel, chatThread))
+            {
+                LOGGER.LogInformation("The model searches the data sources of this chat itself, aka Semantic Search. Skipping the RAG process.");
+                return chatThread;
+            }
+
             // Across the different code-branches, we keep track of whether it
             // makes sense to proceed with the RAG process:
             var proceedWithRAG = true;
@@ -80,7 +105,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             // data sources changed its security requirements.
             //
             List<IDataSource> preselectedDataSources = chatThread.DataSourceOptions.PreselectedDataSourceIds.Select(id => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == id)).Where(ds => ds is not null).ToList()!;
-            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, preselectedDataSources);
+            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, DataSourceRetrievalMode.EVERY_MESSAGE, preselectedDataSources);
             var selectedDataSources = dataSources.SelectedDataSources;
             
             //
@@ -122,48 +147,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
-                // of the chat thread and the data security of the selected data sources:
+                // of the chat thread and the data security of the selected data sources: at least
+                // one data source with a SELF_HOSTED policy restricts the chat to self-hosted
+                // providers. A restriction set earlier stays either way, because the thread might
+                // already contain data from a data source with a SELF_HOSTED policy:
                 //
                 var dataSecurityRestrictedToSelfHosted = selectedDataSources
                     .OfType<IExternalDataSource>()
                     .Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
-                chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
-                {
-                    //
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of SELF_HOSTED (at least one data source).
-                    //
-                    // When the policy was already set to ALLOW_ANY, we restrict it
-                    // to SELF_HOSTED.
-                    //
-                    true => DataSourceSecurity.SELF_HOSTED,
-                    
-                    //
-                    // Case: the data sources which are selected have a security policy
-                    // of ALLOW_ANY (none of the data sources has a SELF_HOSTED policy).
-                    //
-                    // When the policy was already set to SELF_HOSTED, we must keep that.
-                    //
-                    false => chatThread.DataSecurity switch
-                    {
-                        //
-                        // When the policy was not specified yet, we set it to ALLOW_ANY.
-                        //
-                        DataSourceSecurity.NOT_SPECIFIED => DataSourceSecurity.ALLOW_ANY,
-                        DataSourceSecurity.ALLOW_ANY => DataSourceSecurity.ALLOW_ANY,
-                        
-                        //
-                        // When the policy was already set to SELF_HOSTED, we must keep that.
-                        // This is important since the thread might already contain data
-                        // from a data source with a SELF_HOSTED policy.
-                        //
-                        DataSourceSecurity.SELF_HOSTED => DataSourceSecurity.SELF_HOSTED,
-                        
-                        // Default case: we use the current data security of the chat thread.
-                        _ => chatThread.DataSecurity,
-                    }
-                };
+                chatThread.RequireDataSecurity(dataSecurityRestrictedToSelfHosted ? DataSourceSecurity.SELF_HOSTED : DataSourceSecurity.ALLOW_ANY);
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
@@ -228,7 +220,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             
             var ragSources = new List<ISource>();
             foreach (var retrievalContext in dataContexts)
-                ragSources.AddRange(CreateSources(retrievalContext));
+                ragSources.AddRange(retrievalContext.ToSources());
 
             // Merge the sources, avoiding duplicates:
             aiAnswerSources.MergeSources(ragSources);
@@ -239,62 +231,27 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
 
     #endregion
 
-    private static IReadOnlyList<ISource> CreateSources(IRetrievalContext retrievalContext)
+    /// <summary>
+    /// Whether the model searches the data sources of this chat itself, through the tool semantic_search.
+    /// </summary>
+    /// <remarks>
+    /// The registry decides with the same checks, the same provider settings, and the same part of
+    /// the app as the request does before it offers the tool, see BaseProvider. A wrong true would
+    /// leave the chat searching nothing at all, since the RAG process stands back and the request
+    /// offers no tool; a chat whose model cannot search itself therefore always gets false here.
+    /// </remarks>
+    /// <param name="toolRegistry">The tool registry, when there is one. Without it, the request offers no tools either.</param>
+    /// <param name="settings">The settings.</param>
+    /// <param name="provider">The LLM provider which answers.</param>
+    /// <param name="chatModel">The model which answers.</param>
+    /// <param name="chatThread">The chat thread.</param>
+    /// <returns>True when AI Studio must leave the searching to the model.</returns>
+    internal static async Task<bool> IsSearchedByTheModelAsync(ToolRegistry? toolRegistry, SettingsManager settings, IProvider provider, Model chatModel, ChatThread chatThread)
     {
-        var sources = new List<ISource>();
-        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
-        foreach (var link in retrievalContext.Links)
-            AddSource(sources, retrievalContext.DataSourceName, link);
-
-        return sources;
-    }
-
-    private static void AddSource(ICollection<ISource> sources, string title, string link)
-    {
-        if (string.IsNullOrWhiteSpace(title) || !TryNormalizeSourceLink(link, out var normalizedLink))
-            return;
-
-        sources.Add(new Source(title, normalizedLink, SourceOrigin.RAG));
-    }
-
-    private static string GetReferenceTitle(IRetrievalContext retrievalContext) =>
-        retrievalContext is RetrievalTextContext { ReferenceTitle: { Length: > 0 } referenceTitle }
-            ? referenceTitle
-            : retrievalContext.DataSourceName;
-
-    private static string GetReferenceLink(IRetrievalContext retrievalContext) =>
-        retrievalContext is RetrievalTextContext { ReferenceLink: { Length: > 0 } referenceLink }
-            ? referenceLink
-            : retrievalContext.Path;
-
-    private static bool TryNormalizeSourceLink(string link, out string normalizedLink)
-    {
-        normalizedLink = string.Empty;
-        if (string.IsNullOrWhiteSpace(link))
+        if (toolRegistry is null || !chatThread.MayRunTools(settings))
             return false;
 
-        if (Uri.TryCreate(link, UriKind.Absolute, out var absoluteUri) && IsSupportedSourceUri(absoluteUri))
-        {
-            normalizedLink = absoluteUri.AbsoluteUri;
-            return true;
-        }
-
-        try
-        {
-            if (!Path.IsPathRooted(link))
-                return false;
-
-            normalizedLink = new Uri(Path.GetFullPath(link)).AbsoluteUri;
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        var retrievalMode = await toolRegistry.GetEffectiveRetrievalModeAsync(chatThread.DataSourceOptions, provider.CreateSettingsProvider(chatModel), chatThread.RuntimeComponent);
+        return retrievalMode.Mode is DataSourceRetrievalMode.SEMANTIC_SEARCH;
     }
-
-    private static bool IsSupportedSourceUri(Uri uri) =>
-        string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(uri.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase);
 }

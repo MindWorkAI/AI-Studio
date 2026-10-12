@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
@@ -26,7 +27,20 @@ public partial class DataSourceManagement : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
+    [Inject]
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
+
     private readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
+
+    /// <summary>
+    /// The data sources and then the mailboxes, which the table shows together.
+    /// </summary>
+    private IEnumerable<IDataSourceBase> ConfiguredDataSources => this.SettingsManager.ConfigurationData.DataSources
+        .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Cast<IDataSourceBase>());
+
+    private bool AreMailboxesEnabled => PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager);
+
+    private bool MayAddMailbox => this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
     #region Overrides of ComponentBase
 
@@ -77,7 +91,7 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
             return Color.Warning;
 
-        return status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0
+        return status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0
             ? Color.Error
             : Color.Success;
     }
@@ -95,17 +109,18 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null)
             return T("Waiting for indexing status");
 
-        if (status.PermanentlySkippedFiles == 0)
+        // Only files are skipped for want of readable text. A mail is read from the server, never from a file:
+        if (status.PermanentlySkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
             return status.StateLabel;
 
-        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedFiles)}";
+        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)}";
     }
 
-    private string GetEmbeddingName(IDataSource dataSource)
+    private string GetEmbeddingName(IDataSourceBase dataSource)
     {
-        if(dataSource is IInternalDataSource internalDataSource)
+        if(dataSource is IIndexedDataSource indexedDataSource)
         {
-            var matchedEmbedding = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == internalDataSource.EmbeddingId);
+            var matchedEmbedding = this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == indexedDataSource.EmbeddingId);
             if(matchedEmbedding == default)
                 return T("No valid embedding");
 
@@ -118,14 +133,14 @@ public partial class DataSourceManagement : MSGComponentBase
         return T("Unknown");
     }
 
-    private bool CanRefreshDataSource(IDataSource dataSource)
+    private bool CanRefreshDataSource(IDataSourceBase dataSource)
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(dataSource);
     }
 
     private bool HasRefreshableDataSources()
     {
-        return this.SettingsManager.ConfigurationData.DataSources.Any(this.CanRefreshDataSource);
+        return this.ConfiguredDataSources.Any(this.CanRefreshDataSource);
     }
 
     /// <remarks>
@@ -134,12 +149,12 @@ public partial class DataSourceManagement : MSGComponentBase
     /// every internal data source regardless of state, and singling this one out would say more
     /// about the state than that button ever has.
     /// </remarks>
-    private bool CanRepairDataSource(IDataSource dataSource)
+    private bool CanRepairDataSource(IDataSourceBase dataSource)
     {
         return this.DataSourceEmbeddingService.NeedsIndexRepair(dataSource);
     }
 
-    private async Task RepairDataSource(IDataSource dataSource)
+    private async Task RepairDataSource(IDataSourceBase dataSource)
     {
         if (!this.CanRepairDataSource(dataSource))
             return;
@@ -161,7 +176,7 @@ public partial class DataSourceManagement : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task RefreshDataSource(IDataSource dataSource)
+    private async Task RefreshDataSource(IDataSourceBase dataSource)
     {
         if (!this.CanRefreshDataSource(dataSource))
             return;
@@ -235,7 +250,7 @@ public partial class DataSourceManagement : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    private async Task ExportDataSource(IDataSource dataSource)
+    private async Task ExportDataSource(IDataSourceBase dataSource)
     {
         if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
             return;
@@ -440,6 +455,112 @@ public partial class DataSourceManagement : MSGComponentBase
             await this.DataSourceEmbeddingService.RemoveDataSourceAsync(dataSource);
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
+    }
+
+    /// <summary>
+    /// Edits a row of the table, which is either a data source or a mailbox.
+    /// </summary>
+    private Task EditEntry(IDataSourceBase entry) => entry switch
+    {
+        DataSourceMailbox mailbox => this.EditMailbox(mailbox),
+        IDataSource dataSource => this.EditDataSource(dataSource),
+
+        _ => Task.CompletedTask,
+    };
+
+    /// <summary>
+    /// Deletes a row of the table, which is either a data source or a mailbox.
+    /// </summary>
+    private Task DeleteEntry(IDataSourceBase entry) => entry switch
+    {
+        DataSourceMailbox mailbox => this.DeleteMailbox(mailbox),
+        IDataSource dataSource => this.DeleteDataSource(dataSource),
+
+        _ => Task.CompletedTask,
+    };
+
+    private async Task AddMailbox()
+    {
+        if (!this.MayAddMailbox)
+            return;
+
+        var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
+        {
+            { x => x.IsEditing, false },
+            { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataSourceMailboxDialog>(T("Add Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var mailbox = (DataSourceMailbox)dialogResult.Data!;
+
+        //
+        // The dialog refuses to add a mailbox once the organization rules them out, but the rule
+        // may change while it stores the password. Then the password goes again, as far as possible:
+        //
+        if (!this.MayAddMailbox)
+        {
+            await this.RustService.DeleteSecret(mailbox, SecretStoreType.DATA_SOURCE);
+            return;
+        }
+
+        mailbox = mailbox with { Num = this.SettingsManager.ConfigurationData.NextDataSourceNum++ };
+
+        this.SettingsManager.ConfigurationData.Mailboxes.Add(mailbox);
+        await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(mailbox);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task EditMailbox(DataSourceMailbox mailbox)
+    {
+        if (await MailboxEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, mailbox.Id))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    /// <summary>
+    /// Deletes a mailbox from AI Studio: its settings, its password, its index, and its recorded sign-in failure.
+    /// </summary>
+    /// <remarks>
+    /// The sign-in failure is deleted on its own, since it outlives the index on purpose: repairing
+    /// an index must not give the server a new attempt with a password it already refused.
+    /// </remarks>
+    private async Task DeleteMailbox(DataSourceMailbox mailbox)
+    {
+        if (mailbox.IsEnterpriseConfiguration)
+            return;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(T("Are you sure you want to delete the mailbox '{0}'? Your mails stay on the server as they are. AI Studio only deletes its index of them and the stored password."), mailbox.Name) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var deleteSecretResponse = await this.RustService.DeleteSecret(mailbox, SecretStoreType.DATA_SOURCE);
+        if (!deleteSecretResponse.Success)
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Delete Mailbox"),
+                string.Format(T("The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}"), deleteSecretResponse.Issue),
+                T("Close"));
+            return;
+        }
+
+        this.SettingsManager.ConfigurationData.Mailboxes.Remove(mailbox);
+        await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.RemoveDataSourceAsync(mailbox);
+
+        var indexStore = await this.DatabaseClientProvider.GetIndexStoreAsync();
+        await indexStore.ClearMailboxAuthFailureAsync(mailbox.Id, CancellationToken.None);
+
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task ShowInformation(IDataSource dataSource)

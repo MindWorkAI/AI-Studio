@@ -55,7 +55,8 @@ public sealed partial class PluginInstallService
             DocumentAnalysisPolicies: CountObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY),
             LockedSettings: lockedSettings,
             MandatoryInfos: configurationPlugin.MandatoryInfos.Count,
-            Introductions: configurationPlugin.Introductions.Count);
+            Introductions: configurationPlugin.Introductions.Count,
+            MailboxProviders: configurationPlugin.MailboxProviders.Count);
 
         int CountObjects(PluginConfigurationObjectType type) => configObjects.Count(configObject => configObject.Type == type);
     }

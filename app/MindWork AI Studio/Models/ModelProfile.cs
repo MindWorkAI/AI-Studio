@@ -93,6 +93,15 @@ public readonly record struct ModelProfile
     public ImageLimits Images { get; init; }
 
     /// <summary>
+    /// Which role the system prompt is sent in.
+    /// </summary>
+    /// <remarks>
+    /// Stated by the rules of OpenAI's own models alone, and unknown for everything else: the other
+    /// providers have one way to send a system prompt, and the provider knows it without asking.
+    /// </remarks>
+    public SystemPromptRole SystemPromptRole { get; init; }
+
+    /// <summary>
     /// Whether the model has every one of the given capabilities.
     /// </summary>
     /// <remarks>
