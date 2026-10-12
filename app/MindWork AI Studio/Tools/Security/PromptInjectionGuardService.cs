@@ -116,7 +116,9 @@ public sealed class PromptInjectionGuardService(
 
         //
         // Findings are collected per source, not per text: a page whose content and title were
-        // both filtered is one thing that happened to the user, not two.
+        // both filtered is one thing that happened to the user, not two. Doing so here rather than
+        // in the report keeps both counts: two texts with the same findings would look like one
+        // text filtered twice there.
         //
         var findingsBySource = new Dictionary<PromptInjectionSource, (List<PromptInjectionFinding> Findings, int RedactedCount)>();
         for (var responseIndex = 0; responseIndex < indicesToScan.Count; responseIndex++)
@@ -243,8 +245,47 @@ public sealed class PromptInjectionGuardService(
         return collectingScope;
     }
 
-    private async Task ReportNowAsync(IReadOnlyList<PromptInjectionScanResult> results)
+    /// <summary>
+    /// Combines the results of one report into one result per source, in the order the sources came in.
+    /// </summary>
+    /// <remarks>
+    /// An action may filter the same content twice: the classic data source search filters a passage when
+    /// it checks whether the passage fits the question, and once more when it hands the passage to the
+    /// model. Both times, the result is the same, so a result equal to one already seen for its source is
+    /// dropped; the user hears about the passage once. The findings carry no position, though, so two
+    /// passages of one file with exactly the same findings count as one as well. That mostly happens
+    /// where two neighboring chunks overlap, which is the same passage indeed.<br/><br/>
+    /// Other results of one source, such as two passages of one file or the mails of one mailbox,
+    /// become a single result with all their findings and the sum of the removed passages. The report
+    /// counts sources, and one file is one source, however many of its passages were filtered.
+    /// </remarks>
+    /// <param name="results">The results of one report.</param>
+    /// <returns>One result per source.</returns>
+    private static IReadOnlyList<PromptInjectionScanResult> CombineBySource(IReadOnlyList<PromptInjectionScanResult> results)
     {
+        if (results.Count < 2)
+            return results;
+
+        return results.GroupBy(result => result.Source).Select(CombineOneSource).ToList();
+
+        static PromptInjectionScanResult CombineOneSource(IGrouping<PromptInjectionSource, PromptInjectionScanResult> resultsOfSource)
+        {
+            List<PromptInjectionScanResult> distinctResults = [];
+            foreach (var result in resultsOfSource)
+            {
+                if (!distinctResults.Any(known => known.RedactedCount == result.RedactedCount && known.Findings.SequenceEqual(result.Findings)))
+                    distinctResults.Add(result);
+            }
+
+            return distinctResults.Count is 1
+                ? distinctResults[0]
+                : new(resultsOfSource.Key, distinctResults.SelectMany(result => result.Findings).ToList(), distinctResults.Sum(result => result.RedactedCount));
+        }
+    }
+
+    private async Task ReportNowAsync(IReadOnlyList<PromptInjectionScanResult> reportedResults)
+    {
+        var results = CombineBySource(reportedResults);
         var totalCount = results.Sum(result => result.RedactedCount);
         this.detectionLogger.LogWarning(
             "Detected and removed {PassageCount} potentially dangerous passage(s) in {SourceCount} content source(s).",

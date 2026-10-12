@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.RAG.AugmentationProcesses;
 
@@ -37,7 +38,14 @@ public sealed class AugmentationOne : IAugmentationProcess
         }
 
         var numTotalRetrievalContexts = retrievalContexts.Count;
-        
+
+        //
+        // One report for the whole answer. With the check of which passages fit, every passage is
+        // filtered twice: once for that check, and once more for the model.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var reportingScope = guardService.BeginAction();
+
         // Want the user to validate all retrieval contexts?
         if (settings.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation && chatThread.DataSourceOptions.AutomaticValidation)
         {
@@ -48,7 +56,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                 try
                 {
                     // Let's validate all retrieval contexts:
-                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
+                    var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, reportingScope, token);
                     if (validationResults.Count == 0)
                         LOGGER.LogWarning("Retrieval context validation returned no results. Continuing augmentation with all retrieved contexts.");
                     else
@@ -99,7 +107,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         sb.AppendLine();
         
         // Let's convert all retrieval contexts to Markdown:
-        await retrievalContexts.AsMarkdown(sb, token: token);
+        await retrievalContexts.AsMarkdown(sb, reportingScope, token);
         
         // Add the augmented data to the chat thread:
         chatThread.AugmentedData = sb.ToString();
