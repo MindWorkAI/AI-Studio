@@ -242,6 +242,10 @@ public static class ModelCorpus
         new(LITE_LLM, "the-fast-one", NAMED_BY_NO_RULE),
         new(REQUESTY, "anthropic/claude-opus-5", QUOTED_AS_A_NAME_SHAPE),
         new(REQUESTY, "google/gemma-4-31b-it", NAMED_BY_A_RULE),
+        new(REQUESTY, "bedrock/claude-opus-5@eu-central-1", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "claude-opus-5@eu", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "openai/gpt-6-sol:flex", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "novita/qwen/qwen3.8-max", QUOTED_AS_A_NAME_SHAPE),
     ];
 
     /// <summary>
