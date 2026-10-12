@@ -244,22 +244,15 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
             progress.RecordUnchanged(plannedFolders.Sum(folder => folder.Plan.KeptUids.Count));
             progress.Publish();
 
-            //
-            // Whatever the prompt injection filter removes from the mails of this run is reported
-            // once, when the second pass is done, rather than once per mail.
-            //
             var encounteredKeys = new HashSet<string>(StringComparer.Ordinal);
             var workedThrough = true;
-            await using (guardService.BeginAction())
+            foreach (var folder in plannedFolders)
             {
-                foreach (var folder in plannedFolders)
-                {
-                    if (await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, token))
-                        continue;
+                if (await this.SyncNewMailsAsync(context, mailbox, connector, folder, progress, encounteredKeys, token))
+                    continue;
 
-                    workedThrough = false;
-                    break;
-                }
+                workedThrough = false;
+                break;
             }
 
             var sourceHash = BuildSourceHash(plannedFolders);

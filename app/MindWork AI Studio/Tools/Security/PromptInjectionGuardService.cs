@@ -11,7 +11,10 @@ namespace AIStudio.Tools.Security;
 /// The detection itself lives in the Rust runtime. File content is filtered while the runtime
 /// streams it, so it never passes through here; what this service adds is the path for content
 /// the runtime does not read itself — web pages and retrieval contexts — and the reporting the
-/// user sees.
+/// user sees.<br/><br/>
+/// The reporting works per user action, cf. BeginAction: each action tells the user once, when
+/// it ends, about what was filtered for it. One service serves the whole app, so the action has
+/// to travel with the content instead of being kept here.
 /// </remarks>
 public sealed class PromptInjectionGuardService(
     RustService rustService,
@@ -27,8 +30,6 @@ public sealed class PromptInjectionGuardService(
 
     private readonly ILogger detectionLogger = loggerFactory.CreateLogger(DETECTION_LOG_CATEGORY);
     private readonly Lock reportLock = new();
-    private readonly List<PromptInjectionScanResult> pendingResults = [];
-    private int openActions;
 
     /// <summary>
     /// Filters prompt injections out of a text the runtime did not read itself, such as a web
@@ -42,8 +43,9 @@ public sealed class PromptInjectionGuardService(
     /// </remarks>
     /// <param name="text">The content to filter.</param>
     /// <param name="source">Where the content came from, for the report shown to the user.</param>
+    /// <param name="reportingScope">The action the content belongs to, or null when it belongs to none.</param>
     /// <returns>The content with any suspicious passages removed.</returns>
-    public async Task<string> SanitizeAsync(string text, PromptInjectionSource source)
+    public async Task<string> SanitizeAsync(string text, PromptInjectionSource source, PromptInjectionReportingScope? reportingScope = null)
     {
         if (string.IsNullOrWhiteSpace(text))
             return text;
@@ -59,7 +61,7 @@ public sealed class PromptInjectionGuardService(
         }
 
         if (response.RedactedCount > 0)
-            await this.ReportAsync(new(source, response.Findings, response.RedactedCount));
+            await this.ReportAsync(new(source, response.Findings, response.RedactedCount), reportingScope);
 
         return response.SanitizedText;
     }
@@ -75,8 +77,9 @@ public sealed class PromptInjectionGuardService(
     /// the check cannot run, every text is passed through unchanged.
     /// </remarks>
     /// <param name="texts">The contents to filter, each with its source.</param>
+    /// <param name="reportingScope">The action the contents belong to, or null when they belong to none.</param>
     /// <returns>The contents with any suspicious passages removed, in the order they came in.</returns>
-    public async Task<IReadOnlyList<string>> SanitizeAsync(IReadOnlyList<PromptInjectionText> texts)
+    public async Task<IReadOnlyList<string>> SanitizeAsync(IReadOnlyList<PromptInjectionText> texts, PromptInjectionReportingScope? reportingScope = null)
     {
         if (texts.Count is 0)
             return [];
@@ -113,7 +116,9 @@ public sealed class PromptInjectionGuardService(
 
         //
         // Findings are collected per source, not per text: a page whose content and title were
-        // both filtered is one thing that happened to the user, not two.
+        // both filtered is one thing that happened to the user, not two. Doing so here rather than
+        // in the report keeps both counts: two texts with the same findings would look like one
+        // text filtered twice there.
         //
         var findingsBySource = new Dictionary<PromptInjectionSource, (List<PromptInjectionFinding> Findings, int RedactedCount)>();
         for (var responseIndex = 0; responseIndex < indicesToScan.Count; responseIndex++)
@@ -139,9 +144,9 @@ public sealed class PromptInjectionGuardService(
         // One scope around all sources, so a search across five pages reports once instead of
         // five times:
         //
-        await using var reportingScope = this.BeginAction();
+        await using var batchScope = this.BeginAction(within: reportingScope);
         foreach (var (source, aggregate) in findingsBySource)
-            await this.ReportAsync(new(source, aggregate.Findings, aggregate.RedactedCount));
+            await this.ReportAsync(new(source, aggregate.Findings, aggregate.RedactedCount), batchScope);
 
         return sanitizedTexts;
     }
@@ -150,25 +155,31 @@ public sealed class PromptInjectionGuardService(
     /// Records what was filtered out of one piece of content and tells the user about it.
     /// </summary>
     /// <remarks>
-    /// Within a BeginAction scope the result is collected and reported together
-    /// with the rest of that action. Outside of one it is reported immediately: a result that
-    /// simply waited for the next scope would either never reach the user, or reach them as
-    /// part of an unrelated action later on.
+    /// Within an action, the result is collected and reported together with the rest of that
+    /// action once it ends. Without one it is reported right away, and so is a result whose
+    /// action has ended already: waiting for the next action would either never reach the user,
+    /// or reach them as part of an unrelated action later on.<br/><br/>
+    /// Only the action passed in counts, never what else is running. A run over a large data
+    /// source takes minutes, and a message sent meanwhile must not wait for it, nor end up in the
+    /// same report.
     /// </remarks>
-    public async Task ReportAsync(PromptInjectionScanResult result)
+    /// <param name="result">What was filtered out of the content.</param>
+    /// <param name="reportingScope">The action the content belongs to, or null when it belongs to none.</param>
+    public async Task ReportAsync(PromptInjectionScanResult result, PromptInjectionReportingScope? reportingScope = null)
     {
         if (!result.WasFiltered)
             return;
 
-        bool reportNow;
         lock (this.reportLock)
         {
-            this.pendingResults.Add(result);
-            reportNow = this.openActions is 0;
+            if (FindCollectingScope(reportingScope) is { } collectingScope)
+            {
+                collectingScope.PendingResults.Add(result);
+                return;
+            }
         }
 
-        if (reportNow)
-            await this.ReportPendingAsync();
+        await this.ReportNowAsync([result]);
     }
 
     /// <summary>
@@ -177,44 +188,104 @@ public sealed class PromptInjectionGuardService(
     /// </summary>
     /// <remarks>
     /// Results are collected until the action finishes, so the user gets one report about
-    /// twenty documents instead of twenty reports. Actions may nest: only the outermost one
-    /// reports.
+    /// twenty documents instead of twenty reports. An action begun within another one is part
+    /// of it, and only the outermost one reports. Unrelated actions report on their own, each
+    /// as soon as it ends, however much they overlap.<br/><br/>
+    /// The scope has to travel with the content: hand it to wherever that content is read or
+    /// filtered, such as ReportAsync, SanitizeAsync, or RustService.ReadArbitraryFileData.
     /// </remarks>
+    /// <param name="within">The action this one is part of, or null when it is an action of its own.</param>
     /// <returns>A scope that reports what was filtered once it is disposed.</returns>
-    public ReportingScope BeginAction()
-    {
-        lock (this.reportLock)
-            this.openActions++;
+    public PromptInjectionReportingScope BeginAction(PromptInjectionReportingScope? within = null) => new(this, within);
 
-        return new(this);
-    }
-
-    private async Task EndActionAsync()
-    {
-        lock (this.reportLock)
-        {
-            this.openActions--;
-
-            // An inner scope reports nothing: the action the user started is still running.
-            if (this.openActions > 0)
-                return;
-        }
-
-        await this.ReportPendingAsync();
-    }
-
-    private async Task ReportPendingAsync()
+    /// <summary>
+    /// Ends an action and reports what was collected for it.
+    /// </summary>
+    /// <remarks>
+    /// A scope within an action which still runs has collected nothing, since its results went to
+    /// the outermost scope. It collects only once the outer one has ended before it, e.g., for work
+    /// which outlived the action that started it. Ending a scope a second time does nothing.
+    /// </remarks>
+    /// <param name="scope">The scope which ends.</param>
+    internal async Task EndActionAsync(PromptInjectionReportingScope scope)
     {
         List<PromptInjectionScanResult> results;
         lock (this.reportLock)
         {
-            if (this.pendingResults.Count is 0)
+            if (!scope.IsOpen)
                 return;
 
-            results = [..this.pendingResults];
-            this.pendingResults.Clear();
+            scope.IsOpen = false;
+            results = [..scope.PendingResults];
+            scope.PendingResults.Clear();
         }
 
+        if (results.Count > 0)
+            await this.ReportNowAsync(results);
+    }
+
+    /// <summary>
+    /// Finds the scope which collects a result of the given one: the outermost scope of its action
+    /// which is still running.
+    /// </summary>
+    /// <remarks>
+    /// Call under the report lock only.
+    /// </remarks>
+    /// <param name="scope">The scope the result was reported for, or null.</param>
+    /// <returns>The collecting scope, or null when the result has to be reported right away.</returns>
+    private static PromptInjectionReportingScope? FindCollectingScope(PromptInjectionReportingScope? scope)
+    {
+        PromptInjectionReportingScope? collectingScope = null;
+        for (; scope is not null; scope = scope.Parent)
+        {
+            if (scope.IsOpen)
+                collectingScope = scope;
+        }
+
+        return collectingScope;
+    }
+
+    /// <summary>
+    /// Combines the results of one report into one result per source, in the order the sources came in.
+    /// </summary>
+    /// <remarks>
+    /// An action may filter the same content twice: the classic data source search filters a passage when
+    /// it checks whether the passage fits the question, and once more when it hands the passage to the
+    /// model. Both times, the result is the same, so a result equal to one already seen for its source is
+    /// dropped; the user hears about the passage once. The findings carry no position, though, so two
+    /// passages of one file with exactly the same findings count as one as well. That mostly happens
+    /// where two neighboring chunks overlap, which is the same passage indeed.<br/><br/>
+    /// Other results of one source, such as two passages of one file or the mails of one mailbox,
+    /// become a single result with all their findings and the sum of the removed passages. The report
+    /// counts sources, and one file is one source, however many of its passages were filtered.
+    /// </remarks>
+    /// <param name="results">The results of one report.</param>
+    /// <returns>One result per source.</returns>
+    private static IReadOnlyList<PromptInjectionScanResult> CombineBySource(IReadOnlyList<PromptInjectionScanResult> results)
+    {
+        if (results.Count < 2)
+            return results;
+
+        return results.GroupBy(result => result.Source).Select(CombineOneSource).ToList();
+
+        static PromptInjectionScanResult CombineOneSource(IGrouping<PromptInjectionSource, PromptInjectionScanResult> resultsOfSource)
+        {
+            List<PromptInjectionScanResult> distinctResults = [];
+            foreach (var result in resultsOfSource)
+            {
+                if (!distinctResults.Any(known => known.RedactedCount == result.RedactedCount && known.Findings.SequenceEqual(result.Findings)))
+                    distinctResults.Add(result);
+            }
+
+            return distinctResults.Count is 1
+                ? distinctResults[0]
+                : new(resultsOfSource.Key, distinctResults.SelectMany(result => result.Findings).ToList(), distinctResults.Sum(result => result.RedactedCount));
+        }
+    }
+
+    private async Task ReportNowAsync(IReadOnlyList<PromptInjectionScanResult> reportedResults)
+    {
+        var results = CombineBySource(reportedResults);
         var totalCount = results.Sum(result => result.RedactedCount);
         this.detectionLogger.LogWarning(
             "Detected and removed {PassageCount} potentially dangerous passage(s) in {SourceCount} content source(s).",
@@ -229,13 +300,5 @@ public sealed class PromptInjectionGuardService(
 
         if (settingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
             await MessageBus.INSTANCE.SendMessage<PromptInjectionAlertMessage>(null, Event.SHOW_PROMPT_INJECTION_ALERT, new(results));
-    }
-
-    /// <summary>
-    /// Reports everything filtered during one user action when it goes out of scope.
-    /// </summary>
-    public sealed class ReportingScope(PromptInjectionGuardService guardService) : IAsyncDisposable
-    {
-        public async ValueTask DisposeAsync() => await guardService.EndActionAsync();
     }
 }

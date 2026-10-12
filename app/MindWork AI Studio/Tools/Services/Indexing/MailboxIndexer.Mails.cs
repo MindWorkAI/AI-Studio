@@ -148,7 +148,7 @@ internal sealed partial class MailboxIndexer
             new(text.Body, source),
             new(text.Subject, source),
             ..attachmentParts.Select(part => new PromptInjectionText(MailTextNormalization.NormalizeHeaderValue(part.FileName), source)),
-        ]);
+        ], context.PromptInjectionScope);
 
         var attachments = new List<MailAttachmentText>(attachmentParts.Count);
         for (var index = 0; index < attachmentParts.Count; index++)

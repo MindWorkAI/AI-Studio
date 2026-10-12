@@ -29,6 +29,7 @@ Key structure:
 
 - **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
+- **Prompt injection reports** - The user hears once per action about what the filter removed, as soon as that action ends. Content which belongs to an action carries its scope from `PromptInjectionGuardService.BeginAction` down to where it is read or filtered; whatever is filtered without a scope is reported right away. Pass the scope as a parameter, never through a field or an `AsyncLocal`: the service serves the whole app, and the message bus delivers to other receivers in the execution context of whoever sends.
 - **Encryption** - Initialized before Rust service is marked ready
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
@@ -115,6 +116,8 @@ kind of data source plugs into this pipeline instead of building its own.
 
 **Every content path goes through the prompt injection filter.** Files pass the sanitizer of the runtime while
 their text is extracted; a new kind of data source needs its own pass through `PromptInjectionGuardService`.
+Both report with the scope of the run, `IndexedRunContext.PromptInjectionScope`, so the user hears about a run
+once, when it is over, and a message sent meanwhile does not wait for it.
 
 **Area guide:** `app/MindWork AI Studio/Tools/Services/Indexing/AGENTS.md`, with the parts of the
 pipeline, how to add a kind of data source, and the rules which are easy to break.

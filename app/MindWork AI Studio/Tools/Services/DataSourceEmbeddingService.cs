@@ -77,7 +77,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var textChunker = new TextChunker(rustService, logger);
         return
         [
-            new FileSourceIndexer(settingsManager, rustService, guardService, textChunker, logger),
+            new FileSourceIndexer(settingsManager, rustService, textChunker, logger),
             new MailboxIndexer(settingsManager, rustService, guardService, textChunker, logger),
         ];
     }
@@ -702,9 +702,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="refreshMode">Why the run was started, for the log.</param>
     /// <param name="share">How much work the run does at most, as its kind of data source says.</param>
     /// <param name="runControl">The run, which records the embedding settings it works for.</param>
+    /// <param name="promptInjectionScope">The run as one action of the prompt injection filter.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The context of the run, or null when there is no run.</returns>
-    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, RunShare share, DataSourceRunControl runControl, CancellationToken token)
+    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, RunShare share, DataSourceRunControl runControl, PromptInjectionReportingScope promptInjectionScope, CancellationToken token)
     {
         logger.LogInformation(
             "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
@@ -831,7 +832,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 pass.FailedDocumentCount,
                 refreshMode);
 
-        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, pass, settingsManager, this.UpsertStatus, logger);
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, pass, promptInjectionScope, settingsManager, this.UpsertStatus, logger);
     }
 
     private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
@@ -848,7 +849,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var outcome = IndexedRunOutcome.DONE;
         try
         {
-            var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, token);
+            //
+            // Everything the prompt injection filter removes from the documents of this run is
+            // reported once, when the run is over. A step over a few thousand documents which
+            // removes something in forty of them is one thing that happened to the user, not forty.
+            //
+            await using var promptInjectionScope = guardService.BeginAction();
+            var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, promptInjectionScope, token);
             if (context is null)
                 return;
 

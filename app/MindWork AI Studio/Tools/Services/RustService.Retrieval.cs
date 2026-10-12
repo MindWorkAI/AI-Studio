@@ -37,7 +37,8 @@ public sealed partial class RustService
     /// attachment: nothing leaves the app on that path, so there is nothing to warn about, and
     /// reporting it there would warn a second time when the file is actually sent.
     /// </param>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, CancellationToken token = default)
+    /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
@@ -249,7 +250,7 @@ public sealed partial class RustService
         // where the content never leaves the app.
         //
         if (reportPromptInjections)
-            await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+            await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount), reportingScope);
 
         //
         // Filtering does not change the outcome: the passages were removed and the document
@@ -263,12 +264,6 @@ public sealed partial class RustService
         };
     }
 
-    public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
-    {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, null, token))
-            yield return segment.Content;
-    }
-
     /// <summary>
     /// Reads the content of a file for embedding, each piece together with its token count.
     /// </summary>
@@ -279,15 +274,17 @@ public sealed partial class RustService
     /// itself. A file which only exists while it is read, e.g. the attachment of a mail, names
     /// where its content came from instead.
     /// </param>
+    /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The pieces of the content, in order.</returns>
     public async IAsyncEnumerable<ArbitraryFileDataSegment> StreamArbitraryFileDataWithTokenCounts(
         string path,
         EmbeddingProvider embeddingProvider,
         PromptInjectionSource? reportAs = null,
+        PromptInjectionReportingScope? reportingScope = null,
         [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, reportAs, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, embeddingProvider.TokenizerPath, reportAs, reportingScope, token))
         {
             if (segment.TokenCount is { } tokenCount)
             {
@@ -318,14 +315,13 @@ public sealed partial class RustService
 
     private async IAsyncEnumerable<(string Content, int? TokenCount, int? PageNumber)> StreamArbitraryFileDataCore(
         string path,
-        bool extractImages,
-        bool includeTokenCount,
         string tokenizerPath,
         PromptInjectionSource? reportAs,
+        PromptInjectionReportingScope? reportingScope,
         [EnumeratorCancellation] CancellationToken token)
     {
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count={includeTokenCount}&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images=false&include_token_count=true&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         using var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
 
@@ -339,10 +335,7 @@ public sealed partial class RustService
                 path,
                 responseBody);
 
-            if (includeTokenCount)
-                throw new InvalidOperationException($"Rust could not extract and count '{path}'. HTTP {(int)response.StatusCode} ({response.ReasonPhrase}): {responseBody}");
-
-            yield break;
+            throw new InvalidOperationException($"Rust could not extract and count '{path}'. HTTP {(int)response.StatusCode} ({response.ReasonPhrase}): {responseBody}");
         }
 
         var promptInjectionFindings = new List<PromptInjectionFinding>();
@@ -372,12 +365,7 @@ public sealed partial class RustService
                 catch (JsonException)
                 {
                     if (this.TryLogSseErrorMessage(jsonContent, path))
-                    {
-                        if (includeTokenCount)
-                            throw new InvalidOperationException($"Rust could not extract and count a segment from '{path}'. See the runtime log for details.");
-
-                        continue;
-                    }
+                        throw new InvalidOperationException($"Rust could not extract and count a segment from '{path}'. See the runtime log for details.");
 
                     this.logger?.LogError("Failed to deserialize SSE event: {JsonContent}", jsonContent);
                 }
@@ -385,7 +373,7 @@ public sealed partial class RustService
                 if (sseEvent is null)
                     continue;
 
-                var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
+                var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages: false);
                 if (processedEvent.Error is { } error)
                 {
                     // A notice says something about the file without failing the read, so the
@@ -461,7 +449,7 @@ public sealed partial class RustService
         // indexing run could filter documents without ever saying so.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+        await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount), reportingScope);
     }
 
     private bool TryLogSseErrorMessage(string jsonContent, string path)
