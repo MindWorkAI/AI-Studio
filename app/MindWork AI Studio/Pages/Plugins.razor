@@ -1,6 +1,5 @@
 @using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
-@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
@@ -117,24 +116,9 @@
                         }
 
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Class="ms-3" Style="gap: 4px;">
-                            @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
+                            @if (context is { IsInternal: false })
                             {
-                                var sourceUrl = context.SourceURL;
-                                var isSendingMail = IsSendingMail(sourceUrl);
-                                if (isSendingMail)
-                                {
-                                    var isDefaultSupportContact = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, StringComparison.Ordinal);
-                                    <MudTooltip Text="@(isDefaultSupportContact ? string.Empty : T("Send a mail"))">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
-                                    </MudTooltip>
-                                }
-                                else
-                                {
-                                    var isDefaultSourceUrl = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SOURCE_URL, StringComparison.Ordinal);
-                                    <MudTooltip Text="@(isDefaultSourceUrl ? T("No source url available") : T("Open website"))">
-                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSourceUrl"/>
-                                    </MudTooltip>
-                                }
+                                <PluginLinkButton Url="@context.SourceURL" Size="Size.Medium"/>
                             }
 
                             @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
