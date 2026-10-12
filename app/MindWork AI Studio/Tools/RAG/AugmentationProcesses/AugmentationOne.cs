@@ -99,7 +99,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         sb.AppendLine();
         
         // Let's convert all retrieval contexts to Markdown:
-        await retrievalContexts.AsMarkdown(sb, token);
+        await retrievalContexts.AsMarkdown(sb, token: token);
         
         // Add the augmented data to the chat thread:
         chatThread.AugmentedData = sb.ToString();

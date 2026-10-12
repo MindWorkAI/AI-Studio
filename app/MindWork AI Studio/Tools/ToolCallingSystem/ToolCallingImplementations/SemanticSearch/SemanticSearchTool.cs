@@ -303,7 +303,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         // each, and so on. Otherwise, the data source offered first would take the budget, and the
         // others would get what it left over.
         //
-        await using (guardService.BeginAction())
+        await using (var reportingScope = guardService.BeginAction())
         {
             var mostPassages = pages.Select(page => page.Contexts.Count).DefaultIfEmpty(0).Max();
             for (var rank = 0; rank < mostPassages; rank++)
@@ -314,7 +314,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
                         continue;
 
                     var retrievalContext = pages[index].Contexts[rank];
-                    var passage = await retrievalContext.AsMarkdown(index: passageCount + 1, token: token);
+                    var passage = await retrievalContext.AsMarkdown(index: passageCount + 1, reportingScope: reportingScope, token: token);
 
                     // A passage too long for what is left makes room for shorter ones after it:
                     if (textContent.Length + passage.Length > MAX_RESULT_CHARACTERS)
