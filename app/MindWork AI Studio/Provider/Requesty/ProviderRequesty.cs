@@ -71,9 +71,10 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     }
 
     /// <inheritdoc />
-    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        throw this.CreateEmbeddingsNotSupportedException();
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 
     /// <inheritdoc />
@@ -91,7 +92,7 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        return this.LoadEmbeddingModels(apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -142,6 +143,32 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
             listingFactory: modelResponse => managedModels.Concat(modelResponse.Data)
                 .DistinctBy(n => n.Id)
                 .Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
+    }
+
+    /// <summary>
+    /// Loads the models Requesty offers for embedding, which live on a route of their own.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is reported from here: this route answers with the embedding models alone, and what
+    /// is reported replaces everything an instance said before. The windows of the chat models
+    /// would go missing the moment somebody opens the embedding settings.
+    ///
+    /// Nothing is filtered either. The route is the statement: Requesty serves these to embed with,
+    /// which is more than a name can say. Asking the registry on top could only drop a model whose
+    /// name we do not recognize.
+    /// </remarks>
+    /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <returns>The embedding models.</returns>
+    private Task<ModelLoadResult> LoadEmbeddingModels(string? apiKeyProvisional, CancellationToken token)
+    {
+        return this.LoadModelsResponse<RequestyModelsResponse>(
+            SecretStoreType.EMBEDDING_PROVIDER,
+            "models/embedding",
+            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, null)),
+            apiKeyProvisional,
+            requestConfigurator: ConfigureRequest,
             token: token);
     }
 

@@ -202,6 +202,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => true,
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.LITE_LLM => true,
+        LLMProviders.REQUESTY => true,
 
         //
         // Providers that do not support embeddings:
@@ -213,7 +214,6 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.HETZNER => false,
-        LLMProviders.REQUESTY => false,
 
         //
         // Hugging Face serves embeddings, but not through the router endpoint we chat with: that
