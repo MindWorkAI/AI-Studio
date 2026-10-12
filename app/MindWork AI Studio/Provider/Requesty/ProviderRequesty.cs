@@ -10,9 +10,6 @@ namespace AIStudio.Provider.Requesty;
 
 public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new Uri("https://router.requesty.ai/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
-    private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
-    private const string PROJECT_NAME = "MindWork AI Studio";
-
     private static readonly ILogger<ProviderRequesty> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderRequesty>();
 
     #region Implementation of IProvider
@@ -54,12 +51,7 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
                                    AdditionalApiParameters = apiParameters
                                };
                            },
-                           headersAction: headers =>
-                           {
-                               // Set custom headers for project identification:
-                               headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                               headers.Add("X-Title", PROJECT_NAME);
-                           },
+                           headersAction: ProjectAttribution.Apply,
                            token: token))
             yield return content;
     }
@@ -78,7 +70,7 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
         return Task.FromResult(TranscriptionResult.Failure());
     }
 
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         throw this.CreateEmbeddingsNotSupportedException();
@@ -156,7 +148,6 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     private static void ConfigureRequest(HttpRequestMessage request, string secretKey)
     {
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-        request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-        request.Headers.Add("X-Title", PROJECT_NAME);
+        ProjectAttribution.Apply(request.Headers);
     }
 }

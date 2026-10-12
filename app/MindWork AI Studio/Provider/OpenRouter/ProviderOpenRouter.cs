@@ -10,9 +10,6 @@ namespace AIStudio.Provider.OpenRouter;
 
 public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER, new Uri("https://openrouter.ai/api/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
-    private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
-    private const string PROJECT_NAME = "MindWork AI Studio";
-
     private static readonly ILogger<ProviderOpenRouter> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenRouter>();
 
     #region Implementation of IProvider
@@ -54,12 +51,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                                    AdditionalApiParameters = apiParameters
                                };
                            },
-                           headersAction: headers =>
-                           {
-                               // Set custom headers for project identification:
-                               headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                               headers.Add("X-Title", PROJECT_NAME);
-                           },
+                           headersAction: ProjectAttribution.Apply,
                            token: token))
             yield return content;
     }
@@ -120,12 +112,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                 .Select(n => new Model(n.Id, n.Name))
                 .Where(model => model.IsChatModel(this.Provider)),
             apiKeyProvisional,
-            requestConfigurator: (request, secretKey) =>
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                request.Headers.Add("X-Title", PROJECT_NAME);
-            },
+            requestConfigurator: ConfigureRequest,
             listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
             token: token);
     }
@@ -153,12 +140,13 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             "embeddings/models",
             modelResponse => modelResponse.Data.Select(n => new Model(n.Id, n.Name)),
             apiKeyProvisional,
-            requestConfigurator: (request, secretKey) =>
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                request.Headers.Add("X-Title", PROJECT_NAME);
-            },
+            requestConfigurator: ConfigureRequest,
             token: token);
+    }
+
+    private static void ConfigureRequest(HttpRequestMessage request, string secretKey)
+    {
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        ProjectAttribution.Apply(request.Headers);
     }
 }
