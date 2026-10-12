@@ -175,6 +175,9 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
     public bool ReturnsUntrustedExternalContent => true;
 
+    // The model writes the queries, and the search engine is somebody else's:
+    public ToolOutboundData OutboundData => ToolOutboundData.THIRD_PARTY_QUERIES;
+
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
     public string GetDisplayName() => TB("Web Search");

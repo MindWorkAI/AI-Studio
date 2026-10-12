@@ -13,7 +13,7 @@ namespace AIStudio.Provider.OpenAI;
 /// correlated by call ID. Unlike Chat Completions, the whole output of a round has to be sent
 /// back for the next one, reasoning items included, or the API refuses to continue.
 /// </remarks>
-public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters, IList<object> providerTools,
+public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> baseInput, IDictionary<string, object> apiParameters,
     IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
     Func<ResponsesAPIRequest, CancellationToken, IAsyncEnumerable<ServerSentEvent>> streamRequestAsync) : IToolCallingProviderAdapter
 {
@@ -25,13 +25,9 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     public IReadOnlyList<string> RecordedRequestTexts => this.recordedRequestTexts;
 
     /// <summary>
-    /// The tools offered to the model: the provider-native ones plus our local functions.
+    /// The tools offered to the model: our local functions.
     /// </summary>
-    /// <remarks>
-    /// A provider-native tool whose type collides with one of our function names is dropped
-    /// because the model could not tell the two apart.
-    /// </remarks>
-    private readonly IList<object> effectiveProviderTools = BuildEffectiveProviderTools(providerTools, runnableTools);
+    private readonly IList<object> offeredTools = runnableTools.Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition)).ToList();
 
     /// <inheritdoc />
     public async IAsyncEnumerable<ToolCallingStreamEvent> ExecuteRoundAsync(string? finalResponseInstruction, bool includeTools, [EnumeratorCancellation] CancellationToken token = default)
@@ -53,7 +49,7 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
             Input = requestInput,
             Stream = true,
             Store = false,
-            Tools = includeTools ? this.effectiveProviderTools : [],
+            Tools = includeTools ? this.offeredTools : [],
             AdditionalApiParameters = apiParameters,
         };
 
@@ -126,17 +122,5 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
 
         if (!string.IsNullOrWhiteSpace(content))
             this.recordedRequestTexts.Add(content);
-    }
-
-    private static IList<object> BuildEffectiveProviderTools(IList<object> providerTools, IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools)
-    {
-        var localFunctionNames = runnableTools
-            .Select(x => x.Definition.Function.Name)
-            .ToHashSet(StringComparer.Ordinal);
-
-        return providerTools
-            .Where(x => x is not ProviderTool providerTool || !localFunctionNames.Contains(providerTool.Type))
-            .Concat(runnableTools.Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition)))
-            .ToList();
     }
 }

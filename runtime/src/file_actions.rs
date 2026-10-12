@@ -5,7 +5,6 @@ use file_format::FileFormat;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
-use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
 use crate::file_data::is_executable_content;
 
@@ -17,6 +16,9 @@ use ashpd::desktop::open_uri::{OpenDirectoryRequest, OpenFileRequest};
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
+
+#[cfg(any(windows, test))]
+use std::ffi::OsString;
 
 /// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
 #[cfg(windows)]
@@ -116,30 +118,28 @@ pub struct PreviousFile {
 
 /// Let the user select a directory.
 pub async fn select_directory(
-    _token: APIToken,
     Query(query): Query<SelectDirectoryQuery>,
     previous_directory: Option<Json<PreviousDirectory>>,
 ) -> Json<DirectorySelectionResponse> {
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
-            return Json(DirectorySelectionResponse {
-                user_cancelled: true,
-                selected_directory: String::from(""),
-            });
-        }
+    let dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&query.title));
+
+    let Some(mut dialog) = dialog else {
+        error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
+        return Json(DirectorySelectionResponse {
+            user_cancelled: true,
+            selected_directory: String::from(""),
+        });
     };
 
-    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(&query.title);
     if let Some(previous) = previous_directory {
         dialog = dialog.set_directory(previous.path.clone());
     }
 
-    drop(main_window_lock);
-
-    let folder_path = dialog.blocking_pick_folder();
+    let folder_path = await_dialog(|answer| dialog.pick_folder(answer)).await;
     match folder_path {
         Some(path) => {
             match path.into_path() {
@@ -172,7 +172,6 @@ pub async fn select_directory(
 
 /// Let the user select a file.
 pub async fn select_file(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FileSelectionResponse> {
     // Create a new file dialog builder:
@@ -200,7 +199,7 @@ pub async fn select_file(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_path = file_dialog.blocking_pick_file();
+    let file_path = await_dialog(|answer| file_dialog.pick_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -231,7 +230,6 @@ pub async fn select_file(
 
 /// Let the user select some files.
 pub async fn select_files(
-    _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FilesSelectionResponse> {
     // Create a new file dialog builder:
@@ -259,7 +257,7 @@ pub async fn select_files(
     }
 
     // Show the file dialog and get the selected file path:
-    let file_paths = file_dialog.blocking_pick_files();
+    let file_paths = await_dialog(|answer| file_dialog.pick_files(answer)).await;
     match file_paths {
         Some(paths) => {
             let converted: Vec<String> = paths.into_iter().filter_map(|p| p.into_path().ok()).map(|pb| pb.to_string_lossy().to_string()).collect();
@@ -280,7 +278,7 @@ pub async fn select_files(
     }
 }
 
-pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
+pub async fn save_file(payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
     // Create a new file dialog builder:
     let file_dialog = MAIN_WINDOW
         .lock()
@@ -311,7 +309,7 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
     }
 
     // Displays the file dialogue box and select the file:
-    let file_path = file_dialog.blocking_save_file();
+    let file_path = await_dialog(|answer| file_dialog.save_file(answer)).await;
     match file_path {
         Some(path) => match path.into_path() {
             Ok(pb) => {
@@ -341,7 +339,6 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
 }
 
 pub async fn open_path_in_file_manager(
-    _token: APIToken,
     payload: Json<OpenPathOptions>,
 ) -> Json<OpenPathResponse> {
     let requested_path = PathBuf::from(payload.path.trim());
@@ -415,7 +412,6 @@ async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
 /// The page is best effort and never decides whether this succeeded: a viewer which cannot be told
 /// a page still shows the document, which is what the user asked for by clicking a source.
 pub async fn open_document(
-    _token: APIToken,
     payload: Json<OpenDocumentOptions>,
 ) -> Json<OpenDocumentResponse> {
     let requested_path = PathBuf::from(payload.path.trim());
@@ -554,9 +550,10 @@ async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
 /// They all mean the same thing and every one of them spells it differently. A viewer which is not
 /// covered here shows its first page, which is what the system would have done anyway.
 ///
-/// Which spellings exist follows from where a viewer is found: Acrobat is named by the Windows
-/// registration and by nothing else, and the three Linux viewers are named by a desktop entry and
-/// by nothing else. Only a browser is reached on both, so only its spelling is needed everywhere.
+/// Which spellings exist follows from where a viewer is found: Acrobat and Foxit are named by the
+/// Windows registration and by nothing else, and the three Linux viewers are named by a desktop
+/// entry and by nothing else. Only a browser is reached on both, so only its spelling is needed
+/// everywhere.
 #[cfg(any(windows, target_os = "linux", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PageArgument {
@@ -567,6 +564,11 @@ enum PageArgument {
     /// Acrobat and Acrobat Reader take an open action: `/A page=12`.
     #[cfg(any(windows, test))]
     AcrobatOpenAction,
+
+    /// Foxit PDF Reader and Foxit PDF Editor take the same open action, but after the file:
+    /// `handbook.pdf /A page=12`.
+    #[cfg(any(windows, test))]
+    FoxitOpenAction,
 
     /// The GNOME document viewer and its forks count from zero, so page 12 is index 11.
     #[cfg(any(target_os = "linux", test))]
@@ -611,6 +613,9 @@ fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<
 
         #[cfg(any(windows, test))]
         PageArgument::AcrobatOpenAction => vec![String::from("/A"), format!("page={page}"), path_argument],
+
+        #[cfg(any(windows, test))]
+        PageArgument::FoxitOpenAction => vec![path_argument, String::from("/A"), format!("page={page}")],
 
         #[cfg(any(target_os = "linux", test))]
         PageArgument::ZeroBasedIndex => vec![format!("--page-index={}", page.saturating_sub(1)), path_argument],
@@ -664,6 +669,7 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
         };
 
         let Some(argument) = windows_page_argument(&prog_id) else {
+            info!("The program registered for PDFs as '{prog_id}' cannot be sent to a page; the document opens on its first page.");
             return DocumentOpenPlan::Plain;
         };
 
@@ -685,6 +691,7 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
         };
 
         let Some((program, argument)) = linux_page_aware_program(&desktop_id) else {
+            info!("The program registered for PDFs as '{desktop_id}' cannot be sent to a page; the document opens on its first page.");
             return DocumentOpenPlan::Plain;
         };
 
@@ -700,14 +707,26 @@ async fn resolve_document_open_plan(path: &Path, page: u32) -> DocumentOpenPlan 
 ///
 /// The user's own choice comes first; the class registration is what is left when they never made
 /// one, for instance right after the system was installed.
+///
+/// Newer builds of Windows 11 keep that choice under `UserChoiceLatest` as well and, once they have
+/// moved it there, go by nothing else. Whether `UserChoice` still follows a later change is nowhere
+/// documented, so the newer key is asked first and the older one only where it is missing.
 #[cfg(windows)]
 fn windows_default_pdf_prog_id() -> Option<String> {
     use windows_registry::*;
 
-    const USER_CHOICE_KEY: &str = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice";
+    //
+    // Not a typo: below `UserChoiceLatest`, the value `ProgId` sits in a key named `ProgId`.
+    //
+    const USER_CHOICE_KEYS: [&str; 2] = [
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoiceLatest\ProgId",
+        r"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\UserChoice",
+    ];
 
-    if let Ok(key) = CURRENT_USER.open(USER_CHOICE_KEY) && let Ok(prog_id) = key.get_string("ProgId") {
-        return Some(prog_id);
+    for user_choice_key in USER_CHOICE_KEYS {
+        if let Ok(key) = CURRENT_USER.open(user_choice_key) && let Ok(prog_id) = key.get_string("ProgId") && !prog_id.is_empty() {
+            return Some(prog_id);
+        }
     }
 
     CLASSES_ROOT.open(".pdf").ok()
@@ -753,11 +772,19 @@ fn windows_page_argument(prog_id: &str) -> Option<PageArgument> {
     let prog_id = prog_id.to_ascii_lowercase();
 
     //
-    // Acrobat is asked about first, because its registration says nothing about a browser while
-    // the browsers below are recognized by their own name in it.
+    // Acrobat and Foxit are asked about first, because their registration says nothing about a
+    // browser while the browsers below are recognized by their own name in it.
     //
     if prog_id.contains("acroexch") || prog_id.contains("acrobat") {
         return Some(PageArgument::AcrobatOpenAction);
+    }
+
+    //
+    // Foxit keeps its names across products: the current Foxit PDF Editor still registers as
+    // `FoxitPhantomPDF.Document`, so asking for the maker covers the Reader and the Editor alike.
+    //
+    if prog_id.contains("foxit") {
+        return Some(PageArgument::FoxitOpenAction);
     }
 
     const BROWSERS: [&str; 5] = ["msedge", "chrome", "firefox", "opera", "brave"];
@@ -846,6 +873,26 @@ fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &O
 
         None => file_dialog,
     }
+}
+
+/// Shows a file dialog and waits for the user's answer without holding up the runtime.
+///
+/// A dialog stays open until the user answers it, which can take minutes. The blocking variants of
+/// the dialog API would hold a runtime worker that long, and with it every other call of the app,
+/// because they all share one HTTP/2 connection. The plugin shows the dialog on the main thread and
+/// hands the answer to a callback, so this function awaits that callback instead.
+async fn await_dialog<T: Send + 'static>(show: impl FnOnce(Box<dyn FnOnce(Option<T>) + Send>)) -> Option<T> {
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    show(Box::new(move |answer| {
+        // The receiver is only gone when the request was dropped, and then nobody waits for the answer:
+        let _ = sender.send(answer);
+    }));
+
+    receiver.await.unwrap_or_else(|_| {
+        // The plugin drops the callback without calling it when it cannot reach the main thread:
+        error!(Source = "Tauri"; "The file dialog ended without an answer.");
+        None
+    })
 }
 
 fn split_save_file_path(file_path: &str) -> (Option<PathBuf>, Option<String>) {
@@ -972,12 +1019,29 @@ async fn open_path_in_linux_file_manager(target: &FileManagerTarget) -> Result<(
 fn create_file_manager_command(target: &FileManagerTarget) -> Command {
     let mut command = Command::new("explorer.exe");
     if target.reveal_file {
-        command.arg(format!("/select,{}", target.path.to_string_lossy()));
+        //
+        // Explorer reads its command line on its own. Passed as a regular argument, a path with
+        // a space would be quoted as a whole, "/select,C:\My Folder\file.txt", which Explorer
+        // does not understand: it opens the Documents folder instead.
+        //
+        command.raw_arg(explorer_select_argument(&target.path));
     } else {
         command.arg(&target.path);
     }
 
     command
+}
+
+/// Builds the argument which makes Explorer show the given file selected in its folder.
+///
+/// Only the path is quoted, as in /select,"C:\My Folder\file.txt". Windows allows no quotation
+/// mark inside a file or folder name, so the path itself never needs escaping.
+#[cfg(any(windows, test))]
+fn explorer_select_argument(path: &Path) -> OsString {
+    let mut argument = OsString::from("/select,\"");
+    argument.push(path.as_os_str());
+    argument.push("\"");
+    argument
 }
 
 #[cfg(target_os = "macos")]
@@ -995,6 +1059,21 @@ fn create_file_manager_command(target: &FileManagerTarget) -> Command {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[tokio::test]
+    async fn a_dialog_answer_arrives_through_its_callback() {
+        let answer = await_dialog(|answer| {
+            std::thread::spawn(move || answer(Some("Quarterly briefing.html")));
+        }).await;
+
+        assert_eq!(answer, Some("Quarterly briefing.html"));
+    }
+
+    #[tokio::test]
+    async fn a_dialog_without_an_answer_counts_as_cancelled() {
+        let answer = await_dialog::<String>(drop).await;
+        assert_eq!(answer, None);
+    }
 
     #[test]
     fn save_file_options_accept_the_previous_file_contract() {
@@ -1041,6 +1120,13 @@ mod tests {
         assert!(target.reveal_file);
         assert_eq!(linux_portal_operation(&target), LinuxPortalOperation::RevealFile);
         assert_eq!(xdg_open_fallback_path(&target), temp_dir.path());
+    }
+
+    #[test]
+    fn explorer_select_argument_quotes_only_the_path() {
+        let argument = explorer_select_argument(Path::new(r"C:\Users\thorsten\AI Studio Events.log"));
+
+        assert_eq!(argument, OsString::from(r#"/select,"C:\Users\thorsten\AI Studio Events.log""#));
     }
 
     #[test]
@@ -1168,6 +1254,12 @@ mod tests {
         );
 
         assert_eq!(
+            page_arguments(PageArgument::FoxitOpenAction, document, 12).unwrap(),
+            vec![String::from("/docs/handbook.pdf"), String::from("/A"), String::from("page=12")],
+            "Foxit takes the open action Acrobat takes, but only after the file.",
+        );
+
+        assert_eq!(
             page_arguments(PageArgument::ZeroBasedIndex, document, 12).unwrap(),
             vec![String::from("--page-index=11"), String::from("/docs/handbook.pdf")],
             "The GNOME viewer counts from zero, so page twelve is index eleven.",
@@ -1187,6 +1279,10 @@ mod tests {
     #[test]
     fn windows_recognizes_the_programs_it_can_send_to_a_page() {
         assert_eq!(windows_page_argument("AcroExch.Document.DC"), Some(PageArgument::AcrobatOpenAction));
+        assert_eq!(windows_page_argument("FoxitPhantomPDF.Document"), Some(PageArgument::FoxitOpenAction), "The current Foxit PDF Editor still registers under its old name.");
+        assert_eq!(windows_page_argument("FoxitPDFEditor.Document"), Some(PageArgument::FoxitOpenAction));
+        assert_eq!(windows_page_argument("FoxitReader.Document"), Some(PageArgument::FoxitOpenAction));
+        assert_eq!(windows_page_argument("Applications\\FoxitPDFReader.exe"), Some(PageArgument::FoxitOpenAction), "A program picked through 'Open with' is registered by its file name.");
         assert_eq!(windows_page_argument("MSEdgePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("ChromePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("FirefoxPDF"), Some(PageArgument::UrlFragment));
@@ -1199,6 +1295,12 @@ mod tests {
             executable_from_command(r#""C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --single-argument %1"#).as_deref(),
             Some(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
             "A quoted program keeps the spaces in its path and loses the arguments written for a file name.",
+        );
+
+        assert_eq!(
+            executable_from_command(r#""c:\Program Files (x86)\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe" "%1""#).as_deref(),
+            Some(r"c:\Program Files (x86)\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe"),
+            "The file name the command names is dropped, because the page arguments name the file themselves.",
         );
 
         assert_eq!(

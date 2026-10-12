@@ -43,7 +43,7 @@
                     <div class="tool-selection-rows">
                         @foreach (var item in this.catalog)
                         {
-                            var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
+                            var isSelected = this.SelectedToolIds.Contains(item.Id);
                             var warningText = this.GetWarningText(item);
                             <div class="tool-selection-row">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
@@ -66,19 +66,19 @@
                                                 box and would otherwise swallow the clicks landing in that strip.
                                             *@
                                             <MudCheckBox T="bool" Size="Size.Small" Dense="@true" Color="Color.Primary" Value="@isSelected" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
-                                            <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
+                                            <MudIcon Icon="@item.Icon" Color="Color.Info" />
                                             @if (!item.IsActive)
                                             {
                                                 <MudTooltip Text="@T("This tool has been disabled by your organization.")">
                                                     <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
                                                 </MudTooltip>
                                             }
-                                            <MudTooltip Text="@item.Implementation.GetDescription()">
-                                                <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
+                                            <MudTooltip Text="@item.Description">
+                                                <MudText Typo="Typo.body1">@item.DisplayName</MudText>
                                             </MudTooltip>
                                         </MudStack>
                                     </MudButton>
-                                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="@(async () => await this.OpenSettings(item))" />
                                 </MudStack>
                                 @if (!string.IsNullOrWhiteSpace(warningText))
                                 {

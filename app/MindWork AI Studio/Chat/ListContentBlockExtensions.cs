@@ -1,6 +1,7 @@
 ﻿using AIStudio.Provider;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Chat;
 
@@ -29,6 +30,16 @@ public static class ListContentBlockExtensions
         // the message was built -- every chat round and every tool round.
         //
         var canProcessImages = provider.SupportsImageInput();
+
+        //
+        // One report for the whole request: every message of the conversation reads its attached
+        // documents anew, all at the same time. Twenty documents must produce one dialog listing
+        // all of them, not twenty dialogs in a row. A request without documents has nothing to
+        // report, and needs no scope.
+        //
+        await using var reportingScope = blocks.Any(block => block.Content is ContentText text && text.FileAttachments.MayContainDocuments())
+            ? Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction()
+            : null;
 
         var messageTaskList = new List<Task<IMessageBase>>(blocks.Count);
         foreach (var block in blocks)
@@ -65,7 +76,7 @@ public static class ListContentBlockExtensions
             return Task.Run(async () => new TextMessage
             {
                 Role = roleTransformer(block.Role),
-                Content = await text.PrepareTextContentForAI(),
+                Content = await text.PrepareTextContentForAI(reportingScope),
             } as IMessageBase);
         }
         
@@ -92,7 +103,7 @@ public static class ListContentBlockExtensions
                     Role = roleTransformer(block.Role),
                     Content =
                     [
-                        innerTextSubContentFactory(await text.PrepareTextContentForAI()),
+                        innerTextSubContentFactory(await text.PrepareTextContentForAI(reportingScope)),
                         ..images,
                     ]
                 } as IMessageBase;

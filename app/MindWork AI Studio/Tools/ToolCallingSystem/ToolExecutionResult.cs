@@ -19,7 +19,8 @@ public sealed class ToolExecutionResult
     /// JSON embedded in a web page, which this never is: a German document would reach the model
     /// with every umlaut as six characters. The relaxed encoder escapes only what JSON requires.
     /// </remarks>
-    private static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    // Internal, so a tool which keeps its result within a budget measures exactly what the model gets:
+    internal static readonly JsonSerializerOptions MODEL_CONTENT_OPTIONS = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public string? TextContent { get; init; }
 
@@ -39,6 +40,17 @@ public sealed class ToolExecutionResult
     /// it, and the chat stays as it was.
     /// </remarks>
     public DataSourceSecurity RequiredDataSecurity { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+
+    /// <summary>
+    /// Where the chat may still send data from now on, because of what this result brings in.
+    /// </summary>
+    /// <remarks>
+    /// A tool which returns mail content sets the restriction of the mailbox it came from, and the
+    /// strictest one when several mailboxes contributed. The chat then keeps it, see
+    /// ChatThread.RequireOutboundDataRestriction. Left at NONE, the result says nothing about it,
+    /// and the chat stays as it was.
+    /// </remarks>
+    public OutboundDataRequirement RequiredOutboundDataRestriction { get; init; } = OutboundDataRequirement.NONE;
 
     public string ToModelContent()
     {

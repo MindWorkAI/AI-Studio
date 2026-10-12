@@ -10,6 +10,32 @@ public static partial class SourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SourceExtensions).Namespace, nameof(SourceExtensions));
 
+    /// <summary>
+    /// The scheme of the address a mail leaves as a source, when a mail tool found or read it.
+    /// </summary>
+    private const string MAIL_SOURCE_SCHEME = "mailbox";
+
+    /// <summary>
+    /// The address of the source a mail leaves in a chat.
+    /// </summary>
+    /// <remarks>
+    /// Unique per mail, since the sources of a chat are told apart by their address, see
+    /// MergeSources. No browser and no program can open it; the list of sources shows such a
+    /// source as text, see IsMailSource.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <param name="mailId">The id of the mail.</param>
+    /// <returns>The address.</returns>
+    public static string CreateMailSourceUrl(string mailboxId, string mailId) => $"{MAIL_SOURCE_SCHEME}://{mailboxId}/{mailId}";
+
+    /// <summary>
+    /// Whether a source names a mail in one of the mailboxes of the user.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns>True for a mail, which nothing can open by its address.</returns>
+    public static bool IsMailSource(this ISource source) =>
+        Uri.TryCreate(source.URL.Trim(), UriKind.Absolute, out var address) && address.Scheme.Equals(MAIL_SOURCE_SCHEME, StringComparison.OrdinalIgnoreCase);
+
     private static void AppendMarkdownLink(StringBuilder sb, string title, string url)
     {
         sb.Append('[');
@@ -153,9 +179,14 @@ public static partial class SourceExtensions
 
             foreach (var numberedSource in group.Sources)
             {
-                var url = keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL);
                 sb.Append($"- [{numberedSource.Number}] ");
-                AppendMarkdownLink(sb, numberedSource.Source.Title, url);
+
+                // A link to a mail would lead nowhere in a document or in the clipboard, so a mail is named only:
+                if (numberedSource.Source.IsMailSource())
+                    sb.Append(EscapeMarkdownLinkText(numberedSource.Source.Title));
+                else
+                    AppendMarkdownLink(sb, numberedSource.Source.Title, keepPageAnchors ? numberedSource.Source.URL : WithoutPageAnchor(numberedSource.Source.URL));
+
                 sb.AppendLine();
             }
         }

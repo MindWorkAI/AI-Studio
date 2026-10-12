@@ -2,25 +2,19 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 
 namespace AIStudio.Settings;
 
 /// <summary>
-/// The common interface for all data sources.
+/// The common interface for the data sources in DataSources, which classic RAG, Semantic Search and the agents read.
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type_discriminator")]
 [JsonDerivedType(typeof(DataSourceLocalDirectory), nameof(DataSourceType.LOCAL_DIRECTORY))]
 [JsonDerivedType(typeof(DataSourceLocalFile), nameof(DataSourceType.LOCAL_FILE))]
 [JsonDerivedType(typeof(DataSourceERI_V1), nameof(DataSourceType.ERI_V1))]
-public interface IDataSource : IConfigurationObject
+public interface IDataSource : IDataSourceBase
 {
-    /// <summary>
-    /// Which type of data source is this?
-    /// </summary>
-    public DataSourceType Type { get; init; }
-
     /// <summary>
     /// The maximum number of matches one retrieval returns. Searched page by page, it is the size of a page.
     /// </summary>

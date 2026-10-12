@@ -313,9 +313,8 @@ public sealed class MediaTranscriptionService(
                         ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(ownerChat!, mediaPath, result.Text)
                         : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
 
-                if (persistentStorage is null && ownerChat is not null && attachment is ManagedTranscriptAttachment managed
-                    && ownerChat.PendingMediaTranscripts.All(existing => existing.FilePath != managed.FilePath))
-                    ownerChat.PendingMediaTranscripts.Add(managed);
+                if (persistentStorage is null && ownerChat is not null && attachment is ManagedTranscriptAttachment managed)
+                    ownerChat.Draft.AddAttachments([managed]);
 
                 if (isPersistedChat)
                     await WorkspaceBehaviour.StoreChatAsync(ownerChat!);

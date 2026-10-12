@@ -26,7 +26,9 @@ env:
   FLATPAK_UV_VERSION: 0.11.28
   FLATPAK_UV_SHA256: e490a6464492183c5d4534a5527fb4440f7f2bb2f228162ad7e4afe076dc0224
   FLATPAK_FREEDESKTOP_VERSION: "25.08"
-    
+  SSIGN_VERSION: 0.1.7
+  SSIGN_SHA256: 4ee5389a74ddbeb67e18fe8c8b963734ca13de7b24beffbe430c3f427ecc5e40
+
 jobs:
   determine_run_mode:
     name: Determine run mode
@@ -39,6 +41,7 @@ jobs:
       is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
       is_pr_build: ${{ steps.determine.outputs.is_pr_build }}
       is_internal_pr: ${{ steps.determine.outputs.is_internal_pr }}
+      signing_mode: ${{ steps.determine.outputs.signing_mode }}
       build_enabled: ${{ steps.determine.outputs.build_enabled }}
       artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
       skip_reason: ${{ steps.determine.outputs.skip_reason }}
@@ -60,6 +63,7 @@ jobs:
           is_labeled_pr=false
           is_pr_build=false
           is_internal_pr=false
+          signing_mode=none
           build_enabled=false
           artifact_retention_days=0
           skip_reason="Build disabled: event did not match main push, release tag, or labeled internal PR."
@@ -73,15 +77,17 @@ jobs:
             has_run_pipeline_label=true
           fi
 
+          # Pushes to main only check that every platform still builds. They neither sign
+          # anything nor upload their artifacts, so they need no retention period either:
           if [[ "$REF" == refs/tags/v* ]]; then
             is_release=true
+            signing_mode=release
             build_enabled=true
             artifact_retention_days=${{ env.RETENTION_INTERMEDIATE_ASSETS }}
             skip_reason=""
           elif [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
             is_main_push=true
             build_enabled=true
-            artifact_retention_days=7
             skip_reason=""
           elif [[ "$EVENT_NAME" == "pull_request" && "$PR_ACTION" == "labeled" && "$ACTION_LABEL_NAME" == "run-pipeline" ]]; then
             is_labeled_pr=true
@@ -101,11 +107,18 @@ jobs:
             skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
           fi
 
+          # Pull requests from forks never receive secrets, so only the labeled pull
+          # requests of this repository get signed builds:
+          if [[ "$is_pr_build" == "true" && "$is_internal_pr" == "true" ]]; then
+            signing_mode=pr
+          fi
+
           echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
           echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
           echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
           echo "is_pr_build=${is_pr_build}" >> "$GITHUB_OUTPUT"
           echo "is_internal_pr=${is_internal_pr}" >> "$GITHUB_OUTPUT"
+          echo "signing_mode=${signing_mode}" >> "$GITHUB_OUTPUT"
           echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
           echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
           echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
@@ -122,6 +135,7 @@ jobs:
           IS_LABELED_PR: ${{ steps.determine.outputs.is_labeled_pr }}
           IS_PR_BUILD: ${{ steps.determine.outputs.is_pr_build }}
           IS_INTERNAL_PR: ${{ steps.determine.outputs.is_internal_pr }}
+          SIGNING_MODE: ${{ steps.determine.outputs.signing_mode }}
           BUILD_ENABLED: ${{ steps.determine.outputs.build_enabled }}
           ARTIFACT_RETENTION_DAYS: ${{ steps.determine.outputs.artifact_retention_days }}
           SKIP_REASON: ${{ steps.determine.outputs.skip_reason }}
@@ -136,6 +150,7 @@ jobs:
           echo "is_labeled_pr: ${IS_LABELED_PR}"
           echo "is_pr_build: ${IS_PR_BUILD}"
           echo "is_internal_pr: ${IS_INTERNAL_PR}"
+          echo "signing_mode: ${SIGNING_MODE}"
           echo "build_enabled: ${BUILD_ENABLED}"
           echo "artifact_retention_days: ${ARTIFACT_RETENTION_DAYS}"
           echo "skip_reason: ${SKIP_REASON}"
@@ -155,6 +170,7 @@ jobs:
             echo "| is_labeled_pr | ${IS_LABELED_PR} |"
             echo "| is_pr_build | ${IS_PR_BUILD} |"
             echo "| is_internal_pr | ${IS_INTERNAL_PR} |"
+            echo "| signing_mode | ${SIGNING_MODE} |"
             echo "| build_enabled | ${BUILD_ENABLED} |"
             echo "| artifact_retention_days | ${ARTIFACT_RETENTION_DAYS} |"
             echo "| skip_reason | ${SKIP_REASON} |"
@@ -245,6 +261,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [determine_run_mode, read_metadata]
     if: needs.determine_run_mode.outputs.is_release == 'true'
+    environment: Release-Signing
     permissions:
       contents: read
     outputs:
@@ -500,6 +517,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [determine_run_mode, read_metadata, sync_flatpak_repo]
     if: needs.determine_run_mode.outputs.is_release == 'true'
+    environment: Release-Signing
     permissions:
       contents: read
 
@@ -774,7 +792,7 @@ jobs:
           key: verify-linux-x64-rust-${{ env.RUST_VERSION }}
 
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
@@ -813,6 +831,10 @@ jobs:
     name: Build app (${{ matrix.dotnet_runtime }})
     needs: [determine_run_mode, read_metadata, verify]
     if: needs.determine_run_mode.outputs.build_enabled == 'true'
+    # Releases need their environment on every platform, because Linux signs its updater
+    # artifacts as well. Pull requests sign only for macOS and Windows; their Linux builds
+    # run without an environment and do not wait for an approval:
+    environment: ${{ (needs.determine_run_mode.outputs.signing_mode == 'release' && 'Release-Signing') || (needs.determine_run_mode.outputs.signing_mode == 'pr' && !startsWith(matrix.platform, 'ubuntu') && 'PR-Signing') || '' }}
     permissions:
       contents: read
     
@@ -825,42 +847,42 @@ jobs:
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
             tauri_bundle: 'dmg,app,updater'
-            tauri_bundle_pr: 'dmg'
+            tauri_bundle_without_updater: 'dmg'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
             tauri_bundle: 'dmg,app,updater'
-            tauri_bundle_pr: 'dmg'
+            tauri_bundle_without_updater: 'dmg'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
             tauri_bundle: 'appimage,updater'
-            tauri_bundle_pr: 'appimage'
+            tauri_bundle_without_updater: 'appimage'
             
           - platform: 'ubuntu-22.04-arm' # for ARM-based Linux
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
             tauri_bundle: 'appimage,updater'
-            tauri_bundle_pr: 'appimage'
+            tauri_bundle_without_updater: 'appimage'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis,updater'
-            tauri_bundle_pr: 'nsis'
+            tauri_bundle_without_updater: 'nsis'
 
           - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
             tauri_bundle: 'nsis,updater'
-            tauri_bundle_pr: 'nsis'
+            tauri_bundle_without_updater: 'nsis'
     
     runs-on: ${{ matrix.platform }}
     steps:
@@ -1084,7 +1106,39 @@ jobs:
 
           echo "Cleaning up ..."
           rm -fr "$TMP"
-          
+
+      - name: Sign PDFium (macOS)
+        if: startsWith(matrix.platform, 'macos') && needs.determine_run_mode.outputs.signing_mode != 'none'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+
+          # Tauri signs the sidecar and the app, but none of the resources. Apple's notary
+          # service rejects every library inside the app which does not carry our Developer ID
+          # and a secure timestamp, so PDFium gets signed here, before Tauri bundles it. The
+          # keychain is set up the same way Tauri sets up its own one for the app:
+          keychain="${RUNNER_TEMP}/pdfium-signing.keychain-db"
+          keychain_password=$(openssl rand -hex 32)
+          certificate="${RUNNER_TEMP}/pdfium-signing.p12"
+          trap 'security delete-keychain "$keychain" 2>/dev/null || true; rm -f "$certificate"' EXIT
+
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$certificate"
+          current_keychains=$(security list-keychains -d user | tr -d '"')
+
+          security create-keychain -p "$keychain_password" "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign -k "$keychain"
+          security set-keychain-settings -t 3600 -u "$keychain"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" > /dev/null
+          security list-keychains -d user -s $current_keychains "$keychain"
+
+          library="runtime/resources/libraries/libpdfium.dylib"
+          codesign --force --timestamp --options runtime --keychain "$keychain" --sign "$APPLE_SIGNING_IDENTITY" "$library"
+          codesign --verify --strict --verbose=2 "$library"
+
       - name: Deploy PDFium (Windows)
         if: matrix.platform == 'windows-latest'
         env:
@@ -1174,7 +1228,7 @@ jobs:
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
             
       - name: Setup Rust (stable)
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master (v1) of 2026-10-09
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
@@ -1221,7 +1275,27 @@ jobs:
           } else {
             Write-Output "Tauri CLI v2 is already installed"
           }
-          
+
+      - name: Install ssign (Windows)
+        if: matrix.platform == 'windows-latest' && needs.determine_run_mode.outputs.signing_mode != 'none'
+        run: |
+          $ssignDir = Join-Path $env:RUNNER_TEMP "ssign"
+          New-Item -ItemType Directory -Force -Path $ssignDir | Out-Null
+          $archive = Join-Path $ssignDir "ssign.zip"
+
+          Invoke-WebRequest -Uri "https://github.com/Le-Syl21/ssign/releases/download/v$($env:SSIGN_VERSION)/ssign-windows-x86_64.zip" -OutFile $archive
+
+          # ssign gets the secrets of our code signing certificate, so only the exact build we
+          # checked may run. Both Windows builds run on x64, the ARM one cross-compiles:
+          $hash = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne $env:SSIGN_SHA256) {
+            Write-Error "The SHA-256 of ssign is '$hash', but '$($env:SSIGN_SHA256)' was expected."
+            exit 1
+          }
+
+          Expand-Archive -Path $archive -DestinationPath $ssignDir -Force
+          $ssignDir >> $env:GITHUB_PATH
+
       - name: Delete previous artifact, which may exist due to caching (macOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
@@ -1248,6 +1322,10 @@ jobs:
         run: |
           rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe" -ErrorAction SilentlyContinue
           rm -Force "runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*" -ErrorAction SilentlyContinue
+
+          # A main binary from the cache may carry the signature of an earlier build, which turns
+          # invalid as soon as Tauri patches the binary. Cargo links a fresh one when it is missing:
+          rm -Force "runtime/target/${{ matrix.rust_target }}/release/MindWork AI Studio.exe" -ErrorAction SilentlyContinue
           
       - name: Delete previous artifact, which may exist due to caching (Linux - AppImage)
         if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
@@ -1260,33 +1338,54 @@ jobs:
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          SECRET_APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          SECRET_APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          SECRET_APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          SECRET_APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          SECRET_APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          SECRET_APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           bundles="${{ matrix.tauri_bundle }}"
           tauri_config_args=()
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
-            echo "Running PR test build without updater bundle signing"
-            bundles="${{ matrix.tauri_bundle_pr }}"
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" != "true" ]; then
+            echo "Running a non-release build without updater artifacts"
+            bundles="${{ matrix.tauri_bundle_without_updater }}"
             tauri_config_args=(--config '{"bundle":{"createUpdaterArtifacts":false}}')
           else
             export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
             export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
           fi
 
+          # Only builds which may sign hand Tauri the Developer ID and the key for Apple's notary
+          # service. Every other build keeps the ad-hoc signature from tauri.conf.json, which an
+          # exported but empty APPLE_SIGNING_IDENTITY would override:
+          sign_for_macos=false
+          if [ "${{ needs.determine_run_mode.outputs.signing_mode }}" != "none" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
+            sign_for_macos=true
+            export APPLE_CERTIFICATE="$SECRET_APPLE_CERTIFICATE"
+            export APPLE_CERTIFICATE_PASSWORD="$SECRET_APPLE_CERTIFICATE_PASSWORD"
+            export APPLE_SIGNING_IDENTITY="$SECRET_APPLE_SIGNING_IDENTITY"
+            export APPLE_API_ISSUER="$SECRET_APPLE_API_ISSUER"
+            export APPLE_API_KEY="$SECRET_APPLE_API_KEY"
+            export APPLE_API_KEY_PATH="${RUNNER_TEMP}/AuthKey_${APPLE_API_KEY}.p8"
+            (umask 077 && printf '%s\n' "$SECRET_APPLE_API_PRIVATE_KEY" > "$APPLE_API_KEY_PATH")
+          fi
+
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles" "${tauri_config_args[@]}"
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" != "true" ]; then
             updater_artifact_count=$(find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \) | wc -l)
 
             if [ "$updater_artifact_count" -ne 0 ]; then
-              echo "PR builds must not generate updater artifacts."
+              echo "Only release builds may generate updater artifacts."
               find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \)
               exit 1
             fi
           fi
 
-          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" != "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
+          if [ "${{ needs.determine_run_mode.outputs.is_release }}" = "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
             app_update_archive_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz' | wc -l)
             app_update_signature_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz.sig' | wc -l)
 
@@ -1295,40 +1394,127 @@ jobs:
               exit 1
             fi
           fi
-          
+
+          if [ "$sign_for_macos" = "true" ]; then
+            # Check what people download: the app inside the disk image. Builds of the disk image
+            # alone do not even keep the app next to it, because Tauri removes it afterwards:
+            dmg_path=$(find target/${{ matrix.rust_target }}/release/bundle/dmg -maxdepth 1 -name 'MindWork AI Studio_*.dmg' | head -n 1)
+            if [ -z "$dmg_path" ]; then
+              echo "The disk image to check was not found."
+              exit 1
+            fi
+
+            codesign --verify --verbose=2 "$dmg_path"
+
+            mount_point="${RUNNER_TEMP}/dmg-check"
+            hdiutil attach "$dmg_path" -readonly -nobrowse -mountpoint "$mount_point"
+            app_path=$(find "$mount_point" -maxdepth 1 -name '*.app' | head -n 1)
+            if [ -z "$app_path" ]; then
+              echo "The disk image contains no app."
+              exit 1
+            fi
+
+            codesign --verify --deep --strict --verbose=2 "$app_path"
+            xcrun stapler validate "$app_path"
+
+            # Gatekeeper has to accept the app as notarized, not just as signed:
+            assessment=$(spctl --assess --type execute --verbose=4 "$app_path" 2>&1) || true
+            echo "$assessment"
+            if [[ "$assessment" != *"source=Notarized Developer ID"* ]]; then
+              echo "Gatekeeper does not accept the app as notarized."
+              exit 1
+            fi
+
+            hdiutil detach "$mount_point"
+          fi
+
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
         env:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
+          SECRET_CERTUM_EMAIL: ${{ secrets.CERTUM_EMAIL }}
+          SECRET_CERTUM_OTP: ${{ secrets.CERTUM_OTP }}
         run: |
           $bundles = "${{ matrix.tauri_bundle }}"
           $tauriConfigArgs = @()
 
-          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
-            Write-Output "Running PR test build without updater bundle signing"
-            $bundles = "${{ matrix.tauri_bundle_pr }}"
+          if ("${{ needs.determine_run_mode.outputs.is_release }}" -ne "true") {
+            Write-Output "Running a non-release build without updater artifacts"
+            $bundles = "${{ matrix.tauri_bundle_without_updater }}"
             $tauriConfigArgs = @("--config", '{"bundle":{"createUpdaterArtifacts":false}}')
           } else {
             $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
             $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
           }
 
+          # Only builds which may sign hand Tauri a sign command, which in turn hands every file
+          # to our script for ssign. The forward slashes keep the path intact while Tauri passes
+          # the command on to NSIS for signing the uninstaller:
+          $signForWindows = "${{ needs.determine_run_mode.outputs.signing_mode }}" -ne "none"
+          if ($signForWindows) {
+            $env:CERTUM_EMAIL = $env:SECRET_CERTUM_EMAIL
+            $env:CERTUM_OTP = $env:SECRET_CERTUM_OTP
+
+            $signScript = (Join-Path $env:GITHUB_WORKSPACE ".github/scripts/sign-windows.ps1") -replace '\\', '/'
+            $signConfigPath = Join-Path $env:RUNNER_TEMP "tauri-windows-signing.json"
+            $signConfig = @{ bundle = @{ windows = @{ signCommand = @{ cmd = "pwsh"; args = @("-NoProfile", "-NonInteractive", "-File", $signScript, "%1") } } } }
+            $signConfig | ConvertTo-Json -Depth 6 | Set-Content -Path $signConfigPath -Encoding utf8
+            $tauriConfigArgs += @("--config", $signConfigPath)
+          }
+
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles @tauriConfigArgs
+          if ($LASTEXITCODE -ne 0) {
+            # Tauri hides why a sign command failed, so show what our signing script logged:
+            $signLog = Join-Path $env:RUNNER_TEMP "sign-windows.log"
+            if (Test-Path $signLog) {
+              Write-Output "Log of the signing script:"
+              Get-Content -Path $signLog
+            }
 
-          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
+            exit $LASTEXITCODE
+          }
+
+          if ("${{ needs.determine_run_mode.outputs.is_release }}" -ne "true") {
             $updaterArtifacts = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle" -Recurse -File -Include "*.app.tar.gz*", "*.AppImage.tar.gz*", "*nsis.zip*" -ErrorAction SilentlyContinue
 
             if ($updaterArtifacts.Count -ne 0) {
-              Write-Error "PR builds must not generate updater artifacts."
+              Write-Error "Only release builds may generate updater artifacts."
               $updaterArtifacts | ForEach-Object { Write-Error $_.FullName }
               exit 1
             }
           }
 
+          if ($signForWindows) {
+            $installer = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle/nsis" -Filter "MindWork AI Studio_*.exe" | Select-Object -First 1
+            if (-not $installer) {
+              Write-Error "The installer to check was not found."
+              exit 1
+            }
+
+            # The main binary is missing here on purpose: after bundling, Tauri puts the unpatched,
+            # unsigned original back in place. The installer holds the signed one, and our signing
+            # script has already checked that signature right after signing:
+            $signedFiles = @(
+              $installer.FullName,
+              "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer${{ matrix.dotnet_name_postfix }}",
+              "resources/libraries/pdfium.dll"
+            )
+
+            foreach ($file in $signedFiles) {
+              $signature = Get-AuthenticodeSignature -FilePath $file
+              Write-Output "$($signature.Status) | $($signature.SignerCertificate.Subject) | timestamp: $($null -ne $signature.TimeStamperCertificate) | $file"
+
+              if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike '*O=Open Source Developer*' -or $null -eq $signature.TimeStamperCertificate) {
+                Write-Error "'$file' is not signed with our certificate and a timestamp."
+                exit 1
+              }
+            }
+          }
+
       - name: Upload artifact (macOS)
-        if: startsWith(matrix.platform, 'macos')
+        if: startsWith(matrix.platform, 'macos') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
@@ -1339,7 +1525,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - MSI)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
@@ -1350,7 +1536,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - NSIS)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -1361,7 +1547,7 @@ jobs:
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - AppImage)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage') && needs.determine_run_mode.outputs.is_main_push != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
@@ -1585,7 +1771,8 @@ jobs:
       runs-on: ubuntu-latest
       needs: [read_metadata, create_release]
       if: startsWith(github.ref, 'refs/tags/v')
-      
+      environment: Release-Signing
+
       permissions:
         contents: write
       
@@ -1608,7 +1795,7 @@ jobs:
             
           - name: Scan for threats
             id: virus_total
-            uses: crazy-max/ghaction-virustotal@v4
+            uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f # v4.2.0
             with:
               vt_api_key: ${{ secrets.VIRUS_TOTAL_KEY }}
               files: release/assets/*
@@ -1665,7 +1852,7 @@ jobs:
               echo "EOOOF" >> $GITHUB_ENV
             
           - name: Create release
-            uses: softprops/action-gh-release@v2
+            uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
             with:
               prerelease: true
               draft: false

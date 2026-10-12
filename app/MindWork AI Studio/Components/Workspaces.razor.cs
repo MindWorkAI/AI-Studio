@@ -938,12 +938,35 @@ public partial class Workspaces : MSGComponentBase
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
-    private async Task MoveChatAsync(string? chatPath)
+    /// <summary>
+    /// Moves the given chat into another workspace and shows it there in the tree.
+    /// </summary>
+    /// <param name="chat">The chat to move. It gets the new workspace and the new paths of its attachments.</param>
+    /// <param name="targetWorkspaceId">The workspace to move the chat into.</param>
+    /// <remarks>
+    /// Neither asks for the target workspace nor follows the chat in the chat view: both depend on
+    /// where the move was asked for. Whoever moves a chat while this component exists goes through
+    /// here, though, since the tree draws what it has built before and would otherwise keep showing
+    /// the chat in its old place.
+    /// </remarks>
+    public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
     {
-        var chat = await this.LoadChatAsync(chatPath, false);
-        if (chat is null)
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId);
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    private async Task MoveChatFromTreeAsync(string? chatPath)
+    {
+        var storedChat = await this.LoadChatAsync(chatPath, false);
+        if (storedChat is null)
             return;
 
+        //
+        // The open chat moves as it stands on the screen, just like with the button in the chat
+        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
+        // edited, and the chat would continue with that copy afterward:
+        //
+        var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
         
@@ -963,14 +986,9 @@ public partial class Workspaces : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
-        if (this.CurrentChatThread?.ChatId == chat.ChatId)
-        {
-            this.CurrentChatThread = chat;
+        await this.MoveChatAsync(chat, workspaceId);
+        if (ReferenceEquals(chat, this.CurrentChatThread))
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-        }
-
-        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
     private async Task AddChatAsync(string workspacePath)

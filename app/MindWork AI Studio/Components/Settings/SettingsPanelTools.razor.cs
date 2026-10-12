@@ -21,11 +21,11 @@ public partial class SettingsPanelTools : SettingsPanelBase
         await base.OnInitializedAsync();
     }
 
-    private async Task OpenSettings(string toolId)
+    private async Task OpenSettings(ToolCatalogItem item)
     {
         var parameters = new DialogParameters<ToolSettingsDialog>
         {
-            { x => x.ToolId, toolId },
+            { x => x.CollectionId, item.Id },
         };
 
         var dialog = await this.DialogService.ShowAsync<ToolSettingsDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);
@@ -34,14 +34,14 @@ public partial class SettingsPanelTools : SettingsPanelBase
         this.StateHasChanged();
     }
 
-    private async Task OpenExport(string toolId)
+    private async Task OpenExport(ToolCatalogItem item)
     {
         if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
             return;
 
         var parameters = new DialogParameters<ToolSettingsExportDialog>
         {
-            { x => x.ToolId, toolId },
+            { x => x.CollectionId, item.Id },
         };
 
         await this.DialogService.ShowAsync<ToolSettingsExportDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);
@@ -54,13 +54,18 @@ public partial class SettingsPanelTools : SettingsPanelBase
         _ => string.Format(this.T("Missing required settings: {0}"), string.Join(", ", item.ConfigurationState.MissingRequiredFields.Select(fieldName => this.GetFieldDisplayName(item, fieldName))))
     };
 
+    /// <remarks>
+    /// The missing fields are those of the first tool whose settings are incomplete, see
+    /// ToolCatalogItem.ConfigurationState, so that tool names them.
+    /// </remarks>
     private string GetFieldDisplayName(ToolCatalogItem item, string fieldName)
     {
-        var fieldDefinition = item.Definition.SettingsSchema.Properties.GetValueOrDefault(fieldName);
-        if (fieldDefinition is null)
+        var tool = item.Tools.FirstOrDefault(tool => !tool.ConfigurationState.IsConfigured);
+        var fieldDefinition = tool?.Definition.SettingsSchema.Properties.GetValueOrDefault(fieldName);
+        if (tool is null || fieldDefinition is null)
             return fieldName;
 
-        return item.Implementation.GetSettingsFieldLabel(fieldName, fieldDefinition);
+        return tool.Implementation.GetSettingsFieldLabel(fieldName, fieldDefinition);
     }
 
     private IEnumerable<ConfidenceLevel> GetSelectableConfidenceLevels() =>
@@ -85,7 +90,7 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
     private async Task ChangeMinimumProviderConfidence(ToolCatalogItem item, ConfidenceLevel confidenceLevel)
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(item.Definition.Id, confidenceLevel, item.Definition.MinimumProviderConfidence);
+        this.ToolRegistry.SetMinimumProviderConfidence(item.Id, confidenceLevel);
         await this.SettingsManager.StoreSettings();
         this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);

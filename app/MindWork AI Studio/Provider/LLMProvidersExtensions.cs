@@ -459,6 +459,25 @@ public static class LLMProvidersExtensions
         _ => false,
     };
 
+    /// <summary>
+    /// Whether the provider runs on a server that the user or their organization operates.
+    /// </summary>
+    /// <remarks>
+    /// The address of such a server comes from the user: a self-hosted model, or a LiteLLM gateway.
+    /// Only their operators may learn which feature of AI Studio sent a request, see AppUserAgent.
+    /// This is deliberately not derived from IsHostnameNeeded, even though both name the same providers
+    /// today: whether a dialog asks for a hostname is a question of the user interface, and it must
+    /// never silently decide what a server learns about the user.
+    /// </remarks>
+    /// <param name="provider">The provider.</param>
+    /// <returns>True when the provider runs on a self-hosted server; otherwise, false.</returns>
+    public static bool RunsOnSelfHostedServer(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.SELF_HOSTED => true,
+        LLMProviders.LITE_LLM => true,
+        _ => false,
+    };
+
     public static bool IsAPIKeyNeeded(this LLMProviders provider, Host host) => provider switch
     {
         LLMProviders.OPEN_AI => true,
