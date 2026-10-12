@@ -320,7 +320,7 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
 
         if (!DateTimeOffset.TryParseExact(lastChangedText, LAST_CHANGED_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var lastChanged))
         {
-            LOG.LogInformation("The field LAST_CHANGED of plugin '{PluginName}' is not a valid point in time in UTC of the form YYYY-MM-DDTHH:MM:SSZ. Ignoring it.", this.Name);
+            LOG.LogWarning("The field LAST_CHANGED of plugin '{PluginName}' is not a valid point in time in UTC of the form YYYY-MM-DDTHH:MM:SSZ. Ignoring it. Please fix the plugin.", this.Name);
             return null;
         }
 
