@@ -16,9 +16,9 @@ The parts:
   finds and reads the documents of one run, and `TrackChanges` / `StopTracking` notice changes on their own.
   `FileSourceIndexer` is the reference: a file system watcher per data source, fingerprints over path, size and
   write time.
-- **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest and the
-  collection. `IndexDocumentAsync` embeds and stores one document; the cleanup methods remove what a failed
-  attempt left behind.
+- **`IndexedRunContext`** - one prepared run: both stores, the embedding provider, the manifest, the
+  collection, and the scope for reporting prompt injections. `IndexDocumentAsync` embeds and stores one
+  document; the cleanup methods remove what a failed attempt left behind.
 - **`EmbeddingDocument`** - one document: its key, its index row, its display name, and how to read its chunks.
 - **`DocumentRunProgress`** - counts the documents, records indexed and failed ones in the stores, publishes the
   status, and completes or pauses the run.
@@ -49,6 +49,10 @@ To add a kind of data source:
    returns: it decides whether the data source carries on in another run, or stops because its embedding
    provider failed for everything. A run which takes more than twice its share without asking once ends up as
    a warning in the log, while every other data source waits.
+7. Filter everything the indexer reads: files through `ExtractedFileText.ReadAsync`, any other content through
+   `PromptInjectionGuardService.SanitizeAsync`, both with `IndexedRunContext.PromptInjectionScope`. The service
+   opens that scope per run, so the user hears about a run once, when it is over. Begin no action of your own
+   in the indexer, or the user hears about one run several times.
 
 Rules which are easy to break:
 - **A document key is not a path.** Only files use their full path as the key. Never pass a key through the
