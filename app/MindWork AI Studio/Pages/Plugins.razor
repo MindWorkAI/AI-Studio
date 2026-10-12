@@ -85,10 +85,10 @@
                             <MudText Typo="Typo.caption" Class="mud-text-secondary ms-1">
                                 v@(context.Version)
                             </MudText>
-                            @if (context is { IsInternal: false })
+                            @if (context is IAvailablePlugin { IsInternal: false } infoPlugin)
                             {
                                 <MudTooltip Text="@T("Plugin information")">
-                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(context))"/>
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(infoPlugin))"/>
                                 </MudTooltip>
                             }
                         </MudStack>

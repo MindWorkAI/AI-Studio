@@ -485,7 +485,7 @@ public partial class Plugins : MSGComponentBase
         await dialogReference.Result;
     }
 
-    private async Task ShowPluginInfoAsync(IPluginMetadata plugin)
+    private async Task ShowPluginInfoAsync(IAvailablePlugin plugin)
     {
         var dialogParameters = new DialogParameters<PluginInfoDialog>
         {

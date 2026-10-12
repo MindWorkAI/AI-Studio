@@ -1,56 +1,63 @@
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Here are the details of this plugin. Most of them come from its authors, and AI Studio shows them as stated without being able to verify them.")
+        </MudJustifiedText>
+
         <MudSimpleTable Dense="@true" Hover="@true" Bordered="@true" Striped="@true" Style="overflow-x: auto;">
             <tbody>
-                <tr>
-                    <td style="width: 180px;">
-                        <MudText Typo="Typo.body2"><b>@T("Version")</b></MudText>
-                    </td>
-                    <td><MudText Typo="Typo.body2">@this.Plugin.Version</MudText></td>
-                </tr>
-                <tr>
-                    <td>
-                        <MudText Typo="Typo.body2"><b>@T("Last changed")</b></MudText>
-                    </td>
-                    <td><MudText Typo="Typo.body2">@this.LastChangedText</MudText></td>
-                </tr>
-                <tr>
-                    <td>
-                        <MudText Typo="Typo.body2"><b>@T("Authors")</b></MudText>
-                    </td>
-                    <td><MudText Typo="Typo.body2">@this.AuthorsText</MudText></td>
-                </tr>
+                <InfoTableRow Icon="@Icons.Material.Filled.Description" Label="@T("Description")">
+                    <MudText Typo="Typo.body2">@this.Plugin.Description</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Extension" Label="@T("Type")">
+                    <MudText Typo="Typo.body2">@this.TypeText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Tag" Label="@T("Version")">
+                    <MudText Typo="Typo.body2">@this.Plugin.Version</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.EditCalendar" Label="@T("Last changed")">
+                    <MudText Typo="Typo.body2">@this.LastChangedText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.People" Label="@T("Authors")">
+                    <MudText Typo="Typo.body2">@this.AuthorsText</MudText>
+                </InfoTableRow>
                 @if (!string.IsNullOrWhiteSpace(this.Plugin.SupportContact))
                 {
-                    <tr>
-                        <td>
-                            <MudText Typo="Typo.body2"><b>@T("Support contact")</b></MudText>
-                        </td>
-                        <td><MudText Typo="Typo.body2">@this.Plugin.SupportContact</MudText></td>
-                    </tr>
+                    <InfoTableRow Icon="@Icons.Material.Filled.SupportAgent" Label="@T("Support contact")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.SupportContact</MudText>
+                            <PluginLinkButton Url="@this.Plugin.SupportContact" Size="Size.Small"/>
+                        </MudStack>
+                    </InfoTableRow>
                 }
                 @if (!string.IsNullOrWhiteSpace(this.Plugin.SourceURL))
                 {
-                    <tr>
-                        <td>
-                            <MudText Typo="Typo.body2"><b>@T("Source")</b></MudText>
-                        </td>
-                        <td><MudText Typo="Typo.body2">@this.Plugin.SourceURL</MudText></td>
-                    </tr>
+                    <InfoTableRow Icon="@Icons.Material.Filled.Source" Label="@T("Source")">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.SourceURL</MudText>
+                            <PluginLinkButton Url="@this.Plugin.SourceURL" Size="Size.Small"/>
+                        </MudStack>
+                    </InfoTableRow>
                 }
-                <tr>
-                    <td>
-                        <MudText Typo="Typo.body2"><b>@T("Categories")</b></MudText>
-                    </td>
-                    <td><MudText Typo="Typo.body2">@this.CategoriesText</MudText></td>
-                </tr>
-                <tr>
-                    <td>
-                        <MudText Typo="Typo.body2"><b>@T("Target groups")</b></MudText>
-                    </td>
-                    <td><MudText Typo="Typo.body2">@this.TargetGroupsText</MudText></td>
-                </tr>
+                <InfoTableRow Icon="@Icons.Material.Filled.Category" Label="@T("Categories")">
+                    <MudText Typo="Typo.body2">@this.CategoriesText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Groups" Label="@T("Target groups")">
+                    <MudText Typo="Typo.body2">@this.TargetGroupsText</MudText>
+                </InfoTableRow>
+                <InfoTableRow Icon="@Icons.Material.Filled.Fingerprint" Label="@T("Plugin ID")">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.body2" Style="overflow-wrap: anywhere;">@this.Plugin.Id</MudText>
+                        <MudCopyClipboardButton StringContent="@this.Plugin.Id.ToString()" TooltipMessage="@T("Copies the plugin ID to the clipboard")"/>
+                    </MudStack>
+                </InfoTableRow>
+                @if (this.Plugin.IsManagedByConfigServer)
+                {
+                    <InfoTableRow Icon="@Icons.Material.Filled.Business" Label="@T("Origin")">
+                        <MudText Typo="Typo.body2">@T("Managed by your organization")</MudText>
+                    </InfoTableRow>
+                }
             </tbody>
         </MudSimpleTable>
 
