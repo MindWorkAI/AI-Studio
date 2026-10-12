@@ -243,6 +243,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GROQ => true,
         LLMProviders.LITE_LLM => true,
+        LLMProviders.REQUESTY => true,
 
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
@@ -260,7 +261,6 @@ public static class LLMProvidersExtensions
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.REQUESTY => false,
 
         //
         // Hugging Face transcribes audio, but like embeddings, not through the router endpoint we

@@ -65,9 +65,10 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(TranscriptionResult.Failure());
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
 
     /// <inheritdoc />
@@ -92,13 +93,13 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadEmbeddingModels(apiKeyProvisional, token);
+        return this.LoadModelsOfRoute(SecretStoreType.EMBEDDING_PROVIDER, "models/embedding", apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        return this.LoadModelsOfRoute(SecretStoreType.TRANSCRIPTION_PROVIDER, "models/transcription", apiKeyProvisional, token);
     }
 
     #endregion
@@ -147,25 +148,28 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     }
 
     /// <summary>
-    /// Loads the models Requesty offers for embedding, which live on a route of their own.
+    /// Loads the models Requesty offers for embedding or for transcription, each of which lives on
+    /// a route of its own.
     /// </summary>
     /// <remarks>
-    /// Nothing is reported from here: this route answers with the embedding models alone, and what
-    /// is reported replaces everything an instance said before. The windows of the chat models
-    /// would go missing the moment somebody opens the embedding settings.
+    /// Nothing is reported from here: such a route answers with the models of its purpose alone,
+    /// and what is reported replaces everything an instance said before. The windows of the chat
+    /// models would go missing the moment somebody opens the embedding or transcription settings.
     ///
-    /// Nothing is filtered either. The route is the statement: Requesty serves these to embed with,
-    /// which is more than a name can say. Asking the registry on top could only drop a model whose
-    /// name we do not recognize.
+    /// Nothing is filtered either. The route is the statement: Requesty serves these models to
+    /// embed or to transcribe with, which is more than a name can say. Asking the registry on top
+    /// could only drop a model whose name we do not recognize.
     /// </remarks>
+    /// <param name="storeType">Where the API key is stored.</param>
+    /// <param name="route">The route which lists the models, relative to the base URL.</param>
     /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
     /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The embedding models.</returns>
-    private Task<ModelLoadResult> LoadEmbeddingModels(string? apiKeyProvisional, CancellationToken token)
+    /// <returns>The models of the route.</returns>
+    private Task<ModelLoadResult> LoadModelsOfRoute(SecretStoreType storeType, string route, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<RequestyModelsResponse>(
-            SecretStoreType.EMBEDDING_PROVIDER,
-            "models/embedding",
+            storeType,
+            route,
             modelResponse => modelResponse.Data.Select(n => new Model(n.Id, null)),
             apiKeyProvisional,
             requestConfigurator: ConfigureRequest,
