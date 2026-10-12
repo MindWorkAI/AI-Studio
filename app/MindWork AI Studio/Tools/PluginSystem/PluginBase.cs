@@ -12,6 +12,27 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginBase));
 
+    /// <summary>
+    /// The only format the field LAST_CHANGED accepts: a point in time in UTC, read and written with
+    /// the invariant culture.
+    /// </summary>
+    /// <remarks>
+    /// A date alone cannot be shown in the time zone of the user: whether a day in UTC is the same day
+    /// locally depends on the time. The field therefore always carries the time, and the UI converts it.
+    /// </remarks>
+    public const string LAST_CHANGED_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    /// <summary>
+    /// Writes a point in time the way the field LAST_CHANGED expects it.
+    /// </summary>
+    /// <remarks>
+    /// The format ends in a literal Z, so the time has to be converted to UTC first. Otherwise, a
+    /// local time would be written as if it were UTC.
+    /// </remarks>
+    /// <param name="lastChanged">When the plugin was last changed, in any time zone.</param>
+    /// <returns>The time in UTC, formatted for the field LAST_CHANGED.</returns>
+    public static string FormatLastChanged(DateTimeOffset lastChanged) => lastChanged.ToUniversalTime().ToString(LAST_CHANGED_FORMAT, CultureInfo.InvariantCulture);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
 
     private readonly IReadOnlyCollection<string> baseIssues;
@@ -38,7 +59,7 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
     public PluginVersion Version { get; }
 
     /// <inheritdoc />
-    public DateOnly? LastChanged { get; }
+    public DateTimeOffset? LastChanged { get; }
 
     /// <inheritdoc />
     public string[] Authors { get; } = [];
@@ -284,22 +305,22 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
     }
     
     /// <summary>
-    /// Reads the date the plugin was last changed, when the plugin states one.
+    /// Reads when the plugin was last changed, when the plugin states it.
     /// </summary>
     /// <remarks>
     /// Unlike the other fields, LAST_CHANGED is optional: existing plugins were shipped before this
-    /// field existed, and a missing or malformed date is not a reason to refuse loading an otherwise
+    /// field existed, and a missing or malformed value is not a reason to refuse loading an otherwise
     /// valid plugin. A malformed value is logged and treated as absent.
     /// </remarks>
-    /// <returns>The read date, or null when the field is absent or malformed.</returns>
-    private DateOnly? ReadLastChanged()
+    /// <returns>The read point in time in UTC, or null when the field is absent or malformed.</returns>
+    private DateTimeOffset? ReadLastChanged()
     {
         if (!this.State.Environment["LAST_CHANGED"].TryRead<string>(out var lastChangedText))
             return null;
 
-        if (!DateOnly.TryParseExact(lastChangedText, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var lastChanged))
+        if (!DateTimeOffset.TryParseExact(lastChangedText, LAST_CHANGED_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var lastChanged))
         {
-            LOG.LogInformation("The field LAST_CHANGED of plugin '{PluginName}' is not a valid date of the form YYYY-MM-DD. Ignoring it.", this.Name);
+            LOG.LogInformation("The field LAST_CHANGED of plugin '{PluginName}' is not a valid point in time in UTC of the form YYYY-MM-DDTHH:MM:SSZ. Ignoring it.", this.Name);
             return null;
         }
 

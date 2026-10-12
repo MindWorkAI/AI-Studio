@@ -10,7 +10,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants;
 /// </remarks>
 /// <param name="Id">The plugin ID, which stays with the plugin for its whole life.</param>
 /// <param name="Version">The plugin version, as it appears in the Lua file.</param>
-/// <param name="LastChanged">The date the plugin was last changed, when it states one.</param>
+/// <param name="LastChanged">When the plugin was last changed, in UTC, when it states it.</param>
 /// <param name="Authors">The authors of the plugin.</param>
 /// <param name="SupportContact">Where users turn with questions about this plugin.</param>
 /// <param name="SourceURL">Where the plugin comes from.</param>
@@ -19,7 +19,7 @@ namespace AIStudio.Tools.PluginSystem.Assistants;
 /// <param name="IsMaintained">Whether the plugin is still maintained.</param>
 /// <param name="DeprecationMessage">What users are told when the plugin is deprecated.</param>
 /// <param name="IsAssistantBuilderGenerated">Whether the Assistant Builder created this plugin.</param>
-public sealed record DirectChatLauncherPluginMetadata(Guid Id, string Version, DateOnly? LastChanged, IReadOnlyList<string> Authors, string SupportContact, string SourceURL,
+public sealed record DirectChatLauncherPluginMetadata(Guid Id, string Version, DateTimeOffset? LastChanged, IReadOnlyList<string> Authors, string SupportContact, string SourceURL,
     IReadOnlyList<PluginCategory> Categories, IReadOnlyList<PluginTargetGroup> TargetGroups, bool IsMaintained, string DeprecationMessage, bool IsAssistantBuilderGenerated)
 {
     /// <summary>

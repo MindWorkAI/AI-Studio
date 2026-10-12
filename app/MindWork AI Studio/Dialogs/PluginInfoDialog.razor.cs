@@ -19,7 +19,10 @@ public partial class PluginInfoDialog : MSGComponentBase
 
     private string TargetGroupsText => this.Plugin.TargetGroups.Length > 0 ? string.Join(", ", this.Plugin.TargetGroups.Select(targetGroup => targetGroup.Name())) : this.T("No target groups specified");
 
-    private string LastChangedText => this.Plugin.LastChanged?.ToString("d", I18N.I.Culture) ?? "-";
+    /// <summary>
+    /// The plugin states the time in UTC; the user reads it in their own time zone.
+    /// </summary>
+    private string LastChangedText => this.Plugin.LastChanged?.ToLocalTime().ToString("g", I18N.I.Culture) ?? "-";
 
     private void Close() => this.MudDialog.Close();
 }

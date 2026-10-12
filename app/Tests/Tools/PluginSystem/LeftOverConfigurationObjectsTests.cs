@@ -98,7 +98,7 @@ public sealed class LeftOverConfigurationObjectsTests
 
         public PluginVersion Version => new(1, 0, 0);
 
-        public DateOnly? LastChanged => null;
+        public DateTimeOffset? LastChanged => null;
 
         public string[] Authors => [];
 

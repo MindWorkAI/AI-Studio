@@ -21,8 +21,8 @@ DESCRIPTION = "This is a pre-defined configuration of <Company Name>"
 -- The version of the plugin:
 VERSION = "1.0.0"
 
--- The date this plugin was last changed, formatted as YYYY-MM-DD. Optional.
-LAST_CHANGED = "2025-12-31"
+-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.
+LAST_CHANGED = "2025-12-31T12:00:00Z"
 
 -- The type of the plugin:
 TYPE = "CONFIGURATION"

@@ -38,9 +38,9 @@ public interface IPluginMetadata
     public PluginVersion Version { get; }
 
     /// <summary>
-    /// The date this plugin was last changed, when the plugin states one.
+    /// When this plugin was last changed, in UTC, when the plugin states it.
     /// </summary>
-    public DateOnly? LastChanged { get; }
+    public DateTimeOffset? LastChanged { get; }
 
     /// <summary>
     /// The authors of this plugin.
