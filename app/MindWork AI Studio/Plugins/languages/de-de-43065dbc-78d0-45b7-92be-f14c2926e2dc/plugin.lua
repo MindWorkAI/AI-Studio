@@ -2589,20 +2589,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T101
 -- Create a SWOT analysis of my content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1113304215"] = "Stärken, Schwächen, Chancen und Risiken meiner Inhalte analysieren"
 
+-- The model response for this category did not have the expected structure.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1128030601"] = "Die Modellantwort für diese Kategorie entsprach nicht der erwarteten Struktur."
+
+-- Strengths
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1245493657"] = "Stärken"
+
 -- SWOT Analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1864542518"] = "SWOT-Analyse"
-
--- Input
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2677268763"] = "Input"
-
--- Document for analysis
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T203688407"] = "Dokument zur Analyse"
 
 -- Please describe the goal the SWOT analysis should support.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2136978542"] = "Bitte beschreiben Sie das Ziel, das die SWOT-Analyse unterstützen soll."
 
+-- Weaknesses
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2279747526"] = "Schwächen"
+
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237828418"] = "Deutsch (Deutschland)"
+
+-- Opportunities
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2409493450"] = "Chancen"
+
+-- The prioritized actions could not be displayed because the model response did not have the expected structure.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2523185581"] = "Die priorisierten Aktionen konnten nicht angezeigt werden, weil die Antwort des Modells nicht die erwartete Struktur hatte."
 
 -- Input
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2677268763"] = "Eingabe"
@@ -2610,7 +2619,19 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T267
 -- Analysis goal
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2718020690"] = "Analyseziel"
 
--- To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.
+-- This category could not be created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2855208826"] = "Diese Kategorie konnte nicht erstellt werden."
+
+-- Creating prioritized actions...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3093364112"] = "Priorisierte Aktionen werden erstellt…"
+
+-- Analyzing this category...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3114892934"] = "Diese Kategorie wird analysiert…"
+
+-- At least one SWOT category could not be created. The completed categories remain visible below.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3160246784"] = "Mindestens eine SWOT-Kategorie konnte nicht erstellt werden. Die abgeschlossenen Kategorien bleiben unten sichtbar."
+
+-- Um die Aussagekraft der SWOT-Analyse zu erhöhen, laden Sie bitte ergänzende Dokumente hoch, die empirische oder kontextbezogene Daten für eine umfassende interne und externe Bewertung liefern.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3485401617"] = "Um die Aussagekraft der SWOT-Analyse zu erhöhen, laden Sie bitte ergänzende Dokumente hoch, die empirische oder kontextbezogene Daten für eine umfassende interne und externe Bewertung liefern."
 
 -- Create SWOT analysis
@@ -2631,8 +2652,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T388
 -- This SWOT analysis cannot be considered complete or reliable because it can only be created based on the uploaded documents. Without appropriate supporting materials, there is no basis for a sound strategic assessment. Therefore, this analysis should be understood as an initial version and will be revised and improved by us as work continues.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4072390012"] = "Diese SWOT-Analyse kann nicht als vollständige oder belastbare Analyse betrachtet werden, da sie ausschließlich auf Basis der hochgeladenen Dokumente erstellt werden kann. Ohne entsprechende Unterlagen fehlt die Grundlage für eine fundierte strategische Bewertung. Die vorliegende Analyse ist daher als erste Version zu verstehen und wird von uns im weiteren Verlauf noch überarbeitet und verbessert."
 
+-- The category analysis was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T476307744"] = "Die Kategorieanalyse wurde abgebrochen."
+
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysefokus"
+
+-- Threats
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T592141878"] = "Risiken"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Benutzerdefinierte Sprache"
