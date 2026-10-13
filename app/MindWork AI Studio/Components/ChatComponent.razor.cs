@@ -1234,7 +1234,8 @@ public partial class ChatComponent : MSGComponentBase
     /// message lives in the composer only. It becomes a disappearing chat of its own then. Starting a
     /// new chat in a workspace creates the thread right away instead, see unstoredChat. That one is
     /// stored with whatever its draft holds, and also while a transcript is still being made for it,
-    /// since the transcript would otherwise arrive in a chat which is nowhere.<br/><br/>
+    /// since the transcript would otherwise arrive in a chat which is nowhere. Only when its workspace
+    /// was deleted meanwhile, the chat goes along with it.<br/><br/>
     ///
     /// The composer is cleared before the chat is stored, since the message has moved into its chat.
     /// Leaving twice in a row, e.g., with two quick clicks, therefore stores it only once.
@@ -1261,7 +1262,13 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.Clear();
         }
         else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
+        {
+            // Deleting the workspace took the chat along. Storing it would bring the workspace back, as an unnamed one:
+            if (!WorkspaceBehaviour.IsWorkspaceExisting(unstoredChatBeingLeft.WorkspaceId))
+                return;
+
             chat = unstoredChatBeingLeft;
+        }
         else
             return;
 
