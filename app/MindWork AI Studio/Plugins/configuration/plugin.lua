@@ -85,7 +85,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 -- 
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and LLMMAN
+--     -- Allowed values for Host are: LM_STUDIO, LLAMA_CPP, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 -- 
@@ -184,7 +184,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the transcription provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, WHISPER_CPP, and LLMMAN
+--     -- Allowed values for Host are: OLLAMA, VLLM, WHISPER_CPP, and LLMMAN
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --
@@ -221,7 +221,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the embedding provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and LLMMAN
+--     -- Allowed values for Host are: LM_STUDIO, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 --
