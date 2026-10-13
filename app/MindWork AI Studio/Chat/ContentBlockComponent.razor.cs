@@ -89,8 +89,15 @@ public partial class ContentBlockComponent : MSGComponentBase
     [Parameter]
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
 
+    /// <summary>
+    /// Whether the user may change the messages of the chat right now, i.e., remove, edit, regenerate, or roll back.
+    /// </summary>
+    /// <remarks>
+    /// The chat answers false while an answer is being written for it, since every change to a message
+    /// would collide with the answer. Whoever passes none of these actions needs no answer here.
+    /// </remarks>
     [Parameter]
-    public Func<bool> RollbackEnabled { get; set; } = () => false;
+    public Func<bool> BlockActionsEnabled { get; set; } = () => false;
 
     /// <summary>
     /// What the export offers, used both as the label of the export button and as the title of
@@ -321,6 +328,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.HideContent);
         hash.Add(this.SettingsManager.IsDarkMode);
         hash.Add(this.RegenerateEnabled());
+        hash.Add(this.BlockActionsEnabled());
         hash.Add(this.Content.InitialRemoteWait);
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
@@ -733,7 +741,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task RemoveBlock()
     {
-        if (this.RemoveBlockFunc is null)
+        if (this.RemoveBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         var remove = await this.DialogService.ShowMessageBox(
@@ -793,7 +801,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task RegenerateBlock()
     {
-        if (this.RegenerateFunc is null)
+        if (this.RegenerateFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.AI)
@@ -811,7 +819,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private async Task RollbackBlock()
     {
-        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.RollbackEnabled())
+        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.BlockActionsEnabled())
             return;
 
         var rollback = await this.DialogService.ShowMessageBox(
@@ -826,7 +834,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task EditLastBlock()
     {
-        if (this.EditLastBlockFunc is null)
+        if (this.EditLastBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)
@@ -837,7 +845,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task EditLastUserBlock()
     {
-        if (this.EditLastUserBlockFunc is null)
+        if (this.EditLastUserBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)

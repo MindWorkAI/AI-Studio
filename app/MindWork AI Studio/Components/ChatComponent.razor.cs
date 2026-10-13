@@ -39,6 +39,17 @@ public partial class ChatComponent : MSGComponentBase
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
+
+    /// <summary>
+    /// Tells whether an answer is being written for the open chat, whenever that changes.
+    /// </summary>
+    /// <remarks>
+    /// For the parts of the chat page outside this component, such as the provider selection. The AI
+    /// job reports every part of an answer, and this component renders after each report. The page
+    /// learns only when an answer starts or ends, see OnAfterRenderAsync.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<bool> IsAnswerBeingWrittenChanged { get; set; }
     
     [Parameter]
     public Action<string> WorkspaceName { get; set; } = _ => { };
@@ -91,6 +102,7 @@ public partial class ChatComponent : MSGComponentBase
     private bool autoSaveEnabled;
     private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
+    private bool announcedAnswerBeingWritten;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
@@ -153,6 +165,11 @@ public partial class ChatComponent : MSGComponentBase
     /// Stores the open chat with the message being written, while chats are stored automatically.
     /// </summary>
     private ChatDraftAutosave? draftAutosave;
+
+    /// <summary>
+    /// The only way to change the messages of the open chat, which is locked while an answer is being written.
+    /// </summary>
+    private ChatBlockActions blockActions = null!;
 
     /// <summary>
     /// A new chat which has not reached the disk yet, or null.
@@ -292,6 +309,9 @@ public partial class ChatComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+
+        // Created before anything is awaited, because the first render may happen there already:
+        this.blockActions = new(chatId => this.AIJobService.IsChatGenerationActive(chatId));
 
         //
         // Leaving the chat page takes the composer along. Registered before anything is awaited, so
@@ -569,6 +589,20 @@ public partial class ChatComponent : MSGComponentBase
         this.previousInputForbidden = inputForbidden;
 
         //
+        // The page hears about an answer starting or ending here rather than with every report of the
+        // AI job, since a render of the page redraws the workspace tree. This component renders after
+        // every such report and after another chat was opened, so the page never misses a change. The
+        // first render reports in any case: the page may still hold what another instance of this
+        // component told it, e.g., before the workspaces were shown or hidden.
+        //
+        var isAnswerBeingWritten = this.IsCurrentChatStreaming;
+        if (firstRender || isAnswerBeingWritten != this.announcedAnswerBeingWritten)
+        {
+            this.announcedAnswerBeingWritten = isAnswerBeingWritten;
+            await this.IsAnswerBeingWrittenChanged.InvokeAsync(isAnswerBeingWritten);
+        }
+
+        //
         // Everything which can move the token count also renders this component: the selections in
         // the toolbar, the attachments and the composer all travel through an event callback whose
         // receiver is this component, and the streamed answer arrives as a message which already
@@ -756,6 +790,35 @@ public partial class ChatComponent : MSGComponentBase
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
 
     /// <summary>
+    /// Whether a chat template can be made from the open chat. While an answer is being written, the template would copy it unfinished.
+    /// </summary>
+    private bool CanThreadBecomeTemplate => this.CanThreadBeSaved && !this.IsCurrentChatStreaming;
+
+    /// <summary>
+    /// Whether the user may pick another profile, which the open chat carries from then on.
+    /// </summary>
+    /// <remarks>
+    /// Picking a profile replaces the thread with a copy which carries it. While an answer is being
+    /// written, the next update of the AI job puts the thread of the job back in place of that copy,
+    /// and the choice is lost.
+    /// </remarks>
+    private bool CanProfileBeChanged => this.currentChatTemplate.AllowProfileUsage && !this.IsCurrentChatStreaming;
+
+    /// <summary>
+    /// Whether the user may change the attachments of the message being written.
+    /// </summary>
+    /// <remarks>
+    /// Not while an answer is being written, just like the text of the message, and not while the
+    /// audio or video files of the chat are being transcribed.
+    /// </remarks>
+    private bool CanAttachFiles => !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
+    // The chat template locks the profile for good, an answer being written only until it is complete:
+    private string ProfileDisabledText => this.currentChatTemplate.AllowProfileUsage
+        ? T("Profile changes are locked while a response is running.")
+        : T("Profile usage is disabled according to your chat template settings.");
+
+    /// <summary>
     /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
     /// </summary>
     /// <remarks>
@@ -916,6 +979,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task ProfileWasChanged(Profile profile)
     {
+        if (!this.CanProfileBeChanged)
+            return;
+
         this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
 
         //
@@ -1013,6 +1079,22 @@ public partial class ChatComponent : MSGComponentBase
             return this.ChatThread.DataSourceOptions;
         
         return this.earlyDataSourceOptions;
+    }
+
+    /// <summary>
+    /// Takes over what the user changed in the data source selection.
+    /// </summary>
+    /// <remarks>
+    /// While an answer is being written, the selection is read-only and turns every change down
+    /// itself, since the answer reads the very options it shows. Checked here once more, so that the
+    /// chat never stores a change which reached it anyway.
+    /// </remarks>
+    private async Task DataSourceOptionsWereChanged(DataSourceOptions updatedOptions)
+    {
+        if (this.IsCurrentChatStreaming)
+            return;
+
+        await this.SetCurrentDataSourceOptions(updatedOptions);
     }
     
     private async Task SetCurrentDataSourceOptions(DataSourceOptions updatedOptions)
@@ -1152,7 +1234,8 @@ public partial class ChatComponent : MSGComponentBase
     /// message lives in the composer only. It becomes a disappearing chat of its own then. Starting a
     /// new chat in a workspace creates the thread right away instead, see unstoredChat. That one is
     /// stored with whatever its draft holds, and also while a transcript is still being made for it,
-    /// since the transcript would otherwise arrive in a chat which is nowhere.<br/><br/>
+    /// since the transcript would otherwise arrive in a chat which is nowhere. Only when its workspace
+    /// was deleted meanwhile, the chat goes along with it.<br/><br/>
     ///
     /// The composer is cleared before the chat is stored, since the message has moved into its chat.
     /// Leaving twice in a row, e.g., with two quick clicks, therefore stores it only once.
@@ -1179,7 +1262,13 @@ public partial class ChatComponent : MSGComponentBase
             this.ComposerState.Clear();
         }
         else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
+        {
+            // Deleting the workspace took the chat along. Storing it would bring the workspace back, as an unnamed one:
+            if (!WorkspaceBehaviour.IsWorkspaceExisting(unstoredChatBeingLeft.WorkspaceId))
+                return;
+
             chat = unstoredChatBeingLeft;
+        }
         else
             return;
 
@@ -1261,6 +1350,14 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+        //
+        // One answer at a time per chat. Checked before anything touches the chat or the composer:
+        // the AI job service would turn a second answer down only after the chat got its message and
+        // an empty answer, which then stays.
+        //
+        if (this.IsCurrentChatStreaming)
+            return;
+
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
@@ -1794,10 +1891,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task RemoveBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryRemove(this.ChatThread, block))
             return;
-        
-        this.ChatThread.Remove(block);
+
         this.hasUnsavedChanges = true;
         await this.SaveThread();
         this.StateHasChanged();
@@ -1805,13 +1901,12 @@ public partial class ChatComponent : MSGComponentBase
 
     private async Task RegenerateBlock(IContent aiBlock)
     {
-        if(this.ChatThread is null)
-            return;
-        
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
-        
-        this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
+
+        if (!this.blockActions.TryRemoveForRegenerate(this.ChatThread, aiBlock))
+            return;
+
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         
@@ -1820,11 +1915,8 @@ public partial class ChatComponent : MSGComponentBase
 
     private async Task RollbackBlock(IContent aiBlock)
     {
-        if (this.ChatThread is null || this.IsCurrentChatStreaming)
-            return;
-
         // Which parts of the thread a rollback resets and which it keeps is documented at RollBackTo:
-        if (!this.ChatThread.RollBackTo(aiBlock))
+        if (!this.blockActions.TryRollBack(this.ChatThread, aiBlock))
             return;
 
         // The rollback reset the AI-selected data sources, which the data source selection still shows:
@@ -1838,19 +1930,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private Task EditLastUserBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryEditLastUserBlock(this.ChatThread, block))
             return Task.CompletedTask;
 
-        if (block is not ContentText)
-            return Task.CompletedTask;
-
-        var lastBlock = this.ChatThread.Blocks.Last();
-        var lastBlockContent = lastBlock.Content;
-        if(lastBlockContent is null)
-            return Task.CompletedTask;
-
-        this.ChatThread.RemoveForEditing(block);
-        this.ChatThread.Remove(lastBlockContent);
         this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
@@ -1859,13 +1941,9 @@ public partial class ChatComponent : MSGComponentBase
 
     private Task EditLastBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryEditLastBlock(this.ChatThread, block))
             return Task.CompletedTask;
 
-        if (block is not ContentText)
-            return Task.CompletedTask;
-
-        this.ChatThread.RemoveForEditing(block);
         this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();

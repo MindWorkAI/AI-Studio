@@ -55,31 +55,31 @@
                 @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastUserBlock"/>
                     </MudTooltip>
                 }
                 @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.EditLastBlock"/>
                     </MudTooltip>
                 }
                 @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
                 {
                     <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled() || !this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
                     </MudTooltip>
                 }
                 @if (!this.IsLastContentBlock && this.Role is ChatRole.AI && this.RollbackFunc is not null)
                 {
                     <MudTooltip Text="@T("Roll back to this response")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.RollbackEnabled())" OnClick="@this.RollbackBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Restore" Color="Color.Default" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RollbackBlock"/>
                     </MudTooltip>
                 }
                 @if (this.RemoveBlockFunc is not null)
                 {
                     <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Disabled="@(!this.BlockActionsEnabled())" OnClick="@this.RemoveBlock"/>
                     </MudTooltip>
                 }
 

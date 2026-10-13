@@ -660,7 +660,7 @@ public static class WorkspaceBehaviour
         }
     }
 
-    public static async Task RemoveWorkspaceFromCacheAsync(Guid workspaceId)
+    private static async Task RemoveWorkspaceFromCacheAsync(Guid workspaceId)
     {
         await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
         try
@@ -816,6 +816,34 @@ public static class WorkspaceBehaviour
         }
     }
     
+    /// <summary>
+    /// Whether the given workspace exists on the disk.
+    /// </summary>
+    /// <remarks>
+    /// The temporary chats belong to no workspace, so for them, the empty ID, this is always true.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace to look for.</param>
+    public static bool IsWorkspaceExisting(Guid workspaceId) => workspaceId == Guid.Empty || Directory.Exists(Path.Join(WorkspaceRootDirectory, workspaceId.ToString()));
+
+    /// <summary>
+    /// Reads the IDs of the chats the given workspace holds on the disk.
+    /// </summary>
+    /// <param name="workspaceId">The workspace to read.</param>
+    /// <returns>The IDs of its chats; none when the workspace does not exist.</returns>
+    public static IReadOnlyList<Guid> ReadChatIdsOfWorkspace(Guid workspaceId)
+    {
+        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+        if (!Directory.Exists(workspacePath))
+            return [];
+
+        var chatIds = new List<Guid>();
+        foreach (var chatPath in Directory.EnumerateDirectories(workspacePath))
+            if (Guid.TryParse(Path.GetFileName(chatPath), out var chatId))
+                chatIds.Add(chatId);
+
+        return chatIds;
+    }
+
     public static bool IsChatExisting(LoadChat loadChat)
     {
         var chatPath = loadChat.WorkspaceId == Guid.Empty
@@ -1394,6 +1422,38 @@ public static class WorkspaceBehaviour
             semaphore.Release();
             ForgetChatSemaphore(workspaceId, chatId);
         }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Deletes the given workspace together with all of its chats, unless one of them is busy.
+    /// </summary>
+    /// <param name="workspaceId">The workspace to delete.</param>
+    /// <param name="isChatBusy">Whether an answer or a transcript is being made for the chat with the given ID.</param>
+    /// <returns>True when the workspace is gone, which includes it never having been there. False when a busy chat kept it.</returns>
+    /// <remarks>
+    /// The work on a busy chat stores the chat once more when it is done. That would create the
+    /// directory of the chat anew and the one of the workspace with it, which then comes back as an
+    /// unnamed workspace. Deleting all chats but the busy one would be no better: the user asked for
+    /// the workspace to go, not for some of its chats. Hence, a busy chat keeps the whole workspace.<br/><br/>
+    ///
+    /// Asking the user beforehand is up to the caller, and so is taking an open chat of the workspace
+    /// off the screen.
+    /// </remarks>
+    public static async Task<bool> DeleteWorkspaceAsync(Guid workspaceId, Func<Guid, bool> isChatBusy)
+    {
+        var chatIds = ReadChatIdsOfWorkspace(workspaceId);
+        if (chatIds.Any(isChatBusy))
+            return false;
+
+        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+        if (Directory.Exists(workspacePath))
+            Directory.Delete(workspacePath, true);
+
+        await RemoveWorkspaceFromCacheAsync(workspaceId);
+        foreach (var chatId in chatIds)
+            ForgetChatSemaphore(workspaceId, chatId);
 
         return true;
     }
