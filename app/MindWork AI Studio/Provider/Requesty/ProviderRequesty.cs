@@ -108,10 +108,11 @@ public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new
     /// Loads the managed policies and the full model catalog, and offers both as one list.
     /// </summary>
     /// <remarks>
-    /// Requesty lists its managed policies, such as "gpt-5-mini@eu", on a route of their own, and
-    /// the catalog does not contain them. Both lists are read before anything is reported, because
-    /// what is reported replaces everything this instance said before. When the managed route
-    /// fails, the catalog alone is still offered.
+    /// A managed policy, such as "claude-opus-5@eu", bundles several clouds which serve the same
+    /// model, and Requesty decides which of them answers a request. Requesty lists these policies on
+    /// a route of their own, and the catalog does not contain them. Both lists are read before
+    /// anything is reported, because what is reported replaces everything this instance said
+    /// before. When the managed route fails, the catalog alone is still offered.
     /// </remarks>
     /// <param name="storeType">Where the API key is stored.</param>
     /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
