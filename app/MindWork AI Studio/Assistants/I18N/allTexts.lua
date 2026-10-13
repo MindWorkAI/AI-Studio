@@ -5314,6 +5314,30 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTIONFIELD::T4209882371"] = "1 to
 -- {0} tools selected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTIONFIELD::T807707919"] = "{0} tools selected"
 
+-- The API key could not be stored for: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T1278303088"] = "The API key could not be stored for: {0}"
+
+-- The API key was stored, but could not be checked, because the provider did not answer as expected. If the AI providers do not work, please correct the key in the settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T1712559470"] = "The API key was stored, but could not be checked, because the provider did not answer as expected. If the AI providers do not work, please correct the key in the settings."
+
+-- Your organization configured AI providers for you, which need your personal API key. Please enter it here.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T200981583"] = "Your organization configured AI providers for you, which need your personal API key. Please enter it here."
+
+-- The API key was not accepted. Please check the key and try again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T2120297074"] = "The API key was not accepted. Please check the key and try again."
+
+-- The API key was accepted and stored. You can use your AI providers now.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T2443769856"] = "The API key was accepted and stored. You can use your AI providers now."
+
+-- Your API key is missing
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T2932314363"] = "Your API key is missing"
+
+-- API key
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T3924805356"] = "API key"
+
+-- Check and save API key
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::USERAPIKEYPROMPT::T4109992116"] = "Check and save API key"
+
 -- You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1015366320"] = "You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation."
 
