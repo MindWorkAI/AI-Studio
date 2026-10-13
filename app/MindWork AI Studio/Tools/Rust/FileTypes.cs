@@ -71,6 +71,10 @@ public static class FileTypes
     // The legacy binary ".ppt" is missing on purpose: AI Studio has no reader for it, so offering
     // it would only let users attach a file which cannot be read.
     public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "pptx", "odp");
+
+    // What the slide planner takes its layouts from, and what it writes:
+    public static readonly FileTypeFilter POWER_POINT_TEMPLATE = FileTypeFilter.Leaf(TB("PowerPoint template"), "pptx", "potx");
+    public static readonly FileTypeFilter POWER_POINT_PRESENTATION = FileTypeFilter.Leaf("PowerPoint", "pptx");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
 

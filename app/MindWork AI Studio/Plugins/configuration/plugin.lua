@@ -553,6 +553,29 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
+-- Configure the PowerPoint template of the Slide Planner Assistant.
+-- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
+-- can create a PowerPoint file from the result. Without a template, the assistant plans an
+-- outline only. The template applies whether preselection is enabled or not. The path must be
+-- readable on every machine, e.g., on a network share or in a folder your software
+-- distribution fills; for Flatpak installations, it must be readable inside the sandbox.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
+--
+-- Configure the footer text for every slide whose layout has a footer, e.g., the name of
+-- the organization. Leave it empty for no footer. Requires preselection to be enabled.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
+--
+-- Configure whether every chapter moves on to the next color variant of the template. A
+-- template carries variants when it holds each layout several times, with names differing
+-- in their first or last word only, e.g., "A Content" and "B Content". Requires
+-- preselection to be enabled.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedChangeVariantPerChapter"] = false
+--
+-- Allow users to choose another template or change the defaults locally.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedChangeVariantPerChapter.AllowUserOverride"] = true
+
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions"] = true

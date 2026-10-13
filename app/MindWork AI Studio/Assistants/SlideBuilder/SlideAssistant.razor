@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_SLIDE_BUILDER)]
+@using AIStudio.Tools.Rust
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSlideBuilder>
 
 <MudText Typo="Typo.h5"  Class="mb-1 mt-3"> @T("Content to derive slide from")</MudText>
@@ -66,4 +67,33 @@
 <EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name())" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
 <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name())" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />
 <EnumSelection T="AudienceExpertise" NameFunc="@(expertise => expertise.Name())" @bind-Value="@this.selectedAudienceExpertise" Icon="@Icons.Material.Filled.School" Label="@T("Audience expertise")" />
+
+<MudText Typo="Typo.h5" Class="mb-1 mt-6"> @T("PowerPoint template")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only.")
+</MudJustifiedText>
+<SelectFile File="@this.templatePath" FileChanged="@this.OnTemplateChanged" Label="@T("PowerPoint template")" FileDialogTitle="@T("Select a PowerPoint template")" Filter="@([FileTypes.POWER_POINT_TEMPLATE])" Validation="@this.ValidateTemplate" Disabled="@this.IsTemplateLocked"/>
+@if (!string.IsNullOrWhiteSpace(this.templatePath) && !this.IsTemplateLocked)
+{
+    <MudButton StartIcon="@Icons.Material.Filled.LayersClear" Variant="Variant.Outlined" OnClick="@this.UseNoTemplate" Class="mb-3">
+        @T("Use no template")
+    </MudButton>
+}
+
+@if (this.template is not null)
+{
+    @if (this.template.VariantLabels.Count > 0)
+    {
+        <MudSelect T="string" @bind-Value="@this.variantLabel" Label="@T("Color variant")" HelperText="@T("Your template carries its layouts in several colors. Choose the one the presentation starts with.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Palette" Class="mb-3">
+            @foreach (var label in this.template.VariantLabels)
+            {
+                <MudSelectItem T="string" Value="@label">@label</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSwitch T="bool" @bind-Value="@this.changeVariantPerChapter" Label="@T("Change the color variant with every chapter")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+    }
+
+    <MudTextField T="string" @bind-Text="@this.footerText" Label="@T("(Optional) Footer")" HelperText="@T("Shown on every slide whose layout has a footer, e.g., your name, institute, and date.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ShortText" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+}
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
