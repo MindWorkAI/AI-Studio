@@ -40,7 +40,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                            {
                                // Build the list of messages. The image format depends on the host:
                                // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
-                               // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
+                               // - LM Studio, vLLM, llama.cpp, and llmman use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
                                var messages = host switch
                                {
                                    Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
