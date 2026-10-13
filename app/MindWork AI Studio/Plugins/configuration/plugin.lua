@@ -184,7 +184,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the transcription provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and WHISPER_CPP
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, WHISPER_CPP, and LLMMAN
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --

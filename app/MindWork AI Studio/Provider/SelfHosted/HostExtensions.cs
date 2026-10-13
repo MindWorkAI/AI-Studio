@@ -76,12 +76,12 @@ public static class HostExtensions
             case Host.OLLAMA:
             case Host.VLLM:
             case Host.WHISPER_CPP:
+            case Host.LLMMAN:
                 return true;
-            
+
             default:
             case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
-            case Host.LLMMAN:
                 return false;
         }
     }
