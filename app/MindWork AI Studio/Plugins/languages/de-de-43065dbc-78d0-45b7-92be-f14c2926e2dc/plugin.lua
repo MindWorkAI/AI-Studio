@@ -3666,6 +3666,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "zuzüglic
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Wähle zuerst einen Anbieter aus"
 
+-- Profile changes are locked while a response is running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3662116565"] = "Profiländerungen sind gesperrt, solange eine Antwort generiert wird."
+
 -- Start new chat in workspace "{0}"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Neuen Chat im Arbeitsbereich '{0}' starten"
 

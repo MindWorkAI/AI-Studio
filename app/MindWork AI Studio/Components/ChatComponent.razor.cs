@@ -764,6 +764,26 @@ public partial class ChatComponent : MSGComponentBase
     private bool CanThreadBeCopied => this.CanThreadBeSaved && !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
 
     /// <summary>
+    /// Whether a chat template can be made from the open chat. While an answer is being written, the template would copy it unfinished.
+    /// </summary>
+    private bool CanThreadBecomeTemplate => this.CanThreadBeSaved && !this.IsCurrentChatStreaming;
+
+    /// <summary>
+    /// Whether the user may pick another profile, which the open chat carries from then on.
+    /// </summary>
+    /// <remarks>
+    /// Picking a profile replaces the thread with a copy which carries it. While an answer is being
+    /// written, the next update of the AI job puts the thread of the job back in place of that copy,
+    /// and the choice is lost.
+    /// </remarks>
+    private bool CanProfileBeChanged => this.currentChatTemplate.AllowProfileUsage && !this.IsCurrentChatStreaming;
+
+    // The chat template locks the profile for good, an answer being written only until it is complete:
+    private string ProfileDisabledText => this.currentChatTemplate.AllowProfileUsage
+        ? T("Profile changes are locked while a response is running.")
+        : T("Profile usage is disabled according to your chat template settings.");
+
+    /// <summary>
     /// Whether the open chat can move into a workspace, which is exactly when the workspace tree offers it.
     /// </summary>
     /// <remarks>
@@ -924,6 +944,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task ProfileWasChanged(Profile profile)
     {
+        if (!this.CanProfileBeChanged)
+            return;
+
         this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
 
         //

@@ -3666,6 +3666,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3619858297"] = "plus {0} 
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a provider first"
 
+-- Profile changes are locked while a response is running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3662116565"] = "Profile changes are locked while a response is running."
+
 -- Start new chat in workspace "{0}"
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Start new chat in workspace \"{0}\""
 
