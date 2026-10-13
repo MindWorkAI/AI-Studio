@@ -584,6 +584,14 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
 --
+-- Configure whether the chat asks for feedback after an answer.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.FeedbackEnabled"] = true
+--
+-- Configure the feedback server which receives the answers as JSON via HTTP POST.
+-- It must be an absolute http or https address.
+-- CONFIG["SETTINGS"]["DataChat.FeedbackEndpoint"] = "https://feedback.example.org/feedback"
+--
 --
 -- Configure default data source options for new chats.
 --
