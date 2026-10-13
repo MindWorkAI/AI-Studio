@@ -19,7 +19,6 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
     private const string RESULT_FILE_SUFFIX = "_result";
-    private const string TRANSCRIPT_FILE_SUFFIX = ".transcript.md";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
 
@@ -102,7 +101,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string inputDirectory = string.Empty;
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-    private bool includeSubdirectories;
+    private bool includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
+    private bool includeHiddenSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
     private string freePrompt = string.Empty;
     private string importedPrompt = string.Empty;
@@ -178,7 +178,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.inputDirectory = string.Empty;
             this.outputDirectory = string.Empty;
             this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
-            this.includeSubdirectories = false;
+            this.includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
+            this.includeHiddenSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
             this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
             this.freePrompt = string.Empty;
             this.promptFilePath = string.Empty;
@@ -198,6 +199,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputDirectory = settings.OutputDirectory;
         this.filePatterns = settings.FilePatterns;
         this.includeSubdirectories = settings.IncludeSubdirectories;
+        this.includeHiddenSubdirectories = settings.IncludeHiddenSubdirectories;
         this.promptSource = settings.PromptSource;
         this.freePrompt = settings.FreePrompt;
         this.promptFilePath = settings.PromptFilePath;

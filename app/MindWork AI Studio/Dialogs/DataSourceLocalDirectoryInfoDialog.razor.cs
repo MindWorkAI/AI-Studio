@@ -32,7 +32,17 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
         
         if (this.directoryInfo.Exists)
         {
-            this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token);
+            var filePatterns = FileNamePatterns.Parse(this.DataSource.EffectiveFilePatterns);
+            this.directorySizeTask = this.directoryInfo.DetermineContentSize(
+                this.UpdateDirectorySize,
+                this.UpdateDirectoryFiles,
+                this.UpdateFileList,
+                MAX_FILES_TO_SHOW,
+                this.DirectoryOperationDone,
+                this.cts.Token,
+                file => FileNamePatterns.Matches(file.FullName, filePatterns),
+                this.DataSource.IncludeSubdirectories,
+                this.DataSource.IncludeHiddenSubdirectories);
             this.refreshTimer.Elapsed += (_, _) => this.InvokeAsync(this.StateHasChanged);
             this.refreshTimer.Start();
         }

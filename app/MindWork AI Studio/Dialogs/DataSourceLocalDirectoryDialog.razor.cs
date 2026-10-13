@@ -62,6 +62,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
+    private string dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
+    private bool dataIncludeSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_SUBDIRECTORIES;
+    private bool dataIncludeHiddenSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
     private int dataMaxChunkTokenLength;
     private int dataChunkOverlapTokenLength = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     private ushort dataMaxMatches = 10;
@@ -113,6 +116,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataDescription = this.DataSource.Description;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
+            this.dataFilePatterns = this.DataSource.EffectiveFilePatterns;
+            this.dataIncludeSubdirectories = this.DataSource.IncludeSubdirectories;
+            this.dataIncludeHiddenSubdirectories = this.DataSource.IncludeHiddenSubdirectories;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
@@ -184,6 +190,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // Kept out of reach of the form while the source is locked, so a stale field cannot point an
         // indexed data source somewhere else:
         Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
+        FilePatterns = this.NormalizeFilePatterns(),
+        IncludeSubdirectories = this.dataIncludeSubdirectories,
+        IncludeHiddenSubdirectories = this.dataIncludeHiddenSubdirectories,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
@@ -215,6 +224,8 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     }
     
     private void Cancel() => this.MudDialog.Cancel();
+
+    private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

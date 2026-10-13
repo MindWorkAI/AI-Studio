@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 
 namespace AIStudio.Tools.Services.Indexing;
 
@@ -99,7 +100,9 @@ internal sealed partial class FileSourceIndexer
         {
             var watcher = new FileSystemWatcher(configuration.RootPath)
             {
-                Filter = configuration.Filter,
+                // Filtering in managed code keeps rename events reliable: a native filter for one
+                // file may suppress the event when that file is renamed to a different name.
+                Filter = "*",
                 IncludeSubdirectories = configuration.IncludeSubdirectories,
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Size,
             };
@@ -227,7 +230,7 @@ internal sealed partial class FileSourceIndexer
         }
     }
 
-    private static bool IsRelevantWatcherEvent(DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
+    internal static bool IsRelevantWatcherEvent(DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
     {
         if (args is RenamedEventArgs renamedArgs)
         {
@@ -238,7 +241,7 @@ internal sealed partial class FileSourceIndexer
         return IsRelevantWatcherPath(configuration, args.FullPath, args.ChangeType);
     }
 
-    private static bool IsRelevantWatcherPath(DataSourceWatcherConfiguration configuration, string path, WatcherChangeTypes changeType)
+    internal static bool IsRelevantWatcherPath(DataSourceWatcherConfiguration configuration, string path, WatcherChangeTypes changeType)
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
@@ -247,7 +250,13 @@ internal sealed partial class FileSourceIndexer
         if (string.IsNullOrWhiteSpace(fileName))
             return true;
 
-        if (!configuration.IncludeSubdirectories && !string.Equals(fileName, configuration.Filter, StringComparison.OrdinalIgnoreCase))
+        if (configuration.TargetFileName is { } targetFileName)
+            return string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase);
+
+        if (configuration.IncludeSubdirectories
+            && !configuration.IncludeHiddenSubdirectories
+            && changeType is not WatcherChangeTypes.Deleted and not WatcherChangeTypes.Renamed
+            && DirectoryFileTraversal.IsInHiddenSubdirectory(configuration.RootPath, path))
             return false;
 
         if (Directory.Exists(path))
@@ -255,6 +264,22 @@ internal sealed partial class FileSourceIndexer
 
         if (IsSkippedRagFileName(fileName))
             return false;
+
+        if (configuration.FilePatterns is { } patterns)
+        {
+            // When the media itself is selected, its generated Markdown is only the text backing
+            // that document. Ignoring its writes avoids a redundant watcher run and a duplicate
+            // document. A transcript can still be indexed on its own when only *.md is selected.
+            if (PersistentMediaTranscript.IsCoveredArtifact(path, patterns))
+                return false;
+
+            if (FileNamePatterns.Matches(path, patterns))
+                return true;
+
+            // A deleted path can have been a directory, but FileSystemWatcher does not tell us
+            // that after it is gone. Refresh conservatively so files below it leave the index.
+            return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed;
+        }
 
         if (IsSupportedRagFilePath(path))
             return true;
@@ -267,23 +292,31 @@ internal sealed partial class FileSourceIndexer
     {
         DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path) => new DataSourceWatcherConfiguration(
             localDirectory.Path,
-            "*.*",
-            true),
+            localDirectory.IncludeSubdirectories,
+            localDirectory.IncludeHiddenSubdirectories,
+            FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns)),
         DataSourceLocalFile localFile when File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
             Path.GetDirectoryName(localFile.FilePath)!,
-            Path.GetFileName(localFile.FilePath),
-            false),
+            false,
+            TargetFileName: Path.GetFileName(localFile.FilePath)),
         _ => null,
     };
 
-    private static bool IsSameWatchConfiguration(DataSourceWatcherConfiguration left, DataSourceWatcherConfiguration right)
+    internal static bool IsSameWatchConfiguration(DataSourceWatcherConfiguration left, DataSourceWatcherConfiguration right)
     {
         return left.IncludeSubdirectories == right.IncludeSubdirectories
+               && left.IncludeHiddenSubdirectories == right.IncludeHiddenSubdirectories
                && string.Equals(left.RootPath, right.RootPath, StringComparison.OrdinalIgnoreCase)
-               && string.Equals(left.Filter, right.Filter, StringComparison.OrdinalIgnoreCase);
+               && string.Equals(left.TargetFileName, right.TargetFileName, StringComparison.OrdinalIgnoreCase)
+               && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns);
     }
 
-    private sealed record DataSourceWatcherConfiguration(string RootPath, string Filter, bool IncludeSubdirectories);
+    internal sealed record DataSourceWatcherConfiguration(
+        string RootPath,
+        bool IncludeSubdirectories,
+        bool IncludeHiddenSubdirectories = false,
+        string? TargetFileName = null,
+        IReadOnlyList<string>? FilePatterns = null);
 
     private sealed record DataSourceWatcherRegistration(FileSystemWatcher Watcher, DataSourceWatcherConfiguration Configuration);
 }

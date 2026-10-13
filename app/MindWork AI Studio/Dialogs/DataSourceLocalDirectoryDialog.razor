@@ -43,7 +43,7 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
+                @T("Select a root directory for this data source.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {
@@ -71,6 +71,33 @@
                 />
             }
 
+            <MudTextSwitch
+                Label="@T("Include subfolders?")"
+                Value="@this.dataIncludeSubdirectories"
+                ValueChanged="@(value => this.dataIncludeSubdirectories = value)"
+                LabelOn="@T("Yes, index files in subfolders as well")"
+                LabelOff="@T("No, only index files in the selected folder")"
+            />
+
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("Select the file patterns this data source should index. Matching audio and video files without a reusable transcript are sent to your configured transcription provider and stored as Markdown transcripts; without a usable transcription provider, those files are skipped.")
+            </MudJustifiedText>
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataFilePatterns"
+                Label="@T("File patterns")"
+                Class="mb-3"
+                Immediate="@true"
+                Validation="@this.dataSourceValidation.ValidateFilePatterns"
+                HelperText="@T("Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :text: for every readable text file, or * to inspect every file including audio and video.")"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.FilterAlt"
+                AdornmentColor="Color.Info"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+            />
+
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
             </MudJustifiedText>
@@ -94,7 +121,7 @@
             {
                 if (this.SelectedCloudEmbedding)
                 {
-                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" IncludeSubdirectories="@this.dataIncludeSubdirectories" IncludeHiddenSubdirectories="@this.dataIncludeHiddenSubdirectories" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {
@@ -121,6 +148,16 @@
                 </MudButton>
                 <MudDivider/>
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    @if (this.dataIncludeSubdirectories)
+                    {
+                        <MudTextSwitch
+                            Label="@T("Include hidden subfolders?")"
+                            Value="@this.dataIncludeHiddenSubdirectories"
+                            ValueChanged="@(value => this.dataIncludeHiddenSubdirectories = value)"
+                            LabelOn="@T("Yes, index files in hidden subfolders as well")"
+                            LabelOff="@T("No, ignore hidden subfolders")"
+                        />
+                    }
                     @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
                     {
                         <MudTextField

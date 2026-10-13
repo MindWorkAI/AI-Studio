@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Tools.RAG;
@@ -10,6 +12,13 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 public readonly record struct DataSourceLocalDirectory : IInternalDataSource
 {
+    public const string DEFAULT_FILE_PATTERNS = "*";
+
+    // Folder data sources were recursive before this option existed. Keeping true as the
+    // deserialization default preserves every document of existing data sources.
+    public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = true;
+    public const bool DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES = false;
+
     public DataSourceLocalDirectory()
     {
     }
@@ -65,4 +74,30 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     /// The path to the directory.
     /// </summary>
     public string Path { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Semicolon-separated file-name patterns which decide which files below <see cref="Path"/>
+    /// are considered for indexing.
+    /// </summary>
+    public string FilePatterns { get; init; } = DEFAULT_FILE_PATTERNS;
+
+    /// <summary>
+    /// Whether files in folders below <see cref="Path"/> are considered for indexing.
+    /// </summary>
+    public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
+
+    /// <summary>
+    /// Whether files in hidden folders below <see cref="Path"/> are considered for indexing.
+    /// Has no effect when <see cref="IncludeSubdirectories"/> is false.
+    /// </summary>
+    public bool IncludeHiddenSubdirectories { get; init; } = DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
+
+    /// <summary>
+    /// The patterns used at runtime. An invalid value can only come from malformed or hand-edited
+    /// settings; treating it like the legacy default prevents an accidental removal of the index.
+    /// </summary>
+    [JsonIgnore]
+    public string EffectiveFilePatterns => FileNamePatterns.IsValid(this.FilePatterns)
+        ? this.FilePatterns
+        : DEFAULT_FILE_PATTERNS;
 }

@@ -1,3 +1,5 @@
+using System.Text;
+
 using AIStudio.Tools.PluginSystem;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -10,6 +12,12 @@ namespace AIStudio.Tools.Rust;
 /// </summary>
 public static class FileTypes
 {
+    private const int TEXT_PROBE_SIZE = 8_192;
+
+    private static readonly byte[] UTF8_BOM = [0xEF, 0xBB, 0xBF];
+    private static readonly byte[] UTF16_BE_BOM = [0xFE, 0xFF];
+    private static readonly byte[] UTF16_LE_BOM = [0xFF, 0xFE];
+
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypes).Namespace, nameof(FileTypes));
     
     public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
@@ -57,7 +65,15 @@ public static class FileTypes
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter MARKDOWN    = FileTypeFilter.Leaf("Markdown", "md");
-    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+
+    /// <summary>
+    /// Text whose file name or extension is not known in advance, the native picker therefore shows every file; 
+    /// the runtime's text reader performs the authoritative extraction after this type has recognized text-like content.
+    /// </summary>
+    public static readonly FileTypeFilter READABLE_TEXT = FileTypeFilter.Leaf(TB("Readable text"));
+
+    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Composite(TB("Text"), ["txt", "md", "rtf"], READABLE_TEXT);
+
     public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
     public static readonly FileTypeFilter CSV         = FileTypeFilter.Leaf("CSV", "csv");
     public static readonly FileTypeFilter TSV         = FileTypeFilter.Leaf("TSV", "tsv");
@@ -158,7 +174,8 @@ public static class FileTypes
 
     /// <summary>
     /// Validates a file path against the provided filters.
-    /// Supports extension-based matching and source-like file names (e.g. Dockerfile).
+    /// Supports extension-based matching, source-like file names (e.g. Dockerfile), and readable
+    /// text recognized directly from file contents.
     /// </summary>
     public static bool IsAllowedPath(string filePath, params FileTypeFilter[]? types)
     {
@@ -183,7 +200,123 @@ public static class FileTypes
             if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
                 return true;
         }
+
+        if (types.Any(type => type.ContainsType(READABLE_TEXT)) && IsReadableTextFile(filePath))
+            return true;
         
         return false;
+    }
+
+    /// <summary>
+    /// Determines from a small content sample whether a file uses a recognizable text encoding
+    /// and does not resemble binary data.
+    /// </summary>
+    private static bool IsReadableTextFile(string filePath)
+    {
+        try
+        {
+            using var stream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete,
+                TEXT_PROBE_SIZE,
+                FileOptions.SequentialScan);
+
+            var buffer = new byte[TEXT_PROBE_SIZE];
+            var length = 0;
+            while (length < buffer.Length)
+            {
+                var read = stream.Read(buffer, length, buffer.Length - length);
+                if (read == 0)
+                    break;
+
+                length += read;
+            }
+
+            if (length == 0)
+                return false;
+
+            return IsReadableText(buffer.AsSpan(0, length));
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (DecoderFallbackException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsReadableText(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.StartsWith(UTF8_BOM))
+            return IsReadableText(bytes[UTF8_BOM.Length..], new UTF8Encoding(true, true));
+
+        if (bytes.StartsWith(UTF16_BE_BOM))
+            return IsReadableText(bytes[UTF16_BE_BOM.Length..], new UnicodeEncoding(true, true, true));
+
+        if (bytes.StartsWith(UTF16_LE_BOM))
+            return IsReadableText(bytes[UTF16_LE_BOM.Length..], new UnicodeEncoding(false, true, true));
+
+        if (bytes.Contains((byte)0))
+            return false;
+
+        try
+        {
+            return IsReadableText(bytes, new UTF8Encoding(false, true));
+        }
+        catch (DecoderFallbackException)
+        {
+            // Legacy single-byte encodings can represent every byte. Control bytes are therefore
+            // the useful distinction between an encoded text file and arbitrary binary content.
+            return HasAcceptableControlByteRatio(bytes);
+        }
+    }
+
+    private static bool IsReadableText(ReadOnlySpan<byte> bytes, Encoding encoding)
+    {
+        var characters = new char[encoding.GetMaxCharCount(bytes.Length)];
+        var decoder = encoding.GetDecoder();
+        decoder.Convert(bytes, characters, false, out _, out var charactersUsed, out _);
+
+        return charactersUsed > 0 && HasAcceptableControlCharacterRatio(characters.AsSpan(0, charactersUsed));
+    }
+
+    private static bool HasAcceptableControlByteRatio(ReadOnlySpan<byte> bytes)
+    {
+        var controls = 0;
+        foreach (var value in bytes)
+        {
+            if ((value < 0x20 && value != (byte)'\t' && value != (byte)'\n' && value != (byte)'\r' && value != 0x0C) || value == 0x7F)
+                controls++;
+        }
+
+        return controls * 100 <= bytes.Length;
+    }
+
+    private static bool HasAcceptableControlCharacterRatio(ReadOnlySpan<char> characters)
+    {
+        var controls = 0;
+        foreach (var character in characters)
+        {
+            if (char.IsControl(character) && character != '\t' && character != '\n' && character != '\r' && character != '\f')
+                controls++;
+        }
+
+        return controls * 100 <= characters.Length;
     }
 }

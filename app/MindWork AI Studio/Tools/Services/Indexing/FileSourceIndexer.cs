@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
@@ -27,9 +28,10 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
 /// <param name="guardService">The prompt injection filter, whose findings are reported once per run.</param>
+/// <param name="mediaTranscriptionService">Transcribes selected audio and video files.</param>
 /// <param name="textChunker">Cuts the text of a file into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
@@ -40,7 +42,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         INDEXABLE,
         EXCLUDED,
-        UNSUPPORTED,
     }
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
@@ -56,7 +57,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var manifest = context.Manifest;
 
-        var inputFiles = this.GetInputFiles(dataSource);
+        var inputFiles = this.GetInputFiles(dataSource, manifest);
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
 
@@ -167,7 +168,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 continue;
             }
 
-            var document = this.CreateFileDocument(context, dataSource, file, fingerprint);
+            var transcriptReuse = existingRecord is null
+                ? PersistentMediaTranscript.Reuse.CURRENT_SOURCE
+                : PersistentMediaTranscript.Reuse.NEVER;
+            var document = this.CreateFileDocument(context, dataSource, file, fingerprint, transcriptReuse);
             var reportBlockProgress = progress.BeginDocument(document);
 
             try
@@ -247,13 +251,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     }
 
     /// <summary>
-    /// Whether a file has a type whose text can be indexed.
+    /// Whether a file has a type whose text can be indexed or transcribed.
     /// </summary>
     /// <param name="filePath">The path of the file.</param>
-    /// <returns>True for every document type the runtime can read.</returns>
+    /// <returns>True for every document type the runtime can read and for transcribable media.</returns>
     private static bool IsSupportedRagFilePath(string filePath)
     {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO);
     }
 
     private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, IReadOnlyCollection<FileInfo> indexedFiles, CancellationToken token)
@@ -343,17 +347,52 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             : string.Join("; ", reasons);
     }
 
-    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, PersistentMediaTranscript.Reuse transcriptReuse, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = DataSourceEmbeddingService.GetChunkingOptions(dataSource, embeddingProvider);
-        var strategy = TextChunker.GetStrategyForFile(filePath);
-        var content = await ExtractedFileText.ReadAsync(rustService, filePath, embeddingProvider, null, token);
+        var contentPath = filePath;
+        if (PersistentMediaTranscript.IsMediaPath(filePath))
+        {
+            var transcription = await PersistentMediaTranscript.ReadOrCreateAsync(mediaTranscriptionService, filePath, transcriptReuse, logger, token);
+            if (transcription.Status is MediaTranscriptionResultStatus.CANCELLED)
+                throw new OperationCanceledException(token);
+
+            if (transcription.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
+                throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, transcription.UserMessage);
+
+            if (transcription.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
+            {
+                if (IsPermanentMediaFailure(transcription.ErrorCode))
+                    throw new FileExtractionException(FileExtractionErrorCode.UNSUPPORTED, transcription.UserMessage);
+
+                throw new IOException(transcription.UserMessage);
+            }
+
+            contentPath = PersistentMediaTranscript.GetFilePath(filePath);
+        }
+
+        // Reading the generated Markdown through the runtime gives media transcripts the same
+        // prompt-injection filtering as every other indexed document.
+        var strategy = TextChunker.GetStrategyForFile(contentPath);
+        var content = await ExtractedFileText.ReadAsync(rustService, contentPath, embeddingProvider, null, token);
 
         await foreach (var chunk in textChunker.SplitAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
     }
 
-    private FileEnumerationResult GetInputFiles(IDataSource dataSource)
+    private static bool IsPermanentMediaFailure(MediaJobErrorCode? code) => code is
+        MediaJobErrorCode.UNKNOWN_FORMAT
+        or MediaJobErrorCode.UNSAFE_FILE
+        or MediaJobErrorCode.NOT_MEDIA
+        or MediaJobErrorCode.UNSUPPORTED_CONTAINER
+        or MediaJobErrorCode.NO_AUDIO_TRACK
+        or MediaJobErrorCode.UNSUPPORTED_CODEC
+        or MediaJobErrorCode.INVALID_AUDIO_PARAMETERS
+        or MediaJobErrorCode.INVALID_OPUS_HEADER
+        or MediaJobErrorCode.UNSUPPORTED_OPUS_MAPPING
+        or MediaJobErrorCode.DAMAGED_CONTAINER;
+
+    private FileEnumerationResult GetInputFiles(IDataSource dataSource, DataSourceEmbeddingManifest manifest)
     {
         var result = new FileEnumerationResult();
 
@@ -361,7 +400,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                switch (this.GetRagFileIndexingDecision(file))
+                switch (this.GetRagFileIndexingDecision(file, manifest))
                 {
                     case RagFileIndexingDecision.INDEXABLE:
                         result.Files.Add(file);
@@ -370,16 +409,12 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     case RagFileIndexingDecision.EXCLUDED:
                         logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
                         break;
-
-                    default:
-                        result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' has a type AI Studio cannot index."), localFile.FilePath));
-                        break;
                 }
 
                 return result;
 
             case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
-                this.EnumerateAccessibleFiles(localDirectory.Path, result);
+                this.EnumerateAccessibleFiles(localDirectory, manifest, result);
                 return result;
         }
 
@@ -397,63 +432,51 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return result;
     }
 
-    private void EnumerateAccessibleFiles(string rootPath, FileEnumerationResult result)
+    private void EnumerateAccessibleFiles(DataSourceLocalDirectory dataSource, DataSourceEmbeddingManifest manifest, FileEnumerationResult result)
     {
-        var pendingDirectories = new Stack<string>();
-        pendingDirectories.Push(rootPath);
-
-        while (pendingDirectories.Count > 0)
+        var patterns = FileNamePatterns.Parse(dataSource.EffectiveFilePatterns);
+        foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(
+                     dataSource.Path,
+                     dataSource.IncludeSubdirectories,
+                     dataSource.IncludeHiddenSubdirectories,
+                     reportInaccessibleDirectory: (directoryPath, exception) =>
+                     {
+                         logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
+                         result.AddFailure(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
+                     }))
         {
-            var currentPath = pendingDirectories.Pop();
-            IEnumerable<string> subDirectories;
-            IEnumerable<string> files;
+            if (!FileNamePatterns.Matches(filePath, patterns))
+                continue;
 
+            FileInfo fileInfo;
             try
             {
-                subDirectories = Directory.EnumerateDirectories(currentPath);
-                files = Directory.EnumerateFiles(currentPath);
+                fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists)
+                    continue;
             }
             catch (Exception exception)
             {
-                logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
-                result.AddFailure(currentPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), currentPath));
+                logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
+                result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
                 continue;
             }
 
-            foreach (var filePath in files)
+            if (PersistentMediaTranscript.IsCoveredArtifact(fileInfo.FullName, patterns))
             {
-                FileInfo fileInfo;
-                try
-                {
-                    fileInfo = new FileInfo(filePath);
-                    if (!fileInfo.Exists)
-                        continue;
-                }
-                catch (Exception exception)
-                {
-                    logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                    result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
-                    continue;
-                }
-
-                switch (this.GetRagFileIndexingDecision(fileInfo))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(fileInfo);
-                        break;
-
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
-                        break;
-                }
+                logger.LogDebug("Skipping generated transcript '{FilePath}' because its media file is indexed as the document.", fileInfo.FullName);
+                continue;
             }
 
-            foreach (var subDirectory in subDirectories)
+            switch (this.GetRagFileIndexingDecision(fileInfo, manifest))
             {
-                if (this.IsSkippedRagDirectory(subDirectory))
-                    continue;
+                case RagFileIndexingDecision.INDEXABLE:
+                    result.Files.Add(fileInfo);
+                    break;
 
-                pendingDirectories.Push(subDirectory);
+                case RagFileIndexingDecision.EXCLUDED:
+                    logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
+                    break;
             }
         }
     }
@@ -469,7 +492,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
     }
 
-    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
+    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file, DataSourceEmbeddingManifest manifest)
     {
         if (this.IsSkippedRagFile(file))
             return RagFileIndexingDecision.EXCLUDED;
@@ -477,9 +500,28 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
             return RagFileIndexingDecision.EXCLUDED;
 
-        return IsSupportedRagFilePath(file.FullName)
-            ? RagFileIndexingDecision.INDEXABLE
-            : RagFileIndexingDecision.UNSUPPORTED;
+        if (PersistentMediaTranscript.IsMediaPath(file.FullName))
+        {
+            if (mediaTranscriptionService.HasUsableTranscriptionProvider)
+                return RagFileIndexingDecision.INDEXABLE;
+
+            if (!PersistentMediaTranscript.IsReusable(file.FullName, PersistentMediaTranscript.Reuse.CURRENT_SOURCE))
+                return RagFileIndexingDecision.EXCLUDED;
+
+            // An indexed media file whose own fingerprint changed needs a new transcript. A sidecar
+            // with a matching timestamp is not enough to keep stale embeddings alive when there is
+            // no provider capable of replacing it.
+            return manifest.Files.TryGetValue(file.FullName, out var existing)
+                   && !string.Equals(existing.Fingerprint, BuildFileMetadataHash(file), StringComparison.Ordinal)
+                ? RagFileIndexingDecision.EXCLUDED
+                : RagFileIndexingDecision.INDEXABLE;
+        }
+
+        // A directory source reaches this point only after its user-configured pattern selected
+        // the file. A single-file source was validated before it was stored. Extraction is the
+        // authoritative capability check and records an unreadable selected file through the
+        // ordinary per-document failure path instead of silently overriding the user's selection.
+        return RagFileIndexingDecision.INDEXABLE;
     }
 
     private bool IsSkippedRagFile(FileInfo file)
@@ -497,22 +539,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
-            return true;
-        }
-    }
-
-    private bool IsSkippedRagDirectory(string path)
-    {
-        try
-        {
-            var directory = new DirectoryInfo(path);
-            return directory.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                   || directory.Attributes.HasFlag(FileAttributes.Offline)
-                   || directory.Attributes.HasFlag(FileAttributes.System);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
             return true;
         }
     }
@@ -618,11 +644,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <param name="file">The file.</param>
     /// <param name="fingerprint">The fingerprint of the file as it is about to be read.</param>
     /// <returns>The document.</returns>
-    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint) => new(
+    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, PersistentMediaTranscript.Reuse transcriptReuse) => new(
         file.FullName,
         this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow),
         file.Name,
-        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, token));
+        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, transcriptReuse, token));
 
     private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {

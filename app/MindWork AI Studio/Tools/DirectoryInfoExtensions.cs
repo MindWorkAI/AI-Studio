@@ -2,16 +2,9 @@ namespace AIStudio.Tools;
 
 public static class DirectoryInfoExtensions
 {
-    private static readonly EnumerationOptions ENUMERATION_OPTIONS = new()
-    {
-        IgnoreInaccessible = true,
-        RecurseSubdirectories = true,
-        ReturnSpecialDirectories = false,
-    };
-
     /// <summary>
-    /// Determines the size of the directory and all its subdirectories, as well as the number of files. When desired,
-    /// it can report the found files up to a certain limit.
+    /// Determines the size and file count of a directory, optionally including its subdirectories
+    /// and restricted by a file predicate. When desired, it reports the found files up to a limit.
     /// </summary>
     /// <remarks>
     /// You might set reportMaxFiles to a negative value to report all files. Any positive value will limit the number
@@ -31,17 +24,24 @@ public static class DirectoryInfoExtensions
     /// <param name="reportMaxFiles">The maximum number of files to report. A negative value reports all files.</param>
     /// <param name="done">The callback to report that the operation is done.</param>
     /// <param name="cancellationToken">The cancellation token to stop the operation.</param>
-    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default)
+    /// <param name="includeFile">An optional predicate which limits the files included in the totals and reports.</param>
+    /// <param name="includeSubdirectories">Whether files in subdirectories are included.</param>
+    /// <param name="includeHiddenSubdirectories">Whether files in hidden subdirectories are included.</param>
+    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, Func<FileInfo, bool>? includeFile = null, bool includeSubdirectories = true, bool includeHiddenSubdirectories = true)
     {
         var rootDirectoryLen = directoryInfo.FullName.Length;
         long totalSize = 0;
         long numFiles = 0;
         
         await Task.Factory.StartNew(() => {
-            foreach (var file in directoryInfo.EnumerateFiles("*", ENUMERATION_OPTIONS))
+            foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(directoryInfo.FullName, includeSubdirectories, includeHiddenSubdirectories))
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;
+
+                var file = new FileInfo(filePath);
+                if (includeFile is not null && !includeFile(file))
+                    continue;
 
                 totalSize += file.Length;
                 numFiles++;

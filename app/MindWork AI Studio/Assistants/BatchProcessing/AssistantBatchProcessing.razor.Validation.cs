@@ -1,4 +1,4 @@
-using System.IO.Enumeration;
+using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -15,35 +15,7 @@ public partial class AssistantBatchProcessing
         return null;
     }
 
-    private string? ValidateFilePatterns(string patterns)
-    {
-        if (string.IsNullOrWhiteSpace(patterns))
-            return T("Please provide at least one file pattern, e.g., *.pdf. Separate multiple patterns with a semicolon.");
-
-        var individualPatterns = patterns.Split(';');
-        if (individualPatterns.Any(string.IsNullOrWhiteSpace))
-            return T("Please remove empty file patterns. Separate valid patterns with a single semicolon.");
-
-        foreach (var patternEntry in individualPatterns)
-        {
-            var pattern = patternEntry.Trim();
-            if (pattern.Contains("**", StringComparison.Ordinal))
-                return T("Please use only single asterisks as wildcards, e.g., *.pdf or report-*.docx.");
-
-            if (pattern is "." or ".."
-                || pattern.EndsWith("..", StringComparison.Ordinal)
-                || pattern.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\']) >= 0)
-                return T("Please use file name patterns without folder paths, e.g., *.pdf or report-*.docx.");
-
-            var invalidCharacters = Path.GetInvalidFileNameChars()
-                .Where(character => character is not '*' and not '?')
-                .ToArray();
-            if (pattern.IndexOfAny(invalidCharacters) >= 0)
-                return T("One of the file patterns contains an invalid character.");
-        }
-
-        return null;
-    }
+    private string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
     private string? ValidateCsvFileName(string fileName)
     {
@@ -107,11 +79,7 @@ public partial class AssistantBatchProcessing
 
     private IReadOnlyList<string> FindInputFiles(string resolvedOutputDirectory)
     {
-        var patterns = this.filePatterns
-            .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .ToList();
-
-        var searchOption = this.includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var patterns = FileNamePatterns.Parse(this.filePatterns);
         var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var normalizedInputDirectory = TrimDirectorySeparator(Path.GetFullPath(this.inputDirectory));
@@ -127,54 +95,34 @@ public partial class AssistantBatchProcessing
         // would also exclude a document named 'output-notes.md':
         var outputDirectoryPrefix = normalizedOutputDirectory + Path.DirectorySeparatorChar;
 
-        foreach (var pattern in patterns)
+        foreach (var file in DirectoryFileTraversal.EnumerateFiles(
+                     this.inputDirectory,
+                     this.includeSubdirectories,
+                     this.includeHiddenSubdirectories,
+                     includeDirectory: directory => !isOutputSeparateFolder
+                                                    || !string.Equals(TrimDirectorySeparator(Path.GetFullPath(directory)), normalizedOutputDirectory, StringComparison.OrdinalIgnoreCase),
+                     reportInaccessibleDirectory: (directory, exception) =>
+                         throw new IOException($"Could not access directory '{directory}'.", exception)))
         {
-            foreach (var file in Directory.EnumerateFiles(this.inputDirectory, pattern, searchOption))
+            var normalizedFile = Path.GetFullPath(file);
+            if (!FileNamePatterns.Matches(normalizedFile, patterns) || IsTranscriptArtifact(normalizedFile))
+                continue;
+
+            if (isOutputSeparateFolder)
             {
-                var normalizedFile = Path.GetFullPath(file);
-                if (IsTranscriptArtifact(normalizedFile))
+                if (normalizedFile.StartsWith(outputDirectoryPrefix, StringComparison.OrdinalIgnoreCase))
                     continue;
-
-                if (isOutputSeparateFolder)
-                {
-                    if (normalizedFile.StartsWith(outputDirectoryPrefix, StringComparison.OrdinalIgnoreCase))
-                        continue;
-                }
-                else if (this.IsOwnOutputArtifact(normalizedFile))
-                    continue;
-
-                // On Windows, a pattern with a three-character extension also
-                // matches longer extensions: '*.pdf' also returns 'report.pdfx'.
-                // We therefore check the pattern ourselves:
-                if (!MatchesAnyPattern(normalizedFile, patterns))
-                    continue;
-
-                files.Add(normalizedFile);
             }
+            else if (this.IsOwnOutputArtifact(normalizedFile))
+                continue;
+
+            files.Add(normalizedFile);
         }
 
         return [.. files];
     }
 
     private static string TrimDirectorySeparator(string path) => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-    private static bool MatchesAnyPattern(string filePath, IReadOnlyList<string> patterns)
-    {
-        var fileName = Path.GetFileName(filePath);
-        foreach (var pattern in patterns)
-        {
-            // A pattern may contain a folder part, which does not take part in
-            // matching the file name:
-            var namePattern = Path.GetFileName(pattern);
-            if (string.IsNullOrWhiteSpace(namePattern))
-                continue;
-
-            if (FileSystemName.MatchesSimpleExpression(namePattern, fileName))
-                return true;
-        }
-
-        return false;
-    }
 
     /// <summary>
     /// Checks whether a file is an output artifact of this assistant. We need
@@ -199,8 +147,7 @@ public partial class AssistantBatchProcessing
     /// </summary>
     private static bool IsTranscriptArtifact(string filePath)
     {
-        var fileName = Path.GetFileName(filePath);
-        return fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX + ".tmp", StringComparison.OrdinalIgnoreCase);
+        return PersistentMediaTranscript.IsArtifactPath(filePath);
     }
 
     /// <summary>
