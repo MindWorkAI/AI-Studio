@@ -778,6 +778,15 @@ public partial class ChatComponent : MSGComponentBase
     /// </remarks>
     private bool CanProfileBeChanged => this.currentChatTemplate.AllowProfileUsage && !this.IsCurrentChatStreaming;
 
+    /// <summary>
+    /// Whether the user may change the attachments of the message being written.
+    /// </summary>
+    /// <remarks>
+    /// Not while an answer is being written, just like the text of the message, and not while the
+    /// audio or video files of the chat are being transcribed.
+    /// </remarks>
+    private bool CanAttachFiles => !this.IsCurrentChatStreaming && !this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
     // The chat template locks the profile for good, an answer being written only until it is complete:
     private string ProfileDisabledText => this.currentChatTemplate.AllowProfileUsage
         ? T("Profile changes are locked while a response is running.")
