@@ -172,6 +172,25 @@ public sealed class ModelHostTests
         Assert.That(unwrapped.Original, Is.EqualTo("qwen3.8:27b-mlx"));
     }
 
+    [TestCase("hf.co/HuggingFaceTB/SmolLM2-135M-Instruct:latest", "SmolLM2-135M-Instruct:latest", ModelVendor.HUGGING_FACE, TestName = "Behind the registry, the organization from the hub names the vendor")]
+    [TestCase("hf.co/unsloth/Qwen3.5-0.8B-GGUF:latest", "Qwen3.5-0.8B-GGUF:latest", null, TestName = "An organization which only repackaged the weights names nobody")]
+    [TestCase("docker.io/ai/qwen3.5:0.8b", "qwen3.5:0.8b", null, TestName = "The registry and its namespace come off and the variant stays")]
+    public void AnLlmmanReferenceLosesItsRegistryAndKeepsItsTag(string modelId, string expectedModel, ModelVendor? expectedVendor)
+    {
+        //
+        // llmman lists the reference it pulled a model from, with the registry in front and the tag
+        // behind. The registry is a path segment like any organization and comes off the same way.
+        // The tag is what Ollama writes after its colon, too, and stays for the same reason.
+        //
+        var unwrapped = Unwrap(LLMProviders.SELF_HOSTED, modelId, out var vendor);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unwrapped.Original, Is.EqualTo(expectedModel));
+            Assert.That(vendor, Is.EqualTo(expectedVendor));
+        });
+    }
+
     [Test]
     public void AResellerLeavesTheNameAloneAndOnlyTakesTheApiAway()
     {
