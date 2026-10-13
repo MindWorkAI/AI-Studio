@@ -39,6 +39,17 @@ public partial class ChatComponent : MSGComponentBase
     
     [Parameter]
     public EventCallback<AIStudio.Settings.Provider> ProviderChanged { get; set; }
+
+    /// <summary>
+    /// Tells whether an answer is being written for the open chat, whenever that changes.
+    /// </summary>
+    /// <remarks>
+    /// For the parts of the chat page outside this component, such as the provider selection. The AI
+    /// job reports every part of an answer, and this component renders after each report. The page
+    /// learns only when an answer starts or ends, see OnAfterRenderAsync.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<bool> IsAnswerBeingWrittenChanged { get; set; }
     
     [Parameter]
     public Action<string> WorkspaceName { get; set; } = _ => { };
@@ -91,6 +102,7 @@ public partial class ChatComponent : MSGComponentBase
     private bool autoSaveEnabled;
     private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
+    private bool announcedAnswerBeingWritten;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
@@ -575,6 +587,20 @@ public partial class ChatComponent : MSGComponentBase
             await this.inputField.FocusAsync();
 
         this.previousInputForbidden = inputForbidden;
+
+        //
+        // The page hears about an answer starting or ending here rather than with every report of the
+        // AI job, since a render of the page redraws the workspace tree. This component renders after
+        // every such report and after another chat was opened, so the page never misses a change. The
+        // first render reports in any case: the page may still hold what another instance of this
+        // component told it, e.g., before the workspaces were shown or hidden.
+        //
+        var isAnswerBeingWritten = this.IsCurrentChatStreaming;
+        if (firstRender || isAnswerBeingWritten != this.announcedAnswerBeingWritten)
+        {
+            this.announcedAnswerBeingWritten = isAnswerBeingWritten;
+            await this.IsAnswerBeingWrittenChanged.InvokeAsync(isAnswerBeingWritten);
+        }
 
         //
         // Everything which can move the token count also renders this component: the selections in
