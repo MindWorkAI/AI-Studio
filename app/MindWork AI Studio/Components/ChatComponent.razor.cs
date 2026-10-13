@@ -1045,6 +1045,22 @@ public partial class ChatComponent : MSGComponentBase
         
         return this.earlyDataSourceOptions;
     }
+
+    /// <summary>
+    /// Takes over what the user changed in the data source selection.
+    /// </summary>
+    /// <remarks>
+    /// While an answer is being written, the selection is read-only and turns every change down
+    /// itself, since the answer reads the very options it shows. Checked here once more, so that the
+    /// chat never stores a change which reached it anyway.
+    /// </remarks>
+    private async Task DataSourceOptionsWereChanged(DataSourceOptions updatedOptions)
+    {
+        if (this.IsCurrentChatStreaming)
+            return;
+
+        await this.SetCurrentDataSourceOptions(updatedOptions);
+    }
     
     private async Task SetCurrentDataSourceOptions(DataSourceOptions updatedOptions)
     {
