@@ -847,6 +847,40 @@ document: if your configuration stops offering this provider, AI Studio removes 
 the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
 provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
 
+### Asking users for their API key
+
+With `AllowUserProvidedAPIKey` alone, users have to find the provider in the settings and enter
+their key there. Set `PromptForUserAPIKey` instead, and AI Studio asks for the key itself: as long
+as such a provider has no API key, the home page shows a box at its top with an input field for
+the key. AI Studio also stays on the home page after starting, even when another start page is
+configured, until the key is there. `PromptForUserAPIKey` implies `AllowUserProvidedAPIKey`, and
+it works for LLM, embedding, and transcription providers alike.
+
+All providers of one configuration which set the option share one box and one key: the user enters
+the key once, and AI Studio stores it for every one of them. Therefore, mark only providers which
+accept the same key, for example several models behind one Open WebUI server. Providers which need
+another key belong in a configuration of their own.
+
+Before storing the key, AI Studio asks one of the providers for its models. A key the provider
+rejects is not stored, and the user is told so. When the provider cannot be reached, the key is
+stored with a warning, so that an outage does not keep anyone from finishing the setup.
+
+Explain how users obtain their key with `CONFIG["USER_API_KEY_PROMPT"]`. Its Markdown is shown
+above the input field; the title is optional:
+
+```lua
+CONFIG["USER_API_KEY_PROMPT"] = {
+    ["Title"] = "Please add your API key",
+    ["Markdown"] = [===[
+        To use the AI models of your organization, you need a personal API key:
+
+        1. Open [Open WebUI](https://example.org) and sign in.
+        2. Click your profile picture, then "Settings" and "Account".
+        3. Create an API key, copy it, and paste it below.
+    ]===]
+}
+```
+
 ## Describing your own models
 
 AI Studio knows what the models of the large vendors can do, and reads that knowledge from their

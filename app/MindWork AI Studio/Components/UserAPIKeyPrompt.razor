@@ -1,0 +1,46 @@
+@inherits MSGComponentBase
+
+@foreach (var group in this.groups)
+{
+    var state = this.GetState(group);
+    <MudPaper @key="@group.ConfigPluginId" Outlined="@true" Class="pa-3 mb-3 rounded-lg" Style="border-color: var(--mud-palette-warning); border-width: 2px;">
+        <div class="user-api-key-prompt">
+            <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Warning"/>
+                <MudText Typo="Typo.h6">
+                    @(string.IsNullOrWhiteSpace(group.Prompt?.Title) ? T("Your API key is missing") : group.Prompt.Title)
+                </MudText>
+            </MudStack>
+
+            @if (group.Prompt is not null)
+            {
+                <MudJustifiedMarkdown Value="@group.Prompt.Markdown"/>
+            }
+            else
+            {
+                <MudText Typo="Typo.body1" Class="mb-3">
+                    @T("Your organization configured AI providers for you, which need your personal API key. Please enter it here.")
+                </MudText>
+            }
+        </div>
+
+        <SecretInputField Secret="@state.APIKey" SecretChanged="@(apiKey => state.APIKey = apiKey)" Label="@T("API key")"/>
+
+        @if (!string.IsNullOrWhiteSpace(state.Issue))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+                @state.Issue
+            </MudAlert>
+        }
+
+        <MudStack Row="@true" AlignItems="AlignItems.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(state.IsBusy || string.IsNullOrWhiteSpace(state.APIKey))" OnClick="@(() => this.StoreAPIKey(group))">
+                @T("Check and save API key")
+            </MudButton>
+            @if (state.IsBusy)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
+            }
+        </MudStack>
+    </MudPaper>
+}

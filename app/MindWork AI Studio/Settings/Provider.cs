@@ -23,6 +23,7 @@ namespace AIStudio.Settings;
 /// <param name="Model">The LLM model to use for chat.</param>
 /// <param name="AllowUserProvidedAPIKey">When set by a configuration plugin, the user may set their own API key for this otherwise locked, enterprise-managed provider.</param>
 /// <param name="CustomIconDataUrl">The validated custom SVG icon supplied by a configuration plugin.</param>
+/// <param name="PromptForUserAPIKey">When set by a configuration plugin, AI Studio asks the user for the API key of this provider on the home page as long as none is stored.</param>
 public sealed record Provider(
     uint Num,
     string Id,
@@ -39,7 +40,8 @@ public sealed record Provider(
     string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
-    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    string CustomIconDataUrl = "",
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -162,6 +164,14 @@ public sealed record Provider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        // Asking the user for the key only makes sense when the user may set it, so the one implies the other:
+        var promptForUserApiKey = false;
+        if (table.TryGetValue("PromptForUserAPIKey", out var promptForUserApiKeyValue) && promptForUserApiKeyValue.TryRead<bool>(out var promptForUserApiKeyBool))
+            promptForUserApiKey = promptForUserApiKeyBool;
+
+        if (promptForUserApiKey)
+            allowUserProvidedApiKey = true;
+
         var customIconDataUrl = string.Empty;
         if (table.TryGetValue("IconPath", out var iconPathValue))
         {
@@ -188,6 +198,7 @@ public sealed record Provider(
             TokenizerPath = tokenizerPath,
             CapabilityOverrides = capabilityOverrides,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            PromptForUserAPIKey = promptForUserApiKey,
             CustomIconDataUrl = customIconDataUrl,
         };
 

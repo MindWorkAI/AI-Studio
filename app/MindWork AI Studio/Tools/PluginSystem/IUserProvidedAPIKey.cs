@@ -12,4 +12,10 @@ public interface IUserProvidedAPIKey
     /// locked, enterprise-managed object.
     /// </summary>
     public bool AllowUserProvidedAPIKey { get; }
+
+    /// <summary>
+    /// When set by a configuration plugin, AI Studio asks the user for the API key of this object
+    /// on the home page as long as none is stored. Implies <see cref="AllowUserProvidedAPIKey"/>.
+    /// </summary>
+    public bool PromptForUserAPIKey { get; }
 }
