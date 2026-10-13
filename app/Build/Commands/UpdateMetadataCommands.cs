@@ -679,9 +679,31 @@ public sealed partial class UpdateMetadataCommands
 
         var convertedEntry = new StringBuilder();
         for (var index = 0; index < codeSpans.Length; index++)
-            convertedEntry.Append(index % 2 is 0 ? codeSpans[index] : $"<code>{codeSpans[index]}</code>");
+            convertedEntry.Append(index % 2 is 0 ? ConvertLinksToText(codeSpans[index], changelogEntry) : $"<code>{codeSpans[index]}</code>");
 
         return convertedEntry.ToString();
+    }
+
+    /// <summary>
+    /// Reduces the Markdown links of a changelog entry to their text.
+    /// </summary>
+    /// <remarks>
+    /// AppStream descriptions know no links, and the software centers show whatever markup is left as it
+    /// stands: brackets, parentheses, and the whole address. The address is not lost by dropping it here,
+    /// because the changelog in the app and the release notes on GitHub still show the link. A link this
+    /// cannot read, such as one with a code span in its text, stops the conversion rather than reaching
+    /// the software centers half converted.
+    /// </remarks>
+    /// <param name="text">A part of the entry outside of any code span, already escaped for XML.</param>
+    /// <param name="changelogEntry">The whole entry, for the error message.</param>
+    /// <returns>The part with each link replaced by its text.</returns>
+    private static string ConvertLinksToText(string text, string changelogEntry)
+    {
+        var convertedText = MarkdownLinkRegex().Replace(text, "${text}");
+        if (convertedText.Contains("](", StringComparison.Ordinal))
+            throw new InvalidOperationException($"The changelog entry contains a link which cannot be converted: '{changelogEntry}'.");
+
+        return convertedText;
     }
 
     private static DateTime ParseMetadataBuildTime(string buildTime)
@@ -1177,4 +1199,8 @@ public sealed partial class UpdateMetadataCommands
 
     [GeneratedRegex("^[0-9a-fA-F]{40,64}$")]
     private static partial Regex GitCommitHashRegex();
+
+    // Matches one Markdown link. The address may hold one level of parentheses, as Wikipedia addresses do:
+    [GeneratedRegex("""\[(?<text>[^\[\]]+)\]\((?<address>(?:[^()\s]|\([^()\s]*\))+)\)""")]
+    private static partial Regex MarkdownLinkRegex();
 }

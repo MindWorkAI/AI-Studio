@@ -557,21 +557,7 @@ public static class LLMProvidersExtensions
     public static bool CanLoadModels(this LLMProviders provider, Host host, string? apiKey)
     {
         if (provider is LLMProviders.SELF_HOSTED)
-        {
-            switch (host)
-            {
-                case Host.NONE:
-                case Host.WHISPER_CPP:
-                default:
-                    return false;
-
-                case Host.LLAMA_CPP:
-                case Host.OLLAMA:
-                case Host.LM_STUDIO:
-                case Host.VLLM:
-                    return true;
-            }
-        }
+            return host.IsModelListSupported();
 
         if(provider is LLMProviders.NONE)
             return false;

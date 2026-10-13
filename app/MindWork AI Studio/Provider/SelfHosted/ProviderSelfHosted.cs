@@ -25,7 +25,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM or Host.LLAMA_CPP;
+    public override bool HasModelLoadingCapability => host.IsModelListSupported();
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -40,7 +40,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                            {
                                // Build the list of messages. The image format depends on the host:
                                // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
-                               // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
+                               // - LM Studio, vLLM, llama.cpp, and llmman use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
                                var messages = host switch
                                {
                                    Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.CreateSettingsProvider(effectiveChatModel)),
@@ -94,22 +94,17 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     {
         try
         {
-            switch (host)
+            if (host is Host.LLAMA_CPP)
+                return await this.LoadLlamaCppTextModels(apiKeyProvisional, token);
+
+            if (!host.IsChatSupported() || !host.IsModelListSupported())
+                return ModelLoadResult.FromModels([]);
+
+            var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
+            return result with
             {
-                case Host.LLAMA_CPP:
-                    return await this.LoadLlamaCppTextModels(apiKeyProvisional, token);
-
-                case Host.LM_STUDIO:
-                case Host.OLLAMA:
-                case Host.VLLM:
-                    var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
-                    return result with
-                    {
-                        Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
-                    };
-            }
-
-            return ModelLoadResult.FromModels([]);
+                Models = [..result.Models.Where(model => model.IsChatModel(this.Provider))]
+            };
         }
         catch(Exception e)
         {
@@ -128,19 +123,14 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     {
         try
         {
-            switch (host)
-            {
-                case Host.LM_STUDIO:
-                case Host.OLLAMA:
-                case Host.VLLM:
-                    var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
-                    return result with
-                    {
-                        Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))]
-                    };
-            }
+            if (!host.IsEmbeddingSupported() || !host.IsModelListSupported())
+                return ModelLoadResult.FromModels([]);
 
-            return ModelLoadResult.FromModels([]);
+            var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
+            return result with
+            {
+                Models = [..result.Models.Where(model => model.IsEmbeddingModel(this.Provider))]
+            };
         }
         catch(Exception e)
         {
@@ -154,33 +144,28 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     {
         try
         {
-            switch (host)
-            {
-                case Host.WHISPER_CPP:
-                    return ModelLoadResult.FromModels(
-                    [
-                        new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
-                    ]);
-                
-                //
-                // These two answer the models endpoint with everything they serve, and nothing in
-                // that answer says which of them listens. Asking what each model is made for is the
-                // only thing standing between this list and every chat and embedding model of the
-                // installation, which is what it used to hold. An engine running no speech model at
-                // all therefore offers nothing here, and says so, rather than offering models which
-                // would fail the moment audio reaches them.
-                //
-                case Host.OLLAMA:
-                case Host.VLLM:
-                    var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
-                    return result with
-                    {
-                        Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
-                    };
+            if (host is Host.WHISPER_CPP)
+                return ModelLoadResult.FromModels(
+                [
+                    new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
+                ]);
 
-                default:
-                    return ModelLoadResult.FromModels([]);
-            }
+            if (!host.IsTranscriptionSupported() || !host.IsModelListSupported())
+                return ModelLoadResult.FromModels([]);
+
+            //
+            // The engines which get here answer the models endpoint with everything they serve, and
+            // nothing in that answer says which of them listens. Asking what each model is made for
+            // is the only thing standing between this list and every chat and embedding model of
+            // the installation, which is what it used to hold. An engine running no speech model at
+            // all therefore offers nothing here, and says so, rather than offering models which
+            // would fail the moment audio reaches them.
+            //
+            var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
+            return result with
+            {
+                Models = [..result.Models.Where(model => model.IsTranscriptionModel(this.Provider))]
+            };
         }
         catch (Exception e)
         {

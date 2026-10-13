@@ -9795,6 +9795,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2348849647"] = "Last Changelog"
 -- Tools
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2499909372"] = "Tools"
 
+-- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T251243691"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities."
+
 -- AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T2587191175"] = "AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work."
 
@@ -9824,9 +9827,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3959064551"] = "Privacy"
 
 -- Voice input
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T4194938377"] = "Voice input"
-
--- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T4287735840"] = "You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities."
 
 -- You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T457410099"] = "You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems."
@@ -10571,6 +10571,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3364384944"] = "The first 10 supp
 
 -- Thank you, Dominic, for supporting us not only financially but also with code: a smoother chat, the audio quality setting for transcriptions, personal API keys for providers of an organization, sharing feature usage with self-hosted servers, and a better Confluence search.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T348735370"] = "Thank you, Dominic, for supporting us not only financially but also with code: a smoother chat, the audio quality setting for transcriptions, personal API keys for providers of an organization, sharing feature usage with self-hosted servers, and a better Confluence search."
+
+-- Thanks, Eric, for bringing llmman to AI Studio as a new option for self-hosted models.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3520213035"] = "Thanks, Eric, for bringing llmman to AI Studio as a new option for self-hosted models."
 
 -- Thanks, Luc, for your build script contribution.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T3597955013"] = "Thanks, Luc, for your build script contribution."
