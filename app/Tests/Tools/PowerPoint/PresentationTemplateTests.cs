@@ -162,6 +162,19 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void WithoutATemplateTheCommonLayoutsAreOffered()
+    {
+        var template = PresentationTemplate.CreateDefault();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Families.Select(family => family.Name), Is.EqualTo(new[] { "Title Slide", "Section Header", "Title and Content", "Two Content", "Content with Picture", "Table" }));
+            Assert.That(template.VariantLabels, Is.Empty);
+            Assert.That(template.ToCatalogPrompt(), Does.Contain("""- L3 "Title and Content": title (up to 1 line of about 36 characters); text 1 (full width, middle, up to 9 lines of about 58 characters)"""));
+        });
+    }
+
+    [Test]
     public void AFamilyIsFoundByTheIdTheModelWrote()
     {
         var template = TestTemplate.Read(
