@@ -155,6 +155,11 @@ public partial class ChatComponent : MSGComponentBase
     private ChatDraftAutosave? draftAutosave;
 
     /// <summary>
+    /// The only way to change the messages of the open chat, which is locked while an answer is being written.
+    /// </summary>
+    private ChatBlockActions blockActions = null!;
+
+    /// <summary>
     /// A new chat which has not reached the disk yet, or null.
     /// </summary>
     /// <remarks>
@@ -292,6 +297,9 @@ public partial class ChatComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+
+        // Created before anything is awaited, because the first render may happen there already:
+        this.blockActions = new(chatId => this.AIJobService.IsChatGenerationActive(chatId));
 
         //
         // Leaving the chat page takes the composer along. Registered before anything is awaited, so
@@ -1261,6 +1269,14 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+        //
+        // One answer at a time per chat. Checked before anything touches the chat or the composer:
+        // the AI job service would turn a second answer down only after the chat got its message and
+        // an empty answer, which then stays.
+        //
+        if (this.IsCurrentChatStreaming)
+            return;
+
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
@@ -1794,10 +1810,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task RemoveBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryRemove(this.ChatThread, block))
             return;
-        
-        this.ChatThread.Remove(block);
+
         this.hasUnsavedChanges = true;
         await this.SaveThread();
         this.StateHasChanged();
@@ -1805,13 +1820,12 @@ public partial class ChatComponent : MSGComponentBase
 
     private async Task RegenerateBlock(IContent aiBlock)
     {
-        if(this.ChatThread is null)
-            return;
-        
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
-        
-        this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
+
+        if (!this.blockActions.TryRemoveForRegenerate(this.ChatThread, aiBlock))
+            return;
+
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         
@@ -1820,11 +1834,8 @@ public partial class ChatComponent : MSGComponentBase
 
     private async Task RollbackBlock(IContent aiBlock)
     {
-        if (this.ChatThread is null || this.IsCurrentChatStreaming)
-            return;
-
         // Which parts of the thread a rollback resets and which it keeps is documented at RollBackTo:
-        if (!this.ChatThread.RollBackTo(aiBlock))
+        if (!this.blockActions.TryRollBack(this.ChatThread, aiBlock))
             return;
 
         // The rollback reset the AI-selected data sources, which the data source selection still shows:
@@ -1838,19 +1849,9 @@ public partial class ChatComponent : MSGComponentBase
     
     private Task EditLastUserBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryEditLastUserBlock(this.ChatThread, block))
             return Task.CompletedTask;
 
-        if (block is not ContentText)
-            return Task.CompletedTask;
-
-        var lastBlock = this.ChatThread.Blocks.Last();
-        var lastBlockContent = lastBlock.Content;
-        if(lastBlockContent is null)
-            return Task.CompletedTask;
-
-        this.ChatThread.RemoveForEditing(block);
-        this.ChatThread.Remove(lastBlockContent);
         this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
@@ -1859,13 +1860,9 @@ public partial class ChatComponent : MSGComponentBase
 
     private Task EditLastBlock(IContent block)
     {
-        if(this.ChatThread is null)
+        if (!this.blockActions.TryEditLastBlock(this.ChatThread, block))
             return Task.CompletedTask;
 
-        if (block is not ContentText)
-            return Task.CompletedTask;
-
-        this.ChatThread.RemoveForEditing(block);
         this.RestoreComposerForEditing();
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
