@@ -16,6 +16,9 @@ DESCRIPTION = "Describes the models <Company Name> runs itself"
 -- The version of the plugin:
 VERSION = "1.0.0"
 
+-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.
+LAST_CHANGED = "2025-12-31T12:00:00Z"
+
 -- The type of the plugin:
 TYPE = "MODEL"
 
@@ -109,7 +112,7 @@ MODELS = {}
 --     -- the same name means different things depending on who serves it.
 --     -- Allowed values are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK,
 --     -- ALIBABA_CLOUD, PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM,
---     -- FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+--     -- REQUESTY, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
 --     ["ONLY_ON"] = "SELF_HOSTED",
 --
 --     -- Optional: restrict this entry to models of one vendor. Only gateways

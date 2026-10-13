@@ -21,6 +21,9 @@ DESCRIPTION = "This is a pre-defined configuration of <Company Name>"
 -- The version of the plugin:
 VERSION = "1.0.0"
 
+-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.
+LAST_CHANGED = "2025-12-31T12:00:00Z"
+
 -- The type of the plugin:
 TYPE = "CONFIGURATION"
 
@@ -1006,8 +1009,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure a custom confidence scheme.
 -- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
 -- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
---   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED,
---   HELMHOLTZ, GWDG
+--   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, REQUESTY, FIREWORKS, GROQ, HUGGINGFACE,
+--   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
@@ -1027,6 +1030,7 @@ CONFIG["SETTINGS"] = {}
 --     ["HETZNER"] = "HIGH",
 --     ["IONOS"] = "HIGH",
 --     ["LITE_LLM"] = "MODERATE",
+--     ["REQUESTY"] = "MODERATE",
 --     ["FIREWORKS"] = "MODERATE",
 --     ["GROQ"] = "MODERATE",
 --     ["HUGGINGFACE"] = "MODERATE",

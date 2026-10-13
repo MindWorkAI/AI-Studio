@@ -69,11 +69,15 @@ public static class DirectChatLauncherLuaWriter
     /// <summary>
     /// Writes the complete plugin.lua for an installed launcher whose settings changed.
     /// </summary>
+    /// <remarks>
+    /// All metadata is carried over except the time of the last change: changing the settings
+    /// changes the plugin, so that time becomes now.
+    /// </remarks>
     /// <param name="plugin">The installed launcher whose metadata is carried over.</param>
     /// <param name="definition">The name, title, description, and chat settings the user chose.</param>
     /// <returns>The plugin.lua content, ready to be validated and written.</returns>
     public static string Write(PluginAssistants plugin, DirectChatLauncherDefinition definition) =>
-        Write(DirectChatLauncherPluginMetadata.FromPlugin(plugin), definition);
+        Write(DirectChatLauncherPluginMetadata.FromPlugin(plugin) with { LastChanged = DateTimeOffset.UtcNow }, definition);
 
     /// <summary>
     /// Writes the complete plugin.lua for a launcher.
@@ -113,6 +117,13 @@ public static class DirectChatLauncherLuaWriter
         builder.AppendLine("-- The version of the plugin:");
         builder.AppendLine($"VERSION = \"{plugin.Version}\"");
         builder.AppendLine();
+
+        if (plugin.LastChanged is { } lastChanged)
+        {
+            builder.AppendLine("-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.");
+            builder.AppendLine($"LAST_CHANGED = \"{PluginBase.FormatLastChanged(lastChanged)}\"");
+            builder.AppendLine();
+        }
 
         builder.AppendLine("-- The type of the plugin:");
         builder.AppendLine($"TYPE = \"{nameof(PluginType.ASSISTANT)}\"");

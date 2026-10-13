@@ -16,7 +16,7 @@ public sealed partial class RustService
     /// <summary>
     /// Sends a log event to the Rust runtime.
     /// </summary>
-    /// <param name="timestamp">The timestamp of the log event.</param>
+    /// <param name="timestamp">When the log event happened, formatted by TerminalLogger.FormatTransportTimestamp.</param>
     /// <param name="level">The log level.</param>
     /// <param name="category">The category of the log event.</param>
     /// <param name="message">The log message.</param>

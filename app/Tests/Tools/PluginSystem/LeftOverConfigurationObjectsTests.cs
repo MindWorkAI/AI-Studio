@@ -98,6 +98,8 @@ public sealed class LeftOverConfigurationObjectsTests
 
         public PluginVersion Version => new(1, 0, 0);
 
+        public DateTimeOffset? LastChanged => null;
+
         public string[] Authors => [];
 
         public string SupportContact => string.Empty;

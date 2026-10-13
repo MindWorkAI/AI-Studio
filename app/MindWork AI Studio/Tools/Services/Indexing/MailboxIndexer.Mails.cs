@@ -70,6 +70,17 @@ internal sealed partial class MailboxIndexer
         }
 
         //
+        // A mail which failed during an earlier step of this sync waits for the next sync, unless
+        // it changed since. Asked only here: the mail counts as encountered all the same, and one
+        // which merely moved was linked above.
+        //
+        if (progress.SkipIfFailedEarlierInPass(key, mailHash))
+        {
+            progress.Publish();
+            return;
+        }
+
+        //
         // Named after the subject as the server delivered it. The name is for the user alone, who
         // reads it on the embeddings page as in any mail program. A model only ever gets to read
         // the filtered subject, which the index stores.
@@ -137,7 +148,7 @@ internal sealed partial class MailboxIndexer
             new(text.Body, source),
             new(text.Subject, source),
             ..attachmentParts.Select(part => new PromptInjectionText(MailTextNormalization.NormalizeHeaderValue(part.FileName), source)),
-        ]);
+        ], context.PromptInjectionScope);
 
         var attachments = new List<MailAttachmentText>(attachmentParts.Count);
         for (var index = 0; index < attachmentParts.Count; index++)

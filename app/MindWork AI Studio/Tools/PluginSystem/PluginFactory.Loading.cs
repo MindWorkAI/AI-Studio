@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
+using Lua.Platforms;
 using Lua.Standard;
 
 namespace AIStudio.Tools.PluginSystem;
@@ -25,6 +26,11 @@ public static partial class PluginFactory
     /// the same start as a user does.
     /// </remarks>
     private static readonly TimeSpan PLUGIN_TIMEOUT = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// The platform of the Lua runtime of every plugin: the default one, but without any file.
+    /// </summary>
+    private static readonly LuaPlatform PLUGIN_PLATFORM = LuaPlatform.Default with { FileSystem = new NoLuaFileSystem() };
 
     /// <summary>
     /// A list of all available plugins.
@@ -419,6 +425,49 @@ public static partial class PluginFactory
         return pluginTimeout;
     }
 
+    /// <summary>
+    /// Creates the Lua runtime a plugin runs in, with its libraries opened and no code run yet.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin, whatever its type, gets its runtime from here, so all of them see the same
+    /// libraries and the same limits.<br/><br/>
+    /// A plugin may split its code into several files and load them with require, also from
+    /// subdirectories of its own directory, such as require("lib/helpers"). The module loader only
+    /// finds files inside the plugin's directory.<br/><br/>
+    /// No other file is within reach: the runtime has no file system, see NoLuaFileSystem, and neither
+    /// dofile nor loadfile. Code without a directory, such as a plugin a model just wrote, loads no
+    /// module at all.
+    /// </remarks>
+    /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
+    /// <param name="allowedBaseDirectory">The directory the plugin path must be nested in, see Load.</param>
+    /// <returns>The runtime for a single plugin.</returns>
+    internal static LuaState CreateLuaState(string? pluginPath, string? allowedBaseDirectory = null)
+    {
+        var state = LuaState.Create(PLUGIN_PLATFORM);
+        state.ModuleLoader = string.IsNullOrWhiteSpace(pluginPath)
+            ? new NoModuleLoader()
+            : new PluginLoader(pluginPath, allowedBaseDirectory);
+
+        // Add some useful libraries:
+        state.OpenBasicLibrary();
+        state.OpenModuleLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+        state.OpenMathLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenCoroutineLibrary();
+
+        //
+        // Both read a file by its path, relative to the working directory of the app. Without a file
+        // system they would fail anyway, but with an exception of .NET instead of a Lua error. Such an
+        // exception leaves Load, instead of becoming the reason why the plugin could not run:
+        //
+        state.Environment["dofile"] = LuaValue.Nil;
+        state.Environment["loadfile"] = LuaValue.Nil;
+
+        return state;
+    }
+
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
     /// <param name="code">The Lua code of the plugin's main file.</param>
     /// <param name="allowedBaseDirectory">
@@ -432,22 +481,7 @@ public static partial class PluginFactory
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
 
-        var state = LuaState.Create();
-        if (!string.IsNullOrWhiteSpace(pluginPath))
-        {
-            // Add the module loader so that the plugin can load other Lua modules:
-            state.ModuleLoader = new PluginLoader(pluginPath, allowedBaseDirectory);
-        }
-
-        // Add some useful libraries:
-        state.OpenBasicLibrary();
-        state.OpenModuleLibrary();
-        state.OpenStringLibrary();
-        state.OpenTableLibrary();
-        state.OpenMathLibrary();
-        state.OpenBitwiseLibrary();
-        state.OpenCoroutineLibrary();
-
+        var state = CreateLuaState(pluginPath, allowedBaseDirectory);
         try
         {
             await state.DoStringAsync(code, cancellationToken: cancellationToken);

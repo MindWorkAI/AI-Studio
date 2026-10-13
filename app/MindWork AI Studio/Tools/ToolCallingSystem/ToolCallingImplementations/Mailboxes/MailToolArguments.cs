@@ -30,6 +30,10 @@ internal static class MailToolArguments
     public const string IMPORTANCE_ARGUMENT = "importance";
     public const string HAS_ATTACHMENTS_ARGUMENT = "has_attachments";
     public const string FOLDER_ARGUMENT = "folder";
+    public const string SPECIAL_FOLDER_ARGUMENT = "special_folder";
+
+    public const string SPECIAL_FOLDER_SENT = "sent";
+    public const string SPECIAL_FOLDER_DRAFTS = "drafts";
 
     /// <summary>
     /// How long a part of an address or a name may be. Longer than any address, shorter than a sentence.
@@ -42,6 +46,8 @@ internal static class MailToolArguments
     private const int MAX_FOLDER_CHARACTERS = 500;
 
     private static readonly string[] IMPORTANCE_VALUES = ["low", "normal", "high"];
+
+    private static readonly string[] SPECIAL_FOLDER_VALUES = [SPECIAL_FOLDER_SENT, SPECIAL_FOLDER_DRAFTS];
 
     /// <summary>
     /// Adds the conditions to the arguments a mail tool describes.
@@ -61,7 +67,8 @@ internal static class MailToolArguments
         .OptionalBoolean(IS_ENCRYPTED_ARGUMENT, "Optional: true for encrypted mails only, false for unencrypted ones only. AI Studio cannot read the content of encrypted mails, only their header.")
         .OptionalEnum(IMPORTANCE_ARGUMENT, "Optional importance the sender marked the mails with. Mails without such a mark count as normal.", IMPORTANCE_VALUES)
         .OptionalBoolean(HAS_ATTACHMENTS_ARGUMENT, "Optional: true for mails with attachments only, false for mails without any.")
-        .OptionalString(FOLDER_ARGUMENT, "Optional full path of the folder the mails lie in, exactly as results show it, such as 'INBOX' or 'Archive/2026'. Subfolders are not included.");
+        .OptionalString(FOLDER_ARGUMENT, $"Optional full path of the folder the mails lie in, exactly as results show it, such as 'INBOX' or 'Archive/2026'. Subfolders are not included. For the sent mails or the drafts, use {SPECIAL_FOLDER_ARGUMENT} instead.")
+        .OptionalEnum(SPECIAL_FOLDER_ARGUMENT, $"Optional: only the mails the user sent, or only the drafts of the user, however the server names these folders. Cannot be combined with {FOLDER_ARGUMENT}.", SPECIAL_FOLDER_VALUES);
 
     /// <summary>
     /// The value of the importance argument which stands for the given importance.
@@ -74,6 +81,20 @@ internal static class MailToolArguments
         MailImportance.LOW => "low",
         MailImportance.HIGH => "high",
         _ => "normal",
+    };
+
+    /// <summary>
+    /// The value of the special folder argument which stands for the given kind of folder.
+    /// </summary>
+    /// <remarks>
+    /// Results mark the mails in such a folder the same way, so a model can take it over as a condition.
+    /// </remarks>
+    /// <returns>The value, or null for a kind of folder the argument does not offer.</returns>
+    public static string? ToArgumentValue(MailFolderSpecialUse specialUse) => specialUse switch
+    {
+        MailFolderSpecialUse.SENT => SPECIAL_FOLDER_SENT,
+        MailFolderSpecialUse.DRAFTS => SPECIAL_FOLDER_DRAFTS,
+        _ => null,
     };
 
     /// <summary>
@@ -131,6 +152,19 @@ internal static class MailToolArguments
             HasAttachments = ToolArgumentReader.ReadOptionalBoolean(arguments, HAS_ATTACHMENTS_ARGUMENT, "for mails with and without attachments alike"),
         };
 
-        return new(filter, ToolArgumentReader.ReadOptionalLine(arguments, FOLDER_ARGUMENT, MAX_FOLDER_CHARACTERS, "for mails in any folder"));
+        var folder = ToolArgumentReader.ReadOptionalLine(arguments, FOLDER_ARGUMENT, MAX_FOLDER_CHARACTERS, "for mails in any folder");
+        var specialFolder = ToolArgumentReader.ReadOptionalChoice(arguments, SPECIAL_FOLDER_ARGUMENT, SPECIAL_FOLDER_VALUES, "for mails in any folder") switch
+        {
+            null => (MailFolderSpecialUse?)null,
+            SPECIAL_FOLDER_SENT => MailFolderSpecialUse.SENT,
+            SPECIAL_FOLDER_DRAFTS => MailFolderSpecialUse.DRAFTS,
+            var other => throw new UnreachableException($"The special folder '{other}' was offered, but has no meaning."),
+        };
+
+        // Both name the one folder the mails have to lie in, and two such folders would match no mail at all:
+        if (folder is not null && specialFolder is not null)
+            throw new ArgumentException($"Arguments '{FOLDER_ARGUMENT}' and '{SPECIAL_FOLDER_ARGUMENT}' cannot be combined, but both were given. Leave out '{FOLDER_ARGUMENT}' for the sent mails or the drafts, however the server names their folders, or leave out '{SPECIAL_FOLDER_ARGUMENT}' for the folder with the given path.");
+
+        return new(filter, folder, specialFolder);
     }
 }
