@@ -398,7 +398,6 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: Slide Planner Assistant template and defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedChangeVariantPerChapter, this.Id, settingsTable, dryRun);
 
         // Config: Batch Processing Assistant defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);

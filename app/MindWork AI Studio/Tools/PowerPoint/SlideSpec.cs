@@ -10,7 +10,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// that no prompt text of the template stays behind.
 /// </remarks>
 /// <param name="Layout">The ID of the layout family, e.g., "L3".</param>
-/// <param name="StartsChapter">Whether a new chapter starts with this slide, which may change the color variant.</param>
+/// <param name="StartsChapter">Whether a new chapter starts with this slide, which opens a section of the presentation.</param>
 /// <param name="Title">The title; empty when the slide has none.</param>
 /// <param name="Subtitle">The subtitle; empty when the slide has none.</param>
 /// <param name="Texts">The content of the text slots.</param>

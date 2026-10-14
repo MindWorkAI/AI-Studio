@@ -565,16 +565,9 @@ CONFIG["SETTINGS"] = {}
 -- the organization. Leave it empty for no footer. Requires preselection to be enabled.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText"] = ""
 --
--- Configure whether every chapter moves on to the next color variant of the template. A
--- template carries variants when it holds each layout several times, with names differing
--- in their first or last word only, e.g., "A Content" and "B Content". Requires
--- preselection to be enabled.
--- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedChangeVariantPerChapter"] = false
---
 -- Allow users to choose another template or change the defaults locally.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedFooterText.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataSlideBuilder.PreselectedChangeVariantPerChapter.AllowUserOverride"] = true
 
 -- Configure defaults for the Batch Processing Assistant.
 -- Preselection must be enabled for the remaining batch settings to take effect.

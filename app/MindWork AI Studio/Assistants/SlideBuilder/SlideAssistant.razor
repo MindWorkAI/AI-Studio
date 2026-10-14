@@ -80,17 +80,17 @@
     </MudButton>
 }
 
-@if (this.template is not null)
+@* The select renders its items again on its own, e.g., while the form validates, when the template may be gone already: *@
+@if (this.template is { } loadedTemplate)
 {
-    @if (this.template.VariantLabels.Count > 0)
+    @if (loadedTemplate.VariantLabels.Count > 0)
     {
-        <MudSelect T="string" @bind-Value="@this.variantLabel" Label="@T("Color variant")" HelperText="@T("Your template carries its layouts in several colors. Choose the one the presentation starts with.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Palette" Class="mb-3">
-            @foreach (var label in this.template.VariantLabels)
+        <MudSelect T="string" @bind-Value="@this.variantLabel" Label="@T("Color variant")" HelperText="@T("Your template carries its layouts in several colors. Choose the one for the presentation.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Palette" Class="mb-3">
+            @foreach (var label in loadedTemplate.VariantLabels)
             {
                 <MudSelectItem T="string" Value="@label">@label</MudSelectItem>
             }
         </MudSelect>
-        <MudSwitch T="bool" @bind-Value="@this.changeVariantPerChapter" Label="@T("Change the color variant with every chapter")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
     }
 
     <MudTextField T="string" @bind-Text="@this.footerText" Label="@T("(Optional) Footer")" HelperText="@T("Shown on every slide whose layout has a footer, e.g., your name, institute, and date.")" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ShortText" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>

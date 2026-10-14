@@ -206,7 +206,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
             this.customTargetLanguage = string.Empty;
             this.footerText = string.Empty;
-            this.changeVariantPerChapter = false;
         }
     }
 
@@ -222,7 +221,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (this.SettingsManager.ConfigurationData.SlideBuilder.PreselectOptions)
         {
             this.footerText = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedFooterText;
-            this.changeVariantPerChapter = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedChangeVariantPerChapter;
             this.selectedTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedTargetLanguage;
             this.customTargetLanguage = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedOtherLanguage;
             this.selectedAudienceProfile = this.SettingsManager.ConfigurationData.SlideBuilder.PreselectedAudienceProfile;
@@ -284,7 +282,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
         state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
-        state.Set(CHANGE_VARIANT_PER_CHAPTER_STATE_KEY, this.changeVariantPerChapter);
         state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
@@ -310,7 +307,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
         state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
-        state.Restore(CHANGE_VARIANT_PER_CHAPTER_STATE_KEY, value => this.changeVariantPerChapter = value);
         state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);

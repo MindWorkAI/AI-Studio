@@ -30,7 +30,6 @@ public partial class SlideAssistant
 
     private string templatePath = string.Empty;
     private string footerText = string.Empty;
-    private bool changeVariantPerChapter;
     private string? variantLabel;
     private PresentationTemplate? template;
     private SlideDeckSpec? slideDeck;
@@ -53,7 +52,6 @@ public partial class SlideAssistant
 
     private static readonly AssistantSessionStateKey<string> TEMPLATE_PATH_STATE_KEY = new(nameof(templatePath));
     private static readonly AssistantSessionStateKey<string> FOOTER_TEXT_STATE_KEY = new(nameof(footerText));
-    private static readonly AssistantSessionStateKey<bool> CHANGE_VARIANT_PER_CHAPTER_STATE_KEY = new(nameof(changeVariantPerChapter));
     private static readonly AssistantSessionStateKey<string> VARIANT_LABEL_STATE_KEY = new(nameof(variantLabel));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
@@ -269,7 +267,7 @@ public partial class SlideAssistant
                 var currentTemplate = PresentationTemplate.Read(templateFile);
                 templateFile.Position = 0;
 
-                var options = new PresentationWriteOptions(this.variantLabel, this.changeVariantPerChapter, this.footerText.Trim());
+                var options = new PresentationWriteOptions(this.variantLabel, this.footerText.Trim());
                 result = await PresentationWriter.WriteAsync(templateFile, currentTemplate, deck, options, new RustPictureSource(this.RustService, this.slideDeckPicturePaths), presentation, CancellationToken.None);
             }
 

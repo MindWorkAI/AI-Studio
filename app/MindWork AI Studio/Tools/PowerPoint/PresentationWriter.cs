@@ -78,13 +78,13 @@ internal static partial class PresentationWriter
             var layoutParts = presentationPart.SlideMasterParts.SelectMany(master => master.SlideLayoutParts).ToDictionary(part => part.Uri);
             var tableStyleId = presentationPart.TableStylesPart?.TableStyleList?.Default?.Value;
             var slideIdList = presentation.SlideIdList ??= new P.SlideIdList();
-            var variantLabels = VariantLabelsOf(deck, template, options);
+            var variantLabel = VariantLabelOf(template, options);
             var slideIds = new List<uint>(deck.Slides.Count);
             for (var index = 0; index < deck.Slides.Count; index++)
             {
                 var slide = deck.Slides[index];
                 var family = template.FindFamily(slide.Layout) ?? throw new InvalidOperationException($"The slide deck uses the layout '{slide.Layout}', which the template does not have. Check the deck before writing it.");
-                var layout = family.GetLayout(variantLabels[index]);
+                var layout = family.GetLayout(variantLabel);
                 var layoutPart = LayoutPartOf(layoutParts, layout);
                 var slidePart = presentationPart.AddNewPart<SlidePart>();
                 slidePart.AddPart(layoutPart);
@@ -99,13 +99,13 @@ internal static partial class PresentationWriter
             }
 
             //
-            // The imprint closes the presentation, in the variant of the title slide. It is no slide
-            // of the deck, so the model neither planned nor counted it:
+            // The imprint closes the presentation. It is no slide of the deck, so the model neither
+            // planned nor counted it:
             //
             uint? imprintSlideId = null;
             if (ImprintFamilyOf(template) is { } imprintFamily)
             {
-                var layout = imprintFamily.GetLayout(variantLabels.FirstOrDefault());
+                var layout = imprintFamily.GetLayout(variantLabel);
                 var layoutPart = LayoutPartOf(layoutParts, layout);
                 var slidePart = presentationPart.AddNewPart<SlidePart>();
                 slidePart.AddPart(layoutPart);
@@ -168,37 +168,14 @@ internal static partial class PresentationWriter
     }
 
     /// <summary>
-    /// Says which variant each slide is written in.
+    /// Says which variant all slides are written in: the one the user chose, or the first one of
+    /// the template when it has no such variant.
     /// </summary>
-    /// <remarks>
-    /// The slides before the first chapter, such as the title slide, share the variant of the
-    /// first chapter. When the variant changes per chapter, every further chapter moves on to the
-    /// next one, and after the last it starts over.
-    /// </remarks>
-    private static List<string?> VariantLabelsOf(SlideDeckSpec deck, PresentationTemplate template, PresentationWriteOptions options)
-    {
-        var labels = template.VariantLabels;
-        if (labels.Count == 0)
-            return deck.Slides.Select(_ => (string?)null).ToList();
-
-        var start = 0;
-        for (var index = 0; index < labels.Count; index++)
-            if (string.Equals(labels[index], options.VariantLabel, StringComparison.Ordinal))
-                start = index;
-
-        var chapters = 0;
-        var result = new List<string?>(deck.Slides.Count);
-        foreach (var slide in deck.Slides)
-        {
-            if (slide.StartsChapter)
-                chapters++;
-
-            var offset = options.ChangeVariantPerChapter ? Math.Max(0, chapters - 1) : 0;
-            result.Add(labels[(start + offset) % labels.Count]);
-        }
-
-        return result;
-    }
+    /// <returns>The label of the variant; null when the template carries every layout once.</returns>
+    private static string? VariantLabelOf(PresentationTemplate template, PresentationWriteOptions options) =>
+        options.VariantLabel is { } label && template.VariantLabels.Contains(label)
+            ? label
+            : template.VariantLabels.FirstOrDefault();
 
     /// <summary>
     /// Everything needed to fill the shape tree of one slide.

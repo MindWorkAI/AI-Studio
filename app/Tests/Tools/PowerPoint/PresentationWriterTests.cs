@@ -34,7 +34,7 @@ public sealed class PresentationWriterTests
     /// </summary>
     private static readonly SlidePicture WIDE_PICTURE = new([1, 2, 3], "image/png", 400, 100);
 
-    private static readonly PresentationWriteOptions OPTIONS = new("A", true, "Mission team");
+    private static readonly PresentationWriteOptions OPTIONS = new("A", "Mission team");
 
     private static readonly SlideDeckSpec DECK = new("Mars",
     [
@@ -94,7 +94,7 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
-    public async Task EveryChapterAfterTheFirstMovesOnToTheNextVariant()
+    public async Task AllSlidesUseTheChosenVariant()
     {
         var deck = new SlideDeckSpec("Mars",
         [
@@ -102,16 +102,15 @@ public sealed class PresentationWriterTests
             new SlideSpec("L2", true, "One", string.Empty, [], [], [], null),
             new SlideSpec("L2", false, "One more", string.Empty, [], [], [], null),
             new SlideSpec("L2", true, "Two", string.Empty, [], [], [], null),
-            new SlideSpec("L2", false, "Two more", string.Empty, [], [], [], null),
         ]);
 
-        var (perChapter, _) = await WriteAsync(deck, OPTIONS);
-        var (fixedVariant, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "B", ChangeVariantPerChapter = false });
+        var (chosen, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "B" });
+        var (unknown, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "Z" });
 
         Assert.Multiple(() =>
         {
-            Assert.That(LayoutNamesOf(perChapter), Is.EqualTo(new[] { "A Title", "A Content", "A Content", "B Content", "B Content", "A Content" }), "The imprint comes in the variant of the title slide.");
-            Assert.That(LayoutNamesOf(fixedVariant), Is.EqualTo(new[] { "B Title", "B Content", "B Content", "B Content", "B Content", "B Content" }));
+            Assert.That(LayoutNamesOf(chosen), Is.EqualTo(new[] { "B Title", "B Content", "B Content", "B Content", "B Content" }), "Chapters keep the variant, and so does the imprint.");
+            Assert.That(LayoutNamesOf(unknown), Is.EqualTo(new[] { "A Title", "A Content", "A Content", "A Content", "A Content" }), "A variant the template lacks falls back to its first one.");
         });
     }
 

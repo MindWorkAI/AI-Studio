@@ -6,8 +6,8 @@ namespace AIStudio.Tools.PowerPoint;
 /// <remarks>
 /// Corporate templates often carry every layout in several colors. The model chooses what goes on a
 /// slide, never its color: it sees one entry per family, and the color is chosen for the whole
-/// presentation or per chapter. Since all variants share the slots, slot n of one variant is slot n
-/// of every other one.
+/// presentation. Since all variants share the slots, slot n of one variant is slot n of every other
+/// one.
 /// </remarks>
 /// <param name="Id">The short ID the model uses to name the family, e.g., "L3".</param>
 /// <param name="Name">The name the layouts share, e.g., "Inhalt/Content 1".</param>

@@ -34,11 +34,6 @@ public class DataSlideBuilder(Expression<Func<Data, DataSlideBuilder>>? configSe
     public string PreselectedFooterText { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedFooterText, string.Empty);
 
     /// <summary>
-    /// Preselect whether every chapter moves on to the next color variant of the template?
-    /// </summary>
-    public bool PreselectedChangeVariantPerChapter { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedChangeVariantPerChapter, false);
-
-    /// <summary>
     /// Preselect any Slide Builder  options?
     /// </summary>
     public bool PreselectOptions { get; set; } = true;
