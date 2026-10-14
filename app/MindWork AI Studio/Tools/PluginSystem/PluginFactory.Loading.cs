@@ -14,7 +14,19 @@ public static partial class PluginFactory
 {
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
     private static readonly SemaphoreSlim PLUGIN_LOAD_SEMAPHORE = new(1, 1);
-    
+    private static readonly TaskCompletionSource FIRST_LOAD_COMPLETED = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>
+    /// Completes once LoadAll got through for the first time, the clean-up of the configuration included.
+    /// </summary>
+    /// <remarks>
+    /// Until then, the settings may lack whatever the configuration of an organization provides, such
+    /// as its embedding providers: on a new computer, or after restoring a backup, which leaves them
+    /// out. Whoever acts on such objects while AI Studio starts waits for this, or takes them for
+    /// objects which are gone. It never completes when loading failed, so wait with a limit.
+    /// </remarks>
+    public static Task FirstLoadCompleted => FIRST_LOAD_COMPLETED.Task;
+
     /// <summary>
     /// How long a single plugin may take to load, and again to start.
     /// </summary>
@@ -372,6 +384,8 @@ public static partial class PluginFactory
             await SettingsManagerAccess.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
+
+        FIRST_LOAD_COMPLETED.TrySetResult();
     }
 
     /// <summary>

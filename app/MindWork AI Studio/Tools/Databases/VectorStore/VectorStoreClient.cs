@@ -4,6 +4,14 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
 {
     public abstract Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token);
 
+    /// <summary>
+    /// Whether the store was created completely, without creating or opening it.
+    /// </summary>
+    /// <param name="storeName">The name of the store.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when the store exists.</returns>
+    public abstract Task<bool> VectorStoreExists(string storeName, CancellationToken token);
+
     public abstract Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token);
 
     public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token);

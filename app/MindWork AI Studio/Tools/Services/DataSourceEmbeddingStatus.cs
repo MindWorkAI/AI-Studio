@@ -12,7 +12,8 @@ namespace AIStudio.Tools.Services;
 /// document has pages to count. Block numbers start at one, the way the page states them.
 ///
 /// VectorStoreUnreadable says why a data source failed, not only that it did. The UI needs that
-/// difference to offer the repair for this one case, and it is carried as its own flag so nothing
+/// difference to offer the repair for this one case: the vector store cannot be read, or it is
+/// missing although the index database knows what it held. It is carried as its own flag so nothing
 /// has to read it back out of the message in LastError. Attention does the same for what the user
 /// has to decide, and PendingRemovalCount is the number a held back removal asks about: agreeing to
 /// it hands that very number back, cf. ApprovePendingMailRemovalAsync.

@@ -101,6 +101,11 @@ pub struct EnsureQdrantEdgeStoreRequest {
 }
 
 #[derive(Deserialize)]
+pub struct CheckQdrantEdgeStoreRequest {
+    pub store_name: String,
+}
+
+#[derive(Deserialize)]
 pub struct InsertQdrantEdgeEmbeddingRequest {
     pub store_name: String,
     pub points: Vec<QdrantEdgeStoragePoint>,
@@ -344,6 +349,17 @@ impl QdrantEdgeDatabase {
         })
     }
 
+    /// Whether a store was created completely, without creating or loading it.
+    ///
+    /// The app asks this when its index database knows about a store. Should the store be gone,
+    /// the user decides whether to rebuild it, since that sends every document to the embedding
+    /// provider once more. Creating an empty store on the way, as `ensure_store_exists` does,
+    /// would hide that the vectors are missing.
+    fn store_exists(&self, store_name: &str) -> QdrantEdgeResult<bool> {
+        let path = self.store_path(store_name)?;
+        store_is_initialized(&path, store_name)
+    }
+
     fn insert_embedding(&mut self, store_name: &str, points: Vec<QdrantEdgeStoragePoint>) -> QdrantEdgeResult<()> {
         let Some(first_point) = points.first() else {
             return Ok(());
@@ -515,6 +531,12 @@ fn read_qdrant_edge_info() -> Option<QdrantEdgeInfo> {
 pub async fn ensure_qdrant_edge_store(Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
     run_qdrant_edge_request(move |database| {
         database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
+    }).await
+}
+
+pub async fn check_qdrant_edge_store(Json(request): Json<CheckQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<bool>> {
+    run_qdrant_edge_request(move |database| {
+        database.store_exists(&request.store_name)
     }).await
 }
 
@@ -1126,6 +1148,26 @@ mod tests {
         assert!(!existing.created);
         let display_name_path = database.store_path(store_name).unwrap().join(STORE_DISPLAY_NAME_MARKER);
         assert_eq!(fs::read_to_string(display_name_path).unwrap(), "Renamed source");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn asking_whether_a_store_exists_never_creates_it() {
+        let test_directory = test_directory("exists");
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+
+        assert!(!database.store_exists(store_name).unwrap());
+        assert!(!database.store_exists(store_name).unwrap(), "Asking once must not create the store for the next question.");
+        assert!(!database.store_path(store_name).unwrap().exists());
+
+        database.ensure_store_exists(store_name, "Some source", 3).unwrap();
+        assert!(database.store_exists(store_name).unwrap());
+
+        database.delete_store(store_name).unwrap();
+        assert!(!database.store_exists(store_name).unwrap());
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();

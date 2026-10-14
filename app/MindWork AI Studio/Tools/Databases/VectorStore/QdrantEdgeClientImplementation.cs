@@ -23,6 +23,7 @@ public sealed class QdrantEdgeClientImplementation(
     private const string DATABASE_NAME = "Qdrant Edge";
     private const string INFO_PATH = "/system/qdrant-edge/info";
     private const string ENSURE_PATH = "/system/qdrant-edge/ensure";
+    private const string EXISTS_PATH = "/system/qdrant-edge/exists";
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string SEARCH_PATH = "/system/qdrant-edge/search";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
@@ -122,6 +123,10 @@ public sealed class QdrantEdgeClientImplementation(
         await rustService.ExecuteDatabaseQuery<EnsureVectorStoreRequest, VectorStoreEnsureResult>(DATABASE_NAME, ENSURE_PATH,
             new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token) ?? throw new InvalidOperationException("The vector store ensure response was empty.");
 
+    public override async Task<bool> VectorStoreExists(string storeName, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<CheckVectorStoreRequest, bool?>(DATABASE_NAME, EXISTS_PATH,
+            new CheckVectorStoreRequest(storeName), token) ?? throw new InvalidOperationException("The vector store exists response was empty.");
+
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
@@ -171,6 +176,8 @@ public sealed class QdrantEdgeClientImplementation(
 
     // ReSharper disable NotAccessedPositionalProperty.Local
     private sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
+
+    private sealed record CheckVectorStoreRequest(string StoreName);
 
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 

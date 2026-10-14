@@ -37,6 +37,7 @@ fn create_router() -> Router {
         .route("/system/dotnet/ready", get(crate::dotnet::dotnet_ready))
         .route("/system/qdrant-edge/info", get(crate::qdrant_edge_database::qdrant_edge_info))
         .route("/system/qdrant-edge/ensure", post(crate::qdrant_edge_database::ensure_qdrant_edge_store))
+        .route("/system/qdrant-edge/exists", post(crate::qdrant_edge_database::check_qdrant_edge_store))
         .route("/system/qdrant-edge/insert", post(crate::qdrant_edge_database::insert_qdrant_edge_embedding))
         .route("/system/qdrant-edge/search", post(crate::qdrant_edge_database::search_qdrant_edge_embeddings))
         .route("/system/qdrant-edge/delete-file", post(crate::qdrant_edge_database::delete_qdrant_edge_embedding_by_file))
