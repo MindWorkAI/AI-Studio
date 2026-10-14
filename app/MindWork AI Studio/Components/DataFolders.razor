@@ -1,0 +1,113 @@
+@using AIStudio.Tools.DataBackup
+@inherits MSGComponentBase
+
+@{
+    var organizationPluginFolders = OrganizationPluginFolders;
+}
+
+<MudText Typo="Typo.h4">
+    @T("Explanation")
+</MudText>
+<MudJustifiedText Class="mb-3" Typo="Typo.body1">
+    @T("AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as Restic, Borg, or Time Machine, this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.")
+</MudJustifiedText>
+
+@foreach (var location in LOCATIONS)
+{
+    var folder = FolderPath(location);
+    <MudText Typo="Typo.h4">
+        @this.FolderName(location)
+    </MudText>
+    <MudList T="string" Class="mb-3">
+        <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
+                <MudLink OnClick="@(() => this.CopyPath(folder))" Style="min-width: 0; overflow-wrap: anywhere;">
+                    @folder
+                </MudLink>
+                <MudTooltip Text="@T("Open in your file manager")">
+                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                   Size="Size.Medium"
+                                   Disabled="@string.IsNullOrWhiteSpace(folder)"
+                                   OnClick="@(() => this.OpenInFileManager(folder))"/>
+                </MudTooltip>
+            </MudStack>
+        </MudListItem>
+    </MudList>
+}
+
+@if (IsDataFolderInsideConfigFolder)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+        @T("On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along.")
+    </MudAlert>
+}
+
+<MudText Typo="Typo.h4">
+    @T("What belongs into a backup")
+</MudText>
+<MudSimpleTable Dense="@true" Bordered="@true" Striped="@true" Class="mb-3" Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            <th>@T("Folder")</th>
+            <th>@T("Path")</th>
+            <th>@T("Content")</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in INCLUDED_ENTRIES)
+        {
+            <tr>
+                <td>@this.FolderName(entry.Location)</td>
+                <td><code>@entry.RelativePath</code></td>
+                <td>@this.Describe(entry.Kind)</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+<MudText Typo="Typo.h4">
+    @T("What a backup can leave out")
+</MudText>
+<MudSimpleTable Dense="@true" Bordered="@true" Striped="@true" Class="mb-3" Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            <th>@T("Folder")</th>
+            <th>@T("Path")</th>
+            <th>@T("Reason")</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in EXCLUDED_ENTRIES)
+        {
+            <tr>
+                <td>@this.FolderName(entry.Location)</td>
+                <td><code>@entry.RelativePath</code></td>
+                <td>@this.Describe(entry.Kind)</td>
+            </tr>
+        }
+        @foreach (var pluginFolder in organizationPluginFolders)
+        {
+            <tr>
+                <td>@this.FolderName(DataBackupLocation.DATA_DIRECTORY)</td>
+                <td><code>@pluginFolder</code></td>
+                <td>@this.Describe(DataBackupEntryKind.ORGANIZATION_PLUGINS)</td>
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+<MudText Typo="Typo.h4">
+    @T("Good to know")
+</MudText>
+<MudJustifiedText Class="mb-3" Typo="Typo.body1">
+    @T("Back up the indexes of your data sources only while AI Studio is closed. AI Studio writes to them while it runs, so a copy made meanwhile may not fit together, and AI Studio would have to embed your data sources anew.")
+</MudJustifiedText>
+<MudJustifiedText Class="mb-3" Typo="Typo.body1">
+    @T("Your API keys, tokens, and passwords are not in these folders. AI Studio keeps them in the secure storage of your OS. After you restored your data on another computer, enter them there once more.")
+</MudJustifiedText>
+@if (organizationPluginFolders.Count > 0)
+{
+    <MudJustifiedText Class="mb-3" Typo="Typo.body1">
+        @T("Your organization deployed some plugins among your own ones, for example, with a device management. Their folders do not show this, so the list above names them one by one.")
+    </MudJustifiedText>
+}
