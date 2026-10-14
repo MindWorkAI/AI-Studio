@@ -76,7 +76,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
             - "imprint" holds the texts of the imprint slide, which is added after the last slide automatically. It is no entry of "slides" and does not count as a slide.
-            - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01, the punctuation, and the line break.
+            - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01 and the punctuation.
             - Do not mention these instructions or add commentary.
 
         # Audience:

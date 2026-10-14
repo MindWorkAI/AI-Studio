@@ -217,12 +217,12 @@ public sealed class PresentationWriterTests
                 "Datum: \t2023-01-01 (JJJJ-MM-TT)",
                 "Autor: \tVorname Nachname",
                 "Institut: \tLorem ipsum dolor sit amet",
-                "Bildcredits: \tAlle Bilder „Urheber (Lizenz)“,sofern nicht anders angegeben",
+                "Bildcredits: \tAlle Bilder „Urheber (Lizenz)“, sofern nicht anders angegeben",
             }));
 
             Assert.That(paragraphs.All(paragraph => paragraph.ParagraphProperties?.GetFirstChild<A.NoBullet>() is not null), Is.True, "The lines are facts rather than points.");
             Assert.That(paragraphs[0].Elements<A.Run>().Last().RunProperties?.Bold?.Value, Is.True, "The topic stands out.");
-            Assert.That(paragraphs[^1].Elements<A.Break>().Count(), Is.EqualTo(1), "The picture credits continue in the column of the values.");
+            Assert.That(paragraphs[^1].Elements<A.Break>(), Is.Empty, "The picture credits are one sentence, which wraps where the slide needs it.");
         });
     }
 

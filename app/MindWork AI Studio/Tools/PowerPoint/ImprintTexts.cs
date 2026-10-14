@@ -44,7 +44,7 @@ internal sealed record ImprintTexts(
         "Vorname Nachname",
         "Institut:",
         "Bildcredits:",
-        "Alle Bilder „Urheber (Lizenz)“,\nsofern nicht anders angegeben");
+        "Alle Bilder „Urheber (Lizenz)“, sofern nicht anders angegeben");
 
     /// <summary>
     /// The texts as the JSON object the model writes, with the field names it uses.
