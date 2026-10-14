@@ -9,13 +9,13 @@ namespace AIStudio.Chat;
 /// </summary>
 /// <param name="Type">The type of the file attachment.</param>
 /// <param name="FileName">The name of the file, including extension.</param>
-/// <param name="FilePath">The full path to the file, including the filename and extension.</param>
+/// <param name="FilePath">The full path to the file, including the filename and extension. A file below the data directory, such as a transcript, is stored with a path relative to it.</param>
 /// <param name="FileSizeBytes">The size of the file in bytes.</param>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
 [JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
 [JsonDerivedType(typeof(ManagedTranscriptAttachment), typeDiscriminator: "managed_transcript")]
-public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
+public record FileAttachment(FileAttachmentType Type, string FileName, [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string FilePath, long FileSizeBytes)
 {
     /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.

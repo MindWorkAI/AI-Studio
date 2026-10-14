@@ -295,8 +295,8 @@ public static class ChatArchiveImporter
     }
 
     /// <summary>
-    /// Imports one chat: extracts its files into a fresh chat directory, turns the
-    /// archive-relative attachment paths back into absolute ones, and stores the chat.
+    /// Imports one chat: extracts its files into a fresh chat directory, points the paths of
+    /// those files to it, and stores the chat.
     /// </summary>
     /// <param name="existingChatIds">The IDs of all chats in the storage. An imported chat is added.</param>
     private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<ZipArchiveEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, CancellationToken token)
@@ -367,21 +367,22 @@ public static class ChatArchiveImporter
                 return ChatArchiveImportOutcome.FAILED;
             }
 
+            //
+            // A file below the data directory is stored with a path relative to it, which reading
+            // the thread resolved against the data directory of this computer: where the chat lay
+            // when the archive was made. Only the paths of files which were actually extracted move
+            // to the imported chat. Everything else keeps its path:
+            //
+            var originalChatDirectory = WorkspaceBehaviour.GetChatDirectory(thread.WorkspaceId, thread.ChatId);
             thread = thread with { ChatId = targetChatId };
             thread.WorkspaceId = targetWorkspaceId;
-
-            //
-            // Turn the archive-relative paths back into absolute ones. Only paths whose files
-            // were actually extracted are rewritten. Everything else was already absolute when
-            // the archive was created and stays as it is:
-            //
             thread.RewriteFilePaths(path =>
             {
-                var normalizedPath = path.Replace(Path.DirectorySeparatorChar, ChatArchiveFormat.ENTRY_SEPARATOR);
-                if (!extractedPaths.Contains(normalizedPath))
+                var chatRelativePath = Path.GetRelativePath(originalChatDirectory, path).Replace(Path.DirectorySeparatorChar, ChatArchiveFormat.ENTRY_SEPARATOR);
+                if (!extractedPaths.Contains(chatRelativePath))
                     return path;
 
-                return Path.Combine(chatDirectory, normalizedPath.Replace(ChatArchiveFormat.ENTRY_SEPARATOR, Path.DirectorySeparatorChar));
+                return Path.Combine(chatDirectory, chatRelativePath.Replace(ChatArchiveFormat.ENTRY_SEPARATOR, Path.DirectorySeparatorChar));
             });
 
             CopyTranscriptsStoredElsewhere(thread, chatDirectory);
@@ -424,7 +425,7 @@ public static class ChatArchiveImporter
     /// same code. A transcript which no longer exists keeps its place in the chat and shows up
     /// as missing, again as it does in a copy.
     /// </remarks>
-    /// <param name="thread">The imported chat thread, after its archive-relative paths were resolved.</param>
+    /// <param name="thread">The imported chat thread, after the paths of its extracted files were pointed to it.</param>
     /// <param name="chatDirectory">The directory of the imported chat.</param>
     private static void CopyTranscriptsStoredElsewhere(ChatThread thread, string chatDirectory)
     {

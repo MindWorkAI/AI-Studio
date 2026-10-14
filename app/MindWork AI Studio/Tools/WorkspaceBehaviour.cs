@@ -10,7 +10,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
-public static class WorkspaceBehaviour
+public static partial class WorkspaceBehaviour
 {
     public readonly record struct TryCreateWorkspaceResult(bool Success, WorkspaceTreeWorkspace Workspace);
 

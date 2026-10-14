@@ -214,12 +214,7 @@ public static class ChatArchiveExporter
         var chatEntryPrefix = $"{entryPrefix}{chat.ChatId}{ChatArchiveFormat.ENTRY_SEPARATOR}";
         await WriteTextEntryAsync(archive, $"{chatEntryPrefix}{ChatArchiveFormat.NAME_FILE_NAME}", chat.Name, token);
 
-        //
-        // Write the files before rewriting any path: only a file which is really in the
-        // archive may become an archive-relative path. Otherwise a file which could not be
-        // read would leave a relative path behind, which the import cannot resolve.
-        //
-        var includedFiles = new Dictionary<string, string>(PathTools.COMPARER);
+        var includedFiles = 0;
         if (includeChatFiles)
         {
             foreach (var (chatRelativePath, filePath) in ChatArchiveChatFiles.Collect(chatDirectory))
@@ -229,7 +224,7 @@ public static class ChatArchiveExporter
                 try
                 {
                     await WriteFileEntryAsync(archive, $"{chatEntryPrefix}{chatRelativePath}", filePath, token);
-                    includedFiles[chatRelativePath] = filePath;
+                    includedFiles++;
                 }
                 catch (OperationCanceledException)
                 {
@@ -240,13 +235,13 @@ public static class ChatArchiveExporter
                     LOG.LogWarning(exception, "Failed to add the file '{FilePath}' of chat '{ChatId}' to the archive.", filePath, chat.ChatId);
                 }
             }
-
-            thread.RewriteFilePaths(originalPath =>
-                TryGetChatRelativePath(chatDirectory, originalPath, out var relativePath) && includedFiles.ContainsKey(relativePath)
-                    ? relativePath
-                    : originalPath);
         }
 
+        //
+        // The paths of the chat need no rewriting: a file below the data directory is stored with
+        // a path relative to it anyway. The import finds the files of this chat by that path, below
+        // the directory of the chat:
+        //
         var threadJson = JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS);
         await WriteTextEntryAsync(archive, $"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", threadJson, token);
 
@@ -255,34 +250,8 @@ public static class ChatArchiveExporter
             ChatId = chat.ChatId,
             Name = chat.Name,
             LastEditTime = chat.LastEditTime,
-            IncludedFiles = includedFiles.Count,
+            IncludedFiles = includedFiles,
         };
-    }
-
-    /// <summary>
-    /// Determines whether the given path points into the chat directory and returns the
-    /// archive-relative path for it.
-    /// </summary>
-    private static bool TryGetChatRelativePath(string chatDirectory, string path, out string relativePath)
-    {
-        relativePath = string.Empty;
-        if (string.IsNullOrWhiteSpace(path))
-            return false;
-
-        try
-        {
-            var relative = Path.GetRelativePath(Path.GetFullPath(chatDirectory), Path.GetFullPath(path));
-            if (Path.IsPathRooted(relative) || relative == ".." || relative.StartsWith($"..{Path.DirectorySeparatorChar}", PathTools.COMPARISON))
-                return false;
-
-            relativePath = relative.Replace(Path.DirectorySeparatorChar, ChatArchiveFormat.ENTRY_SEPARATOR);
-            return true;
-        }
-        catch (Exception exception)
-        {
-            LOG.LogWarning(exception, "Could not determine whether the path '{Path}' belongs to the chat directory '{ChatDirectory}'.", path, chatDirectory);
-            return false;
-        }
     }
 
     private static async Task WriteTextEntryAsync(ZipArchive archive, string entryName, string content, CancellationToken token)
