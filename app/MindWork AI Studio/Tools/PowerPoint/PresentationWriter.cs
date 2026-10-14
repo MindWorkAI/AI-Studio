@@ -16,6 +16,9 @@ namespace AIStudio.Tools.PowerPoint;
 /// corporate design applies to everything written here. Slots without content get no placeholder
 /// at all, which leaves no prompt text such as "Click to add text" behind.
 ///
+/// Every presentation ends with an imprint, written on a content layout of the template like every
+/// other slide. It is no slide of the deck, so the number of slides the user asked for leaves it out.
+///
 /// The deck has to pass <see cref="SlideDeckSpecValidator"/> first; what fits the template is not
 /// checked again here.
 /// </remarks>
@@ -82,9 +85,7 @@ internal static partial class PresentationWriter
                 var slide = deck.Slides[index];
                 var family = template.FindFamily(slide.Layout) ?? throw new InvalidOperationException($"The slide deck uses the layout '{slide.Layout}', which the template does not have. Check the deck before writing it.");
                 var layout = family.GetLayout(variantLabels[index]);
-                if (!layoutParts.TryGetValue(layout.PartUri, out var layoutPart))
-                    throw new InvalidOperationException($"The template has no layout at '{layout.PartUri}'. The template was read from another file than the one being written.");
-
+                var layoutPart = LayoutPartOf(layoutParts, layout);
                 var slidePart = presentationPart.AddNewPart<SlidePart>();
                 slidePart.AddPart(layoutPart);
                 var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, (double)template.SlideWidth * template.SlideHeight);
@@ -97,13 +98,36 @@ internal static partial class PresentationWriter
                 slideIds.Add(slideId);
             }
 
-            WriteSections(presentation, deck, slideIds);
+            //
+            // The imprint closes the presentation, in the variant of the title slide. It is no slide
+            // of the deck, so the model neither planned nor counted it:
+            //
+            uint? imprintSlideId = null;
+            if (ImprintFamilyOf(template) is { } imprintFamily)
+            {
+                var layout = imprintFamily.GetLayout(variantLabels.FirstOrDefault());
+                var layoutPart = LayoutPartOf(layoutParts, layout);
+                var slidePart = presentationPart.AddNewPart<SlidePart>();
+                slidePart.AddPart(layoutPart);
+                slidePart.Slide = new P.Slide(
+                    new P.CommonSlideData(ImprintShapeTreeOf(layout, layoutPart.SlideLayout, deck, options.FooterText)),
+                    new P.ColorMapOverride(new A.MasterColorMapping()));
+
+                imprintSlideId = FIRST_SLIDE_ID + (uint)deck.Slides.Count;
+                slideIdList.Append(new P.SlideId { Id = imprintSlideId.Value, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
+            }
+
+            WriteSections(presentation, deck, slideIds, imprintSlideId);
         }
 
         file.Position = 0;
         await file.CopyToAsync(output, token);
         return new PresentationWriteResult(skippedPictures);
     }
+
+    private static SlideLayoutPart LayoutPartOf(Dictionary<Uri, SlideLayoutPart> layoutParts, TemplateLayout layout) => layoutParts.TryGetValue(layout.PartUri, out var layoutPart)
+        ? layoutPart
+        : throw new InvalidOperationException($"The template has no layout at '{layout.PartUri}'. The template was read from another file than the one being written.");
 
     private static async Task<(Dictionary<int, SlidePicture> Loaded, List<int> Skipped)> LoadPicturesAsync(SlideDeckSpec deck, IPictureSource pictures, CancellationToken token)
     {

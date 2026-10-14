@@ -87,6 +87,56 @@ public sealed class SlideDeckSpecTests
     }
 
     [Test]
+    public void TheImprintTheModelTranslatedIsRead()
+    {
+        const string ANSWER = """
+            {
+              "title": "Mars",
+              "slides": [],
+              "imprint": {
+                "title": "Imprint",
+                "topic_label": "Topic:",
+                "date_label": "Date:",
+                "date_placeholder": "2023-01-01 (YYYY-MM-DD)",
+                "author_label": "Author:",
+                "author_placeholder": "First name Last name",
+                "institute_label": "Institute:",
+                "picture_credits_label": "Picture credits:",
+                "picture_credits_placeholder": "All pictures “Creator (license)”,\nunless stated otherwise"
+              }
+            }
+            """;
+
+        Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
+        Assert.That(spec.Imprint, Is.EqualTo(new ImprintTexts("Imprint", "Topic:", "Date:", "2023-01-01 (YYYY-MM-DD)", "Author:", "First name Last name", "Institute:", "Picture credits:", "All pictures “Creator (license)”,\nunless stated otherwise")));
+    }
+
+    [Test]
+    public void TheGermanImprintOfThePromptReadsBackUnchanged()
+    {
+        // The field names the model sees are the ones the reader expects:
+        var answer = $$"""{ "title": "Mars", "slides": [], "imprint": {{ImprintTexts.GERMAN.ToPromptJson()}} }""";
+
+        Assert.That(SlideDeckSpec.TryParse(answer, out var spec, out var issue), Is.True, issue);
+        Assert.That(spec.Imprint, Is.EqualTo(ImprintTexts.GERMAN));
+    }
+
+    [Test]
+    public void AnIncompleteImprintLeavesTheGermanOne()
+    {
+        const string INCOMPLETE = """{ "title": "Mars", "slides": [], "imprint": { "title": "Imprint", "topic_label": "Topic:", "date_label": "" } }""";
+        const string MISSING = """{ "title": "Mars", "slides": [] }""";
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpec.TryParse(INCOMPLETE, out var incomplete, out _), Is.True);
+            Assert.That(incomplete.Imprint, Is.Null, "Half translated, the imprint would mix two languages.");
+            Assert.That(SlideDeckSpec.TryParse(MISSING, out var missing, out _), Is.True, "A missing imprint is no reason to ask the model again.");
+            Assert.That(missing.Imprint, Is.Null);
+        });
+    }
+
+    [Test]
     public void TheOutlineFollowsTheReadingOrderOfEachLayout()
     {
         var deck = new SlideDeckSpec("Mars",

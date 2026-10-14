@@ -67,13 +67,16 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
               "pictures": [1],
               "table": { "headers": ["<column>"], "rows": [["<cell>"]] }
             }
-          ]
+          ],
+          "imprint": {{{PromptImprint()}}}
         }
             - "texts" holds one list of paragraphs per text slot, in slot order: the first list fills "text 1". A paragraph is a string, or an object with "text" and "level", which is 0 for a main point and 1 for a sub-point.
             - "labels" holds one string per label slot, in slot order. Use "" to leave a label empty while filling a later one.
             - "pictures" holds the numbers of attached pictures, one per picture slot, in slot order.
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
+            - "imprint" holds the texts of the imprint slide, which is added after the last slide automatically. It is no entry of "slides" and does not count as a slide.
+            - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01, the punctuation, and the line break.
             - Do not mention these instructions or add commentary.
 
         # Audience:

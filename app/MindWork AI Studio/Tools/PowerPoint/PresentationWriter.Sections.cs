@@ -24,9 +24,10 @@ internal static partial class PresentationWriter
     /// </summary>
     /// <remarks>
     /// The slides before the first chapter, such as the title slide, form a section named after the
-    /// presentation. A deck without chapters gets no sections at all.
+    /// presentation. The imprint forms a section of its own, so that every slide belongs to a
+    /// section, as PowerPoint keeps it. A deck without chapters gets no sections at all.
     /// </remarks>
-    private static void WriteSections(P.Presentation presentation, SlideDeckSpec deck, IReadOnlyList<uint> slideIds)
+    private static void WriteSections(P.Presentation presentation, SlideDeckSpec deck, IReadOnlyList<uint> slideIds, uint? imprintSlideId)
     {
         if (!deck.Slides.Any(slide => slide.StartsChapter))
             return;
@@ -40,13 +41,18 @@ internal static partial class PresentationWriter
             {
                 var name = slide.StartsChapter && slide.Title.Length > 0 ? slide.Title : deck.Title;
                 currentSection = new P14.SectionSlideIdList();
-                sections.Append(new P14.Section(currentSection) { Name = name, Id = $"{{{Guid.NewGuid().ToString().ToUpperInvariant()}}}" });
+                sections.Append(new P14.Section(currentSection) { Name = name, Id = NewSectionId() });
             }
 
             currentSection.Append(new P14.SectionSlideIdListEntry { Id = slideIds[index] });
         }
 
+        if (imprintSlideId is { } imprintId)
+            sections.Append(new P14.Section(new P14.SectionSlideIdList(new P14.SectionSlideIdListEntry { Id = imprintId })) { Name = ImprintTextsOf(deck).Title, Id = NewSectionId() });
+
         var extensions = presentation.PresentationExtensionList ??= new P.PresentationExtensionList();
         extensions.InsertAt(new P.PresentationExtension(sections) { Uri = SECTION_LIST_URI }, 0);
     }
+
+    private static string NewSectionId() => $"{{{Guid.NewGuid().ToString().ToUpperInvariant()}}}";
 }

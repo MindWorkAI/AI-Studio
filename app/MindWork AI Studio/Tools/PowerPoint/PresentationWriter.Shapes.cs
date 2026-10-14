@@ -41,17 +41,7 @@ internal static partial class PresentationWriter
     private static P.ShapeTree ShapeTreeOf(SlidePart slidePart, SlideContent content)
     {
         var placeholders = LayoutPlaceholders.Of(content.LayoutElement);
-        var shapeTree = new P.ShapeTree(
-            new P.NonVisualGroupShapeProperties(
-                new P.NonVisualDrawingProperties { Id = 1U, Name = string.Empty },
-                new P.NonVisualGroupShapeDrawingProperties(),
-                new P.ApplicationNonVisualDrawingProperties()),
-            new P.GroupShapeProperties(new A.TransformGroup(
-                new A.Offset { X = 0, Y = 0 },
-                new A.Extents { Cx = 0, Cy = 0 },
-                new A.ChildOffset { X = 0, Y = 0 },
-                new A.ChildExtents { Cx = 0, Cy = 0 })));
-
+        var shapeTree = NewShapeTree();
         var slide = content.Slide;
         var nextId = 2U;
         foreach (var slot in content.Layout.Slots)
@@ -77,20 +67,45 @@ internal static partial class PresentationWriter
             nextId++;
         }
 
-        //
-        // Footer and slide number appear only on slides which carry their placeholders, even when
-        // the layout has them:
-        //
-        if (content.FooterText.Length > 0 && placeholders.Footer is { } footer)
+        AppendFooterAndSlideNumber(shapeTree, placeholders, content.FooterText, nextId);
+        return shapeTree;
+    }
+
+    /// <summary>
+    /// The shape tree of a slide, with no shapes in it yet.
+    /// </summary>
+    private static P.ShapeTree NewShapeTree() => new(
+        new P.NonVisualGroupShapeProperties(
+            new P.NonVisualDrawingProperties { Id = 1U, Name = string.Empty },
+            new P.NonVisualGroupShapeDrawingProperties(),
+            new P.ApplicationNonVisualDrawingProperties()),
+        new P.GroupShapeProperties(new A.TransformGroup(
+            new A.Offset { X = 0, Y = 0 },
+            new A.Extents { Cx = 0, Cy = 0 },
+            new A.ChildOffset { X = 0, Y = 0 },
+            new A.ChildExtents { Cx = 0, Cy = 0 })));
+
+    /// <summary>
+    /// Adds the footer and the slide number, as far as the layout has places for them.
+    /// </summary>
+    /// <remarks>
+    /// Footer and slide number appear only on slides which carry their placeholders, even when the
+    /// layout has them.
+    /// </remarks>
+    /// <param name="shapeTree">The shape tree of the slide.</param>
+    /// <param name="placeholders">The placeholders of the slide's layout.</param>
+    /// <param name="footerText">The footer text; empty for no footer.</param>
+    /// <param name="nextId">The next free shape ID of the slide.</param>
+    private static void AppendFooterAndSlideNumber(P.ShapeTree shapeTree, LayoutPlaceholders placeholders, string footerText, uint nextId)
+    {
+        if (footerText.Length > 0 && placeholders.Footer is { } footer)
         {
-            shapeTree.Append(TextShape(nextId, $"Footer {nextId}", Clone(footer), ParagraphsOf(content.FooterText), false));
+            shapeTree.Append(TextShape(nextId, $"Footer {nextId}", Clone(footer), ParagraphsOf(footerText), false));
             nextId++;
         }
 
         if (placeholders.SlideNumber is { } slideNumber)
             shapeTree.Append(TextShape(nextId, $"Slide Number {nextId}", Clone(slideNumber), [new A.Paragraph(new A.Field(new A.Text("‹#›")) { Id = SLIDE_NUMBER_FIELD_ID, Type = "slidenum" })], false));
-
-        return shapeTree;
     }
 
     /// <summary>

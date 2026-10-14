@@ -180,6 +180,11 @@ public partial class SlideAssistant
             : "    - Choose as many slides as the content needs.";
     }
 
+    /// <summary>
+    /// The texts of the imprint for the model to translate, in German as the corporate template states them.
+    /// </summary>
+    private static string PromptImprint() => ImprintTexts.GERMAN.ToPromptJson();
+
     private string PromptBulletPoints()
     {
         var count = this.numberOfBulletPoints > 0
