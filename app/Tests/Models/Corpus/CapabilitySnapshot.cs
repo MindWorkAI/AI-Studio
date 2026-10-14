@@ -133,7 +133,7 @@ public static class CapabilitySnapshot
             .ThenBy(entry => entry.ModelId, StringComparer.Ordinal)
             .Select(Line);
 
-        return new StringBuilder(HEADER).AppendJoin('\n', lines).ToString();
+        return new StringBuilder(HEADER.ReplaceLineEndings("\n")).AppendJoin('\n', lines).ToString();
     }
 
     /// <summary>

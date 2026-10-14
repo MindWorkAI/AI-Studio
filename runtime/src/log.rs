@@ -538,12 +538,10 @@ mod tests {
             .suppress_timestamp()
             .suffix("log");
         let storage = OnceLock::new();
+        let expected = absolute(temporary.join(".AI Studio Events.log")).unwrap();
 
         store_startup_log_path(&storage, &log_path);
 
-        assert_eq!(
-            storage.get().unwrap(),
-            "/tmp/org.mindworkai.AIStudio/data/.AI Studio Events.log",
-        );
+        assert_eq!(PathBuf::from(storage.get().unwrap().as_str()), expected);
     }
 }
