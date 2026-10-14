@@ -452,16 +452,17 @@ CONFIG["SETTINGS"] = {}
 -- On Linux, this button exports the plugin archive instead of using a native share sheet.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToSharePlugins"] = false
 
--- Configure the user permission to export chats into an archive file, which the data backup
--- in the settings writes. When set to false, the export button stays visible but is disabled.
--- Chats often hold confidential content, and an archive is a single file which can leave the
--- computer on any stick or cloud drive.
--- CONFIG["SETTINGS"]["DataApp.AllowUserToExportChats"] = false
+-- Configure the user permission to back up the data of AI Studio into a file, e.g. to take it
+-- to a new computer. When set to false, the backup button stays visible but is disabled.
+-- A backup holds chats and other confidential content in a single file, which can leave the
+-- computer on any stick or cloud drive. Secrets such as API keys never go into a backup.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToBackUpData"] = false
 
--- Configure the user permission to import chats from an archive file. When set to false, the
--- button to choose an archive stays visible but is disabled. An archive brings along the
--- locations of the documents its chats name, and those are read again when a chat continues.
--- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChats"] = false
+-- Configure the user permission to restore the data of AI Studio from a backup file, or to add
+-- the chats of a backup. When set to false, the restore button stays visible but is disabled.
+-- A backup brings along the locations of documents and local data sources, and those are read
+-- again afterward.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToRestoreData"] = false
 
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true

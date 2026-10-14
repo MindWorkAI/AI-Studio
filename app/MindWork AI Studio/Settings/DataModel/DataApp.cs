@@ -220,22 +220,22 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
 
     /// <summary>
-    /// Should the user be allowed to export chats into an archive file?
+    /// Should the user be allowed to back up the data of AI Studio into a file?
     /// </summary>
     /// <remarks>
-    /// Chats often hold confidential content, and an archive is a single file which can leave
-    /// the computer on any stick or cloud drive.
+    /// A backup holds chats and other confidential content in a single file, which can leave the
+    /// computer on any stick or cloud drive. Secrets never go into it.
     /// </remarks>
-    public bool AllowUserToExportChats { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToExportChats, true);
+    public bool AllowUserToBackUpData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToBackUpData, true);
 
     /// <summary>
-    /// Should the user be allowed to import chats from an archive file?
+    /// Should the user be allowed to restore the data of AI Studio from a backup file, or to add the chats of one?
     /// </summary>
     /// <remarks>
-    /// An archive brings along everything its chats name, including the locations of attached
-    /// documents, which are read again when such a chat continues.
+    /// A backup brings along everything its chats and settings name, including the locations of
+    /// attached documents and of local data sources, which are read again afterward.
     /// </remarks>
-    public bool AllowUserToImportChats { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChats, true);
+    public bool AllowUserToRestoreData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToRestoreData, true);
 
     /// <summary>
     /// Should administration settings be visible in the UI?

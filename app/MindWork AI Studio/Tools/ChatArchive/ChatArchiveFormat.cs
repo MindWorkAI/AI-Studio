@@ -13,9 +13,9 @@ public static class ChatArchiveFormat
     public const int FORMAT_VERSION = 1;
 
     /// <summary>
-    /// The file extension used for chat archives.
+    /// The file extension used for backups, named like the one of plugin archives.
     /// </summary>
-    public const string FILE_EXTENSION = ".aistudio-chats";
+    public const string FILE_EXTENSION = ".mwbackup";
 
     /// <summary>
     /// The manifest file at the archive root. It describes what the archive contains.

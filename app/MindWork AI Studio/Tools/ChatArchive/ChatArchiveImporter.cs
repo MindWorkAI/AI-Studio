@@ -14,7 +14,7 @@ public static class ChatArchiveImporter
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(ChatArchiveImporter));
 
-    private static readonly int BUFFER_SIZE = 64 * 1024;
+    private const int BUFFER_SIZE = 64 * 1024;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatArchiveImporter).Namespace, nameof(ChatArchiveImporter));
 

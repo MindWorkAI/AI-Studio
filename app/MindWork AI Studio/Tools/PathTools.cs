@@ -12,7 +12,7 @@ public static class PathTools
     public static readonly StringComparison COMPARISON = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
     /// <summary>
-    /// The comparer matching <see cref="COMPARISON"/>, for path-keyed lookups.
+    /// The comparer matching COMPARISON, for path-keyed lookups.
     /// </summary>
     public static readonly StringComparer COMPARER = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
 }

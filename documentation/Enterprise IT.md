@@ -773,6 +773,15 @@ With `DataMailboxes.MinimumOutboundDataRestriction`, you rule out the less stric
 
 With `DataMailboxes.AllowOnlyOrganizationMailServers`, AI Studio connects to no other IMAP server. Before every connection, it compares the host of the mailbox with the hosts of your mail servers; port and encryption make no difference. A mailbox somebody added on another server before stops synchronizing at once, the embeddings page says why, and the AI no longer reads it. Its local index stays, so the mailbox comes back as it was, should you allow its server again. Switch it on together with your first mail servers, and nobody gets to add a mailbox elsewhere at all.
 
+## Backing up and restoring data
+
+Users can back up the data of AI Studio into a single `.mwbackup` file, for example to take it to a new computer, and restore it there. Secrets such as API keys never go into a backup. These settings decide whether they may:
+
+| Setting | Effect |
+|---|---|
+| `DataApp.AllowUserToBackUpData` | `false` keeps users from writing a backup. The button stays visible but is disabled. |
+| `DataApp.AllowUserToRestoreData` | `false` keeps users from restoring a backup and from adding the chats of one. The buttons stay visible but are disabled. |
+
 ## Letting users provide their own API key
 
 Sometimes you want to hand out a preconfigured provider -- a fixed host, model, and instance name

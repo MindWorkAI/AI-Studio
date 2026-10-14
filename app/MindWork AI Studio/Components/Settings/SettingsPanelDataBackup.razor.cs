@@ -53,9 +53,9 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
     private int SelectedChatCount => this.workspaceSelections.Where(selection => selection.IsSelected).Sum(selection => selection.ChatCount) + (this.includeTemporaryChats ? this.temporaryChatCount : 0);
 
-    private bool AllowChatExport => this.SettingsManager.ConfigurationData.App.AllowUserToExportChats;
+    private bool AllowChatExport => this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData;
 
-    private bool AllowChatImport => this.SettingsManager.ConfigurationData.App.AllowUserToImportChats;
+    private bool AllowChatImport => this.SettingsManager.ConfigurationData.App.AllowUserToRestoreData;
 
     /// <summary>
     /// Whether the chosen archive can be imported now.
@@ -185,8 +185,8 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
             if (includeChatFiles is null)
                 return;
 
-            var suggestedFileName = $"ai-studio-chats-{DateTime.Now:yyyy-MM-dd}{ChatArchiveFormat.FILE_EXTENSION}";
-            var saveResponse = await this.RustService.SaveFile(T("Export chats"), [FileTypes.CHAT_ARCHIVE], suggestedFileName);
+            var suggestedFileName = $"ai-studio-backup-{DateTime.Now:yyyy-MM-dd}{ChatArchiveFormat.FILE_EXTENSION}";
+            var saveResponse = await this.RustService.SaveFile(T("Export chats"), [FileTypes.BACKUP_ARCHIVE], suggestedFileName);
             if (saveResponse.UserCancelled)
                 return;
 
@@ -267,7 +267,7 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
         this.isBusy = true;
         try
         {
-            var selectionResponse = await this.RustService.SelectFile(T("Select a chat archive"), [FileTypes.CHAT_ARCHIVE]);
+            var selectionResponse = await this.RustService.SelectFile(T("Select a chat archive"), [FileTypes.BACKUP_ARCHIVE]);
             if (selectionResponse.UserCancelled)
                 return;
 

@@ -28,7 +28,7 @@ public static class ChatArchiveExporter
         ".pdf", ".docx", ".xlsx", ".pptx", ".odt", ".odp",
     };
 
-    private static readonly int BUFFER_SIZE = 64 * 1024;
+    private const int BUFFER_SIZE = 64 * 1024;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatArchiveExporter).Namespace, nameof(ChatArchiveExporter));
 
