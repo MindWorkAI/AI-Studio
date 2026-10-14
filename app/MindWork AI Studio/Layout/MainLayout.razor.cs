@@ -80,7 +80,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
 
-    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
+    private DataSourceEmbeddingOverview embeddingOverview = DataSourceEmbeddingOverview.Create([]);
     private IReadOnlyCollection<NavBarItem> navItems = [];
     private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
     private bool showEmbeddingStatusIcon;
@@ -476,9 +476,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
-            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
             DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
             DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (Icons.Material.Filled.Error, palette.Error.Value, "#d32f2f"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (Icons.Material.Filled.Warning, palette.Warning.Value, "#d29f00"),
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
             // icon does not draw attention while there is nothing to attend to:
@@ -497,9 +498,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             T("Embeddings are running: {0} of {1} are indexed."),
             this.embeddingOverview.IndexedDocuments.CompactCount(),
             this.embeddingOverview.TotalDocuments.CompactCount()),
-        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedDocuments > 0
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => this.embeddingOverview.FailedDocuments > 0
             ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
             : T("Some embeddings failed and need attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING && this.embeddingOverview.AttentionDataSources == 1 =>
+            T("One data source needs attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING =>
+            string.Format(T("{0} data sources need attention."), this.embeddingOverview.AttentionDataSources.CompactCount()),
 
         // The entry is always visible, so its resting state needs words as well. An empty tooltip
         // would leave the user guessing what the icon is there for:

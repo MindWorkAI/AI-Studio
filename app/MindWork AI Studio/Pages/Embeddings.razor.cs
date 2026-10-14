@@ -50,7 +50,7 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private int TotalIndexedDocuments => this.Statuses.Sum(status => status.IndexedDocuments);
 
-    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.PermanentlySkippedDocuments));
+    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.SkippedDocuments));
 
     private int TotalFailedDocuments => this.Statuses.Sum(status => status.FailedDocuments);
 
@@ -147,7 +147,8 @@ public partial class Embeddings : MSGComponentBase
     /// data source at once.
     /// </remarks>
     private static bool IsWorthOpening(DataSourceEmbeddingStatus status) =>
-        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0;
+        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED
+        || status.Health is not DataSourceEmbeddingHealth.HEALTHY;
 
     /// <remarks>
     /// MudBlazor keeps track of which panel is open on its own, so this only records the decision.
@@ -210,7 +211,7 @@ public partial class Embeddings : MSGComponentBase
         // that: they are behind us in the folder, and leaving them out would let the number fall
         // behind the file whose name is shown right next to it.
         //
-        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.PermanentlySkippedDocuments + status.FailedDocuments + 1));
+        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.SkippedDocuments + status.FailedDocuments + 1));
         var total = this.FormatNumber(status.TotalDocuments);
         if (isMailbox)
         {
@@ -229,7 +230,7 @@ public partial class Embeddings : MSGComponentBase
 
     private string GetSkippedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Skipped mails: {0}."), this.FormatNumber(status.PermanentlySkippedDocuments))
-        : string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), this.FormatNumber(status.PermanentlySkippedDocuments));
+        : string.Format(T("Skipped files: {0}. Open a group below to see why and what you can do."), this.FormatNumber(status.SkippedDocuments));
 
     private string GetFailedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Failed mails: {0}"), this.FormatNumber(status.FailedDocuments))
@@ -255,10 +256,13 @@ public partial class Embeddings : MSGComponentBase
     {
         DataSourceEmbeddingState.RUNNING => Color.Warning,
         DataSourceEmbeddingState.QUEUED => Color.Info,
-        DataSourceEmbeddingState.FAILED => Color.Error,
-        DataSourceEmbeddingState.COMPLETED when status.FailedDocuments > 0 => Color.Warning,
-        DataSourceEmbeddingState.COMPLETED => Color.Success,
-        _ => Color.Default,
+        _ => status.Health switch
+        {
+            DataSourceEmbeddingHealth.ERROR => Color.Error,
+            DataSourceEmbeddingHealth.WARNING => Color.Warning,
+            DataSourceEmbeddingHealth.HEALTHY => Color.Success,
+            _ => Color.Default,
+        },
     };
 
     /// <summary>
@@ -271,6 +275,10 @@ public partial class Embeddings : MSGComponentBase
     private sealed record FailureCause(int Priority, string Title, string Icon, Color Color, bool IsPermanent, bool NeedsProviderSettings, bool ShowsMessagePerFile);
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
+
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsTranscriptionSettings);
+
+    private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
 
     /// <summary>
     /// Puts the failures of a data source into one group per cause, the most pressing one first.
@@ -307,8 +315,9 @@ public partial class Embeddings : MSGComponentBase
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 
+        var showsMessagePerFile = !hasCauseName || failure.ExtractionCode is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED;
         return failure.IsPermanent
-            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, !hasCauseName)
+            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, showsMessagePerFile)
             : new FailureCause(2, title, Icons.Material.Filled.ReportProblem, Color.Warning, false, false, !hasCauseName);
     }
 
@@ -317,6 +326,39 @@ public partial class Embeddings : MSGComponentBase
         .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name)) ?? string.Empty;
 
     private static string GetGroupHeader(FailureGroup group) => $"{group.Cause.Title} ({group.Failures.Count})";
+
+    private IReadOnlyList<IgnoredFileGroup> GetIgnoredFileGroups(DataSourceEmbeddingStatus status) => status.IgnoredFiles
+        .GroupBy(this.GetIgnoredFileCause)
+        .Select(group => new IgnoredFileGroup(group.Key, group.OrderBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
+        .OrderBy(group => group.Cause.Priority)
+        .ThenByDescending(group => group.Files.Count)
+        .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingIgnoredFile file) => file.Reason switch
+    {
+        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING => new IgnoredFileCause(
+            0,
+            T("No transcription provider"),
+            T("These audio or video files match the data source patterns, but no usable transcription provider is configured. A reusable transcript is used when one is available."),
+            Icons.Material.Filled.MicOff,
+            Color.Warning,
+            true),
+        DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED => new IgnoredFileCause(
+            1,
+            FileTypes.IMAGE.FilterName,
+            T("These image files match the data source patterns, but images cannot currently be added to the index."),
+            Icons.Material.Filled.ImageNotSupported,
+            Color.Default,
+            false),
+        _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
+    };
+
+    private static string GetIgnoredGroupHeader(IgnoredFileGroup group) => $"{group.Cause.Title} ({group.Files.Count})";
+
+    private string GetFilePatternExclusionGroupText(DataSourceEmbeddingFilePatternGroup group) => string.IsNullOrWhiteSpace(group.FileType)
+        ? string.Format(T("Files without an extension ({0})"), this.FormatNumber(group.FileCount))
+        : string.Format(T("{0} files ({1})"), group.FileType, this.FormatNumber(group.FileCount));
 
     private static string GetFileName(string filePath)
     {
@@ -332,6 +374,8 @@ public partial class Embeddings : MSGComponentBase
     /// lies on a server.
     /// </remarks>
     private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, DataSourceEmbeddingFailure failure) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
+
+    private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, string filePath) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(filePath) && Path.IsPathRooted(filePath);
 
     /// <summary>
     /// How a failed mail is called in the list: by its subject, which is all the user knows it by.
@@ -350,12 +394,14 @@ public partial class Embeddings : MSGComponentBase
     /// file has to be opened, replaced, or run through an OCR. This is the same way out the log
     /// viewer offers for the log files.
     /// </remarks>
-    private async Task ShowInFileManager(DataSourceEmbeddingFailure failure)
+    private Task ShowInFileManager(DataSourceEmbeddingFailure failure) => this.ShowInFileManager(failure.DocumentKey);
+
+    private async Task ShowInFileManager(string filePath)
     {
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.TryOpenPathInRuntimeFileManager(failure.DocumentKey);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(filePath);
         }
         catch (Exception e)
         {
@@ -379,7 +425,9 @@ public partial class Embeddings : MSGComponentBase
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
                status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
-               (status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
+               (status.State is DataSourceEmbeddingState.FAILED
+                || status.FailedDocuments > 0
+                || status.HasMissingTranscriptionProvider);
     }
 
     /// <remarks>
@@ -394,13 +442,13 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes the user to the settings, where the embedding providers are configured.
+    /// Takes the user to the settings, where embedding and transcription providers are configured.
     /// </summary>
     /// <remarks>
-    /// Offered only for the failures a setting fixes, such as a rejected API key. Reading what
-    /// went wrong and then having to find the right page is where people give up.
+    /// Offered only for a problem a provider setting fixes. Reading what went wrong and then
+    /// having to find the right page is where people give up.
     /// </remarks>
-    private void OpenEmbeddingProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
+    private void OpenProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
 
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {

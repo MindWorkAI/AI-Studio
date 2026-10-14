@@ -55,6 +55,7 @@ public sealed class FileSourceIndexerWatcherTests
     [TestCase("main.tf", WatcherChangeTypes.Created, true)]
     [TestCase("MAIN.TF", WatcherChangeTypes.Changed, true)]
     [TestCase(".gitignore", WatcherChangeTypes.Changed, true)]
+    [TestCase("notes.md", WatcherChangeTypes.Created, true)]
     [TestCase("notes.md", WatcherChangeTypes.Changed, false)]
     [TestCase("notes.md", WatcherChangeTypes.Deleted, true)]
     [TestCase("notes.md", WatcherChangeTypes.Renamed, true)]
@@ -200,11 +201,13 @@ public sealed class FileSourceIndexerWatcherTests
                 directoryPath,
                 true,
                 FilePatterns: FileNamePatterns.Parse("*"));
+            var unrelatedPatterns = configuration with { FilePatterns = FileNamePatterns.Parse("*.tf") };
 
             Assert.Multiple(() =>
             {
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, mediaPath, WatcherChangeTypes.Changed), Is.True);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, transcriptPath, WatcherChangeTypes.Created), Is.False);
+                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(unrelatedPatterns, transcriptPath, WatcherChangeTypes.Created), Is.False);
             });
         }
         finally

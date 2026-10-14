@@ -276,9 +276,15 @@ internal sealed partial class FileSourceIndexer
             if (FileNamePatterns.Matches(path, patterns))
                 return true;
 
+            // A transcript which is not selected as a Markdown document is generated data, not
+            // an ignored user file, so its creation must not schedule a pointless status refresh.
+            if (PersistentMediaTranscript.IsArtifactPath(path))
+                return false;
+
+            // A newly found file which lies outside the patterns belongs in the ignored-file list.
             // A deleted path can have been a directory, but FileSystemWatcher does not tell us
-            // that after it is gone. Refresh conservatively so files below it leave the index.
-            return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed;
+            // that after it is gone. Refresh conservatively so the index and that list stay current.
+            return changeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed;
         }
 
         if (IsSupportedRagFilePath(path))

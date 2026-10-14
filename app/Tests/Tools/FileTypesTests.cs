@@ -132,6 +132,7 @@ public class FileTypesTests
 
     [TestCase("recording.mp3")]
     [TestCase("meeting.mp4")]
+    [TestCase("voice-recording.webm")]
     public void LocalFileDataSourcesAcceptTranscribableMedia(string fileName)
     {
         var validation = new DataSourceValidation();

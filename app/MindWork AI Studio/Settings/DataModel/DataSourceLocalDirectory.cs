@@ -76,19 +76,19 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string Path { get; init; } = string.Empty;
 
     /// <summary>
-    /// Semicolon-separated file-name patterns which decide which files below <see cref="Path"/>
+    /// Semicolon-separated file-name patterns which decide which files below <see cref="this.Path"/>
     /// are considered for indexing.
     /// </summary>
     public string FilePatterns { get; init; } = DEFAULT_FILE_PATTERNS;
 
     /// <summary>
-    /// Whether files in folders below <see cref="Path"/> are considered for indexing.
+    /// Whether files in folders below <see cref="this.Path"/> are considered for indexing.
     /// </summary>
     public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
 
     /// <summary>
-    /// Whether files in hidden folders below <see cref="Path"/> are considered for indexing.
-    /// Has no effect when <see cref="IncludeSubdirectories"/> is false.
+    /// Whether files in hidden folders below <see cref="this.Path"/> are considered for indexing.
+    /// Has no effect when <see cref="this.IncludeSubdirectories"/> is false.
     /// </summary>
     public bool IncludeHiddenSubdirectories { get; init; } = DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
 

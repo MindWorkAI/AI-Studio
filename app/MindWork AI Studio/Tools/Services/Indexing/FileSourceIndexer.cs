@@ -42,6 +42,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         INDEXABLE,
         EXCLUDED,
+        IMAGE_NOT_SUPPORTED,
+        TRANSCRIPTION_PROVIDER_MISSING,
     }
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
@@ -59,7 +61,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var inputFiles = this.GetInputFiles(dataSource, manifest);
         var indexedFiles = inputFiles.Files;
-        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
+        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
         foreach (var failure in inputFiles.Failures)
         {
@@ -72,10 +74,12 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
+            inputFiles.IgnoredFiles.Count,
+            inputFiles.FilePatternExclusionCount,
             inputFiles.FailedFiles,
             context.CollectionName);
 
@@ -93,7 +97,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count,
             removedMissingFiles);
 
-        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger);
+        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger, inputFiles.IgnoredFiles, inputFiles.FilePatternExclusions);
         if (CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
         {
             logger.LogInformation(
@@ -363,7 +367,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             if (transcription.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
             {
                 if (IsPermanentMediaFailure(transcription.ErrorCode))
-                    throw new FileExtractionException(FileExtractionErrorCode.UNSUPPORTED, transcription.UserMessage);
+                    throw new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, transcription.UserMessage);
 
                 throw new IOException(transcription.UserMessage);
             }
@@ -400,16 +404,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                switch (this.GetRagFileIndexingDecision(file, manifest))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(file);
-                        break;
-
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
-                        break;
-                }
+                this.AddInputFile(file, manifest, result);
 
                 return result;
 
@@ -446,7 +441,15 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                      }))
         {
             if (!FileNamePatterns.Matches(filePath, patterns))
+            {
+                // Generated transcript sidecars are an implementation detail. Everything else in
+                // a folder the user chose to scan is useful transparency when a pattern was
+                // mistyped or was narrower than intended.
+                if (!PersistentMediaTranscript.IsArtifactPath(filePath))
+                    result.AddFilePatternExclusion(filePath);
+
                 continue;
+            }
 
             FileInfo fileInfo;
             try
@@ -468,16 +471,29 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 continue;
             }
 
-            switch (this.GetRagFileIndexingDecision(fileInfo, manifest))
-            {
-                case RagFileIndexingDecision.INDEXABLE:
-                    result.Files.Add(fileInfo);
-                    break;
+            this.AddInputFile(fileInfo, manifest, result);
+        }
+    }
 
-                case RagFileIndexingDecision.EXCLUDED:
-                    logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
-                    break;
-            }
+    private void AddInputFile(FileInfo file, DataSourceEmbeddingManifest manifest, FileEnumerationResult result)
+    {
+        switch (this.GetRagFileIndexingDecision(file, manifest))
+        {
+            case RagFileIndexingDecision.INDEXABLE:
+                result.Files.Add(file);
+                break;
+
+            case RagFileIndexingDecision.EXCLUDED:
+                logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
+                break;
+
+            case RagFileIndexingDecision.IMAGE_NOT_SUPPORTED:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED);
+                break;
+
+            case RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING);
+                break;
         }
     }
 
@@ -498,7 +514,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             return RagFileIndexingDecision.EXCLUDED;
 
         if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
-            return RagFileIndexingDecision.EXCLUDED;
+            return RagFileIndexingDecision.IMAGE_NOT_SUPPORTED;
 
         if (PersistentMediaTranscript.IsMediaPath(file.FullName))
         {
@@ -506,14 +522,14 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 return RagFileIndexingDecision.INDEXABLE;
 
             if (!PersistentMediaTranscript.IsReusable(file.FullName, PersistentMediaTranscript.Reuse.CURRENT_SOURCE))
-                return RagFileIndexingDecision.EXCLUDED;
+                return RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING;
 
             // An indexed media file whose own fingerprint changed needs a new transcript. A sidecar
             // with a matching timestamp is not enough to keep stale embeddings alive when there is
             // no provider capable of replacing it.
             return manifest.Files.TryGetValue(file.FullName, out var existing)
                    && !string.Equals(existing.Fingerprint, BuildFileMetadataHash(file), StringComparison.Ordinal)
-                ? RagFileIndexingDecision.EXCLUDED
+                ? RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING
                 : RagFileIndexingDecision.INDEXABLE;
         }
 
