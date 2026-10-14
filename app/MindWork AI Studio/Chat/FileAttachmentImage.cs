@@ -14,4 +14,11 @@ public record FileAttachmentImage(string FileName, string FilePath, long FileSiz
     /// The image source.
     /// </summary>
     public string Source { get; set; } = FilePath;
+
+    /// <inheritdoc />
+    public override FileAttachment WithFilePath(string filePath) => new FileAttachmentImage(this.FileName, filePath, this.FileSizeBytes)
+    {
+        SourceType = this.SourceType,
+        Source = this.SourceType is ContentImageSource.LOCAL_PATH ? filePath : this.Source,
+    };
 }

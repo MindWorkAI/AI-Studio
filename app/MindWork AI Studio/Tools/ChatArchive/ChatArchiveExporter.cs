@@ -241,7 +241,7 @@ public static class ChatArchiveExporter
                 }
             }
 
-            ChatArchiveAttachmentPaths.Rewrite(thread, originalPath =>
+            thread.RewriteFilePaths(originalPath =>
                 TryGetChatRelativePath(chatDirectory, originalPath, out var relativePath) && includedFiles.ContainsKey(relativePath)
                     ? relativePath
                     : originalPath);

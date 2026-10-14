@@ -22,6 +22,9 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
         return this with { FileName = Path.GetFileName(this.FilePath), FileSizeBytes = size };
     }
 
+    /// <inheritdoc />
+    public override FileAttachment WithFilePath(string filePath) => new ManagedTranscriptAttachment(this.FileName, filePath, this.FileSizeBytes, this.OriginalFileName, this.IsStaged);
+
     /// <summary>Creates a transcript in an operation-specific staging directory.</summary>
     /// <param name="originalPath">Original media path.</param>
     /// <param name="transcript">Provider transcript.</param>

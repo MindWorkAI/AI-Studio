@@ -64,6 +64,17 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     public virtual FileAttachment Normalize() => FromPath(this.FilePath);
 
     /// <summary>
+    /// Makes the same attachment for its file at another place, e.g. after the chat holding the file moved.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately no with expression: that one keeps whatever was derived from the old path when
+    /// the attachment was made, such as FilePathAsUrl, and the source of an image.
+    /// </remarks>
+    /// <param name="filePath">The path of the file now.</param>
+    /// <returns>An attachment of the same kind, with the new path.</returns>
+    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes);
+
+    /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
     /// extracting the filename, and reading the file size.
     /// </summary>

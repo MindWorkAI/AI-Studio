@@ -974,16 +974,7 @@ public static class WorkspaceBehaviour
         var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
         var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(pathComparer);
 
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                if (content.FileAttachments[index] is ManagedTranscriptAttachment transcript)
-                    content.FileAttachments[index] = CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths);
-            }
-        }
-
-        chat.Draft.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
+        chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
             ? CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths)
             : attachment);
     }
@@ -1153,22 +1144,14 @@ public static class WorkspaceBehaviour
         }
     }
 
-    /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
-    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
-    {
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-                content.FileAttachments[index] = RelocateAttachment(content.FileAttachments[index], sourceDirectory, targetDirectory);
-        }
-
-        //
-        // The transcripts of the message not sent yet live in the chat directory as well. Left with
-        // their old paths, the draft points at a directory which is gone after the move, and the
-        // transcripts would never reach the message.
-        //
-        chat.Draft.ReplaceAttachments(attachment => RelocateAttachment(attachment, sourceDirectory, targetDirectory));
-    }
+    /// <summary>Rewrites absolute file paths after moving the complete chat directory.</summary>
+    /// <remarks>
+    /// The transcripts of the message not sent yet live in the chat directory as well. Left with
+    /// their old paths, the draft points at a directory which is gone after the move, and the
+    /// transcripts would never reach the message. ChatThread.RewriteFilePaths takes the draft along.
+    /// </remarks>
+    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory) =>
+        chat.RewriteFilePaths(path => RelocatePath(path, sourceDirectory, targetDirectory));
 
     /// <summary>
     /// Gives an attachment the path it has after its chat moved into another workspace.
@@ -1191,23 +1174,22 @@ public static class WorkspaceBehaviour
     /// <summary>Gives an attachment inside a moved directory its path in the target directory.</summary>
     private static FileAttachment RelocateAttachment(FileAttachment attachment, string sourceDirectory, string targetDirectory)
     {
+        var movedPath = RelocatePath(attachment.FilePath, sourceDirectory, targetDirectory);
+        return movedPath == attachment.FilePath ? attachment : attachment.WithFilePath(movedPath);
+    }
+
+    /// <summary>Gives a path inside a moved directory its place in the target directory, and leaves every other path as it is.</summary>
+    private static string RelocatePath(string path, string sourceDirectory, string targetDirectory)
+    {
         var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
             ? sourceDirectory
             : sourceDirectory + Path.DirectorySeparatorChar;
 
         var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
-            return attachment;
+        if (!Path.GetFullPath(path).StartsWith(sourcePrefix, pathComparison))
+            return path;
 
-        var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
-        var movedPath = Path.Combine(targetDirectory, relativePath);
-
-        return attachment switch
-        {
-            ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
-            FileAttachmentImage image => image with { FilePath = movedPath },
-            _ => attachment with { FilePath = movedPath },
-        };
+        return Path.Combine(targetDirectory, Path.GetRelativePath(sourceDirectory, path));
     }
 
     private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)

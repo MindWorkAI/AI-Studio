@@ -375,7 +375,7 @@ public static class ChatArchiveImporter
             // were actually extracted are rewritten. Everything else was already absolute when
             // the archive was created and stays as it is:
             //
-            ChatArchiveAttachmentPaths.Rewrite(thread, path =>
+            thread.RewriteFilePaths(path =>
             {
                 var normalizedPath = path.Replace(Path.DirectorySeparatorChar, ChatArchiveFormat.ENTRY_SEPARATOR);
                 if (!extractedPaths.Contains(normalizedPath))
@@ -441,16 +441,7 @@ public static class ChatArchiveImporter
                 ? transcript
                 : WorkspaceBehaviour.CopyManagedTranscriptAttachment(thread, transcript, transcriptDirectory, copiedPaths);
 
-        foreach (var content in thread.Blocks.Select(block => block.Content).OfType<IContent>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                if (content.FileAttachments[index] is ManagedTranscriptAttachment transcript)
-                    content.FileAttachments[index] = CopyWhenElsewhere(transcript);
-            }
-        }
-
-        thread.Draft.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
+        thread.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
             ? CopyWhenElsewhere(transcript)
             : attachment);
     }
