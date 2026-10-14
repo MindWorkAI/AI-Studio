@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Text;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
+using Lua.Platforms;
 using Lua.Standard;
 
 namespace AIStudio.Tools.PluginSystem;
@@ -13,6 +15,23 @@ public static partial class PluginFactory
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
     private static readonly SemaphoreSlim PLUGIN_LOAD_SEMAPHORE = new(1, 1);
     
+    /// <summary>
+    /// How long a single plugin may take to load, and again to start.
+    /// </summary>
+    /// <remarks>
+    /// The limit applies to each plugin on its own, never to all plugins together. A shared budget
+    /// let a slow machine spend it on the first plugins, so the ones at the end of the line never
+    /// started: the language plugin among them, and configuration plugins of the organization,
+    /// whose objects the clean-up then removed. The limit holds in every build, so a developer sees
+    /// the same start as a user does.
+    /// </remarks>
+    private static readonly TimeSpan PLUGIN_TIMEOUT = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// The platform of the Lua runtime of every plugin: the default one, but without any file.
+    /// </summary>
+    private static readonly LuaPlatform PLUGIN_PLATFORM = LuaPlatform.Default with { FileSystem = new NoLuaFileSystem() };
+
     /// <summary>
     /// A list of all available plugins.
     /// </summary>
@@ -42,6 +61,8 @@ public static partial class PluginFactory
         await PLUGIN_LOAD_SEMAPHORE.WaitAsync(cancellationToken);
 
         var configObjectList = new List<PluginConfigurationObject>();
+        var hasStartedConfigurationPlugins = false;
+        var notStartedConfigPluginIds = new HashSet<Guid>();
         
         try
         {
@@ -65,11 +86,13 @@ public static partial class PluginFactory
             IEnumerable<string> pluginMainFiles = pluginsDirectoryExists ? Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories) : [];
             foreach (var pluginMainFile in pluginMainFiles)
             {
+                using var pluginTimeout = CreatePluginTimeout(cancellationToken);
+                var loadingStartedAt = Stopwatch.GetTimestamp();
                 try
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled. It seems to be a timeout.");
+                        LOG.LogWarning("Was not able to load all plugins, because the operation was cancelled.");
                         break;
                     }
 
@@ -79,11 +102,11 @@ public static partial class PluginFactory
                     await using(var fileStream = fileInfo.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
                         using var reader = new StreamReader(fileStream, Encoding.UTF8);
-                        code = await reader.ReadToEndAsync(cancellationToken);
+                        code = await reader.ReadToEndAsync(pluginTimeout.Token);
                     }
                     
                     var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
-                    var plugin = await Load(pluginPath, code, cancellationToken: cancellationToken);
+                    var plugin = await Load(pluginPath, code, cancellationToken: pluginTimeout.Token);
             
                     switch (plugin)
                     {
@@ -189,6 +212,10 @@ public static partial class PluginFactory
 
                     AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId, configurationPriority));
                 }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    LOG.LogError($"Was not able to load plugin '{pluginMainFile}'. Reason: It did not finish within the limit of {PLUGIN_TIMEOUT.TotalSeconds:0} seconds and was stopped after {Stopwatch.GetElapsedTime(loadingStartedAt).TotalSeconds:0.0} seconds. The remaining plugins load regardless.");
+                }
                 catch (Exception e)
                 {
                     LOG.LogError($"Was not able to load plugin '{pluginMainFile}'. Issue: {e.Message}");
@@ -201,6 +228,25 @@ public static partial class PluginFactory
             {
                 var configObjects = await RestartAllPlugins(cancellationToken);
                 configObjectList.AddRange(configObjects);
+
+                //
+                // Each configuration plugin which started has changed the settings, but none of
+                // them stored the change. We store all of it once, at the end of this method:
+                //
+                hasStartedConfigurationPlugins = RUNNING_PLUGINS.OfType<PluginConfiguration>().Any();
+
+                //
+                // A configuration plugin which loaded but did not start has contributed nothing to
+                // the configuration objects. To the clean-up below, it would look as if the plugin
+                // had dropped all of its objects, and they would be deleted, secrets included. That
+                // is what a slow machine did to the configuration of an organization, once the
+                // time ran out before its plugin got its turn:
+                //
+                foreach (var notStartedConfigPlugin in AVAILABLE_PLUGINS.Where(plugin => plugin.Type is PluginType.CONFIGURATION && RUNNING_PLUGINS.All(runningPlugin => runningPlugin.Id != plugin.Id)))
+                {
+                    notStartedConfigPluginIds.Add(notStartedConfigPlugin.Id);
+                    LOG.LogWarning($"The configuration plugin '{notStartedConfigPlugin.Name}' (Id='{notStartedConfigPlugin.Id}') was loaded, but did not start. Everything it manages stays unchanged until it starts again. Please check the errors above.");
+                }
             }
         }
         finally
@@ -255,35 +301,42 @@ public static partial class PluginFactory
             LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
         }
 
+        var wasConfigurationChanged = hasStartedConfigurationPlugins;
+
         // Check LLM providers:
-        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER))
+            wasConfigurationChanged = true;
 
         // Check transcription providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check embedding providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
             wasConfigurationChanged = true;
 
         // Check chat templates:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check profiles:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check document analysis policies:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
-        // Check left-over mandatory info acceptances:
-        if (SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
+        //
+        // Check left-over mandatory info acceptances. The mandatory infos come from the running
+        // configuration plugins only, so we skip this while one of them did not start: the user
+        // would have to accept its infos again, although nothing about them changed:
+        //
+        if (notStartedConfigPluginIds.Count == 0 && SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
         // Check all managed settings, i.e. settings which a configuration plugin can lock,
@@ -294,11 +347,12 @@ public static partial class PluginFactory
         //
         // The enterprise approvals of all configuration plugins add up. Now that every plugin has
         // contributed and the clean-up above has dropped the removed ones, we rebuild the effective
-        // list. We skip that while a configuration plugin is deployed but could not be loaded: its
-        // approvals are missing from the contributions, and withdrawing them would demand a new
-        // security audit for assistant plugins the organization has approved:
+        // list. We skip that while a configuration plugin is deployed but could not be loaded, or
+        // was loaded but did not start: its approvals are missing from the contributions, and
+        // withdrawing them would demand a new security audit for assistant plugins the
+        // organization has approved:
         //
-        if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
+        if(unloadedEnterpriseConfigPluginIds.Count == 0 && notStartedConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
             wasConfigurationChanged = true;
 
         //
@@ -310,7 +364,7 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
 
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
-        if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0))
+        if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0 || notStartedConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;
 
         if (wasConfigurationChanged)
@@ -354,6 +408,66 @@ public static partial class PluginFactory
         return deployedEnterpriseConfigPluginIds;
     }
 
+    /// <summary>
+    /// Creates the time limit for loading or starting a single plugin.
+    /// </summary>
+    /// <remarks>
+    /// The limit is linked to the token of the caller, so cancelling the whole operation still stops
+    /// the plugin at hand. Tell the two apart by that token: when it is not cancelled, the plugin ran
+    /// out of time, and only this plugin is affected.
+    /// </remarks>
+    /// <param name="cancellationToken">The token of the whole operation.</param>
+    /// <returns>A token source that cancels after PLUGIN_TIMEOUT or together with the caller's token.</returns>
+    private static CancellationTokenSource CreatePluginTimeout(CancellationToken cancellationToken)
+    {
+        var pluginTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        pluginTimeout.CancelAfter(PLUGIN_TIMEOUT);
+        return pluginTimeout;
+    }
+
+    /// <summary>
+    /// Creates the Lua runtime a plugin runs in, with its libraries opened and no code run yet.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin, whatever its type, gets its runtime from here, so all of them see the same
+    /// libraries and the same limits.<br/><br/>
+    /// A plugin may split its code into several files and load them with require, also from
+    /// subdirectories of its own directory, such as require("lib/helpers"). The module loader only
+    /// finds files inside the plugin's directory.<br/><br/>
+    /// No other file is within reach: the runtime has no file system, see NoLuaFileSystem, and neither
+    /// dofile nor loadfile. Code without a directory, such as a plugin a model just wrote, loads no
+    /// module at all.
+    /// </remarks>
+    /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
+    /// <param name="allowedBaseDirectory">The directory the plugin path must be nested in, see Load.</param>
+    /// <returns>The runtime for a single plugin.</returns>
+    internal static LuaState CreateLuaState(string? pluginPath, string? allowedBaseDirectory = null)
+    {
+        var state = LuaState.Create(PLUGIN_PLATFORM);
+        state.ModuleLoader = string.IsNullOrWhiteSpace(pluginPath)
+            ? new NoModuleLoader()
+            : new PluginLoader(pluginPath, allowedBaseDirectory);
+
+        // Add some useful libraries:
+        state.OpenBasicLibrary();
+        state.OpenModuleLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+        state.OpenMathLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenCoroutineLibrary();
+
+        //
+        // Both read a file by its path, relative to the working directory of the app. Without a file
+        // system they would fail anyway, but with an exception of .NET instead of a Lua error. Such an
+        // exception leaves Load, instead of becoming the reason why the plugin could not run:
+        //
+        state.Environment["dofile"] = LuaValue.Nil;
+        state.Environment["loadfile"] = LuaValue.Nil;
+
+        return state;
+    }
+
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
     /// <param name="code">The Lua code of the plugin's main file.</param>
     /// <param name="allowedBaseDirectory">
@@ -367,22 +481,7 @@ public static partial class PluginFactory
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");
 
-        var state = LuaState.Create();
-        if (!string.IsNullOrWhiteSpace(pluginPath))
-        {
-            // Add the module loader so that the plugin can load other Lua modules:
-            state.ModuleLoader = new PluginLoader(pluginPath, allowedBaseDirectory);
-        }
-
-        // Add some useful libraries:
-        state.OpenBasicLibrary();
-        state.OpenModuleLibrary();
-        state.OpenStringLibrary();
-        state.OpenTableLibrary();
-        state.OpenMathLibrary();
-        state.OpenBitwiseLibrary();
-        state.OpenCoroutineLibrary();
-
+        var state = CreateLuaState(pluginPath, allowedBaseDirectory);
         try
         {
             await state.DoStringAsync(code, cancellationToken: cancellationToken);
@@ -463,17 +562,17 @@ public static partial class PluginFactory
     /// This is only valid as long as none of these settings gets a user interface. When you add
     /// one, remove the setting from this method and from the shim's document.
     /// </remarks>
-    /// <param name="hasUnloadedConfigPlugins" >
-    /// True when at least one configuration plugin is deployed but could not be loaded. In that case,
-    /// we cannot tell whether a value comes from that plugin or from a removed one, so we repair
-    /// nothing at all.
+    /// <param name="hasMissingConfigPlugins" >
+    /// True when at least one configuration plugin is deployed but could not be loaded, or was loaded
+    /// but did not start. In that case, we cannot tell whether a value comes from that plugin or from
+    /// a removed one, so we repair nothing at all.
     /// </param>
     /// <returns>True when at least one setting was repaired, otherwise false.</returns>
-    private static bool RepairLegacyConfigOnlySettings(bool hasUnloadedConfigPlugins)
+    private static bool RepairLegacyConfigOnlySettings(bool hasMissingConfigPlugins)
     {
-        if (hasUnloadedConfigPlugins)
+        if (hasMissingConfigPlugins)
         {
-            LOG.LogWarning("Skipping the repair of configuration-only settings: at least one configuration plugin is deployed, but could not be loaded. We try again the next time AI Studio starts.");
+            LOG.LogWarning("Skipping the repair of configuration-only settings: at least one configuration plugin could not be loaded or did not start. We try again the next time AI Studio starts.");
             return false;
         }
 

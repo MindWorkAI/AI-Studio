@@ -9,4 +9,5 @@ public enum Host
     WHISPER_CPP,
     OLLAMA,
     VLLM,
+    LLMMAN,
 }

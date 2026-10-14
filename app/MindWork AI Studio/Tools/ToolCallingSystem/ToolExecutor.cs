@@ -48,6 +48,20 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         }
     }
 
+    /// <summary>
+    /// Whether a function name consists of 1 to 64 ASCII letters, digits, underscores, or hyphens.
+    /// </summary>
+    /// <remarks>
+    /// The rule OpenAI states for function names. Our own definitions have to meet it to be offered
+    /// at all, and every name a model returned has to meet it to be sent back in the conversation:
+    /// vLLM checks the calls of the history with exactly this rule when it serves a Mistral model,
+    /// and it rejects the whole request over a single name which breaks it.
+    /// </remarks>
+    public static bool IsValidFunctionName(string? functionName) =>
+        !string.IsNullOrWhiteSpace(functionName) &&
+        functionName.Length <= 64 &&
+        functionName.All(character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-');
+
     public async Task<ToolCallOutcome> ExecuteAsync(
         string toolCallId,
         string toolName,

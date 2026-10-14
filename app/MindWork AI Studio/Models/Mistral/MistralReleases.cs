@@ -59,6 +59,7 @@ public static class MistralReleases
     /// </remarks>
     private static readonly (string VersionName, int Release)[] VERSION_NAMES =
     [
+        ("mistral-large-4", 2610),
         ("mistral-large-3", 2512),
 
         ("mistral-medium-3.5", 2604),

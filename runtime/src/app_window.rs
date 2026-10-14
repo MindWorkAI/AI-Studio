@@ -20,7 +20,6 @@ use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
-use crate::api_token::APIToken;
 use crate::clipboard::shutdown_clipboard;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
@@ -379,7 +378,7 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
 /// When the client disconnects, the stream is closed. But we try to not lose events in between.
 /// The client is expected to reconnect automatically when the connection is closed and continue
 /// listening for events.
-pub async fn get_event_stream(_token: APIToken) -> Response {
+pub async fn get_event_stream() -> Response {
     // Get the lock to the event broadcast sender:
     let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
 
@@ -652,7 +651,7 @@ pub async fn change_location_to(url: &str) {
 }
 
 /// Checks for updates.
-pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
+pub async fn check_for_update() -> Json<CheckUpdateResponse> {
     if let Some(reason) = self_update_blocked_reason(is_flatpak(), installation_kind()) {
         warn!(Source = "Updater"; "Skipping update check because {reason}.");
         return Json(CheckUpdateResponse {
@@ -737,7 +736,7 @@ pub struct CheckUpdateResponse {
 }
 
 /// Installs the update.
-pub async fn install_update(_token: APIToken) {
+pub async fn install_update() {
     if let Some(reason) = self_update_blocked_reason(is_flatpak(), installation_kind()) {
         warn!(Source = "Updater"; "Skipping update installation because {reason}.");
         return;
@@ -819,7 +818,7 @@ pub struct AppExitResponse {
 }
 
 /// Requests a controlled shutdown of the entire desktop application.
-pub async fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
+pub async fn exit_app() -> Json<AppExitResponse> {
     let app_handle = {
         let main_window_lock = MAIN_WINDOW.lock().unwrap();
         match main_window_lock.as_ref() {
@@ -848,7 +847,7 @@ pub async fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
 
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
-pub async fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
+pub async fn register_shortcut(payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
     let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
     Json(crate::global_shortcuts::register(app_handle, event_sender, payload.0).await)
@@ -873,7 +872,7 @@ pub struct ShortcutValidationResponse {
 /// Validates a shortcut string without registering it.
 /// Checks if the shortcut syntax is valid and if it
 /// conflicts with existing shortcuts.
-pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
+pub async fn validate_shortcut(payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
     let shortcut = payload.shortcut.clone();
 
     // Empty shortcuts are always valid (means "disabled"):
@@ -924,13 +923,13 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
 /// Tauri shortcuts are temporarily unregistered and restored on resume.
 /// This is useful when opening a dialog to configure shortcuts, so the user can
 /// press the current shortcut to re-enter it without triggering the action.
-pub async fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+pub async fn suspend_shortcuts() -> Json<ShortcutResponse> {
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
     Json(crate::global_shortcuts::suspend(app_handle).await)
 }
 
 /// Resumes shortcut processing by re-registering all shortcuts with the OS.
-pub async fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+pub async fn resume_shortcuts() -> Json<ShortcutResponse> {
     let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
     let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
     Json(crate::global_shortcuts::resume(app_handle, event_sender).await)

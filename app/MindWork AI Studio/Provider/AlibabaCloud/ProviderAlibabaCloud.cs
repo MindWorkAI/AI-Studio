@@ -66,7 +66,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
         return Task.FromResult(TranscriptionResult.Failure());
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);

@@ -79,6 +79,8 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
                     └── plugin.lua
 ```
 
+A plugin may split its Lua code into several files and load them with `require`. Name the file relative to the plugin directory and without `.lua`, and separate subdirectories with a slash: `require("icon")` loads `icon.lua`, and `require("lib/helpers")` loads `lib/helpers.lua`. A plugin can only load files from its own directory, and `dofile` and `loadfile` are not available.
+
 ## Structure
 - `ASSISTANT` is the root table. Every assistant requires `Title` and `Description`.
 - Form assistants additionally require `SystemPrompt`, `SubmitText`, `AllowProfiles`, and a nested `UI` definition.
