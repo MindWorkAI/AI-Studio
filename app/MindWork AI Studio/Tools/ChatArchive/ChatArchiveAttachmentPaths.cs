@@ -28,36 +28,31 @@ public static class ChatArchiveAttachmentPaths
                 image.Source = rewrite(image.Source);
         }
 
-        // Transcripts which were prepared for the composer but not sent yet:
-        for (var index = 0; index < chat.PendingMediaTranscripts.Count; index++)
-        {
-            var transcript = chat.PendingMediaTranscripts[index];
-            if (string.IsNullOrWhiteSpace(transcript.FilePath))
-                continue;
-
-            chat.PendingMediaTranscripts[index] = transcript with { FilePath = rewrite(transcript.FilePath) };
-        }
+        // The message the user has not sent yet, with all of its attachments, transcripts included:
+        chat.Draft.ReplaceAttachments(attachment => RewriteAttachment(attachment, rewrite));
     }
 
     private static void RewriteAttachments(List<FileAttachment> attachments, Func<string, string> rewrite)
     {
         for (var index = 0; index < attachments.Count; index++)
+            attachments[index] = RewriteAttachment(attachments[index], rewrite);
+    }
+
+    private static FileAttachment RewriteAttachment(FileAttachment attachment, Func<string, string> rewrite)
+    {
+        if (string.IsNullOrWhiteSpace(attachment.FilePath))
+            return attachment;
+
+        var rewrittenPath = rewrite(attachment.FilePath);
+        if (rewrittenPath == attachment.FilePath)
+            return attachment;
+
+        return attachment switch
         {
-            var attachment = attachments[index];
-            if (string.IsNullOrWhiteSpace(attachment.FilePath))
-                continue;
+            ManagedTranscriptAttachment managed => managed with { FilePath = rewrittenPath },
+            FileAttachmentImage image => image with { FilePath = rewrittenPath },
 
-            var rewrittenPath = rewrite(attachment.FilePath);
-            if (rewrittenPath == attachment.FilePath)
-                continue;
-
-            attachments[index] = attachment switch
-            {
-                ManagedTranscriptAttachment managed => managed with { FilePath = rewrittenPath },
-                FileAttachmentImage image => image with { FilePath = rewrittenPath },
-
-                _ => attachment with { FilePath = rewrittenPath },
-            };
-        }
+            _ => attachment with { FilePath = rewrittenPath },
+        };
     }
 }

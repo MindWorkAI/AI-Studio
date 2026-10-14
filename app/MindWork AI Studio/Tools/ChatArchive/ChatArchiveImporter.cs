@@ -450,8 +450,9 @@ public static class ChatArchiveImporter
             }
         }
 
-        for (var index = 0; index < thread.PendingMediaTranscripts.Count; index++)
-            thread.PendingMediaTranscripts[index] = CopyWhenElsewhere(thread.PendingMediaTranscripts[index]);
+        thread.Draft.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
+            ? CopyWhenElsewhere(transcript)
+            : attachment);
     }
 
     /// <summary>
