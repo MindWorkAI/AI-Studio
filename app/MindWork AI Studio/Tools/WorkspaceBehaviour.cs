@@ -872,7 +872,7 @@ public static class WorkspaceBehaviour
 
             Directory.CreateDirectory(chatDirectory);
 
-            await FinalizeStagedTranscriptsAsync(chat, chatDirectory);
+            FinalizeStagedTranscripts(chat, chatDirectory);
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
@@ -1087,7 +1087,7 @@ public static class WorkspaceBehaviour
             UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
             chat.WorkspaceId = targetWorkspaceId;
             
-            await FinalizeStagedTranscriptsAsync(chat, targetDirectory);
+            FinalizeStagedTranscripts(chat, targetDirectory);
             await StoreMovedChatFilesAsync(chat, targetDirectory);
 
             var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
@@ -1192,36 +1192,41 @@ public static class WorkspaceBehaviour
         return Path.Combine(targetDirectory, Path.GetRelativePath(sourceDirectory, path));
     }
 
-    private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)
+    /// <summary>
+    /// Moves the transcripts of a chat which still wait in the staging area into the chat directory.
+    /// </summary>
+    /// <remarks>
+    /// A transcript waits there when its chat was not stored yet when the transcript was made. The draft
+    /// counts as well: leaving a new chat stores it along with the message the user started in it, and
+    /// the next start of AI Studio empties the staging area. A transcript of the draft left behind there
+    /// would be gone, while the stored draft still pointed at it.
+    /// </remarks>
+    private static void FinalizeStagedTranscripts(ChatThread chat, string chatDirectory)
     {
         var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
         ReconcileTranscriptCounter(chat, transcriptDirectory);
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                if (content.FileAttachments[index] is not ManagedTranscriptAttachment { IsStaged: true } staged
-                    || !File.Exists(staged.FilePath))
-                    continue;
+        chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment { IsStaged: true } staged && File.Exists(staged.FilePath)
+            ? FinalizeStagedTranscript(chat, staged, transcriptDirectory)
+            : attachment);
+    }
 
-                Directory.CreateDirectory(transcriptDirectory);
-                var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
+    /// <summary>Moves one staged transcript into the transcript directory of its chat.</summary>
+    private static ManagedTranscriptAttachment FinalizeStagedTranscript(ChatThread chat, ManagedTranscriptAttachment staged, string transcriptDirectory)
+    {
+        Directory.CreateDirectory(transcriptDirectory);
+        var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
 
-                File.Move(staged.FilePath, targetPath);
-                var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
-                if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
-                    Directory.Delete(sourceDirectory);
+        File.Move(staged.FilePath, targetPath);
+        var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
+        if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
+            Directory.Delete(sourceDirectory);
 
-                content.FileAttachments[index] = new ManagedTranscriptAttachment(
-                    Path.GetFileName(targetPath),
-                    targetPath,
-                    new FileInfo(targetPath).Length,
-                    staged.OriginalFileName,
-                    false);
-            }
-        }
-
-        await Task.CompletedTask;
+        return new ManagedTranscriptAttachment(
+            Path.GetFileName(targetPath),
+            targetPath,
+            new FileInfo(targetPath).Length,
+            staged.OriginalFileName,
+            false);
     }
 
     /// <summary>Raises the persisted counter to the highest transcript suffix found chat-wide.</summary>
