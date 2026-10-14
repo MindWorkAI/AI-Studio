@@ -5,12 +5,14 @@
     var organizationPluginFolders = OrganizationPluginFolders;
 }
 
+<MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+    @this.ExpertNotice
+</MudAlert>
+
 <MudText Typo="Typo.h4">
     @T("Explanation")
 </MudText>
-<MudJustifiedText Class="mb-3" Typo="Typo.body1">
-    @T("AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as Restic, Borg, or Time Machine, this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.")
-</MudJustifiedText>
+<MudJustifiedMarkdown Value="@T("AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.")"/>
 
 @foreach (var location in LOCATIONS)
 {

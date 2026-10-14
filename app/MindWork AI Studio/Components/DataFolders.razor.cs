@@ -31,7 +31,24 @@ public partial class DataFolders : MSGComponentBase
     [Inject]
     private ILogger<DataFolders> Logger { get; init; } = null!;
 
-    private static bool IsDataFolderInsideConfigFolder => !string.IsNullOrWhiteSpace(SettingsManager.ConfigDirectory)
+    /// <summary>
+    /// Tells everybody but experts where to go instead.
+    /// </summary>
+    /// <remarks>
+    /// Pointing to the backups of AI Studio makes sense only while the organization allows them.
+    /// </remarks>
+    private string ExpertNotice
+    {
+        get
+        {
+            var notice = T("The following is meant for experts who back up their computer with a tool of their own.");
+            return this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData
+                ? $"{notice} {T("To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore in the settings instead.")}"
+                : notice;
+        }
+    }
+
+    private static bool IsDataFolderInsideConfigFolder =>!string.IsNullOrWhiteSpace(SettingsManager.ConfigDirectory)
                                                           && !string.IsNullOrWhiteSpace(SettingsManager.DataDirectory)
                                                           && PathTools.IsInsideDirectory(SettingsManager.ConfigDirectory, SettingsManager.DataDirectory);
 
