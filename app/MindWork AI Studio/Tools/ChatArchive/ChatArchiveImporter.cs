@@ -298,7 +298,13 @@ public static class ChatArchiveImporter
     /// Imports one chat: extracts its files into a fresh chat directory, points the paths of
     /// those files to it, and stores the chat.
     /// </summary>
+    /// <param name="chatEntries">The archive entries of the chat.</param>
+    /// <param name="chatEntryPrefix">The path of the chat within the archive, which every entry of the chat starts with.</param>
+    /// <param name="targetWorkspaceId">The workspace to import the chat into, or Guid.Empty for a temporary chat.</param>
+    /// <param name="chat">The chat as the manifest lists it.</param>
+    /// <param name="collisionBehavior">What to do when a chat with the same ID exists already.</param>
     /// <param name="existingChatIds">The IDs of all chats in the storage. An imported chat is added.</param>
+    /// <param name="token">Cancels the import.</param>
     private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<ZipArchiveEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, CancellationToken token)
     {
         var threadEntry = chatEntries.FirstOrDefault(entry => NormalizeEntryName(entry.FullName).Equals($"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", StringComparison.OrdinalIgnoreCase));

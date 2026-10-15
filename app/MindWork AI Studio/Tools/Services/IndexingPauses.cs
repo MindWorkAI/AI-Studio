@@ -62,9 +62,9 @@ internal sealed class IndexingPauses
             this.lastPauseEnded?.TrySetResult();
             this.lastPauseEnded = null;
 
-            var stoppedRuns = this.stoppedRuns.Select(stoppedRun => new DataSourceRunRequest(stoppedRun.Key, stoppedRun.Value)).ToList();
+            var runsToQueueAgain = this.stoppedRuns.Select(stoppedRun => new DataSourceRunRequest(stoppedRun.Key, stoppedRun.Value)).ToList();
             this.stoppedRuns.Clear();
-            return stoppedRuns;
+            return runsToQueueAgain;
         }
     }
 

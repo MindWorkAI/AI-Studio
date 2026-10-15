@@ -44,6 +44,7 @@ public sealed class FirstPluginLoadTests
         using var stopping = new CancellationTokenSource();
         stopping.Cancel();
 
-        Assert.That(async () => await DataSourceEmbeddingService.WaitForFirstPluginLoadAsync(neverLoaded.Task, TimeSpan.FromMinutes(1), stopping.Token), Throws.InstanceOf<OperationCanceledException>());
+        var waiting = DataSourceEmbeddingService.WaitForFirstPluginLoadAsync(neverLoaded.Task, TimeSpan.FromMinutes(1), stopping.Token);
+        Assert.That(async () => await waiting, Throws.InstanceOf<OperationCanceledException>());
     }
 }
