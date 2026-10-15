@@ -36,8 +36,16 @@ fn main() {
     let metadata = include_str!("../metadata.txt");
     let mut metadata_lines = metadata.lines().collect::<Vec<_>>();
     metadata_lines[9] = rid;
-    let new_metadata = metadata_lines.join("\n");
-    std::fs::write("../metadata.txt", new_metadata).unwrap();
+
+    // Every line ends with a line break, the last one included. The build
+    // script of the .NET side writes the file the same way:
+    let mut new_metadata = metadata_lines.join("\n");
+    new_metadata.push('\n');
+
+    // Write only on a change to avoid unnecessary rewrites:
+    if new_metadata != metadata {
+        std::fs::write("../metadata.txt", new_metadata).unwrap();
+    }
 
     //
     // Read the current version and update the

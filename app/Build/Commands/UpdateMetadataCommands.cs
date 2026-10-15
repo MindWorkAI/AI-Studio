@@ -525,7 +525,6 @@ public sealed partial class UpdateMetadataCommands
 
         return new(
             metadataPath,
-            metadataContent,
             metadataLines,
             appVersion,
             buildNumber,
@@ -558,8 +557,7 @@ public sealed partial class UpdateMetadataCommands
         releaseState.MetadataLines[BUILD_TIME_INDEX] = buildTimeString;
         releaseState.MetadataLines[BUILD_NUMBER_INDEX] = buildNumber.ToString(CultureInfo.InvariantCulture);
         releaseState.MetadataLines[COMMIT_HASH_INDEX] = $"{releaseState.HeadCommitHash}, release";
-        var updatedMetadata = JoinLines(releaseState.MetadataContent, releaseState.MetadataLines);
-        await File.WriteAllTextAsync(releaseState.MetadataPath, updatedMetadata, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(releaseState.MetadataPath, releaseState.MetadataLines);
 
         var updatedChangelogHeader = FormatChangelogHeader(releaseState.AppVersion, buildNumber, buildTime);
         var updatedChangelog = ReplaceExactlyOnce(releaseState.ChangelogContent, releaseState.ChangelogHeader, updatedChangelogHeader);
@@ -767,10 +765,20 @@ public sealed partial class UpdateMetadataCommands
         return content.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
     }
 
-    private static string JoinLines(string originalContent, string[] lines)
+    /// <summary>
+    /// Writes the metadata file with a line feed after each line, the last one included.
+    /// </summary>
+    /// <remarks>
+    /// This is the form in which the file is committed, and the build script of the Rust runtime writes it
+    /// the same way. File.WriteAllLinesAsync would end the lines with the line break of the current OS, so
+    /// that the file would change with the OS it was last built on.
+    /// </remarks>
+    /// <param name="pathMetadata">The path of the metadata file.</param>
+    /// <param name="lines">The lines to write. An empty element after the final line break, as SplitLines leaves it, adds no empty line.</param>
+    private static async Task WriteMetadataLinesAsync(string pathMetadata, IEnumerable<string> lines)
     {
-        var lineEnding = originalContent.Contains("\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
-        return string.Join(lineEnding, lines);
+        var metadata = string.Join('\n', lines).TrimEnd('\n') + '\n';
+        await File.WriteAllTextAsync(pathMetadata, metadata, Environment.UTF8_NO_BOM);
     }
     
     private async Task<string> ReadPdfiumVersion()
@@ -794,7 +802,7 @@ public sealed partial class UpdateMetadataCommands
         Console.Write($"- Updating architecture to {rid.ToUserFriendlyName()} ...");
         lines[ARCHITECTURE_INDEX] = rid.AsMicrosoftRid();
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
         Console.WriteLine(" done.");
     }
     
@@ -813,7 +821,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating commit hash from '{currentCommitHash}' to '{updatedCommitHash}'.");
         lines[COMMIT_HASH_INDEX] = updatedCommitHash;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
     private async Task<AppVersion> UpdateAppVersion(PrepareAction action, string? version = null)
@@ -876,7 +884,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating app version from '{currentAppVersionLine}' to '{updatedAppVersion}'.");
 
         lines[APP_VERSION_INDEX] = updatedAppVersion;
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
 
         return new(updatedAppVersion, newMajor, newMinor, newPatch);
     }
@@ -935,7 +943,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated Tauri version from {currentTauriVersion} to {updatedTauriVersion}.");
         lines[TAURI_VERSION_INDEX] = updatedTauriVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
     private async Task UpdateVectorStoreVersion()
@@ -960,7 +968,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated vector store version from {currentVectorStoreVersion} to {updatedVectorStoreVersion}.");
         lines[VECTOR_STORE_VERSION_INDEX] = updatedVectorStoreVersion;
 
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
     private async Task UpdateMudBlazorVersion()
@@ -985,7 +993,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated MudBlazor version from {currentMudBlazorVersion} to {updatedMudBlazorVersion}.");
         lines[MUD_BLAZOR_VERSION_INDEX] = updatedMudBlazorVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
     private async Task UpdateRustVersion()
@@ -1009,7 +1017,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updated Rust version from {currentRustVersion} to {updatedRustVersion}.");
         lines[RUST_VERSION_INDEX] = updatedRustVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
     private async Task UpdateDotnetVersion()
@@ -1040,7 +1048,7 @@ public sealed partial class UpdateMetadataCommands
         lines[DOTNET_VERSION_INDEX] = updatedDotnetVersion;
         lines[DOTNET_SDK_VERSION_INDEX] = updatedDotnetSdkVersion;
         
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
     }
     
     private async Task<IList<Match>> DetermineVersion(string name, string workingDirectory,  Regex regex, string program, string command)
@@ -1126,7 +1134,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating build number from '{lines[BUILD_NUMBER_INDEX]}' to '{buildNumber}'.");
         
         lines[BUILD_NUMBER_INDEX] = buildNumber.ToString();
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
         return buildNumber;
     }
     
@@ -1140,13 +1148,12 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine($"- Updating build time from '{lines[BUILD_TIME_INDEX]}' to '{buildTime}'.");
         
         lines[BUILD_TIME_INDEX] = buildTime;
-        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+        await WriteMetadataLinesAsync(pathMetadata, lines);
         return buildTime;
     }
 
     private sealed record RebuildReleaseState(
         string MetadataPath,
-        string MetadataContent,
         string[] MetadataLines,
         string AppVersion,
         int BuildNumber,
