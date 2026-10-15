@@ -1,130 +1,66 @@
 @using AIStudio.Tools.ChatArchive
 @inherits SettingsPanelBase
 
-<ExpansionPanel HeaderIcon="@Icons.Material.Filled.SettingsBackupRestore" HeaderText="@T("Data Backup & Restore")" ExpandedChanged="@this.PanelExpandedChanged">
-    <MudText Typo="Typo.body1" Class="mb-3">
-        @T("Save your chats as an archive file, for example as a backup or to move them to another computer. You can read such archives back into AI Studio at any time.")
-    </MudText>
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.SettingsBackupRestore" HeaderText="@T("Data Backup & Restore")">
+    <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4">
+        <MudTabPanel Text="@T("Back up")" Icon="@Icons.Material.Filled.Archive" Disabled="@this.isBusy">
 
-    <MudTabs Elevation="0" Rounded="@true" ApplyEffectsToContainer="@true" Outlined="@true" PanelClass="pa-4" ActivePanelIndexChanged="@this.ActivePanelChanged">
-        <MudTabPanel Text="@T("Export")" Icon="@Icons.Material.Filled.Archive" Disabled="@this.isBusy">
+            <MudText Typo="Typo.body1" Class="mb-3">
+                @T("Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.")
+            </MudText>
 
-            @if (this.isLoadingWorkspaces)
+            @if (this.DataBackupService.IsRunning)
             {
-                <MudProgressLinear Indeterminate="@true" Color="Color.Primary" Class="mb-3"/>
+                <MudProgressLinear Color="Color.Primary" Value="@this.BackupProgressPercentage" Indeterminate="@(this.DataBackupService.Progress.Total is 0)" Class="mb-2"/>
+                <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.body2">
+                        @this.BackupProgressText
+                    </MudText>
+                    <MudButton Variant="Variant.Text" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@this.DataBackupService.Cancel">
+                        @T("Cancel")
+                    </MudButton>
+                </MudStack>
+                <MudText Typo="Typo.caption">
+                    @T("The backup goes on when you leave this page.")
+                </MudText>
             }
             else
             {
-                @if (!string.IsNullOrWhiteSpace(this.workspaceLoadError))
-                {
-                    <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-3">
-                        @this.workspaceLoadError
-                    </MudAlert>
-                }
-                else if (!this.HasWorkspacesToExport)
-                {
-                    <MudAlert Severity="Severity.Info" Dense="@true" Class="mb-3">
-                        @T("There are no chats to export yet.")
-                    </MudAlert>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body2" Class="mb-2">
-                        @T("Choose the workspaces you want to export.")
-                    </MudText>
-                }
+                <LockableButton Text="@T("Back up data")" Icon="@Icons.Material.Filled.Save" OnClickAsync="@this.StartBackupAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowBackup)" NoMargin="@true"/>
 
-                @* The refresh button stays available even when nothing could be read,
-                   so that a failed attempt can be repeated: *@
-                <MudStack Row="@true" Spacing="2" Class="mb-2">
-                    @if (this.HasWorkspacesToExport)
+                @if (this.DataBackupService.LastResult is { } backupResult)
+                {
+                    @if (backupResult.Success)
                     {
-                        <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.SelectAll" OnClick="@(() => this.SelectAllWorkspaces(true))" Disabled="@this.isBusy">
-                            @T("Select all")
-                        </MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Deselect" OnClick="@(() => this.SelectAllWorkspaces(false))" Disabled="@this.isBusy">
-                            @T("Select none")
-                        </MudButton>
-                    }
-                    <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await this.LoadWorkspacesAsync())" Disabled="@this.isBusy">
-                        @T("Refresh")
-                    </MudButton>
-                </MudStack>
-
-                @if (this.HasWorkspacesToExport)
-                {
-                <MudPaper Outlined="@true" Class="pa-3 mb-3">
-                    @foreach (var selection in this.workspaceSelections)
-                    {
-                        <div>
-                            <MudCheckBox T="bool" Value="@selection.IsSelected" ValueChanged="@(value => this.WorkspaceSelectionChanged(selection, value))" Color="Color.Primary" Dense="@true" Disabled="@this.isBusy" Label="@($"{selection.Name} ({string.Format(T("{0} chats"), selection.ChatCount)})")"/>
-                        </div>
-                    }
-
-                    @if (this.temporaryChatCount > 0)
-                    {
-                        <div>
-                            <MudCheckBox T="bool" @bind-Value="@this.includeTemporaryChats" Color="Color.Primary" Dense="@true" Disabled="@this.isBusy" Label="@($"{T("Temporary chats")} ({string.Format(T("{0} chats"), this.temporaryChatCount)})")"/>
-                        </div>
-                    }
-                </MudPaper>
-
-                @* Stated permanently, because it holds for every export and decides whether
-                   an archive is of any use on the other computer: *@
-                <MudAlert Severity="Severity.Info" Dense="@true" Class="mb-3">
-                    @T("Documents you attached, such as PDF or Word files, are not written into the archive. The chats keep the location where each document is stored, so those documents stay usable as long as the other computer can reach that location.")
-                </MudAlert>
-
-                @if (this.isProcessing)
-                {
-                    @this.ProgressWithCancel
-                }
-                else
-                {
-                    <LockableButton Text="@string.Format(T("Export {0} chats"), this.SelectedChatCount)" Icon="@Icons.Material.Filled.Save" OnClickAsync="@this.StartExportAsync" Disabled="@(() => this.isBusy || !this.IsAnythingSelected)" IsLocked="@(() => !this.AllowChatExport)" NoMargin="@true"/>
-                }
-                }
-
-                @if (this.exportResult is { } result)
-                {
-                    @if (!result.Success)
-                    {
-                        <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3">
-                            @result.Issue
+                        <MudAlert Severity="@(backupResult.IncludesDataSourceIndexes ? Severity.Success : Severity.Warning)" Dense="@true" Class="mt-3">
+                            <MudText Typo="Typo.body2">
+                                @string.Format(T("Backed up {0} files into: {1}"), backupResult.FileCount, backupResult.ArchivePath)
+                            </MudText>
+                            @if (!backupResult.IncludesDataSourceIndexes)
+                            {
+                                <MudText Typo="Typo.body2">
+                                    @T("The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew.")
+                                </MudText>
+                            }
                         </MudAlert>
                     }
-                    else if (result.Cancelled)
+                    else if (backupResult.Cancelled)
                     {
                         <MudAlert Severity="Severity.Info" Dense="@true" Class="mt-3">
-                            @T("The export was stopped. No archive was created.")
+                            @T("The backup was stopped. No file was left behind.")
                         </MudAlert>
                     }
                     else
                     {
-                        @* A chat missing from a backup must not pass as a success: *@
-                        <MudAlert Severity="@(result.UnreadableChats > 0 ? Severity.Warning : Severity.Success)" Dense="@true" Class="mt-3">
-                            <MudText Typo="Typo.body2">
-                                @string.Format(T("Exported {0} chats from {1} workspaces to: {2}"), result.ExportedChats, result.ExportedWorkspaces, result.ArchivePath)
-                            </MudText>
-                            @if (result.IncludedFiles > 0)
-                            {
-                                <MudText Typo="Typo.body2">
-                                    @string.Format(T("{0} files created by AI Studio, such as transcripts, were included."), result.IncludedFiles)
-                                </MudText>
-                            }
-                            @if (result.UnreadableChats > 0)
-                            {
-                                <MudText Typo="Typo.body2">
-                                    @string.Format(T("{0} chats could not be read and are missing from the archive. Please try the export again later."), result.UnreadableChats)
-                                </MudText>
-                            }
+                        <MudAlert Severity="Severity.Error" Dense="@true" Class="mt-3">
+                            @backupResult.Issue
                         </MudAlert>
                     }
                 }
             }
 
         </MudTabPanel>
-        <MudTabPanel Text="@T("Import")" Icon="@Icons.Material.Filled.Unarchive" Disabled="@this.isBusy">
+        <MudTabPanel Text="@T("Import")" Icon="@Icons.Material.Filled.Unarchive" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
 
             <MudText Typo="Typo.body2" Class="mb-2">
                 @T("Choose an archive to see what it contains before anything is imported.")
@@ -235,7 +171,7 @@
 @code {
 
     /// <summary>
-    /// The progress of the running export or import. Both tabs show the same thing.
+    /// The progress of the running import.
     /// </summary>
     private RenderFragment ProgressWithCancel => @<text>
         <MudProgressLinear Color="Color.Primary" Value="@this.ProgressPercentage" Class="mb-2"/>

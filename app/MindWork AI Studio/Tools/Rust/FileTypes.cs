@@ -1,4 +1,4 @@
-using AIStudio.Tools.ChatArchive;
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.PluginSystem;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -105,7 +105,7 @@ public static class FileTypes
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
     public static readonly FileTypeFilter SHORTCUT = FileTypeFilter.Leaf(TB("Shortcut"), "lnk");
     public static readonly FileTypeFilter PLUGIN_ARCHIVE = FileTypeFilter.Leaf(TB("Plugin archive"), PluginArchive.PLUGIN_FILE_EXTENSION.TrimStart('.'), "zip");
-    public static readonly FileTypeFilter BACKUP_ARCHIVE = FileTypeFilter.Leaf(TB("AI Studio backup"), ChatArchiveFormat.FILE_EXTENSION.TrimStart('.'), "zip");
+    public static readonly FileTypeFilter BACKUP_ARCHIVE = FileTypeFilter.Leaf(TB("AI Studio backup"), DataBackupFormat.FILE_EXTENSION.TrimStart('.'), "zip");
     
     /// <summary>
     /// The file types AI Studio converts using Pandoc.

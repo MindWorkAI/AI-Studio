@@ -13,11 +13,6 @@ public static class ChatArchiveFormat
     public const int FORMAT_VERSION = 1;
 
     /// <summary>
-    /// The file extension used for backups, named like the one of plugin archives.
-    /// </summary>
-    public const string FILE_EXTENSION = ".mwbackup";
-
-    /// <summary>
     /// The manifest file at the archive root. It describes what the archive contains.
     /// </summary>
     public const string MANIFEST_FILE_NAME = "manifest.json";

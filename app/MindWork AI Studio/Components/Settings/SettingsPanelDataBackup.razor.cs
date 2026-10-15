@@ -1,40 +1,34 @@
-using AIStudio.Dialogs;
 using AIStudio.Tools.ChatArchive;
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
-
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelDataBackup : SettingsPanelBase
 {
     /// <summary>
-    /// The shortest time between two progress renders. Without this, a large archive would
-    /// re-render the whole page once per chat.
+    /// The shortest time between two progress renders. Without this, a large backup or archive
+    /// would re-render the whole page once per file or chat.
     /// </summary>
     private static readonly TimeSpan PROGRESS_RENDER_INTERVAL = TimeSpan.FromMilliseconds(100);
 
     [Inject]
     private ILogger<SettingsPanelDataBackup> Logger { get; init; } = null!;
 
-    private readonly List<ChatArchiveWorkspaceSelection> workspaceSelections = [];
+    [Inject]
+    private DataBackupService DataBackupService { get; init; } = null!;
 
     private ChatArchiveCollisionBehavior collisionBehavior = ChatArchiveCollisionBehavior.SKIP;
     private CancellationTokenSource? cancellationTokenSource;
     private ChatArchiveProgress progress;
-    private ChatArchiveExportResult? exportResult;
     private ChatArchiveImportPreview? importPreview;
     private ChatArchiveImportResult? importResult;
     private DateTimeOffset lastProgressRender;
-    private string workspaceLoadError = string.Empty;
+    private DateTimeOffset lastBackupRender;
     private string selectedArchivePath = string.Empty;
-    private int temporaryChatCount;
-    private bool includeTemporaryChats;
-
-    private bool isLoadingWorkspaces;
-    private bool wereWorkspacesLoaded;
 
     /// <summary>
     /// Blocks any further action, starting with the click that opens a file dialog. Without
@@ -43,17 +37,11 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
     private bool isBusy;
 
     /// <summary>
-    /// Indicates that an export or import is running, which shows the progress.
+    /// Indicates that an import is running, which shows the progress.
     /// </summary>
     private bool isProcessing;
 
-    private bool HasWorkspacesToExport => this.workspaceSelections.Count > 0 || this.temporaryChatCount > 0;
-
-    private bool IsAnythingSelected => this.workspaceSelections.Any(selection => selection.IsSelected) || (this.includeTemporaryChats && this.temporaryChatCount > 0);
-
-    private int SelectedChatCount => this.workspaceSelections.Where(selection => selection.IsSelected).Sum(selection => selection.ChatCount) + (this.includeTemporaryChats ? this.temporaryChatCount : 0);
-
-    private bool AllowChatExport => this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData;
+    private bool AllowBackup => this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData;
 
     private bool AllowChatImport => this.SettingsManager.ConfigurationData.App.AllowUserToRestoreData;
 
@@ -68,10 +56,26 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
     private double ProgressPercentage => this.progress.TotalChats is 0 ? 0d : this.progress.ProcessedChats * 100d / this.progress.TotalChats;
 
+    private double BackupProgressPercentage => this.DataBackupService.Progress.Total is 0 ? 0d : this.DataBackupService.Progress.Processed * 100d / this.DataBackupService.Progress.Total;
+
+    private string BackupProgressText => this.DataBackupService.Progress switch
+    {
+        { Phase: DataBackupPhase.COPYING_INDEXES } current => string.Format(T("Copying the indexes of your data sources: {0} of {1}"), current.Processed + 1, current.Total),
+        { Phase: DataBackupPhase.WRITING, Total: > 0 } current => string.Format(T("Writing file {0} of {1}"), current.Processed, current.Total),
+        _ => T("Preparing the backup"),
+    };
+
     #region Overrides of MSGComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.DataBackupService.StateChanged += this.OnBackupStateChanged;
+        await base.OnInitializedAsync();
+    }
 
     protected override void DisposeResources()
     {
+        this.DataBackupService.StateChanged -= this.OnBackupStateChanged;
         this.cancellationTokenSource?.Cancel();
         this.DisposeCancellation();
     }
@@ -79,184 +83,45 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
     #endregion
 
     /// <summary>
-    /// Reads the workspaces when the user opens this panel for the first time. Doing it
-    /// earlier would scan the chat storage every time the settings are opened.
+    /// Shows what the backup does, which runs in the service, not here.
     /// </summary>
-    private async Task PanelExpandedChanged(bool isExpanded)
+    private void OnBackupStateChanged()
     {
-        if (!isExpanded || this.wereWorkspacesLoaded)
+        // Render at most every PROGRESS_RENDER_INTERVAL, but never skip the end of a backup:
+        var now = DateTimeOffset.UtcNow;
+        if (this.DataBackupService.IsRunning && now - this.lastBackupRender < PROGRESS_RENDER_INTERVAL)
             return;
 
-        // Only a successful run counts as loaded. Otherwise, a single failure would leave
-        // the panel empty for the rest of the session:
-        this.wereWorkspacesLoaded = await this.LoadWorkspacesAsync();
+        this.lastBackupRender = now;
+        _ = this.InvokeAsync(this.StateHasChanged);
     }
 
-    /// <summary>
-    /// Reads all workspaces with their chat counts, keeping the current selection.
-    /// </summary>
-    /// <returns>Whether the workspaces could be read.</returns>
-    private async Task<bool> LoadWorkspacesAsync()
+    private async Task StartBackupAsync()
     {
-        this.isLoadingWorkspaces = true;
-        this.workspaceLoadError = string.Empty;
-        try
-        {
-            var previousSelection = this.workspaceSelections
-                .Where(selection => selection.IsSelected)
-                .Select(selection => selection.WorkspaceId)
-                .ToHashSet();
-
-            this.workspaceSelections.Clear();
-
-            var tree = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-            foreach (var workspace in tree.Workspaces)
-            {
-                var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(workspace.WorkspaceId);
-                this.workspaceSelections.Add(new()
-                {
-                    WorkspaceId = workspace.WorkspaceId,
-                    Name = workspace.Name,
-                    ChatCount = chats.Count,
-                    IsSelected = previousSelection.Contains(workspace.WorkspaceId),
-                });
-            }
-
-            this.workspaceSelections.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
-            this.temporaryChatCount = tree.TemporaryChats.Count;
-            return true;
-        }
-        catch (Exception exception)
-        {
-            // Reading the chat storage can fail, e.g. when the data directory sits on a
-            // network drive. Report it instead of showing an empty panel:
-            this.Logger.LogError(exception, "Failed to read the workspaces for the data backup.");
-            this.workspaceLoadError = string.Format(T("Your chats could not be read: {0}"), exception.Message);
-            this.temporaryChatCount = 0;
-            return false;
-        }
-        finally
-        {
-            this.isLoadingWorkspaces = false;
-        }
-    }
-
-    /// <summary>
-    /// Refreshes the workspaces when returning to the export, because an import in the
-    /// meantime might have changed them.
-    /// </summary>
-    private async Task ActivePanelChanged(int panelIndex)
-    {
-        if (this.isBusy || panelIndex is not 0)
+        if (this.isBusy || this.DataBackupService.IsRunning || !this.AllowBackup)
             return;
 
-        await this.LoadWorkspacesAsync();
-    }
-
-    private void WorkspaceSelectionChanged(ChatArchiveWorkspaceSelection selection, bool isSelected)
-    {
-        selection.IsSelected = isSelected;
-        this.exportResult = null;
-    }
-
-    private void SelectAllWorkspaces(bool isSelected)
-    {
-        foreach (var selection in this.workspaceSelections)
-            selection.IsSelected = isSelected;
-
-        this.includeTemporaryChats = isSelected && this.temporaryChatCount > 0;
-        this.exportResult = null;
-    }
-
-    private async Task StartExportAsync()
-    {
-        if (this.isBusy || !this.IsAnythingSelected || !this.AllowChatExport)
-            return;
-
+        string archivePath;
         this.isBusy = true;
         try
         {
-            var workspaceIds = this.workspaceSelections
-                .Where(selection => selection.IsSelected)
-                .Select(selection => selection.WorkspaceId)
-                .ToList();
-
-            var includeChatFiles = await this.AskForChatFilesAsync(workspaceIds);
-            if (includeChatFiles is null)
-                return;
-
-            var suggestedFileName = $"ai-studio-backup-{DateTime.Now:yyyy-MM-dd}{ChatArchiveFormat.FILE_EXTENSION}";
-            var saveResponse = await this.RustService.SaveFile(T("Export chats"), [FileTypes.BACKUP_ARCHIVE], suggestedFileName);
+            var suggestedFileName = $"ai-studio-backup-{DateTime.Now:yyyy-MM-dd}{DataBackupFormat.FILE_EXTENSION}";
+            var saveResponse = await this.RustService.SaveFile(T("Back up data"), [FileTypes.BACKUP_ARCHIVE], suggestedFileName);
             if (saveResponse.UserCancelled)
                 return;
 
-            this.exportResult = null;
-            this.isProcessing = true;
-            this.progress = new(0, this.SelectedChatCount);
-            this.cancellationTokenSource = new();
-
-            // Show the progress and the cancel button before the first chat is written:
-            await this.InvokeAsync(this.StateHasChanged);
-
-            // Compressing on the UI thread would keep the progress bar and the cancel
-            // button from updating for the whole run:
-            var token = this.cancellationTokenSource.Token;
-            var reporter = this.CreateProgressReporter();
-            this.exportResult = await Task.Run(() => ChatArchiveExporter.ExportAsync(workspaceIds, this.includeTemporaryChats, includeChatFiles.Value, saveResponse.SaveFilePath, reporter, token), token);
-        }
-        catch (OperationCanceledException)
-        {
-            this.Logger.LogInformation("The user cancelled the chat export.");
+            archivePath = saveResponse.SaveFilePath;
         }
         finally
         {
-            this.isProcessing = false;
-            this.DisposeCancellation();
             this.isBusy = false;
-
-            // The lockable button calls this as a plain function, not as an event of this
-            // component, so nothing renders the result unless we do:
-            await this.InvokeAsync(this.StateHasChanged);
-        }
-    }
-
-    /// <summary>
-    /// Asks whether the files AI Studio owns for the selected chats travel with the archive.
-    /// </summary>
-    /// <remarks>
-    /// Chats without such files are the normal case, and there the question has no answer
-    /// worth asking for. The dialog therefore only appears when the selection really contains
-    /// files which would otherwise be lost.
-    /// </remarks>
-    /// <param name="workspaceIds">The selected workspaces.</param>
-    /// <returns>Whether to include the files, or null when the user cancelled the export.</returns>
-    private async Task<bool?> AskForChatFilesAsync(IReadOnlyList<Guid> workspaceIds)
-    {
-        bool hasChatFiles;
-        try
-        {
-            // Scanning the chat storage on the UI thread would freeze the settings:
-            hasChatFiles = await Task.Run(() => ChatArchiveExporter.HasChatFilesAsync(workspaceIds, this.includeTemporaryChats, CancellationToken.None));
-        }
-        catch (Exception exception)
-        {
-            //
-            // Asking is a convenience, not a requirement. When the storage cannot be scanned,
-            // the export still runs and simply includes whatever it finds:
-            //
-            this.Logger.LogWarning(exception, "Failed to check the selected chats for app-owned files.");
-            return true;
         }
 
-        if (!hasChatFiles)
-            return false;
-
-        var dialogReference = await this.DialogService.ShowAsync<ChatArchiveFilesDialog>(T("Include files created by AI Studio?"), DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return null;
-
-        return dialogResult.Data as bool? ?? false;
+        //
+        // The service runs the backup and reports every step through StateChanged, so leaving the
+        // page does not stop it:
+        //
+        await this.DataBackupService.CreateBackupAsync(archivePath);
     }
 
     private async Task ChooseArchiveAsync()
@@ -322,8 +187,6 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
             this.isProcessing = false;
             this.DisposeCancellation();
             this.isBusy = false;
-
-            await this.LoadWorkspacesAsync();
         }
     }
 
