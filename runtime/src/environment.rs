@@ -859,11 +859,18 @@ fn enterprise_env_key_equals(env_name: &str, expected: &str) -> bool {
 
 #[cfg(target_os = "windows")]
 fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
-    if env_name.len() < prefix.len() {
-        return None;
-    }
+    enterprise_env_key_suffix_ignoring_case(env_name, prefix)
+}
 
-    let (raw_prefix, suffix) = env_name.split_at(prefix.len());
+/// Returns the slot suffix of an environment variable name, comparing the prefix without
+/// regard to case, the way Windows compares the names of environment variables.
+///
+/// Every environment variable passes through here, whatever characters its name contains.
+/// Where the length of the prefix ends inside one of them, the name cannot start with the
+/// prefix, and splitting it there would panic.
+#[cfg(any(target_os = "windows", test))]
+fn enterprise_env_key_suffix_ignoring_case<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
+    let (raw_prefix, suffix) = env_name.split_at_checked(prefix.len())?;
     if raw_prefix.eq_ignore_ascii_case(prefix) {
         normalize_enterprise_slot_suffix(suffix)
     } else {
@@ -1368,8 +1375,9 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        directory_is_writable, enterprise_environment_key_name,
-        enterprise_policy_file_slot_suffix, has_managed_installation_marker,
+        directory_is_writable, enterprise_env_key_suffix_ignoring_case,
+        enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
+        has_managed_installation_marker,
         is_windows_machine_wide_installation, is_windows_per_user_installation,
         load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
@@ -1378,6 +1386,7 @@ mod tests {
         select_effective_enterprise_secret_source, update_target_installation_kind,
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
         ExternalHttpCustomRootCertificatePolicy, InstallationKind, LinuxPackageType,
+        ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX,
         MANAGED_INSTALLATION_MARKER_FILE_NAME,
     };
     use std::collections::HashMap;
@@ -1624,6 +1633,33 @@ mod tests {
             enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_100000"),
             None
         );
+    }
+
+    #[test]
+    fn enterprise_env_key_suffix_ignoring_case_accepts_any_case() {
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("mindwork_ai_studio_enterprise_config_id_10503", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            Some("10503")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("Mindwork_AI_Studio_Enterprise_Config_Server_URL_00000", ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX),
+            Some("00000")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("MINDWORK_AI_STUDIO", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            None
+        );
+    }
+
+    #[test]
+    fn enterprise_env_key_suffix_ignoring_case_skips_names_where_the_prefix_ends_inside_a_character() {
+        for prefix in [ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX] {
+            // Every "Ä" takes two bytes, and both prefixes are an odd number of bytes long:
+            let name = "Ä".repeat(prefix.len());
+            assert!(!name.is_char_boundary(prefix.len()));
+
+            assert_eq!(enterprise_env_key_suffix_ignoring_case(&name, prefix), None);
+        }
     }
 
     #[test]
