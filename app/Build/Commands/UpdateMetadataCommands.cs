@@ -22,26 +22,27 @@ public sealed partial class UpdateMetadataCommands
         [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
-            return;
+            throw new CommandExitedException(1);
 
         // Validate parameters: either action or version must be specified, but not both:
         if (action == PrepareAction.NONE && string.IsNullOrWhiteSpace(version))
         {
             Console.WriteLine("- Error: You must specify either --action (-a) or --version (-v).");
-            return;
+            throw new CommandExitedException(1);
         }
 
         if (action != PrepareAction.NONE && !string.IsNullOrWhiteSpace(version))
         {
             Console.WriteLine("- Error: You cannot specify both --action and --version. Please use only one.");
-            return;
+            throw new CommandExitedException(1);
         }
 
         // If version is specified, use SET action:
         if (!string.IsNullOrWhiteSpace(version))
             action = PrepareAction.SET;
 
-        // Prepare the metadata for the next release:
+        // Prepare the metadata for the next release. When this fails, it ends the
+        // whole command, so that nothing is built from half-prepared metadata:
         await this.PerformPrepare(action, true, version);
 
         await this.BuildPreparedRelease(offline);
@@ -52,7 +53,7 @@ public sealed partial class UpdateMetadataCommands
         [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
-            return;
+            throw new CommandExitedException(1);
 
         Console.WriteLine("==============================");
         Console.WriteLine("- Prepare a new build of the current release ...");
@@ -65,7 +66,7 @@ public sealed partial class UpdateMetadataCommands
         catch (InvalidOperationException exception)
         {
             Console.WriteLine($"- Error: {exception.Message}");
-            return;
+            throw new CommandExitedException(1);
         }
 
         await this.ApplyRebuildReleaseState(releaseState, DateTime.UtcNow);
@@ -199,7 +200,7 @@ public sealed partial class UpdateMetadataCommands
             if (!File.Exists(changelogPath))
             {
                 Console.WriteLine($"- Error: The changelog file '{Path.GetFileName(changelogPath)}' does not exist.");
-                return;
+                throw new CommandExitedException(1);
             }
 
             var buildNumber = await this.IncreaseBuildNumber();
@@ -905,7 +906,7 @@ public sealed partial class UpdateMetadataCommands
             if (!versionMatch.Success)
             {
                 Console.WriteLine($"- Error: Invalid version format '{version}'. Expected format: major.minor.patch (e.g., 26.1.2)");
-                return new(string.Empty, 0, 0, 0);
+                throw new CommandExitedException(1);
             }
 
             newMajor = int.Parse(versionMatch.Groups["major"].Value);
