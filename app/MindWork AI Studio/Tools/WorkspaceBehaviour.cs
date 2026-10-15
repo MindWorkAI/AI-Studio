@@ -970,9 +970,8 @@ public static partial class WorkspaceBehaviour
 
     private static void CopyManagedTranscriptAttachments(ChatThread chat, string targetChatDirectory)
     {
-        var targetTranscriptDirectory = Path.Combine(targetChatDirectory, "attachments", "transcripts");
-        var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(pathComparer);
+        var targetTranscriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(targetChatDirectory);
+        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(PathTools.COMPARER);
 
         chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
             ? CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths)
@@ -1036,7 +1035,7 @@ public static partial class WorkspaceBehaviour
             if (!Directory.Exists(chatDirectory))
                 throw new DirectoryNotFoundException($"The owning chat directory does not exist: '{chatDirectory}'.");
             
-            var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+            var transcriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory);
             Directory.CreateDirectory(transcriptDirectory);
             ReconcileTranscriptCounter(chat, transcriptDirectory);
             
@@ -1181,12 +1180,7 @@ public static partial class WorkspaceBehaviour
     /// <summary>Gives a path inside a moved directory its place in the target directory, and leaves every other path as it is.</summary>
     private static string RelocatePath(string path, string sourceDirectory, string targetDirectory)
     {
-        var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
-            ? sourceDirectory
-            : sourceDirectory + Path.DirectorySeparatorChar;
-
-        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!Path.GetFullPath(path).StartsWith(sourcePrefix, pathComparison))
+        if (!PathTools.IsInsideDirectory(sourceDirectory, path))
             return path;
 
         return Path.Combine(targetDirectory, Path.GetRelativePath(sourceDirectory, path));
@@ -1203,7 +1197,7 @@ public static partial class WorkspaceBehaviour
     /// </remarks>
     private static void FinalizeStagedTranscripts(ChatThread chat, string chatDirectory)
     {
-        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        var transcriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory);
         ReconcileTranscriptCounter(chat, transcriptDirectory);
         chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment { IsStaged: true } staged && File.Exists(staged.FilePath)
             ? FinalizeStagedTranscript(chat, staged, transcriptDirectory)

@@ -89,6 +89,7 @@ public partial class DataFolders : MSGComponentBase
         DataBackupEntryKind.ORGANIZATION_PLUGINS => T("Plugins of your organization. Your organization brings them back."),
         DataBackupEntryKind.TEMPORARY_FILES => T("Files which AI Studio needs only for a moment and deletes again."),
         DataBackupEntryKind.DOWNLOADED_TOOLS => T("Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again."),
+        DataBackupEntryKind.INTERFACE_KEYS => T("Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones."),
         DataBackupEntryKind.LOGS => T("Log files. They help when something goes wrong, but they hold none of your data."),
 
         _ => string.Empty,

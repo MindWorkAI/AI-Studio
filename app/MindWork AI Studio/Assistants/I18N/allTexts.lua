@@ -3916,6 +3916,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1682175486"] = "What belong
 -- The index of your local data sources: which files AI Studio embedded, and their text.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T170332953"] = "The index of your local data sources: which files AI Studio embedded, and their text."
 
+-- Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1981169629"] = "Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones."
+
 -- Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1992121437"] = "Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again."
 

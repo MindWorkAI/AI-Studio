@@ -507,7 +507,7 @@ public static class ChatArchiveImporter
     /// <param name="chatDirectory">The directory of the imported chat.</param>
     private static void CopyTranscriptsStoredElsewhere(ChatThread thread, string chatDirectory)
     {
-        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        var transcriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory);
         var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(PathTools.COMPARER);
 
         //

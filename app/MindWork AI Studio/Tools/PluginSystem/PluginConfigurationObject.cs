@@ -651,16 +651,6 @@ public sealed record PluginConfigurationObject
 
         var fullPluginPath = Path.GetFullPath(pluginPath);
         var candidatePath = Path.GetFullPath(Path.Combine(fullPluginPath, configuredTokenizerPath));
-
-        if (candidatePath.Equals(fullPluginPath, StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        var pluginPrefix = fullPluginPath.EndsWith(Path.DirectorySeparatorChar)
-            ? fullPluginPath
-            : fullPluginPath + Path.DirectorySeparatorChar;
-
-        return candidatePath.StartsWith(pluginPrefix, StringComparison.OrdinalIgnoreCase)
-            ? candidatePath
-            : null;
+        return PathTools.IsInsideDirectory(fullPluginPath, candidatePath) ? candidatePath : null;
     }
 }

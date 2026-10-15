@@ -71,6 +71,12 @@ public enum DataBackupEntryKind
     DOWNLOADED_TOOLS,
 
     /// <summary>
+    /// The keys with which the user interface protects its data. Only the Flatpak keeps them in the data
+    /// folder, since the home folder is read-only there, and AI Studio creates new ones when they are missing.
+    /// </summary>
+    INTERFACE_KEYS,
+
+    /// <summary>
     /// The log files.
     /// </summary>
     LOGS,

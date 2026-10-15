@@ -535,16 +535,18 @@ AI Studio has a dedicated directory for this: `.config-tests`. Anything stored t
 
 Do not use the `.config` directory for this. It belongs to your configuration web server, and AI Studio removes everything there that your organization does not reference anymore.
 
-### The data directory
+### The data and configuration directories
 
-Plugins live in the data directory of AI Studio:
+Plugins live in the data directory of AI Studio. The settings live in its configuration directory:
 
-| Platform | Data directory |
-| --- | --- |
-| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
-| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
-| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
-| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+| Platform | Data directory | Configuration directory |
+| --- | --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` | `%APPDATA%\com.github.mindwork-ai.ai-studio` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` | `~/Library/Application Support/com.github.mindwork-ai.ai-studio` |
+| Linux | `$XDG_DATA_HOME/org.mindworkai.AIStudio/data`, usually `~/.local/share/org.mindworkai.AIStudio/data` | `$XDG_CONFIG_HOME/org.mindworkai.AIStudio`, usually `~/.config/org.mindworkai.AIStudio` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/org.mindworkai.AIStudio/data` | `~/.var/app/org.mindworkai.AIStudio/config/org.mindworkai.AIStudio` |
+
+The panel **Your Data Folders** on the Information page shows both directories as AI Studio resolved them on the device at hand.
 
 ### Staging a deployment
 
@@ -822,7 +824,7 @@ A restore leaves the plugins of your organization, the plugins which come with A
 
 ### Backing up with a tool of your own
 
-If you back up the user profiles of your devices anyway, for example with Restic, Borg, or the backup solution of your organization, the Information page helps: its panel **Your Data Folders** shows where the data and configuration directories lie, and which of their contents belong into a backup. The panel derives this from the same list the backups of AI Studio follow, and it stays complete even when you set `DataApp.AllowUserToBackUpData` to `false`.
+If you back up the user profiles of your devices anyway, for example with Restic, Borg, or the backup solution of your organization, the Information page helps: its panel **Your Data Folders** shows where the data and configuration directories lie, and which of their contents belong into a backup. [The data and configuration directories](#the-data-and-configuration-directories) lists their usual places. The panel derives this from the same list the backups of AI Studio follow, and it stays complete even when you set `DataApp.AllowUserToBackUpData` to `false`.
 
 Keep in mind:
 

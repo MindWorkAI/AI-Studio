@@ -65,6 +65,7 @@ public static class DataBackupContents
         new(DataBackupLocation.CONFIG_DIRECTORY, DataRestoreFormat.PREVIOUS_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.RESULT_FILE_NAME, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "pandoc/", DataBackupEntryKind.DOWNLOADED_TOOLS),
+        new(DataBackupLocation.DATA_DIRECTORY, "data-protection-keys/", DataBackupEntryKind.INTERFACE_KEYS),
         new(DataBackupLocation.DATA_DIRECTORY, "events.log", DataBackupEntryKind.LOGS),
 
         // The runtime hides the log of the startup on Linux and macOS:
