@@ -14,6 +14,9 @@
         <MudText Typo="Typo.body1" Class="mt-2">
             @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.")
         </MudText>
+        <MudText Typo="Typo.body1" Class="mt-2">
+            @T("AI Studio indexes large data sources in steps of a few minutes, so that your other data sources get their turn in between.")
+        </MudText>
         @if (this.AreMailboxesEnabled)
         {
             <MudText Typo="Typo.body1" Class="mt-2">

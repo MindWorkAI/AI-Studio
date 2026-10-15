@@ -21,6 +21,9 @@ DESCRIPTION = "This is a pre-defined configuration of <Company Name>"
 -- The version of the plugin:
 VERSION = "1.0.0"
 
+-- When this plugin was last changed, in UTC, formatted as YYYY-MM-DDTHH:MM:SSZ. Optional.
+LAST_CHANGED = "2025-12-31T12:00:00Z"
+
 -- The type of the plugin:
 TYPE = "CONFIGURATION"
 
@@ -82,7 +85,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 -- 
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     -- Allowed values for Host are: LM_STUDIO, LLAMA_CPP, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 -- 
@@ -181,7 +184,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the transcription provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and WHISPER_CPP
+--     -- Allowed values for Host are: OLLAMA, VLLM, WHISPER_CPP, and LLMMAN
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --
@@ -218,7 +221,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the embedding provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     -- Allowed values for Host are: LM_STUDIO, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 --
@@ -1008,8 +1011,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure a custom confidence scheme.
 -- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
 -- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
---   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED,
---   HELMHOLTZ, GWDG
+--   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, REQUESTY, FIREWORKS, GROQ, HUGGINGFACE,
+--   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
@@ -1029,6 +1032,7 @@ CONFIG["SETTINGS"] = {}
 --     ["HETZNER"] = "HIGH",
 --     ["IONOS"] = "HIGH",
 --     ["LITE_LLM"] = "MODERATE",
+--     ["REQUESTY"] = "MODERATE",
 --     ["FIREWORKS"] = "MODERATE",
 --     ["GROQ"] = "MODERATE",
 --     ["HUGGINGFACE"] = "MODERATE",

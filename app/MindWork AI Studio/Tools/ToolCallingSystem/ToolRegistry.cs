@@ -193,7 +193,7 @@ public sealed class ToolRegistry
             return false;
         }
 
-        if (!IsValidFunctionName(definition.Function.Name))
+        if (!ToolExecutor.IsValidFunctionName(definition.Function.Name))
         {
             issue = "the function name must contain 1-64 ASCII letters, digits, underscores, or hyphens";
             return false;
@@ -278,11 +278,6 @@ public sealed class ToolRegistry
 
         return true;
     }
-
-    private static bool IsValidFunctionName(string? functionName) =>
-        !string.IsNullOrWhiteSpace(functionName) &&
-        functionName.Length <= 64 &&
-        functionName.All(character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-');
 
     public IReadOnlyList<ToolDefinition> GetDefinitionsForComponent(Components component)
     {

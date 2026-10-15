@@ -50,8 +50,12 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     /// Gets a value indicating whether the file still exists on the file system.
     /// </summary>
     /// <remarks>
-    /// This property checks the file system each time it is accessed.
+    /// This property checks the file system each time it is accessed. It is therefore excluded from
+    /// serialization: a path on a network share which is out of reach blocks until the SMB timeout,
+    /// and the settings carry such attachments in chat templates. Every store of the settings would
+    /// wait that long. Reading never used the value, so older files with the field still load.
     /// </remarks>
+    [JsonIgnore]
     public bool Exists => File.Exists(this.FilePath);
 
     /// <summary>

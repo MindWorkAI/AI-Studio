@@ -32,7 +32,7 @@ public sealed partial class DataSourceEmbeddingService
             dataSource.Id);
 
         var activeRun = this.CancelActiveDataSourceRun(dataSource);
-        this.ClearQueuedDataSourceState(dataSourceId);
+        this.runQueue.Clear(dataSourceId);
         if (activeRun is not null)
             await activeRun.Completion.Task;
 
@@ -137,6 +137,8 @@ public sealed partial class DataSourceEmbeddingService
         IndexStoreClient? indexStore,
         CancellationToken token)
     {
+        // What failed while building the index which is thrown away now says nothing about the next one:
+        this.passes.TryRemove(dataSourceId, out _);
         await this.DeleteCollectionAsync(DataSourceEmbeddingNames.GetCollectionName(dataSourceId), vectorStore, token);
 
         indexStore ??= await databaseClientProvider.GetIndexStoreAsync(token);

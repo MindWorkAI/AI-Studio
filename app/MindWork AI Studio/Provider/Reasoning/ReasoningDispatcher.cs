@@ -108,6 +108,7 @@ public static class ReasoningDispatcher
             LLMProviders.HETZNER or
             LLMProviders.IONOS or
             LLMProviders.LITE_LLM or
+            LLMProviders.REQUESTY or
             LLMProviders.X or
             LLMProviders.DEEP_SEEK or
             LLMProviders.GROQ or
@@ -123,6 +124,13 @@ public static class ReasoningDispatcher
             Host.LLAMA_CPP => [ReasoningDialect.OPEN_AI_COMPATIBLE, ReasoningDialect.REASONING_EFFORT, ReasoningDialect.QWEN_THINKING, ReasoningDialect.LLAMA_CPP],
 
             Host.VLLM => [ReasoningDialect.OPEN_AI_COMPATIBLE, ReasoningDialect.REASONING_EFFORT, ReasoningDialect.QWEN_THINKING, ReasoningDialect.GOOGLE_THINKING, ReasoningDialect.VLLM],
+
+            //
+            // llmman starts llama.cpp for GGUF models and vLLM, SGLang, or MLX for the others, and
+            // hands their fields through unchanged. Which engine serves a model is up to llmman, so
+            // it is read in everything llama.cpp and vLLM are read in:
+            //
+            Host.LLMMAN => [ReasoningDialect.OPEN_AI_COMPATIBLE, ReasoningDialect.REASONING_EFFORT, ReasoningDialect.QWEN_THINKING, ReasoningDialect.GOOGLE_THINKING, ReasoningDialect.LLAMA_CPP, ReasoningDialect.VLLM],
 
             _ => EVERYTHING_A_GATEWAY_MIGHT_SERVE,
         },

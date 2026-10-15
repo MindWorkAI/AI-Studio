@@ -54,6 +54,8 @@ public sealed class HostNamingTests
             Assert.That(HostNaming.VendorOfOrganization("Qwen"), Is.EqualTo(ModelVendor.ALIBABA));
             Assert.That(HostNaming.VendorOfOrganization("deepseek-ai"), Is.EqualTo(ModelVendor.DEEP_SEEK));
             Assert.That(HostNaming.VendorOfOrganization("HuggingFaceTB"), Is.EqualTo(ModelVendor.HUGGING_FACE));
+            Assert.That(HostNaming.VendorOfOrganization("zai"), Is.EqualTo(ModelVendor.Z_AI));
+            Assert.That(HostNaming.VendorOfOrganization("minimaxi"), Is.EqualTo(ModelVendor.MINIMAX));
             Assert.That(HostNaming.VendorOfOrganization("somebody-else"), Is.EqualTo(ModelVendor.UNKNOWN));
         });
     }
@@ -108,6 +110,31 @@ public sealed class HostNamingTests
         {
             Assert.That(taken, Is.True);
             Assert.That(inner.Original, Is.EqualTo("google/gemma-4-31B-it"));
+        });
+    }
+
+    [Test]
+    public void TheRegionSuffixComesOffAndTheModelStaysWhatItWas()
+    {
+        var taken = HostNaming.TryStripRegionSuffix(new ModelId("bedrock/claude-opus-5@eu-central-1"), out var inner);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(taken, Is.True);
+            Assert.That(inner.Original, Is.EqualTo("bedrock/claude-opus-5"));
+        });
+    }
+
+    [TestCase("bedrock/claude-opus-5", TestName = "A name without an at sign has no region to take off")]
+    [TestCase("@eu", TestName = "A region with nothing in front of it is not a wrapping")]
+    public void WhatCarriesNoRegionIsLeftAlone(string modelId)
+    {
+        var taken = HostNaming.TryStripRegionSuffix(new ModelId(modelId), out var inner);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(taken, Is.False);
+            Assert.That(inner.Original, Is.EqualTo(modelId));
         });
     }
 

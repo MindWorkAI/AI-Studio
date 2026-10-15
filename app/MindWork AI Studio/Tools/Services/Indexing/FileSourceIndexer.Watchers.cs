@@ -281,7 +281,7 @@ internal sealed partial class FileSourceIndexer
             if (PersistentMediaTranscript.IsArtifactPath(path))
                 return false;
 
-            // A newly found file which lies outside the patterns belongs in the ignored-file list.
+            // A newly found file which lies outside the patterns belongs in the exclusion summary.
             // A deleted path can have been a directory, but FileSystemWatcher does not tell us
             // that after it is gone. Refresh conservatively so the index and that list stay current.
             return changeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed;

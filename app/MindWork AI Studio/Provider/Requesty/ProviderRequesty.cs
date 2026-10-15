@@ -1,0 +1,185 @@
+using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+
+using AIStudio.Chat;
+using AIStudio.Models.Live;
+using AIStudio.Provider.OpenAI;
+using AIStudio.Settings;
+
+namespace AIStudio.Provider.Requesty;
+
+public sealed class ProviderRequesty() : BaseProvider(LLMProviders.REQUESTY, new Uri("https://router.requesty.ai/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
+{
+    private static readonly ILogger<ProviderRequesty> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderRequesty>();
+
+    #region Implementation of IProvider
+
+    /// <inheritdoc />
+    public override string Id => LLMProviders.REQUESTY.ToSecretId();
+
+    /// <inheritdoc />
+    public override string InstanceName { get; set; } = "Requesty";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
+    {
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+                           "Requesty",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters, tools) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
+
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
+
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
+
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   Tools = tools,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           headersAction: ProjectAttribution.Apply,
+                           token: token))
+            yield return content;
+    }
+
+    #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, [EnumeratorCancellation] CancellationToken token = default)
+    {
+        yield break;
+    }
+    #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+    /// <inheritdoc />
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    {
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
+    }
+
+    /// <inheritdoc />
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    {
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
+    }
+
+    /// <inheritdoc />
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
+    }
+
+    /// <inheritdoc />
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return Task.FromResult(ModelLoadResult.FromModels([]));
+    }
+
+    /// <inheritdoc />
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModelsOfRoute(SecretStoreType.EMBEDDING_PROVIDER, "models/embedding", apiKeyProvisional, token);
+    }
+
+    /// <inheritdoc />
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    {
+        return this.LoadModelsOfRoute(SecretStoreType.TRANSCRIPTION_PROVIDER, "models/transcription", apiKeyProvisional, token);
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Loads the managed policies and the full model catalog, and offers both as one list.
+    /// </summary>
+    /// <remarks>
+    /// A managed policy, such as "claude-opus-5@eu", bundles several clouds which serve the same
+    /// model, and Requesty decides which of them answers a request. Requesty lists these policies on
+    /// a route of their own, and the catalog does not contain them. Both lists are read before
+    /// anything is reported, because what is reported replaces everything this instance said
+    /// before. When the managed route fails, the catalog alone is still offered.
+    /// </remarks>
+    /// <param name="storeType">Where the API key is stored.</param>
+    /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <returns>The chat models.</returns>
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
+    {
+        IList<RequestyModel> managedModels = [];
+        await this.LoadModelsResponse<RequestyModelsResponse>(
+            storeType,
+            "models/managed",
+            modelResponse =>
+            {
+                managedModels = modelResponse.Data;
+                return [];
+            },
+            apiKeyProvisional,
+            requestConfigurator: ConfigureRequest,
+            token: token);
+
+        return await this.LoadModelsResponse<RequestyModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => managedModels.Concat(modelResponse.Data)
+                .DistinctBy(n => n.Id)
+                .Select(n => new Model(n.Id, null))
+                .Where(model => model.IsChatModel(this.Provider)),
+            apiKeyProvisional,
+            requestConfigurator: ConfigureRequest,
+            listingFactory: modelResponse => managedModels.Concat(modelResponse.Data)
+                .DistinctBy(n => n.Id)
+                .Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
+    }
+
+    /// <summary>
+    /// Loads the models Requesty offers for embedding or for transcription, each of which lives on
+    /// a route of its own.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is reported from here: such a route answers with the models of its purpose alone,
+    /// and what is reported replaces everything an instance said before. The windows of the chat
+    /// models would go missing the moment somebody opens the embedding or transcription settings.
+    ///
+    /// Nothing is filtered either. The route is the statement: Requesty serves these models to
+    /// embed or to transcribe with, which is more than a name can say. Asking the registry on top
+    /// could only drop a model whose name we do not recognize.
+    /// </remarks>
+    /// <param name="storeType">Where the API key is stored.</param>
+    /// <param name="route">The route which lists the models, relative to the base URL.</param>
+    /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <returns>The models of the route.</returns>
+    private Task<ModelLoadResult> LoadModelsOfRoute(SecretStoreType storeType, string route, string? apiKeyProvisional, CancellationToken token)
+    {
+        return this.LoadModelsResponse<RequestyModelsResponse>(
+            storeType,
+            route,
+            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, null)),
+            apiKeyProvisional,
+            requestConfigurator: ConfigureRequest,
+            token: token);
+    }
+
+    private static void ConfigureRequest(HttpRequestMessage request, string secretKey)
+    {
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        ProjectAttribution.Apply(request.Headers);
+    }
+}

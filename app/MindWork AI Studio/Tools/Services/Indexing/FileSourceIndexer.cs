@@ -24,17 +24,23 @@ namespace AIStudio.Tools.Services.Indexing;
 ///
 /// Changes are noticed by a file system watcher per data source. A burst of changes is waited out
 /// before a run is asked for, so saving a document twice in a row costs one run, not two.
+///
+/// A run reads files for its share of the time, cf. Share, and leaves the rest to the next one, so
+/// a folder which takes hours does not hold up every other data source. Every such step lists the
+/// folder anew, and counts what needs no reading before it reads the first file. A step stores no
+/// hash, so a folder which is indexed for the first time stays out of every search until its index
+/// is complete, cf. DocumentRunProgress.PauseRunAsync.
 /// </remarks>
 /// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
-/// <param name="guardService">The prompt injection filter, whose findings are reported once per run.</param>
 /// <param name="mediaTranscriptionService">Transcribes selected audio and video files.</param>
 /// <param name="textChunker">Cuts the text of a file into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, MediaTranscriptionService mediaTranscriptionService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
+    private const int MAX_LOGGED_EXCLUDED_FILE_EXAMPLES = 3;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileSourceIndexer).Namespace, nameof(FileSourceIndexer));
 
@@ -52,6 +58,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
 
     /// <inheritdoc />
+    public RunShare Share => new(RunShare.DEFAULT_DURATION);
+
+    /// <inheritdoc />
     public async Task<IndexedRunOutcome> ProcessAsync(IndexedRunContext context, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
         if (context.DataSource is not IDataSource dataSource || !this.Supports(dataSource))
@@ -59,7 +68,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var manifest = context.Manifest;
 
+        var enumerationStartedUtc = DateTimeOffset.UtcNow;
         var inputFiles = this.GetInputFiles(dataSource, manifest);
+        var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
@@ -73,14 +84,19 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 failure.Reason);
         }
 
+        //
+        // Listing the files is what every step of a large folder pays before it reads anything,
+        // hence the time it took:
+        //
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
             inputFiles.IgnoredFiles.Count,
             inputFiles.FilePatternExclusionCount,
             inputFiles.FailedFiles,
+            enumerationDuration.TotalMilliseconds,
             context.CollectionName);
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
@@ -120,63 +136,56 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         token.ThrowIfCancellationRequested();
+
+        //
+        // Everything which needs no reading is counted before the first file is read. Counted one
+        // by one, the progress of every step would start at zero, and climb through the files the
+        // steps before already did.
+        //
+        var partition = PartitionFiles(indexedFiles, metadataSnapshot.FileHashes, manifest, context.Pass);
+        progress.RecordUnchanged(partition.UnchangedCount);
+        foreach (var (filePath, permanentFailure) in partition.StillUnreadable)
+        {
+            logger.LogDebug(
+                "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
+                filePath,
+                dataSource.Name,
+                dataSource.Id,
+                permanentFailure.Code,
+                ShortHash(permanentFailure.Fingerprint),
+                permanentFailure.OccurredAtUtc);
+            progress.RecordStillUnreadable(filePath, permanentFailure);
+        }
+
+        foreach (var failure in partition.FailedEarlierInPass)
+            progress.RecordFailedEarlierInPass(failure);
+
+        logger.LogInformation(
+            "Sorted the files of data source '{DataSourceName}' ({DataSourceId}). Unchanged={UnchangedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, FailedEarlierInPass={FailedEarlierInPass}, ToRead={FilesToRead}.",
+            dataSource.Name,
+            dataSource.Id,
+            partition.UnchangedCount,
+            partition.StillUnreadable.Count,
+            partition.FailedEarlierInPass.Count,
+            partition.ToRead.Count);
         progress.Publish();
 
-        //
-        // Everything the runtime filters out of these files is reported once for the whole data
-        // source. A run over a few thousand documents which removes something in forty of them
-        // is one thing that happened to the user, not forty. The scope ends with this method, so
-        // the report arrives when the run is finished rather than in the middle of it.
-        //
-        await using var promptInjectionReportingScope = guardService.BeginAction();
-
-        foreach (var file in indexedFiles)
+        for (var fileIndex = 0; fileIndex < partition.ToRead.Count; fileIndex++)
         {
             token.ThrowIfCancellationRequested();
+            if (progress.HasDoneItsShare(DateTimeOffset.UtcNow))
+                return await this.PauseAsync(dataSource, progress, refreshMode, partition.ToRead.Count - fileIndex, token);
 
+            var file = partition.ToRead[fileIndex];
             var fingerprint = metadataSnapshot.FileHashes[file.FullName];
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) &&
-                string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because the persisted metadata hash matches. MetadataHashPrefix={MetadataHashPrefix}, LastWriteUtc={LastWriteUtc:O}, FileSize={FileSize}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    ShortHash(fingerprint),
-                    file.LastWriteTimeUtc,
-                    file.Length);
-                progress.RecordUnchanged();
-                progress.Publish();
-                continue;
-            }
-
-            //
-            // A file which failed for a reason of its own is not read again until it changes.
-            // Without this, a folder holding hundreds of scanned documents without a text layer
-            // would spend half an hour on every start to arrive at the result we already have:
-            //
-            if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) &&
-                string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    permanentFailure.Code,
-                    ShortHash(fingerprint),
-                    permanentFailure.OccurredAtUtc);
-                progress.RecordStillUnreadable(file.FullName, permanentFailure);
-                progress.Publish();
-                continue;
-            }
+            var existingRecord = manifest.Files.GetValueOrDefault(file.FullName);
 
             var transcriptReuse = existingRecord is null
                 ? PersistentMediaTranscript.Reuse.CURRENT_SOURCE
                 : PersistentMediaTranscript.Reuse.NEVER;
             var document = this.CreateFileDocument(context, dataSource, file, fingerprint, transcriptReuse);
             var reportBlockProgress = progress.BeginDocument(document);
+            var startedAtUtc = DateTimeOffset.UtcNow;
 
             try
             {
@@ -189,7 +198,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     ShortHash(fingerprint),
                     progress.DoneDocuments + 1,
                     totalFiles);
-                var startedAtUtc = DateTimeOffset.UtcNow;
                 var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
@@ -222,6 +230,21 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             {
                 await progress.RecordDocumentFailureAsync(document, exception, token);
             }
+
+            //
+            // A file is read to its end, however long that takes: its text arrives as a stream from
+            // the runtime, which cannot pick up where it stopped. Every other data source waits
+            // for it, so it should at least show up in the log:
+            //
+            var fileDuration = DateTimeOffset.UtcNow - startedAtUtc;
+            if (fileDuration > context.Share.MaxDuration)
+                logger.LogWarning(
+                    "Reading file '{FilePath}' of data source '{DataSourceName}' ({DataSourceId}) took {FileMinutes:F0} minutes, longer than the share of a whole run, which is {ShareMinutes:F0} minutes. Every other data source waited for it.",
+                    file.FullName,
+                    dataSource.Name,
+                    dataSource.Id,
+                    fileDuration.TotalMinutes,
+                    context.Share.MaxDuration.TotalMinutes);
         }
 
         await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
@@ -241,6 +264,71 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             ShortHash(metadataSnapshot.SourceHash));
 
         return IndexedRunOutcome.DONE;
+    }
+
+    /// <summary>
+    /// Sorts the files of a data source by what one run does with them.
+    /// </summary>
+    /// <remarks>
+    /// A file which failed for a reason of its own is not read again until it changes. Without
+    /// that, a folder holding hundreds of scanned documents without a text layer would spend half
+    /// an hour on every start to arrive at the result we already have. A file which failed during
+    /// an earlier step of the pass waits for the next pass, unless it changed since, cf. IndexingPass.
+    /// </remarks>
+    /// <param name="files">The files of the data source, in the order they are read.</param>
+    /// <param name="fingerprints">The fingerprint of every one of them, by its full path.</param>
+    /// <param name="manifest">What the index stores about the data source.</param>
+    /// <param name="pass">The pass the run is a step of.</param>
+    /// <returns>The files, sorted.</returns>
+    internal static FilePartition PartitionFiles(IReadOnlyList<FileInfo> files, IReadOnlyDictionary<string, string> fingerprints, DataSourceEmbeddingManifest manifest, IndexingPass pass)
+    {
+        var unchangedCount = 0;
+        var stillUnreadable = new List<KeyValuePair<string, PermanentIndexingFailureRecord>>();
+        var failedEarlierInPass = new List<DataSourceEmbeddingFailure>();
+        var toRead = new List<FileInfo>();
+
+        foreach (var file in files)
+        {
+            var fingerprint = fingerprints[file.FullName];
+            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) && string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
+                unchangedCount++;
+            else if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) && string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
+                stillUnreadable.Add(new(file.FullName, permanentFailure));
+            else if (pass.TryGetEarlierFailure(file.FullName, fingerprint, out var earlierFailure))
+                failedEarlierInPass.Add(earlierFailure);
+            else
+                toRead.Add(file);
+        }
+
+        return new(unchangedCount, stillUnreadable, failedEarlierInPass, toRead);
+    }
+
+    /// <summary>
+    /// Ends a run which did its share of the work before it read every file.
+    /// </summary>
+    /// <remarks>
+    /// Without a hash, cf. DocumentRunProgress.PauseRunAsync: a folder which is indexed for the
+    /// first time must not count as complete, and one which was complete before keeps the hash of
+    /// back then, which no longer matches, so the next run reads on.
+    /// </remarks>
+    private async Task<IndexedRunOutcome> PauseAsync(IDataSource dataSource, DocumentRunProgress progress, DataSourceEmbeddingRefreshMode refreshMode, int filesLeftToRead, CancellationToken token)
+    {
+        var outcome = await progress.PauseRunAsync(null, "data source embedding run paused", token);
+        if (outcome is not IndexedRunOutcome.MORE_TO_DO)
+            return outcome;
+
+        logger.LogInformation(
+            "Embedding data source '{DataSourceName}' ({DataSourceId}) carries on in another run. RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, Failed={FailedFiles}, Done={DoneFiles}/{TotalFiles}, LeftToRead={FilesLeftToRead}.",
+            dataSource.Name,
+            dataSource.Id,
+            refreshMode,
+            progress.IndexedDocuments,
+            progress.FailedDocuments,
+            progress.DoneDocuments,
+            progress.TotalDocuments,
+            filesLeftToRead);
+
+        return IndexedRunOutcome.MORE_TO_DO;
     }
 
     /// <summary>
@@ -351,7 +439,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             : string.Join("; ", reasons);
     }
 
-    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, PersistentMediaTranscript.Reuse transcriptReuse, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, PersistentMediaTranscript.Reuse transcriptReuse, PromptInjectionReportingScope reportingScope, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = DataSourceEmbeddingService.GetChunkingOptions(dataSource, embeddingProvider);
         var contentPath = filePath;
@@ -378,7 +466,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // Reading the generated Markdown through the runtime gives media transcripts the same
         // prompt-injection filtering as every other indexed document.
         var strategy = TextChunker.GetStrategyForFile(contentPath);
-        var content = await ExtractedFileText.ReadAsync(rustService, contentPath, embeddingProvider, null, token);
+        var content = await ExtractedFileText.ReadAsync(rustService, contentPath, embeddingProvider, null, reportingScope, token);
 
         await foreach (var chunk in textChunker.SplitAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
@@ -404,7 +492,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                this.AddInputFile(file, manifest, result);
+                if (this.AddInputFile(file, manifest, result) is RagFileIndexingDecision.EXCLUDED)
+                    logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
 
                 return result;
 
@@ -430,6 +519,14 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private void EnumerateAccessibleFiles(DataSourceLocalDirectory dataSource, DataSourceEmbeddingManifest manifest, FileEnumerationResult result)
     {
         var patterns = FileNamePatterns.Parse(dataSource.EffectiveFilePatterns);
+
+        //
+        // Every log line travels to the runtime as a request of its own. A folder holding many
+        // temporary or system files gets one line in total rather than one per file:
+        //
+        var excludedFiles = 0;
+        var excludedFileExamples = new List<string>(MAX_LOGGED_EXCLUDED_FILE_EXAMPLES);
+
         foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(
                      dataSource.Path,
                      dataSource.IncludeSubdirectories,
@@ -471,20 +568,28 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 continue;
             }
 
-            this.AddInputFile(fileInfo, manifest, result);
+            if (this.AddInputFile(fileInfo, manifest, result) is not RagFileIndexingDecision.EXCLUDED)
+                continue;
+
+            excludedFiles++;
+            if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
+                excludedFileExamples.Add(Path.GetRelativePath(dataSource.Path, fileInfo.FullName));
         }
+
+        if (excludedFiles > 0)
+            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, dataSource.Path, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
     }
 
-    private void AddInputFile(FileInfo file, DataSourceEmbeddingManifest manifest, FileEnumerationResult result)
+    private RagFileIndexingDecision AddInputFile(FileInfo file, DataSourceEmbeddingManifest manifest, FileEnumerationResult result)
     {
-        switch (this.GetRagFileIndexingDecision(file, manifest))
+        var decision = this.GetRagFileIndexingDecision(file, manifest);
+        switch (decision)
         {
             case RagFileIndexingDecision.INDEXABLE:
                 result.Files.Add(file);
                 break;
 
             case RagFileIndexingDecision.EXCLUDED:
-                logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
                 break;
 
             case RagFileIndexingDecision.IMAGE_NOT_SUPPORTED:
@@ -495,6 +600,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING);
                 break;
         }
+
+        return decision;
     }
 
     private string TryGetRelativePath(IDataSource dataSource, FileInfo file) => dataSource switch
@@ -521,16 +628,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             if (mediaTranscriptionService.HasUsableTranscriptionProvider)
                 return RagFileIndexingDecision.INDEXABLE;
 
-            if (!PersistentMediaTranscript.IsReusable(file.FullName, PersistentMediaTranscript.Reuse.CURRENT_SOURCE))
-                return RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING;
-
-            // An indexed media file whose own fingerprint changed needs a new transcript. A sidecar
-            // with a matching timestamp is not enough to keep stale embeddings alive when there is
-            // no provider capable of replacing it.
-            return manifest.Files.TryGetValue(file.FullName, out var existing)
-                   && !string.Equals(existing.Fingerprint, BuildFileMetadataHash(file), StringComparison.Ordinal)
-                ? RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING
-                : RagFileIndexingDecision.INDEXABLE;
+            var currentFingerprint = BuildFileMetadataHash(file);
+            return CanIndexMediaWithoutTranscriptionProvider(file, currentFingerprint, manifest)
+                ? RagFileIndexingDecision.INDEXABLE
+                : RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING;
         }
 
         // A directory source reaches this point only after its user-configured pattern selected
@@ -539,6 +640,19 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // ordinary per-document failure path instead of silently overriding the user's selection.
         return RagFileIndexingDecision.INDEXABLE;
     }
+
+    /// <summary>
+    /// Whether media can remain in the index without asking a transcription provider.
+    /// </summary>
+    /// <remarks>
+    /// A current sidecar can supply the text of a new or changed media file. An unchanged file
+    /// which is already indexed needs no text at all during a hash-check run, so deleting its
+    /// sidecar or removing the provider must not discard otherwise valid embeddings.
+    /// </remarks>
+    internal static bool CanIndexMediaWithoutTranscriptionProvider(FileInfo file, string currentFingerprint, DataSourceEmbeddingManifest manifest) =>
+        PersistentMediaTranscript.IsReusable(file.FullName, PersistentMediaTranscript.Reuse.CURRENT_SOURCE)
+        || manifest.Files.TryGetValue(file.FullName, out var existing)
+           && string.Equals(existing.Fingerprint, currentFingerprint, StringComparison.Ordinal);
 
     private bool IsSkippedRagFile(FileInfo file)
     {
@@ -664,7 +778,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         file.FullName,
         this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow),
         file.Name,
-        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, transcriptReuse, token));
+        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, transcriptReuse, context.PromptInjectionScope, token));
 
     private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {

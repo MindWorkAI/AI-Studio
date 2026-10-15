@@ -230,7 +230,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         {
             ReceivedSinceUtc = new DateTimeOffset(2026, 8, 31, 22, 0, 0, TimeSpan.Zero),
             Importance = MailImportance.HIGH,
-        }, "INBOX");
+        }, "INBOX", null);
 
         var description = MailToolResults.DescribeConditions(conditions, timeZone);
 
@@ -244,13 +244,64 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void TheConditionsShowTheSpecialFolderAsTheArgumentTakesIt()
+    {
+        var description = MailToolResults.DescribeConditions(new MailConditions(new MailFilter(), null, MailFolderSpecialUse.DRAFTS), TimeZoneInfo.Utc);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT]!.GetValue<string>(), Is.EqualTo("drafts"));
+            Assert.That(description.ContainsKey(MailToolArguments.FOLDER_ARGUMENT), Is.False);
+        });
+    }
+
+    [TestCase(new[] { "INBOX" }, null)]
+    [TestCase(new[] { "Sent Items" }, "sent")]
+    [TestCase(new[] { "Drafts" }, "drafts")]
+    [TestCase(new[] { "Drafts", "Sent Items" }, "sent")]
+    [TestCase(new[] { "Elsewhere" }, null)]
+    public void AMailAmongTheSentMailsOrTheDraftsIsMarked(string[] folderPaths, string? expected)
+    {
+        IReadOnlyList<MailFolderRecord> folders = [Folder("INBOX"), Folder("Sent Items", MailFolderSpecialUse.SENT), Folder("Drafts", MailFolderSpecialUse.DRAFTS)];
+
+        Assert.That(MailToolResults.GetSpecialFolder(folderPaths, folders), Is.EqualTo(expected), "A mail in the folder of the sent mails was sent, even when a copy lies among the drafts. A folder the index does not know marks nothing.");
+    }
+
+    [Test]
+    public void AMissingSpecialFolderListsTheFoldersToPickFrom()
+    {
+        var description = new JsonObject();
+        var issues = new JsonArray();
+
+        MailToolResults.DescribeMissingFolder(description, issues, MailFolderSpecialUse.SENT, ["INBOX", "Gesendet"], 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues.Single()!.GetValue<string>(), Does.Contain("no folder for sent mails").And.Contain("either because the user left it out or because the server does not mark it").And.Contain("pass its path in 'folder' instead of 'special_folder'"));
+            Assert.That(description["folders"]!.AsArray().Select(folder => folder!.GetValue<string>()), Is.EqualTo(new[] { "INBOX", "Gesendet" }));
+        });
+    }
+
+    [Test]
+    public void AMissingFolderByPathOffersNoOtherArgument()
+    {
+        var issues = new JsonArray();
+
+        MailToolResults.DescribeMissingFolder(new JsonObject(), issues, null, ["INBOX", "Archive"], 120);
+
+        Assert.That(issues.Single()!.GetValue<string>(), Does.Contain("no folder with the path given in 'folder'").And.Contain("The first 2 of its 120 folders").And.Not.Contain("special_folder"));
+    }
+
+    [Test]
     public void SemanticSearchNeverSeesAMailbox()
     {
         Assert.That(typeof(IDataSource).IsAssignableFrom(typeof(DataSourceMailbox)), Is.False, "Semantic Search, classic RAG, and the agents take their data sources from DataSources, which holds only IDataSource. A mailbox has its own rules and tools.");
     }
 
     // Stating its definition and reading its arguments needs none of the services the tool searches with:
-    private SearchMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, NullLogger<SearchMailsTool>.Instance);
+    private SearchMailsTool Tool() => new(this.SettingsManager, new MailboxRetrievalService(this.SettingsManager, null!, null!, NullLogger<MailboxRetrievalService>.Instance), null!, null!, NullLogger<SearchMailsTool>.Instance);
+
+    private static MailFolderRecord Folder(string path, MailFolderSpecialUse specialUse = MailFolderSpecialUse.NONE) => new(path, specialUse, 1, null, null, null, null, null);
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);
 

@@ -83,12 +83,23 @@ public readonly record struct DataSourceMailbox : IIndexedDataSource, ISecretId
     /// </summary>
     /// <remarks>
     /// The full path as the server names it, including the server's own hierarchy delimiter. Empty
-    /// means the whole mailbox, apart from the trash and the junk folder.
+    /// means the whole mailbox, apart from the trash and the junk folder. The sent mails and the
+    /// drafts may come along from outside of it, see IncludeSentAndDrafts.
     /// </remarks>
     public string RootFolder { get; init; } = string.Empty;
 
     /// <summary>
-    /// How far back the index reaches. Flagged mails are indexed regardless of their age.
+    /// Whether the folders for sent mails and for drafts are synchronized as well, when they lie outside the root folder.
+    /// </summary>
+    /// <remarks>
+    /// Without a root folder, both belong to the whole mailbox anyway. Only the folders the server
+    /// marks as such count, without their subfolders. A mailbox stored before this setting existed
+    /// loads with it switched on, so that its next sync fetches them.
+    /// </remarks>
+    public bool IncludeSentAndDrafts { get; init; } = true;
+
+    /// <summary>
+    /// How far back the index reaches. Flagged mails and drafts are indexed regardless of their age.
     /// </summary>
     public MailboxMaxAge MaxAge { get; init; } = MailboxMaxAge.LAST_12_MONTHS;
 

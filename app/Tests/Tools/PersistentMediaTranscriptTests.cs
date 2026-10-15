@@ -1,10 +1,38 @@
 using AIStudio.Tools;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tests.Tools;
 
 public sealed class PersistentMediaTranscriptTests
 {
+    [Test]
+    public async Task UnchangedIndexedMediaDoesNotNeedItsTranscriptOrAProviderAgain()
+    {
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-indexed-media-{Guid.NewGuid():N}");
+        var mediaPath = Path.Combine(directoryPath, "recording.mp3");
+        Directory.CreateDirectory(directoryPath);
+
+        try
+        {
+            await File.WriteAllBytesAsync(mediaPath, [1, 2, 3]);
+            var file = new FileInfo(mediaPath);
+            var manifest = new DataSourceEmbeddingManifest();
+            manifest.Files[file.FullName] = new EmbeddedFileRecord("CURRENT", file.Length, new DateTimeOffset(file.LastWriteTimeUtc), DateTimeOffset.UtcNow, 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(FileSourceIndexer.CanIndexMediaWithoutTranscriptionProvider(file, "CURRENT", manifest), Is.True);
+                Assert.That(FileSourceIndexer.CanIndexMediaWithoutTranscriptionProvider(file, "CHANGED", manifest), Is.False);
+            });
+        }
+        finally
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
     [Test]
     public async Task CurrentTranscriptBecomesStaleWhenTheMediaChanges()
     {

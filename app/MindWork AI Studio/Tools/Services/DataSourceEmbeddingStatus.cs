@@ -48,7 +48,7 @@ public sealed record DataSourceEmbeddingStatus(
     public IReadOnlyList<DataSourceEmbeddingIgnoredFile> IgnoredFiles { get; init; } = [];
 
     /// <summary>
-    /// Files outside the configured file patterns, summarized by extension. They are intentional
+    /// Files outside the configured file patterns, summarized by file type. They are intentional
     /// exclusions rather than skipped documents and therefore do not affect progress or status.
     /// </summary>
     public IReadOnlyList<DataSourceEmbeddingFilePatternGroup> FilePatternExclusions { get; init; } = [];
