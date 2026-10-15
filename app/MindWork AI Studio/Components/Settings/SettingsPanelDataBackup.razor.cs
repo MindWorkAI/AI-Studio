@@ -109,10 +109,10 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
 
             this.workspaceSelections.Clear();
 
-            var tree = await Tools.WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
+            var tree = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
             foreach (var workspace in tree.Workspaces)
             {
-                var chats = await Tools.WorkspaceBehaviour.GetWorkspaceChatsAsync(workspace.WorkspaceId);
+                var chats = await WorkspaceBehaviour.GetWorkspaceChatsAsync(workspace.WorkspaceId);
                 this.workspaceSelections.Add(new()
                 {
                     WorkspaceId = workspace.WorkspaceId,

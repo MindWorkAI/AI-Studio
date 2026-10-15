@@ -67,7 +67,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
-    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion)
+    /// <summary>
+    /// The pauses of the indexing, cf. PauseIndexingAsync.
+    /// </summary>
+    private readonly IndexingPauses pauses = new();
+
+    /// <summary>
+    /// An active run.
+    /// </summary>
+    /// <param name="TokenSource">Stops the run.</param>
+    /// <param name="Completion">Completes once the run has ended.</param>
+    /// <param name="RefreshMode">Why the run was asked for.</param>
+    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion, DataSourceEmbeddingRefreshMode RefreshMode)
     {
         /// <summary>
         /// The embedding settings the run works for, as GetRunSignature describes them.
@@ -643,7 +654,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var runTokenSource = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
         var runControl = new DataSourceRunControl(
             runTokenSource,
-            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously));
+            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously),
+            refreshMode);
 
         if (!this.activeRuns.TryAdd(dataSource.Id, runControl))
         {
@@ -662,8 +674,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             // One run at a time, whichever way it started: the startup check goes on next to the
             // queue once the automatic refresh is switched on while the app runs. The wait counts as
             // part of the run, so deleting or repairing the data source ends the wait as well,
-            // instead of waiting for the run before it to finish first.
+            // instead of waiting for the run before it to finish first. A paused indexing holds
+            // every run back in front of the gate, cf. PauseIndexingAsync:
             //
+            await this.pauses.WaitWhilePausedAsync(runTokenSource.Token);
             await this.runGate.WaitAsync(runTokenSource.Token);
             try
             {
