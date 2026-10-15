@@ -259,7 +259,7 @@ public sealed partial class UpdateMetadataCommands
         var foundIssue = false;
         foreach (var buildOutputLine in dotnetBuildOutputLines)
         {
-            if(buildOutputLine.Contains(" error ") || buildOutputLine.Contains("#warning"))
+            if(IsDotnetBuildIssue(buildOutputLine))
             {
                 if(!foundIssue)
                 {
@@ -348,7 +348,7 @@ public sealed partial class UpdateMetadataCommands
         var foundRustIssue = false;
         foreach (var buildOutputLine in rustBuildOutputLines)
         {
-            if(buildOutputLine.Contains("error", StringComparison.OrdinalIgnoreCase) || buildOutputLine.Contains("warning"))
+            if(IsRustBuildIssue(buildOutputLine))
             {
                 if(!foundRustIssue)
                 {
@@ -370,6 +370,42 @@ public sealed partial class UpdateMetadataCommands
             Console.WriteLine("- Compilation completed successfully.");
             Console.WriteLine();
         }
+    }
+
+    /// <summary>
+    /// Whether a line of the .NET build output is an error or the warning of a #warning directive.
+    /// </summary>
+    /// <remarks>
+    /// MSBuild writes its diagnostics as "origin: error CODE: text" and keeps the keyword English in any
+    /// language. Looking for the word alone would also catch messages which merely mention an error.
+    /// </remarks>
+    /// <param name="line">One line of the build output.</param>
+    /// <returns>True, when the line reports an issue.</returns>
+    private static bool IsDotnetBuildIssue(string line) => DotnetErrorRegex().IsMatch(line) || line.Contains("#warning", StringComparison.Ordinal);
+
+    /// <summary>
+    /// Whether a line of the Rust build output is an error or a warning.
+    /// </summary>
+    /// <remarks>
+    /// Cargo and rustc start each diagnostic at the beginning of a line, with "error:", "error[", or "warning:".
+    /// Looking for these words anywhere would also catch the names of crates such as thiserror, which cargo
+    /// prints while compiling them. The note about dependencies which a future Rust version will reject also
+    /// starts with "warning:", yet it says nothing about this build. The Tauri CLI reports its own failures
+    /// with a right-aligned "Error" label.
+    /// </remarks>
+    /// <param name="line">One line of the build output.</param>
+    /// <returns>True, when the line reports an issue.</returns>
+    private static bool IsRustBuildIssue(string line)
+    {
+        const string FUTURE_INCOMPATIBILITY_NOTE = "warning: the following packages contain code that will be rejected by a future version of Rust";
+
+        if (line.StartsWith(FUTURE_INCOMPATIBILITY_NOTE, StringComparison.Ordinal))
+            return false;
+
+        return line.StartsWith("error:", StringComparison.Ordinal)
+            || line.StartsWith("error[", StringComparison.Ordinal)
+            || line.StartsWith("warning:", StringComparison.Ordinal)
+            || TauriErrorRegex().IsMatch(line);
     }
 
     private async Task CreateNextChangelog(int currentBuildNumber, AppVersion currentAppVersion)
@@ -1206,6 +1242,14 @@ public sealed partial class UpdateMetadataCommands
 
     [GeneratedRegex("^[0-9a-fA-F]{40,64}$")]
     private static partial Regex GitCommitHashRegex();
+
+    // Matches the category of an MSBuild error, e.g., "): error CS0103:", "MSBUILD : error MSB1009:", or "): error :":
+    [GeneratedRegex(""":\s*error(?:\s+[A-Z]+[0-9]+)?\s*:""")]
+    private static partial Regex DotnetErrorRegex();
+
+    // Matches the label of a Tauri CLI error, which is right-aligned to twelve characters:
+    [GeneratedRegex("""^\s+Error\s""")]
+    private static partial Regex TauriErrorRegex();
 
     // Matches one Markdown link. The address may hold one level of parentheses, as Wikipedia addresses do:
     [GeneratedRegex("""\[(?<text>[^\[\]]+)\]\((?<address>(?:[^()\s]|\([^()\s]*\))+)\)""")]
