@@ -46,4 +46,7 @@ public sealed class ConfigurationBaseObjectDescriptor<TClass>(PluginConfiguratio
 
     /// <inheritdoc />
     public override Task<bool> CleanLeftOverAsync(IList<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds, IReadOnlySet<Guid> notStartedConfigPluginIds, IList<PluginConfigurationObject> configObjectList) => PluginConfigurationObject.CleanLeftOverConfigurationObjects(type, selection, availablePlugins, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, secretStoreType);
+
+    /// <inheritdoc />
+    public override int RemovePluginObjects(Data settings) => selection.Compile()(settings).RemoveAll(configObject => configObject.IsEnterpriseConfiguration);
 }

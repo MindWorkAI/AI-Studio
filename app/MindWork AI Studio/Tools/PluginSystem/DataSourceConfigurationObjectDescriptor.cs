@@ -1,3 +1,5 @@
+using AIStudio.Settings.DataModel;
+
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem;
@@ -24,4 +26,7 @@ public sealed class DataSourceConfigurationObjectDescriptor : PluginConfiguratio
     /// deleted as a secret.
     /// </remarks>
     public override Task<bool> CleanLeftOverAsync(IList<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds, IReadOnlySet<Guid> notStartedConfigPluginIds, IList<PluginConfigurationObject> configObjectList) => PluginConfigurationObject.CleanLeftOverConfigurationObjects(this.Type, x => x.DataSources, availablePlugins, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true);
+
+    /// <inheritdoc />
+    public override int RemovePluginObjects(Data settings) => settings.DataSources.RemoveAll(dataSource => dataSource.IsEnterpriseConfiguration);
 }
