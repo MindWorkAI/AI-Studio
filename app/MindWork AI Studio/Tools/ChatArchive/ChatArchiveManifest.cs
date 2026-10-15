@@ -1,41 +1,32 @@
-using System.Text.Json.Serialization;
-
 namespace AIStudio.Tools.ChatArchive;
 
 /// <summary>
-/// The manifest at the root of a chat archive. It describes the archive contents, so that
-/// the import can show a preview without extracting anything.
+/// The chats a backup holds, so that the user sees them before any is added.
 /// </summary>
 public sealed record ChatArchiveManifest
 {
     /// <summary>
-    /// The format version of this archive.
+    /// When the backup was made.
     /// </summary>
-    public int FormatVersion { get; init; } = ChatArchiveFormat.FORMAT_VERSION;
+    public DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
-    /// The time when this archive was created.
-    /// </summary>
-    public DateTimeOffset ExportedAt { get; init; }
-
-    /// <summary>
-    /// The AI Studio version which created this archive. Informational only.
+    /// The AI Studio version which made the backup. Informational only.
     /// </summary>
     public string AppVersion { get; init; } = string.Empty;
 
     /// <summary>
-    /// All workspaces contained in this archive.
+    /// All workspaces with chats in the backup.
     /// </summary>
     public List<ChatArchiveManifestWorkspace> Workspaces { get; init; } = [];
 
     /// <summary>
-    /// All temporary chats contained in this archive.
+    /// All temporary chats in the backup.
     /// </summary>
     public List<ChatArchiveManifestChat> TemporaryChats { get; init; } = [];
 
     /// <summary>
-    /// Gets the total number of chats in this archive.
+    /// Gets the total number of chats in the backup.
     /// </summary>
-    [JsonIgnore]
     public int TotalChatCount => this.Workspaces.Sum(workspace => workspace.Chats.Count) + this.TemporaryChats.Count;
 }

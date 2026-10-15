@@ -1,7 +1,7 @@
 namespace AIStudio.Tools.ChatArchive;
 
 /// <summary>
-/// Describes one exported workspace inside a chat archive.
+/// One workspace with chats in a backup.
 /// </summary>
 public sealed record ChatArchiveManifestWorkspace
 {
@@ -11,12 +11,12 @@ public sealed record ChatArchiveManifestWorkspace
     public Guid WorkspaceId { get; init; }
 
     /// <summary>
-    /// The name of the workspace at the time of the export.
+    /// The name of the workspace when the backup was made.
     /// </summary>
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// All chats of this workspace contained in the archive.
+    /// All chats of this workspace in the backup.
     /// </summary>
     public List<ChatArchiveManifestChat> Chats { get; init; } = [];
 }

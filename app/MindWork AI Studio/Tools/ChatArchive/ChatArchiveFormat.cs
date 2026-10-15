@@ -1,31 +1,25 @@
+using AIStudio.Tools.DataBackup;
+
 namespace AIStudio.Tools.ChatArchive;
 
 /// <summary>
-/// Central definition of the chat archive format. A chat archive is a ZIP file which mirrors
-/// the chat storage layout, so that exported chats can be restored without any conversion.
+/// Where a backup keeps its chats, for adding them to the chats there are.
 /// </summary>
+/// <remarks>
+/// A backup holds the chats in the layout of the data folder, cf. DataBackupFormat: every chat in a
+/// directory of its own, below its workspace or among the temporary chats.
+/// </remarks>
 public static class ChatArchiveFormat
 {
     /// <summary>
-    /// The archive format version written by this app version. The importer refuses archives
-    /// with a higher version, because it cannot know what those archives contain.
+    /// Where a backup keeps the workspaces, each in a directory named after its ID.
     /// </summary>
-    public const int FORMAT_VERSION = 1;
+    public static readonly string WORKSPACES_PREFIX = DataBackupFormat.DATA_ROOT + DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.WORKSPACES).RelativePath;
 
     /// <summary>
-    /// The manifest file at the archive root. It describes what the archive contains.
+    /// Where a backup keeps the temporary chats, each in a directory named after its ID.
     /// </summary>
-    public const string MANIFEST_FILE_NAME = "manifest.json";
-
-    /// <summary>
-    /// The archive directory containing all exported workspaces.
-    /// </summary>
-    public const string WORKSPACES_DIRECTORY = "workspaces";
-
-    /// <summary>
-    /// The archive directory containing all exported temporary chats.
-    /// </summary>
-    public const string TEMPORARY_CHATS_DIRECTORY = "tempChats";
+    public static readonly string TEMPORARY_CHATS_PREFIX = DataBackupFormat.DATA_ROOT + DataBackupContents.ENTRIES.First(entry => entry.Kind is DataBackupEntryKind.TEMPORARY_CHATS).RelativePath;
 
     /// <summary>
     /// The file storing the workspace or chat name.
@@ -36,10 +30,4 @@ public static class ChatArchiveFormat
     /// The file storing the serialized chat thread.
     /// </summary>
     public const string THREAD_FILE_NAME = "thread.json";
-
-    /// <summary>
-    /// The separator used inside ZIP archives. ZIP entries always use forward slashes,
-    /// regardless of the operating system.
-    /// </summary>
-    public const char ENTRY_SEPARATOR = '/';
 }

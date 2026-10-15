@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Tools.ChatArchive;
 using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Rust;
@@ -29,6 +31,11 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
     private DateTimeOffset lastProgressRender;
     private DateTimeOffset lastBackupRender;
     private string selectedArchivePath = string.Empty;
+
+    /// <summary>
+    /// The culture of the active language plugin, which dates are shown in.
+    /// </summary>
+    private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
 
     /// <summary>
     /// Blocks any further action, starting with the click that opens a file dialog. Without
@@ -70,6 +77,10 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
     protected override async Task OnInitializedAsync()
     {
         this.DataBackupService.StateChanged += this.OnBackupStateChanged;
+
+        var activeLanguagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        this.currentCultureInfo = CommonTools.DeriveActiveCultureOrInvariant(activeLanguagePlugin.IETFTag);
+
         await base.OnInitializedAsync();
     }
 
@@ -132,7 +143,7 @@ public partial class SettingsPanelDataBackup : SettingsPanelBase
         this.isBusy = true;
         try
         {
-            var selectionResponse = await this.RustService.SelectFile(T("Select a chat archive"), [FileTypes.BACKUP_ARCHIVE]);
+            var selectionResponse = await this.RustService.SelectFile(T("Select a backup"), [FileTypes.BACKUP_ARCHIVE]);
             if (selectionResponse.UserCancelled)
                 return;
 

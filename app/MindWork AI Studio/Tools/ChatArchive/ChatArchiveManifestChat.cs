@@ -1,7 +1,7 @@
 namespace AIStudio.Tools.ChatArchive;
 
 /// <summary>
-/// Describes one exported chat inside a chat archive.
+/// One chat in a backup.
 /// </summary>
 public sealed record ChatArchiveManifestChat
 {
@@ -11,18 +11,7 @@ public sealed record ChatArchiveManifestChat
     public Guid ChatId { get; init; }
 
     /// <summary>
-    /// The name of the chat at the time of the export.
+    /// The name of the chat when the backup was made.
     /// </summary>
     public string Name { get; init; } = string.Empty;
-
-    /// <summary>
-    /// The time of the last edit at the time of the export.
-    /// </summary>
-    public DateTimeOffset LastEditTime { get; init; }
-
-    /// <summary>
-    /// The number of app-owned files of this chat which were included in the archive,
-    /// such as transcripts.
-    /// </summary>
-    public int IncludedFiles { get; init; }
 }

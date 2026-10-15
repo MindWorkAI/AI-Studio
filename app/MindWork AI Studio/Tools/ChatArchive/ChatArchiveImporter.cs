@@ -3,13 +3,21 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.ChatArchive;
 
 /// <summary>
-/// Reads chat archives and writes their contents back into the chat storage.
+/// Adds the chats of a backup to the chats there are, and leaves everything else alone.
 /// </summary>
+/// <remarks>
+/// The other way to use a backup, next to restoring it: a restore replaces all data, while this keeps
+/// every chat and adds those of the backup. A chat which exists already is kept, or added once more,
+/// as the user decides.<br/><br/>
+///
+/// The backup is opened for reading only, and every entry is read as a stream, cf. DataBackupReader.
+/// </remarks>
 public static class ChatArchiveImporter
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(ChatArchiveImporter));
@@ -19,36 +27,43 @@ public static class ChatArchiveImporter
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatArchiveImporter).Namespace, nameof(ChatArchiveImporter));
 
     /// <summary>
-    /// Returns the entry name with forward slashes. The ZIP format prescribes them, but
-    /// some tools on Windows write backslashes instead. Reading both keeps archives from
-    /// such tools importable.
+    /// One entry of a backup, with its name checked and normalized.
     /// </summary>
-    private static string NormalizeEntryName(string entryName) => entryName.Replace('\\', ChatArchiveFormat.ENTRY_SEPARATOR);
+    private sealed record BackupEntry(string Name, ZipArchiveEntry Entry);
 
     /// <summary>
-    /// Reads the manifest of an archive without importing anything.
+    /// What one import did so far.
     /// </summary>
-    /// <param name="archivePath">The archive to inspect.</param>
-    /// <param name="token">Cancels reading the manifest.</param>
-    /// <returns>The preview of the archive contents.</returns>
+    /// <remarks>
+    /// Every counter is raised as the import goes: a cancellation leaves the chats imported so far in
+    /// the storage, so the numbers have to describe them even when the import never reaches its end.
+    /// </remarks>
+    private sealed class ImportTally
+    {
+        public int ProcessedChats;
+        public int ImportedWorkspaces;
+        public int ImportedChats;
+        public int SkippedChats;
+        public int FailedChats;
+    }
+
+    /// <summary>
+    /// Reads which chats a backup holds, without adding any.
+    /// </summary>
+    /// <param name="archivePath">The backup to look into.</param>
+    /// <param name="token">Cancels the reading.</param>
+    /// <returns>The chats of the backup, or why the backup cannot be used.</returns>
     public static async Task<ChatArchiveImportPreview> ReadPreviewAsync(string archivePath, CancellationToken token)
     {
         try
         {
             using var archive = ZipFile.OpenRead(archivePath);
-            var manifestEntry = archive.GetEntry(ChatArchiveFormat.MANIFEST_FILE_NAME);
-            if (manifestEntry is null)
-                return new(false, new(), TB("This file is not a chat archive."));
+            var manifestResult = await DataBackupReader.ReadManifestAsync(archive, token);
+            if (manifestResult.Manifest is not { } manifest)
+                return new(false, new(), manifestResult.Issue);
 
-            await using var manifestStream = manifestEntry.Open();
-            var manifest = await JsonSerializer.DeserializeAsync<ChatArchiveManifest>(manifestStream, WorkspaceBehaviour.JSON_OPTIONS, token);
-            if (manifest is null)
-                return new(false, new(), TB("The content list of this archive could not be read."));
-
-            if (manifest.FormatVersion > ChatArchiveFormat.FORMAT_VERSION)
-                return new(false, manifest, TB("This archive was created by a newer version of AI Studio. Please update AI Studio to import it."));
-
-            return new(true, manifest, string.Empty);
+            var chats = await ListChatsAsync(archive, GroupEntriesByChat(archive), token);
+            return new(true, chats with { CreatedAt = manifest.CreatedAtUtc, AppVersion = manifest.AppVersion }, string.Empty);
         }
         catch (OperationCanceledException)
         {
@@ -56,30 +71,26 @@ public static class ChatArchiveImporter
         }
         catch (InvalidDataException)
         {
-            return new(false, new(), TB("This file is not a chat archive."));
+            return new(false, new(), TB("This file is no backup of AI Studio, or it was not written completely."));
         }
         catch (Exception exception)
         {
-            LOG.LogError(exception, "Failed to read the archive '{ArchivePath}'.", archivePath);
+            LOG.LogError(exception, "Failed to read the backup '{ArchivePath}'.", archivePath);
             return new(false, new(), string.Format(TB("Unexpected error: {0}"), exception.Message));
         }
     }
 
     /// <summary>
-    /// Imports all chats of an archive into the chat storage.
+    /// Adds all chats of a backup to the chat storage.
     /// </summary>
-    /// <param name="archivePath">The archive to import.</param>
-    /// <param name="collisionBehavior">What to do with chats which already exist.</param>
-    /// <param name="progress">Receives the import progress.</param>
-    /// <param name="token">Cancels the import. Chats imported before the cancellation are kept.</param>
-    /// <returns>The import result.</returns>
+    /// <param name="archivePath">The backup.</param>
+    /// <param name="collisionBehavior">What to do with chats which exist already.</param>
+    /// <param name="progress">Receives the progress.</param>
+    /// <param name="token">Cancels the import. Chats added before the cancellation are kept.</param>
+    /// <returns>What the import did.</returns>
     public static async Task<ChatArchiveImportResult> ImportAsync(string archivePath, ChatArchiveCollisionBehavior collisionBehavior, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
     {
-        var importedWorkspaces = 0;
-        var importedChats = 0;
-        var skippedChats = 0;
-        var failedChats = 0;
-
+        var tally = new ImportTally();
         var preview = await ReadPreviewAsync(archivePath, token);
         if (!preview.Success)
             return new(false, 0, 0, 0, 0, preview.Issue, false);
@@ -87,22 +98,19 @@ public static class ChatArchiveImporter
         try
         {
             var manifest = preview.Manifest;
-            var totalChats = manifest.TotalChatCount;
-            var processedChats = 0;
-
             using var archive = ZipFile.OpenRead(archivePath);
             var entriesByChat = GroupEntriesByChat(archive);
 
-            // Which workspaces exist already is asked once per archived workspace, so read
+            // Which workspaces exist already is asked once per workspace of the backup, so read
             // the tree once instead of building a full snapshot every time:
             var tree = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
             var knownWorkspaceIds = tree.Workspaces.Select(workspace => workspace.WorkspaceId).ToHashSet();
 
             //
-            // A chat counts as existing wherever it is stored, not just in the workspace the
-            // archive names: it may have been moved since the export. Importing it there again
-            // under the same identity would leave two chats with one ID, while the app finds a
-            // chat, and the answer being written for it, by that ID alone:
+            // A chat counts as existing wherever it is stored, not just in the workspace the backup
+            // names: it may have been moved since the backup was made. Adding it there again under
+            // the same identity would leave two chats with one ID, while the app finds a chat, and
+            // the answer being written for it, by that ID alone:
             //
             var existingChatIds = tree.TemporaryChats.Select(chat => chat.ChatId).ToHashSet();
             foreach (var workspace in tree.Workspaces)
@@ -112,47 +120,6 @@ public static class ChatArchiveImporter
                     existingChatIds.Add(chat.ChatId);
             }
 
-            //
-            // Workspace chats and temporary chats differ only in where they are stored.
-            // Every counter is raised inside the loop: a cancellation leaves the chats
-            // imported so far in the storage, so the numbers have to describe them even
-            // when the loop never reaches its end.
-            //
-            async Task ImportChatsAsync(string entryPrefix, Guid targetWorkspaceId, IReadOnlyList<ChatArchiveManifestChat> chats, bool countsAsWorkspace)
-            {
-                var isFirstImportOfWorkspace = true;
-                foreach (var chat in chats)
-                {
-                    token.ThrowIfCancellationRequested();
-                    progress?.Report(new(processedChats, totalChats));
-                    processedChats++;
-
-                    var chatEntryPrefix = $"{entryPrefix}{chat.ChatId}{ChatArchiveFormat.ENTRY_SEPARATOR}";
-                    var chatEntries = entriesByChat.GetValueOrDefault(chatEntryPrefix, []);
-
-                    switch (await ImportChatAsync(chatEntries, chatEntryPrefix, targetWorkspaceId, chat, collisionBehavior, existingChatIds, token))
-                    {
-                        case ChatArchiveImportOutcome.IMPORTED:
-                            importedChats++;
-                            if (countsAsWorkspace && isFirstImportOfWorkspace)
-                            {
-                                importedWorkspaces++;
-                                isFirstImportOfWorkspace = false;
-                            }
-
-                            break;
-
-                        case ChatArchiveImportOutcome.SKIPPED:
-                            skippedChats++;
-                            break;
-
-                        default:
-                            failedChats++;
-                            break;
-                    }
-                }
-            }
-
             foreach (var workspace in manifest.Workspaces)
             {
                 token.ThrowIfCancellationRequested();
@@ -160,54 +127,97 @@ public static class ChatArchiveImporter
                 var targetWorkspaceId = await ResolveTargetWorkspaceAsync(workspace, knownWorkspaceIds);
                 if (targetWorkspaceId == Guid.Empty)
                 {
-                    LOG.LogWarning("Skipping workspace '{WorkspaceName}' of the archive, because no target workspace could be prepared.", workspace.Name);
-                    failedChats += workspace.Chats.Count;
-                    processedChats += workspace.Chats.Count;
+                    LOG.LogWarning("Skipping workspace '{WorkspaceName}' of the backup, because no target workspace could be prepared.", workspace.Name);
+                    tally.FailedChats += workspace.Chats.Count;
+                    tally.ProcessedChats += workspace.Chats.Count;
                     continue;
                 }
 
-                var workspaceEntryPrefix = $"{ChatArchiveFormat.WORKSPACES_DIRECTORY}{ChatArchiveFormat.ENTRY_SEPARATOR}{workspace.WorkspaceId}{ChatArchiveFormat.ENTRY_SEPARATOR}";
-                await ImportChatsAsync(workspaceEntryPrefix, targetWorkspaceId, workspace.Chats, countsAsWorkspace: true);
+                var workspaceEntryPrefix = $"{ChatArchiveFormat.WORKSPACES_PREFIX}{workspace.WorkspaceId}{ZipEntryNames.SEPARATOR}";
+                await ImportChatsAsync(tally, workspaceEntryPrefix, targetWorkspaceId, workspace.Chats, true, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, progress, token);
             }
 
-            var temporaryChatsEntryPrefix = $"{ChatArchiveFormat.TEMPORARY_CHATS_DIRECTORY}{ChatArchiveFormat.ENTRY_SEPARATOR}";
-            await ImportChatsAsync(temporaryChatsEntryPrefix, Guid.Empty, manifest.TemporaryChats, countsAsWorkspace: false);
+            await ImportChatsAsync(tally, ChatArchiveFormat.TEMPORARY_CHATS_PREFIX, Guid.Empty, manifest.TemporaryChats, false, manifest.TotalChatCount, entriesByChat, collisionBehavior, existingChatIds, progress, token);
 
-            progress?.Report(new(processedChats, totalChats));
-            LOG.LogInformation("Imported {ImportedChats} chats from the archive '{ArchivePath}'. Skipped {SkippedChats} existing chats, {FailedChats} chats failed.", importedChats, archivePath, skippedChats, failedChats);
+            progress?.Report(new(tally.ProcessedChats, manifest.TotalChatCount));
+            LOG.LogInformation("Imported {ImportedChats} chats from the backup '{ArchivePath}'. Skipped {SkippedChats} existing chats, {FailedChats} chats failed.", tally.ImportedChats, archivePath, tally.SkippedChats, tally.FailedChats);
 
-            return new(true, importedWorkspaces, importedChats, skippedChats, failedChats, string.Empty, false);
+            return new(true, tally.ImportedWorkspaces, tally.ImportedChats, tally.SkippedChats, tally.FailedChats, string.Empty, false);
         }
         catch (OperationCanceledException)
         {
             //
-            // Unlike a cancelled export, which leaves no archive behind, the chats imported
-            // so far stay in the chat storage. So report what happened instead of throwing,
-            // otherwise the user has no idea what is now part of their chats:
+            // The chats imported so far stay in the chat storage. So report what happened instead
+            // of throwing, otherwise the user has no idea what is now part of their chats:
             //
-            LOG.LogInformation("The user cancelled the import of the archive '{ArchivePath}' after {ImportedChats} chats.", archivePath, importedChats);
-            return new(true, importedWorkspaces, importedChats, skippedChats, failedChats, string.Empty, true);
+            LOG.LogInformation("The user cancelled the import of the backup '{ArchivePath}' after {ImportedChats} chats.", archivePath, tally.ImportedChats);
+            return new(true, tally.ImportedWorkspaces, tally.ImportedChats, tally.SkippedChats, tally.FailedChats, string.Empty, true);
         }
         catch (Exception exception)
         {
-            LOG.LogError(exception, "Failed to import the archive '{ArchivePath}'.", archivePath);
-            return new(false, importedWorkspaces, importedChats, skippedChats, failedChats, string.Format(TB("Unexpected error: {0}"), exception.Message), false);
+            LOG.LogError(exception, "Failed to import the backup '{ArchivePath}'.", archivePath);
+            return new(false, tally.ImportedWorkspaces, tally.ImportedChats, tally.SkippedChats, tally.FailedChats, string.Format(TB("Unexpected error: {0}"), exception.Message), false);
         }
     }
 
     /// <summary>
-    /// Sorts all archive entries by the chat they belong to. Without this, every chat would
-    /// have to scan all entries of the archive.
+    /// Adds the chats of one workspace of the backup, or its temporary chats.
     /// </summary>
-    private static Dictionary<string, List<ZipArchiveEntry>> GroupEntriesByChat(ZipArchive archive)
+    private static async Task ImportChatsAsync(ImportTally tally, string entryPrefix, Guid targetWorkspaceId, IReadOnlyList<ChatArchiveManifestChat> chats, bool countsAsWorkspace, int totalChats, Dictionary<string, List<BackupEntry>> entriesByChat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, IProgress<ChatArchiveProgress>? progress, CancellationToken token)
     {
-        var entriesByChat = new Dictionary<string, List<ZipArchiveEntry>>(StringComparer.Ordinal);
+        var isFirstImportOfWorkspace = true;
+        foreach (var chat in chats)
+        {
+            token.ThrowIfCancellationRequested();
+            progress?.Report(new(tally.ProcessedChats, totalChats));
+            tally.ProcessedChats++;
+
+            var chatEntryPrefix = $"{entryPrefix}{chat.ChatId}{ZipEntryNames.SEPARATOR}";
+            var chatEntries = entriesByChat.GetValueOrDefault(chatEntryPrefix, []);
+
+            switch (await ImportChatAsync(chatEntries, chatEntryPrefix, targetWorkspaceId, chat, collisionBehavior, existingChatIds, token))
+            {
+                case ChatArchiveImportOutcome.IMPORTED:
+                    tally.ImportedChats++;
+                    if (countsAsWorkspace && isFirstImportOfWorkspace)
+                    {
+                        tally.ImportedWorkspaces++;
+                        isFirstImportOfWorkspace = false;
+                    }
+
+                    break;
+
+                case ChatArchiveImportOutcome.SKIPPED:
+                    tally.SkippedChats++;
+                    break;
+
+                case ChatArchiveImportOutcome.FAILED:
+                    tally.FailedChats++;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sorts the entries of a backup by the chat they belong to. Without this, every chat would have
+    /// to scan all entries of the backup.
+    /// </summary>
+    /// <remarks>
+    /// An entry whose name could lead outside of the chat directory is left out, cf. ZipEntryNames.
+    /// </remarks>
+    private static Dictionary<string, List<BackupEntry>> GroupEntriesByChat(ZipArchive archive)
+    {
+        var entriesByChat = new Dictionary<string, List<BackupEntry>>(StringComparer.Ordinal);
         foreach (var entry in archive.Entries)
         {
-            var entryName = NormalizeEntryName(entry.FullName);
+            if (!ZipEntryNames.TryNormalize(entry.FullName, out var entryName))
+            {
+                LOG.LogWarning("Ignoring the backup entry '{EntryName}', because its name could lead outside of the chat directory.", entry.FullName);
+                continue;
+            }
 
             // Skip directory entries:
-            if (entryName.EndsWith(ChatArchiveFormat.ENTRY_SEPARATOR))
+            if (entryName.EndsWith(ZipEntryNames.SEPARATOR))
                 continue;
 
             var chatEntryPrefix = GetChatEntryPrefix(entryName);
@@ -220,32 +230,38 @@ public static class ChatArchiveImporter
                 entriesByChat[chatEntryPrefix] = chatEntries;
             }
 
-            chatEntries.Add(entry);
+            chatEntries.Add(new(entryName, entry));
         }
 
         return entriesByChat;
     }
 
     /// <summary>
-    /// Determines the chat an archive entry belongs to: everything up to and including the
-    /// chat identifier, so <c>workspaces/W/C/thread.json</c> becomes <c>workspaces/W/C/</c>.
+    /// Determines the chat an entry belongs to: everything up to and including the ID of the chat, so
+    /// "data/workspaces/W/C/thread.json" becomes "data/workspaces/W/C/".
     /// </summary>
     /// <returns>The chat prefix, or null when the entry belongs to no chat.</returns>
     private static string? GetChatEntryPrefix(string entryName)
     {
-        var expectedSeparators = 0;
-        if (entryName.StartsWith($"{ChatArchiveFormat.WORKSPACES_DIRECTORY}{ChatArchiveFormat.ENTRY_SEPARATOR}", StringComparison.Ordinal))
-            expectedSeparators = 3;
-        else if (entryName.StartsWith($"{ChatArchiveFormat.TEMPORARY_CHATS_DIRECTORY}{ChatArchiveFormat.ENTRY_SEPARATOR}", StringComparison.Ordinal))
-            expectedSeparators = 2;
-
-        if (expectedSeparators is 0)
+        string root;
+        int levels;
+        if (entryName.StartsWith(ChatArchiveFormat.WORKSPACES_PREFIX, StringComparison.Ordinal))
+        {
+            root = ChatArchiveFormat.WORKSPACES_PREFIX;
+            levels = 2;
+        }
+        else if (entryName.StartsWith(ChatArchiveFormat.TEMPORARY_CHATS_PREFIX, StringComparison.Ordinal))
+        {
+            root = ChatArchiveFormat.TEMPORARY_CHATS_PREFIX;
+            levels = 1;
+        }
+        else
             return null;
 
-        var index = 0;
-        for (var separator = 0; separator < expectedSeparators; separator++)
+        var index = root.Length;
+        for (var level = 0; level < levels; level++)
         {
-            var next = entryName.IndexOf(ChatArchiveFormat.ENTRY_SEPARATOR, index);
+            var next = entryName.IndexOf(ZipEntryNames.SEPARATOR, index);
             if (next < 0)
                 return null;
 
@@ -256,10 +272,73 @@ public static class ChatArchiveImporter
     }
 
     /// <summary>
-    /// Determines the workspace which receives the chats of an archived workspace. Known
+    /// Lists the chats of a backup, with the names of their workspaces.
+    /// </summary>
+    private static async Task<ChatArchiveManifest> ListChatsAsync(ZipArchive archive, Dictionary<string, List<BackupEntry>> entriesByChat, CancellationToken token)
+    {
+        var workspaces = new Dictionary<Guid, ChatArchiveManifestWorkspace>();
+        var temporaryChats = new List<ChatArchiveManifestChat>();
+        foreach (var (chatEntryPrefix, chatEntries) in entriesByChat)
+        {
+            token.ThrowIfCancellationRequested();
+
+            // A chat without its thread cannot be added, so it is not listed either:
+            if (!chatEntries.Any(entry => entry.Name.Equals($"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            var segments = chatEntryPrefix.TrimEnd(ZipEntryNames.SEPARATOR).Split(ZipEntryNames.SEPARATOR);
+            if (!Guid.TryParse(segments[^1], out var chatId))
+                continue;
+
+            var nameEntry = chatEntries.FirstOrDefault(entry => entry.Name.Equals($"{chatEntryPrefix}{ChatArchiveFormat.NAME_FILE_NAME}", StringComparison.OrdinalIgnoreCase));
+            var chat = new ChatArchiveManifestChat
+            {
+                ChatId = chatId,
+                Name = nameEntry is null ? string.Empty : await ReadTextAsync(nameEntry.Entry, token),
+            };
+
+            if (chatEntryPrefix.StartsWith(ChatArchiveFormat.TEMPORARY_CHATS_PREFIX, StringComparison.Ordinal))
+            {
+                temporaryChats.Add(chat);
+                continue;
+            }
+
+            if (!Guid.TryParse(segments[^2], out var workspaceId))
+                continue;
+
+            if (!workspaces.TryGetValue(workspaceId, out var workspace))
+            {
+                var workspaceNameEntry = archive.GetEntry($"{ChatArchiveFormat.WORKSPACES_PREFIX}{workspaceId}{ZipEntryNames.SEPARATOR}{ChatArchiveFormat.NAME_FILE_NAME}");
+                workspace = new ChatArchiveManifestWorkspace
+                {
+                    WorkspaceId = workspaceId,
+                    Name = workspaceNameEntry is null ? string.Empty : await ReadTextAsync(workspaceNameEntry, token),
+                };
+
+                workspaces[workspaceId] = workspace;
+            }
+
+            workspace.Chats.Add(chat);
+        }
+
+        return new()
+        {
+            Workspaces = workspaces.Values.OrderBy(workspace => workspace.Name, StringComparer.CurrentCultureIgnoreCase).ToList(),
+            TemporaryChats = temporaryChats,
+        };
+    }
+
+    private static async Task<string> ReadTextAsync(ZipArchiveEntry entry, CancellationToken token)
+    {
+        using var reader = new StreamReader(entry.Open());
+        return (await reader.ReadToEndAsync(token)).Trim();
+    }
+
+    /// <summary>
+    /// Determines the workspace which receives the chats of a workspace of the backup. Known
     /// workspaces are reused, unknown ones are created with their original identity.
     /// </summary>
-    /// <param name="workspace">The archived workspace.</param>
+    /// <param name="workspace">The workspace of the backup.</param>
     /// <param name="knownWorkspaceIds">The workspaces which exist already. Newly created ones are added.</param>
     private static async Task<Guid> ResolveTargetWorkspaceAsync(ChatArchiveManifestWorkspace workspace, HashSet<Guid> knownWorkspaceIds)
     {
@@ -298,19 +377,19 @@ public static class ChatArchiveImporter
     /// Imports one chat: extracts its files into a fresh chat directory, points the paths of
     /// those files to it, and stores the chat.
     /// </summary>
-    /// <param name="chatEntries">The archive entries of the chat.</param>
-    /// <param name="chatEntryPrefix">The path of the chat within the archive, which every entry of the chat starts with.</param>
+    /// <param name="chatEntries">The backup entries of the chat.</param>
+    /// <param name="chatEntryPrefix">The path of the chat within the backup, which every entry of the chat starts with.</param>
     /// <param name="targetWorkspaceId">The workspace to import the chat into, or Guid.Empty for a temporary chat.</param>
-    /// <param name="chat">The chat as the manifest lists it.</param>
+    /// <param name="chat">The chat as the preview lists it.</param>
     /// <param name="collisionBehavior">What to do when a chat with the same ID exists already.</param>
     /// <param name="existingChatIds">The IDs of all chats in the storage. An imported chat is added.</param>
     /// <param name="token">Cancels the import.</param>
-    private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<ZipArchiveEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, CancellationToken token)
+    private static async Task<ChatArchiveImportOutcome> ImportChatAsync(IReadOnlyList<BackupEntry> chatEntries, string chatEntryPrefix, Guid targetWorkspaceId, ChatArchiveManifestChat chat, ChatArchiveCollisionBehavior collisionBehavior, HashSet<Guid> existingChatIds, CancellationToken token)
     {
-        var threadEntry = chatEntries.FirstOrDefault(entry => NormalizeEntryName(entry.FullName).Equals($"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", StringComparison.OrdinalIgnoreCase));
+        var threadEntry = chatEntries.FirstOrDefault(entry => entry.Name.Equals($"{chatEntryPrefix}{ChatArchiveFormat.THREAD_FILE_NAME}", StringComparison.OrdinalIgnoreCase));
         if (threadEntry is null)
         {
-            LOG.LogWarning("The archive contains no chat thread for the chat '{ChatId}'.", chat.ChatId);
+            LOG.LogWarning("The backup contains no chat thread for the chat '{ChatId}'.", chat.ChatId);
             return ChatArchiveImportOutcome.FAILED;
         }
 
@@ -341,21 +420,15 @@ public static class ChatArchiveImporter
             {
                 token.ThrowIfCancellationRequested();
 
-                var relativePath = NormalizeEntryName(entry.FullName)[chatEntryPrefix.Length..];
+                var relativePath = entry.Name[chatEntryPrefix.Length..];
                 if (relativePath.Equals(ChatArchiveFormat.THREAD_FILE_NAME, StringComparison.OrdinalIgnoreCase) ||
                     relativePath.Equals(ChatArchiveFormat.NAME_FILE_NAME, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                var destinationPath = ResolveSafeDestination(chatDirectory, relativePath);
-                if (destinationPath is null)
-                {
-                    LOG.LogWarning("Ignoring the archive entry '{EntryName}', because it points outside of the chat directory.", entry.FullName);
-                    continue;
-                }
-
+                var destinationPath = ZipEntryNames.GetDestinationPath(chatDirectory, relativePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
 
-                await using var entryStream = entry.Open();
+                await using var entryStream = entry.Entry.Open();
                 await using var fileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
                 await entryStream.CopyToAsync(fileStream, token);
 
@@ -363,7 +436,7 @@ public static class ChatArchiveImporter
             }
 
             ChatThread? thread;
-            await using (var threadStream = threadEntry.Open())
+            await using (var threadStream = threadEntry.Entry.Open())
                 thread = await JsonSerializer.DeserializeAsync<ChatThread>(threadStream, WorkspaceBehaviour.JSON_OPTIONS, token);
 
             if (thread is null)
@@ -376,7 +449,7 @@ public static class ChatArchiveImporter
             //
             // A file below the data directory is stored with a path relative to it, which reading
             // the thread resolved against the data directory of this computer: where the chat lay
-            // when the archive was made. Only the paths of files which were actually extracted move
+            // when the backup was made. Only the paths of files which were actually extracted move
             // to the imported chat. Everything else keeps its path:
             //
             var originalChatDirectory = WorkspaceBehaviour.GetChatDirectory(thread.WorkspaceId, thread.ChatId);
@@ -384,11 +457,10 @@ public static class ChatArchiveImporter
             thread.WorkspaceId = targetWorkspaceId;
             thread.RewriteFilePaths(path =>
             {
-                var chatRelativePath = Path.GetRelativePath(originalChatDirectory, path).Replace(Path.DirectorySeparatorChar, ChatArchiveFormat.ENTRY_SEPARATOR);
-                if (!extractedPaths.Contains(chatRelativePath))
-                    return path;
-
-                return Path.Combine(chatDirectory, chatRelativePath.Replace(ChatArchiveFormat.ENTRY_SEPARATOR, Path.DirectorySeparatorChar));
+                var chatRelativePath = Path.GetRelativePath(originalChatDirectory, path).Replace(Path.DirectorySeparatorChar, ZipEntryNames.SEPARATOR);
+                return extractedPaths.Contains(chatRelativePath)
+                    ? Path.Combine(chatDirectory, chatRelativePath.Replace(ZipEntryNames.SEPARATOR, Path.DirectorySeparatorChar))
+                    : path;
             });
 
             CopyTranscriptsStoredElsewhere(thread, chatDirectory);
@@ -421,11 +493,11 @@ public static class ChatArchiveImporter
     }
 
     /// <summary>
-    /// Gives the imported chat its own copy of every transcript the archive did not carry.
+    /// Gives the imported chat its own copy of every transcript the backup did not carry.
     /// </summary>
     /// <remarks>
-    /// Such a transcript still names the place where it lay when the archive was made. On the
-    /// same computer that is the chat the archive came from, and since a chat deletes the
+    /// Such a transcript still names the place where it lay when the backup was made. On the
+    /// same computer that is the chat the backup came from, and since a chat deletes the
     /// transcripts it names, deleting the imported chat would take the transcripts of the
     /// original along. A copied chat gets its own copies for the same reason, so this uses the
     /// same code. A transcript which no longer exists keeps its place in the chat and shows up
@@ -440,65 +512,14 @@ public static class ChatArchiveImporter
 
         //
         // Only a transcript in the data directory can belong to another chat, and only there
-        // does deleting a chat delete its transcripts. Any other path is left alone, so that an
-        // archive cannot get files from elsewhere on this computer copied into a chat:
+        // does deleting a chat delete its transcripts. Any other path is left alone, so that a
+        // backup cannot get files from elsewhere on this computer copied into a chat:
         //
-        ManagedTranscriptAttachment CopyWhenElsewhere(ManagedTranscriptAttachment transcript) =>
-            IsInsideDirectory(chatDirectory, transcript.FilePath) || !IsInsideDirectory(SettingsManager.DataDirectory!, transcript.FilePath)
-                ? transcript
-                : WorkspaceBehaviour.CopyManagedTranscriptAttachment(thread, transcript, transcriptDirectory, copiedPaths);
-
         thread.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
-            ? CopyWhenElsewhere(transcript)
+                                                && !PathTools.IsInsideDirectory(chatDirectory, transcript.FilePath)
+                                                && PathTools.IsInsideDirectory(SettingsManager.DataDirectory!, transcript.FilePath)
+            ? WorkspaceBehaviour.CopyManagedTranscriptAttachment(thread, transcript, transcriptDirectory, copiedPaths)
             : attachment);
-    }
-
-    /// <summary>
-    /// Determines whether a path lies below the given directory.
-    /// </summary>
-    /// <remarks>
-    /// A path which cannot be resolved counts as lying elsewhere. The copy which follows then
-    /// decides what becomes of it, and it keeps such an attachment as it is.
-    /// </remarks>
-    private static bool IsInsideDirectory(string directory, string path)
-    {
-        try
-        {
-            var fullDirectory = Path.GetFullPath(directory);
-            var directoryPrefix = fullDirectory.EndsWith(Path.DirectorySeparatorChar)
-                ? fullDirectory
-                : fullDirectory + Path.DirectorySeparatorChar;
-
-            return Path.GetFullPath(path).StartsWith(directoryPrefix, PathTools.COMPARISON);
-        }
-        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Combines the chat directory with an archive-relative path and rejects paths which
-    /// would escape the chat directory.
-    /// </summary>
-    private static string? ResolveSafeDestination(string chatDirectory, string relativePath)
-    {
-        try
-        {
-            var fullChatDirectory = Path.GetFullPath(chatDirectory);
-            var destinationPath = Path.GetFullPath(Path.Combine(fullChatDirectory, relativePath.Replace(ChatArchiveFormat.ENTRY_SEPARATOR, Path.DirectorySeparatorChar)));
-
-            var directoryPrefix = fullChatDirectory.EndsWith(Path.DirectorySeparatorChar)
-                ? fullChatDirectory
-                : fullChatDirectory + Path.DirectorySeparatorChar;
-
-            return destinationPath.StartsWith(directoryPrefix, PathTools.COMPARISON) ? destinationPath : null;
-        }
-        catch (Exception exception)
-        {
-            LOG.LogWarning(exception, "Could not resolve the archive path '{RelativePath}' inside the chat directory '{ChatDirectory}'.", relativePath, chatDirectory);
-            return null;
-        }
     }
 
     private static void TryDeleteDirectory(string directory)

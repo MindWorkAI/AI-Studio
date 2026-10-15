@@ -60,14 +60,14 @@
             }
 
         </MudTabPanel>
-        <MudTabPanel Text="@T("Import")" Icon="@Icons.Material.Filled.Unarchive" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
+        <MudTabPanel Text="@T("Add chats")" Icon="@Icons.Material.Filled.Unarchive" Disabled="@(this.isBusy || this.DataBackupService.IsRunning)">
 
             <MudText Typo="Typo.body2" Class="mb-2">
-                @T("Choose an archive to see what it contains before anything is imported.")
+                @T("Add the chats of a backup to the chats you have. Nothing else changes, and you see the chats of the backup before any is added.")
             </MudText>
 
             <MudStack Row="@true" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-3">
-                <LockableButton Text="@T("Choose archive")" Icon="@Icons.Material.Filled.FolderOpen" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowChatImport)" NoMargin="@true"/>
+                <LockableButton Text="@T("Choose backup")" Icon="@Icons.Material.Filled.FolderOpen" OnClickAsync="@this.ChooseArchiveAsync" Disabled="@(() => this.isBusy)" IsLocked="@(() => !this.AllowChatImport)" NoMargin="@true"/>
                 @if (!string.IsNullOrWhiteSpace(this.selectedArchivePath))
                 {
                     <MudText Typo="Typo.body2">
@@ -88,7 +88,7 @@
                 {
                     <MudPaper Outlined="@true" Class="pa-3 mb-3">
                         <MudText Typo="Typo.body2" Class="mb-2">
-                            @string.Format(T("Created on {0} with AI Studio {1}"), preview.Manifest.ExportedAt.ToLocalTime().ToString("g"), preview.Manifest.AppVersion)
+                            @string.Format(T("Created on {0} with AI Studio {1}"), CommonTools.FormatTimestampToGeneral(preview.Manifest.CreatedAt.ToLocalTime().DateTime, this.currentCultureInfo), preview.Manifest.AppVersion)
                         </MudText>
 
                         @foreach (var workspace in preview.Manifest.Workspaces)
