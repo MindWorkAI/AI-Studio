@@ -556,9 +556,18 @@ CONFIG["SETTINGS"] = {}
 -- Configure the PowerPoint template of the Slide Planner Assistant.
 -- The slides then use the layouts of this presentation or template (.pptx, .potx), and users
 -- can create a PowerPoint file from the result. Without a template, the assistant plans an
--- outline only. The template applies whether preselection is enabled or not. The path must be
--- readable on every machine, e.g., on a network share or in a folder your software
--- distribution fills; for Flatpak installations, it must be readable inside the sandbox.
+-- outline only. The template applies whether preselection is enabled or not.
+--
+-- The simplest way is to ship the template with this plugin: put the file next to this
+-- plugin.lua, or into a folder below it, and give its path relative to this plugin.lua. The
+-- path must stay inside the plugin directory, i.e., no '..' segments and no links pointing
+-- out of it. When the file is missing or the path is rejected, AI Studio logs a warning, and
+-- this plugin does not manage the template: users keep the one they chose, or have none.
+-- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+--
+-- An absolute path works as well. It must be readable on every machine, e.g., on a network
+-- share or in a folder your software distribution fills; for Flatpak installations, it must
+-- be readable inside the sandbox.
 -- CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "C:\\Templates\\Corporate.potx"
 --
 -- Configure the footer text for every slide whose layout has a footer, e.g., the name of

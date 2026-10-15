@@ -153,6 +153,7 @@ public static partial class ManagedConfiguration
     /// <param name="configSelection">The expression to select the configuration class.</param>
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
+    /// <param name="convert">Turns the configured text into the value to store, e.g., a path relative to the plugin into a full one; null rejects the text. Without it, the text is stored as it is.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
     public static bool TryProcessConfiguration<TClass>(
@@ -160,9 +161,10 @@ public static partial class ManagedConfiguration
         Expression<Func<TClass, string>> propertyExpression,
         Guid configPluginId,
         LuaTable settings,
-        bool dryRun)
+        bool dryRun,
+        Func<string, string?>? convert = null)
     {
-        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings, dryRun);
+        return TryProcessConfiguration(configSelection, propertyExpression, string.Empty, configPluginId, settings, dryRun, convert);
     }
 
     /// <summary>
@@ -179,6 +181,7 @@ public static partial class ManagedConfiguration
     /// <param name="configSelection">The expression to select the configuration class.</param>
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
+    /// <param name="convert">For plain strings: turns the configured text into the value to store; null rejects the text. Without it, the text is stored as it is.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TDataType">The data type of the configured value.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -188,7 +191,8 @@ public static partial class ManagedConfiguration
         TDataType configuredType,
         Guid configPluginId,
         LuaTable settings,
-        bool dryRun)
+        bool dryRun,
+        Func<string, string?>? convert = null)
     {
         //
         // Handle configured string values
@@ -217,8 +221,9 @@ public static partial class ManagedConfiguration
 
                     // Case: the read string is just a string:
                     case string:
-                        configuredValue = configuredText;
-                        successful = true;
+                        var convertedText = convert is null ? configuredText : convert(configuredText);
+                        successful = convertedText is not null;
+                        configuredValue = convertedText ?? configuredText;
                         break;
                 }
             }

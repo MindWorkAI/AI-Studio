@@ -953,6 +953,31 @@ Two things to keep in mind when you prepare the icon:
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
 
+## Shipping the PowerPoint template of the Slide Planner
+
+The Slide Planner plans slides for the layouts of a PowerPoint template, and it creates PowerPoint
+files in that template's design. Instead of placing your corporate template on a network share, you
+can ship it with your configuration plugin. Put the file next to your `plugin.lua`, or into a folder
+below it, and give its path relative to your `plugin.lua`:
+
+```lua
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath"] = "Corporate.potx"
+CONFIG["SETTINGS"]["DataSlideBuilder.TemplatePath.AllowUserOverride"] = true
+```
+
+AI Studio stores the full path of the file inside the plugin directory. With `AllowUserOverride`,
+your template is preselected, and users may still choose another one; without it, the template is
+locked.
+
+The relative path must stay inside the plugin directory. AI Studio rejects `..` segments and links
+pointing out of that directory. A missing or rejected file is never fatal: AI Studio logs a warning
+and treats the template as if your plugin did not configure it. Users then keep the template they
+chose themselves, or have none, and the Slide Planner plans an outline only. An absolute path, e.g.,
+on a network share, keeps working as before.
+
+Keep in mind that every client downloads the whole configuration plugin, template included, whenever
+AI Studio starts and whenever your configuration changes.
+
 ## Feature usage statistics (telemetry)
 
 When your organization runs its own AI servers, for example behind a LiteLLM gateway, you may want

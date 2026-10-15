@@ -56,7 +56,7 @@ internal static class PluginIconFile
             return false;
         }
 
-        if (!IsInsideDirectory(pluginRoot, resolvedPath))
+        if (!PluginFilePath.IsInsideDirectory(pluginRoot, resolvedPath))
         {
             issue = "The icon path points outside of the configuration plugin directory.";
             return false;
@@ -84,7 +84,7 @@ internal static class PluginIconFile
                 return false;
             }
 
-            if (!LinksStayInsideDirectory(pluginRoot, resolvedPath))
+            if (!PluginFilePath.LinksStayInsideDirectory(pluginRoot, resolvedPath))
             {
                 issue = "The icon path contains a link that points outside of the configuration plugin directory.";
                 return false;
@@ -97,29 +97,5 @@ internal static class PluginIconFile
             issue = $"The icon file could not be read: {e.Message}";
             return false;
         }
-    }
-
-    private static bool LinksStayInsideDirectory(string rootDirectory, string filePath)
-    {
-        var relativePath = Path.GetRelativePath(rootDirectory, filePath);
-        var currentPath = Path.GetFullPath(rootDirectory);
-        foreach (var segment in relativePath.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
-        {
-            currentPath = Path.Combine(currentPath, segment);
-            FileSystemInfo pathInfo = Directory.Exists(currentPath) ? new DirectoryInfo(currentPath) : new FileInfo(currentPath);
-            var finalTarget = pathInfo.ResolveLinkTarget(true);
-            if (finalTarget is not null && !IsInsideDirectory(rootDirectory, finalTarget.FullName))
-                return false;
-        }
-
-        return true;
-    }
-
-    private static bool IsInsideDirectory(string rootDirectory, string path)
-    {
-        var root = Path.GetFullPath(rootDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        var target = Path.GetFullPath(path);
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return target.StartsWith(root, comparison);
     }
 }

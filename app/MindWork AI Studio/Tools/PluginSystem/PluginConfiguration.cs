@@ -396,7 +396,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
         // Config: Slide Planner Assistant template and defaults?
-        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.TemplatePath, this.Id, settingsTable, dryRun, convert: this.ResolvePluginFile);
         ManagedConfiguration.TryProcessConfiguration(x => x.SlideBuilder, x => x.PreselectedFooterText, this.Id, settingsTable, dryRun);
 
         // Config: Batch Processing Assistant defaults?
@@ -431,6 +431,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         message = string.Empty;
         return true;
+    }
+
+    /// <summary>
+    /// Resolves a file this plugin names in a setting: a relative path against the plugin directory,
+    /// so the plugin can ship the file itself.
+    /// </summary>
+    /// <returns>The full path, or null when the file cannot be used, which leaves the setting untouched.</returns>
+    private string? ResolvePluginFile(string path)
+    {
+        if (PluginFilePath.TryResolve(path, this.PluginPath, out var resolvedPath, out var issue))
+            return resolvedPath;
+
+        LOG.LogWarning($"The configuration plugin '{this.Name}' names the file '{path}', which cannot be used: {issue}");
+        return null;
     }
 
     private static bool TryValidateMinimumProviderConfidenceConfiguration(LuaTable settingsTable, out string message)
