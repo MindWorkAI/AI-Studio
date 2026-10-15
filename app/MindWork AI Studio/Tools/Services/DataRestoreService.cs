@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 
 using AIStudio.Settings;
 using AIStudio.Tools.AIJobs;
@@ -19,13 +20,18 @@ namespace AIStudio.Tools.Services;
 /// the app asks for the restart right away, and offers to discard the restore instead.<br/><br/>
 ///
 /// The service enforces what the organization allows on its own, since a component may show an
-/// outdated state.
+/// outdated state.<br/><br/>
+///
+/// At the start which applied a restore, the service holds the report of the runtime until the user
+/// saw it, cf. DataRestoreFollowUpService.
 /// </remarks>
-public sealed class DataRestoreService(ILogger<DataRestoreService> logger, SettingsManager settingsManager, DataSourceEmbeddingService embeddingService, DataBackupService dataBackupService, AIJobService aiJobService, MediaTranscriptionService mediaTranscriptionService)
+public sealed class DataRestoreService(ILogger<DataRestoreService> logger, SettingsManager settingsManager, RustService rustService, DataSourceEmbeddingService embeddingService, DataBackupService dataBackupService, AIJobService aiJobService, MediaTranscriptionService mediaTranscriptionService)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataRestoreService).Namespace, nameof(DataRestoreService));
 
     private readonly Lock stateLock = new();
+
+    private readonly TaskCompletionSource startupStateLoaded = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     private CancellationTokenSource? preparing;
 
@@ -70,6 +76,135 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
     public DataRestoreResult? LastResult { get; private set; }
 
     /// <summary>
+    /// How the runtime applied a restore at this start, until the user saw it; otherwise null.
+    /// </summary>
+    public DataRestoreReport? Report { get; private set; }
+
+    /// <summary>
+    /// Whether the runtime has not finished a restore and continues at the next start, cf.
+    /// DataRestoreFollowUp.IsRestoreUnfinished. Until then, AI Studio neither prepares nor discards a
+    /// restore.
+    /// </summary>
+    public bool IsRestoreUnfinished { get; private set; }
+
+    /// <summary>
+    /// Completes once the service knows what the last start left behind, cf. LoadStartupStateAsync.
+    /// </summary>
+    public Task StartupStateLoaded => this.startupStateLoaded.Task;
+
+    /// <summary>
+    /// Learns at the start what the runtime and the last run left behind: the report of a restore, a
+    /// restore which still waits for a restart, and what a backup or a preparation left halfway.
+    /// </summary>
+    /// <param name="token">Cancels reading the report.</param>
+    public async Task LoadStartupStateAsync(CancellationToken token)
+    {
+        try
+        {
+            var dataDirectory = SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet.");
+            var configDirectory = SettingsManager.ConfigDirectory ?? throw new InvalidOperationException("The configuration directory is not known yet.");
+            try
+            {
+                this.Report = await DataRestoreFollowUp.ReadReportAsync(dataDirectory, token);
+                if (this.Report is not null)
+                    logger.LogInformation("The runtime applied a restore at this start: {Outcome}. {Detail}", this.Report.Outcome, this.Report.Detail);
+            }
+            catch (Exception exception) when (exception is JsonException or IOException)
+            {
+                logger.LogError(exception, "Could not read how the runtime applied a restore.");
+                DataRestoreFollowUp.RemoveReport(dataDirectory);
+            }
+
+            this.IsRestoreUnfinished = DataRestoreFollowUp.IsRestoreUnfinished(dataDirectory);
+            if (this.IsRestoreUnfinished)
+                logger.LogError("The runtime has not finished a restore. It tries to move the replaced data back at the next start.");
+
+            if (!dataBackupService.IsRunning && !this.IsPreparing)
+                DataRestoreFollowUp.RemoveLeftovers(dataDirectory, configDirectory);
+
+            //
+            // A restore which still waits for its start, e.g., in the development environment, where the
+            // .NET server may restart without the runtime: whatever changes until then is lost.
+            //
+            if (DataRestoreFollowUp.IsRestorePending(dataDirectory))
+            {
+                logger.LogWarning("A prepared restore still waits for the restart which applies it.");
+                this.IsRestorePending = true;
+                this.indexingPause ??= await embeddingService.PauseIndexingAsync(token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not learn what the last start left behind of a restore or a backup.");
+        }
+        finally
+        {
+            this.startupStateLoaded.TrySetResult();
+            this.StateChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Removes the data which a restore replaced. Call it once the restored settings loaded.
+    /// </summary>
+    public void RemoveReplacedData()
+    {
+        try
+        {
+            var dataDirectory = SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet.");
+            var configDirectory = SettingsManager.ConfigDirectory ?? throw new InvalidOperationException("The configuration directory is not known yet.");
+            if (DataRestoreFollowUp.RemoveReplacedData(dataDirectory, configDirectory))
+                logger.LogInformation("Removed the data which the last restore replaced.");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not remove the data which the last restore replaced.");
+        }
+    }
+
+    /// <summary>
+    /// Finds what the user still has to do after the restore of this start, e.g., enter API keys again.
+    /// </summary>
+    /// <returns>The open points; none when no restore was applied.</returns>
+    public async Task<IReadOnlyList<DataRestoreOpenPoint>> CollectOpenPointsAsync()
+    {
+        if (this.Report?.Outcome is not DataRestoreOutcome.APPLIED)
+            return [];
+
+        try
+        {
+            return await DataRestoreOpenPoints.CollectAsync(settingsManager.ConfigurationData, new RustStoredSecrets(rustService));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not find what remains to do after the restore.");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Forgets the report of the runtime, once the user saw it.
+    /// </summary>
+    public void ForgetReport()
+    {
+        this.Report = null;
+        try
+        {
+            DataRestoreFollowUp.RemoveReport(SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet."));
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Could not remove the report of the restore.");
+        }
+
+        this.StateChanged?.Invoke();
+    }
+
+    /// <summary>
     /// Prepares the restore of a backup for the next start.
     /// </summary>
     /// <param name="archivePath">The backup.</param>
@@ -81,6 +216,9 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
 
         if (dataBackupService.IsRunning)
             return this.Refuse(TB("A backup is running. Please restore once it is done."));
+
+        if (this.IsRestoreUnfinished)
+            return this.Refuse(TB("AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first."));
 
         if (aiJobService.HasActiveJobs || mediaTranscriptionService.GetSnapshots().Any(snapshot => snapshot.Status is MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING))
             return this.Refuse(TB("AI Studio is still writing an answer or a transcript. Please restore once it is done."));
@@ -149,7 +287,7 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
     /// </summary>
     public async Task DiscardPendingRestoreAsync()
     {
-        if (this.IsPreparing)
+        if (this.IsPreparing || this.IsRestoreUnfinished)
             return;
 
         try

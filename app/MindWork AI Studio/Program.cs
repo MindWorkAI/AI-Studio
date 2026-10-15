@@ -228,6 +228,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
+        builder.Services.AddHostedService<DataRestoreFollowUpService>();
 
         // Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md. Remove after 2027-04-14:
         builder.Services.AddHostedService<RelativeDataPathsMigrationService>();

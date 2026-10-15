@@ -59,6 +59,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
     [Inject]
+    private DataRestoreService DataRestoreService { get; init; } = null!;
+
+    [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
 
     [Inject]
@@ -391,7 +394,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
-                    this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after the startup");
+                    this.ShowStartupDialogsAsync().Observe($"{nameof(MainLayout)}: dialogs after the startup");
                     break;
 
                 case Event.RAG_EMBEDDING_STATUS_CHANGED:
@@ -638,6 +641,36 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.SettingsManager.IsDarkMode = this.useDarkMode;
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Shows what the user has to see once the plugins started: the mandatory infos first, then how a
+    /// restore of a backup went.
+    /// </summary>
+    private async Task ShowStartupDialogsAsync()
+    {
+        await this.EnsureMandatoryInfosAcceptedAsync();
+        await this.ShowDataRestoreReportAsync();
+    }
+
+    /// <summary>
+    /// Tells how the runtime applied a restore at this start, and what remains to do.
+    /// </summary>
+    private async Task ShowDataRestoreReportAsync()
+    {
+        await this.DataRestoreService.StartupStateLoaded;
+        if (this.DataRestoreService.Report is not { } report)
+            return;
+
+        var dialogParameters = new DialogParameters<DataRestoreReportDialog>
+        {
+            { x => x.Report, report },
+            { x => x.OpenPoints, await this.DataRestoreService.CollectOpenPointsAsync() },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataRestoreReportDialog>(T("Restore of a Backup"), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        this.DataRestoreService.ForgetReport();
     }
 
     private async Task EnsureMandatoryInfosAcceptedAsync()

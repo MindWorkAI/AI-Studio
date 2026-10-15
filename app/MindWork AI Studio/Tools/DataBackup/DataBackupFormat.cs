@@ -42,6 +42,12 @@ public static class DataBackupFormat
     public const string CONFIG_ROOT = "config/";
 
     /// <summary>
+    /// The directory in the data folder where the copies of the vector stores wait while a backup runs.
+    /// The runtime creates it; keep the name in sync with BACKUP_STAGING_DIRECTORY there.
+    /// </summary>
+    public const string STAGING_DIRECTORY = ".backup-staging/";
+
+    /// <summary>
     /// How the manifest and the plan of a restore are written: readable for anybody who opens them,
     /// and for the runtime, which applies the plan.
     /// </summary>

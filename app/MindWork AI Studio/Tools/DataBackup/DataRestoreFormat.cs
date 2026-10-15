@@ -19,10 +19,10 @@ namespace AIStudio.Tools.DataBackup;
 /// <list type="bullet">
 /// <item>PREVIOUS_DIRECTORY, below both folders, keeps what the restore replaced. The app removes it
 /// once it loaded the restored settings.</item>
-/// <item>A journal in the pending directory of the data folder lists every move. While it lies next to
-/// READY_FILE_NAME, the runtime moves everything back at the next start, so the app never removes a
-/// pending directory which holds READY_FILE_NAME.</item>
-/// <item>RESULT_FILE_NAME in the data folder tells the app how the restore ended.</item>
+/// <item>JOURNAL_FILE_NAME in the pending directory of the data folder lists every move. While it lies
+/// next to READY_FILE_NAME, the runtime moves everything back at the next start, so the app never
+/// removes a pending directory which holds READY_FILE_NAME.</item>
+/// <item>RESULT_FILE_NAME in the data folder tells the app how the restore ended, cf. DataRestoreReport.</item>
 /// </list>
 /// Keep in sync with the runtime, which applies the restore.
 /// </remarks>
@@ -59,4 +59,18 @@ public static class DataRestoreFormat
     /// How the runtime applied a restore, in the data folder.
     /// </summary>
     public const string RESULT_FILE_NAME = ".restore-result.json";
+
+    /// <summary>
+    /// The journal of the runtime, in the pending directory of the data folder. Next to READY_FILE_NAME,
+    /// it tells that the runtime has not finished a restore: it moves it back at the next start.
+    /// </summary>
+    public const string JOURNAL_FILE_NAME = "journal.json";
+
+    /// <summary>
+    /// The path of one of the directories above, below the given folder.
+    /// </summary>
+    /// <param name="folder">The data or the configuration folder.</param>
+    /// <param name="directory">PENDING_DIRECTORY or PREVIOUS_DIRECTORY.</param>
+    /// <returns>The path of the directory.</returns>
+    public static string DirectoryIn(string folder, string directory) => Path.Join(folder, directory.TrimEnd(DataBackupContents.SEPARATOR));
 }

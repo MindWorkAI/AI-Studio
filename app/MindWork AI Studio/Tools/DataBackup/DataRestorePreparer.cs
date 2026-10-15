@@ -98,9 +98,16 @@ public static class DataRestorePreparer
     /// <summary>
     /// Removes a prepared restore, complete or not, so that the next start leaves everything as it is.
     /// </summary>
+    /// <remarks>
+    /// A restore which the runtime has not finished stays: its journal is the only way back to the data
+    /// it replaced, cf. DataRestoreFollowUp.IsRestoreUnfinished.
+    /// </remarks>
     /// <param name="target">Where the restore was to go.</param>
     public static void Discard(DataRestoreTarget target)
     {
+        if (DataRestoreFollowUp.IsRestoreUnfinished(target.DataDirectory))
+            throw new InvalidOperationException("The runtime has not finished the last restore yet, so it cannot be discarded.");
+
         foreach (var pendingDirectory in new[] { PendingDirectory(target.DataDirectory), PendingDirectory(target.ConfigDirectory) })
             if (Directory.Exists(pendingDirectory))
                 Directory.Delete(pendingDirectory, true);
@@ -111,9 +118,9 @@ public static class DataRestorePreparer
     /// </summary>
     /// <param name="target">Where the restore goes.</param>
     /// <returns>True when the next start applies a restore.</returns>
-    public static bool IsPrepared(DataRestoreTarget target) => File.Exists(Path.Join(PendingDirectory(target.DataDirectory), DataRestoreFormat.READY_FILE_NAME));
+    public static bool IsPrepared(DataRestoreTarget target) => DataRestoreFollowUp.IsRestorePending(target.DataDirectory);
 
-    private static string PendingDirectory(string directory) => Path.Join(directory, DataRestoreFormat.PENDING_DIRECTORY.TrimEnd(DataBackupContents.SEPARATOR));
+    private static string PendingDirectory(string directory) => DataRestoreFormat.DirectoryIn(directory, DataRestoreFormat.PENDING_DIRECTORY);
 
     /// <summary>
     /// Refuses a backup of a later version of AI Studio. Its settings or its index may have a form
