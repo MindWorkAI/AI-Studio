@@ -324,7 +324,8 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
             var target = this.CreateTarget();
             try
             {
-                DataRestorePreparer.Discard(target);
+                // The unpacked backup may hold thousands of files, and the click to discard it arrives on the thread of the user interface:
+                await Task.Run(() => DataRestorePreparer.Discard(target));
                 logger.LogInformation("Discarded the prepared restore.");
             }
             finally

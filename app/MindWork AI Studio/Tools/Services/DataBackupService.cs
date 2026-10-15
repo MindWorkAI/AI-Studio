@@ -110,32 +110,16 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
         }
 
         this.ReportProgress(new(DataBackupPhase.PREPARING, 0, 0));
-        var indexCopiesDirectory = string.Empty;
         var token = cancellation.Token;
         try
         {
-            var dataDirectory = SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet.");
-            var configDirectory = SettingsManager.ConfigDirectory ?? throw new InvalidOperationException("The configuration directory is not known yet.");
-            var settings = DataBackupSettings.CopyWithoutPluginObjects(settingsManager.ConfigurationData);
-            var settingsJson = JsonSerializer.Serialize(settings, SettingsManager.JSON_OPTIONS);
-            var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
-
-            indexCopiesDirectory = await this.CopyIndexesAsync(token);
-
-            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders);
-            var manifest = new DataBackupManifest(
-                DataBackupFormat.FORMAT_VERSION,
-                Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",
-                settings.Version.ToString(),
-                DateTimeOffset.UtcNow,
-                dataDirectory,
-                configDirectory,
-                !string.IsNullOrWhiteSpace(indexCopiesDirectory),
-                []);
-
+            //
+            // Copying the settings and the index of the data sources takes a while, and SQLite does
+            // its work synchronously, even behind its async methods. The click which starts a backup,
+            // though, arrives on the thread of the user interface, which would stand still meanwhile:
+            //
             var progress = new Progress<DataBackupProgress>(this.ReportProgress);
-            await using (var archiveStream = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan))
-                manifest = await Task.Run(() => DataBackupWriter.WriteAsync(archiveStream, sources, manifest, progress, token), token);
+            var manifest = await Task.Run(() => this.WriteBackupAsync(archivePath, progress, token), token);
 
             logger.LogInformation("Backed up {FileCount} files with {Megabytes:F1} MB into '{ArchivePath}'. The indexes of the data sources are included: {IncludesIndexes}.", manifest.Entries.Count, manifest.Entries.Sum(entry => entry.Size) / (1024d * 1024d), archivePath, manifest.IncludesDataSourceIndexes);
             return this.End(new(true, false, archivePath, manifest.Entries.Count, manifest.Entries.Sum(entry => entry.Size), manifest.IncludesDataSourceIndexes, string.Empty));
@@ -160,12 +144,51 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
         }
         finally
         {
-            this.TryDeleteIndexCopies(indexCopiesDirectory);
             lock (this.stateLock)
                 this.running = null;
 
             cancellation.Dispose();
             this.StateChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// Copies the settings and the indexes, and writes them into the backup together with the rest of the data.
+    /// </summary>
+    /// <param name="archivePath">The file of the backup.</param>
+    /// <param name="progress">Receives how far writing got.</param>
+    /// <param name="token">Cancels the backup.</param>
+    /// <returns>The manifest of the backup, as written into it.</returns>
+    private async Task<DataBackupManifest> WriteBackupAsync(string archivePath, IProgress<DataBackupProgress> progress, CancellationToken token)
+    {
+        var indexCopiesDirectory = string.Empty;
+        try
+        {
+            var dataDirectory = SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet.");
+            var configDirectory = SettingsManager.ConfigDirectory ?? throw new InvalidOperationException("The configuration directory is not known yet.");
+            var settings = DataBackupSettings.CopyWithoutPluginObjects(settingsManager.ConfigurationData);
+            var settingsJson = JsonSerializer.Serialize(settings, SettingsManager.JSON_OPTIONS);
+            var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
+
+            indexCopiesDirectory = await this.CopyIndexesAsync(token);
+
+            var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders);
+            var manifest = new DataBackupManifest(
+                DataBackupFormat.FORMAT_VERSION,
+                Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown",
+                settings.Version.ToString(),
+                DateTimeOffset.UtcNow,
+                dataDirectory,
+                configDirectory,
+                !string.IsNullOrWhiteSpace(indexCopiesDirectory),
+                []);
+
+            await using var archiveStream = new FileStream(archivePath, FileMode.Create, FileAccess.Write, FileShare.None, BUFFER_SIZE, FileOptions.Asynchronous | FileOptions.SequentialScan);
+            return await DataBackupWriter.WriteAsync(archiveStream, sources, manifest, progress, token);
+        }
+        finally
+        {
+            this.TryDeleteIndexCopies(indexCopiesDirectory);
         }
     }
 

@@ -24,6 +24,11 @@ When working on these, keep in mind:
 - **Let every probe in `GetDisplayInfo()` catch its own failure.** When the method throws, the page
   replaces the *entire* block with the fallback client, so one unreadable value costs all the others
   as well.
+- **SQLite runs its async methods synchronously.** `Microsoft.Data.Sqlite`, and EF Core on top of it,
+  only looks asynchronous: the calling thread does all the work. A statement which may take long, such
+  as `VACUUM` or a check of the whole database, runs in `Task.Run` inside the client, as
+  `BackupToDirectoryAsync` does. Otherwise a click in the user interface which reaches it freezes the
+  whole window until the statement is done.
 - **Raw SQL against SQLite goes through `context.Database.GetDbConnection()`**, not through
   `SqlQueryRaw<T>`: that one expects a column named `Value` and wraps the statement, so a `PRAGMA`
   never works with it.

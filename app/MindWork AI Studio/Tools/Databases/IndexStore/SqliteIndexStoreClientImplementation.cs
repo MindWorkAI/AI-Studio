@@ -590,9 +590,14 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
     /// GetDbConnection. The connections of the context share one cache, and a shared cache locks
     /// whole tables: reading the whole database for the copy would hold back every writer until the
     /// copy is done. Without pooling, nothing keeps the copy open afterward, so the backup can
-    /// delete it on every OS.
+    /// delete it on every OS.<br/><br/>
+    ///
+    /// SQLite runs its async methods synchronously, and copying and checking a large index takes a
+    /// while. The copy therefore runs on a thread of its own, so that it never holds up its caller.
     /// </remarks>
-    public override async Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token)
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(() => this.CopyAndCheckAsync(targetDirectory, token), token);
+
+    private async Task<string> CopyAndCheckAsync(string targetDirectory, CancellationToken token)
     {
         Directory.CreateDirectory(targetDirectory);
         var targetPath = Path.Join(targetDirectory, DATABASE_FILENAME);

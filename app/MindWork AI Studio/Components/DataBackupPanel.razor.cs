@@ -188,9 +188,11 @@ public partial class DataBackupPanel : MSGComponentBase
             if (selectionResponse.UserCancelled)
                 return;
 
-            this.selectedArchivePath = selectionResponse.SelectedFilePath;
+            var archivePath = this.selectedArchivePath = selectionResponse.SelectedFilePath;
             this.importResult = null;
-            this.preview = await ChatArchiveImporter.ReadPreviewAsync(this.selectedArchivePath, CancellationToken.None);
+
+            // A large backup lists many thousands of files, and reading a ZIP file is mostly synchronous:
+            this.preview = await Task.Run(() => ChatArchiveImporter.ReadPreviewAsync(archivePath, CancellationToken.None));
         }
         finally
         {
