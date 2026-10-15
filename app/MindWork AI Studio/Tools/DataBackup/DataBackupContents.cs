@@ -14,7 +14,11 @@ namespace AIStudio.Tools.DataBackup;
 /// The entries which stay out are listed, too. The folder panel on the information page tells users
 /// who back up these folders with a tool of their own what they may leave out, and nobody has to guess
 /// whether a folder was forgotten or left out on purpose. Whoever adds a file or folder to the data or
-/// configuration folder adds it here, one way or the other.
+/// configuration folder adds it here, one way or the other.<br/><br/>
+///
+/// The runtime, which applies a restore, keeps its own list of the included entries and refuses to
+/// replace anything else (REPLACEABLE_ELEMENTS in runtime/src/data_restore.rs). An entry included here
+/// goes there as well.
 /// </remarks>
 public static class DataBackupContents
 {
@@ -57,6 +61,9 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, ".backup-staging/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.CONFIG_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.PREVIOUS_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.CONFIG_DIRECTORY, DataRestoreFormat.PREVIOUS_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.RESULT_FILE_NAME, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "pandoc/", DataBackupEntryKind.DOWNLOADED_TOOLS),
         new(DataBackupLocation.DATA_DIRECTORY, "events.log", DataBackupEntryKind.LOGS),
 

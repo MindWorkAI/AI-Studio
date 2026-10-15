@@ -15,6 +15,15 @@ namespace AIStudio.Tools.DataBackup;
 /// <item>READY_FILE_NAME in the same directory comes last. Without it, the restore was not prepared
 /// completely, and the runtime leaves everything as it is.</item>
 /// </list>
+/// What the runtime adds, cf. runtime/src/data_restore.rs:
+/// <list type="bullet">
+/// <item>PREVIOUS_DIRECTORY, below both folders, keeps what the restore replaced. The app removes it
+/// once it loaded the restored settings.</item>
+/// <item>A journal in the pending directory of the data folder lists every move. While it lies next to
+/// READY_FILE_NAME, the runtime moves everything back at the next start, so the app never removes a
+/// pending directory which holds READY_FILE_NAME.</item>
+/// <item>RESULT_FILE_NAME in the data folder tells the app how the restore ended.</item>
+/// </list>
 /// Keep in sync with the runtime, which applies the restore.
 /// </remarks>
 public static class DataRestoreFormat
@@ -39,4 +48,15 @@ public static class DataRestoreFormat
     /// Marks a restore as prepared completely, in the pending directory of the data folder.
     /// </summary>
     public const string READY_FILE_NAME = "READY";
+
+    /// <summary>
+    /// The directory, below the data folder and below the configuration folder, which keeps what the
+    /// runtime replaced, in the layout of that folder.
+    /// </summary>
+    public const string PREVIOUS_DIRECTORY = ".restore-previous/";
+
+    /// <summary>
+    /// How the runtime applied a restore, in the data folder.
+    /// </summary>
+    public const string RESULT_FILE_NAME = ".restore-result.json";
 }

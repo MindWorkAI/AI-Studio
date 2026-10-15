@@ -51,6 +51,7 @@ fn create_router() -> Router {
         .route("/updates/check", get(crate::app_window::check_for_update))
         .route("/updates/install", get(crate::app_window::install_update))
         .route("/app/exit", post(crate::app_window::exit_app))
+        .route("/app/restart", post(crate::app_window::restart_app))
         .route("/select/directory", post(crate::file_actions::select_directory))
         .route("/select/file", post(crate::file_actions::select_file))
         .route("/select/files", post(crate::file_actions::select_files))
