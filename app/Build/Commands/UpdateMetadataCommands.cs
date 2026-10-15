@@ -191,11 +191,12 @@ public sealed partial class UpdateMetadataCommands
 
         Console.WriteLine("- Prepare the metadata for the next release ...");
 
-        var appVersion = await this.UpdateAppVersion(action, version);
+        var appVersion = await this.DetermineNextAppVersion(action, version);
         if (!string.IsNullOrWhiteSpace(appVersion.VersionText))
         {
             // The changelog is the source for the AppStream description. Check it before we write
-            // any further metadata, so that a missing changelog cannot leave a half-prepared release:
+            // any metadata, the version included, so that a missing changelog cannot leave a
+            // half-prepared release:
             var changelogPath = GetChangelogPath(appVersion.VersionText);
             if (!File.Exists(changelogPath))
             {
@@ -203,6 +204,7 @@ public sealed partial class UpdateMetadataCommands
                 throw new CommandExitedException(1);
             }
 
+            await this.UpdateAppVersion(appVersion);
             var buildNumber = await this.IncreaseBuildNumber();
             var buildTime = await this.UpdateBuildTime();
             await this.UpdateChangelog(buildNumber, appVersion.VersionText, buildTime);
@@ -884,7 +886,7 @@ public sealed partial class UpdateMetadataCommands
         await WriteMetadataLinesAsync(pathMetadata, lines);
     }
 
-    private async Task<AppVersion> UpdateAppVersion(PrepareAction action, string? version = null)
+    private async Task<AppVersion> DetermineNextAppVersion(PrepareAction action, string? version = null)
     {
         const int APP_VERSION_INDEX = 0;
 
@@ -940,13 +942,19 @@ public sealed partial class UpdateMetadataCommands
             }
         }
 
-        var updatedAppVersion = $"{newMajor}.{newMinor}.{newPatch}";
-        Console.WriteLine($"- Updating app version from '{currentAppVersionLine}' to '{updatedAppVersion}'.");
+        return new($"{newMajor}.{newMinor}.{newPatch}", newMajor, newMinor, newPatch);
+    }
 
-        lines[APP_VERSION_INDEX] = updatedAppVersion;
+    private async Task UpdateAppVersion(AppVersion appVersion)
+    {
+        const int APP_VERSION_INDEX = 0;
+
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        Console.WriteLine($"- Updating app version from '{lines[APP_VERSION_INDEX].Trim()}' to '{appVersion.VersionText}'.");
+
+        lines[APP_VERSION_INDEX] = appVersion.VersionText;
         await WriteMetadataLinesAsync(pathMetadata, lines);
-
-        return new(updatedAppVersion, newMajor, newMinor, newPatch);
     }
 
     private async Task UpdateLicenceYear(string licenceFilePath)
