@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AIStudio.Tools.DataBackup;
 
@@ -41,12 +42,14 @@ public static class DataBackupFormat
     public const string CONFIG_ROOT = "config/";
 
     /// <summary>
-    /// How the manifest is written: readable for anybody who opens the backup.
+    /// How the manifest and the plan of a restore are written: readable for anybody who opens them,
+    /// and for the runtime, which applies the plan.
     /// </summary>
     public static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters = { new JsonStringEnumConverter() },
     };
 
     /// <summary>

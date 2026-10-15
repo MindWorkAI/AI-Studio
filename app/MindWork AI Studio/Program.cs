@@ -211,6 +211,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddSingleton<DataBackupService>();
+        builder.Services.AddSingleton<DataRestoreService>();
         builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<MailboxRetrievalService>();

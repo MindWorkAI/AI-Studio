@@ -131,7 +131,7 @@ public static class DataBackupWriter
                 token.ThrowIfCancellationRequested();
 
                 var relativePath = Path.GetRelativePath(root, filePath).Replace(Path.DirectorySeparatorChar, DataBackupContents.SEPARATOR);
-                if (excludedPaths.Any(excludedPath => IsExcluded(relativePath, excludedPath)))
+                if (excludedPaths.Any(excludedPath => DataBackupContents.Covers(excludedPath, relativePath)))
                     continue;
 
                 files.Add(new(DataBackupFormat.EntryName(DataBackupLocation.DATA_DIRECTORY, relativePath), filePath));
@@ -140,10 +140,6 @@ public static class DataBackupWriter
 
         return files;
     }
-
-    private static bool IsExcluded(string relativePath, string excludedPath) => excludedPath.EndsWith(DataBackupContents.SEPARATOR)
-        ? relativePath.StartsWith(excludedPath, PathTools.COMPARISON)
-        : relativePath.Equals(excludedPath, PathTools.COMPARISON);
 
     /// <summary>
     /// Writes one entry, and notes its size and hash while it streams through.

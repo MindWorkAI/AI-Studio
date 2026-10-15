@@ -55,12 +55,24 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, "mailAttachments/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "mindwork_ai_studio.pid", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, ".backup-staging/", DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.CONFIG_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "pandoc/", DataBackupEntryKind.DOWNLOADED_TOOLS),
         new(DataBackupLocation.DATA_DIRECTORY, "events.log", DataBackupEntryKind.LOGS),
 
         // The runtime hides the log of the startup on Linux and macOS:
         new(DataBackupLocation.DATA_DIRECTORY, OperatingSystem.IsWindows() ? "AI Studio Events.log" : ".AI Studio Events.log", DataBackupEntryKind.LOGS),
     ];
+
+    /// <summary>
+    /// Whether a path lies within an entry: below it for a folder, or the entry itself for a file.
+    /// </summary>
+    /// <param name="entryPath">The path of the entry, as the list holds it.</param>
+    /// <param name="relativePath">The path to check, relative to the same folder and with forward slashes.</param>
+    /// <returns>True when the entry covers the path.</returns>
+    public static bool Covers(string entryPath, string relativePath) => entryPath.EndsWith(SEPARATOR)
+        ? relativePath.StartsWith(entryPath, PathTools.COMPARISON)
+        : relativePath.Equals(entryPath, PathTools.COMPARISON);
 
     /// <summary>
     /// Finds the plugins which the organization deployed into the folder of the user's plugins.
