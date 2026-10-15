@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
+using Build.Tools;
+
 using SharedTools;
 
 namespace Build.Commands;
@@ -76,7 +78,8 @@ public sealed partial class UpdateMetadataCommands
     private async Task BuildPreparedRelease(bool offline)
     {
         // Build once to allow the Rust compiler to read the changed metadata
-        // and to update all .NET artifacts:
+        // and to update all .NET artifacts. When this build fails, it ends the
+        // whole command; nothing below runs on top of its broken artifacts:
         await this.Build(offline);
         
         // Now, we update the web assets (which may were updated by the first build):
@@ -227,7 +230,7 @@ public sealed partial class UpdateMetadataCommands
         [Option("skip-verify", Description = "Skip the quality gate which otherwise runs before anything is built")] bool skipVerify = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
-            return;
+            throw new CommandExitedException(1);
 
         //
         // The gate runs before anything is built, and the build stops when it does not pass. That
@@ -255,7 +258,7 @@ public sealed partial class UpdateMetadataCommands
         Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
         await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
         var dotnetBuildOutput = await this.ReadCommandOutput(pathApp, "dotnet", $"publish --configuration release --runtime {rid.AsMicrosoftRid()} --disable-build-servers --force");
-        var dotnetBuildOutputLines = dotnetBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+        var dotnetBuildOutputLines = dotnetBuildOutput.Text.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundIssue = false;
         foreach (var buildOutputLine in dotnetBuildOutputLines)
         {
@@ -275,11 +278,24 @@ public sealed partial class UpdateMetadataCommands
         
         if(foundIssue)
             Console.WriteLine();
-        else
+        else if(dotnetBuildOutput.ExitCode is 0)
         {
             Console.WriteLine(" completed successfully.");
         }
-        
+        else
+        {
+            // Unlike the Rust build, this one ran silently. When none of its lines looks like a
+            // diagnostic, its whole output is the only thing left to go on:
+            Console.WriteLine(" failed:");
+            Console.WriteLine(dotnetBuildOutput.Text);
+        }
+
+        if(dotnetBuildOutput.ExitCode is not 0)
+        {
+            Console.WriteLine($"- Error: The .NET build failed with exit code {dotnetBuildOutput.ExitCode}.");
+            throw new CommandExitedException(1);
+        }
+
         //
         // Prepare the .NET artifact to be used by Tauri as sidecar:
         //
@@ -301,7 +317,7 @@ public sealed partial class UpdateMetadataCommands
         if (string.IsNullOrWhiteSpace(tauriSidecarArtifactName))
         {
             Console.WriteLine($"- Error: Unsupported rid '{rid.AsMicrosoftRid()}'.");
-            return;
+            throw new CommandExitedException(1);
         }
     
         var dotnetArtifactPath = Path.Combine(pathApp, "bin", "dist");
@@ -322,7 +338,7 @@ public sealed partial class UpdateMetadataCommands
         else
         {
             Console.WriteLine($"- Error: Published .NET artifact not found: '{dotnetPublishedPath}'.");
-            return;
+            throw new CommandExitedException(1);
         }
 
         Console.Write($"- Move the .NET artifact to the Tauri sidecar destination ...");
@@ -333,8 +349,11 @@ public sealed partial class UpdateMetadataCommands
         }
         catch (Exception e)
         {
+            // Building on would not fail: Tauri would quietly take whichever sidecar an earlier build
+            // left in its place, and the result would contain an outdated .NET app:
             Console.WriteLine(" failed.");
             Console.WriteLine($"   - Error: {e.Message}");
+            throw new CommandExitedException(1);
         }
         
         //
@@ -344,7 +363,7 @@ public sealed partial class UpdateMetadataCommands
         
         var pathRuntime = Environment.GetRustRuntimeDirectory();
         var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --no-bundle", true);
-        var rustBuildOutputLines = rustBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+        var rustBuildOutputLines = rustBuildOutput.Text.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundRustIssue = false;
         foreach (var buildOutputLine in rustBuildOutputLines)
         {
@@ -362,11 +381,15 @@ public sealed partial class UpdateMetadataCommands
             }
         }
         
-        if(foundRustIssue)
-            Console.WriteLine();
-        else
+        Console.WriteLine();
+        if(rustBuildOutput.ExitCode is not 0)
         {
-            Console.WriteLine();
+            Console.WriteLine($"- Error: The Rust build failed with exit code {rustBuildOutput.ExitCode}.");
+            throw new CommandExitedException(1);
+        }
+
+        if(!foundRustIssue)
+        {
             Console.WriteLine("- Compilation completed successfully.");
             Console.WriteLine();
         }
@@ -555,7 +578,7 @@ public sealed partial class UpdateMetadataCommands
         if (!ReleasesStartRegex().IsMatch(await File.ReadAllTextAsync(metainfoPath, Encoding.UTF8)))
             throw new InvalidOperationException("The AppStream metainfo does not contain a <releases> element.");
 
-        var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Trim();
+        var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Text.Trim();
         if (!GitCommitHashRegex().IsMatch(headCommitHash))
             throw new InvalidOperationException("The current Git commit hash could not be determined.");
 
@@ -850,7 +873,7 @@ public sealed partial class UpdateMetadataCommands
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
         var currentCommitHash = lines[COMMIT_HASH_INDEX].Trim();
-        var headCommitHash = await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD");
+        var headCommitHash = (await this.ReadCommandOutput(Environment.GetAIStudioDirectory(), "git", "rev-parse HEAD")).Text;
         var first10Chars = headCommitHash[..11];
         var updatedCommitHash = $"{first10Chars}, release";
 
@@ -1116,7 +1139,7 @@ public sealed partial class UpdateMetadataCommands
         return matches;
     }
     
-    private async Task<string> ReadCommandOutput(string workingDirectory, string program, string command, bool showLiveOutput = false)
+    private async Task<CommandOutput> ReadCommandOutput(string workingDirectory, string program, string command, bool showLiveOutput = false)
     {
         var processInfo = new ProcessStartInfo
         {
@@ -1129,35 +1152,36 @@ public sealed partial class UpdateMetadataCommands
             CreateNoWindow = true,
         };
 
+        //
+        // Both streams deliver their lines on threads of their own, so the lines are collected under
+        // a lock. The handlers are in place before reading starts; otherwise, the first lines may get
+        // lost, and with them the diagnostic which says why a build failed:
+        //
         var sb = new StringBuilder();
+        var sbLock = new Lock();
+        void CollectLine(string? line)
+        {
+            if(string.IsNullOrWhiteSpace(line))
+                return;
+
+            lock (sbLock)
+            {
+                if(showLiveOutput)
+                    Console.WriteLine(line);
+                sb.AppendLine(line);
+            }
+        }
+
         using var process = new Process();
         process.StartInfo = processInfo;
+        process.OutputDataReceived += (_, args) => CollectLine(args.Data);
+        process.ErrorDataReceived += (_, args) => CollectLine(args.Data);
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
-        
-        process.OutputDataReceived += (_, args) =>
-        {
-            if(!string.IsNullOrWhiteSpace(args.Data))
-            {
-                if(showLiveOutput)
-                    Console.WriteLine(args.Data);
-                sb.AppendLine(args.Data);
-            }
-        };
-        
-        process.ErrorDataReceived += (_, args) =>
-        {
-            if(!string.IsNullOrWhiteSpace(args.Data))
-            {
-                if(showLiveOutput)
-                    Console.WriteLine(args.Data);
-                sb.AppendLine(args.Data);
-            }
-        };
-        
+
         await process.WaitForExitAsync();
-        return sb.ToString();
+        return new(sb.ToString(), process.ExitCode);
     }
     
     private async Task<int> IncreaseBuildNumber()
