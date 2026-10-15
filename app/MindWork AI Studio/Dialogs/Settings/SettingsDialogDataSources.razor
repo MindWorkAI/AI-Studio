@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Components.Sections
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -9,9 +10,11 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <DataSourceManagement/>
+        <DataSourceManagement AddMenuSectionId="@this.addMenuSectionId"/>
     </DialogContent>
     <DialogActions>
+        <SectionOutlet SectionId="@this.addMenuSectionId"/>
+        <MudSpacer/>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
             @T("Close")
         </MudButton>
