@@ -201,7 +201,7 @@ jobs:
           # Read the first two lines of the metadata file:
           version=$(sed -n '1p' metadata.txt)
           build_time=$(sed -n '2p' metadata.txt)
-          pdfium_full_version=$(sed -n '11p' metadata.txt)
+          pdfium_full_version=$(sed -n '10p' metadata.txt)
           pdfium_chromium_revision=$(echo "$pdfium_full_version" | cut -d'.' -f3)
           source_commit=$(git rev-parse HEAD)
 
@@ -926,11 +926,11 @@ jobs:
           # Next line is the necessary PDFium version.
           # The format is '137.0.7123.0'. What we need
           # is the '7123' part:
-          pdfium_version=$(sed -n '11p' metadata.txt)
+          pdfium_version=$(sed -n '10p' metadata.txt)
           pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
           
           # Next line is the vector store version:
-          vector_store_version="$(sed -n '12p' metadata.txt)"
+          vector_store_version="$(sed -n '11p' metadata.txt)"
           
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
@@ -993,11 +993,11 @@ jobs:
           # Next line is the necessary PDFium version.
           # The format is '137.0.7123.0'. What we need
           # is the '7123' part:
-          $pdfium_version = $metadata[10]
+          $pdfium_version = $metadata[9]
           $pdfium_version = $pdfium_version.Split('.')[2]
           
           # Next line is the vector store version:
-          $vector_store_version = $metadata[11]
+          $vector_store_version = $metadata[10]
           
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV

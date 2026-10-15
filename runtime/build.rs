@@ -7,20 +7,19 @@ fn main() {
     println!("cargo:rustc-env=OUT_DIR={}", out_dir.to_str().unwrap());
 
     //
-    // When we are in debug mode, we want to set the current RID
-    // to the current architecture. This is necessary, so that
-    // the developers get the right behavior.
-    //
-    // We read the current OS and architecture and overwrite the
-    // current RID in the metadata file (line #10).
+    // The runtime reports the platform it is built for. Cargo runs this
+    // build script on the machine which builds, so std::env::consts would
+    // name that machine. Both differ when we cross-compile, e.g., for
+    // Intel-based Macs on an ARM-based one. Hence, we read the target
+    // from Cargo and pass its RID on to the compiler.
     //
     // We have to take care of different naming conventions. The
     // following RIDs are supported: win-x64, win-arm64, linux-x64,
     // linux-arm64, osx-x64, osx-arm64.
     //
-    let current_os = std::env::consts::OS;
-    let current_arch = std::env::consts::ARCH;
-    let rid = match (current_os, current_arch) {
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_arch = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    let rid = match (target_os.as_str(), target_arch.as_str()) {
         ("windows", "x86_64") => "win-x64",
         ("windows", "aarch64") => "win-arm64",
 
@@ -30,28 +29,17 @@ fn main() {
         ("macos", "x86_64") => "osx-x64",
         ("macos", "aarch64") => "osx-arm64",
 
-        _ => panic!("Unsupported OS or architecture: {current_os} {current_arch}"),
+        _ => panic!("Unsupported OS or architecture: {target_os} {target_arch}"),
     };
 
-    let metadata = include_str!("../metadata.txt");
-    let mut metadata_lines = metadata.lines().collect::<Vec<_>>();
-    metadata_lines[9] = rid;
-
-    // Every line ends with a line break, the last one included. The build
-    // script of the .NET side writes the file the same way:
-    let mut new_metadata = metadata_lines.join("\n");
-    new_metadata.push('\n');
-
-    // Write only on a change to avoid unnecessary rewrites:
-    if new_metadata != metadata {
-        std::fs::write("../metadata.txt", new_metadata).unwrap();
-    }
+    println!("cargo:rustc-env=AI_STUDIO_ARCHITECTURE={rid}");
 
     //
     // Read the current version and update the
     // Rust and Tauri configuration files:
     //
-    let version = metadata_lines[0];
+    let metadata = include_str!("../metadata.txt");
+    let version = metadata.lines().next().unwrap();
     update_cargo_toml("Cargo.toml", version);
     update_tauri_conf("tauri.conf.json", version);
 }

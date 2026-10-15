@@ -135,8 +135,8 @@
             -->
             <MetaArchitecture>$(RuntimeIdentifier)</MetaArchitecture>
 
-            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
-            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaVectorStoreVersion>
+            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaPdfiumVersion>
+            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaVectorStoreVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             

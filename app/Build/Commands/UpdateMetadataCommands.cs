@@ -844,7 +844,7 @@ public sealed partial class UpdateMetadataCommands
     
     private async Task<string> ReadPdfiumVersion()
     {
-        const int PDFIUM_VERSION_INDEX = 10;
+        const int PDFIUM_VERSION_INDEX = 9;
         
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
@@ -1002,7 +1002,7 @@ public sealed partial class UpdateMetadataCommands
 
     private async Task UpdateVectorStoreVersion()
     {
-        const int VECTOR_STORE_VERSION_INDEX = 11;
+        const int VECTOR_STORE_VERSION_INDEX = 10;
 
         var pathMetadata = Environment.GetMetadataPath();
         var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
