@@ -32,4 +32,29 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
     public abstract Task OptimizeVectorStore(string storeName, CancellationToken token);
 
     public abstract Task DeleteVectorStore(string storeName, CancellationToken token);
+
+    /// <summary>
+    /// Prepares a backup of the stores: lists them, checks that their copies fit on the disk, and
+    /// creates the directory for the copies below the data directory.
+    /// </summary>
+    /// <remarks>
+    /// Pause the indexing first, cf. DataSourceEmbeddingService.PauseIndexingAsync, so that no store
+    /// changes until all of them are copied.
+    /// </remarks>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The backup, with every store to copy.</returns>
+    public abstract Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token);
+
+    /// <summary>
+    /// Copies one store into the directory of a prepared backup.
+    /// </summary>
+    /// <remarks>
+    /// The store is unloaded for the copy and loads again with the next request. Requests for any
+    /// store wait while one is copied.
+    /// </remarks>
+    /// <param name="backupId">The backup, as PrepareBackupAsync named it.</param>
+    /// <param name="storeName">The name of the store.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>How many bytes were copied. Zero when the store was not created completely.</returns>
+    public abstract Task<long> CopyStoreForBackupAsync(string backupId, string storeName, CancellationToken token);
 }

@@ -46,6 +46,12 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
+    public override Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) =>
+        Task.FromException<VectorStoreBackupPreparation>(this.CreateUnavailableException());
+
+    public override Task<long> CopyStoreForBackupAsync(string backupId, string storeName, CancellationToken token) =>
+        Task.FromException<long>(this.CreateUnavailableException());
+
     private InvalidOperationException CreateUnavailableException() =>
         new(unavailableReason ?? "The vector store is not available.");
 

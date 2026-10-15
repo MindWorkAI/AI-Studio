@@ -29,7 +29,9 @@ public sealed class QdrantEdgeClientImplementation(
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
     private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
-    
+    private const string PREPARE_BACKUP_PATH = "/system/qdrant-edge/backup/prepare";
+    private const string COPY_STORE_FOR_BACKUP_PATH = "/system/qdrant-edge/backup/copy";
+
     private readonly string path = path;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(QdrantEdgeClientImplementation).Namespace, nameof(QdrantEdgeClientImplementation));
@@ -163,6 +165,14 @@ public sealed class QdrantEdgeClientImplementation(
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_STORE_PATH, new DeleteVectorStoreRequest(storeName), token);
 
+    public override async Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<PrepareBackupRequest, VectorStoreBackupPreparation>(DATABASE_NAME, PREPARE_BACKUP_PATH,
+            new PrepareBackupRequest(), token) ?? throw new InvalidOperationException("The response preparing the backup of the vector stores was empty.");
+
+    public override async Task<long> CopyStoreForBackupAsync(string backupId, string storeName, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<CopyStoreForBackupRequest, long?>(DATABASE_NAME, COPY_STORE_FOR_BACKUP_PATH,
+            new CopyStoreForBackupRequest(backupId, storeName), token) ?? throw new InvalidOperationException("The response copying a vector store for the backup was empty.");
+
     public override void Dispose()
     {
     }
@@ -189,5 +199,12 @@ public sealed class QdrantEdgeClientImplementation(
     private sealed record OptimizeVectorStoreRequest(string StoreName);
     
     private sealed record DeleteVectorStoreRequest(string StoreName);
+
+    /// <summary>
+    /// Preparing a backup needs nothing but the request itself.
+    /// </summary>
+    private sealed record PrepareBackupRequest;
+
+    private sealed record CopyStoreForBackupRequest(string BackupId, string StoreName);
     // ReSharper restore NotAccessedPositionalProperty.Local
 }

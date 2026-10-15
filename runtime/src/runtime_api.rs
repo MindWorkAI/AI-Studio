@@ -43,6 +43,8 @@ fn create_router() -> Router {
         .route("/system/qdrant-edge/delete-file", post(crate::qdrant_edge_database::delete_qdrant_edge_embedding_by_file))
         .route("/system/qdrant-edge/optimize", post(crate::qdrant_edge_database::optimize_qdrant_edge_store))
         .route("/system/qdrant-edge/delete-store", post(crate::qdrant_edge_database::delete_qdrant_edge_store))
+        .route("/system/qdrant-edge/backup/prepare", post(crate::qdrant_edge_database::prepare_qdrant_edge_backup))
+        .route("/system/qdrant-edge/backup/copy", post(crate::qdrant_edge_database::copy_qdrant_edge_store_for_backup))
         .route("/clipboard/set", post(crate::clipboard::set_clipboard))
         .route("/share/file", post(crate::share_sheet::share_file))
         .route("/events", get(crate::app_window::get_event_stream))
