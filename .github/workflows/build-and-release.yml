@@ -922,14 +922,7 @@ jobs:
 
           # Format the app version:
           formatted_app_version="v${app_version}"
-          
-          # Set the architecture:
-          if sed --version 2>/dev/null | grep -q GNU; then
-            sed -i "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
-          else
-            sed -i '' "10s/.*/${{ matrix.dotnet_runtime }}/" metadata.txt
-          fi
-          
+
           # Next line is the necessary PDFium version.
           # The format is '137.0.7123.0'. What we need
           # is the '7123' part:
@@ -996,13 +989,7 @@ jobs:
 
           # Format the app version:
           $formatted_app_version = "v${app_version}"
-          
-          # Set the architecture:
-          $metadata[9] = "${{ matrix.dotnet_runtime }}"
-          
-          # Write the changed metadata back to the file:
-          Set-Content -Path metadata.txt -Value $metadata
-          
+
           # Next line is the necessary PDFium version.
           # The format is '137.0.7123.0'. What we need
           # is the '7123' part:

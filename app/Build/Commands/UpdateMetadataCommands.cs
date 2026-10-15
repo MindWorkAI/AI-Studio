@@ -251,7 +251,6 @@ public sealed partial class UpdateMetadataCommands
         var rid = Environment.GetCurrentRid();
         
         Console.WriteLine("==============================");
-        await this.UpdateArchitecture(rid);
         await this.UpdateTauriVersion();
         await this.UpdateVectorStoreVersion();
         
@@ -855,19 +854,6 @@ public sealed partial class UpdateMetadataCommands
         return shortVersion;
     }
 
-    private async Task UpdateArchitecture(RID rid)
-    {
-        const int ARCHITECTURE_INDEX = 9;
-        
-        var pathMetadata = Environment.GetMetadataPath();
-        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
-        Console.Write($"- Updating architecture to {rid.ToUserFriendlyName()} ...");
-        lines[ARCHITECTURE_INDEX] = rid.AsMicrosoftRid();
-        
-        await WriteMetadataLinesAsync(pathMetadata, lines);
-        Console.WriteLine(" done.");
-    }
-    
     [Command("update-project-hash", Description = "Update the project commit hash")]
     public async Task UpdateProjectCommitHash()
     {

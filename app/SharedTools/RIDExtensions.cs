@@ -8,8 +8,8 @@ public static class RIDExtensions
     /// Detects the current Runtime Identifier (RID) at runtime based on OS and architecture.
     /// </summary>
     /// <remarks>
-    /// This method should be preferred over reading the RID from metadata,
-    /// as the metadata may contain stale values in development environments.
+    /// This is the machine which runs the code. The architecture in the metadata of AI Studio
+    /// is the platform AI Studio was built for instead; both can differ under emulation.
     /// </remarks>
     /// <returns>The detected RID for the current platform.</returns>
     public static RID GetCurrentRID()
