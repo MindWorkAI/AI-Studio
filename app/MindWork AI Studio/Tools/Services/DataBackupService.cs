@@ -28,6 +28,21 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
 {
     private const int BUFFER_SIZE = 64 * 1024;
 
+    /// <summary>
+    /// ERROR_FILE_TOO_LARGE of Windows, as an HRESULT.
+    /// </summary>
+    private const int WINDOWS_FILE_TOO_LARGE = unchecked((int)0x800700DF);
+
+    /// <summary>
+    /// ERROR_FILE_SYSTEM_LIMITATION of Windows, as an HRESULT.
+    /// </summary>
+    private const int WINDOWS_FILE_SYSTEM_LIMITATION = unchecked((int)0x80070299);
+
+    /// <summary>
+    /// EFBIG of Linux and macOS, which .NET passes on as the HResult.
+    /// </summary>
+    private const int UNIX_FILE_TOO_LARGE = 27;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataBackupService).Namespace, nameof(DataBackupService));
 
     private readonly Lock stateLock = new();
@@ -131,6 +146,12 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             logger.LogInformation("The user cancelled the backup into '{ArchivePath}'. The incomplete backup was removed.", archivePath);
             return this.End(new(false, true, archivePath, 0, 0, false, string.Empty));
         }
+        catch (IOException exception) when (IsFileTooLarge(exception))
+        {
+            this.TryDeleteArchive(archivePath);
+            logger.LogError(exception, "The backup into '{ArchivePath}' failed, since the file system takes no file this large. The incomplete backup was removed.", archivePath);
+            return this.End(new(false, false, archivePath, 0, 0, false, TB("The backup is too large for the chosen drive, which takes no files beyond 4 GB. USB sticks formatted with FAT32 are such drives. Please choose another drive.")));
+        }
         catch (Exception exception)
         {
             this.TryDeleteArchive(archivePath);
@@ -147,6 +168,11 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             this.StateChanged?.Invoke();
         }
     }
+
+    /// <summary>
+    /// Whether writing failed since the file system takes no file this large, as FAT32 does beyond 4 GiB.
+    /// </summary>
+    private static bool IsFileTooLarge(IOException exception) => exception.HResult is WINDOWS_FILE_TOO_LARGE or WINDOWS_FILE_SYSTEM_LIMITATION or UNIX_FILE_TOO_LARGE;
 
     /// <summary>
     /// Stops the running backup. It removes what it wrote so far.

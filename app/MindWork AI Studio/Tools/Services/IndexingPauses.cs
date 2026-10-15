@@ -26,6 +26,18 @@ internal sealed class IndexingPauses
     private TaskCompletionSource? lastPauseEnded;
 
     /// <summary>
+    /// Whether the indexing is paused right now.
+    /// </summary>
+    public bool IsPaused
+    {
+        get
+        {
+            lock (this.stateLock)
+                return this.count > 0;
+        }
+    }
+
+    /// <summary>
     /// Begins a pause. From now on, every run which is about to start waits.
     /// </summary>
     public void Begin()

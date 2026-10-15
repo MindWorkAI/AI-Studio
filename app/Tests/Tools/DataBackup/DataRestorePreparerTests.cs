@@ -110,6 +110,12 @@ public sealed class DataRestorePreparerTests
         });
     }
 
+    [Test]
+    public void DiscardingWithoutAPreparedRestoreChangesNothing()
+    {
+        Assert.That(() => DataRestorePreparer.Discard(this.Target), Throws.Nothing, "A preparation discards whatever an earlier one left, and mostly, there is nothing.");
+    }
+
     /// <summary>
     /// Writes a backup of a data folder with a chat and a plugin of the user.
     /// </summary>

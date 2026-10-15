@@ -36,6 +36,9 @@ public sealed partial class DataSourceEmbeddingService
         if (activeRun is not null)
             await activeRun.Completion.Task;
 
+        // A backup copies the stores during a pause, and the copies would no longer fit together:
+        await this.pauses.WaitWhilePausedAsync(CancellationToken.None);
+
         await this.ResetPersistedStateAsync(dataSourceId, null, null, CancellationToken.None);
         this.statuses.TryRemove(dataSourceId, out _);
         PublishStatusChanged();

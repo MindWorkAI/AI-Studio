@@ -43,7 +43,7 @@ public partial class DataFolders : MSGComponentBase
         {
             var notice = T("The following is meant for experts who back up their computer with a tool of their own.");
             return this.SettingsManager.ConfigurationData.App.AllowUserToBackUpData
-                ? $"{notice} {T("To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore in the settings instead.")}"
+                ? $"{notice} {T("To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore on this page or in the settings instead.")}"
                 : notice;
         }
     }

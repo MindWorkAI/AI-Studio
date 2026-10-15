@@ -85,6 +85,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
 
     private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     private IReadOnlyCollection<NavBarItem> navItems = [];
@@ -97,6 +98,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged += this.OnDataRestoreStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -651,6 +653,40 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         await this.EnsureMandatoryInfosAcceptedAsync();
         await this.ShowDataRestoreReportAsync();
+        await this.ShowDataRestorePendingDialogAsync();
+    }
+
+    /// <summary>
+    /// Asks for the restart as soon as a restore is prepared.
+    /// </summary>
+    private void OnDataRestoreStateChanged()
+    {
+        if (this.DataRestoreService.IsRestorePending)
+            this.InvokeAsync(this.ShowDataRestorePendingDialogAsync).Observe($"{nameof(MainLayout)}: asking for the restart which applies a restore");
+    }
+
+    /// <summary>
+    /// Blocks AI Studio while a prepared restore waits for the restart, since whatever changes until
+    /// then would be lost.
+    /// </summary>
+    private async Task ShowDataRestorePendingDialogAsync()
+    {
+        if (!await this.dataRestorePendingDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            await this.DataRestoreService.StartupStateLoaded;
+            if (!this.DataRestoreService.IsRestorePending)
+                return;
+
+            var dialogReference = await this.DialogService.ShowAsync<DataRestorePendingDialog>(T("Restore of a Backup"), DialogOptions.BLOCKING_FULLSCREEN);
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.dataRestorePendingDialogSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -755,9 +791,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged -= this.OnDataRestoreStateChanged;
         this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
+        this.dataRestorePendingDialogSemaphore.Dispose();
     }
 
     #endregion

@@ -33,7 +33,25 @@ public sealed class IndexingPausesTests
     {
         var pauses = new IndexingPauses();
 
-        Assert.That(pauses.WaitWhilePausedAsync(CancellationToken.None).IsCompleted, Is.True);
+        Assert.Multiple(() =>
+        {
+            Assert.That(pauses.IsPaused, Is.False);
+            Assert.That(pauses.WaitWhilePausedAsync(CancellationToken.None).IsCompleted, Is.True);
+        });
+    }
+
+    [Test]
+    public void TheIndexingCountsAsPausedUntilTheLastPauseEnded()
+    {
+        var pauses = new IndexingPauses();
+        pauses.Begin();
+        pauses.Begin();
+        pauses.End();
+
+        Assert.That(pauses.IsPaused, Is.True, "Deleting a data source would discard its index while a backup copies it.");
+
+        pauses.End();
+        Assert.That(pauses.IsPaused, Is.False);
     }
 
     [Test]

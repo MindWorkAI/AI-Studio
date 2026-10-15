@@ -3,6 +3,16 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService
 {
     /// <summary>
+    /// Whether the indexing is paused right now, e.g., while a backup copies the indexes, or while a
+    /// restore waits for the restart.
+    /// </summary>
+    /// <remarks>
+    /// Deleting or repairing a data source waits for the end of a pause, so the user interface asks
+    /// first and tells the user instead of waiting.
+    /// </remarks>
+    public bool IsIndexingPaused => this.pauses.IsPaused;
+
+    /// <summary>
     /// Pauses the indexing of every data source, e.g., while a backup copies the indexes.
     /// </summary>
     /// <remarks>

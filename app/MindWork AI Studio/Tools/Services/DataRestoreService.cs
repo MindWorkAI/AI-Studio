@@ -321,16 +321,27 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
 
         try
         {
-            DataRestorePreparer.Discard(this.CreateTarget());
-            this.IsRestorePending = false;
-            logger.LogInformation("Discarded the prepared restore.");
+            var target = this.CreateTarget();
+            try
+            {
+                DataRestorePreparer.Discard(target);
+                logger.LogInformation("Discarded the prepared restore.");
+            }
+            finally
+            {
+                // What remains on the disk decides, should discarding have failed halfway:
+                this.IsRestorePending = DataRestorePreparer.IsPrepared(target);
+            }
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Could not discard the prepared restore.");
         }
 
-        await this.EndIndexingPauseAsync();
+        // A restore which the next start still applies keeps the indexing paused:
+        if (!this.IsRestorePending)
+            await this.EndIndexingPauseAsync();
+
         this.StateChanged?.Invoke();
     }
 

@@ -108,6 +108,11 @@ public static class DataRestorePreparer
         if (DataRestoreFollowUp.IsRestoreUnfinished(target.DataDirectory))
             throw new InvalidOperationException("The runtime has not finished the last restore yet, so it cannot be discarded.");
 
+        // First of all: should removing the rest fail halfway, the next start must not apply what is left.
+        var readyPath = Path.Join(PendingDirectory(target.DataDirectory), DataRestoreFormat.READY_FILE_NAME);
+        if (File.Exists(readyPath))
+            File.Delete(readyPath);
+
         foreach (var pendingDirectory in new[] { PendingDirectory(target.DataDirectory), PendingDirectory(target.ConfigDirectory) })
             if (Directory.Exists(pendingDirectory))
                 Directory.Delete(pendingDirectory, true);
