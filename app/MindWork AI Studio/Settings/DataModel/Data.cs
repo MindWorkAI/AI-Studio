@@ -117,6 +117,16 @@ public sealed class Data
     public List<string> AppliedEnterpriseAssistantActivations { get; set; } = [];
 
     /// <summary>
+    /// Whether AI Studio already stored the chats and the settings once more, so that every path below
+    /// the data directory in them is relative.
+    /// </summary>
+    /// <remarks>
+    /// Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md.
+    /// Remove after 2027-04-14.
+    /// </remarks>
+    public bool StoredDataPathsAreRelative { get; set; }
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;

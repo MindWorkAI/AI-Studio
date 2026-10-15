@@ -125,53 +125,22 @@ public sealed record PluginConfigurationObject
     /// provided list with results.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to parse, which must
-    /// inherit from <see cref="ConfigurationBaseObject"/>.</typeparam>
-    /// <param name="configObjectType">The type of configuration object to process, as specified
-    /// in <see cref="PluginConfigurationObjectType"/>.</param>
-    /// <param name="configObjectSelection">An expression to retrieve existing configuration objects from
-    /// the main configuration data.</param>
-    /// <param name="nextConfigObjectNumSelection">An expression to retrieve the next available configuration
-    /// object number from the main configuration data.</param>
+    /// inherit from ConfigurationBaseObject.</typeparam>
+    /// <param name="descriptor">Describes the type of configuration object: its Lua table, how to
+    /// read one entry, and where the settings keep these objects.</param>
     /// <param name="mainTable">The Lua table containing entries to parse into configuration objects.</param>
     /// <param name="configPluginId">The unique identifier of the plugin associated with the configuration
     /// objects being parsed.</param>
-    /// <param name="configObjects">The list to populate with the parsed configuration objects.
-    /// This parameter is passed by reference.</param>
+    /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run, where changes
     /// are not persisted.</param>
-    /// <param name="pluginPath">An optional parameter specifying the file path of the plugin, used for relative paths in the Lua table.</param>
+    /// <param name="pluginPath">The directory of the plugin, used for relative paths in the Lua table.</param>
     /// <returns>Returns true if parsing succeeds and configuration objects are added
     /// to the list; otherwise, false.</returns>
-    public static bool TryParse<TClass>(
-        PluginConfigurationObjectType configObjectType,
-        Expression<Func<Data, List<TClass>>> configObjectSelection,
-        Expression<Func<Data, uint>> nextConfigObjectNumSelection,
-        LuaTable mainTable,
-        Guid configPluginId,
-        ref List<PluginConfigurationObject> configObjects,
-        bool dryRun,
-        string pluginPath = ""
-    ) where TClass : ConfigurationBaseObject
+    public static bool TryParse<TClass>(ConfigurationBaseObjectDescriptor<TClass> descriptor, LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) where TClass : ConfigurationBaseObject
     {
-        var luaTableName = configObjectType switch
-        {
-            PluginConfigurationObjectType.LLM_PROVIDER => "LLM_PROVIDERS",
-            PluginConfigurationObjectType.CHAT_TEMPLATE => "CHAT_TEMPLATES",
-            PluginConfigurationObjectType.DATA_SOURCE => "DATA_SOURCES",
-            PluginConfigurationObjectType.EMBEDDING_PROVIDER => "EMBEDDING_PROVIDERS",
-            PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => "TRANSCRIPTION_PROVIDERS",
-            PluginConfigurationObjectType.PROFILE => "PROFILES",
-            PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => "DOCUMENT_ANALYSIS_POLICIES",
-
-            _ => null,
-        };
-
-        if (luaTableName is null)
-        {
-            LOG.LogError("The configuration object type '{ConfigObjectType}' is not supported yet (config plugin id: {ConfigPluginId}).", configObjectType, configPluginId);
-            return false;
-        }
-
+        var configObjectType = descriptor.Type;
+        var luaTableName = descriptor.LuaTableName;
         if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
             LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
@@ -179,7 +148,7 @@ public sealed record PluginConfigurationObject
         }
 
         var localSettingsManager = SettingsManagerAccess;
-        var storedObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
+        var storedObjects = descriptor.Selection.Compile()(localSettingsManager.ConfigurationData);
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
         for (var i = 1; i <= numberObjects; i++)
@@ -191,19 +160,7 @@ public sealed record PluginConfigurationObject
                 continue;
             }
 
-            var (wasParsingSuccessful, configObject) = configObjectType switch
-            {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
-                PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
-                PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
-
-                _ => (false, NoConfigurationObject.INSTANCE)
-            };
-
-            if (wasParsingSuccessful)
+            if (descriptor.Parser(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configObject))
             {
                 // Store it in the config object list:
                 configObjects.Add(new()
@@ -236,7 +193,7 @@ public sealed record PluginConfigurationObject
                 else
                 {
                     configObject = KeepSynchronizedTokenizer(configObject, null);
-                    if (nextConfigObjectNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
+                    if (descriptor.NextNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
                     {
                         // Case: Increment the next number was successful
                         configObject = configObject with { Num = nextNum };
@@ -330,11 +287,7 @@ public sealed record PluginConfigurationObject
     /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run.</param>
     /// <returns>True if the table was present and processed; otherwise false.</returns>
-    public static bool TryParseDataSources(
-        LuaTable mainTable,
-        Guid configPluginId,
-        ref List<PluginConfigurationObject> configObjects,
-        bool dryRun)
+    public static bool TryParseDataSources(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun)
     {
         const string LUA_TABLE_NAME = "DATA_SOURCES";
         if (!mainTable.TryGetValue(LUA_TABLE_NAME, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
@@ -698,16 +651,6 @@ public sealed record PluginConfigurationObject
 
         var fullPluginPath = Path.GetFullPath(pluginPath);
         var candidatePath = Path.GetFullPath(Path.Combine(fullPluginPath, configuredTokenizerPath));
-
-        if (candidatePath.Equals(fullPluginPath, StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        var pluginPrefix = fullPluginPath.EndsWith(Path.DirectorySeparatorChar)
-            ? fullPluginPath
-            : fullPluginPath + Path.DirectorySeparatorChar;
-
-        return candidatePath.StartsWith(pluginPrefix, StringComparison.OrdinalIgnoreCase)
-            ? candidatePath
-            : null;
+        return PathTools.IsInsideDirectory(fullPluginPath, candidatePath) ? candidatePath : null;
     }
 }

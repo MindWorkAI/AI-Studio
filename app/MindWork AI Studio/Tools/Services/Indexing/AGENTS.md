@@ -67,6 +67,12 @@ Rules which are easy to break:
   data source selection that a run got through the whole data source (`IsIndexAwaitingRebuild`). Files pass
   `null` to `PauseRunAsync`, so a folder stays out of the selection until its first indexing or its rebuild is
   complete. The mailbox passes its hash, since every mail it indexed can be searched right away.
+- **Every run passes the pause.** A backup pauses the indexing with `PauseIndexingAsync` while it copies the
+  stores. Runs wait for the end of a pause in `ProcessDataSourceRunAsync`, in front of the run gate, so start
+  every run there. A run which starts any other way writes to the stores while they are copied, and the backup
+  holds two stores which do not fit together. Discarding the stored index of a data source, when it is deleted
+  or repaired, waits for the end of a pause as well (`WaitWhilePausedAsync`); the user interface asks
+  `IsIndexingPaused` first and tells the user instead of waiting.
 - **A pass lives only while the last step left more to do.** The service drops the pass of a data source after
   every other outcome and every exception, and when the stored index is reset. A retry the user asks for, and a
   step with other embedding settings, begin a new pass (`IndexingPass.ContinueOrBegin`). A pass kept beyond that

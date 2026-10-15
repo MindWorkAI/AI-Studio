@@ -1,0 +1,28 @@
+using AIStudio.Tools.PluginSystem;
+
+namespace AIStudio.Tests.Tools.PluginSystem;
+
+/// <summary>
+/// Checks that every type of configuration object has its descriptor.
+/// </summary>
+/// <remarks>
+/// Reading the objects from a configuration plugin and removing the left-over ones go through the
+/// descriptors. A type without one would be read by neither: a configuration plugin could define such
+/// objects without effect, and the ones a removed plugin left behind would stay in the settings.
+/// </remarks>
+[TestFixture]
+public sealed class PluginConfigurationObjectDescriptorsTests
+{
+    [Test]
+    public void EveryTypeHasExactlyOneDescriptor()
+    {
+        var describedTypes = PluginConfigurationObjectDescriptors.ALL.Select(descriptor => descriptor.Type).ToList();
+        var configurableTypes = Enum.GetValues<PluginConfigurationObjectType>().Where(type => type is not PluginConfigurationObjectType.NONE and not PluginConfigurationObjectType.UNKNOWN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(describedTypes, Is.EquivalentTo(configurableTypes));
+            Assert.That(describedTypes, Is.Unique, "A type described twice would be read and cleaned up twice.");
+        });
+    }
+}

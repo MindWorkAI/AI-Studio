@@ -22,7 +22,7 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    string TokenizerPath = "",
+    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     string TokenizerFingerprint = "",
     int EmbeddingBatchSize = 0,
     int TokenLimit = 0,

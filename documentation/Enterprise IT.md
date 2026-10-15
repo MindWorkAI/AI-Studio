@@ -535,16 +535,18 @@ AI Studio has a dedicated directory for this: `.config-tests`. Anything stored t
 
 Do not use the `.config` directory for this. It belongs to your configuration web server, and AI Studio removes everything there that your organization does not reference anymore.
 
-### The data directory
+### The data and configuration directories
 
-Plugins live in the data directory of AI Studio:
+Plugins live in the data directory of AI Studio. The settings live in its configuration directory:
 
-| Platform | Data directory |
-| --- | --- |
-| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
-| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
-| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
-| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+| Platform | Data directory | Configuration directory |
+| --- | --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` | `%APPDATA%\com.github.mindwork-ai.ai-studio` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` | `~/Library/Application Support/com.github.mindwork-ai.ai-studio` |
+| Linux | `$XDG_DATA_HOME/org.mindworkai.AIStudio/data`, usually `~/.local/share/org.mindworkai.AIStudio/data` | `$XDG_CONFIG_HOME/org.mindworkai.AIStudio`, usually `~/.config/org.mindworkai.AIStudio` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/org.mindworkai.AIStudio/data` | `~/.var/app/org.mindworkai.AIStudio/config/org.mindworkai.AIStudio` |
+
+The panel **Your Data Folders** on the Information page shows both directories as AI Studio resolved them on the device at hand.
 
 ### Staging a deployment
 
@@ -772,6 +774,65 @@ With `DataMailboxes.MinimumOutboundDataRestriction`, you rule out the less stric
 `CONFIG["MAILBOX_PROVIDERS"]` offers your own mail servers in the mailbox dialog, ahead of the well-known public providers. Each entry names the server with its host, port, and encryption, and may add a hint on the username and a link to your instructions; users still sign in with their own username and password. A configuration may define several mail servers, and those of all your configurations are offered together. `plugin.lua` lists the fields.
 
 With `DataMailboxes.AllowOnlyOrganizationMailServers`, AI Studio connects to no other IMAP server. Before every connection, it compares the host of the mailbox with the hosts of your mail servers; port and encryption make no difference. A mailbox somebody added on another server before stops synchronizing at once, the embeddings page says why, and the AI no longer reads it. Its local index stays, so the mailbox comes back as it was, should you allow its server again. Switch it on together with your first mail servers, and nobody gets to add a mailbox elsewhere at all.
+
+## Backing up and restoring data
+
+Users can back up the data of AI Studio into a single `.mwbackup` file, for example to take it to a new computer, and restore it there. They find both under **Data Backup & Restore**, on the Information page and in the settings. Instead of replacing all their data, users may also add only the chats of a backup to the chats they have. Secrets such as API keys never go into a backup. These settings decide whether they may:
+
+| Setting | Effect |
+|---|---|
+| `DataApp.AllowUserToBackUpData` | `false` keeps users from writing a backup. The button stays visible but is disabled. |
+| `DataApp.AllowUserToRestoreData` | `false` keeps users from restoring a backup and from adding the chats of one. The buttons stay visible but are disabled. |
+
+Both settings start as `true`. A backup holds the chats, the text of indexed documents, and indexed mails in a single file. The file is not encrypted, and it can leave the computer on any USB stick or cloud drive. Where that must not happen, set `DataApp.AllowUserToBackUpData` to `false`.
+
+### What a backup holds
+
+A backup takes along what AI Studio needs to carry on with the same data on another computer:
+
+- the settings, without what your configurations manage, see [Settings and objects of your configurations](#settings-and-objects-of-your-configurations),
+- the chats in workspaces and the temporary chats, along with their transcripts,
+- the plugins of the user, such as the assistants they built,
+- the tokenizers chosen for providers,
+- the projects of the Visual Briefing Assistant,
+- the local index of data sources and mailboxes, together with its embeddings, so that nothing has to be embedded again. While a backup copies the index, the indexing pauses, and it carries on afterward.
+
+What stays out:
+
+- **Secrets.** API keys, passwords, and tokens stay in the OS keyring. After a restore on another computer, AI Studio lists the providers, data sources, mailboxes, and tools of the user which need theirs again. The secrets of your configurations come back with your configurations.
+- **Plugins of your organization.** Everything below `.config` and `.config-tests` stays out, and so does every plugin elsewhere which is marked with `DEPLOYED_USING_CONFIG_SERVER = true`, see [Important: Mark enterprise-managed plugins explicitly](#important-mark-enterprise-managed-plugins-explicitly). Your deployment brings them back. A plugin which your MDM solution placed without that marker counts as one of the user's own: it goes into backups, and a restore can replace or remove it.
+- **Files outside the folders of AI Studio**, such as documents attached to a chat, the folders of local data sources, the folders of the batch processing, or a bundle of root certificates. A backup keeps only their locations. After a restore, AI Studio lists the settings whose files or folders it cannot find on the new computer.
+- Plugins which come with AI Studio, tools AI Studio downloaded such as Pandoc, log files, and temporary files.
+
+### Settings and objects of your configurations
+
+Before the settings go into a backup, AI Studio leaves out every object which a configuration plugin manages: LLM, embedding, and transcription providers, profiles, chat templates, data sources, and document analysis policies. On a computer which receives your configurations, these objects come back from there, along with their API keys, and nothing appears twice. The same holds for configuration plugins the user installed themselves: they go into the backup as plugins and bring their objects back after a restore.
+
+A setting which your configuration locks stays in the backup, together with the configuration which locked it. After a restore, AI Studio treats it like the setting of a withdrawn configuration until your configuration locks it again, see [Withdrawing a configuration](#withdrawing-a-configuration). On a device which receives your configurations, the setting therefore ends up as you configured it. On one without them, the user gets back the value they had chosen before your configuration took the setting over.
+
+### How a restore works
+
+A restore replaces the data of the user with the backup, and it needs a restart: while AI Studio runs, its files are open, and on Windows, they cannot be replaced at all.
+
+1. AI Studio checks the backup. It refuses a backup made by a newer version of AI Studio, and one whose files do not match its list of contents.
+2. AI Studio unpacks the backup into a folder `.restore-pending`, one within the data directory and one within the configuration directory. This needs free space for the unpacked backup on top of the current data. Until the restart, the indexing pauses, and AI Studio asks the user to restart now or to discard the restore.
+3. At the next start, before AI Studio opens any of its files, it moves the current data into a folder `.restore-previous` and the restored data into its place, piece by piece. A piece for which the backup holds nothing stays as it was.
+4. Should a step fail, AI Studio moves everything back, and the user keeps their data as it was. Should even that fail, AI Studio tries again at every start.
+5. Once the restored settings have loaded, AI Studio deletes the replaced data from `.restore-previous`, reports the outcome, and lists what remains to do, such as entering API keys again.
+
+A restore leaves the plugins of your organization, the plugins which come with AI Studio, and the log files as they are. When a restore fails, the log file `events.log` in the data directory tells why, in the entries from the source `Restore`.
+
+### Backing up with a tool of your own
+
+If you back up the user profiles of your devices anyway, for example with Restic, Borg, or the backup solution of your organization, the Information page helps: its panel **Your Data Folders** shows where the data and configuration directories lie, and which of their contents belong into a backup. [The data and configuration directories](#the-data-and-configuration-directories) lists their usual places. The panel derives this from the same list the backups of AI Studio follow, and it stays complete even when you set `DataApp.AllowUserToBackUpData` to `false`.
+
+Keep in mind:
+
+- Copy the local index below `databases/` only while AI Studio is closed. While it runs, these files change, and on Windows, they are locked. A copy taken then may not be readable afterward.
+- Secrets do not lie in these folders. They stay in the OS keyring.
+- On macOS, the data directory lies within the configuration directory.
+- No pattern of paths tells the plugins which your MDM solution placed outside `.config` apart from the user's own plugins. The panel lists the folders of those marked with `DEPLOYED_USING_CONFIG_SERVER = true`, so you can leave them out.
+- AI Studio stores the paths to its own files, such as transcripts and tokenizers, relative to the data directory. A copy therefore also works on a computer whose folders lie elsewhere, for example under another user name, as long as AI Studio v26.10.1 or later ran before the copy was taken. Paths to the user's own files, such as attachments or the folders of data sources, stay as they are.
 
 ## Letting users provide their own API key
 

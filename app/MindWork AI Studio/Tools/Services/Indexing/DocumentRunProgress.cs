@@ -49,6 +49,29 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DocumentRunProgress).Namespace, nameof(DocumentRunProgress));
 
+    /// <summary>
+    /// Makes the progress of a run which reads nothing, showing the data source as the index holds it.
+    /// </summary>
+    /// <remarks>
+    /// For a run which stops before it looks at a single document, e.g. because the server of a
+    /// mailbox or the folder of a data source cannot be reached. The documents skipped for good keep
+    /// their place in the list, so the user still sees why.
+    /// </remarks>
+    /// <param name="context">The run.</param>
+    /// <param name="indexedDocuments">How many documents the index holds.</param>
+    /// <param name="logger">The logger of the embedding service.</param>
+    /// <returns>The progress, ready to publish the stored state or why the run stopped.</returns>
+    public static DocumentRunProgress FromStoredState(IndexedRunContext context, int indexedDocuments, ILogger logger)
+    {
+        var permanentFailures = context.Manifest.PermanentFailures;
+        var progress = new DocumentRunProgress(context, indexedDocuments + permanentFailures.Count, 0, string.Empty, [], logger);
+        progress.RecordUnchanged(indexedDocuments);
+        foreach (var (key, failure) in permanentFailures)
+            progress.RecordStillUnreadable(key, failure);
+
+        return progress;
+    }
+
     public int TotalDocuments => totalDocuments;
 
     /// <summary>

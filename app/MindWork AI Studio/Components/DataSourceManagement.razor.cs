@@ -419,6 +419,9 @@ public partial class DataSourceManagement : MSGComponentBase
         if (dataSource.IsEnterpriseConfiguration)
             return;
 
+        if (await this.RefuseWhileIndexingPaused(T("Delete Data Source")))
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
@@ -455,6 +458,21 @@ public partial class DataSourceManagement : MSGComponentBase
             await this.DataSourceEmbeddingService.RemoveDataSourceAsync(dataSource);
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
+    }
+
+    /// <summary>
+    /// Tells the user to wait while a backup copies the indexes or a restore waits for the restart:
+    /// deleting a data source discards its index, which waits for the end of the pause.
+    /// </summary>
+    /// <param name="title">The title of the action which waits.</param>
+    /// <returns>True when the action has to wait.</returns>
+    private async Task<bool> RefuseWhileIndexingPaused(string title)
+    {
+        if (!this.DataSourceEmbeddingService.IsIndexingPaused)
+            return false;
+
+        await this.DialogService.ShowMessageBox(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
+        return true;
     }
 
     /// <summary>
@@ -531,6 +549,9 @@ public partial class DataSourceManagement : MSGComponentBase
     private async Task DeleteMailbox(DataSourceMailbox mailbox)
     {
         if (mailbox.IsEnterpriseConfiguration)
+            return;
+
+        if (await this.RefuseWhileIndexingPaused(T("Delete Mailbox")))
             return;
 
         var dialogParameters = new DialogParameters<ConfirmDialog>

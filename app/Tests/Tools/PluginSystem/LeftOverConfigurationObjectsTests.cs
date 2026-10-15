@@ -60,7 +60,7 @@ public sealed class LeftOverConfigurationObjectsTests
     [Test]
     public async Task TheObjectsOfAPluginWhichDidNotStartStay()
     {
-        var wasChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, [new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid> { PLUGIN_ID }, []);
+        var wasChanged = await PluginConfigurationObjectDescriptors.CHAT_TEMPLATE.CleanLeftOverAsync([new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid> { PLUGIN_ID }, []);
 
         Assert.Multiple(() =>
         {
@@ -72,7 +72,7 @@ public sealed class LeftOverConfigurationObjectsTests
     [Test]
     public async Task TheObjectsOfAPluginWhichStartedWithoutThemAreRemoved()
     {
-        var wasChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, [new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid>(), []);
+        var wasChanged = await PluginConfigurationObjectDescriptors.CHAT_TEMPLATE.CleanLeftOverAsync([new AvailablePlugin()], new HashSet<Guid>(), new HashSet<Guid>(), []);
 
         Assert.Multiple(() =>
         {
