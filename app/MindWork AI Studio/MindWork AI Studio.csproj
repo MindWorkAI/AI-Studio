@@ -17,6 +17,16 @@
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
+
+        <!--
+            SelfContained makes the SDK pick the RID of the machine which runs the restore, and the lock file
+            records that RID. Without a fixed list, a restore on any other platform rewrites the lock file.
+            Hence, we list all six RIDs we ship, so that the lock file stays the same everywhere. When we add a
+            platform, add its RID here as well. The price: each restore downloads the runtime packs of all six
+            platforms. Please note that `dotnet restore -r` replaces this list; use a plain `dotnet restore` or
+            `dotnet publish -r` instead.
+        -->
+        <RuntimeIdentifiers>osx-arm64;osx-x64;linux-x64;linux-arm64;win-x64;win-arm64</RuntimeIdentifiers>
         
         <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
         <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
