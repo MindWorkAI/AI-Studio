@@ -66,7 +66,16 @@ public static class CapabilitySnapshot
     /// </remarks>
     private const string NO_SYSTEM_PROMPT_ROLE = "(unknown)";
 
-    private const string HEADER =
+    /// <summary>
+    /// The comment block every snapshot starts with.
+    /// </summary>
+    /// <remarks>
+    /// A raw string literal takes its line breaks from this source file as it was checked out, and Git
+    /// for Windows checks it out with CRLF unless told otherwise. The snapshot has no carriage returns,
+    /// so the header must not bring any along: otherwise no snapshot on Windows ever matches, and the
+    /// failure names no model at all.
+    /// </remarks>
+    private static readonly string HEADER =
         """
         # What the rules answer, for every model of the corpus.
         #
@@ -93,7 +102,7 @@ public static class CapabilitySnapshot
         # what each of them must answer, but it states capabilities alone.
         #
 
-        """;
+        """.ReplaceLineEndings("\n");
 
     /// <summary>
     /// The directory this source file lives in, filled in by the compiler.
