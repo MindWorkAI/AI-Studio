@@ -355,26 +355,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         
-        // Handle configured LLM providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured transcription providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, x => x.NextTranscriptionNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured embedding providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, x => x.NextEmbeddingNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured chat templates:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured data sources:
-        PluginConfigurationObject.TryParseDataSources(mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured profiles:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured document analysis policies:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        // Handle configured objects such as LLM providers, chat templates, or data sources:
+        foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
+            descriptor.TryParse(mainTable, this.Id, this.configObjects, dryRun, this.PluginPath);
 
         // Handle configured mandatory infos:
         this.TryReadMandatoryInfos(mainTable);
