@@ -7,6 +7,7 @@ using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tools.Services;
 
@@ -25,7 +26,7 @@ namespace AIStudio.Tools.Services;
 /// At the start which applied a restore, the service holds the report of the runtime until the user
 /// saw it, cf. DataRestoreFollowUpService.
 /// </remarks>
-public sealed class DataRestoreService(ILogger<DataRestoreService> logger, SettingsManager settingsManager, RustService rustService, DataSourceEmbeddingService embeddingService, DataBackupService dataBackupService, AIJobService aiJobService, MediaTranscriptionService mediaTranscriptionService)
+public sealed class DataRestoreService(ILogger<DataRestoreService> logger, SettingsManager settingsManager, RustService rustService, ToolRegistry toolRegistry, ToolSettingsService toolSettingsService, DataSourceEmbeddingService embeddingService, DataBackupService dataBackupService, AIJobService aiJobService, MediaTranscriptionService mediaTranscriptionService)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataRestoreService).Namespace, nameof(DataRestoreService));
 
@@ -177,13 +178,41 @@ public sealed class DataRestoreService(ILogger<DataRestoreService> logger, Setti
 
         try
         {
-            return await DataRestoreOpenPoints.CollectAsync(settingsManager.ConfigurationData, new RustStoredSecrets(rustService));
+            return await DataRestoreOpenPoints.CollectAsync(settingsManager.ConfigurationData, new RustStoredSecrets(rustService), this.FindToolSecrets());
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Could not find what remains to do after the restore.");
             return [];
         }
+    }
+
+    /// <summary>
+    /// Finds the secret settings of the tools which the user set up, i.e., saved the settings of.
+    /// </summary>
+    /// <remarks>
+    /// A setting the organization fixed comes from its configuration plugin, and one the tool does
+    /// not show for the saved settings means nothing for them. Which of the remaining ones held a
+    /// value nobody knows: a backup holds no secrets, so the dialog asks to enter them again if they
+    /// were used.
+    /// </remarks>
+    private List<DataRestoreToolSecret> FindToolSecrets()
+    {
+        var toolSecrets = new List<DataRestoreToolSecret>();
+        foreach (var definition in toolRegistry.GetAllDefinitions())
+        {
+            if (toolRegistry.GetImplementation(definition.ImplementationKey) is not { } implementation)
+                continue;
+
+            if (!settingsManager.ConfigurationData.Tools.Settings.TryGetValue(definition.Id, out var storedValues))
+                continue;
+
+            foreach (var (fieldName, field) in definition.SettingsSchema.Properties)
+                if (field.Secret && !toolSettingsService.IsFieldLocked(definition, fieldName) && implementation.IsSettingsFieldVisible(fieldName, storedValues))
+                    toolSecrets.Add(new(definition.Id, fieldName, implementation.GetDisplayName(), implementation.GetSettingsFieldLabel(fieldName, field)));
+        }
+
+        return toolSecrets;
     }
 
     /// <summary>

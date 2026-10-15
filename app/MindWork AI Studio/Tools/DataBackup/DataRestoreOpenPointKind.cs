@@ -32,6 +32,12 @@ public enum DataRestoreOpenPointKind
     MAILBOX_WITHOUT_PASSWORD,
 
     /// <summary>
+    /// A tool which the user set up has no value for a secret setting on this computer, e.g., for
+    /// the API key of a search service.
+    /// </summary>
+    TOOL_WITHOUT_SECRET,
+
+    /// <summary>
     /// A local data source names a file or folder which does not exist on this computer.
     /// </summary>
     DATA_SOURCE_NOT_FOUND,

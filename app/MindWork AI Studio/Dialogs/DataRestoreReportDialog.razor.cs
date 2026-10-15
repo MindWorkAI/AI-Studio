@@ -90,6 +90,7 @@ public partial class DataRestoreReportDialog : MSGComponentBase
         DataRestoreOpenPointKind.TRANSCRIPTION_PROVIDER_WITHOUT_API_KEY => string.Format(T("Enter the API key of the transcription provider '{0}' again, if it needs one."), openPoint.Name),
         DataRestoreOpenPointKind.DATA_SOURCE_WITHOUT_SECRET => string.Format(T("Enter the password or token of the data source '{0}' again."), openPoint.Name),
         DataRestoreOpenPointKind.MAILBOX_WITHOUT_PASSWORD => string.Format(T("Enter the password of the mailbox '{0}' again."), openPoint.Name),
+        DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET => string.Format(T("Enter the setting '{1}' of the tool '{0}' again, if you used it."), openPoint.Name, openPoint.Setting),
         DataRestoreOpenPointKind.DATA_SOURCE_NOT_FOUND => string.Format(T("The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew."), openPoint.Name),
         DataRestoreOpenPointKind.BATCH_PROCESSING_PATH_NOT_FOUND => string.Format(T("The batch processing uses '{0}', which does not exist on this computer."), openPoint.Name),
         DataRestoreOpenPointKind.CERTIFICATE_BUNDLE_NOT_FOUND => string.Format(T("The file with your own root certificates, '{0}', does not exist on this computer."), openPoint.Name),

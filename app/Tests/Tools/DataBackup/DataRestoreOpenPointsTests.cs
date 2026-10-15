@@ -52,7 +52,7 @@ public sealed class DataRestoreOpenPointsTests
         settings.DataSources.Add(new DataSourceERI_V1 { Id = "plugin-server", Name = "ERI server of the organization", AuthMethod = AuthMethod.TOKEN, IsEnterpriseConfiguration = true, EnterpriseConfigurationPluginId = PLUGIN_ID });
         settings.Mailboxes.Add(new DataSourceMailbox { Id = "user-mailbox", Name = "My mailbox", AuthMethod = MailboxAuthMethod.PASSWORD });
 
-        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets("My Anthropic"));
+        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets("My Anthropic"), []);
 
         Assert.That(openPoints, Is.EqualTo(new DataRestoreOpenPoint[]
         {
@@ -81,7 +81,7 @@ public sealed class DataRestoreOpenPointsTests
         settings.ERI.ERIServers.Add(new DataERIServer { ServerName = "Wiki server", WriteToFilesystem = true, BaseDirectory = missingFolder });
         settings.ERI.ERIServers.Add(new DataERIServer { ServerName = "Draft server", WriteToFilesystem = false, BaseDirectory = missingFolder });
 
-        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets());
+        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets(), []);
 
         Assert.That(openPoints, Is.EqualTo(new DataRestoreOpenPoint[]
         {
@@ -101,9 +101,23 @@ public sealed class DataRestoreOpenPointsTests
         settings.App.ExternalHttpCustomRootCertificatesEnabled = false;
         settings.App.ExternalHttpCustomRootCertificateBundlePath = Path.Combine(this.testDirectory, "missing.pem");
 
-        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets());
+        var openPoints = await DataRestoreOpenPoints.CollectAsync(settings, new StoredSecrets(), []);
 
         Assert.That(openPoints, Is.Empty);
+    }
+
+    [Test]
+    public async Task TheMissingSecretsOfTheToolsAreOpenPoints()
+    {
+        DataRestoreToolSecret[] toolSecrets =
+        [
+            new("web_search", "tavily.apiKey", "Web search", "Tavily API Key"),
+            new("web_search", "staan.apiKey", "Web search", "Staan API Key"),
+        ];
+
+        var openPoints = await DataRestoreOpenPoints.CollectAsync(new Data(), new StoredSecrets("staan.apiKey"), toolSecrets);
+
+        Assert.That(openPoints, Is.EqualTo(new DataRestoreOpenPoint[] { new(DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET, "Web search", "Tavily API Key") }));
     }
 
     /// <summary>

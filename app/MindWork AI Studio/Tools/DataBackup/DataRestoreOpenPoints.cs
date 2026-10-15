@@ -2,6 +2,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Tools.DataBackup;
 
@@ -9,9 +10,9 @@ namespace AIStudio.Tools.DataBackup;
 /// Finds what the user still has to do after a restore.
 /// </summary>
 /// <remarks>
-/// A backup holds no secrets, so the providers, data sources, and mailboxes of the user lack them on
-/// another computer. Those of the organization do not: their configuration plugin brings them along
-/// with their secrets. The files and folders which the settings name may be missing, too, wherever
+/// A backup holds no secrets, so the providers, data sources, mailboxes, and tools of the user lack
+/// them on another computer. Those of the organization do not: their configuration plugin brings them
+/// along with their secrets. The files and folders which the settings name may be missing, too, wherever
 /// they come from.
 /// </remarks>
 public static class DataRestoreOpenPoints
@@ -21,8 +22,9 @@ public static class DataRestoreOpenPoints
     /// </summary>
     /// <param name="settings">The restored settings.</param>
     /// <param name="secrets">Tells which secrets this computer holds.</param>
+    /// <param name="toolSecrets">The secret settings of the tools which the user set up. Only the tools know which of their settings are secret, cf. DataRestoreService.</param>
     /// <returns>The open points, in the order of the settings.</returns>
-    public static async Task<IReadOnlyList<DataRestoreOpenPoint>> CollectAsync(Data settings, IStoredSecrets secrets)
+    public static async Task<IReadOnlyList<DataRestoreOpenPoint>> CollectAsync(Data settings, IStoredSecrets secrets, IReadOnlyList<DataRestoreToolSecret> toolSecrets)
     {
         var openPoints = new List<DataRestoreOpenPoint>();
         foreach (var provider in settings.Providers.Where(provider => !provider.IsEnterpriseConfiguration && provider.UsedLLMProvider.IsAPIKeyNeeded(provider.Host)))
@@ -60,6 +62,10 @@ public static class DataRestoreOpenPoints
         foreach (var mailbox in settings.Mailboxes.Where(mailbox => mailbox is { IsEnterpriseConfiguration: false, AuthMethod: MailboxAuthMethod.PASSWORD }))
             if (!await secrets.HasSecretAsync(mailbox, SecretStoreType.DATA_SOURCE))
                 openPoints.Add(new(DataRestoreOpenPointKind.MAILBOX_WITHOUT_PASSWORD, mailbox.Name));
+
+        foreach (var toolSecret in toolSecrets)
+            if (!await secrets.HasSecretAsync(new ToolSettingsSecretId(toolSecret.ToolId, toolSecret.FieldName), SecretStoreType.TOOL_SETTINGS))
+                openPoints.Add(new(DataRestoreOpenPointKind.TOOL_WITHOUT_SECRET, toolSecret.ToolName, toolSecret.SettingLabel));
 
         var batchProcessing = settings.BatchProcessing;
         foreach (var folder in new[] { batchProcessing.InputDirectory, batchProcessing.OutputDirectory })
