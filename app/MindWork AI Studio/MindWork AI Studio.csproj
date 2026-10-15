@@ -63,9 +63,9 @@
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
       <PackageReference Include="MailKit" Version="4.18.1" />
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.20" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.20" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.20" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.21" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.21" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.21" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
