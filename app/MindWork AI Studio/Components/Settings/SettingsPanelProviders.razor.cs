@@ -52,7 +52,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     private async Task ImportProvider()
     {
-        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.LLM_PROVIDER, T("Import LLM Provider"));
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.LLM_PROVIDER, T("Import Provider"));
         if (import?.ConfigurationObject is not AIStudio.Settings.Provider provider)
             return;
 

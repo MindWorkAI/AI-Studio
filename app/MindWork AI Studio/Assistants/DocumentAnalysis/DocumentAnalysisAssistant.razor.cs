@@ -491,7 +491,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if (this.ArePolicyControlsDisabled)
             return;
 
-        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, T("Import document analysis policy"));
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, T("Import policy"));
         if (import?.ConfigurationObject is not DataDocumentAnalysisPolicy policy || this.ArePolicyControlsDisabled)
             return;
 

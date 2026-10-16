@@ -39,7 +39,7 @@ public sealed class ConfigurationSnippetParser
         issue = string.Empty;
         if (string.IsNullOrWhiteSpace(source) || source.Length > 1_000_000)
         {
-            issue = TB("Paste one exported configuration snippet (up to 1 MB).");
+            issue = TB("Please paste one exported configuration of at most 1 MB.");
             return false;
         }
 
@@ -58,7 +58,7 @@ public sealed class ConfigurationSnippetParser
             parser.Expect('#');
             parser.ExpectWord("CONFIG");
             if (parser.ReadBracketedString() != expectedSection)
-                throw new FormatException(TB("The configuration section names do not match."));
+                throw new FormatException(TB("The pasted configuration names two different types of configuration."));
             parser.Expect('+');
             parser.Expect('1');
             parser.Expect(']');
@@ -66,7 +66,7 @@ public sealed class ConfigurationSnippetParser
             table = parser.ReadTable(0);
             parser.SkipTrivia();
             if (parser.position != source.Length)
-                throw new FormatException(TB("The snippet must contain exactly one table assignment and no executable code."));
+                throw new FormatException(TB("The pasted configuration must consist of exactly one exported item, without any further code."));
             return true;
         }
         catch (FormatException exception)
@@ -79,7 +79,7 @@ public sealed class ConfigurationSnippetParser
     private LuaTable ReadTable(int depth)
     {
         if (depth > 32)
-            throw new FormatException(TB("The snippet contains too many nested tables."));
+            throw new FormatException(TB("The pasted configuration contains too many nested tables."));
         this.Expect('{');
         var table = new LuaTable();
         var arrayIndex = 1;
@@ -141,7 +141,7 @@ public sealed class ConfigurationSnippetParser
         }
         if (this.position > start && double.TryParse(this.source[start..this.position], NumberStyles.Float, CultureInfo.InvariantCulture, out var number) && double.IsFinite(number))
             return number;
-        throw new FormatException(string.Format(TB("Only literal values are allowed at character {0}; executable Lua is not accepted."), start + 1));
+        throw new FormatException(string.Format(TB("At character {0}, the pasted configuration contains code. Only plain values such as texts, numbers, true, and false are allowed."), start + 1));
     }
 
     private bool IsLongStringStart() => this.IsLongBracketAt(this.position);
@@ -229,7 +229,7 @@ public sealed class ConfigurationSnippetParser
             this.SkipLineBreak();
             var end = this.source.IndexOf("]" + equals + "]", this.position, StringComparison.Ordinal);
             if (end < 0)
-                throw new FormatException(TB("Unterminated long string."));
+                throw new FormatException(TB("A long string is not closed."));
             var value = NormalizeLineBreaks(this.source[this.position..end]);
             this.position = end + equals.Length + 2;
             return value;
@@ -244,7 +244,7 @@ public sealed class ConfigurationSnippetParser
             if (c == quote)
                 return builder.ToString();
             if (c is '\r' or '\n')
-                throw new FormatException(TB("A quoted string contains an unescaped newline."));
+                throw new FormatException(TB("A quoted string contains a line break, which Lua does not allow."));
             if (c != '\\')
             {
                 builder.Append(c);
@@ -257,10 +257,10 @@ public sealed class ConfigurationSnippetParser
             {
                 'n' => '\n', 'r' => '\r', 't' => '\t', 'a' => '\a', 'b' => '\b', 'f' => '\f', 'v' => '\v',
                 '\\' => '\\', '"' => '"', '\'' => '\'',
-                _ => throw new FormatException(string.Format(TB("Unsupported string escape sequence: {0}"), "\\" + c)),
+                _ => throw new FormatException(string.Format(TB("The escape sequence {0} is not supported."), "\\" + c)),
             });
         }
-        throw new FormatException(TB("Unterminated quoted string."));
+        throw new FormatException(TB("A quoted string is not closed."));
     }
 
     private void SkipTrivia()

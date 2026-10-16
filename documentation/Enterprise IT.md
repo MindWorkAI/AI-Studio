@@ -621,15 +621,35 @@ Some exports ask a question first: a provider with an API key offers to include 
 
 Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
 
-### Importing one exported item for personal use
+### Importing an exported item
 
-Each parent screen has a button naming the item to import beside **Add** for profiles, LLM providers, embedding providers, transcription providers, chat templates, and document analysis policies. The data source screen has **Import ERI v1 Data Source** beside **Add Data Source**. Copy an exported snippet from the item's **Export configuration** control, paste one snippet of the matching type into the import dialog, and choose its item-specific import button. AI Studio reads the table as data; it does not run Lua code. The existing creation form then opens with its fields filled in. Review them and choose **Add** to create the item. Canceling either dialog leaves nothing saved. Tool Settings snippets cannot be imported this way.
+Not everything worth sharing calls for a configuration plugin. Say somebody built a good chat template and wants to hand it to three colleagues: they export it as above, and each colleague imports it as a template of their own. Every item in the table above except tools has an **Import** button next to its **Add** button, e.g., **Import Chat Template** or **Import Provider**. It opens a dialog to paste the exported fragment into.
 
-The imported item receives a new ID and the next local number. It belongs to you, even if the snippet came from an organization configuration. Existing provider, profile, tool, and data source references are kept; unavailable references are flagged so you can review them. Chat template attachments must point to existing local files. Relink or remove any missing or relative paths in the creation dialog before saving.
+- **Data only.** AI Studio reads the fragment with the same rules as a configuration plugin, but it never runs it. A fragment which contains anything other than values, such as a function call, a variable, or an expression, is refused.
+- **An item of the user's own.** The imported item gets an ID of its own and belongs to no configuration plugin, even when the fragment came from one. Importing the same fragment twice gives two items.
+- **Reviewed before it is saved.** Providers, profiles, chat templates, and data sources open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
+- **Hints first.** Before that, the dialog lists what the user should know: a preselected provider, profile, data source, or tool which does not exist on this computer, a tokenizer which is not on this computer and is therefore left out, an API key which cannot be decrypted, and every local file which a chat template would attach to each of its chats. Attachments which are not on this computer are relinked or removed in the form.
+- **Secrets.** An API key, token, or password which the export included in encrypted form is decrypted only where the encryption secret of your organization is configured, see [Encrypted API Keys](#encrypted-api-keys). Without it, a provider is imported without its key, and an ERI data source with a token or password cannot be imported at all. Data sources which sign in with Kerberos cannot be imported either.
+- **No connection on its own.** Importing contacts no server. The user loads the models of a provider, or tests the connection of a data source, in the form.
 
-If an exported provider or ERI source contains an `ENC:v1` credential, AI Studio can fill it only on a device with the matching enterprise encryption secret. Otherwise, enter your own key, token, or password. A credential is stored in the local operating system secret store only when you save the item. Exporting still requires **Show administration settings**.
+Exporting needs **Show administration settings**; importing does not.
 
-All eight snippet import settings default to `true`. `DataApp.AllowUserToImportConfigurationSnippets` is the master switch; `DataApp.AllowUserToImportProfile`, `DataApp.AllowUserToImportLLMProvider`, `DataApp.AllowUserToImportEmbeddingProvider`, `DataApp.AllowUserToImportTranscriptionProvider`, `DataApp.AllowUserToImportChatTemplate`, `DataApp.AllowUserToImportERIDataSource`, and `DataApp.AllowUserToImportDocumentAnalysisPolicy` control the seven item types. The master and matching item setting must both allow the import. Provider imports also require `DataApp.AllowUserToAddProvider` and the matching provider Add permission. A blocked Import button stays visible with a lock. AI Studio checks these permissions when opening the import dialog and again before saving. Plugin archive import permissions are independent.
+#### Allowing or locking imports
+
+Each of these settings is `true` by default:
+
+| Setting | Allows importing |
+|---|---|
+| `DataApp.AllowUserToImportConfigurationSnippets` | anything at all |
+| `DataApp.AllowUserToImportProfile` | profiles |
+| `DataApp.AllowUserToImportLLMProvider` | LLM providers |
+| `DataApp.AllowUserToImportEmbeddingProvider` | embedding providers |
+| `DataApp.AllowUserToImportTranscriptionProvider` | transcription providers |
+| `DataApp.AllowUserToImportChatTemplate` | chat templates |
+| `DataApp.AllowUserToImportERIDataSource` | ERI data sources |
+| `DataApp.AllowUserToImportDocumentAnalysisPolicy` | document analysis policies |
+
+An import needs both the first setting and the one of its type. A provider also needs what adding one by hand needs: `DataApp.AllowUserToAddProvider` and the setting of its kind, such as `DataApp.AllowUserToAddLLMProvider`. A locked **Import** button stays visible with a lock. The permission is checked once more when the user saves, so locking imports while somebody fills in a form still holds. Importing plugin archives has a setting of its own, `DataApp.AllowUserToImportPlugins`.
 
 ## Encrypted API Keys
 

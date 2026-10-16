@@ -66,7 +66,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task ImportEmbeddingProvider()
     {
-        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding Provider"));
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding"));
         if (import?.ConfigurationObject is not EmbeddingProvider embeddingProvider)
             return;
 

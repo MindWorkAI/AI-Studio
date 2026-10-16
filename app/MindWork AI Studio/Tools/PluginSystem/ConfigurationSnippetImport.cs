@@ -98,7 +98,7 @@ public static class ConfigurationSnippetImport
             case ChatTemplate template:
                 var localPaths = attachmentPaths.Where(IsLocalFile).ToList();
                 if (localPaths.Count > 0)
-                    hints.Add(string.Format(TB("The chat template attaches these files of this computer to every chat started with it: {0}. Please check that you want to share them."), string.Join(", ", localPaths)));
+                    hints.Add(string.Format(TB("The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them."), string.Join(", ", localPaths)));
 
                 result = new(MakeLocal(template) with { FileAttachments = localPaths.Select(FileAttachment.FromPath).ToList() }, string.Empty, hints, attachmentPaths.Except(localPaths).ToList());
                 return true;

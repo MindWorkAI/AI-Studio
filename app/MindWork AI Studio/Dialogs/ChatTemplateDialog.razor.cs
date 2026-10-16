@@ -308,7 +308,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         {
             if (!IsExistingFile(replacementPath))
             {
-                this.relinkIssue = string.Format(T("Relink the missing attachment '{0}' to an existing local file or remove it before saving."), originalPath);
+                this.relinkIssue = string.Format(T("Please relink the attachment '{0}' to a file on this computer or remove it before you save."), originalPath);
                 return;
             }
         }

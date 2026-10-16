@@ -290,7 +290,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                     this.dataSelectedRetrievalProcess = importedRetrieval;
                 else
                 {
-                    this.importRetrievalIssue = string.Format(T("The imported retrieval process '{0}' is unavailable. Select another process before saving."), this.importedRetrievalId);
+                    this.importRetrievalIssue = string.Format(T("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
                     this.dataSelectedRetrievalProcess = default;
                 }
 

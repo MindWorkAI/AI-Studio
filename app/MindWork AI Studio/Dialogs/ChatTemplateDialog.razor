@@ -99,7 +99,7 @@
                 @if (this.HasUnresolvedAttachments)
                 {
                     <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.WarningAmber" Class="mb-3">
-                        @T("Some attachments in this chat template are missing. Relink or remove them before adding the template.")
+                        @T("Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.")
                     </MudAlert>
                 }
                 @if (!string.IsNullOrWhiteSpace(this.relinkIssue))
@@ -114,7 +114,7 @@
                         <MudTextField T="string" Value="@attachment.ReplacementPath"
                                       ValueChanged="@(value => this.UpdateRelinkPath(currentIndex, value))"
                                       Label="@string.Format(T("Relink attachment: {0}"), attachment.OriginalPath)"
-                                      HelperText="@T("Enter an absolute path to an existing local file, or remove this attachment.")" Variant="Variant.Outlined" Immediate="@true" />
+                                      HelperText="@T("Enter the full path of a file on this computer, or remove the attachment.")" Variant="Variant.Outlined" Immediate="@true" />
                         <MudTooltip Text="@T("Remove this attachment")">
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => this.RemoveAttachmentToRelink(currentIndex))" />
                         </MudTooltip>

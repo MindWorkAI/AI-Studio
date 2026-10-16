@@ -187,7 +187,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task ImportERIDataSource()
     {
-        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import Data Source"));
         if (import?.ConfigurationObject is not DataSourceERI_V1 dataSource)
             return;
 

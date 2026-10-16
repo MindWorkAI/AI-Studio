@@ -60,7 +60,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 
     private async Task ImportTranscriptionProvider()
     {
-        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import Transcription Provider"));
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import transcription provider"));
         if (import?.ConfigurationObject is not TranscriptionProvider transcriptionProvider)
             return;
 

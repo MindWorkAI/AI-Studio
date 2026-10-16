@@ -66,7 +66,7 @@ public partial class ConfigurationSnippetImportDialog : MSGComponentBase
         //
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(this.Type))
         {
-            this.issue = T("Import is locked by your organization.");
+            this.issue = T("Your organization does not allow importing this type of configuration.");
             this.importWithHints = null;
             return;
         }
