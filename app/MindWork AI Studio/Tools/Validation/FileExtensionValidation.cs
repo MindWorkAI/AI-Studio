@@ -1,4 +1,3 @@
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -59,7 +58,6 @@ public static class FileExtensionValidation
             return false;
         }
 
-        var capabilities = provider?.GetModelCapabilities() ?? new();
         if (FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE))
         {
             switch (useCae)
@@ -76,8 +74,7 @@ public static class FileExtensionValidation
                     return true;
                 
                 // In this use case, we can check the provider capabilities:
-                case UseCase.ATTACHING_CONTENT when capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) ||
-                                                    capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT):
+                case UseCase.ATTACHING_CONTENT when provider?.SupportsImageInput() is true:
                     return true;
                 
                 // We know that images are not supported:

@@ -7,6 +7,7 @@ using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using SharedTools;
 
@@ -22,6 +23,11 @@ namespace AIStudio.Settings.DataModel;
 public readonly record struct DataSourceERI_V1 : IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
+
+    /// <summary>
+    /// What an export writes as the shared username when the data source has none to export.
+    /// </summary>
+    public const string SHARED_USERNAME_PLACEHOLDER = "<shared username>";
 
     public DataSourceERI_V1()
     {
@@ -75,6 +81,43 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public async Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
     {
+        var latestUserPrompt = lastUserPrompt switch
+        {
+            ContentText text => text.Text,
+            ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
+                ? base64Image
+                : string.Empty,
+            _ => string.Empty
+        };
+
+        return await this.RetrieveDataAsync(latestUserPrompt, lastUserPrompt.ToERIContentType, thread, this.MaxMatches, token) ?? [];
+    }
+
+    /// <inheritdoc />
+    public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
+    {
+        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        if (this.MaxMatches == 0)
+            return RetrievalPage.EMPTY;
+
+        //
+        // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
+        // thread still tells the server what the conversation is about. Nor does it know an offset:
+        // the server returns the whole window, and the page is cut from it here. Hence, the pages
+        // are only as stable as the order in which the server returns its matches. A server which
+        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        //
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        if (contexts is null)
+            return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
+
+        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
+        return new RetrievalPage(pageContexts, hasMore);
+    }
+
+    /// <returns>What the ERI server found, or null when it could not be searched.</returns>
+    private async Task<IReadOnlyList<IRetrievalContext>?> RetrieveDataAsync(string latestUserPrompt, ContentType latestUserPromptType, ChatThread thread, int maxMatches, CancellationToken token)
+    {
         // Important: Do not dispose the RustService here, as it is a singleton.
         var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
         var logger = Program.SERVICE_PROVIDER.GetRequiredService<ILogger<DataSourceERI_V1>>();
@@ -85,18 +128,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         {
             var retrievalRequest = new RetrievalRequest
             {
-                LatestUserPromptType = lastUserPrompt.ToERIContentType,
-                LatestUserPrompt = lastUserPrompt switch
-                {
-                    ContentText text => text.Text,
-                    ContentImage image => await image.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image 
-                        : string.Empty,
-                    _ => string.Empty
-                },
+                LatestUserPromptType = latestUserPromptType,
+                LatestUserPrompt = latestUserPrompt,
                 
                 Thread = await thread.ToERIChatThread(token),
-                MaxMatches = this.MaxMatches,
+                MaxMatches = maxMatches,
                 RetrievalProcessId = this.SelectedRetrievalId,
                 Parameters = null, // The ERI server selects useful default parameters
             };
@@ -148,14 +184,14 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             }
 
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
-            return [];
+            return null;
         }
 
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
-        return [];
+        return null;
     }
 
-    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
+    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, bool dryRun, out DataSourceERI_V1 dataSource)
     {
         dataSource = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -164,9 +200,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
-        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
+        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || !DataSourceValidation.IsNameValid(name))
         {
-            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name of at most {DataSourceValidation.MAX_NAME_LENGTH} characters without control characters. (Plugin ID: {configPluginId})");
             return false;
         }
 
@@ -270,7 +306,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             EnterpriseConfigurationPluginId = configPluginId,
         };
 
-        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
+        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource, dryRun);
     }
 
     /// <summary>
@@ -288,7 +324,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         switch (this.AuthMethod)
         {
             case AuthMethod.TOKEN:
-                secretLine = CreateSecretLine("Token", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.TOKEN), encryptedSecret);
                 break;
 
             case AuthMethod.USERNAME_PASSWORD:
@@ -301,13 +337,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
                 if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD)
                 {
-                    var username = string.IsNullOrWhiteSpace(this.Username) ? "<shared username>" : this.Username;
+                    var username = string.IsNullOrWhiteSpace(this.Username) ? SHARED_USERNAME_PLACEHOLDER : this.Username;
                     usernameLine = $"""
                                    ["Username"] = "{LuaTools.EscapeLuaString(username)}",
                                    """;
                 }
 
-                secretLine = CreateSecretLine("Password", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.USERNAME_PASSWORD), encryptedSecret);
                 break;
         }
 
@@ -329,15 +365,21 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 """;
     }
 
-    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
+    /// <summary>
+    /// The field of a configuration which holds the encrypted secret of an auth method.
+    /// </summary>
+    /// <param name="authMethod">How the data source signs in.</param>
+    /// <returns>The name of the field, or an empty string for an auth method without a secret.</returns>
+    public static string GetSecretFieldName(AuthMethod authMethod) => authMethod switch
     {
-        var secretFieldName = dataSource.AuthMethod switch
-        {
-            AuthMethod.TOKEN => "Token",
-            AuthMethod.USERNAME_PASSWORD => "Password",
-            _ => string.Empty,
-        };
+        AuthMethod.TOKEN => "Token",
+        AuthMethod.USERNAME_PASSWORD => "Password",
+        _ => string.Empty,
+    };
 
+    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource, bool dryRun)
+    {
+        var secretFieldName = GetSecretFieldName(dataSource.AuthMethod);
         if (string.IsNullOrWhiteSpace(secretFieldName))
             return true;
 
@@ -365,6 +407,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             LOGGER.LogWarning($"Failed to decrypt the {secretFieldName} for data source {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
             return false;
         }
+
+        //
+        // A dry run only checks the configuration, so it queues nothing: the start which follows it
+        // would otherwise store the secret once more for every dry run before it:
+        //
+        if (dryRun)
+            return true;
 
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",

@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
@@ -39,9 +40,33 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             dialogParameters.Add(x => x.ExistingChatThread, this.ExistingChatThread);
         }
 
+        await this.AddChatTemplate(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportChatTemplate()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.CHAT_TEMPLATE, T("Import Chat Template"));
+        if (import?.ConfigurationObject is not ChatTemplate chatTemplate)
+            return;
+
+        var dialogParameters = CreateDialogParameters(chatTemplate, isEditing: false);
+        dialogParameters.Add(x => x.AttachmentsToRelink, import.AttachmentsToRelink);
+        await this.AddChatTemplate(dialogParameters, isImport: true);
+    }
+
+    private async Task AddChatTemplate(DialogParameters<ChatTemplateDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported chat template is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             return;
 
         var addedChatTemplate = (ChatTemplate)dialogResult.Data!;
@@ -58,20 +83,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
             return;
 
-        var dialogParameters = new DialogParameters<ChatTemplateDialog>
-        {
-            { x => x.DataNum, chatTemplate.Num },
-            { x => x.DataId, chatTemplate.Id },
-            { x => x.DataName, chatTemplate.Name },
-            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
-            { x => x.IsEditing, true },
-            { x => x.ExampleConversation, chatTemplate.ExampleConversation },
-            { x => x.FileAttachments, chatTemplate.FileAttachments },
-            { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -85,22 +97,24 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     private async Task ViewChatTemplate(ChatTemplate chatTemplate)
     {
-        var dialogParameters = new DialogParameters<ChatTemplateDialog>
-        {
-            { x => x.DataNum, chatTemplate.Num },
-            { x => x.DataId, chatTemplate.Id },
-            { x => x.DataName, chatTemplate.Name },
-            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
-            { x => x.IsEditing, true },
-            { x => x.IsReadOnly, true },
-            { x => x.ExampleConversation, chatTemplate.ExampleConversation },
-            { x => x.FileAttachments, chatTemplate.FileAttachments },
-            { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
-        };
-
-        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true, isReadOnly: true), DialogOptions.FULLSCREEN);
     }
+
+    private static DialogParameters<ChatTemplateDialog> CreateDialogParameters(ChatTemplate chatTemplate, bool isEditing, bool isReadOnly = false) => new()
+    {
+        { x => x.DataNum, chatTemplate.Num },
+        { x => x.DataId, chatTemplate.Id },
+        { x => x.DataName, chatTemplate.Name },
+        { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+        { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
+        { x => x.IsEditing, isEditing },
+        { x => x.IsReadOnly, isReadOnly },
+        { x => x.ExampleConversation, chatTemplate.ExampleConversation },
+        { x => x.FileAttachments, chatTemplate.FileAttachments },
+        { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+        { x => x.ToolIds, chatTemplate.ToolIds },
+        { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
+    };
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
     {
@@ -128,6 +142,9 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
             return;
 
+        if (!await this.ConfirmExportOfLocalDataSources(chatTemplate))
+            return;
+
         await this.CopyChatTemplateLuaToClipboard(chatTemplate);
     }
 
@@ -141,9 +158,13 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
         if (chatTemplate.FileAttachments.Count == 0)
         {
+            // That way asks about the local data sources itself, so we must not ask twice:
             await this.ExportChatTemplateWithSharedAttachmentPaths(chatTemplate);
             return;
         }
+
+        if (!await this.ConfirmExportOfLocalDataSources(chatTemplate))
+            return;
 
         this.isPluginDirectoryDialogOpen = true;
         try
@@ -160,6 +181,35 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         }
     }
 
+    /// <summary>
+    /// Asks whether to export a template although it preselects data sources of this machine.
+    /// </summary>
+    /// <remarks>
+    /// The export writes the preselected data source IDs unchanged, which is what makes a template
+    /// usable across an organization — but a local file or folder exists here and nowhere else, so
+    /// its ID points at nothing on the machine reading the plugin. Nothing breaks, the chat simply
+    /// starts without that source, and that is precisely why it has to be said beforehand: nobody
+    /// would notice it afterwards. Exporting anyway is a fair choice, because the rest of the
+    /// template is worth rolling out.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template about to be exported.</param>
+    /// <returns>True when the export may go ahead.</returns>
+    private async Task<bool> ConfirmExportOfLocalDataSources(ChatTemplate chatTemplate)
+    {
+        var localDataSourceNames = ChatTemplate.GetPreselectedLocalDataSourceNames(chatTemplate, this.SettingsManager.ConfigurationData.DataSources);
+        if (localDataSourceNames.Count == 0)
+            return true;
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(T("This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"), string.Join(", ", localDataSourceNames)) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
+    }
+
     private async Task CopyChatTemplateLuaToClipboard(ChatTemplate chatTemplate)
     {
         if (!chatTemplate.TryExportAsConfigurationSection(out var luaCode, out var issue))
@@ -172,7 +222,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         }
 
         if (!string.IsNullOrWhiteSpace(luaCode))
-            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private async Task CopyPackagedChatTemplateLuaToClipboard(ChatTemplate chatTemplate, string pluginDirectory)
@@ -187,6 +237,6 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         }
 
         if (!string.IsNullOrWhiteSpace(luaCode))
-            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 }

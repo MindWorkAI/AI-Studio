@@ -16,6 +16,4 @@ public abstract class SettingsPanelBase : MSGComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
     
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
 }

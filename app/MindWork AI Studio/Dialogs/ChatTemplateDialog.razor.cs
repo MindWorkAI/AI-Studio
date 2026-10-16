@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
@@ -56,8 +57,27 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public IReadOnlyCollection<FileAttachment> FileAttachments { get; init; } = [];
 
+    /// <summary>
+    /// The attachments of an imported chat template which are not on this computer, as the
+    /// configuration snippet names them. The user relinks or removes each one before saving.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<string> AttachmentsToRelink { get; init; } = [];
+
     [Parameter]
     public bool AllowProfileUsage { get; set; } = true;
+
+    /// <summary>
+    /// The tools this template preselects, or null when it says nothing about tools.
+    /// </summary>
+    [Parameter]
+    public HashSet<string>? ToolIds { get; set; }
+
+    /// <summary>
+    /// The data source options this template preselects, or null when it says nothing about them.
+    /// </summary>
+    [Parameter]
+    public DataSourceOptions? DataSourceOptions { get; set; }
 
     [Parameter]
     public bool CreateFromExistingChatThread { get; set; }
@@ -78,6 +98,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool dataIsValid;
     private List<ContentBlock> dataExampleConversation = [];
     private HashSet<FileAttachment> fileAttachments = [];
+    private List<(string OriginalPath, string ReplacementPath)> attachmentsToRelink = [];
+    private string relinkIssue = string.Empty;
+    private bool HasUnresolvedAttachments => this.attachmentsToRelink.Any(attachment => !IsExistingFile(attachment.ReplacementPath));
+    private bool preselectTools;
+    private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
+    private bool preselectDataSources;
+    private DataSourceOptions templateDataSourceOptions = new();
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -97,13 +124,28 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // Load the used instance names:
         this.UsedNames = this.SettingsManager.ConfigurationData.ChatTemplates.Select(x => x.Name.ToLowerInvariant()).ToList();
 
+        //
+        // The two switches below carry the third state of the preselection: switched off, this
+        // template says nothing, and a chat started with it uses the defaults from the chat
+        // options. Their working copies live apart from the parameters, so switching a
+        // preselection off and on again does not throw away what was picked.
+        //
+        this.preselectTools = this.ToolIds is not null;
+        this.selectedToolIds = this.ToolIds is null ? new(StringComparer.Ordinal) : new(this.ToolIds, StringComparer.Ordinal);
+        this.preselectDataSources = this.DataSourceOptions is not null;
+
+        // Saying that this template preselects data sources is already the statement that it wants
+        // them, so the switch inside the selection starts on instead of at its usual default:
+        this.templateDataSourceOptions = this.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
+
         // When editing, we need to load the data:
         if(this.IsEditing)
-        {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
-            this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
-            this.fileAttachments = [..this.FileAttachments];
-        }
+
+        // An edited template brings its conversation and attachments along, and so does an imported one:
+        this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
+        this.fileAttachments = [..this.FileAttachments];
+        this.attachmentsToRelink = this.AttachmentsToRelink.Select(path => (path, string.Empty)).ToList();
 
         if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
         {
@@ -138,10 +180,30 @@ public partial class ChatTemplateDialog : MSGComponentBase
         ExampleConversation = this.dataExampleConversation,
         FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
+        ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
+        DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,
 
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
+
+    private static bool IsExistingFile(string path) => Path.IsPathFullyQualified(path) && File.Exists(path);
+
+    private void UpdateRelinkPath(int index, string? path)
+    {
+        this.attachmentsToRelink[index] = (this.attachmentsToRelink[index].OriginalPath, path ?? string.Empty);
+        if (!this.HasUnresolvedAttachments)
+            this.relinkIssue = string.Empty;
+    }
+
+    private void RemoveAttachmentToRelink(int index)
+    {
+        this.attachmentsToRelink.RemoveAt(index);
+        if (!this.HasUnresolvedAttachments)
+            this.relinkIssue = string.Empty;
+    }
+
+    private void SetSelectedToolIds(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
 
     private void RemoveMessage(ContentBlock item)
     {
@@ -239,6 +301,18 @@ public partial class ChatTemplateDialog : MSGComponentBase
         if (this.IsReadOnly)
             return;
 
+        // Only check the relinked attachments here. They are added right before closing, so that a
+        // failed save does not leave a path behind which the user changes afterward:
+        this.relinkIssue = string.Empty;
+        foreach (var (originalPath, replacementPath) in this.attachmentsToRelink)
+        {
+            if (!IsExistingFile(replacementPath))
+            {
+                this.relinkIssue = string.Format(T("Please relink the attachment '{0}' to a file on this computer or remove it before you save."), originalPath);
+                return;
+            }
+        }
+
         await this.form.Validate();
 
         // When the data is not valid, we don't store it:
@@ -248,6 +322,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // When an inline edit is ongoing, we cannot store the data:
         if (this.isInlineEditOnGoing)
             return;
+
+        foreach (var (_, replacementPath) in this.attachmentsToRelink)
+            this.fileAttachments.Add(FileAttachment.FromPath(replacementPath));
+        this.attachmentsToRelink.Clear();
 
         // Use the data model to store the chat template.
         // We just return this data to the parent component:

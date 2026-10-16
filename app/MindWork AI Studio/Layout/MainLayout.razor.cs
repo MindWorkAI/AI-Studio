@@ -5,6 +5,7 @@ using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -53,6 +54,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
+
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
+    [Inject]
+    private DataRestoreService DataRestoreService { get; init; } = null!;
+
+    [Inject]
+    private CircuitStateService CircuitState { get; init; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
@@ -71,8 +84,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
 
+    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     private IReadOnlyCollection<NavBarItem> navItems = [];
+    private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
+    private bool showEmbeddingStatusIcon;
     
     #region Overrides of ComponentBase
 
@@ -80,6 +98,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged += this.OnDataRestoreStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -106,19 +125,21 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesIfAutomaticRefreshAsync();
         
         // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.RegisterComponent(this, this.CircuitState);
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
-            Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
+            Event.CHAT_GENERATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED,Event.ASSISTANT_SESSION_CHANGED, 
+            Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
-        UpdateService.SetBlazorDependencies(this.Snackbar);
+        UpdateService.MarkBlazorReady();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -131,14 +152,40 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Send a message to start the plugin system:
         await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_PLUGIN_SYSTEM);
         
-        await this.themeProvider.WatchSystemDarkModeAsync(this.SystemeThemeChanged);
+        await this.themeProvider.WatchSystemDarkModeAsync(this.SystemThemeChanged);
+        this.CircuitState.ConnectionRestored += this.OnConnectionRestored;
         await this.UpdateThemeConfiguration();
         this.LoadNavItems();
+        this.LoadEmbeddingItem();
 
         await base.OnInitializedAsync();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //
+        // After a reload of the page, the plugins are already running and do not report
+        // again. The document would keep the language of the HTML template then:
+        //
+        if (firstRender)
+            await this.SetDocumentLanguageAsync(await this.SettingsManager.GetActiveLanguagePlugin());
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
     #endregion
+
+    /// <summary>
+    /// Tells the browser in which language the user interface is written. The browser needs this, e.g.,
+    /// to hyphenate texts by the rules of that language, and screen readers need it to pronounce them.
+    /// </summary>
+    /// <param name="language">The active language plugin.</param>
+    private async Task SetDocumentLanguageAsync(ILanguagePlugin language)
+    {
+        // Without a language plugin, the user interface shows the English texts of the code:
+        var ietfTag = string.IsNullOrWhiteSpace(language.IETFTag) ? "en" : language.IETFTag;
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "setDocumentLanguage", ietfTag);
+    }
 
     private void ShowSettingsWriteProtectionWarning()
     {
@@ -230,9 +277,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     await this.UpdateThemeConfiguration();
                     this.LoadNavItems();
+                    this.LoadEmbeddingItem();
                     this.StateHasChanged();
                     if (this.startupCompleted)
-                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                        this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after a configuration change");
                     break;
 
                 case Event.COLOR_THEME_CHANGED:
@@ -254,6 +302,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     break;
 
+                case Event.SHOW_PROMPT_INJECTION_ALERT:
+                    if (data is PromptInjectionAlertMessage promptInjectionAlert)
+                        await this.ShowPromptInjectionAlertAsync(promptInjectionAlert);
+
+                    break;
+
                 case Event.SHOW_ERROR:
                     if (data is DataErrorMessage error)
                         error.Show(this.Snackbar);
@@ -266,8 +320,14 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     break;
 
+                case Event.SHOW_INFO:
+                    if (data is DataInfoMessage info)
+                        info.Show(this.Snackbar);
+
+                    break;
+
                 case Event.STARTUP_PLUGIN_SYSTEM:
-                    _ = Task.Run(async () =>
+                    Task.Run(async () =>
                     {
                         // Set up the plugin system:
                         if (PluginFactory.Setup())
@@ -278,8 +338,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             //
                             // Check if there is an enterprise configuration plugin to download:
                             //
+                            // Every deferred environment matters here: each one is a configuration
+                            // to download, so this is the one place which uses all of them.
                             var enterpriseEnvironments = this.MessageBus
-                                .CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
+                                .TakeDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
                                 .Where(env => env != default)
                                 .ToList();
                             
@@ -308,43 +370,73 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             // Initialize the enterprise encryption service for decrypting API keys:
                             await PluginFactory.InitializeEnterpriseEncryption(this.RustService);
 
-                            // Load (but not start) all plugins without waiting for them:
-                            #if DEBUG
-                            var pluginLoadingTimeout = new CancellationTokenSource();
-                            #else
-                            var pluginLoadingTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            #endif
-                            await PluginFactory.LoadAll(pluginLoadingTimeout.Token);
+                            // Load and start all plugins. Each plugin has a time limit of its own,
+                            // so a slow one cannot keep the others from starting:
+                            await PluginFactory.LoadAll();
 
                             // Set up hot reloading for plugins:
                             PluginFactory.SetUpHotReloading();
                             await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_COMPLETED);
                         }
-                    });
+                    }).Observe($"{nameof(MainLayout)}: setting up the plugin system");
                     break;
 
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    await this.SetDocumentLanguageAsync(this.Lang);
                     this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
+                    this.LoadEmbeddingItem();
 
                     await this.InvokeAsync(this.StateHasChanged);
                     if (this.startupCompleted)
-                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                        this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after a plugin reload");
                     break;
 
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
-                    _ = this.EnsureMandatoryInfosAcceptedAsync();
+                    this.ShowStartupDialogsAsync().Observe($"{nameof(MainLayout)}: dialogs after the startup");
+                    break;
+
+                case Event.RAG_EMBEDDING_STATUS_CHANGED:
+                    this.LoadNavItems();
+                    this.LoadEmbeddingItem();
+                    this.StateHasChanged();
                     break;
             }
         });
     }
 
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    private async Task ShowPromptInjectionAlertAsync(PromptInjectionAlertMessage alert)
     {
-        return Task.FromResult<TResult?>(default);
+        await this.promptInjectionDialogSemaphore.WaitAsync();
+        try
+        {
+            if (!this.SettingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
+                return;
+
+            var dialogParameters = new DialogParameters<PromptInjectionAlertDialog>
+            {
+                { x => x.Alert, alert },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<PromptInjectionAlertDialog>(
+                T("Security notice"),
+                dialogParameters,
+                DialogOptions.FULLSCREEN);
+
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.promptInjectionDialogSemaphore.Release();
+        }
+    }
+
+    public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    {
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 
     #endregion
@@ -357,11 +449,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
-        _ = this.InvokeAsync(() =>
+        this.InvokeAsync(() =>
         {
             this.LoadNavItems();
             this.StateHasChanged();
-        });
+        }).Observe($"{nameof(MainLayout)}: refreshing the navigation after a media import change");
     }
     
     private IEnumerable<NavBarItem> GetNavItems()
@@ -372,8 +464,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
-        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.CHAT);
-        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT);
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
         var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
         var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
         var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;
@@ -393,6 +485,55 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         yield return new(T("Information"), Icons.Material.Filled.Info, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
         yield return new(T("Settings"), Icons.Material.Filled.Settings, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
+
+    private void LoadEmbeddingItem()
+    {
+        this.embeddingOverview = this.DataSourceEmbeddingService.GetOverview();
+
+        //
+        // The entry is shown whenever local RAG is available, in every state. Hiding it while
+        // nothing was running looked tidier, but a data source which was just added has no status
+        // yet: the service creates one when the run begins. The icon was therefore missing during
+        // the very moment the user was waiting for it. What the entry does communicate is its
+        // state, through the icon below.
+        //
+        // The preview feature is what gates it now. The route itself is not gated, so without this
+        // check, users who have no RAG at all would get a navigation entry for it.
+        //
+        this.showEmbeddingStatusIcon = PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager);
+
+        var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
+        {
+            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
+            DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
+            DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+
+            // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
+            // icon does not draw attention while there is nothing to attend to:
+            _ => (Icons.Material.Filled.LibraryAddCheck, palette.DarkLighten, palette.GrayLight),
+        };
+        this.embeddingItem = new NavBarItem(T("Data sources"), embeddingIcon.icon, embeddingIcon.lightcolor, embeddingIcon.darkcolor, Routes.EMBEDDINGS, false);
+    }
+    
+    /// <remarks>
+    /// Speaks of neither files nor mails: the overview sums up data sources of every kind.
+    /// </remarks>
+    private string EmbeddingNavigationTooltip => this.embeddingOverview.State switch
+    {
+        DataSourceEmbeddingState.QUEUED => T("Embeddings are waiting to be processed."),
+        DataSourceEmbeddingState.RUNNING => string.Format(
+            T("Embeddings are running: {0} of {1} are indexed."),
+            this.embeddingOverview.IndexedDocuments.CompactCount(),
+            this.embeddingOverview.TotalDocuments.CompactCount()),
+        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedDocuments > 0
+            ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
+            : T("Some embeddings failed and need attention."),
+
+        // The entry is always visible, so its resting state needs words as well. An empty tooltip
+        // would leave the user guessing what the icon is there for:
+        _ => T("All data sources are up to date.")
+    };
 
     private async Task ShowUpdateDialog()
     {
@@ -456,15 +597,45 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         }
     }
     
-    private async Task SystemeThemeChanged(bool isDark)
+    /// <summary>
+    /// True, when the user wants AI Studio to follow the light or dark mode of the operating system.
+    /// </summary>
+    /// <remarks>
+    /// This also decides whether the MudThemeProvider watches the operating system at all. On a system
+    /// change, the provider takes the new mode into its own state first and calls our handler only
+    /// afterward, so the handler cannot prevent it. Nor can a new render of this layout undo it: the
+    /// provider takes over its IsDarkMode parameter only when that value changes, and with a fixed theme,
+    /// it never does. Were the provider watching while the user chose a fixed theme, MudBlazor would show
+    /// the colors of the system from the next render on, while the rest of the app kept the chosen ones.
+    /// </remarks>
+    private bool FollowSystemTheme => this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM;
+
+    private async Task SystemThemeChanged(bool isDark)
     {
         this.Logger.LogInformation($"The system theme changed to {(isDark ? "dark" : "light")}.");
         await this.UpdateThemeConfiguration();
     }
 
+    /// <summary>
+    /// Reads the color theme anew once the browser connection of this circuit returned.
+    /// </summary>
+    /// <remarks>
+    /// The browser reports a change of the system theme exactly once. Blazor drops that report while the
+    /// connection is down, which happens when the machine switches its theme during sleep and wakes up
+    /// again. Since the circuit survives the sleep (cf. the retention settings in Program.cs), no reload
+    /// reads the theme anew either, so AI Studio would keep the theme it had before the sleep.
+    /// <br/><br/>
+    /// The update is deliberately not awaited: this handler runs while Blazor is still completing the
+    /// reconnection, and the answer to the JavaScript call inside can only arrive afterward.
+    /// </remarks>
+    private void OnConnectionRestored()
+    {
+        this.InvokeAsync(this.UpdateThemeConfiguration).Observe($"{nameof(MainLayout)}: reading the color theme after the connection returned");
+    }
+
     private async Task UpdateThemeConfiguration()
     {
-        if (this.SettingsManager.ConfigurationData.App.PreferredTheme is Themes.SYSTEM)
+        if (this.FollowSystemTheme)
             this.useDarkMode = await this.themeProvider.GetSystemDarkModeAsync();
         else
             this.useDarkMode = this.SettingsManager.ConfigurationData.App.PreferredTheme == Themes.DARK;
@@ -472,6 +643,70 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.SettingsManager.IsDarkMode = this.useDarkMode;
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
+    }
+
+    /// <summary>
+    /// Shows what the user has to see once the plugins started: the mandatory infos first, then how a
+    /// restore of a backup went.
+    /// </summary>
+    private async Task ShowStartupDialogsAsync()
+    {
+        await this.EnsureMandatoryInfosAcceptedAsync();
+        await this.ShowDataRestoreReportAsync();
+        await this.ShowDataRestorePendingDialogAsync();
+    }
+
+    /// <summary>
+    /// Asks for the restart as soon as a restore is prepared.
+    /// </summary>
+    private void OnDataRestoreStateChanged()
+    {
+        if (this.DataRestoreService.IsRestorePending)
+            this.InvokeAsync(this.ShowDataRestorePendingDialogAsync).Observe($"{nameof(MainLayout)}: asking for the restart which applies a restore");
+    }
+
+    /// <summary>
+    /// Blocks AI Studio while a prepared restore waits for the restart, since whatever changes until
+    /// then would be lost.
+    /// </summary>
+    private async Task ShowDataRestorePendingDialogAsync()
+    {
+        if (!await this.dataRestorePendingDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            await this.DataRestoreService.StartupStateLoaded;
+            if (!this.DataRestoreService.IsRestorePending)
+                return;
+
+            var dialogReference = await this.DialogService.ShowAsync<DataRestorePendingDialog>(T("Restore of a Backup"), DialogOptions.BLOCKING_FULLSCREEN);
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.dataRestorePendingDialogSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Tells how the runtime applied a restore at this start, and what remains to do.
+    /// </summary>
+    private async Task ShowDataRestoreReportAsync()
+    {
+        await this.DataRestoreService.StartupStateLoaded;
+        if (this.DataRestoreService.Report is not { } report)
+            return;
+
+        var dialogParameters = new DialogParameters<DataRestoreReportDialog>
+        {
+            { x => x.Report, report },
+            { x => x.OpenPoints, await this.DataRestoreService.CollectOpenPointsAsync() },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataRestoreReportDialog>(T("Restore of a Backup"), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        this.DataRestoreService.ForgetReport();
     }
 
     private async Task EnsureMandatoryInfosAcceptedAsync()
@@ -556,8 +791,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged -= this.OnDataRestoreStateChanged;
+        this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
+        this.dataRestorePendingDialogSemaphore.Dispose();
     }
 
     #endregion

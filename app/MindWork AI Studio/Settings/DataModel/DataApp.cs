@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = null)
@@ -58,6 +60,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Whether an alert dialog should be shown when prompt-injection content is blocked.
+    /// </summary>
+    public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
+
+    /// <summary>
     /// Should the built-in introduction be visible on the home page?
     /// </summary>
     public bool ShowIntroduction { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowIntroduction, true);
@@ -108,6 +115,18 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string UseTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.UseTranscriptionProvider, string.Empty);
 
     /// <summary>
+    /// The Opus bitrate used when normalizing uploaded audio/video for transcription.
+    /// </summary>
+    /// <remarks>
+    /// Every recording is re-encoded to mono Opus before it goes to the transcription provider. That
+    /// encoding used to be fixed at 32 kbps, which cost the transcription models entire quiet passages:
+    /// a greeting spoken softly at the start of a recording was simply missing from the transcript. The
+    /// same recording compared at 64 and 128 kbps came back complete, which is why 128 kbps is the
+    /// default here. Users trading accuracy for a smaller upload can still pick a lower bitrate.
+    /// </remarks>
+    public TranscriptionOpusBitrate OpusBitrate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.OpusBitrate, TranscriptionOpusBitrate.KBPS_128);
+
+    /// <summary>
     /// The global keyboard shortcut for toggling voice recording.
     /// Uses Tauri's shortcut format, e.g., "CmdOrControl+1" (Cmd+1 on macOS, Ctrl+1 on Windows/Linux).
     /// Set to empty string to disable the global shortcut.
@@ -130,6 +149,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
+    /// Should requests to self-hosted servers, i.e., self-hosted providers and LiteLLM, name the feature that sent them?
+    /// </summary>
+    /// <remarks>
+    /// Whoever operates such a server learns about it, which usually is an organization. Off by default:
+    /// AI Studio then sends no User-Agent at all. Cloud providers never learn about it either way.
+    /// </remarks>
+    public bool ShareFeatureUsageWithSelfHostedServerOperators { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShareFeatureUsageWithSelfHostedServerOperators, false);
+
+    /// <summary>
     /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
     /// </summary>
     public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
@@ -148,7 +176,140 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
-    
+
+    /// <summary>
+    /// Should the user be allowed to add LLM providers?
+    /// </summary>
+    public bool AllowUserToAddLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add embedding providers?
+    /// </summary>
+    public bool AllowUserToAddEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add transcription providers?
+    /// </summary>
+    public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to add mailboxes?
+    /// </summary>
+    /// <remarks>
+    /// Independent of AllowUserToAddProvider, because a mailbox is a data source, not a provider.
+    /// Mailboxes the user added before stay, and the user may still edit or delete them.
+    /// </remarks>
+    public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
+
+    /// <summary>
+    /// Should the user be allowed to import configurations which others exported?
+    /// </summary>
+    /// <remarks>
+    /// The master switch of the import: the switch of each type allows its import only while this
+    /// one does as well. Use CanImportConfigurationSnippet rather than reading the switches one by one.
+    /// </remarks>
+    public bool AllowUserToImportConfigurationSnippets { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationSnippets, true);
+
+    /// <summary>
+    /// Should the user be allowed to import profiles?
+    /// </summary>
+    public bool AllowUserToImportProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportProfile, true);
+
+    /// <summary>
+    /// Should the user be allowed to import LLM providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddLLMProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import embedding providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddEmbeddingProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import transcription providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddTranscriptionProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportTranscriptionProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import chat templates?
+    /// </summary>
+    public bool AllowUserToImportChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChatTemplate, true);
+
+    /// <summary>
+    /// Should the user be allowed to import external data sources (ERI servers)?
+    /// </summary>
+    public bool AllowUserToImportERIDataSource { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportERIDataSource, true);
+
+    /// <summary>
+    /// Should the user be allowed to import document analysis policies?
+    /// </summary>
+    public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
+
+    /// <summary>
+    /// May the user import a configuration of this type, which somebody else exported?
+    /// </summary>
+    /// <param name="type">The type of configuration object to import.</param>
+    /// <returns>True when the master switch and the switch of the type allow it, and for providers also the permission to add one.</returns>
+    public bool CanImportConfigurationSnippet(PluginConfigurationObjectType type) => this.AllowUserToImportConfigurationSnippets && type switch
+    {
+        PluginConfigurationObjectType.PROFILE => this.AllowUserToImportProfile,
+        PluginConfigurationObjectType.LLM_PROVIDER => this.AllowUserToImportLLMProvider && this.AllowUserToAddProvider && this.AllowUserToAddLLMProvider,
+        PluginConfigurationObjectType.EMBEDDING_PROVIDER => this.AllowUserToImportEmbeddingProvider && this.AllowUserToAddProvider && this.AllowUserToAddEmbeddingProvider,
+        PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => this.AllowUserToImportTranscriptionProvider && this.AllowUserToAddProvider && this.AllowUserToAddTranscriptionProvider,
+        PluginConfigurationObjectType.CHAT_TEMPLATE => this.AllowUserToImportChatTemplate,
+        PluginConfigurationObjectType.DATA_SOURCE => this.AllowUserToImportERIDataSource,
+        PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => this.AllowUserToImportDocumentAnalysisPolicy,
+
+        _ => false,
+    };
+
+    /// <summary>
+    /// Should the user be allowed to import plugin archives from disk?
+    /// </summary>
+    public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to import configuration plugin archives from disk?
+    /// </summary>
+    /// <remarks>
+    /// This is a second gate on top of AllowUserToImportPlugins, and both must allow the import.
+    /// Configuration plugins deserve their own switch because they are far more powerful than an
+    /// assistant: they define LLM providers and data sources, and they lock settings.
+    /// </remarks>
+    public bool AllowUserToImportConfigurationPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationPlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to share or export plugins as archives?
+    /// </summary>
+    public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to back up the data of AI Studio into a file?
+    /// </summary>
+    /// <remarks>
+    /// A backup holds chats and other confidential content in a single file, which can leave the
+    /// computer on any stick or cloud drive. Secrets never go into it.
+    /// </remarks>
+    public bool AllowUserToBackUpData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToBackUpData, true);
+
+    /// <summary>
+    /// Should the user be allowed to restore the data of AI Studio from a backup file, or to add the chats of one?
+    /// </summary>
+    /// <remarks>
+    /// A backup brings along everything its chats and settings name, including the locations of
+    /// attached documents and of local data sources, which are read again afterward.
+    /// </remarks>
+    public bool AllowUserToRestoreData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToRestoreData, true);
+
     /// <summary>
     /// Should administration settings be visible in the UI?
     /// </summary>
@@ -158,6 +319,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should copied and exported AI-generated content include a disclosure?
     /// </summary>
     public bool AddAIGeneratedContentDisclosure { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddAIGeneratedContentDisclosure, true);
+
+    /// <summary>
+    /// Settings for indexing local data sources.
+    /// </summary>
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
 
     /// <summary>
     /// List of assistants that should be hidden from the UI.

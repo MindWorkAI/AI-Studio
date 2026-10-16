@@ -107,7 +107,9 @@ public sealed partial class RustService
         var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)
         {
-            if(!isTrying)
+            if(isTrying)
+                this.logger!.LogWarning($"Failed to get the secret data for '{secretKey}' due to an API issue (try mode): '{result.StatusCode}'");
+            else
                 this.logger!.LogError($"Failed to get the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
             return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the secret data due to an API issue."));
         }
@@ -115,8 +117,17 @@ public sealed partial class RustService
         var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
         if (!state.Success)
         {
+            //
+            // A missing entry is what try mode is for: the absent keyring entry is how the app
+            // recognizes an unconfigured secret in the first place, so it is not worth a line
+            // in the log. Anything else — a locked keychain, an unavailable secret service, a
+            // dismissed prompt — is a real problem that used to hide on debug level:
+            //
             if (isTrying)
-                this.logger!.LogDebug($"No secret data configured for '{secretKey}' (try mode): '{state.Issue}'");
+            {
+                if (state.IssueCode is not SecretStoreIssueCode.SECRET_NOT_FOUND)
+                    this.logger!.LogWarning($"Failed to get the secret data for '{secretKey}' (try mode): '{state.Issue}'");
+            }
             else
                 this.logger!.LogError($"Failed to get the secret data for '{secretKey}': '{state.Issue}'");
         }

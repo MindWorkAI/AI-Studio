@@ -5,7 +5,6 @@ use axum::Json;
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// The process-wide clipboard instance. On Linux, retaining this instance keeps the app's
@@ -113,7 +112,27 @@ fn release_clipboard<B>(clipboard: &mut Option<B>) -> bool {
 }
 
 /// Sets the clipboard text to the provided encrypted text.
-pub async fn set_clipboard(_token: APIToken, encrypted_text: String) -> Json<SetClipboardResponse> {
+pub async fn set_clipboard(encrypted_text: String) -> Json<SetClipboardResponse> {
+    //
+    // The clipboard backend of the operating system may take a moment to answer, a failed write is
+    // retried with a fresh backend, and the lock waits for a write still running. None of this
+    // belongs on a runtime worker, because all calls of the app share one HTTP/2 connection.
+    //
+    match tokio::task::spawn_blocking(move || set_clipboard_sync(encrypted_text)).await {
+        Ok(response) => response,
+        Err(error) => {
+            let issue = format!("The clipboard worker failed: {error}");
+            error!(Source = "Clipboard"; "{issue}");
+            Json(SetClipboardResponse {
+                success: false,
+                issue,
+            })
+        },
+    }
+}
+
+/// Performs the blocking part of [`set_clipboard`].
+fn set_clipboard_sync(encrypted_text: String) -> Json<SetClipboardResponse> {
     let encrypted_text = EncryptedText::new(encrypted_text);
 
     // Decrypt this text first:
@@ -149,7 +168,7 @@ pub async fn set_clipboard(_token: APIToken, encrypted_text: String) -> Json<Set
 }
 
 /// Sets rich clipboard content with a plain-text fallback.
-pub async fn set_rich_clipboard(_token: APIToken, encrypted_text: String) -> Json<SetClipboardResponse> {
+pub async fn set_rich_clipboard(encrypted_text: String) -> Json<SetClipboardResponse> {
     let encrypted_text = EncryptedText::new(encrypted_text);
     let decrypted_text = match ENCRYPTION.decrypt(&encrypted_text) {
         Ok(text) => text,

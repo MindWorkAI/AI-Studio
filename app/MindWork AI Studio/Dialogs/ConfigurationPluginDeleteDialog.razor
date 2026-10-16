@@ -1,0 +1,42 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @(string.Format(T("Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."), this.PluginName))
+        </MudJustifiedText>
+
+        @if (this.Consequences.Count > 0)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-1">
+                @T("This also removes everything the configuration plugin had set up:")
+            </MudJustifiedText>
+
+            <MudList T="string" Class="mb-3">
+                @foreach (var consequence in this.Consequences)
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.RemoveCircleOutline" IconColor="Color.Error">
+                        @consequence
+                    </MudListItem>
+                }
+            </MudList>
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("The configuration plugin is not running, so we cannot tell what it had set up. Anything it configured will be removed as well.")
+            </MudJustifiedText>
+        }
+
+        <MudJustifiedText Typo="Typo.body2">
+            @T("You can install the plugin again later, but any changes you made to its settings are lost.")
+        </MudJustifiedText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("No")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Error">
+            @T("Yes, delete it")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

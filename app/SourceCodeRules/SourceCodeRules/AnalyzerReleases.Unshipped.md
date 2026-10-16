@@ -1,7 +1,8 @@
 ### New Rules
 
- Rule ID | Category | Severity | Notes 
----------|----------|----------|-------
+ Rule ID   | Category | Severity | Notes                                
+-----------|----------|----------|--------------------------------------
+    
 
 
 ### Changed Rules

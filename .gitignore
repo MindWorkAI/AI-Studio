@@ -172,3 +172,6 @@ orleans.codegen.cs
 
 # Tauri generated schemas/manifests
 /runtime/gen/
+
+# Ignore what a failing snapshot test leaves behind for comparison:
+/app/Tests/Models/Corpus/CapabilitySnapshot.actual.txt

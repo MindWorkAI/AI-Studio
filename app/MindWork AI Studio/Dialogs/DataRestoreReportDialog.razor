@@ -1,0 +1,56 @@
+@using AIStudio.Tools.DataBackup
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Class="mb-3">
+            <MudIcon Icon="@this.Icon" Color="@this.IconColor" Size="Size.Large"/>
+            <MudStack Spacing="1">
+                <MudText Typo="Typo.h6">
+                    @this.Headline
+                </MudText>
+                <MudJustifiedText Typo="Typo.body1">
+                    @this.Explanation
+                </MudJustifiedText>
+                @if (!string.IsNullOrWhiteSpace(this.BackupDescription))
+                {
+                    <MudJustifiedText Typo="Typo.body2">
+                        @this.BackupDescription
+                    </MudJustifiedText>
+                }
+            </MudStack>
+        </MudStack>
+
+        @if (this.Report.Outcome is DataRestoreOutcome.APPLIED)
+        {
+            @if (this.OpenPoints.Count == 0)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Outlined">
+                    @T("Nothing else to do: every provider and every data source has what it needs on this computer.")
+                </MudAlert>
+            }
+            else
+            {
+                <MudJustifiedText Typo="Typo.body1">
+                    @T("A backup holds no API keys or passwords, and some files and folders are not on this computer. Please check the following:")
+                </MudJustifiedText>
+                <MudList T="string" Dense="true">
+                    @foreach (var openPoint in this.OpenPoints)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.ChecklistRtl" IconColor="Color.Warning">@this.Describe(openPoint)</MudListItem>
+                    }
+                </MudList>
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(this.Report.Detail))
+        {
+            <MudJustifiedText Typo="Typo.caption">
+                @string.Format(T("Technical details: {0}"), this.Report.Detail)
+            </MudJustifiedText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

@@ -1,0 +1,32 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.DashboardCustomize" Class="mr-2"/>
+            @T("Assistant: Visual Briefing defaults")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationSelect OptionDescription="@T("Default target language")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage = value)"/>
+            @if (this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="@T("Default custom target language")" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedOtherLanguage = value)"/>
+            }
+            <ConfigurationSelect OptionDescription="@T("Default audience profile")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceProfile)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceProfileData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceProfile = value)"/>
+            <ConfigurationSelect OptionDescription="@T("Default audience age group")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceAgeGroup)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceAgeGroupData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceAgeGroup = value)"/>
+            <ConfigurationSelect OptionDescription="@T("Default audience organizational level")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceOrganizationalLevel)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceOrganizationalLevelData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceOrganizationalLevel = value)"/>
+            <ConfigurationSelect OptionDescription="@T("Default audience expertise")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceExpertise)" Data="@ConfigurationSelectDataFactory.GetSlideBuilderAudienceExpertiseData()" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedAudienceExpertise = value)"/>
+            <ConfigurationOption OptionDescription="@T("Show source references by default?")" LabelOn="@T("Source references are visible")" LabelOff="@T("Source references are hidden")" State="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.ShowSourceReferences)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.ShowSourceReferences = value)"/>
+            <ConfigurationOption OptionDescription="@T("Optimize large visual assets by default?")" LabelOn="@T("Large visual assets are optimized")" LabelOff="@T("Visual assets keep their original size")" State="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.OptimizeImages)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.OptimizeImages = value)"/>
+            <ConfigurationMinConfidenceSelection RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence = value)"/>
+            <ConfigurationProviderSelection Component="Components.VISUAL_BRIEFING_ASSISTANT" Data="@this.AvailableLLMProviders" SelectedValue="@(() => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedProvider = value)"/>
+            <ConfigurationSelect OptionDescription="@T("Default profile")" SelectedValue="@(() => ProfilePreselection.FromStoredValue(this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedProfile))" Data="@ConfigurationSelectDataFactory.GetComponentProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.VisualBriefing.PreselectedProfile = value)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>
+    </DialogActions>
+</MudDialog>

@@ -1,6 +1,7 @@
 ﻿using AIStudio.Provider;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Chat;
 
@@ -11,23 +12,35 @@ public static class ListContentBlockExtensions
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
     /// <param name="roleTransformer">A function that transforms each content block into a message result asynchronously.</param>
-    /// <param name="selectedProvider">The selected LLM provider.</param>
-    /// <param name="selectedModel">The selected model.</param>
+    /// <param name="provider">The configured provider, whose model is being written to.</param>
     /// <param name="textSubContentFactory">A factory function to create text sub-content.</param>
     /// <param name="imageSubContentFactory">A factory function to create image sub-content.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed results.</returns>
     public static async Task<IList<IMessageBase>> BuildMessagesAsync(
         this List<ContentBlock> blocks,
-        LLMProviders selectedProvider,
-        Model selectedModel,
+        AIStudio.Settings.Provider provider,
         Func<ChatRole, string> roleTransformer,
         Func<string, ISubContent> textSubContentFactory,
         Func<FileAttachmentImage, Task<ISubContent>> imageSubContentFactory)
     {
-        var capabilities = selectedProvider.GetModelCapabilities(selectedModel);
-        var canProcessImages = capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT) ||
-                               capabilities.Contains(Capability.SINGLE_IMAGE_INPUT);
-        
+        //
+        // Asked through the configured provider, so that what a person set in their expert settings
+        // counts here too. It did not: this path read the automatic answer alone, so somebody who
+        // switched image input on saw it work while attaching the picture and saw it ignored while
+        // the message was built -- every chat round and every tool round.
+        //
+        var canProcessImages = provider.SupportsImageInput();
+
+        //
+        // One report for the whole request: every message of the conversation reads its attached
+        // documents anew, all at the same time. Twenty documents must produce one dialog listing
+        // all of them, not twenty dialogs in a row. A request without documents has nothing to
+        // report, and needs no scope.
+        //
+        await using var reportingScope = blocks.Any(block => block.Content is ContentText text && text.FileAttachments.MayContainDocuments())
+            ? Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>().BeginAction()
+            : null;
+
         var messageTaskList = new List<Task<IMessageBase>>(blocks.Count);
         foreach (var block in blocks)
         {
@@ -63,7 +76,7 @@ public static class ListContentBlockExtensions
             return Task.Run(async () => new TextMessage
             {
                 Role = roleTransformer(block.Role),
-                Content = await text.PrepareTextContentForAI(),
+                Content = await text.PrepareTextContentForAI(reportingScope),
             } as IMessageBase);
         }
         
@@ -90,7 +103,7 @@ public static class ListContentBlockExtensions
                     Role = roleTransformer(block.Role),
                     Content =
                     [
-                        innerTextSubContentFactory(await text.PrepareTextContentForAI()),
+                        innerTextSubContentFactory(await text.PrepareTextContentForAI(reportingScope)),
                         ..images,
                     ]
                 } as IMessageBase;
@@ -102,8 +115,7 @@ public static class ListContentBlockExtensions
     /// Processes a list of content blocks using direct image URL format to create message results asynchronously.
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
-    /// <param name="selectedProvider">The selected LLM provider.</param>
-    /// <param name="selectedModel">The selected model.</param>
+    /// <param name="provider">The configured provider, whose model is being written to.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
     /// <remarks>
     /// Uses direct image URL format where the image data is placed directly in the image_url field:
@@ -114,10 +126,8 @@ public static class ListContentBlockExtensions
     /// </remarks>
     public static async Task<IList<IMessageBase>> BuildMessagesUsingDirectImageUrlAsync(
         this List<ContentBlock> blocks,
-        LLMProviders selectedProvider,
-        Model selectedModel) => await blocks.BuildMessagesAsync(
-            selectedProvider,
-            selectedModel,
+        AIStudio.Settings.Provider provider) => await blocks.BuildMessagesAsync(
+            provider,
             StandardRoleTransformer,
             StandardTextSubContentFactory,
             DirectImageSubContentFactory);
@@ -126,8 +136,7 @@ public static class ListContentBlockExtensions
     /// Processes a list of content blocks using nested image URL format to create message results asynchronously.
     /// </summary>
     /// <param name="blocks">The list of content blocks to process.</param>
-    /// <param name="selectedProvider">The selected LLM provider.</param>
-    /// <param name="selectedModel">The selected model.</param>
+    /// <param name="provider">The configured provider, whose model is being written to.</param>
     /// <returns>An asynchronous task that resolves to a list of transformed message results.</returns>
     /// <remarks>
     /// Uses nested image URL format where the image data is wrapped in an object:
@@ -138,10 +147,8 @@ public static class ListContentBlockExtensions
     /// </remarks>
     public static async Task<IList<IMessageBase>> BuildMessagesUsingNestedImageUrlAsync(
         this List<ContentBlock> blocks,
-        LLMProviders selectedProvider,
-        Model selectedModel) => await blocks.BuildMessagesAsync(
-            selectedProvider,
-            selectedModel,
+        AIStudio.Settings.Provider provider) => await blocks.BuildMessagesAsync(
+            provider,
             StandardRoleTransformer,
             StandardTextSubContentFactory,
             NestedImageSubContentFactory);

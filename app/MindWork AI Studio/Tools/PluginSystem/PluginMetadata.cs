@@ -1,11 +1,11 @@
 namespace AIStudio.Tools.PluginSystem;
 
-public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isManagedByConfigServer = false, Guid? managedConfigurationId = null) : IAvailablePlugin
+public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isManagedByConfigServer = false, Guid? managedConfigurationId = null, int configurationPriority = 0) : IAvailablePlugin
 {
     #region Implementation of IPluginMetadata
 
     /// <inheritdoc />
-    public string IconSVG { get; } = plugin.IconSVG;
+    public string IconDataUrl { get; } = plugin.IconDataUrl;
     
     /// <inheritdoc />
     public PluginType Type { get; } = plugin.Type;
@@ -21,6 +21,9 @@ public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isM
 
     /// <inheritdoc />
     public PluginVersion Version { get; } = plugin.Version;
+
+    /// <inheritdoc />
+    public DateTimeOffset? LastChanged { get; } = plugin.LastChanged;
 
     /// <inheritdoc />
     public string[] Authors { get; } = plugin.Authors;
@@ -53,8 +56,11 @@ public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isM
     public string LocalPath { get; } = localPath;
     
     public bool IsManagedByConfigServer { get; } = isManagedByConfigServer;
-    
+
     public Guid? ManagedConfigurationId { get; } = managedConfigurationId;
+
+    /// <inheritdoc />
+    public int ConfigurationPriority { get; } = configurationPriority;
 
     #endregion
 }

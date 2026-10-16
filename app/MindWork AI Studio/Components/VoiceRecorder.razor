@@ -1,22 +1,32 @@
 @namespace AIStudio.Components
 @inherits MSGComponentBase
 
+@*
+    The toolbar belongs to this component, not to the places which use it: MudToolBar keeps its
+    minimum height even when empty. Left outside, it reserved space in the navigation bar while
+    this component rendered nothing at all, which made the neighboring items float above the
+    bottom edge.
+*@
 @if (this.ShouldRenderVoiceRecording)
 {
-    <MudTooltip Text="@this.Tooltip">
-        @if (this.isTranscribing || this.isPreparing)
-        {
-            <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary"/>
-        }
-        else
-        {
-            <MudToggleIconButton Toggled="@this.isRecording"
-                                 ToggledChanged="@this.OnRecordingToggled"
-                                 Icon="@Icons.Material.Filled.Mic"
-                                 ToggledIcon="@Icons.Material.Filled.Stop"
-                                 Disabled="@(!this.IsVoiceRecordingAvailable)"
-                                 Color="Color.Primary"
-                                 ToggledColor="Color.Error"/>
-        }
-    </MudTooltip>
+    <MudStack AlignItems="AlignItems.Center">
+        <MudToolBar WrapContent="true">
+            <MudTooltip Text="@this.Tooltip">
+                @if (this.isTranscribing || this.isPreparing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary"/>
+                }
+                else
+                {
+                    <MudToggleIconButton Toggled="@this.isRecording"
+                                         ToggledChanged="@this.OnRecordingToggled"
+                                         Icon="@Icons.Material.Filled.Mic"
+                                         ToggledIcon="@Icons.Material.Filled.Stop"
+                                         Disabled="@(!this.IsVoiceRecordingAvailable)"
+                                         Color="Color.Primary"
+                                         ToggledColor="Color.Error"/>
+                }
+            </MudTooltip>
+        </MudToolBar>
+    </MudStack>
 }

@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
+using AIStudio.Models.Live;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
 
@@ -9,9 +10,6 @@ namespace AIStudio.Provider.OpenRouter;
 
 public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER, new Uri("https://openrouter.ai/api/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
-    private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
-    private const string PROJECT_NAME = "MindWork AI Studio";
-
     private static readonly ILogger<ProviderOpenRouter> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenRouter>();
 
     #region Implementation of IProvider
@@ -33,10 +31,10 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
-                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.CreateSettingsProvider(chatModel));
 
                                return new ChatCompletionAPIRequest
                                {
@@ -49,15 +47,11 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
-                           headersAction: headers =>
-                           {
-                               // Set custom headers for project identification:
-                               headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                               headers.Add("X-Title", PROJECT_NAME);
-                           },
+                           headersAction: ProjectAttribution.Apply,
                            token: token))
             yield return content;
     }
@@ -76,7 +70,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
         return Task.FromResult(TranscriptionResult.Failure());
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
@@ -86,7 +80,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -98,7 +92,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadEmbeddingModels(token, apiKeyProvisional);
+        return this.LoadEmbeddingModels(apiKeyProvisional, token);
     }
     
     /// <inheritdoc />
@@ -109,45 +103,50 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
 
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data
-                .Where(n =>
-                    !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
-                .Select(n => new Model(n.Id, n.Name)),
-            token,
+                .Select(n => new Model(n.Id, n.Name))
+                .Where(model => model.IsChatModel(this.Provider)),
             apiKeyProvisional,
-            requestConfigurator: (request, secretKey) =>
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                request.Headers.Add("X-Title", PROJECT_NAME);
-            });
+            requestConfigurator: ConfigureRequest,
+            listingFactory: modelResponse => modelResponse.Data.Select(n => ModelListing.For(n.Id, n.ContextWindowTokens)),
+            token: token);
     }
 
-    private Task<ModelLoadResult> LoadEmbeddingModels(CancellationToken token, string? apiKeyProvisional = null)
+    /// <summary>
+    /// Loads the models OpenRouter offers for embedding, which live on a route of their own.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is reported from here: this route answers with the embedding models alone, and what
+    /// is reported replaces everything an instance said before. The windows of the chat models
+    /// would go missing the moment somebody opens the embedding settings.
+    ///
+    /// Nothing is filtered either, for the same reason. The route is the statement: OpenRouter
+    /// serves these to embed with, which is more than a name can say. Asking the registry on top
+    /// could only drop a model whose name we do not recognize -- and where the two disagree, the
+    /// answer is a rule in Models/, not a model missing from this list.
+    /// </remarks>
+    /// <param name="apiKeyProvisional">An API key which is not stored yet.</param>
+    /// <param name="token">The cancellation token to use.</param>
+    /// <returns>The embedding models.</returns>
+    private Task<ModelLoadResult> LoadEmbeddingModels(string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
             SecretStoreType.EMBEDDING_PROVIDER,
             "embeddings/models",
             modelResponse => modelResponse.Data.Select(n => new Model(n.Id, n.Name)),
-            token,
             apiKeyProvisional,
-            requestConfigurator: (request, secretKey) =>
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-                request.Headers.Add("X-Title", PROJECT_NAME);
-            });
+            requestConfigurator: ConfigureRequest,
+            token: token);
+    }
+
+    private static void ConfigureRequest(HttpRequestMessage request, string secretKey)
+    {
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        ProjectAttribution.Apply(request.Headers);
     }
 }

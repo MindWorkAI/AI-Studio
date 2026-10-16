@@ -38,6 +38,15 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
     protected abstract Type Type { get; }
     
     /// <summary>
+    /// The component this agent runs as.
+    /// </summary>
+    /// <remarks>
+    /// Its requests name it, e.g., in the User-Agent for self-hosted servers. Without it, an agent
+    /// working for an assistant would be counted as chat.
+    /// </remarks>
+    protected abstract Tools.Components Component { get; }
+
+    /// <summary>
     /// The name of the agent.
     /// </summary>
     public abstract string Id { get; }
@@ -75,9 +84,10 @@ public abstract class AgentBase(ILogger<AgentBase> logger, SettingsManager setti
         Name = string.Empty,
         SystemPrompt = systemPrompt,
         Blocks = [],
+        RuntimeComponent = this.Component,
     };
 
-    protected UserRequest AddUserRequest(ChatThread thread, string request)
+    protected static UserRequest AddUserRequest(ChatThread thread, string request)
     {
         var time = DateTimeOffset.Now;
         var lastUserPrompt = new ContentText

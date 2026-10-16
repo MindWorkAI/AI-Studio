@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using AIStudio.Settings;
@@ -35,57 +37,110 @@ public sealed record PluginConfigurationObject
     public required PluginConfigurationObjectType Type { get; init; } = PluginConfigurationObjectType.NONE;
 
     /// <summary>
+    /// The name of the configuration object, e.g. the name of a provider.
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Where this configuration object sends data to: the host of a self-hosted provider or data
+    /// source, or the name of the cloud provider. Empty for objects without a destination, such as
+    /// chat templates or profiles.
+    /// </summary>
+    /// <remarks>
+    /// We keep this next to the object metadata so the import preview can tell users where a
+    /// configuration would send their prompts before its providers are stored.
+    /// </remarks>
+    public string Endpoint { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Determines the destination of a configuration object for the import preview.
+    /// </summary>
+    private static string DescribeEndpoint(IConfigurationObject configObject) => configObject switch
+    {
+        Settings.Provider { IsSelfHosted: true } provider => provider.Hostname,
+        Settings.Provider provider => Provider.LLMProvidersExtensions.ToName(provider.UsedLLMProvider),
+
+        EmbeddingProvider { IsSelfHosted: true } embeddingProvider => embeddingProvider.Hostname,
+        EmbeddingProvider embeddingProvider => Provider.LLMProvidersExtensions.ToName(embeddingProvider.UsedLLMProvider),
+
+        TranscriptionProvider { IsSelfHosted: true } transcriptionProvider => transcriptionProvider.Hostname,
+        TranscriptionProvider transcriptionProvider => Provider.LLMProvidersExtensions.ToName(transcriptionProvider.UsedLLMProvider),
+
+        DataSourceERI_V1 dataSource => dataSource.Hostname,
+
+        _ => string.Empty,
+    };
+
+    /// <summary>
+    /// The tokenizer file as the configuration plugin names it, relative to the plugin directory.
+    /// Empty for objects without a tokenizer.
+    /// </summary>
+    /// <remarks>
+    /// The provider in the settings does not keep this path: it points to the copy the runtime stored
+    /// of the file. The synchronization of the tokenizers needs both, this path to know which file the
+    /// plugin wants, and the copy to know what is stored already.
+    /// </remarks>
+    public string ConfiguredTokenizerPath { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Reads the tokenizer path of a configuration object just parsed from a configuration plugin.
+    /// </summary>
+    private static string DescribeConfiguredTokenizerPath(IConfigurationObject configObject) => configObject switch
+    {
+        Settings.Provider provider => provider.TokenizerPath,
+        EmbeddingProvider embeddingProvider => embeddingProvider.TokenizerPath,
+
+        _ => string.Empty,
+    };
+
+    /// <summary>
+    /// Hands the synchronized tokenizer of the stored provider over to the provider just parsed from
+    /// the configuration plugin.
+    /// </summary>
+    /// <remarks>
+    /// The plugin names its tokenizer by a path inside the plugin, while the stored provider points to
+    /// the copy the runtime made of it, along with the fingerprint of that copy. Until the tokenizers
+    /// are synchronized, the settings have to keep pointing to that copy: the embedding service does
+    /// not wait for the plugins, and an indexing run in between built the embedding signature from an
+    /// empty fingerprint. It took that for another tokenizer and reset the index of every data source
+    /// of the provider, without asking. A new provider starts without a tokenizer until the
+    /// synchronization stores one.
+    /// </remarks>
+    /// <param name="parsedObject">The configuration object just parsed from the plugin.</param>
+    /// <param name="storedObject">The configuration object stored so far, or null for a new one.</param>
+    /// <returns>The parsed configuration object, carrying the tokenizer of the stored one.</returns>
+    private static ConfigurationBaseObject KeepSynchronizedTokenizer(ConfigurationBaseObject parsedObject, ConfigurationBaseObject? storedObject) => (parsedObject, storedObject) switch
+    {
+        (Settings.Provider provider, Settings.Provider storedProvider) => provider with { TokenizerPath = storedProvider.TokenizerPath },
+        (Settings.Provider provider, _) => provider with { TokenizerPath = string.Empty },
+
+        (EmbeddingProvider provider, EmbeddingProvider storedProvider) => provider with { TokenizerPath = storedProvider.TokenizerPath, TokenizerFingerprint = storedProvider.TokenizerFingerprint },
+        (EmbeddingProvider provider, _) => provider with { TokenizerPath = string.Empty, TokenizerFingerprint = string.Empty },
+
+        _ => parsedObject,
+    };
+
+    /// <summary>
     /// Parses Lua table entries into configuration objects of the specified type, populating the
     /// provided list with results.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to parse, which must
-    /// inherit from <see cref="ConfigurationBaseObject"/>.</typeparam>
-    /// <param name="configObjectType">The type of configuration object to process, as specified
-    /// in <see cref="PluginConfigurationObjectType"/>.</param>
-    /// <param name="configObjectSelection">An expression to retrieve existing configuration objects from
-    /// the main configuration data.</param>
-    /// <param name="nextConfigObjectNumSelection">An expression to retrieve the next available configuration
-    /// object number from the main configuration data.</param>
+    /// inherit from ConfigurationBaseObject.</typeparam>
+    /// <param name="descriptor">Describes the type of configuration object: its Lua table, how to
+    /// read one entry, and where the settings keep these objects.</param>
     /// <param name="mainTable">The Lua table containing entries to parse into configuration objects.</param>
     /// <param name="configPluginId">The unique identifier of the plugin associated with the configuration
     /// objects being parsed.</param>
-    /// <param name="configObjects">The list to populate with the parsed configuration objects.
-    /// This parameter is passed by reference.</param>
+    /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run, where changes
     /// are not persisted.</param>
-    /// <param name="pluginPath">An optional parameter specifying the file path of the plugin, used for relative paths in the Lua table.</param>
+    /// <param name="pluginPath">The directory of the plugin, used for relative paths in the Lua table.</param>
     /// <returns>Returns true if parsing succeeds and configuration objects are added
     /// to the list; otherwise, false.</returns>
-    public static bool TryParse<TClass>(
-        PluginConfigurationObjectType configObjectType,
-        Expression<Func<Data, List<TClass>>> configObjectSelection,
-        Expression<Func<Data, uint>> nextConfigObjectNumSelection,
-        LuaTable mainTable,
-        Guid configPluginId,
-        ref List<PluginConfigurationObject> configObjects,
-        bool dryRun,
-        string pluginPath = ""
-    ) where TClass : ConfigurationBaseObject
+    public static bool TryParse<TClass>(ConfigurationBaseObjectDescriptor<TClass> descriptor, LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) where TClass : ConfigurationBaseObject
     {
-        var luaTableName = configObjectType switch
-        {
-            PluginConfigurationObjectType.LLM_PROVIDER => "LLM_PROVIDERS",
-            PluginConfigurationObjectType.CHAT_TEMPLATE => "CHAT_TEMPLATES",
-            PluginConfigurationObjectType.DATA_SOURCE => "DATA_SOURCES",
-            PluginConfigurationObjectType.EMBEDDING_PROVIDER => "EMBEDDING_PROVIDERS",
-            PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => "TRANSCRIPTION_PROVIDERS",
-            PluginConfigurationObjectType.PROFILE => "PROFILES",
-            PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => "DOCUMENT_ANALYSIS_POLICIES",
-
-            _ => null,
-        };
-
-        if (luaTableName is null)
-        {
-            LOG.LogError("The configuration object type '{ConfigObjectType}' is not supported yet (config plugin id: {ConfigPluginId}).", configObjectType, configPluginId);
-            return false;
-        }
-
+        var configObjectType = descriptor.Type;
+        var luaTableName = descriptor.LuaTableName;
         if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
             LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
@@ -93,7 +148,7 @@ public sealed record PluginConfigurationObject
         }
 
         var localSettingsManager = SettingsManagerAccess;
-        var storedObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
+        var storedObjects = descriptor.Selection.Compile()(localSettingsManager.ConfigurationData);
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
         for (var i = 1; i <= numberObjects; i++)
@@ -105,19 +160,7 @@ public sealed record PluginConfigurationObject
                 continue;
             }
 
-            var (wasParsingSuccessful, configObject) = configObjectType switch
-            {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
-                PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
-                PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
-
-                _ => (false, NoConfigurationObject.INSTANCE)
-            };
-
-            if (wasParsingSuccessful)
+            if (descriptor.Parser(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configObject))
             {
                 // Store it in the config object list:
                 configObjects.Add(new()
@@ -125,25 +168,32 @@ public sealed record PluginConfigurationObject
                     ConfigPluginId = configPluginId,
                     Id = Guid.Parse(configObject.Id),
                     Type = configObjectType,
+                    Name = configObject.Name,
+                    Endpoint = DescribeEndpoint(configObject),
+                    ConfiguredTokenizerPath = DescribeConfiguredTokenizerPath(configObject),
                 });
 
                 if (dryRun)
                     continue;
 
                 var objectIndex = storedObjects.FindIndex(t => t.Id == configObject.Id);
-                
+
                 // Case: The object already exists, we update it:
                 if (objectIndex > -1)
                 {
                     var existingObject = storedObjects[objectIndex];
-                    configObject = configObject with { Num = existingObject.Num };
+                    if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                        continue;
+
+                    configObject = KeepSynchronizedTokenizer(configObject, existingObject) with { Num = existingObject.Num };
                     storedObjects[objectIndex] = (TClass)configObject;
                 }
                 
                 // Case: The object does not exist, we have to add it
                 else
                 {
-                    if (nextConfigObjectNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
+                    configObject = KeepSynchronizedTokenizer(configObject, null);
+                    if (descriptor.NextNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
                     {
                         // Case: Increment the next number was successful
                         configObject = configObject with { Num = nextNum };
@@ -167,23 +217,83 @@ public sealed record PluginConfigurationObject
     }
 
     /// <summary>
+    /// Stores the tokenizers the providers of a configuration plugin name, and points these providers
+    /// in the settings to the stored copies.
+    /// </summary>
+    /// <param name="configPluginId">The configuration plugin whose providers to synchronize.</param>
+    /// <param name="pluginPath">The directory of the plugin, which the tokenizer paths are relative to.</param>
+    /// <param name="configObjects">The configuration objects the plugin defined while it started. They carry the tokenizer path of each provider.</param>
+    /// <returns>True when a provider in the settings changed; otherwise false.</returns>
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Tokenizer synchronization needs indexed access to update enterprise-managed providers in place.")]
+    public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath, IList<PluginConfigurationObject> configObjects)
+    {
+        var wasConfigurationChanged = false;
+        var localSettingsManager = SettingsManagerAccess;
+        ITokenizerStorage tokenizerStorage = RustService;
+
+        for (var i = 0; i < localSettingsManager.ConfigurationData.Providers.Count; i++)
+        {
+            var provider = localSettingsManager.ConfigurationData.Providers[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var configuredTokenizerPath = FindConfiguredTokenizerPath(PluginConfigurationObjectType.LLM_PROVIDER, provider.Id);
+            if (configuredTokenizerPath is null)
+                continue;
+
+            var syncedProvider = await SyncProviderTokenizerAsync(tokenizerStorage, provider, configuredTokenizerPath, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            localSettingsManager.ConfigurationData.Providers[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        for (var i = 0; i < localSettingsManager.ConfigurationData.EmbeddingProviders.Count; i++)
+        {
+            var provider = localSettingsManager.ConfigurationData.EmbeddingProviders[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var configuredTokenizerPath = FindConfiguredTokenizerPath(PluginConfigurationObjectType.EMBEDDING_PROVIDER, provider.Id);
+            if (configuredTokenizerPath is null)
+                continue;
+
+            var syncedProvider = await SyncEmbeddingTokenizerAsync(tokenizerStorage, provider, configuredTokenizerPath, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            localSettingsManager.ConfigurationData.EmbeddingProviders[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        return wasConfigurationChanged;
+
+        //
+        // A provider the plugin did not define this time is left as it is: the clean-up after the
+        // start of all plugins removes it, together with its tokenizer.
+        //
+        string? FindConfiguredTokenizerPath(PluginConfigurationObjectType configObjectType, string providerId) => configObjects.FirstOrDefault(configObject =>
+            configObject.Type == configObjectType &&
+            configObject.ConfigPluginId == configPluginId &&
+            configObject.Id.ToString() == providerId)?.ConfiguredTokenizerPath;
+    }
+
+    /// <summary>
     /// Parses configured data sources from a configuration plugin.
     /// </summary>
+    /// <param name="descriptor">The descriptor of the data sources.</param>
     /// <param name="mainTable">The Lua table containing entries to parse into data sources.</param>
     /// <param name="configPluginId">The unique identifier of the plugin associated with the data sources.</param>
     /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run.</param>
     /// <returns>True if the table was present and processed; otherwise false.</returns>
-    public static bool TryParseDataSources(
-        LuaTable mainTable,
-        Guid configPluginId,
-        ref List<PluginConfigurationObject> configObjects,
-        bool dryRun)
+    public static bool TryParseDataSources(DataSourceConfigurationObjectDescriptor descriptor, LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun)
     {
-        const string LUA_TABLE_NAME = "DATA_SOURCES";
-        if (!mainTable.TryGetValue(LUA_TABLE_NAME, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
+        var luaTableName = descriptor.LuaTableName;
+        if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
-            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, configPluginId);
+            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
             return false;
         }
 
@@ -196,13 +306,13 @@ public sealed record PluginConfigurationObject
             var luaObjectTableValue = luaTable[i];
             if (!luaObjectTableValue.TryRead<LuaTable>(out var luaObjectTable))
             {
-                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 
-            if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, out var configObject))
+            if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, dryRun, out var configObject))
             {
-                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 
@@ -211,6 +321,8 @@ public sealed record PluginConfigurationObject
                 ConfigPluginId = configPluginId,
                 Id = Guid.Parse(configObject.Id),
                 Type = PluginConfigurationObjectType.DATA_SOURCE,
+                Name = configObject.Name,
+                Endpoint = DescribeEndpoint(configObject),
             });
 
             if (dryRun)
@@ -220,6 +332,9 @@ public sealed record PluginConfigurationObject
             if (objectIndex > -1)
             {
                 var existingObject = storedObjects[objectIndex];
+                if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                    continue;
+
                 configObject = configObject with { Num = existingObject.Num };
                 storedObjects[objectIndex] = configObject;
             }
@@ -249,12 +364,51 @@ public sealed record PluginConfigurationObject
     }
 
     /// <summary>
+    /// Checks whether a configuration plugin may replace a stored configuration object, or whether
+    /// that object belongs to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// Configuration objects are matched by their ID alone. Without this check, a local configuration
+    /// plugin could claim the ID of an object an organization deployed and replace it, e.g. to point
+    /// a self-hosted LLM provider at a different host.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="existingObject">The configuration object which is stored already.</param>
+    /// <param name="configPluginId">The configuration plugin which wants to replace that object.</param>
+    /// <returns>True when the plugin may replace the object, otherwise false.</returns>
+    private static bool MayReplaceConfigurationObject(IConfigurationObject existingObject, Guid configPluginId)
+    {
+        if (!existingObject.IsEnterpriseConfiguration || existingObject.EnterpriseConfigurationPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsOrganizationConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
+            return true;
+
+        if (PluginFactory.IsOrganizationConfigurationPlugin(configPluginId))
+            return true;
+
+        LOG.LogWarning("The configuration plugin '{ConfigPluginId}' tried to replace the object '{ConfigObjectName}' (id={ConfigObjectId}), which belongs to the configuration plugin '{OwningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.", configPluginId, existingObject.Name, existingObject.Id, existingObject.EnterpriseConfigurationPluginId);
+        return false;
+    }
+
+    /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to clean up.</typeparam>
     /// <param name="configObjectType">The type of configuration object to process.</param>
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
+    /// <param name="deployedEnterpriseConfigPluginIds">
+    /// The IDs of the configuration plugins which an organization deployed on this machine, including
+    /// those which could not be loaded. Objects of a deployed plugin are never removed, because the
+    /// plugin was not removed either.
+    /// </param>
+    /// <param name="notStartedConfigPluginIds">
+    /// The IDs of the configuration plugins which were loaded, but did not start. Their objects are
+    /// never removed either: such a plugin contributed nothing to the list of configuration objects,
+    /// so all of its objects would look as if the plugin had dropped them.
+    /// </param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
@@ -263,6 +417,8 @@ public sealed record PluginConfigurationObject
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
+        IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds,
+        IReadOnlySet<Guid> notStartedConfigPluginIds,
         IList<PluginConfigurationObject> configObjectList,
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
@@ -281,7 +437,26 @@ public sealed record PluginConfigurationObject
             var configObjectSourcePluginId = configuredObject.EnterpriseConfigurationPluginId;
             if(configObjectSourcePluginId == Guid.Empty)
                 continue;
-            
+
+            //
+            // Is the source plugin deployed, but could not be loaded? Then we must not touch any of
+            // its objects. The plugin was not removed, it is broken: it might be invalid Lua code,
+            // a missing `plugin.lua`, or an incomplete download. Removing the objects would delete
+            // the organization's providers and data sources, including their secrets, although the
+            // organization still manages this AI Studio instance:
+            //
+            if(deployedEnterpriseConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
+                continue;
+
+            //
+            // Was the source plugin loaded, but did not start? Then it is not broken, it could not
+            // run this time, e.g., because it ran out of time on a slow machine. It contributed no
+            // objects, so every one of its objects would look removed from the plugin. They stay
+            // until the plugin starts again and tells us which ones it still defines:
+            //
+            if(notStartedConfigPluginIds.Contains(configObjectSourcePluginId))
+                continue;
+
             // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left
             // over and should be removed:
             var templateSourcePlugin = availablePlugins.FirstOrDefault(plugin => plugin.Id == configObjectSourcePluginId);
@@ -306,6 +481,19 @@ public sealed record PluginConfigurationObject
         var wasConfigurationChanged = leftOverObjects.Count > 0;
         foreach (var item in leftOverObjects.Distinct())
         {
+            if (item is Settings.Provider provider)
+            {
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise provider '{ProviderName}': {Issue}", provider.InstanceName, deleteTokenizerResult.Message);
+            }
+            else if (item is EmbeddingProvider embeddingProvider)
+            {
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(embeddingProvider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise embedding provider '{ProviderName}': {Issue}", embeddingProvider.Name, deleteTokenizerResult.Message);
+            }
+
             configuredObjects.Remove(item);
         
             // Delete the API key from the OS keyring if the removed object has one:
@@ -316,6 +504,13 @@ public sealed record PluginConfigurationObject
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else
                     LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+            else if(item is IUserProvidedAPIKey { AllowUserProvidedAPIKey: true })
+            {
+                // The user manages their own key for this provider. Keep it in the OS keyring
+                // in case the organization's configuration comes back later, instead of forcing
+                // the user to re-enter it:
+                LOG.LogInformation($"Preserving the user-provided API key for removed enterprise provider '{item.Name}' in the OS keyring.");
             }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {
@@ -328,5 +523,135 @@ public sealed record PluginConfigurationObject
         }
 
         return wasConfigurationChanged;
+    }
+
+    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(ITokenizerStorage tokenizerStorage, Settings.Provider provider, string configuredTokenizerPath, string pluginPath)
+    {
+        var syncedTokenizer = await SyncTokenizerAsync(
+            tokenizerStorage,
+            configuredTokenizerPath,
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForProvider(provider),
+            $"provider '{provider.InstanceName}'");
+
+        return provider with { TokenizerPath = syncedTokenizer.Path };
+    }
+
+    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(ITokenizerStorage tokenizerStorage, EmbeddingProvider provider, string configuredTokenizerPath, string pluginPath)
+    {
+        var syncedTokenizer = await SyncTokenizerAsync(
+            tokenizerStorage,
+            configuredTokenizerPath,
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForEmbeddingProvider(provider),
+            $"embedding provider '{provider.Name}'");
+
+        //
+        // The embedding signature is built from the tokenizer's content, so the fingerprint travels
+        // with the provider. When neither the stored copy nor the file in the plugin could be read,
+        // there is nothing to build it from, and writing nothing would look like another tokenizer
+        // and cost every data source of this provider its index -- so in that case the previous
+        // fingerprint is kept rather than cleared.
+        //
+        var syncedTokenizerFingerprint = syncedTokenizer.Fingerprint;
+        if (string.IsNullOrEmpty(syncedTokenizerFingerprint) && !string.IsNullOrWhiteSpace(syncedTokenizer.Path))
+            syncedTokenizerFingerprint = provider.TokenizerFingerprint;
+
+        return provider with { TokenizerPath = syncedTokenizer.Path, TokenizerFingerprint = syncedTokenizerFingerprint };
+    }
+
+    /// <summary>
+    /// Stores the tokenizer a configuration plugin names for a model, or deletes what is stored for
+    /// the model when the plugin names none or an unusable one. A stored copy with the same content
+    /// as the file in the plugin is kept as it is.
+    /// </summary>
+    /// <param name="tokenizerStorage">Where tokenizers are checked and stored, the runtime outside of tests.</param>
+    /// <param name="configuredTokenizerPath">The tokenizer path as the plugin names it, relative to the plugin directory.</param>
+    /// <param name="storedTokenizerPath">The copy the provider points to so far, or an empty string when it has none.</param>
+    /// <param name="pluginPath">The directory of the plugin. The tokenizer has to lie inside it.</param>
+    /// <param name="modelId">The model the tokenizer belongs to, as TokenizerModelId builds it.</param>
+    /// <param name="logName">How the log names the provider, e.g., "provider 'Name'".</param>
+    /// <returns>The stored copy and the fingerprint of its content, or StoredTokenizer.NONE when no tokenizer is stored.</returns>
+    internal static async Task<StoredTokenizer> SyncTokenizerAsync(ITokenizerStorage tokenizerStorage, string configuredTokenizerPath, string storedTokenizerPath, string pluginPath, string modelId, string logName)
+    {
+        if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
+        {
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            return StoredTokenizer.NONE;
+        }
+
+        var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
+        if (resolvedPath is null)
+        {
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer path '{TokenizerPath}' for {LogName} is invalid. The tokenizer path must stay within the plugin directory '{PluginPath}'.", configuredTokenizerPath, logName, pluginPath);
+            return StoredTokenizer.NONE;
+        }
+
+        //
+        // Checking a tokenizer means the runtime builds it from the whole file, which takes most of
+        // a second for a common one, and every start of the plugin did that again for every
+        // tokenizer. A stored copy with the same content as the file in the plugin passed that check
+        // when it was stored, and storing it again would change nothing. Comparing the content also
+        // notices a copy which is gone or was changed since, and two files which cannot be read are
+        // not the same tokenizer.
+        //
+        var comparingStartedAt = Stopwatch.GetTimestamp();
+        var sourceFingerprint = await TokenizerFingerprint.ForFileAsync(resolvedPath);
+        if (!string.IsNullOrEmpty(sourceFingerprint) && !string.IsNullOrWhiteSpace(storedTokenizerPath))
+        {
+            var storedFingerprint = await TokenizerFingerprint.ForFileAsync(storedTokenizerPath);
+            if (storedFingerprint == sourceFingerprint)
+            {
+                LOG.LogInformation("The tokenizer for {LogName} is unchanged; kept the stored copy (checked in {Milliseconds:F0} ms).", logName, Stopwatch.GetElapsedTime(comparingStartedAt).TotalMilliseconds);
+                return new StoredTokenizer(storedTokenizerPath, storedFingerprint);
+            }
+        }
+
+        var validateResult = await tokenizerStorage.ValidateTokenizer(resolvedPath);
+        if (!validateResult.Success)
+        {
+            var deleteResult = await tokenizerStorage.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer for {LogName} is invalid. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, validateResult.Message);
+            return StoredTokenizer.NONE;
+        }
+
+        var storeResult = await tokenizerStorage.StoreTokenizer(modelId, resolvedPath);
+        if (!storeResult.Success)
+        {
+            LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);
+            return StoredTokenizer.NONE;
+        }
+
+        //
+        // The runtime copies the file as it is, so when the copy cannot be read right afterward, the
+        // file in the plugin still tells what is in it:
+        //
+        var storedTokenizerFingerprint = await TokenizerFingerprint.ForFileAsync(storeResult.StoredPath);
+        if (string.IsNullOrEmpty(storedTokenizerFingerprint))
+            storedTokenizerFingerprint = sourceFingerprint;
+
+        return new StoredTokenizer(storeResult.StoredPath, storedTokenizerFingerprint);
+    }
+
+    private static string? ResolvePluginTokenizerPath(string configuredTokenizerPath, string pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath))
+            return null;
+
+        var fullPluginPath = Path.GetFullPath(pluginPath);
+        var candidatePath = Path.GetFullPath(Path.Combine(fullPluginPath, configuredTokenizerPath));
+        return PathTools.IsInsideDirectory(fullPluginPath, candidatePath) ? candidatePath : null;
     }
 }

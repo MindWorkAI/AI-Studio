@@ -24,18 +24,6 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    /// On which layer to register the drop area. Higher layers have priority over lower layers.
-    /// </summary>
-    [Parameter]
-    public int Layer { get; set; }
-
-    /// <summary>
-    /// When true, pause catching dropped files. Default is false.
-    /// </summary>
-    [Parameter]
-    public bool PauseCatchingDrops { get; set; }
-
     [Parameter]
     public HashSet<FileAttachment> DocumentPaths { get; set; } = [];
 
@@ -46,8 +34,14 @@ public partial class AttachDocuments : MSGComponentBase
     public Func<HashSet<FileAttachment>, Task> OnChange { get; set; } = _ => Task.CompletedTask;
 
     /// <summary>
-    /// Catch all documents that are hovered over the AI Studio window and not only over the drop zone.
+    /// Makes this component the default target of its area, meaning of its page, assistant, or
+    /// dialog: it then also takes the drops which land anywhere in that area without hitting a zone
+    /// of their own.
     /// </summary>
+    /// <remarks>
+    /// Only one zone per area can hold that role, and if several ask for it, the first one in the
+    /// markup gets it.
+    /// </remarks>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
 
@@ -72,6 +66,12 @@ public partial class AttachDocuments : MSGComponentBase
 
     [Parameter]
     public AIStudio.Settings.Provider? Provider { get; set; }
+
+    /// <summary>
+    /// Gets or sets the optional picker and drop filter applied before standard attachment validation.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? AllowedFileTypes { get; set; }
 
     /// <summary>Optional persisted chat that can own transcript files immediately.</summary>
     [Parameter]
@@ -99,9 +99,6 @@ public partial class AttachDocuments : MSGComponentBase
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
-    private uint numDropAreasAboveThis;
-    private bool isComponentHovered;
-    private bool isDraggingOver;
     private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
         ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
@@ -116,10 +113,8 @@ public partial class AttachDocuments : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
+        this.ApplyFilters([], []);
 
-        // Register this drop area:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
     }
 
@@ -134,12 +129,12 @@ public partial class AttachDocuments : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaAttachmentsAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AttachDocuments)}: syncing media attachments");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no chat or assistant owner surface.</summary>
@@ -178,26 +173,18 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task SyncCompletedMediaAttachmentsAsync()
     {
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
-        var completed = delivery?.Attachments ?? [];
-        var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
+        // Owners that persist their own sources have already taken the media over when the batch
+        // started, so re-adding the delivered transcripts here would duplicate them.
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
+            ? Array.Empty<FileAttachment>()
+            : delivery?.Attachments ?? [];
+        var pending = this.OwnerChat?.Draft.MediaTranscripts ?? [];
         var changed = false;
-        var ownerPendingChanged = false;
-        
+
         foreach (var attachment in completed.Concat(pending))
             changed |= this.DocumentPaths.Add(attachment);
 
-        if (this.OwnerChat is not null)
-        {
-            foreach (var attachment in completed.OfType<ManagedTranscriptAttachment>())
-            {
-                if (this.OwnerChat.PendingMediaTranscripts.All(existing => existing.FilePath != attachment.FilePath))
-                {
-                    this.OwnerChat.PendingMediaTranscripts.Add(attachment);
-                    ownerPendingChanged = true;
-                }
-            }
-        }
-
+        var ownerPendingChanged = this.OwnerChat?.Draft.AddAttachments(completed.OfType<ManagedTranscriptAttachment>()) ?? false;
         if (changed || ownerPendingChanged)
         {
             await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
@@ -215,96 +202,38 @@ public partial class AttachDocuments : MSGComponentBase
         base.DisposeResources();
     }
 
-    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
-            return;
-
-        switch (triggeredEvent)
-        {
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    this.numDropAreasAboveThis++;
-                    this.PauseCatchingDrops = true;
-                }
-
-                break;
-            }
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-            {
-                if(data is int layer && layer > this.Layer)
-                {
-                    if(this.numDropAreasAboveThis > 0)
-                        this.numDropAreasAboveThis--;
-
-                    if(this.numDropAreasAboveThis is 0)
-                        this.PauseCatchingDrops = false;
-                }
-
-                break;
-            }
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
-                {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop hovered event.", this.Name);
-                    return;
-                }
-
-                this.isDraggingOver = true;
-                this.SetDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                this.isDraggingOver = false;
-                this.isComponentHovered = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var paths }:
-                if(this.PauseCatchingDrops)
-                    return;
-
-                if(!this.isComponentHovered && !this.CatchAllDocuments)
-                {
-                    this.Logger.LogDebug("Attach documents component '{Name}' is not hovered, ignoring file drop dropped event.", this.Name);
-                    return;
-                }
-
-                await this.AddFileBatchAsync(paths);
-                await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-                await this.OnChange(this.DocumentPaths);
-                this.isDraggingOver = false;
-                this.ClearDragClass();
-                this.StateHasChanged();
-                break;
-        }
-    }
-
     #endregion
 
-    private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mt-4 mud-width-full mud-height-full";
+    /// <summary>
+    /// Attaches what the user dropped on the zone of this component.
+    /// </summary>
+    /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
+    private async Task PathsDropped(List<string> paths) => await this.AttachDroppedPathsAsync(paths);
 
-    private string dragClass = DEFAULT_DRAG_CLASS;
+    /// <summary>
+    /// Attaches dropped paths and reports which files it made of them.
+    /// </summary>
+    /// <remarks>
+    /// This is what the attachment dialogs call while they are open: a drop lands in the dialog the
+    /// user is looking at, yet only this component knows how to turn a path into an attachment. The
+    /// answer is what lets those dialogs show the result, see PathsDropped for our own zone.
+    /// </remarks>
+    /// <param name="paths">The dropped paths, in the order the runtime delivered them.</param>
+    /// <returns>The files this call attached, in the order they were dropped.</returns>
+    private async Task<IReadOnlyList<FileAttachment>> AttachDroppedPathsAsync(List<string> paths)
+    {
+        var attached = await this.AddFileBatchAsync(paths);
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
+
+        //
+        // A dialog reaches us through a delegate rather than through an event callback, so nothing
+        // renders this component afterwards. Without this, the number on the badge would stay at its
+        // old value until something else happens to render us.
+        //
+        this.StateHasChanged();
+        return attached;
+    }
 
     private async Task AddFilesManually()
     {
@@ -314,7 +243,7 @@ public partial class AttachDocuments : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
+            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"), this.AllowedFileTypes);
             if (selectFiles.UserCancelled)
                 return;
 
@@ -334,11 +263,20 @@ public partial class AttachDocuments : MSGComponentBase
             return;
 
         var previousAttachments = this.DocumentPaths.ToHashSet();
-        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
-        foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
+        this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths, this.AttachDroppedPathsAsync, () => this.IsUnavailable);
+        var removedAttachments = previousAttachments.Except(this.DocumentPaths).ToList();
+        foreach (var removedAttachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
-        
-        this.ReconcileOwnerPendingTranscripts();
+
+        this.RemoveFromOwnerDraft(removedAttachments);
+
+        //
+        // Said out loud, like every other path in this file. Removing a file in the dialog changed
+        // the attachments while whoever owns them heard nothing about it -- the chat then kept
+        // showing what the message no longer carries.
+        //
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
     }
 
     private async Task ClearAllFiles()
@@ -346,39 +284,14 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.IsUnavailable)
             return;
 
-        foreach (var attachment in this.DocumentPaths)
+        var removedAttachments = this.DocumentPaths.ToList();
+        foreach (var attachment in removedAttachments)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
-        
+
         this.DocumentPaths.Clear();
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft(removedAttachments);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
-    }
-
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
-
-    private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
-
-    private void OnMouseEnter(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
-        this.isComponentHovered = true;
-        this.SetDragClass();
-        this.StateHasChanged();
-    }
-
-    private void OnMouseLeave(EventArgs _)
-    {
-        if(this.IsUnavailable || this.PauseCatchingDrops)
-            return;
-
-        this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
-        this.isComponentHovered = false;
-        this.ClearDragClass();
-        this.StateHasChanged();
     }
 
     private async Task RemoveDocument(FileAttachment fileAttachment)
@@ -388,25 +301,44 @@ public partial class AttachDocuments : MSGComponentBase
 
         this.DocumentPaths.Remove(fileAttachment);
         ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
-        this.ReconcileOwnerPendingTranscripts();
+        this.RemoveFromOwnerDraft([fileAttachment]);
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
 
-    /// <summary>Keeps persisted chat-draft transcript references aligned with the composer.</summary>
-    private void ReconcileOwnerPendingTranscripts()
-    {
-        if (this.OwnerChat is null)
-            return;
+    /// <summary>
+    /// Removes the attachments the user took out of the composer from the draft of the owner chat.
+    /// </summary>
+    /// <remarks>
+    /// Only what the user removed leaves the draft. The media transcription service hands a finished
+    /// transcript to the draft before the composer shows it, so aligning the draft with the composer
+    /// would drop such a transcript, and its file would stay behind without an owner.
+    /// </remarks>
+    /// <param name="removedAttachments">The attachments the user removed.</param>
+    private void RemoveFromOwnerDraft(IEnumerable<FileAttachment> removedAttachments) => this.OwnerChat?.Draft.RemoveAttachments(removedAttachments);
 
-        var retainedPaths = this.DocumentPaths.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
-        this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
-    }
-
-    private async Task AddFileBatchAsync(IEnumerable<string> paths)
+    /// <summary>
+    /// Validates the given paths and attaches every file which passes.
+    /// </summary>
+    /// <param name="paths">The paths to attach, in the order they arrived.</param>
+    /// <returns>
+    /// The files this call attached, in the order they arrived. Media files are never among them:
+    /// they go to the transcription service and become attachments only once their transcript is
+    /// ready, which is long after this call has returned.
+    /// </returns>
+    private async Task<IReadOnlyList<FileAttachment>> AddFileBatchAsync(IEnumerable<string> paths)
     {
+        var attached = new List<FileAttachment>();
         var pathList = paths.ToList();
+        if (this.AllowedFileTypes is { Length: > 0 })
+        {
+            var rejectedPaths = pathList.Where(path => !FileTypes.IsAllowedPath(path, this.AllowedFileTypes)).ToArray();
+            pathList.RemoveAll(path => rejectedPaths.Contains(path, StringComparer.Ordinal));
+            if (rejectedPaths.Length > 0)
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Some files do not use an allowed format and were not attached.")));
+        }
+
         var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
         if (inaccessiblePaths.Count > 0)
         {
@@ -420,38 +352,50 @@ public partial class AttachDocuments : MSGComponentBase
         var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
         var regularPaths = existingPaths.Except(mediaPaths).ToList();
 
-        var canAddRegularFiles = true;
-        if (regularPaths.Count > 0)
+        //
+        // Only the formats we convert with Pandoc depend on a Pandoc installation. Everything
+        // else, PDFs in particular, is read by the Rust runtime itself, so those files must stay
+        // attachable without Pandoc.
+        //
+        var canAddPandocFiles = true;
+        if (regularPaths.Any(FileTypes.RequiresPandoc))
         {
             var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
                 showSuccessMessage: false,
                 showDialog: true);
-            canAddRegularFiles = pandocState.IsAvailable;
+            canAddPandocFiles = pandocState.IsAvailable;
         }
 
         foreach (var path in regularPaths)
         {
-            if (!canAddRegularFiles)
-                break;
-
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(
-                    FileExtensionValidation.UseCase.ATTACHING_CONTENT,
-                    path,
-                    this.ValidateMediaFileTypes,
-                    this.Provider))
+            if (!canAddPandocFiles && FileTypes.RequiresPandoc(path))
+            {
+                this.Logger.LogWarning("The file '{Path}' needs Pandoc and was not attached.", path);
                 continue;
-            this.DocumentPaths.Add(FileAttachment.FromPath(path));
+            }
+
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
+                continue;
+
+            //
+            // This counts as attached even when the set already held the file: the user just
+            // dropped it, and whoever asked us wants to hear about the file they aimed at, not
+            // about whether it happened to be new to us.
+            //
+            var attachment = FileAttachment.FromPath(path);
+            this.DocumentPaths.Add(attachment);
+            attached.Add(attachment);
         }
 
         if (mediaPaths.Count is 0)
-            return;
+            return attached;
 
         if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
         {
             await this.MessageBus.SendWarning(new(
                 Icons.Material.Filled.VoiceChat,
                 this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
-            return;
+            return attached;
         }
 
         var names = string.Join('\n', mediaPaths.Select(path => $"- {Markdown.EscapeInlineText(Path.GetFileName(path))}"));
@@ -471,16 +415,28 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
             this.T("Transcribe media files"),
             dialogParameters,
-            DialogOptions.FULLSCREEN);
+            DialogOptions.BLOCKING_FULLSCREEN);
 
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
-            return;
+            return attached;
 
         if (this.OwnerChat is null)
             this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
 
+        // Owners that persist their own sources show the file right away and keep it next to the
+        // stored document, instead of waiting for the transcription to be delivered back.
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
+        {
+            foreach (var mediaPath in mediaPaths)
+                this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));
+            
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
+        }
+
         this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
+        return attached;
     }
 
     private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);
@@ -494,6 +450,8 @@ public partial class AttachDocuments : MSGComponentBase
         var dialogParameters = new DialogParameters<DocumentCheckDialog>
         {
             { x => x.Document, fileAttachment },
+            { x => x.AttachPaths, this.AttachDroppedPathsAsync },
+            { x => x.IsAttachingUnavailable, () => this.IsUnavailable },
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);

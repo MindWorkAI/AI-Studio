@@ -5,11 +5,11 @@
     <MudTooltip Text="@T("Shows and hides the confidence card with information about the selected LLM provider.")" Placement="Placement.Top">
         @if (this.Mode is PopoverTriggerMode.ICON)
         {
-            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@(() => this.ToggleConfidence())"/>
+            <MudIconButton Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@this.ToggleConfidence"/>
         }
         else
         {
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@(() => this.ToggleConfidence())">
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Security" IconClass="confidence-icon" Style="@this.LLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager)" OnClick="@this.ToggleConfidence">
                 @T("Confidence")
             </MudButton>
         }
@@ -28,7 +28,7 @@
                 <MudText Typo="Typo.h6">
                     @T("Description")
                 </MudText>
-                <MudMarkdown Value="@this.currentConfidence.Description" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                <MudJustifiedMarkdown Value="@this.currentConfidence.Description" />
 
                 @if (this.currentConfidence.Sources.Count > 0)
                 {
@@ -61,7 +61,7 @@
                 </MudText>
             </MudCardContent>
             <MudCardActions>
-                <MudButton Variant="Variant.Filled" OnClick="@(() => this.HideConfidence())">
+                <MudButton Variant="Variant.Filled" OnClick="@this.HideConfidence">
                     Close
                 </MudButton>
             </MudCardActions>

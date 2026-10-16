@@ -124,7 +124,7 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_EMAIL_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputBulletPoints = deferredContent;
         

@@ -9,8 +9,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginRevisionDialogResult(Guid PluginId, string PluginName, PluginAssistantAudit? Audit);
-
 public partial class AssistantPluginRevisionDialog : MSGComponentBase
 {
     private const string PLUGIN_FILE_NAME = "plugin.lua";
@@ -23,7 +21,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
     private AssistantPluginGenerationService AssistantPluginGenerationService { get; init; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
@@ -144,7 +142,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
             if (this.availablePlugin is null)
                 return;
 
-            this.revisionCheckResult = await this.AssistantPluginInstallService.CheckInstalledAssistantUpdateAsync(this.availablePlugin, this.revisedLua, CancellationToken.None);
+            this.revisionCheckResult = await this.PluginInstallService.CheckInstalledAssistantUpdateAsync(this.availablePlugin, this.revisedLua, CancellationToken.None);
             if (this.revisionCheckResult.Success)
                 return;
 
@@ -168,7 +166,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
 
         try
         {
-            var result = await this.AssistantPluginInstallService.UpdateInstalledAssistantAsync(this.availablePlugin, this.revisedLua, CancellationToken.None);
+            var result = await this.PluginInstallService.UpdateInstalledAssistantAsync(this.availablePlugin, this.revisedLua, CancellationToken.None);
             if (!result.Success)
             {
                 LOGGER.LogError($"Failed to revise assistant plugin '{result.PluginName}' ({result.PluginId}) in '{result.PluginDirectory}' with issue '{result.Issue}'.");
@@ -200,7 +198,12 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
         await this.InvokeAsync(this.StateHasChanged);
         try
         {
-            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin);
+            //
+            // The provider the user picked for the revision serves as the fallback: it is used only
+            // when nothing is configured for the audit agent, and only when it is trusted enough for
+            // an audit. Without it, a revised plugin could not be checked at all here.
+            //
+            var audit = await this.AssistantPluginAuditService.RunAuditAsync(updatedPlugin, fallbackProvider: this.providerSettings);
             if (audit.Level is AssistantAuditLevel.UNKNOWN)
                 return audit;
 

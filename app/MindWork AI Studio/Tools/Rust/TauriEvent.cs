@@ -5,7 +5,8 @@ namespace AIStudio.Tools.Rust;
 /// </summary>
 /// <param name="EventType">The type of the Tauri event.</param>
 /// <param name="Payload">The payload of the Tauri event.</param>
-public readonly record struct TauriEvent(TauriEventType EventType, List<string> Payload)
+/// <param name="Position">Where the cursor was, for the drag and drop events which know it.</param>
+public readonly record struct TauriEvent(TauriEventType EventType, List<string> Payload, DropPosition? Position = null)
 {
     /// <summary>
     /// Attempts to parse the first payload element as a shortcut.
@@ -27,6 +28,28 @@ public readonly record struct TauriEvent(TauriEventType EventType, List<string> 
 
         // Try parsing snake_case format (e.g., "voice_recording_toggle"):
         return TryParseSnakeCase(this.Payload[0], out shortcut);
+    }
+
+    /// <summary>
+    /// Reads the cursor position of a drag and drop event.
+    /// </summary>
+    /// <remarks>
+    /// The coordinates are viewport-relative CSS pixels, ready for a hit test in the browser. Only the
+    /// drag and drop events carry them, which is why the caller has to ask instead of assuming.
+    /// </remarks>
+    /// <param name="x">The distance from the left edge of the viewport, in CSS pixels.</param>
+    /// <param name="y">The distance from the top edge of the viewport, in CSS pixels.</param>
+    /// <returns>True if the event carried a position, false otherwise.</returns>
+    public bool TryGetDropPosition(out double x, out double y)
+    {
+        x = 0.0;
+        y = 0.0;
+        if (this.Position is not { } position)
+            return false;
+
+        x = position.X;
+        y = position.Y;
+        return true;
     }
 
     /// <summary>

@@ -18,5 +18,3 @@ public partial class MudTextList : ComponentBase
     
     private string Classes => $"mud-text-list {this.Class}";
 }
-
-public readonly record struct TextItem(string Header, string Text);

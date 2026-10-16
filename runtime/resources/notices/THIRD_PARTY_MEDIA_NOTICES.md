@@ -149,6 +149,28 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+## Apache ECharts 6.1.0 common
+
+Copyright 2017-2026 The Apache Software Foundation
+
+Apache ECharts is licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+The bundled distribution includes zrender and other BSD-licensed subcomponents.
+Their copyright and license notices are preserved in the bundled
+`echarts.common.min.js` file and in the Apache ECharts distribution:
+https://github.com/apache/echarts/tree/6.1.0/licenses
+
+## image 0.25.10
+
+Copyright image-rs developers
+
+Licensed, at your option, under either the Apache License, Version 2.0 or the
+MIT License:
+
+- https://www.apache.org/licenses/LICENSE-2.0
+- https://github.com/image-rs/image/blob/v0.25.10/LICENSE-MIT
+
 ## webm-iterable 0.6.4
 
 MIT License

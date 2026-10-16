@@ -23,9 +23,22 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     
     [Parameter]
     public DataSourceERI_V1 DataSource { get; set; }
-    
+
+    /// <summary>
+    /// Whether the data source was imported. It then fills the form like an edited one, but the
+    /// dialog does not connect to its server before the user tests the connection.
+    /// </summary>
+    [Parameter]
+    public bool IsImport { get; set; }
+
+    /// <summary>
+    /// The token or password an imported data source brought along.
+    /// </summary>
+    [Parameter]
+    public string ImportedSecret { get; set; } = string.Empty;
+
     [Inject]
-    private ILogger<ProviderDialog> Logger { get; init; } = null!;
+    private ILogger<DataSourceERI_V1Dialog> Logger { get; init; } = null!;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -43,6 +56,8 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataSecretStorageIssue = string.Empty;
+    private string importRetrievalIssue = string.Empty;
+    private string importedRetrievalId = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
@@ -87,16 +102,17 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
-        // Load the used instance names:
-        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant()).ToList();
+        // Load the used instance names, those of the mailboxes included:
+        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
+            .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Select(x => x.Name.ToLowerInvariant()))
+            .ToList();
         
-        // When editing, we need to load the data:
-        if(this.IsEditing)
+        // An edited data source fills the form, and so does an imported one:
+        if(this.IsEditing || this.IsImport)
         {
             //
             // Assign the data to the form fields:
             //
-            this.dataEditingPreviousInstanceName = this.DataSource.Name.ToLowerInvariant();
             this.dataNum = this.DataSource.Num;
             this.dataId = this.DataSource.Id;
             this.dataName = this.DataSource.Name;
@@ -112,7 +128,12 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             // restore the selected retrieval process id. That's why we
             // assign the selected retrieval id to the default retrieval process:
             this.dataSelectedRetrievalProcess = this.dataSelectedRetrievalProcess with { Id = this.DataSource.SelectedRetrievalId };
+        }
 
+        // When editing, we need to load the data:
+        if(this.IsEditing)
+        {
+            this.dataEditingPreviousInstanceName = this.DataSource.Name.ToLowerInvariant();
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {
                 // Load the secret:
@@ -133,7 +154,13 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             // Select the retrieval process:
             this.dataSelectedRetrievalProcess = this.availableRetrievalProcesses.FirstOrDefault(n => n.Id == this.DataSource.SelectedRetrievalId);
         }
-        
+        else if (this.IsImport)
+        {
+            // The first connection test, which the user starts, selects the imported retrieval process:
+            this.dataSecret = this.ImportedSecret;
+            this.importedRetrievalId = this.DataSource.SelectedRetrievalId;
+        }
+
         await base.OnInitializedAsync();
     }
 
@@ -177,6 +204,8 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         };
     }
     
+    private void ClearImportRetrievalIssue() => this.importRetrievalIssue = string.Empty;
+
     private bool IsConnectionEncrypted() => this.dataHostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
 
     private bool IsConnectionPossible()
@@ -251,7 +280,23 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             }
             
             this.availableRetrievalProcesses = retrievalInfoRequest.Data ?? [];
-            
+
+            // Only the first successful test after an import resolves the imported retrieval ID;
+            // afterward, the selection belongs to the user:
+            if (!string.IsNullOrWhiteSpace(this.importedRetrievalId))
+            {
+                var importedRetrieval = this.availableRetrievalProcesses.FirstOrDefault(item => item.Id == this.importedRetrievalId);
+                if (importedRetrieval != default)
+                    this.dataSelectedRetrievalProcess = importedRetrieval;
+                else
+                {
+                    this.importRetrievalIssue = string.Format(T("The server does not offer the imported retrieval process '{0}'. Please select another one before you save."), this.importedRetrievalId);
+                    this.dataSelectedRetrievalProcess = default;
+                }
+
+                this.importedRetrievalId = string.Empty;
+            }
+
             this.connectionTested = true;
             this.connectionSuccessfulTested = true;
             this.Logger.LogInformation("Connection to the ERI v1 server was successful tested.");
@@ -330,6 +375,19 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);
                 await this.form.Validate();
                 return;
+            }
+
+            //
+            // The OS keyring stores the secret under the name of the data source, so a renamed one
+            // got a new entry just now, and the old one goes once the new one is in place. A name
+            // which differs only in case is no rename here: some keyrings ignore case, so both
+            // names lead to the same entry, and deleting the old one would delete the secret.
+            //
+            if (this.IsEditing && !string.Equals(this.DataSource.Name, addedDataSource.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                var deleteResponse = await this.RustService.DeleteSecret(this.DataSource, SecretStoreType.DATA_SOURCE);
+                if (!deleteResponse.Success)
+                    this.Logger.LogWarning($"Failed to delete the secret of the data source '{this.dataId}' stored under its previous name: {deleteResponse.Issue}");
             }
         }
         

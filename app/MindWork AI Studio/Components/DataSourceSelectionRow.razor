@@ -1,0 +1,24 @@
+@using AIStudio.Settings
+@using AIStudio.Provider
+@inherits MSGComponentBase
+
+<MudTooltip Text="@this.GetBlockedTooltip()" Disabled="@(!this.IsBlocked)" RootStyle="display: block;" Placement="Placement.Top">
+    <MudListItem Value="@this.DataSource" Disabled="@this.IsBlocked">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Style="min-width: 0; width: 100%;">
+            <MudText Typo="Typo.body2" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
+                @this.DataSource.Name
+            </MudText>
+            @if (this.DataSource is IInternalDataSource internalSource)
+            {
+                <MudSpacer/>
+                @if (this.IsBlocked)
+                {
+                    <MudIcon Icon="@this.GetBlockedIcon()" Size="Size.Small" Color="@this.GetBlockedIconColor()" Style="flex-shrink: 0;"/>
+                }
+                <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                    <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
+                </MudTooltip>
+            }
+        </MudStack>
+    </MudListItem>
+</MudTooltip>

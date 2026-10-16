@@ -10,7 +10,8 @@ public static class PluginTypeExtensions
         PluginType.ASSISTANT => TB("Assistant plugin"),
         PluginType.CONFIGURATION => TB("Configuration plugin"),
         PluginType.THEME => TB("Theme plugin"),
-        
+        PluginType.MODEL => TB("Model plugin"),
+
         _ => TB("Unknown plugin type"),
     };
     
@@ -20,7 +21,8 @@ public static class PluginTypeExtensions
         PluginType.ASSISTANT => "assistants",
         PluginType.CONFIGURATION => "configurations",
         PluginType.THEME => "themes",
-        
+        PluginType.MODEL => "models",
+
         _ => "unknown",
     };
 }

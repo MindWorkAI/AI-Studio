@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Net.Http.Headers;
 
 namespace AIStudio.Tools.PluginSystem;
@@ -46,7 +45,7 @@ public static partial class PluginFactory
         
         LOG.LogInformation($"Try to download configuration plugin with ID='{configPlugId}' from server='{configServerUrl}' (GET {downloadUrl})");
         var tempDownloadFile = Path.GetTempFileName();
-        var stagedDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.staging-{Guid.NewGuid():N}");
+        var stagedDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.staging-{Guid.NewGuid():N}");
         string? backupDirectory = null;
         var wasSuccessful = false;
         try
@@ -67,10 +66,10 @@ public static partial class PluginFactory
 
             ExtractConfigPluginArchive(tempDownloadFile, stagedDirectory);
 
-            var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+            var configDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
             if (Directory.Exists(configDirectory))
             {
-                backupDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.backup-{Guid.NewGuid():N}");
+                backupDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.backup-{Guid.NewGuid():N}");
                 Directory.Move(configDirectory, backupDirectory);
             }
 
@@ -85,7 +84,7 @@ public static partial class PluginFactory
         {
             LOG.LogError(e, "An error occurred while downloading or extracting the enterprise configuration plugin.");
 
-            var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+            var configDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
             if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !Directory.Exists(configDirectory))
             {
                 try
@@ -130,69 +129,11 @@ public static partial class PluginFactory
         return wasSuccessful;
     }
 
-    // Compatibility shim for Windows-created ZIPs with backslashes in entry names (dotnet/runtime#27620).
-    // See documentation/compatibility-shims/2026-07-enterprise-config-zip-backslashes.md.
     private static void ExtractConfigPluginArchive(string sourceArchiveFileName, string destinationDirectory)
     {
-        using var archive = ZipFile.OpenRead(sourceArchiveFileName);
-        Directory.CreateDirectory(destinationDirectory);
-
-        var destinationDirectoryFullPath = Path.GetFullPath(destinationDirectory);
-        if (!destinationDirectoryFullPath.EndsWith(Path.DirectorySeparatorChar))
-            destinationDirectoryFullPath += Path.DirectorySeparatorChar;
-
-        foreach (var entry in archive.Entries)
-        {
-            var normalizedEntryName = NormalizeConfigPluginZipEntryName(entry.FullName);
-            var destinationPath = GetConfigPluginZipEntryDestinationPath(destinationDirectoryFullPath, normalizedEntryName);
-
-            if (normalizedEntryName.EndsWith('/'))
-            {
-                if (entry.Length != 0)
-                    throw new InvalidDataException($"The enterprise configuration plugin archive contains a directory entry with data: '{entry.FullName}'.");
-
-                Directory.CreateDirectory(destinationPath);
-                continue;
-            }
-
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            entry.ExtractToFile(destinationPath);
-        }
+        PluginArchive.Extract(sourceArchiveFileName, destinationDirectory);
 
         if (!Directory.EnumerateFiles(destinationDirectory, "plugin.lua", SearchOption.AllDirectories).Any())
             throw new InvalidDataException("The enterprise configuration plugin archive does not contain a plugin.lua file.");
-    }
-
-    private static string NormalizeConfigPluginZipEntryName(string entryName)
-    {
-        var normalizedEntryName = entryName.Replace('\\', '/');
-        if (string.IsNullOrWhiteSpace(normalizedEntryName))
-            throw new InvalidDataException("The enterprise configuration plugin archive contains an empty entry name.");
-
-        if (normalizedEntryName.Contains('\0'))
-            throw new InvalidDataException($"The enterprise configuration plugin archive contains an invalid entry name: '{entryName}'.");
-
-        if (normalizedEntryName.StartsWith('/'))
-            throw new InvalidDataException($"The enterprise configuration plugin archive contains a rooted entry name: '{entryName}'.");
-
-        if (normalizedEntryName is [_, ':', ..])
-            throw new InvalidDataException($"The enterprise configuration plugin archive contains a drive-qualified entry name: '{entryName}'.");
-
-        var pathSegments = normalizedEntryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (pathSegments.Length == 0 || pathSegments.Any(segment => segment is "." or ".."))
-            throw new InvalidDataException($"The enterprise configuration plugin archive contains an unsafe entry name: '{entryName}'.");
-
-        return normalizedEntryName;
-    }
-
-    private static string GetConfigPluginZipEntryDestinationPath(string destinationDirectoryFullPath, string normalizedEntryName)
-    {
-        var pathSegments = normalizedEntryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var relativePath = Path.Combine(pathSegments);
-        var destinationPath = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, relativePath));
-        if (!destinationPath.StartsWith(destinationDirectoryFullPath, StringComparison.Ordinal))
-            throw new InvalidDataException($"The enterprise configuration plugin archive contains an entry outside the destination directory: '{normalizedEntryName}'.");
-
-        return destinationPath;
     }
 }

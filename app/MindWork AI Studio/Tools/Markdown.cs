@@ -1,4 +1,5 @@
 using Markdig;
+using Markdig.Syntax;
 using System.Text;
 
 namespace AIStudio.Tools;
@@ -56,6 +57,30 @@ public static class Markdown
         }
 
         return escaped.ToString();
+    }
+
+    /// <summary>Closes a code fence which the text opened but never closed.</summary>
+    /// <remarks>
+    /// An unclosed fence runs to the end of the document, so anything appended after it would be
+    /// read as code instead of as Markdown. The chat never shows this, because it renders the answer
+    /// and what belongs below it separately. A document is one text, and there an answer which ends
+    /// in an open fence would swallow whatever follows it.
+    /// </remarks>
+    /// <param name="markdownText">The Markdown text to inspect.</param>
+    /// <returns>The text with its open fence closed, or the text itself when no fence is open.</returns>
+    public static string CloseOpenCodeFence(string markdownText)
+    {
+        if (string.IsNullOrWhiteSpace(markdownText))
+            return markdownText;
+
+        var document = Markdig.Markdown.Parse(markdownText, SAFE_MARKDOWN_PIPELINE);
+
+        // Only the last fence of a text can be an open one: an open fence takes everything
+        // after it with it, so no other block is able to follow it.
+        if (document.Descendants<FencedCodeBlock>().LastOrDefault() is not { ClosingFencedCharCount: 0 } openFence)
+            return markdownText;
+
+        return $"{markdownText}{Environment.NewLine}{new string(openFence.FencedChar, openFence.OpeningFencedCharCount)}";
     }
 
     public static string RemoveSharedIndentation(string value)

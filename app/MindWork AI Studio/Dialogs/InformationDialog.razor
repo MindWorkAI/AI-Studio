@@ -1,0 +1,16 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3">
+            <MudIcon Icon="@this.Icon" Color="@this.IconColor" Size="Size.Large"/>
+            <MudJustifiedText Typo="Typo.body1">
+                @this.Message
+            </MudJustifiedText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

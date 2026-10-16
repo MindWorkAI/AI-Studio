@@ -1,7 +1,6 @@
 using System.Diagnostics;
-using System.Reflection;
 
-using AIStudio.Tools.Metadata;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using SharedTools;
@@ -10,12 +9,8 @@ namespace AIStudio.Tools;
 
 public sealed class PandocProcessBuilder
 {
-    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
-    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
-
-    // Use runtime detection instead of metadata to ensure correct RID on dev machines:
+    // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
     private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
-    private static readonly RID METADATA_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
     private const string FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY = "/app/plugins/pandoc/bin";
 
@@ -139,19 +134,6 @@ public sealed class PandocProcessBuilder
         try
         {
             //
-            // Log a warning if the runtime-detected RID differs from the metadata RID.
-            // This can happen on dev machines where the metadata.txt contains stale values.
-            // We always use the runtime-detected RID for correct behavior.
-            //
-            if (shouldLog && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
-            {
-                LOGGER.LogWarning(
-                    "Runtime-detected RID '{RuntimeRID}' differs from metadata RID '{MetadataRID}'. Using runtime-detected RID. This is expected on dev machines where metadata.txt may be outdated.",
-                    CPU_ARCHITECTURE.ToUserFriendlyName(),
-                    METADATA_ARCHITECTURE.ToUserFriendlyName());
-            }
-
-            //
             // First, we try to find the pandoc executable in the data directory.
             // Any local installation should be preferred over the system-wide installation.
             //
@@ -216,8 +198,12 @@ public sealed class PandocProcessBuilder
                 }
                 catch (Exception ex)
                 {
-                    if (shouldLog)
-                        LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
+                    //
+                    // Always logged, in contrast to the lines above: those describe a stable setup,
+                    // while this one is a transient fault, e.g. an unreachable data directory on a
+                    // network drive. Suppressing repeats would hide it after the first call.
+                    //
+                    LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
                 }
             }
 
@@ -252,7 +238,7 @@ public sealed class PandocProcessBuilder
     /// </summary>
     public static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
 
-    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName, string linuxPackageType)
+    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName, LinuxPackageType linuxPackageType)
     {
         var candidates = new List<string>();
 
@@ -271,7 +257,7 @@ public sealed class PandocProcessBuilder
                 break;
 
             case RID.LINUX_X64 or RID.LINUX_ARM64:
-                if (string.Equals(linuxPackageType, "flatpak", StringComparison.OrdinalIgnoreCase))
+                if (linuxPackageType is LinuxPackageType.FLATPAK)
                     AddCandidate(candidates, FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY, executableName);
 
                 AddCandidate(candidates, "/usr/local/bin", executableName);

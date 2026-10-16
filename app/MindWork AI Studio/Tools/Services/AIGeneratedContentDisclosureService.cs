@@ -35,11 +35,11 @@ public sealed class AIGeneratedContentDisclosureService(SettingsManager settings
     /// <summary>
     /// Copies AI-generated text with the configured disclosure.
     /// </summary>
-    public async Task CopyText2Clipboard(ISnackbar snackbar, string text)
+    public async Task CopyText2Clipboard(string text)
     {
         if (!this.SettingsManager.ConfigurationData.App.AddAIGeneratedContentDisclosure || string.IsNullOrWhiteSpace(text))
         {
-            await this.RustService.CopyText2Clipboard(snackbar, text);
+            await this.RustService.CopyText2Clipboard(text);
             return;
         }
 
@@ -47,7 +47,7 @@ public sealed class AIGeneratedContentDisclosureService(SettingsManager settings
         var disclosure = await this.GetDisclosure();
         var plainText = $"{contentWithoutTrailingLineBreaks}{Environment.NewLine}{Environment.NewLine}{disclosure}";
         var htmlText = $"<div style=\"white-space: pre-wrap;\">{WebUtility.HtmlEncode(contentWithoutTrailingLineBreaks)}</div><div style=\"font-weight: bold; margin-top: 1em;\">{WebUtility.HtmlEncode(disclosure)}</div>";
-        await this.RustService.CopyRichText2Clipboard(snackbar, plainText, htmlText);
+        await this.RustService.CopyRichText2Clipboard(plainText, htmlText);
     }
 
     private async Task<string> GetDisclosure()

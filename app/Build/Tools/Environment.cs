@@ -34,6 +34,28 @@ public static class Environment
         return Path.GetFullPath(directory);
     }
     
+    public static string GetTestsDirectory()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var directory = Path.Combine(currentDirectory, "..", "Tests");
+        return Path.GetFullPath(directory);
+    }
+
+    /// <summary>
+    /// The root of the git repository, which is what a path in a report is written relative to.
+    /// </summary>
+    /// <remarks>
+    /// GitHub resolves the file of an annotation against the checkout, not against wherever a tool
+    /// happened to run. An absolute path of somebody's machine would therefore land the annotation
+    /// nowhere, without saying so.
+    /// </remarks>
+    public static string GetRepositoryDirectory()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+        var directory = Path.Combine(currentDirectory, "..", "..");
+        return Path.GetFullPath(directory);
+    }
+
     public static string GetRustRuntimeDirectory()
     {
         var currentDirectory = Directory.GetCurrentDirectory();

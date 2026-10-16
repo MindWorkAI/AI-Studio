@@ -44,10 +44,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     [Parameter]
     public Size Size { get; set; } = Size.Small;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-    
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -68,36 +65,37 @@ public partial class MudCopyClipboardButton : ComponentBase
     private async Task CopyToClipboard(string textContent)
     {
         if (this.IsAIGenerated)
-            await this.DisclosureService.CopyText2Clipboard(this.Snackbar, textContent);
+            await this.DisclosureService.CopyText2Clipboard(textContent);
         else
-            await this.RustService.CopyText2Clipboard(this.Snackbar, textContent);
+            await this.RustService.CopyText2Clipboard(textContent);
     }
     
     /// <summary>
     /// Copy this block's content to the clipboard.
     /// </summary>
+    /// <remarks>
+    /// The user copies what the card shows, and the card shows the answer together with the sources
+    /// AI Studio collected for it. Pasting the answer into a mail without them would leave the
+    /// reader with claims nobody is able to check.
+    /// </remarks>
     private async Task CopyToClipboard(IContent? contentToCopy)
     {
         if (contentToCopy is null)
             return;
-        
+
         switch (this.Type)
         {
-            case ContentType.TEXT:
-                var textContent = (ContentText) contentToCopy;
+            case ContentType.TEXT when contentToCopy.TryGetExportMarkdown(out var markdown):
                 if (this.IsAIGenerated)
-                    await this.DisclosureService.CopyText2Clipboard(this.Snackbar, textContent.Text);
+                    await this.DisclosureService.CopyText2Clipboard(markdown);
                 else
-                    await this.RustService.CopyText2Clipboard(this.Snackbar, textContent.Text);
+                    await this.RustService.CopyText2Clipboard(markdown);
                 break;
             
             default:
-                this.Snackbar.Add(TB("Cannot copy this content type to clipboard."), Severity.Error, config =>
-                {
-                    config.Icon = Icons.Material.Filled.ContentCopy;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Error;
-                });
+                // This component is no MSGComponentBase, so it uses the shared bus instance the same
+                // way FileExtensionValidation does:
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, TB("Cannot copy this content type to clipboard.")));
                 break;
         }
     }

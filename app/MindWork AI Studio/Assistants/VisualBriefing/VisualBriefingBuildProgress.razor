@@ -1,0 +1,42 @@
+@inherits MSGComponentBase
+
+<MudExpansionPanels Class="mb-4" Elevation="0">
+    <MudExpansionPanel Text="@this.BuildProgressTitle" Expanded="@(this.Build?.Status is not VisualBriefingBuildStatus.COMPLETED)">
+        <MudStepperWithoutActions ActiveIndex="@this.BuildStepperIndex" ReadOnly="@true">
+            <ChildContent>
+                @for (var index = 0; index < STAGE_GROUPS.Length; index++)
+                {
+                    var stepIndex = index;
+                    <MudStep Title="@this.StepTitle(stepIndex)" Completed="@this.BuildGroupCompleted(stepIndex)" HasError="@this.BuildGroupStopped(stepIndex)">
+                        <MudStack Spacing="1" Class="mt-2">
+                            <MudText Typo="Typo.body2">@this.BuildGroupSummary(stepIndex)</MudText>
+                            @if (this.BuildGroupRunning(stepIndex))
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                                <MudText Typo="Typo.body2">@string.Format(T("{0} in progress..."), this.StepTitle(stepIndex))</MudText>
+                            }
+                            
+                            @if (this.BuildGroupStopped(stepIndex))
+                            {
+                                <MudAlert Severity="Severity.Error" Dense="true">
+                                    @this.BuildGroupFailure(stepIndex)
+                                </MudAlert>
+                                
+                                @if (this.Build?.Status is VisualBriefingBuildStatus.FAILED or VisualBriefingBuildStatus.CANCELED)
+                                {
+                                    <MudButton Variant="Variant.Filled"
+                                               Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow"
+                                               Disabled="@this.Disabled"
+                                               OnClick="@this.OnResume">
+                                        @T("Resume build")
+                                    </MudButton>
+                                }
+                            }
+                        </MudStack>
+                    </MudStep>
+                }
+            </ChildContent>
+        </MudStepperWithoutActions>
+    </MudExpansionPanel>
+</MudExpansionPanels>

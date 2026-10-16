@@ -1,0 +1,205 @@
+using System.Text.Json;
+
+using AIStudio.Tools.PluginSystem;
+
+namespace AIStudio.Tools.ToolCallingSystem;
+
+public interface IToolImplementation
+{
+    public string ImplementationKey { get; }
+
+    /// <summary>
+    /// Describes this tool: what the model may call, which settings it needs, and where it may
+    /// be used.
+    /// </summary>
+    /// <remarks>
+    /// For a tool written in C#, the definition and the implementation are one object. Tools that
+    /// arrive from elsewhere — a plugin, an assistant — get their definition from their own
+    /// definition source instead, and are matched to an implementation by their implementation key.
+    /// </remarks>
+    public ToolDefinition GetDefinition();
+
+    /// <summary>
+    /// The function this tool offers the model in the request being prepared, or null when it has
+    /// nothing to offer there.
+    /// </summary>
+    /// <remarks>
+    /// A definition is registered once, but some tools cannot say what they offer until they know
+    /// the request. Semantic Search describes the data sources of the chat, and only those the
+    /// provider may search; without any of them, it has nothing to offer, and the model should not
+    /// learn about a tool which can only come back empty. Most tools offer the same function every
+    /// time, which is what this returns unless a tool says otherwise.<br/><br/>
+    /// Asked for every request, after every check of ToolRegistry has passed, so it only decides
+    /// what an allowed tool offers, never whether it is allowed. For the same reason, only the
+    /// description and the parameters of what comes back are used: the function keeps the name and
+    /// the strict mode it was registered with, and the definition everything else. A tool which
+    /// throws is left out of the request.<br/><br/>
+    /// Keep the result stable while the chat stays the same, down to the order of what it lists:
+    /// the providers cache a request from its beginning, and the tools are part of that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The function to offer, or null to leave the tool out of this request.</returns>
+    public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult<ToolFunctionDefinition?>(definition.Function);
+
+    /// <summary>
+    /// The instructions this tool adds to the system prompt of the request being prepared.
+    /// </summary>
+    /// <remarks>
+    /// Most tools always say the same, which is what this returns unless a tool says otherwise. A
+    /// tool whose rules follow one of its settings words them here instead: Read Web Page tells the
+    /// model whether it may choose web addresses itself, depending on its free address choice.
+    /// Everything outside a request keeps reading the registered instructions, the token count
+    /// below the message field among them, so those should describe the tool's default.<br/><br/>
+    /// Asked the way ResolveFunctionAsync is: for every request, after every check of ToolRegistry
+    /// has passed, and only when the tool has a function to offer. A tool which throws is left out
+    /// of the request. Keep the result stable while the chat and the settings stay the same: the
+    /// providers cache a request from its beginning, and the system prompt is that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The instructions to add to the system prompt, or an empty text for none.</returns>
+    public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult(definition.SystemPromptInstructions);
+
+    public string Icon => Icons.Material.Filled.Build;
+
+    /// <summary>
+    /// Whether this tool exists in this installation right now.
+    /// </summary>
+    /// <remarks>
+    /// For a tool which belongs to a preview feature. While the preview is switched off, the tool
+    /// appears nowhere, neither in a selection nor in the settings, and no request offers it. A
+    /// selection which names it keeps it all the same, so it comes back with the preview. Asked
+    /// whenever tools are listed, so it has to be cheap.
+    /// </remarks>
+    public bool IsAvailable => true;
+
+    public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
+
+    /// <summary>
+    /// Whether this tool returns content it fetched from outside AI Studio, such as a web page.
+    /// </summary>
+    /// <remarks>
+    /// Such content is attacker-controlled and must be filtered for prompt injections before a
+    /// model sees it. A tool that returns it filters it itself, because only the tool knows which
+    /// of its fields came from where — see the web search and read web page tools, which do so
+    /// through the web page content sanitizer.<br/><br/>
+    /// Declaring it here keeps the obligation visible in one place, and gives tools that cannot
+    /// carry it out themselves, such as tools defined by plugin authors, a flag the tool executor
+    /// can act on for them.
+    /// </remarks>
+    public bool ReturnsUntrustedExternalContent => false;
+
+    /// <summary>
+    /// Where this tool sends data when it runs, beyond AI Studio and the provider of the model.
+    /// </summary>
+    /// <remarks>
+    /// A chat which read from a mailbox keeps the tools whose data goes further than the mailbox
+    /// allows from being offered and from running, see ToolSelectionRules.IsOutboundDataAllowed.
+    /// A tool which says nothing counts as one which contacts addresses the model chooses, the most
+    /// open kind: a tool which forgot to say, or one written by a plugin author, is kept back rather
+    /// than let through.
+    /// </remarks>
+    public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
+    /// <summary>
+    /// Whether this tool keeps to the outbound data restriction of the chat itself.
+    /// </summary>
+    /// <remarks>
+    /// For a tool whose kind of outbound data would be kept back, but which can tell allowed
+    /// destinations from others on its own. Such a tool is offered whatever the chat demands, and
+    /// it has to read ToolExecutionContext.ChatThread.RequiredOutboundDataRestriction on every call
+    /// and refuse what goes too far.
+    /// </remarks>
+    public bool EnforcesOutboundDataRestriction => false;
+
+    public string GetDisplayName() => TB("Tool");
+
+    public string GetDescription() => TB("Tool description");
+
+    public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
+        TB(fieldDefinition.Title);
+
+    public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
+        TB(fieldDefinition.Description);
+
+    public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => null;
+
+    /// <summary>
+    /// The heading shown above one group of settings.
+    /// </summary>
+    /// <remarks>
+    /// The group name in the schema is an identifier, so it is not what the user should read.
+    /// A tool that declares groups translates their headings here, the same way it does for
+    /// its field labels.
+    /// </remarks>
+    public string GetSettingsGroupLabel(string groupKey) => groupKey;
+
+    /// <summary>
+    /// Links offered next to one group of settings, such as where to create an account.
+    /// </summary>
+    public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => [];
+
+    /// <summary>
+    /// Independently selectable areas of this tool's configuration export.
+    /// </summary>
+    /// <remarks>
+    /// By default, each settings group is one area, including an area for ungrouped fields.
+    /// Override this when the export needs a different partition. IDs must be unique and stable;
+    /// labels must be translated. Areas contain schema field names, never values or secrets.
+    /// Selecting an area does not implicitly include general settings or other areas, and a
+    /// field hidden in the settings dialog is still exportable.
+    /// </remarks>
+    public IReadOnlyList<ExportableSettings> GetExportableSettings(ToolDefinition definition) => definition.SettingsSchema.Properties
+            .GroupBy(property => property.Value.Group, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var label = this.GetSettingsGroupLabel(group.Key);
+                return new ExportableSettings(
+                    group.Key,
+                    string.IsNullOrEmpty(label) ? TB("General") : label,
+                    group.Select(property => property.Key).ToList()
+                );
+            })
+            .ToList();
+
+    /// <summary>
+    /// Whether one settings field is worth showing, given what is filled in at the moment.
+    /// </summary>
+    /// <remarks>
+    /// For a setting that only has a meaning once something else is set, such as choosing
+    /// between services while only one of them is configured. It is asked again after every
+    /// change in the dialog, so a field can appear the moment it starts to matter.<br/><br/>
+    /// A hidden field keeps its stored value, because hiding it is not clearing it. Two things
+    /// follow from that: a required field must never be hidden, and a check on a hidden field
+    /// must not be able to fail, or the user is left with a message about something they
+    /// cannot see.
+    /// </remarks>
+    public bool IsSettingsFieldVisible(string fieldName, IReadOnlyDictionary<string, string> settingsValues) => true;
+
+    /// <summary>
+    /// What the user should know about their settings without any of it being wrong.
+    /// </summary>
+    /// <remarks>
+    /// For a combination that is allowed, saveable, and does less than it looks like it does:
+    /// something configured that a policy then keeps out of use, for instance. A setting that is
+    /// actually wrong belongs in the configuration state instead, which is what stops the dialog
+    /// from saving it.<br/><br/>
+    /// Asked again after every change in the dialog, like the field visibility, so a warning
+    /// appears and disappears with the value it is about.
+    /// </remarks>
+    public IReadOnlyList<string> GetSettingsWarnings(IReadOnlyDictionary<string, string> settingsValues) => [];
+
+    public Task<ToolConfigurationState?> ValidateConfigurationAsync(
+        ToolDefinition definition,
+        IReadOnlyDictionary<string, string> settingsValues,
+        CancellationToken token = default) => Task.FromResult<ToolConfigurationState?>(null);
+
+    public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default);
+
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IToolImplementation).Namespace, nameof(IToolImplementation));
+}

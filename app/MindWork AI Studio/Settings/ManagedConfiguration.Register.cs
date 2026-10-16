@@ -19,10 +19,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>The default value.</returns>
-    public static TValue Register<TClass, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, TValue>> propertyExpression,
-        TValue defaultValue)
+    public static TValue Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, TValue>> propertyExpression, TValue defaultValue)
         where TValue : struct
     {
         // When called from the JSON deserializer by using the standard constructor,
@@ -57,10 +54,7 @@ public static partial class ManagedConfiguration
     /// <param name="defaultValue">The default value to use when the setting is not configured.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <returns>The default value.</returns>
-    public static string Register<TClass>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, string>> propertyExpression,
-        string defaultValue)
+    public static string Register<TClass>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, string>> propertyExpression, string defaultValue)
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
@@ -95,10 +89,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the elements in the list within the configuration class.</typeparam>
     /// <returns>A list containing the default value.</returns>
-    public static List<TValue> Register<TClass, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, IList<TValue>>> propertyExpression,
-        TValue defaultValue)
+    public static List<TValue> Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, IList<TValue>>> propertyExpression, TValue defaultValue)
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
@@ -133,10 +124,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the elements within the property list.</typeparam>
     /// <returns>The list of default values.</returns>
-    public static List<TValue> Register<TClass, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, IList<TValue>>> propertyExpression,
-        IList<TValue> defaultValues)
+    public static List<TValue> Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, IList<TValue>>> propertyExpression, IList<TValue> defaultValues)
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
@@ -170,10 +158,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the values within the set.</typeparam>
     /// <returns>A set containing the default value.</returns>
-    public static HashSet<TValue> Register<TClass, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        TValue defaultValue)
+    public static HashSet<TValue> Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, ISet<TValue>>> propertyExpression, TValue defaultValue)
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
@@ -208,10 +193,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class from which the property is selected.</typeparam>
     /// <typeparam name="TValue">The type of the elements in the collection associated with the configuration property.</typeparam>
     /// <returns>A set containing the default values.</returns>
-    public static HashSet<TValue> Register<TClass, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        IList<TValue> defaultValues)
+    public static HashSet<TValue> Register<TClass, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, ISet<TValue>>> propertyExpression, IList<TValue> defaultValues)
     {
         // When called from the JSON deserializer by using the standard constructor,
         // we ignore the register call and return the default value:
@@ -246,10 +228,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class from which the property is selected.</typeparam>
     /// <typeparam name="TDict">>The type of the dictionary within the configuration class.</typeparam>
     /// <returns>A dictionary containing the default values.</returns>
-    public static TDict Register<TClass, TDict>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, IDictionary<string, string>>> propertyExpression,
-        TDict defaultValues)
+    public static TDict Register<TClass, TDict>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, IDictionary<string, string>>> propertyExpression, TDict defaultValues)
         where TDict : IDictionary<string, string>, new()
     {
         // When called from the JSON deserializer by using the standard constructor,
@@ -286,10 +265,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
     /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
     /// <returns>A dictionary containing the default values.</returns>
-    public static Dictionary<TKey, TValue> Register<TClass, TKey, TValue>(
-        Expression<Func<Data, TClass>>? configSelection,
-        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
-        Dictionary<TKey, TValue> defaultValues)
+    public static Dictionary<TKey, TValue> Register<TClass, TKey, TValue>(Expression<Func<Data, TClass>>? configSelection, Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression, Dictionary<TKey, TValue> defaultValues)
         where TKey : struct, Enum
         where TValue : struct, Enum
     {

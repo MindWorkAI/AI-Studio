@@ -27,7 +27,7 @@ public partial class Writer : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
-        this.typeTimer.Elapsed += async (_, _) => await this.InvokeAsync(this.GetSuggestions);
+        this.typeTimer.Elapsed += (_, _) => this.InvokeAsync(this.GetSuggestions).Observe($"{nameof(Writer)}: getting writing suggestions");
         this.typeTimer.AutoReset = false;
         
         await base.OnInitializedAsync();
@@ -82,6 +82,7 @@ public partial class Writer : MSGComponentBase
                             do not repeat the task.
                             """,
             Blocks = [],
+            RuntimeComponent = Tools.Components.WRITER,
         };
         
         var time = DateTimeOffset.Now;
