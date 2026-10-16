@@ -127,7 +127,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
             //
             var outboundDataRestriction = chatThread.RequiredOutboundDataRestriction;
             if (!ToolSelectionRules.IsOutboundDataAllowed(outboundDataRestriction.Restriction, implementation))
-                throw new ToolExecutionBlockedException(outboundDataRestriction.GetToolBlockedMessage(settingsManager.ConfigurationData.Mailboxes));
+                throw new ToolExecutionBlockedException(outboundDataRestriction.GetToolBlockedMessage(settingsManager.ConfigurationData));
 
             var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
             var result = await implementation.ExecuteAsync(document.RootElement, new ToolExecutionContext

@@ -21,6 +21,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_LOG_URL_LENGTH = 2000;
     private const FreeAddressChoice DEFAULT_FREE_ADDRESS_CHOICE = FreeAddressChoice.OFF;
 
+    // Keeps web search out and the model from writing addresses once a chat holds an internal
+    // page, while the links on that page and the ones the user pastes stay readable:
+    private const OutboundDataRestriction DEFAULT_INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION = OutboundDataRestriction.ONLY_LINKS_FROM_CHAT;
+
     /// <summary>
     /// Below how many characters the content of an HTML page is reported as partial.
     /// </summary>
@@ -35,13 +39,31 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const string MAX_CONTENT_CHARACTERS_SETTING = "maxContentCharacters";
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
     private const string FREE_ADDRESS_CHOICE_SETTING = "freeAddressChoice";
+    private const string INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING = "internalPageOutboundDataRestriction";
 
     private const string URL_ARGUMENT = "url";
 
     public string ImplementationKey => ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
 
     /// <inheritdoc />
-    public ToolDefinition GetDefinition() => new()
+    public ToolDefinition GetDefinition() => CreateDefinition();
+
+    /// <summary>
+    /// The level a chat is restricted to once it read an internal page, as the settings of this
+    /// tool have it.
+    /// </summary>
+    /// <remarks>
+    /// Also the level of a Confluence search, which reads a page of the wiki as well. Whether this
+    /// tool is switched on does not matter for that: a search selects it anyway, and the setting
+    /// is the one an organization locks for all internal content.
+    /// </remarks>
+    internal static async Task<OutboundDataRestriction> ReadInternalPageOutboundDataRestrictionAsync(ToolSettingsService toolSettingsService)
+    {
+        var settingsValues = await toolSettingsService.GetSettingsAsync(CreateDefinition());
+        return ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING));
+    }
+
+    private static ToolDefinition CreateDefinition() => new()
     {
         Id = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
         ImplementationKey = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,
@@ -54,10 +76,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .Optional(MAX_CONTENT_CHARACTERS_SETTING)
             .Optional(ALLOWED_PRIVATE_HOSTS_SETTING)
             .OptionalChoice(FREE_ADDRESS_CHOICE_SETTING, ToolSettingsOptionSources.FREE_ADDRESS_CHOICE)
+            .OptionalChoice(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION)
             .Build(),
 
-        // Those of the default free address choice in a chat which read no mailbox. A request gets
-        // the ones of the value actually set and of its chat, see ResolveSystemPromptInstructionsAsync,
+        // Those of the default free address choice in a chat which holds no internal content, with
+        // the warning that an internal page ends web search. A request gets the ones of the values
+        // actually set, of its chat, and of the tools it offers, see ResolveSystemPromptInstructionsAsync,
         // while the token count below the message field reads these:
         SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_FREE_ADDRESS_CHOICE, OutboundDataRestriction.UNRESTRICTED, wiki: null),
         Function = new()
@@ -77,8 +101,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     // The model passes the address, and the address alone can carry data out:
     public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
 
-    // A chat restricted by a mailbox may still read the addresses given to the model and the pages
-    // of the configured wiki, which only this tool can tell apart, see IsAllowedByOutboundDataRestriction:
+    // A restricted chat may still read the addresses given to the model, the pages of the configured
+    // wiki, and those of the allowed private hosts, which only this tool can tell apart, see
+    // IsAllowedByOutboundDataRestriction:
     public bool EnforcesOutboundDataRestriction => true;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
@@ -93,6 +118,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         MAX_CONTENT_CHARACTERS_SETTING => TB("Maximum Content Characters"),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("Allowed Private Hosts"),
         FREE_ADDRESS_CHOICE_SETTING => TB("Free Address Choice"),
+        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => TB("Where a chat may send data after reading internal pages"),
         _ => TB(fieldDefinition.Title),
     };
 
@@ -102,6 +128,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         FREE_ADDRESS_CHOICE_SETTING => TB("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default."),
+        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName(), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -156,18 +183,33 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             });
         }
 
+        // Reported for the same reason: a guess would decide where intranet content may go.
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var restrictionError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = restrictionError,
+            });
+        }
+
         return Task.FromResult<ToolConfigurationState?>(null);
     }
 
     /// <inheritdoc />
     /// <remarks>
     /// A chat which may only reach the services configured in AI Studio can still read the pages
-    /// of the configured wiki. Without one, every address would be refused, so the tool offers
-    /// nothing instead of a function which can only fail.
+    /// of the configured wiki and of the allowed private hosts. Without either, every address
+    /// would be refused, so the tool offers nothing instead of a function which can only fail.
     /// </remarks>
     public async ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
     {
         if (!IsOnlyForConfiguredServices(context.ChatThread.RequiredOutboundDataRestriction.Restriction))
+            return definition.Function;
+
+        var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
+        ReadAllowedPrivateHosts(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var hasAllowedPrivateHosts);
+        if (hasAllowedPrivateHosts)
             return definition.Function;
 
         return await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) is null ? null : definition.Function;
@@ -178,9 +220,41 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
-        var wiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
-        return BuildSystemPromptInstructions(ReadFreeAddressChoice(settingsValues.GetValueOrDefault(FREE_ADDRESS_CHOICE_SETTING)), outboundDataRestriction, wiki);
+        var wiki = await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
+        var allowedPrivateHosts = TryReadAllowedPrivateHostPatterns(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var patterns, out _)
+            ? patterns.Select(pattern => pattern.ToString()).ToList()
+            : null;
+
+        return BuildSystemPromptInstructions(
+            ReadFreeAddressChoice(settingsValues.GetValueOrDefault(FREE_ADDRESS_CHOICE_SETTING)),
+            outboundDataRestriction,
+            wiki,
+            allowedPrivateHosts,
+            InternalPageEndsWebSearch(
+                ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
+                context.MayOffer(ToolSelectionRules.WEB_SEARCH_TOOL_ID),
+                wiki,
+                allowedPrivateHosts));
     }
+
+    /// <summary>
+    /// Whether reading an internal page would take away a web search which the request offers.
+    /// </summary>
+    /// <remarks>
+    /// Only then do the rules tell the model to search the web first. Without a wiki and without
+    /// allowed private hosts, the tool reaches no internal page at all: every private address is
+    /// refused, redirects included, and only the wiki counts as internal on a public address. A
+    /// chat which may no longer search the web has no web search among the candidates either.
+    /// </remarks>
+    /// <param name="internalPageRestriction">The level an internal page restricts the chat to, see ReadInternalPageOutboundDataRestriction.</param>
+    /// <param name="offersWebSearch">Whether the request may offer web search, see ToolResolutionContext.MayOffer.</param>
+    /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
+    /// <returns>True when the rules have to warn of it.</returns>
+    internal static bool InternalPageEndsWebSearch(OutboundDataRestriction internalPageRestriction, bool offersWebSearch, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts) =>
+        internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED &&
+        offersWebSearch &&
+        (wiki is not null || allowedPrivateHosts is { Count: > 0 });
 
     /// <summary>
     /// Reads the free address choice from its stored value.
@@ -203,13 +277,21 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// Following such a link cannot carry anything out of the conversation, since the link is read
     /// word for word; putting parts of the conversation into an address could, which is why that
     /// is ruled out in both cases. Off is enforced as well, see IsAllowedByFreeAddressChoice.<br/><br/>
-    /// A chat which read from a mailbox gets the rules of its restriction on top, see
+    /// A chat which holds internal content gets the rules of its restriction on top, see
     /// IsAllowedByOutboundDataRestriction. A call has to pass both, so the rules name what is left:
-    /// with the choice switched off, a wiki page counts only when its address stands in the
-    /// conversation. The model learns this beforehand, so it does not spend its calls on addresses
-    /// which are refused anyway.
+    /// with the choice switched off, a page of the wiki or of an allowed private host counts only
+    /// when its address stands in the conversation. The model learns this beforehand, so it does
+    /// not spend its calls on addresses which are refused anyway.<br/><br/>
+    /// A chat without a restriction learns that an internal page would bring one, and that web
+    /// search would then be gone, so it searches the web first when a task needs both. It learns
+    /// so only when that can happen, see InternalPageEndsWebSearch.
     /// </remarks>
-    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki)
+    /// <param name="freeAddressChoice">The free address choice of the tool.</param>
+    /// <param name="outboundDataRestriction">Where the chat may still send data.</param>
+    /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
+    /// <param name="internalPageEndsWebSearch">Whether reading an internal page would take away a web search which the request offers, see InternalPageEndsWebSearch. The default is what the registered instructions assume.</param>
+    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts = null, bool internalPageEndsWebSearch = true)
     {
         var mayChooseAddresses = freeAddressChoice is FreeAddressChoice.ON;
         var addressRules = mayChooseAddresses
@@ -219,24 +301,53 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
               - Never invent, guess, complete, or assemble a URL, not even for a well-known website. When no URL fits and no other tool can find one, ask the user for it.
               """;
 
-        var wikiPages = mayChooseAddresses && wiki is not null ? $", or a page of the wiki at {wiki}" : string.Empty;
+        //
+        // The services configured in AI Studio, which every level allows. Named in the singular
+        // after "a page", and in the plural after "pages":
+        //
+        var hosts = allowedPrivateHosts is { Count: > 0 } ? string.Join(", ", allowedPrivateHosts) : null;
+        var configuredPage = (wiki, hosts) switch
+        {
+            (not null, not null) => $"a page of the wiki at {wiki} or on the internal hosts {hosts}",
+            (not null, null) => $"a page of the wiki at {wiki}",
+            (null, not null) => $"a page on the internal hosts {hosts}",
+            _ => null,
+        };
+
+        var configuredPages = (wiki, hosts) switch
+        {
+            (not null, not null) => $"pages of the wiki at {wiki} or on the internal hosts {hosts}",
+            (not null, null) => $"pages of the wiki at {wiki}",
+            (null, not null) => $"pages on the internal hosts {hosts}",
+            _ => "no pages",
+        };
+
+        const string REASON = "This chat holds internal content, such as e-mails, wiki pages, or internal web pages.";
+        var chosenPages = mayChooseAddresses && configuredPage is not null ? $", or {configuredPage}" : string.Empty;
+
+        // Without a wiki, there are no hits of a wiki search to name as an example:
+        var givenPagesExample = wiki is not null ? ", such as the hits of a wiki search" : string.Empty;
         var restrictionRules = outboundDataRestriction switch
         {
-            OutboundDataRestriction.UNRESTRICTED => string.Empty,
+            OutboundDataRestriction.UNRESTRICTED when !internalPageEndsWebSearch => string.Empty,
+            OutboundDataRestriction.UNRESTRICTED => """
+
+                                                    - Reading an internal page, such as one in the intranet or the wiki, makes `web_search` unavailable for the rest of this chat. When a task also needs `web_search`, search the web before you read such a page.
+                                                    """,
 
             OutboundDataRestriction.ONLY_LINKS_FROM_CHAT => $"""
 
-                                                             - This chat holds content of e-mails. AI Studio therefore only reads a URL which appears word for word in this conversation{wikiPages}, whatever the rules above allow, and refuses every other one. Never add or change a part of a URL.
+                                                             - {REASON} AI Studio therefore only reads a URL which appears word for word in this conversation{chosenPages}, whatever the rules above allow, and refuses every other one. Never add or change a part of a URL.
                                                              """,
 
             _ when mayChooseAddresses => $"""
 
-                                          - This chat holds content of e-mails. AI Studio therefore only reads pages of the wiki at {wiki}, whatever the rules above allow, and refuses every other URL, including those in the conversation. When the user needs another web page, tell them that a new chat can read it.
+                                          - {REASON} AI Studio therefore only reads {configuredPages}, whatever the rules above allow, and refuses every other URL, including those in the conversation. When the user needs another web page, tell them that a new chat can read it.
                                           """,
 
             _ => $"""
 
-                  - This chat holds content of e-mails. AI Studio therefore only reads pages of the wiki at {wiki} whose URL appears word for word in this conversation, such as the hits of a wiki search, and refuses every other URL. When the user needs another web page, tell them that a new chat can read it.
+                  - {REASON} AI Studio therefore only reads {configuredPages} whose URL appears word for word in this conversation{givenPagesExample}, and refuses every other URL. When the user needs another web page, tell them that a new chat can read it.
                   """,
         };
 
@@ -255,18 +366,21 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             throw new ArgumentException("Argument 'url' must be a valid HTTP or HTTPS URL.");
 
         //
-        // Checked before anything is logged or sent: an address the model made up may carry mail
-        // content in its path, and the log must not hold that either. The refusal never repeats
+        // Checked before anything is logged or sent: an address the model made up may carry
+        // internal content in its path, and the log must not hold that either. The refusal never repeats
         // the address, because a tool result which holds it would make it one a tool returned.
         //
+        if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
+            throw new InvalidOperationException(allowlistError);
+
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
         var wiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
-        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, out var mustStayInWiki))
+        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, host => IsAllowedPrivateHost(host, allowedPrivateHosts), out var redirectLimit))
         {
-            logger.LogInformation("Refused a web page because the chat read from a mailbox which restricts outbound data to '{OutboundDataRestriction}'. ToolCallId={ToolCallId}", outboundDataRestriction, context.ToolCallId);
+            logger.LogInformation("Refused a web page because the chat holds internal content which restricts outbound data to '{OutboundDataRestriction}'. Origin={Origin}, ToolCallId={ToolCallId}", outboundDataRestriction, context.ChatThread.RequiredOutboundDataRestriction.Origin, context.ToolCallId);
             throw new ToolExecutionBlockedException(IsOnlyForConfiguredServices(outboundDataRestriction)
-                ? TB("This chat read e-mails, so it may only read pages of the wiki configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.")
-                : TB("This chat read e-mails, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat."));
+                ? TB("This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.")
+                : TB("This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat."));
         }
 
         var freeAddressChoice = ReadFreeAddressChoice(context.SettingsValues.GetValueOrDefault(FREE_ADDRESS_CHOICE_SETTING));
@@ -282,8 +396,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
         var maxContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_CONTENT_CHARACTERS_SETTING) ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
-        if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
-            throw new InvalidOperationException(allowlistError);
 
         logger.LogInformation(
             "Starting web page retrieval. ToolCallId={ToolCallId}, Url={Url}, TimeoutSeconds={TimeoutSeconds}, MaxContentCharacters={MaxContentCharacters}",
@@ -304,14 +416,20 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     UseOsSso = true,
                     IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
                     OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
-                    IsTargetAllowed = mustStayInWiki && wiki is not null ? target => ConfluenceSearchTool.IsWithinWiki(wiki, target) : null,
+                    IsTargetAllowed = redirectLimit is RedirectLimit.WITHIN_WIKI && wiki is not null ? target => ConfluenceSearchTool.IsWithinWiki(wiki, target) : null,
+                    NonPublicTargetsOnly = redirectLimit is RedirectLimit.NON_PUBLIC_ONLY,
                 },
                 token);
+        }
+        catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED)
+        {
+            // Its own text, which names no address either:
+            throw new ToolExecutionBlockedException(TB("This page lies on an allowed private host, but it or one of its redirects leads to a public address. This chat read internal content, so it may not follow such an address."));
         }
         catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.TARGET_NOT_ALLOWED)
         {
             // Its own text, because the one of the exception names the address the wiki redirected to:
-            throw new ToolExecutionBlockedException(TB("The wiki redirected this page to an address outside of it. This chat read e-mails, so it may not follow such a redirect."));
+            throw new ToolExecutionBlockedException(TB("The wiki redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect."));
         }
         catch (WebPageAccessBlockedException exception)
         {
@@ -360,6 +478,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             contentTruncated,
             retrievedPage.RequiredProviderConfidence);
 
+        var outboundDataRequirement = GetOutboundDataRequirement(
+            page.FinalUrl,
+            retrievedPage.ReachedNonPublicAddress,
+            ReadInternalPageOutboundDataRestriction(context.SettingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
+            await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService));
+
         return new ToolExecutionResult
         {
             JsonContent = BuildModelContent(page, retrievedPage.ContentKind, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
@@ -367,42 +491,137 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                 ? []
                 : [new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
             RequiredProviderConfidence = retrievedPage.RequiredProviderConfidence,
+
+            // Set here only, on a page which was read: a refused or failed call brought nothing
+            // into the chat.
+            RequiredOutboundDataRestriction = outboundDataRequirement,
         };
+    }
+
+    /// <summary>
+    /// Reads the level an internal page restricts its chat to from its stored value.
+    /// </summary>
+    /// <remarks>
+    /// An unset value reads as the default. Anything else that is not the name of a level reads as
+    /// the strictest one, because a level guessed too loosely would let internal content out. The
+    /// configuration check reports such a value anyway and keeps the tool out of use until
+    /// somebody corrects it.
+    /// </remarks>
+    internal static OutboundDataRestriction ReadInternalPageOutboundDataRestriction(string? configuredValue)
+    {
+        if (string.IsNullOrWhiteSpace(configuredValue))
+            return DEFAULT_INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION;
+
+        return EnumNames.TryParse<OutboundDataRestriction>(configuredValue, out var restriction) ? restriction : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+    }
+
+    /// <summary>
+    /// What a page which was read demands of its chat.
+    /// </summary>
+    /// <remarks>
+    /// An internal page is one read from a non-public address, or one within the configured wiki:
+    /// a wiki with a public address holds internal content all the same. Both restrict the chat
+    /// alike, to the level of this tool's setting, and the chat names the host the page came from.
+    /// A public page demands nothing.<br/><br/>
+    /// Only the page as it was read in the end counts, after every redirect, because that is where
+    /// the content came from. A public address which redirects into the intranet therefore
+    /// restricts the chat, and an intranet address which redirects to a public page, such as a
+    /// sign-in page, does not.
+    /// </remarks>
+    /// <param name="finalUrl">The address the page was read from, after every redirect.</param>
+    /// <param name="reachedNonPublicAddress">Whether that address was a non-public one, see RetrievedWebPage.ReachedNonPublicAddress.</param>
+    /// <param name="internalPageRestriction">The level internal pages restrict a chat to.</param>
+    /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <returns>The requirement the chat takes on with the page.</returns>
+    internal static OutboundDataRequirement GetOutboundDataRequirement(Uri finalUrl, bool reachedNonPublicAddress, OutboundDataRestriction internalPageRestriction, Uri? wiki)
+    {
+        var isInternal = reachedNonPublicAddress || (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, finalUrl));
+        return isInternal ? new(internalPageRestriction, OutboundDataOrigin.INTERNAL_WEB_PAGE, finalUrl.Host) : OutboundDataRequirement.NONE;
     }
 
     /// <summary>
     /// Whether the outbound data restriction of the chat allows reading this address.
     /// </summary>
     /// <remarks>
-    /// The pages of the configured wiki are allowed on every level, because the wiki is a service
-    /// configured in AI Studio. With ONLY_LINKS_FROM_CHAT, so are the addresses given to the model,
-    /// see ChatThread.IsWebAddressGivenToTheModel. A level this version does not know allows only
-    /// what the strictest one does.<br/><br/>
-    /// A wiki page whose address the model chose has to stay in the wiki, redirects included: the
-    /// address may carry mail content, and a redirect elsewhere could carry it on. An address given
-    /// to the model may be redirected anywhere, since whatever the redirect carries came from the
-    /// server rather than from the chat.
+    /// The services configured in AI Studio are allowed on every level: the pages of the
+    /// configured wiki, and the pages on the allowed private hosts. With ONLY_LINKS_FROM_CHAT, so
+    /// are the addresses given to the model, see ChatThread.IsWebAddressGivenToTheModel. A level
+    /// this version does not know allows only what the strictest one does.<br/><br/>
+    /// An address the model chose may carry the content which restricts the chat, so it must not
+    /// lead anywhere else, redirects included. A wiki page has to stay in the wiki. A page on an
+    /// allowed private host has to stay on non-public addresses: a pattern such as *.example.org
+    /// matches public hosts as well, so a matching name is not enough. An address given to the
+    /// model may be redirected anywhere, since whatever the redirect carries came from the server
+    /// rather than from the chat.
     /// </remarks>
     /// <param name="url">The address the model wants to read.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data.</param>
     /// <param name="chatThread">The chat, for the addresses given to the model.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
-    /// <param name="mustStayInWiki">Whether every redirect has to stay in the wiki.</param>
+    /// <param name="isAllowedPrivateHost">Whether a host matches the allowed private hosts.</param>
+    /// <param name="redirectLimit">Where the request and its redirects may lead.</param>
     /// <returns>True when the address may be read.</returns>
-    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, out bool mustStayInWiki)
+    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, Func<string, bool> isAllowedPrivateHost, out RedirectLimit redirectLimit)
     {
-        mustStayInWiki = false;
+        redirectLimit = RedirectLimit.NONE;
         if (outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED)
             return true;
 
         if (outboundDataRestriction is OutboundDataRestriction.ONLY_LINKS_FROM_CHAT && chatThread.IsWebAddressGivenToTheModel(url))
             return true;
 
-        if (wiki is null || !ConfluenceSearchTool.IsWithinWiki(wiki, url))
+        // The wiki first, so a wiki on an allowed private host stays confined to the wiki:
+        if (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, url))
+        {
+            redirectLimit = RedirectLimit.WITHIN_WIKI;
+            return true;
+        }
+
+        if (!isAllowedPrivateHost(url.Host))
             return false;
 
-        mustStayInWiki = true;
+        redirectLimit = RedirectLimit.NON_PUBLIC_ONLY;
         return true;
+    }
+
+    /// <summary>
+    /// Where a request and its redirects may lead, see IsAllowedByOutboundDataRestriction.
+    /// </summary>
+    internal enum RedirectLimit
+    {
+        /// <summary>
+        /// Anywhere the other checks allow.
+        /// </summary>
+        NONE,
+
+        /// <summary>
+        /// Only within the configured wiki.
+        /// </summary>
+        WITHIN_WIKI,
+
+        /// <summary>
+        /// Only to non-public addresses.
+        /// </summary>
+        NON_PUBLIC_ONLY,
+    }
+
+    /// <summary>
+    /// Reads the allowed private hosts into a check of a host against them.
+    /// </summary>
+    /// <remarks>
+    /// A list which cannot be read allows no host. The configuration check reports it anyway and
+    /// keeps the tool out of use until somebody corrects it.
+    /// </remarks>
+    /// <param name="rawValue">The stored value of the setting.</param>
+    /// <param name="hasAny">Whether the list allows any host at all.</param>
+    /// <returns>Whether a host matches one of the allowed private hosts.</returns>
+    internal static Func<string, bool> ReadAllowedPrivateHosts(string? rawValue, out bool hasAny)
+    {
+        if (!TryReadAllowedPrivateHostPatterns(rawValue, out var patterns, out _))
+            patterns = [];
+
+        hasAny = patterns.Count > 0;
+        return host => IsAllowedPrivateHost(host, patterns);
     }
 
     /// <summary>
@@ -411,8 +630,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <remarks>
     /// With the choice switched on, the model may choose addresses itself. Switched off, only an
     /// address given to the model is read, see ChatThread.IsWebAddressGivenToTheModel. Checked in
-    /// addition to the outbound data restriction, so a call has to pass both: a chat which read
-    /// from a mailbox and has the choice switched off reads a wiki page only when a tool returned
+    /// addition to the outbound data restriction, so a call has to pass both: a chat which holds
+    /// internal content and has the choice switched off reads a wiki page only when a tool returned
     /// its address, a hit of a wiki search, say.
     /// </remarks>
     /// <param name="url">The address the model wants to read.</param>
@@ -576,5 +795,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             this.IsWildcard
                 ? normalizedHost.EndsWith($".{this.Host}", StringComparison.Ordinal) && normalizedHost.Length > this.Host.Length + 1
                 : normalizedHost.Equals(this.Host, StringComparison.Ordinal);
+
+        // As the user writes it, for the rules of the model:
+        public override string ToString() => this.IsWildcard ? $"*.{this.Host}" : this.Host;
     }
 }

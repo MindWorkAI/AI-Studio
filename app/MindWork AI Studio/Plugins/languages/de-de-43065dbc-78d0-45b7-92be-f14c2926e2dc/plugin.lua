@@ -11430,8 +11430,17 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIO
 -- Unknown encryption
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::MAILBOXTRANSPORTSECURITYEXTENSIONS::T685301366"] = "Unbekannte Verschlüsselung"
 
+-- This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1307134700"] = "Dieser Chat hat eine interne Webseite auf „{0}“ gelesen, als die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ des Werkzeugs „Webseite lesen“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
+-- This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T1719013859"] = "Dieser Chat hat Ihr Confluence-Wiki durchsucht, als die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ des Werkzeugs „Webseite lesen“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
 -- This chat read mails from the mailbox '{0}' while its setting 'Where a chat may send data after reading mails' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3290545516"] = "Dieser Chat hat E-Mails aus dem Postfach „{0}“ gelesen, als dessen Einstellung „Wohin ein Chat Daten senden darf, nachdem er E-Mails gelesen hat“ auf „{1}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
+-- This chat read internal content while the chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3482648272"] = "Dieser Chat hat interne Inhalte gelesen, als er auf „{0}“ beschränkt war. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
 
 -- This chat read mails from a mailbox which has been removed since, while its setting 'Where a chat may send data after reading mails' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T996427866"] = "Dieser Chat hat E-Mails aus einem inzwischen entfernten Postfach gelesen, als dessen Einstellung „Wohin ein Chat Daten senden darf, nachdem er E-Mails gelesen hat“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
@@ -11439,11 +11448,11 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 -- Unknown restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1376332431"] = "Unbekannte Einschränkung"
 
--- The chat may only use services configured in AI Studio, such as this mailbox or your Confluence. It reads no web pages, and it does not search the web.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T1775242920"] = "Der Chat darf nur Dienste nutzen, die in AI Studio eingerichtet sind, z. B. dieses Postfach oder Ihr Confluence. Er liest keine Webseiten und führt keine Websuche durch."
-
 -- Configured services and addresses from the chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3527841781"] = "Konfigurierte Dienste und Adressen aus dem Chat"
+
+-- The chat may use every tool you chose, web search and any web page included. Internal content, such as your mails, can then reach third parties, e.g., inside a search query or the address of a web page.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3881528711"] = "Der Chat darf alle Werkzeuge nutzen, die Sie ausgewählt haben, die Websuche und beliebige Webseiten eingeschlossen. Dabei können interne Inhalte, etwa Ihre E-Mails, an Dritte gelangen, zum Beispiel in einer Suchanfrage oder in der Adresse einer Webseite."
 
 -- No restriction
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T3930382848"] = "Keine Einschränkung"
@@ -11451,14 +11460,14 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSION
 -- This version of AI Studio does not know this restriction, so it applies the strictest one.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T4017092834"] = "Diese Version von AI Studio kennt diese Einschränkung nicht und wendet daher die strengste an."
 
--- The chat may use every tool you chose, web search and any web page included. Content of your mails can then reach third parties, e.g., inside a search query or the address of a web page.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T455109430"] = "Der Chat darf alle Werkzeuge nutzen, die Sie ausgewählt haben, die Websuche und beliebige Webseiten eingeschlossen. Dabei können Inhalte Ihrer E-Mails an Dritte gelangen, zum Beispiel in einer Suchanfrage oder in der Adresse einer Webseite."
+-- The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own outside the services configured in AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T4161394355"] = "Der Chat darf auch Webseiten lesen, deren Adressen im Chat stehen – ob Sie sie eingegeben haben oder ein Werkzeug sie zurückgegeben hat. Dabei verwendet er die Adressen genau so, wie sie dort stehen. Er durchsucht das Web nicht, und außerhalb der in AI Studio konfigurierten Dienste kann die KI keine eigenen Adressen wählen."
+
+-- The chat may only use services configured in AI Studio: your mailboxes, your Confluence wiki, and the allowed private hosts of the tool 'Read Web Page'. It reads no other web pages, and it does not search the web.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T739697396"] = "Der Chat darf nur Dienste nutzen, die in AI Studio konfiguriert sind: Ihre Postfächer, Ihr Confluence-Wiki und die zulässigen privaten Hosts des Werkzeugs „Webseite lesen“. Er liest keine anderen Webseiten und durchsucht das Web nicht."
 
 -- Only services configured in AI Studio
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T750634166"] = "Nur in AI Studio konfigurierte Dienste"
-
--- The chat may also read web pages whose addresses stand in the chat, written by you or returned by a tool, exactly as they stand there. It does not search the web, and the AI cannot choose addresses of its own.
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATARESTRICTIONEXTENSIONS::T956070146"] = "Der Chat darf auch Webseiten lesen, deren Adressen im Chat stehen – ob Sie sie eingegeben haben oder ein Werkzeug sie zurückgegeben hat. Dabei verwendet er die Adressen genau so, wie sie dort stehen. Er durchsucht das Web nicht, und die KI kann keine eigenen Adressen wählen."
 
 -- Visual Briefing Assistant: Turn source material into an interactive briefing
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1217946647"] = "Assistent für visuelle Briefings: Quellmaterial in ein interaktives Briefing verwandeln"
@@ -13668,11 +13677,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- (Optional) Search request timeout in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3778965668"] = "(Optional) Zeitlimit der Suchanfrage in Sekunden."
 
--- The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T4076619075"] = "Die HTTPS-Adresse Ihres Confluence-Data-Center-Wikis, gegebenenfalls einschließlich ihres Pfads, z. B. https://wiki.example.org/confluence/. Confluence Cloud wird noch nicht unterstützt. Hat Ihr Wiki eine private oder VPN-Adresse, fügen Sie seinen Host auch zu den zulässigen privaten Hosts von „Webseite lesen“ hinzu, damit sich die gefundenen Seiten öffnen lassen."
-
 -- The setting '{0}' must be a positive integer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T4199432074"] = "Die Einstellung „{0}“ muss eine positive ganze Zahl sein."
+
+-- The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found. Where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page, which applies to wiki pages as well.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T557398291"] = "Die HTTPS-Adresse Ihres Confluence-Data-Center-Wikis, gegebenenfalls einschließlich ihres Pfads, z. B. https://wiki.example.org/confluence/. Confluence Cloud wird noch nicht unterstützt. Hat Ihr Wiki eine private oder VPN-Adresse, fügen Sie seinen Host auch zu den zulässigen privaten Hosts von „Webseite lesen“ hinzu, damit sich die gefundenen Seiten öffnen lassen. Wohin ein Chat nach einer Suche Daten senden darf, legt die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ von „Webseite lesen“ fest, die auch für die Seiten des Wikis gilt."
 
 -- Search Confluence
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T665149329"] = "Confluence durchsuchen"
@@ -13719,20 +13728,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Lets the AI search your mailboxes, list mails by sender, date, or flags, and quote what they say.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::SEARCHMAILSTOOL::T553285901"] = "Ermöglicht der KI, Ihre Postfächer zu durchsuchen, E-Mails nach Absender, Datum oder Status wie ungelesen oder gekennzeichnet aufzulisten und daraus zu zitieren."
 
+-- This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1012489816"] = "Dieser Chat enthält interne Inhalte, etwa E-Mails, Wiki-Seiten oder interne Webseiten, und darf deshalb nur Seiten des Wikis und der zulässigen privaten Hosts lesen, die in AI Studio konfiguriert sind. Die angeforderte Adresse gehört nicht dazu. Ein neuer Chat kann wieder andere Webseiten lesen."
+
 -- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1105887195"] = "(Optional) Allowlist für Hosts von privaten oder VPN-Webseiten. Aus Sicherheitsgründen ist der Zugriff auf private oder VPN-Webseiten standardmäßig nicht erlaubt. Trennen Sie Host-Muster durch Kommas, z. B. example.de, *.example.de. Für erlaubte private Hosts ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich. Bei erlaubten internen HTTPS-Hosts versucht AI Studio automatisch die Standardanmeldung des Betriebssystems, wenn der Server mit integrierter Authentifizierung antwortet."
 
--- This chat read e-mails, so it may only read pages of the wiki configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1492481490"] = "Dieser Chat hat E-Mails gelesen und darf deshalb nur Seiten des in AI Studio konfigurierten Wikis lesen. Die angeforderte Adresse gehört nicht dazu. Ein neuer Chat kann wieder andere Webseiten lesen."
+-- This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1345856008"] = "Dieser Chat enthält interne Inhalte, etwa E-Mails, Wiki-Seiten oder interne Webseiten, und darf deshalb nur Webseiten lesen, deren Adresse genau so im Chat steht, wie der Benutzer sie geschrieben oder ein Werkzeug sie zurückgegeben hat, sowie Seiten des Wikis und der zulässigen privaten Hosts, die in AI Studio konfiguriert sind. Die angeforderte Adresse erfüllt keine dieser Bedingungen. Wird die Seite benötigt, kann der Benutzer ihre Adresse in den Chat schreiben."
+
+-- This page lies on an allowed private host, but it or one of its redirects leads to a public address. This chat read internal content, so it may not follow such an address.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1492035627"] = "Diese Seite liegt auf einem zulässigen privaten Host, aber sie oder eine ihrer Weiterleitungen führt zu einer öffentlichen Adresse. Dieser Chat hat interne Inhalte gelesen und darf einer solchen Adresse deshalb nicht folgen."
+
+-- The wiki redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1662103425"] = "Das Wiki hat diese Seite auf eine Adresse außerhalb des Wikis weitergeleitet. Dieser Chat enthält interne Inhalte und darf einer solchen Weiterleitung deshalb nicht folgen."
 
 -- Free Address Choice
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1691759278"] = "Freie Adresswahl"
-
--- The wiki redirected this page to an address outside of it. This chat read e-mails, so it may not follow such a redirect.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1743069449"] = "Das Wiki hat diese Seite auf eine Adresse außerhalb des Wikis weitergeleitet. Dieser Chat hat E-Mails gelesen und darf einer solchen Weiterleitung deshalb nicht folgen."
-
--- This chat read e-mails, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1844389828"] = "Dieser Chat hat E-Mails gelesen und darf deshalb nur Webseiten lesen, deren Adresse genau so im Chat steht, wie der Benutzer sie geschrieben oder ein Werkzeug sie zurückgegeben hat, sowie Seiten des in AI Studio konfigurierten Wikis. Die angeforderte Adresse erfüllt keine dieser Bedingungen. Wird die Seite benötigt, kann der Benutzer ihre Adresse in den Chat schreiben."
 
 -- (Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2016138446"] = "(Optional) Ist die freie Adresswahl aus, öffnet die KI nur Webadressen, die im Chat vorkommen, etwa in Ihren Nachrichten, angehängten Dokumenten oder Datenquellen, oder die ein Werkzeug zurückgegeben hat. Alle anderen Adressen lehnt AI Studio ab. Ist sie an, darf die KI Adressen auch selbst wählen. Standardmäßig ist sie aus."
@@ -13758,6 +13770,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Read Web Page
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Webseite lesen"
 
+-- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3698872955"] = "(Optional) Interne Seiten sind Webseiten mit einer privaten oder VPN-Adresse sowie die Seiten Ihres Confluence-Wikis, unabhängig von dessen Adresse. Sobald ein Chat eine solche Seite gelesen oder Ihr Wiki durchsucht hat, könnten eine Websuche oder eine von der KI gewählte Webadresse interne Inhalte an Dritte weitergeben. Diese Einstellung legt fest, was der Chat danach noch nutzen darf. Mit „{0}“, der Voreinstellung, durchsucht der Chat das Web nicht, liest aber weiterhin Webseiten, deren Adressen im Chat stehen. Mit „{1}“ liest er nur Seiten Ihres Confluence-Wikis und der zulässigen privaten Hosts. Eine Änderung gilt für Seiten, die später gelesen werden; ein Chat behält die Stufe, die galt, als er eine Seite gelesen hat."
+
 -- Load a web page and extract its readable content, links, and page details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Laden Sie eine Webseite und extrahieren Sie deren lesbaren Inhalt, Links und Seitendetails."
 
@@ -13769,6 +13784,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- The setting '{0}' must be a positive integer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4199432074"] = "Die Einstellung „{0}“ muss eine positive ganze Zahl sein."
+
+-- Where a chat may send data after reading internal pages
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T644445659"] = "Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat"
 
 -- The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T68683294"] = "Die Einstellung „{0}“ hat den Wert „{1}“, der nicht zu den verfügbaren Optionen gehört. Bitte wählen Sie einen der angebotenen Werte aus."

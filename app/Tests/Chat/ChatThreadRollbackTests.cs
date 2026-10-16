@@ -144,7 +144,7 @@ public sealed class ChatThreadRollbackTests
             ],
         };
 
-        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, "5c9e2a7b-3f1d-4e8a-b6c4-2d7f9a1e3b5c");
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, "5c9e2a7b-3f1d-4e8a-b6c4-2d7f9a1e3b5c");
         thread.RequireProviderConfidence(ConfidenceLevel.HIGH);
         thread.RequireOutboundDataRestriction(restriction);
 
