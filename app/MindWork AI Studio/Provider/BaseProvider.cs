@@ -37,6 +37,11 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
+    /// <summary>
+    /// Whether the requests of this provider carry the User-Agent of AI Studio, see AppUserAgent.
+    /// </summary>
+    private readonly bool sharesFeatureUsage;
+
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = ProviderJsonOptions.OPTIONS;
 
     /// <summary>
@@ -52,6 +57,17 @@ public abstract class BaseProvider : IProvider, ISecretId
         this.Provider = provider;
         this.BaseUri = baseUri;
         this.HttpClient = ExternalHttpClientTimeout.CreateHttpClient(baseUri, trustPolicy);
+
+        //
+        // Decided once per provider, so that all requests of one provider agree. As the default header
+        // of the client, the User-Agent reaches every request: transcriptions, embeddings, and model
+        // lists name the app this way, while chat requests additionally name their component, see
+        // StreamOpenAICompatibleChatCompletion. The settings are read the same way the client above
+        // reads its timeout:
+        //
+        this.sharesFeatureUsage = AppUserAgent.IsAllowedFor(provider, Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>());
+        if (this.sharesFeatureUsage)
+            AppUserAgent.Apply(this.HttpClient);
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -1118,6 +1134,21 @@ public abstract class BaseProvider : IProvider, ISecretId
                     continue;
                 }
 
+                //
+                // The line stating what the request cost carries no content of its own: providers
+                // send it as the last line of the stream, with no choices at all. It is handled
+                // before the check below, which would otherwise drop it as an empty response.
+                //
+                var usage = providerResponse.GetUsage();
+                if (usage.IsKnown)
+                {
+                    yield return providerResponse.ContainsContent()
+                        ? providerResponse.GetContent() with { Usage = usage }
+                        : new(string.Empty, [], Usage: usage);
+
+                    continue;
+                }
+
                 // Skip empty responses:
                 if (!providerResponse.ContainsContent())
                     continue;
@@ -1142,16 +1173,43 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Check if annotations are supported:
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
+        var isCompleted = false;
         await foreach (var serverSentEvent in this.ReadServerSentEventsAsync(providerName, "responses call", requestBuilder, token))
         {
-            // Check if the line is the end of the stream. This one is read off the raw line
-            // rather than off a payload, because it has none:
+            // Check if the line announces the end of the stream. This one is read off the raw
+            // line rather than off a payload, because it has none:
             if (serverSentEvent.Line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
-                yield break;
+            {
+                isCompleted = true;
+                continue;
+            }
             
             // Skip lines without a payload:
             if (serverSentEvent.Data.Length is 0)
                 continue;
+
+            //
+            // The payload after the announcement is the whole response, and the only line which
+            // states what the request cost. The stream ends here whether that can be read or not,
+            // which keeps the end independent of how a gateway orders the fields of the payload.
+            //
+            if (isCompleted)
+            {
+                var usage = TokenUsage.UNKNOWN;
+                try
+                {
+                    usage = JsonSerializer.Deserialize<ResponsesCompletedStreamLine>(serverSentEvent.Data, JSON_SERIALIZER_OPTIONS)?.GetUsage() ?? TokenUsage.UNKNOWN;
+                }
+                catch
+                {
+                    // Invalid JSON data states nothing, and the answer is complete either way.
+                }
+
+                if (usage.IsKnown)
+                    yield return new(string.Empty, [], Usage: usage);
+
+                yield break;
+            }
 
             //
             // Find delta lines:
@@ -1229,6 +1287,8 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="systemPromptRole">The system prompt role to use.</param>
     /// <param name="requestPath">The request path, relative to the provider base URL.</param>
     /// <param name="headersAction">Optional additional headers to add.</param>
+    /// <param name="mayAskForSequentialToolCalls">Whether a request which offers tools may ask for one call at a time. False for a provider which rejects the parallel_tool_calls parameter.</param>
+    /// <param name="enforcesStrictToolSchemas">Whether the provider binds the model's tool calls to a strict schema. Only then are tools offered in strict mode; everywhere else a strict schema would only tell the model that every argument is required.</param>
     /// <param name="token">The cancellation token.</param>
     /// <typeparam name="TRequest">The request DTO type.</typeparam>
     /// <typeparam name="TDelta">The delta stream line type.</typeparam>
@@ -1245,6 +1305,8 @@ public abstract class BaseProvider : IProvider, ISecretId
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
+        bool mayAskForSequentialToolCalls = true,
+        bool enforcesStrictToolSchemas = false,
         [EnumeratorCancellation] CancellationToken token = default)
         where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
@@ -1258,6 +1320,18 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("parallel_tool_calls");
 
+        //
+        // Where the User-Agent is shared, a chat request also names the component which sent it. This
+        // covers both ways to the provider below: the single request, and every round of a tool run.
+        //
+        Action<HttpRequestHeaders>? requestHeadersAction = this.sharesFeatureUsage
+            ? headers =>
+            {
+                headersAction?.Invoke(headers);
+                AppUserAgent.ApplyComponent(headers, chatThread);
+            }
+            : headersAction;
+
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
@@ -1268,11 +1342,16 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             var providerSettings = this.CreateSettingsProvider(chatModel);
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
-                providerSettings,
-                chatThread.RuntimeComponent,
+                new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = this.Provider.GetConfidence(settingsManager).Level,
+                    ChatThread = chatThread,
+                },
                 chatThread.RuntimeSelectedToolIds,
-                this.Provider.GetConfidence(settingsManager).Level,
-                chatThread.MayRunTools(settingsManager));
+                chatThread.MayRunTools(settingsManager),
+                token);
 
             systemPrompt = new TextMessage
             {
@@ -1283,8 +1362,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (runnableTools.Count > 0)
             {
                 var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
-                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
-                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, headersAction, requestToken),
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition, enforcesStrictToolSchemas)).ToList(), mayAskForSequentialToolCalls, runnableTools,
+                    (requestDto, requestToken) => this.StreamChatCompletionRequest(requestDto, providerName, requestPath, requestedSecret, requestHeadersAction, requestToken),
                     ChatCompletionSourceReader.Read<TDelta, TAnnotation>,
                     this.logger);
 
@@ -1330,7 +1409,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
             // Set provider-specific headers:
-            headersAction?.Invoke(request.Headers);
+            requestHeadersAction?.Invoke(request.Headers);
 
             // Set the content:
             request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
@@ -1341,15 +1420,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
-    /// <summary>
-    /// Describes this provider instance with the given model as configured provider settings.
-    /// </summary>
-    /// <remarks>
-    /// Anything asking about model capabilities must go through this, because the expert
-    /// capability overrides live on the settings object: a provider that builds its own settings
-    /// instance without them silently ignores what the user configured.
-    /// </remarks>
-    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    /// <inheritdoc />
+    public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
         UsedLLMProvider = this.Provider,
         Model = chatModel,

@@ -7,6 +7,9 @@ using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
 
+using MudBlazor.Interfaces;
+using MudBlazor.Utilities;
+
 namespace AIStudio.Dialogs;
 
 public partial class DataSourceLocalFileDialog : MSGComponentBase
@@ -63,10 +66,17 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private int dataChunkOverlapTokenLength = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     private ushort dataMaxMatches = 10;
     private bool showExpertSettings;
+    private bool revalidateAfterRender;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
+
+    // The fields whose rules read other fields, see RevalidateDependentFields:
+    private MudSelect<string> embeddingSelect = null!;
+    private MudSelect<ConfidenceLevel> confidenceLevelSelect = null!;
+    private MudNumericField<int> maxChunkTokenLengthField = null!;
+    private MudNumericField<int> chunkOverlapTokenLengthField = null!;
 
     public DataSourceLocalFileDialog()
     {
@@ -88,8 +98,10 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
-        // Load the used instance names:
-        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant()).ToList();
+        // Load the used instance names, those of the mailboxes included:
+        this.UsedDataSourcesNames = this.SettingsManager.ConfigurationData.DataSources.Select(x => x.Name.ToLowerInvariant())
+            .Concat(this.SettingsManager.ConfigurationData.Mailboxes.Select(x => x.Name.ToLowerInvariant()))
+            .ToList();
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -116,7 +128,14 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
-        
+
+        // A check asked for in code waits until the fields hold their new values, cf. ToggleExpertSettings:
+        if (this.revalidateAfterRender)
+        {
+            this.revalidateAfterRender = false;
+            await this.RevalidateDependentFields(changedField: null);
+        }
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -197,6 +216,14 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     
     private void Cancel() => this.MudDialog.Cancel();
 
+    /// <summary>
+    /// Gives the fields which are checked against each other a fresh verdict: the embedding provider
+    /// and the required confidence level, and the token limits, which depend on the embedding provider.
+    /// </summary>
+    private Task RevalidateDependentFields(IFormComponent? changedField) => DependentFieldValidation.RevalidateAsync(changedField, this.embeddingSelect, this.confidenceLevelSelect, this.maxChunkTokenLengthField, this.chunkOverlapTokenLengthField);
+
+    private Task RevalidateAfterFieldChange(FormFieldChangedEventArgs change) => this.RevalidateDependentFields(change.Field);
+
     private string? ValidateMaxChunkTokenLength(int maxChunkTokenLength)
     {
         if (!this.showExpertSettings)
@@ -234,6 +261,10 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         this.showExpertSettings = !this.showExpertSettings;
         if (this.showExpertSettings && this.dataMaxChunkTokenLength < 1)
             this.dataMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
+
+        // The token limits are only checked while they are shown. The field learns the limit set
+        // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
     }
 
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;

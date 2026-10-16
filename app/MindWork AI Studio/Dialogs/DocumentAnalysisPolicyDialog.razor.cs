@@ -68,7 +68,7 @@ public partial class DocumentAnalysisPolicyDialog : MSGComponentBase
         this.analysisRules = importedAnalysisRules;
         this.outputRules = importedOutputRules;
         this.minimumConfidence = confidence;
-        this.allowedToolIds = new(toolIds, StringComparer.Ordinal);
+        this.allowedToolIds = this.ToolRegistry.NormalizeSelection(toolIds);
         this.providerId = importedProviderId;
         this.profileId = importedProfileId;
         this.hideDefinition = hide;
@@ -79,7 +79,7 @@ public partial class DocumentAnalysisPolicyDialog : MSGComponentBase
         if (!string.IsNullOrWhiteSpace(this.profileId) && this.profileId != Profile.NO_PROFILE.Id && this.SettingsManager.ConfigurationData.Profiles.All(profile => profile.Id != this.profileId))
             missing.Add(ConfigurationImportFields.MissingProfileReference(this.profileId));
         var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT))
-            .Select(item => item.Definition.Id).ToHashSet(StringComparer.Ordinal);
+            .Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
         missing.AddRange(this.allowedToolIds.Where(id => !availableToolIds.Contains(id)).Select(ConfigurationImportFields.MissingToolReference));
         this.referenceIssue = ConfigurationImportFields.UnavailableReferencesIssue(missing);
         this.form.ResetValidation();

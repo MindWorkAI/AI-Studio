@@ -29,9 +29,39 @@ public sealed class ToolParameterSchemaBuilder
 
     public ToolParameterSchemaBuilder OptionalInteger(string name, string description) => this.Add(name, "integer", description, isRequired: false);
 
+    public ToolParameterSchemaBuilder OptionalBoolean(string name, string description) => this.Add(name, "boolean", description, isRequired: false);
+
     public ToolParameterSchemaBuilder RequiredEnum(string name, string description, params string[] allowedValues) => this.Add(name, "string", description, isRequired: true, allowedValues);
 
     public ToolParameterSchemaBuilder OptionalEnum(string name, string description, params string[] allowedValues) => this.Add(name, "string", description, isRequired: false, allowedValues);
+
+    /// <summary>
+    /// An argument the model may leave out or pass as a list of strings.
+    /// </summary>
+    /// <remarks>
+    /// With allowed values, every entry of the list has to be one of them, such as the data sources
+    /// Semantic Search may be asked to search. How many entries the list holds is for the tool to
+    /// check, like everything else a model passes.
+    /// </remarks>
+    public ToolParameterSchemaBuilder OptionalStringArray(string name, string description, params string[] allowedValues)
+    {
+        var items = new JsonObject
+        {
+            ["type"] = "string",
+        };
+
+        if (allowedValues is { Length: > 0 })
+            items["enum"] = new JsonArray([..allowedValues.Select(value => JsonValue.Create(value))]);
+
+        this.properties[name] = new JsonObject
+        {
+            ["type"] = "array",
+            ["description"] = description,
+            ["items"] = items,
+        };
+
+        return this;
+    }
 
     /// <summary>
     /// Produces the finished schema.

@@ -60,10 +60,16 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
         // list either way.
         //
         var sources = readSources?.Invoke(serverSentEvent) ?? [];
-        
+
+        //
+        // The usage arrives on a line without choices at most providers, and next to the last
+        // piece of text at some. Read before the choices are looked at, it is not lost in either.
+        //
+        var usage = line?.Usage?.ToTokenUsage() ?? TokenUsage.UNKNOWN;
+
         var delta = line?.Choices?.FirstOrDefault()?.Delta;
         if (delta is null)
-            return WithSources(string.Empty, sources);
+            return WithSources(string.Empty, sources, usage);
 
         this.hasReadAnything = true;
         
@@ -80,10 +86,10 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
 
         var textDelta = delta.Content;
         if (textDelta.Length is 0)
-            return WithSources(string.Empty, sources);
+            return WithSources(string.Empty, sources, usage);
 
         this.text.Append(textDelta);
-        return new ChatCompletionStreamPart(textDelta, sources);
+        return new ChatCompletionStreamPart(textDelta, sources, usage);
     }
     
     /// <summary>
@@ -183,10 +189,10 @@ public sealed class ChatCompletionToolCallAccumulator(Func<ServerSentEvent, ILis
     private static string? Coalesce(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
     
     /// <summary>
-    /// A part for a line which brought sources but no text, or nothing at all.
+    /// A part for a line which brought sources or a usage but no text, or nothing at all.
     /// </summary>
-    private static ChatCompletionStreamPart WithSources(string text, IList<ISource> sources)
-        => sources.Count is 0 ? ChatCompletionStreamPart.Nothing : new ChatCompletionStreamPart(text, sources);
+    private static ChatCompletionStreamPart WithSources(string text, IList<ISource> sources, TokenUsage usage)
+        => sources.Count is 0 && !usage.IsKnown ? ChatCompletionStreamPart.Nothing : new ChatCompletionStreamPart(text, sources, usage);
 
     /// <summary>
     /// One tool call while its fragments are still arriving.

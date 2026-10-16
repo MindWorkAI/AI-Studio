@@ -147,6 +147,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
+    /// Should requests to self-hosted servers, i.e., self-hosted providers and LiteLLM, name the feature that sent them?
+    /// </summary>
+    /// <remarks>
+    /// Whoever operates such a server learns about it, which usually is an organization. Off by default:
+    /// AI Studio then sends no User-Agent at all. Cloud providers never learn about it either way.
+    /// </remarks>
+    public bool ShareFeatureUsageWithSelfHostedServerOperators { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShareFeatureUsageWithSelfHostedServerOperators, false);
+
+    /// <summary>
     /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
     /// </summary>
     public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
@@ -205,6 +214,15 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     });
 
     /// <summary>
+    /// Should the user be allowed to add mailboxes?
+    /// </summary>
+    /// <remarks>
+    /// Independent of AllowUserToAddProvider, because a mailbox is a data source, not a provider.
+    /// Mailboxes the user added before stay, and the user may still edit or delete them.
+    /// </remarks>
+    public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
+
+    /// <summary>
     /// Should the user be allowed to import plugin archives from disk?
     /// </summary>
     public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
@@ -223,6 +241,24 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to share or export plugins as archives?
     /// </summary>
     public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to back up the data of AI Studio into a file?
+    /// </summary>
+    /// <remarks>
+    /// A backup holds chats and other confidential content in a single file, which can leave the
+    /// computer on any stick or cloud drive. Secrets never go into it.
+    /// </remarks>
+    public bool AllowUserToBackUpData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToBackUpData, true);
+
+    /// <summary>
+    /// Should the user be allowed to restore the data of AI Studio from a backup file, or to add the chats of one?
+    /// </summary>
+    /// <remarks>
+    /// A backup brings along everything its chats and settings name, including the locations of
+    /// attached documents and of local data sources, which are read again afterward.
+    /// </remarks>
+    public bool AllowUserToRestoreData { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToRestoreData, true);
 
     /// <summary>
     /// Should administration settings be visible in the UI?

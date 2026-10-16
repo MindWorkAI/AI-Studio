@@ -45,7 +45,8 @@ public sealed class Gpt5Family : ModelFamily
             .Apis(RESPONSES_API)
             .Reasoning(ReasoningSupport.ALWAYS)
             .ContextWindow(400_000)
-            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base");
+            .Tokenizer(TokenizerKind.TIKTOKEN, "o200k_base")
+            .SystemPromptRole(SystemPromptRole.DEVELOPER);
 
         //
         // The alias for the model of this generation which does not reason. The previous rules had

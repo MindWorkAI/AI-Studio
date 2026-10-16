@@ -154,7 +154,9 @@ const STRUCTURAL_RULES: &[StructuralRule] = &[
     StructuralRule {
         id: "unicode_smuggling",
         category: FindingCategory::EncodingEvasion,
-        // Zero-width and bidirectional control characters carry no meaning for a reader.
+        // Zero-width and bidirectional control characters carry no meaning for a reader. The
+        // scans see the text without them, through `normalize::is_invisible`, which has to name
+        // the same characters; a test below keeps the two in step.
         redaction: Redaction::Silent,
         pattern: r"[\u{200B}-\u{200F}\u{2060}-\u{2064}\u{2066}-\u{2069}\u{FEFF}]+",
     },
@@ -364,6 +366,31 @@ mod tests {
     fn zero_width_characters_are_detected() {
         let ids = matching_rule_ids("harmless\u{200B}text");
         assert!(ids.contains(&"unicode_smuggling"), "got {ids:?}");
+    }
+
+    /// The rule removes the invisible characters from the text, and the readable view leaves the
+    /// same ones out while scanning. A character only the rule knew would still break phrases
+    /// apart in the scan and then vanish from what the model gets; one only the view knew would
+    /// be judged absent while it stays in the text.
+    #[test]
+    fn the_rule_and_the_readable_view_agree_on_what_is_invisible() {
+        let (_, pattern) = STRUCTURAL
+            .rules()
+            .find(|(rule, _)| rule.id == "unicode_smuggling")
+            .expect("the rule must exist");
+
+        let candidates = (0x2000..=0x206F).chain(0xFE00..=0xFEFF).chain([0x00A0, 0x00AD, 0x0020]);
+        for code_point in candidates {
+            let Some(character) = char::from_u32(code_point) else {
+                continue;
+            };
+
+            assert_eq!(
+                pattern.is_match(&character.to_string()),
+                super::super::normalize::is_invisible(character),
+                "U+{code_point:04X} is invisible to one of them only",
+            );
+        }
     }
 
     #[test]

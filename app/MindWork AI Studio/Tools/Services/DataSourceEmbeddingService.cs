@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Channels;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -10,19 +9,15 @@ using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
+using AIStudio.Tools.Services.Indexing;
+
+using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
 
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService
+    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
 {
-    private const int VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD = 100_000;
-
-    /// <summary>
-    /// How often the block progress within one file is reported to the user interface at most.
-    /// </summary>
-    private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
-
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
     /// </summary>
@@ -32,63 +27,80 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// </remarks>
     private static readonly TimeSpan REINDEX_CHECK_TIMEOUT = TimeSpan.FromSeconds(2);
 
-    private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
-    private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, byte> pendingQueueIds = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>
+    /// How long the first run waits for the plugins to be loaded, cf. WaitForFirstPluginLoadAsync.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin may take ten seconds to load and ten more to start, and the configuration of an
+    /// organization may have to be downloaded first. Should loading fail, the data sources are
+    /// indexed all the same, with whatever the settings hold by then.
+    /// </remarks>
+    private static readonly TimeSpan FIRST_PLUGIN_LOAD_TIMEOUT = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    /// One indexer per kind of data source this service indexes.
+    /// </summary>
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
+
+    private readonly DataSourceRunQueue runQueue = new();
+
+    /// <summary>
+    /// Lets one run at a time embed, cf. ProcessDataSourceRunAsync.
+    /// </summary>
+    private readonly SemaphoreSlim runGate = new(1, 1);
+
     private readonly ConcurrentDictionary<string, DataSourceRunControl> activeRuns = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
-    private readonly object queueStateLock = new();
+
+    /// <summary>
+    /// The pass of every data source whose last step left more to do, and of none else, cf. IndexingPass.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, IndexingPass> passes = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Guards the run signature of every active run, cf. DataSourceRunControl.RunSignature.
+    /// </summary>
+    private readonly Lock runSignatureLock = new();
+
     private int startupHashCheckStarted;
     private int startupHashCheckCompleted;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
-    private enum DataSourceQueueRequestResult
+    /// <summary>
+    /// The pauses of the indexing, cf. PauseIndexingAsync.
+    /// </summary>
+    private readonly IndexingPauses pauses = new();
+
+    /// <summary>
+    /// An active run.
+    /// </summary>
+    /// <param name="TokenSource">Stops the run.</param>
+    /// <param name="Completion">Completes once the run has ended.</param>
+    /// <param name="RefreshMode">Why the run was asked for.</param>
+    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion, DataSourceEmbeddingRefreshMode RefreshMode)
     {
-        QUEUED,
-        ALREADY_QUEUED,
-        RUNNING,
-        RUNNING_MARKED_PENDING,
+        /// <summary>
+        /// The embedding settings the run works for, as GetRunSignature describes them.
+        /// </summary>
+        /// <remarks>
+        /// Null until the run has resolved its embedding provider. Read and written under
+        /// runSignatureLock only.
+        /// </remarks>
+        public DataSourceRunSignature? RunSignature { get; set; }
     }
 
-    private enum DataSourceEmbeddingRefreshMode
+    /// <summary>
+    /// Creates one indexer per kind of data source, all of them cutting their text with the same chunker.
+    /// </summary>
+    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, ILogger logger)
     {
-        STARTUP_HASH_CHECK,
-        HASH_CHECK,
-        WATCHER_HASH_CHECK,
-        MANUAL_RETRY,
-    }
-
-    private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
-
-    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion);
-
-    private sealed class VectorStoreOptimizationTracker
-    {
-        public long StoredChunksSinceLastOptimization { get; private set; }
-
-        public bool HasPendingChanges { get; private set; }
-
-        public void MarkChanged()
-        {
-            this.HasPendingChanges = true;
-        }
-
-        public void RecordStoredChunks(int chunkCount)
-        {
-            if (chunkCount <= 0)
-                return;
-
-            this.HasPendingChanges = true;
-            this.StoredChunksSinceLastOptimization += chunkCount;
-        }
-
-        public void Reset()
-        {
-            this.StoredChunksSinceLastOptimization = 0;
-            this.HasPendingChanges = false;
-        }
+        var textChunker = new TextChunker(rustService, logger);
+        return
+        [
+            new FileSourceIndexer(settingsManager, rustService, textChunker, logger),
+            new MailboxIndexer(settingsManager, rustService, guardService, textChunker, logger),
+        ];
     }
 
     public IReadOnlyList<DataSourceEmbeddingStatus> GetStatuses()
@@ -107,19 +119,19 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         if (activeStatus is not null)
         {
-            var total = Math.Max(activeStatus.TotalFiles, 1);
+            var total = Math.Max(activeStatus.TotalDocuments, 1);
             return new(
                 activeStatus.State,
-                activeStatus.IndexedFiles,
+                activeStatus.IndexedDocuments,
                 total,
-                activeStatus.FailedFiles);
+                activeStatus.FailedDocuments);
         }
 
         var failedStatus = orderedStatuses
-            .FirstOrDefault(status => status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+            .FirstOrDefault(status => status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
 
         if (failedStatus is not null)
-            return new(DataSourceEmbeddingState.FAILED, failedStatus.IndexedFiles, failedStatus.TotalFiles, failedStatus.FailedFiles);
+            return new(DataSourceEmbeddingState.FAILED, failedStatus.IndexedDocuments, failedStatus.TotalDocuments, failedStatus.FailedDocuments);
 
         return new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     }
@@ -133,9 +145,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     {
         this.RefreshWatchers();
 
-        var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedInternalDataSource)
-            .ToList();
+        var supportedDataSources = this.GetConfiguredIndexedSources();
 
         logger.LogInformation(
             "Queueing {DataSourceCount} supported internal data source(s) for background embedding hash checks. QueueAfterCurrentRun={QueueAfterCurrentRun}.",
@@ -188,15 +198,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
-    public bool CanRefreshDataSource(IDataSource dataSource)
+    public bool CanRefreshDataSource(IDataSourceBase dataSource)
     {
-        return this.IsSupportedInternalDataSource(dataSource);
+        return this.IsSupportedIndexedSource(dataSource);
     }
 
     public bool CanRefreshDataSource(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource) &&
-            this.CanRefreshDataSource(dataSource);
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out _);
     }
 
     /// <summary>
@@ -226,27 +235,26 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return true;
         }
 
-        var manifest = await indexStore.GetManifestAsync(dataSourceId, token);
-        return HasStoredIndexState(manifest);
+        var indexState = await indexStore.GetDataSourceStateAsync(dataSourceId, token);
+        return HasStoredIndexState(indexState);
     }
 
     /// <summary>
     /// Whether the index holds anything at all about a data source.
     /// </summary>
-    /// <param name="manifest">What the index store returned for it.</param>
+    /// <remarks>
+    /// The row of the data source is the whole answer. Everything else the index stores about it --
+    /// its documents, their chunks and the documents skipped for good -- hangs on that row and is
+    /// deleted along with it, and the row itself is only ever written together with the embedding
+    /// provider and the signature. Reading the documents as well, the way the manifest does, would
+    /// add nothing but time, and a lot of it for a data source with a hundred thousand documents.
+    ///
+    /// A data source whose documents were all skipped for good therefore has index state as well,
+    /// even though nothing was indexed of it.
+    /// </remarks>
+    /// <param name="indexState">What the index store holds about the data source as a whole, or null.</param>
     /// <returns>True when there is stored index state.</returns>
-    private static bool HasStoredIndexState(DataSourceEmbeddingManifest manifest)
-    {
-        return !string.IsNullOrWhiteSpace(manifest.EmbeddingProviderId)
-               || !string.IsNullOrWhiteSpace(manifest.EmbeddingSignature)
-               || !string.IsNullOrWhiteSpace(manifest.SourceHash)
-               || manifest.VectorSize > 0
-               || manifest.Files.Count > 0
-
-               // A data source whose files were all skipped for good has index state as well,
-               // even though nothing was indexed of it:
-               || manifest.PermanentFailures.Count > 0;
-    }
+    private static bool HasStoredIndexState(DataSourceIndexState? indexState) => indexState is not null;
 
     /// <summary>
     /// Picks the data sources which already hold something in the index.
@@ -261,14 +269,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="dataSources">The data sources to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>Those of them which have stored index state.</returns>
-    public async Task<IReadOnlyList<IDataSource>> GetDataSourcesWithStoredIndexAsync(IReadOnlyCollection<IDataSource> dataSources, CancellationToken token = default)
+    public async Task<IReadOnlyList<IDataSourceBase>> GetDataSourcesWithStoredIndexAsync(IReadOnlyCollection<IDataSourceBase> dataSources, CancellationToken token = default)
     {
         //
         // Filtering first also keeps the index database from being created while local RAG is off:
         // asking for the store runs its migrations on the first call, which must not happen because
         // somebody opened a dialog.
         //
-        var candidates = dataSources.Where(this.IsSupportedInternalDataSource).ToList();
+        var candidates = dataSources.Where(this.IsSupportedIndexedSource).ToList();
         if (candidates.Count == 0)
             return [];
 
@@ -284,11 +292,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return candidates;
             }
 
-            var affected = new List<IDataSource>(candidates.Count);
+            var affected = new List<IDataSourceBase>(candidates.Count);
             foreach (var dataSource in candidates)
             {
-                var manifest = await indexStore.GetManifestAsync(dataSource.Id, timeout.Token);
-                if (HasStoredIndexState(manifest))
+                var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, timeout.Token);
+                if (HasStoredIndexState(indexState))
                     affected.Add(dataSource);
             }
 
@@ -323,14 +331,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <param name="dataSource">The data source to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the data source is waiting for its index to be rebuilt.</returns>
-    public async Task<bool> IsAwaitingReindexAsync(IDataSource dataSource, CancellationToken token = default)
+    public async Task<bool> IsAwaitingReindexAsync(IDataSourceBase dataSource, CancellationToken token = default)
     {
         //
         // This guard also keeps the index database out of the picture while local RAG is switched
         // off: asking for the store creates the database and runs its migrations on the first call,
         // which must not happen because somebody opened the data source selection.
         //
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!this.IsSupportedIndexedSource(dataSource))
             return false;
 
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
@@ -399,57 +407,92 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     /// <summary>
-    /// Whether a data source cannot be searched because its vector store cannot be read anymore.
+    /// Whether a data source cannot be searched because its vector store cannot be read anymore, or is missing.
     /// </summary>
     /// <remarks>
     /// Unlike the re-index check above, this reads no database at all: the state comes from the run
-    /// or the search which ran into the unreadable store, and is kept in memory only. That it does
+    /// or the search which ran into the unreadable or missing store, and is kept in memory only. That it does
     /// not survive a restart is deliberate. The very same store may well open on the next start,
     /// and a mark written to disk would then be wrong with nobody noticing. Until something touches
     /// the store again, the data source counts as usable, and a failing search says so on its own.
     /// </remarks>
     /// <param name="dataSource">The data source to ask about.</param>
     /// <returns>True when the data source waits for the user to have its index rebuilt.</returns>
-    public bool NeedsIndexRepair(IDataSource dataSource) =>
+    public bool NeedsIndexRepair(IDataSourceBase dataSource) =>
         this.statuses.TryGetValue(dataSource.Id, out var status) &&
         status is { State: DataSourceEmbeddingState.FAILED, VectorStoreUnreadable: true };
 
-    public Task QueueDataSourceAsync(IDataSource dataSource)
+    public Task QueueDataSourceAsync(IDataSourceBase dataSource)
     {
         return this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
     }
 
     public Task QueueDataSourceAsync(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource)
             ? this.QueueDataSourceAsync(dataSource)
             : Task.CompletedTask;
     }
 
     public Task RetryDataSourceAsync(string dataSourceId)
     {
-        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+        return this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource)
             ? this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.MANUAL_RETRY)
             : Task.CompletedTask;
     }
 
-    private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
+    /// <summary>
+    /// Syncs a mailbox soon, because a tool is about to read what may have changed on its server since the last sync.
+    /// </summary>
+    /// <remarks>
+    /// Runs like a sync at the interval: only while the user lets the data sources refresh on their
+    /// own, and never despite a refused sign-in. A sync which is running already gets one follow-up,
+    /// since it may have looked at the folder in question before the change. One which is queued
+    /// already stays the only one.
+    /// </remarks>
+    /// <param name="mailboxId">The id of the mailbox.</param>
+    /// <returns>True when a sync is on its way; false when the user switched the automatic refresh off, the mailbox is not configured, or it waits for the user to sign in again.</returns>
+    public async Task<bool> RequestMailboxSyncAsync(string mailboxId)
     {
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
+            return false;
+
+        if (!this.TryGetConfiguredIndexedSource(mailboxId, out var dataSource) || dataSource is not DataSourceMailbox || !this.IsSupportedIndexedSource(dataSource))
+            return false;
+
+        if (this.statuses.TryGetValue(mailboxId, out var status) && IsWaitingForSignIn(status))
+            return false;
+
+        await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.TOOL_REQUEST);
+        return true;
+    }
+
+    private async Task QueueDataSourceAsync(IDataSourceBase dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
+    {
+        if (!this.IsSupportedIndexedSource(dataSource))
             return;
 
         this.RefreshWatchers();
         logger.LogDebug("Refreshed watcher state for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
 
-        var queueRequestResult = this.TryReserveDataSourceQueueSlot(dataSource.Id, queueAfterCurrentRun);
+        var queueRequestResult = this.runQueue.TryReserve(dataSource.Id, queueAfterCurrentRun, refreshMode);
+
+        //
+        // Every change of the embedding settings ends up here, whichever dialog made it. A run
+        // started before would carry on with the old settings, possibly for hours, only for the
+        // next run to throw its work away. It stops after the reservation, so the run which
+        // starts over with the new settings is certain before the old one ends.
+        //
+        this.CancelOutdatedDataSourceRun(dataSource.Id);
+
         switch (queueRequestResult)
         {
             case DataSourceQueueRequestResult.ALREADY_QUEUED:
-                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already queued for background embeddings. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already queued for background embeddings. Merged the queue request into the queued run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
                 return;
 
             case DataSourceQueueRequestResult.RUNNING:
-                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. The queue request adds no further follow-up embedding run. RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
                 return;
 
             case DataSourceQueueRequestResult.RUNNING_MARKED_PENDING:
@@ -457,34 +500,29 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return;
         }
 
+        var lane = this.GetQueueLane(dataSource.Id);
         logger.LogInformation(
-            "Queueing data source '{DataSourceName}' ({DataSourceId}) for background embedding hash check. RefreshMode={RefreshMode}.",
+            "Queueing data source '{DataSourceName}' ({DataSourceId}) for background embedding hash check. RefreshMode={RefreshMode}, Lane={Lane}.",
             dataSource.Name,
             dataSource.Id,
-            refreshMode);
+            refreshMode,
+            lane);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
-        {
-            this.UpsertStatus(this.CreateStatus(
-                dataSource,
-                DataSourceEmbeddingState.QUEUED,
-                currentStatus?.TotalFiles ?? 0,
-                currentStatus?.IndexedFiles ?? 0,
-                currentStatus?.FailedFiles ?? 0,
-                failures: currentStatus?.Failures ?? []));
-        }
+            this.UpsertStatus(this.GetQueuedStatus(dataSource));
+
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-        await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSource.Id, refreshMode));
+        await this.runQueue.EnqueueAsync(dataSource.Id, lane);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
-    public async Task RemoveDataSourceAsync(IDataSource dataSource)
+    public async Task RemoveDataSourceAsync(IDataSourceBase dataSource)
     {
-        if (!this.IsSupportedInternalDataSource(dataSource))
+        if (!this.IsSupportedIndexedSource(dataSource))
             return;
 
         this.RemoveWatcher(dataSource.Id);
         var activeRun = this.CancelActiveDataSourceRun(dataSource);
-        this.ClearQueuedDataSourceState(dataSource.Id);
+        this.runQueue.Clear(dataSource.Id);
         this.statuses.TryRemove(dataSource.Id, out _);
         if (activeRun is not null)
         {
@@ -495,95 +533,132 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             await activeRun.Completion.Task;
         }
 
+        // A backup copies the stores during a pause, and the copies would no longer fit together:
+        await this.pauses.WaitWhilePausedAsync(CancellationToken.None);
+
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
         this.statuses.TryRemove(dataSource.Id, out _);
-        this.PublishStatusChanged();
+        PublishStatusChanged();
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Changes to the embedding settings which do not pass through the queue, cf. ProcessMessage:
+        MessageBus.INSTANCE.RegisterComponent(this);
+        this.ApplyFilters([], [Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED]);
+
         await this.WaitForInitialSettingsAndBootstrapAsync(stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var queueItem = await this.queue.Reader.ReadAsync(stoppingToken);
-            var dataSourceId = queueItem.DataSourceId;
-            this.MarkDataSourceRunStarted(dataSourceId);
-
-            IDataSource? dataSource = null;
+            var runRequest = await this.runQueue.DequeueAsync(stoppingToken);
 
             try
             {
-                dataSource = settingsManager.ConfigurationData.DataSources
-                    .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-                if (dataSource is null || !this.IsSupportedInternalDataSource(dataSource))
-                    continue;
-
-                await this.ProcessDataSourceRunAsync(dataSource, queueItem.RefreshMode, stoppingToken);
+                await this.RunDataSourceAsync(runRequest.DataSourceId, runRequest.RefreshMode, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 break;
             }
-            catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+        }
+    }
+
+    /// <summary>
+    /// Runs a data source which the queue marked as running, and queues its follow-up run afterward.
+    /// </summary>
+    /// <remarks>
+    /// The one bracket around every run, whether it came out of the queue or from the startup check.
+    /// Whoever calls this has marked the run as running, cf. DataSourceRunQueue.DequeueAsync and
+    /// TryBeginRun. That is what turns every request during the run into exactly one follow-up run,
+    /// the next step of a data source which did its share of the work among them. It also shows the
+    /// data source as queued again once the run ends, instead of leaving it on running.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <param name="refreshMode">Why the run was asked for.</param>
+    /// <param name="token">The cancellation token.</param>
+    private async Task RunDataSourceAsync(string dataSourceId, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    {
+        IIndexedDataSource? dataSource = null;
+
+        try
+        {
+            if (!this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource))
             {
-                //
-                // Nothing is deleted and nothing is rebuilt here. The data source says what is
-                // wrong with it, stays out of the selection while it says so, and waits for the
-                // user to ask for the repair.
-                //
-                logger.LogError(
-                    exception,
-                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
-                    dataSource.Name,
-                    dataSource.Id);
-                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+                // Deleted, or no longer indexed since a preview was switched off. Its pass would lead nowhere:
+                this.passes.TryRemove(dataSourceId, out _);
+                return;
             }
-            catch (Exception exception)
+
+            await this.ProcessDataSourceRunAsync(dataSource, refreshMode, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (VectorStoreUnreadableException exception) when (dataSource is not null)
+        {
+            //
+            // Nothing is deleted and nothing is rebuilt here. The data source says what is
+            // wrong with it, stays out of the selection while it says so, and waits for the
+            // user to ask for the repair.
+            //
+            logger.LogError(
+                exception,
+                "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
+                dataSource.Name,
+                dataSource.Id);
+            this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
+        }
+        catch (Exception exception)
+        {
+            if (dataSource is null)
             {
-                if (dataSource is null)
-                {
-                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceId}'.", dataSourceId);
-                }
-                else
-                {
-                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                    this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
-                }
+                logger.LogError(exception, "Background embedding failed for data source '{DataSourceId}'. RefreshMode={RefreshMode}.", dataSourceId, refreshMode);
             }
-            finally
+            else
             {
-                await this.QueuePendingDataSourceRunAsync(dataSourceId, stoppingToken);
+                logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.", dataSource.Name, dataSource.Id, refreshMode);
+                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
             }
         }
+        finally
+        {
+            await this.QueuePendingDataSourceRunAsync(dataSourceId, token);
+        }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        MessageBus.INSTANCE.Unregister(this);
+        await base.StopAsync(cancellationToken);
     }
 
     public override void Dispose()
     {
         this.DisposeWatchers();
         base.Dispose();
+        this.runGate.Dispose();
     }
 
-    private async Task ProcessDataSourceRunAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
+    private async Task ProcessDataSourceRunAsync(IDataSourceBase requestedDataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
     {
-        if (!this.TryGetConfiguredDataSource(dataSource.Id, out var configuredDataSource) ||
-            !this.IsSupportedInternalDataSource(configuredDataSource))
+        if (!this.TryGetConfiguredIndexedSource(requestedDataSource.Id, out var dataSource))
         {
             logger.LogDebug(
                 "Skipping embedding run for data source '{DataSourceName}' ({DataSourceId}) because it is no longer configured. RefreshMode={RefreshMode}.",
-                dataSource.Name,
-                dataSource.Id,
+                requestedDataSource.Name,
+                requestedDataSource.Id,
                 refreshMode);
             return;
         }
 
-        dataSource = configuredDataSource;
         var runTokenSource = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
         var runControl = new DataSourceRunControl(
             runTokenSource,
-            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously));
+            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously),
+            refreshMode);
 
         if (!this.activeRuns.TryAdd(dataSource.Id, runControl))
         {
@@ -598,15 +673,40 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await this.ProcessDataSourceAsync(dataSource, refreshMode, runTokenSource.Token);
+            //
+            // One run at a time, whichever way it started: the startup check goes on next to the
+            // queue once the automatic refresh is switched on while the app runs. The wait counts as
+            // part of the run, so deleting or repairing the data source ends the wait as well,
+            // instead of waiting for the run before it to finish first. A paused indexing holds
+            // every run back in front of the gate, cf. PauseIndexingAsync:
+            //
+            await this.pauses.WaitWhilePausedAsync(runTokenSource.Token);
+            await this.runGate.WaitAsync(runTokenSource.Token);
+            try
+            {
+                await this.ProcessDataSourceAsync(dataSource, refreshMode, runControl, runTokenSource.Token);
+            }
+            finally
+            {
+                this.runGate.Release();
+            }
         }
         catch (OperationCanceledException) when (!parentToken.IsCancellationRequested && runTokenSource.IsCancellationRequested)
         {
             logger.LogInformation(
-                "Stopped background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the data source was removed or canceled. RefreshMode={RefreshMode}.",
+                "Stopped background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the data source was removed or canceled, or its embedding settings changed. RefreshMode={RefreshMode}.",
                 dataSource.Name,
                 dataSource.Id,
                 refreshMode);
+
+            //
+            // A data source which is still there has its next run asked for already, which starts
+            // over with the current settings, in a pass of its own. Its row says so instead of
+            // showing this run as running.
+            //
+            this.passes.TryRemove(dataSource.Id, out _);
+            if (this.TryGetConfiguredIndexedSource(dataSource.Id, out var configuredDataSource))
+                this.UpsertStatus(this.GetQueuedStatus(configuredDataSource));
         }
         finally
         {
@@ -616,17 +716,24 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
     }
 
-    private async Task ProcessDataSourceAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    /// <summary>
+    /// Works out everything an indexing run needs, before anything is read from the data source.
+    /// </summary>
+    /// <remarks>
+    /// The same for every kind of data source: both stores have to be there, the embedding provider
+    /// has to exist and meet the confidence level the data source asks for, and the stored manifest
+    /// has to belong to the current embedding configuration -- otherwise it is discarded here. When
+    /// any of this fails, the status of the data source says why, and there is no run.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="refreshMode">Why the run was started, for the log.</param>
+    /// <param name="share">How much work the run does at most, as its kind of data source says.</param>
+    /// <param name="runControl">The run, which records the embedding settings it works for.</param>
+    /// <param name="promptInjectionScope">The run as one action of the prompt injection filter.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The context of the run, or null when there is no run.</returns>
+    private async Task<IndexedRunContext?> PrepareIndexedRunAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, RunShare share, DataSourceRunControl runControl, PromptInjectionReportingScope promptInjectionScope, CancellationToken token)
     {
-        if (dataSource is not IInternalDataSource internalDataSource)
-        {
-            logger.LogWarning(
-                "Skipping background embeddings for non-internal data source '{DataSourceName}' ({DataSourceId}).",
-                dataSource.Name,
-                dataSource.Id);
-            return;
-        }
-
         logger.LogInformation(
             "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
             dataSource.Name,
@@ -647,7 +754,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 vectorStore.Name);
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The vector database is not available.")));
-            return;
+            return null;
         }
 
         if (!indexStore.IsAvailable)
@@ -659,47 +766,60 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 indexStore.Name);
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The local RAG index database is not available.")));
-            return;
+            return null;
         }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var persistedManifest = await indexStore.GetManifestAsync(dataSource.Id, token);
-        if (persistedManifest.VectorSize > 0)
+        var persistedState = await indexStore.GetDataSourceStateAsync(dataSource.Id, token);
+        if (persistedState is { VectorSize: > 0 })
         {
-            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedManifest.VectorSize, token);
-            if (ensureResult.Created)
+            //
+            // The index database knows what was indexed, but the vectors are gone, e.g. because the
+            // folder of the vector database was deleted, or restored from another backup than the
+            // index database. Rebuilding sends every document to the embedding provider once more,
+            // which costs money and hours, so it is for the user to decide, cf. RepairDataSourceAsync.
+            // Until then, the data source stays out of every search.
+            //
+            if (!await vectorStore.VectorStoreExists(collectionName, token))
             {
                 logger.LogWarning(
-                    "Vector store '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}) was missing although persisted embedding state exists. Resetting the stale state so all vectors are rebuilt.",
+                    "Vector store '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}) is missing although persisted embedding state exists. The data source is waiting for a repair.",
                     collectionName,
                     dataSource.Name,
                     dataSource.Id);
-                await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, indexStore, token);
+                token.ThrowIfCancellationRequested();
+                this.UpsertStatus(this.GetMissingVectorStoreStatus(dataSource));
+                return null;
             }
+
+            // Opens the store, so one which cannot be read shows up before the run starts:
+            await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedState.VectorSize, token);
         }
 
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
         {
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, TB("The selected embedding provider is not available. Please check it in the settings.")));
-            return;
+            return null;
         }
 
-        if (!embeddingProvider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(internalDataSource.ConfidenceLevel))
+        if (!AllowsEmbedding(dataSource, embeddingProvider.GetConfidenceLevel(settingsManager)))
         {
-            var errorMessage = string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), internalDataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
+            var errorMessage = dataSource is DataSourceMailbox && !dataSource.ConfidenceLevel.IsAllowedMailboxConfidence()
+                ? TB("The mailbox has no valid confidence level, so no provider may read it. Please choose one in the settings of the mailbox.")
+                : string.Format(TB("The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."), dataSource.ConfidenceLevel.GetName(), embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
             logger.LogWarning(
                 "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) does not meet the required confidence. RequiredConfidence={RequiredConfidence}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
                 dataSource.Name,
                 dataSource.Id,
                 embeddingProvider.Name,
                 embeddingProvider.Id,
-                internalDataSource.ConfidenceLevel.GetName(),
+                dataSource.ConfidenceLevel.GetName(),
                 embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
 
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, errorMessage));
-            return;
+            return null;
         }
 
         logger.LogInformation(
@@ -709,663 +829,110 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, indexStore, token);
-        token.ThrowIfCancellationRequested();
+        //
+        // From here on, a change of the embedding settings stops this run, cf. CancelOutdatedDataSourceRun.
+        // The provider passed the confidence check above, so this is the run signature as well.
+        //
+        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider);
+        var runSignature = new DataSourceRunSignature(embeddingSignature);
+        lock (this.runSignatureLock)
+            runControl.RunSignature = runSignature;
 
-        var inputFiles = this.GetInputFiles(dataSource);
-        var indexedFiles = inputFiles.Files;
-        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
-
-        foreach (var failure in inputFiles.Failures)
+        //
+        // A change which arrived while this run was still waiting for the databases found no
+        // signature to compare against, so nothing stopped it. Yet this run may have started from
+        // the data source as it was before the change. Recording above and the check in
+        // CancelOutdatedDataSourceRun take the same lock, so either that check saw the signature
+        // and stopped the run, or this check sees the change. Checked before the manifest, which
+        // would otherwise throw the stored index away for settings which no longer apply.
+        //
+        if (IsRunOutdated(runSignature, this.GetCurrentRunSignature(dataSource.Id)))
         {
-            logger.LogWarning(
-                "Cannot index data source input '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}'.",
-                failure.FilePath,
-                dataSource.Name,
-                dataSource.Id,
-                failure.Reason);
+            await this.StopOutdatedDataSourceRunAsync(dataSource.Id);
+            token.ThrowIfCancellationRequested();
         }
 
-        logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
-            dataSource.Name,
-            dataSource.Id,
-            indexedFiles.Count,
-            inputFiles.FailedFiles,
-            collectionName);
-
-        var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
-        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(vectorStore, indexStore, dataSource, collectionName, manifest, indexedFiles, token);
-        var optimizationTracker = new VectorStoreOptimizationTracker();
-        if (removedMissingFiles > 0)
-            optimizationTracker.MarkChanged();
+        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, embeddingSignature, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
-        logger.LogInformation(
-            "Compared data source hash for '{DataSourceName}' ({DataSourceId}). StoredSourceHashPrefix={StoredSourceHashPrefix}, CurrentSourceHashPrefix={CurrentSourceHashPrefix}, StoredFileRecords={StoredFileRecords}, CurrentFiles={CurrentFiles}, RemovedMissingFiles={RemovedMissingFiles}.",
-            dataSource.Name,
-            dataSource.Id,
-            ShortHash(manifest.SourceHash),
-            ShortHash(metadataSnapshot.SourceHash),
-            manifest.Files.Count,
-            indexedFiles.Count,
-            removedMissingFiles);
-
-        if (this.CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
-        {
+        //
+        // Only now, with the run signature recorded and checked, and with whatever an outdated
+        // manifest threw away: a pass belongs to the embedding settings it began with.
+        //
+        var lastPass = this.passes.GetValueOrDefault(dataSource.Id);
+        var pass = IndexingPass.ContinueOrBegin(lastPass, refreshMode, runSignature);
+        this.passes[dataSource.Id] = pass;
+        if (pass == lastPass)
             logger.LogInformation(
-                "Skipping data source '{DataSourceName}' ({DataSourceId}) because the persisted data source hash and all persisted file hashes match. RefreshMode={RefreshMode}, PermanentlySkippedFiles={PermanentlySkippedFiles}.",
+                "Carrying on the indexing pass of data source '{DataSourceName}' ({DataSourceId}). FailedEarlierInPass={FailedEarlierInPass}, RefreshMode={RefreshMode}.",
                 dataSource.Name,
                 dataSource.Id,
-                refreshMode,
-                manifest.PermanentFailures.Count);
+                pass.FailedDocumentCount,
+                refreshMode);
 
-            await this.OptimizeCollectionIfNeededAsync(
-                optimizationTracker,
-                vectorStore,
-                collectionName,
-                dataSource,
-                "data source finished after removing missing files",
-                token);
+        return new IndexedRunContext(dataSource, embeddingProvider, embeddingProvider.CreateProvider(), vectorStore, indexStore, manifest, share, pass, promptInjectionScope, settingsManager, this.UpsertStatus, logger);
+    }
 
-            token.ThrowIfCancellationRequested();
-            await indexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
-
-            //
-            // The files which were skipped for good are none of the indexed ones, and their stored
-            // reasons belong into the list even on a run which read nothing at all:
-            //
-            this.UpsertStatus(this.CreateCompletedStatus(
-                dataSource,
-                totalFiles,
-                indexedFiles.Count - manifest.PermanentFailures.Count,
-                inputFiles.FailedFiles,
-                inputFiles.LastError,
-                [..inputFiles.Failures, ..CreatePermanentFailureDetails(manifest)],
-                manifest.PermanentFailures.Count));
+    private async Task ProcessDataSourceAsync(IIndexedDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunControl runControl, CancellationToken token)
+    {
+        if (!this.TryGetIndexer(dataSource, out var indexer))
+        {
+            logger.LogWarning(
+                "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because no indexer reads this kind of data source.",
+                dataSource.Name,
+                dataSource.Id);
             return;
         }
 
-        token.ThrowIfCancellationRequested();
-        this.UpsertStatus(this.CreateStatus(
-            dataSource,
-            DataSourceEmbeddingState.RUNNING,
-            totalFiles,
-            0,
-            inputFiles.FailedFiles,
-            lastError: inputFiles.LastError,
-            failures: inputFiles.Failures));
-
-        var provider = embeddingProvider.CreateProvider();
-        var skippedFiles = 0;
-        var permanentlySkippedFiles = 0;
-        var completedFiles = 0;
-        var newFiles = 0;
-        var changedFiles = 0;
-        var failedFiles = inputFiles.FailedFiles;
-        var lastError = inputFiles.LastError;
-        var failureDetails = inputFiles.Failures.ToList();
-
-        //
-        // Which kinds of provider failure the user was already told about in this run. A rejected
-        // API key is the same problem for every one of a few thousand documents, and one message
-        // is what it takes to send the user to the settings.
-        //
-        var reportedFailureReasons = new HashSet<ProviderRequestFailureReason>();
-
-        //
-        // Everything the runtime filters out of these files is reported once for the whole data
-        // source. A run over a few thousand documents which removes something in forty of them
-        // is one thing that happened to the user, not forty. The scope ends with this method, so
-        // the report arrives when the run is finished rather than in the middle of it.
-        //
-        await using var promptInjectionReportingScope = guardService.BeginAction();
-
-        foreach (var file in indexedFiles)
+        var outcome = IndexedRunOutcome.DONE;
+        try
         {
-            token.ThrowIfCancellationRequested();
+            //
+            // Everything the prompt injection filter removes from the documents of this run is
+            // reported once, when the run is over. A step over a few thousand documents which
+            // removes something in forty of them is one thing that happened to the user, not forty.
+            //
+            await using var promptInjectionScope = guardService.BeginAction();
+            var context = await this.PrepareIndexedRunAsync(dataSource, refreshMode, indexer.Share, runControl, promptInjectionScope, token);
+            if (context is null)
+                return;
 
-            var fingerprint = metadataSnapshot.FileHashes[file.FullName];
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) &&
-                string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because the persisted metadata hash matches. MetadataHashPrefix={MetadataHashPrefix}, LastWriteUtc={LastWriteUtc:O}, FileSize={FileSize}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    ShortHash(fingerprint),
-                    file.LastWriteTimeUtc,
-                    file.Length);
-                skippedFiles++;
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails, permanentlySkippedFiles: permanentlySkippedFiles));
-                continue;
-            }
+            var runStartedUtc = DateTimeOffset.UtcNow;
+            outcome = await indexer.ProcessAsync(context, refreshMode, token);
 
             //
-            // A file which failed for a reason of its own is not read again until it changes.
-            // Without this, a folder holding hundreds of scanned documents without a text layer
-            // would spend half an hour on every start to arrive at the result we already have:
+            // A kind of data source which never asks whether its run did its share holds up every
+            // other data source for as long as the run takes, and nothing fails to point that out:
             //
-            if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) &&
-                string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
-            {
-                logger.LogDebug(
-                    "Skipping file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because reading it failed permanently before. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}, OccurredAtUtc={OccurredAtUtc:O}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    permanentFailure.Code,
-                    ShortHash(fingerprint),
-                    permanentFailure.OccurredAtUtc);
-                permanentlySkippedFiles++;
-
-                // The stored reason keeps its place in the list, so the user still sees why:
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, permanentFailure.Message, permanentFailure.OccurredAtUtc, ExtractionCode: permanentFailure.Code, IsPermanent: true));
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails, permanentlySkippedFiles: permanentlySkippedFiles));
-                continue;
-            }
-
-            this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
-
-            //
-            // What the page says while one file is being worked on. Without it, a document of
-            // several thousand pages leaves the same sentence standing for hours, and a progress
-            // which never moves cannot be told apart from one which is stuck.
-            //
-            var lastBlockReportUtc = DateTimeOffset.MinValue;
-
-            try
-            {
-                logger.LogInformation(
-                    "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because {EmbeddingReason}. CurrentMetadataHashPrefix={CurrentMetadataHashPrefix}. Progress={CompletedFiles}/{TotalFiles}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    GetFileEmbeddingReason(file, fingerprint, existingRecord),
-                    ShortHash(fingerprint),
-                    skippedFiles + completedFiles + 1,
-                    totalFiles);
-                var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, ReportBlockProgress, token);
-                token.ThrowIfCancellationRequested();
-                var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
-                if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
-                    throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
-
-                var embeddedAtUtc = DateTimeOffset.UtcNow;
-                var record = new EmbeddedFileRecord(
-                    fingerprint,
-                    file.Length,
-                    new DateTimeOffset(file.LastWriteTimeUtc),
-                    embeddedAtUtc,
-                    chunkCount);
-                await indexStore.UpsertFileAsync(
-                    dataSource.Id,
-                    this.CreateEmbeddingStateFile(dataSource, file, fingerprint, chunkCount, embeddedAtUtc),
-                    token);
-                manifest.Files[file.FullName] = record;
-                await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, file.FullName, token);
-                completedFiles++;
-                if (existingRecord is null)
-                    newFiles++;
-                else
-                    changedFiles++;
-
-                logger.LogInformation(
-                    "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
-                    file.FullName,
-                    dataSource.Name,
-                    dataSource.Id,
-                    chunkCount,
-                    (DateTimeOffset.UtcNow - startedAtUtc).TotalMilliseconds);
-            }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (ProviderRequestException exception)
-            {
-                //
-                // The provider said what went wrong and what the user can do about it. That
-                // sentence is what goes into the status, together with the classification the UI
-                // needs to offer the matching way out.
-                //
-                failedFiles++;
-                lastError = exception.UserMessage;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.UserMessage, DateTimeOffset.UtcNow, exception.FailureReason, exception.StatusCode, embeddingProvider.Name));
-                manifest.Files.Remove(file.FullName);
-                await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, file.FullName, token);
-                await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
-
+            var runDuration = DateTimeOffset.UtcNow - runStartedUtc;
+            if (context.ShareStartedUtc is null && runDuration > context.Share.MaxDuration * 2)
                 logger.LogWarning(
-                    exception,
-                    "Failed to embed file '{FilePath}' for data source '{DataSourceName}' because the embedding provider '{EmbeddingProviderName}' failed. FailureReason={FailureReason}, StatusCode={StatusCode}.",
-                    file.FullName,
-                    dataSource.Name,
-                    embeddingProvider.Name,
-                    exception.FailureReason,
-                    exception.StatusCode);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.UserMessage, failureDetails));
-
-                // Once per kind of failure, not once per file:
-                if (reportedFailureReasons.Add(exception.FailureReason))
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, exception.UserMessage));
-            }
-            catch (FileExtractionException exception) when (exception.Code.IsPermanentIndexingFailure())
-            {
-                //
-                // The file itself is why this failed, so trying it again changes nothing until the
-                // file does. The reason is written into the index, and the fingerprint next to it
-                // decides when to come back: an OCR run over a scanned PDF changes both size and
-                // write time, which is exactly the moment the file deserves another attempt.
-                //
-                permanentlySkippedFiles++;
-                var occurredAtUtc = DateTimeOffset.UtcNow;
-                var indexingMessage = exception.Code.ToIndexingUserMessage(file.Name);
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, indexingMessage, occurredAtUtc, ExtractionCode: exception.Code, IsPermanent: true));
-                manifest.Files.Remove(file.FullName);
-                await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
-
-                var absolutePath = Path.GetFullPath(file.FullName);
-                manifest.PermanentFailures[absolutePath] = new PermanentIndexingFailureRecord(fingerprint, exception.Code, indexingMessage, occurredAtUtc);
-                await indexStore.UpsertPermanentFailureAsync(
-                    dataSource.Id,
-                    new PermanentIndexingFailure(this.CreateParentFileId(dataSource.Id, absolutePath), absolutePath, fingerprint, exception.Code, indexingMessage, occurredAtUtc),
-                    token);
-
-                logger.LogInformation(
-                    exception,
-                    "Skipping file '{FilePath}' of data source '{DataSourceName}' ({DataSourceId}) from now on because reading it failed for a reason which lies in the file. FailureCode={FailureCode}, MetadataHashPrefix={MetadataHashPrefix}.",
-                    file.FullName,
+                    "The run of data source '{DataSourceName}' ({DataSourceId}) took {RunMinutes:F0} minutes without asking once whether it did its share of {ShareMinutes:F0} minutes, so every other data source waited that long. RefreshMode={RefreshMode}.",
                     dataSource.Name,
                     dataSource.Id,
-                    exception.Code,
-                    ShortHash(fingerprint));
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles));
-            }
-            catch (VectorStoreUnreadableException)
-            {
-                //
-                // Not about this one file: the store of the whole data source cannot be opened, so
-                // every remaining file would fail the same way. Carrying on would fill the list
-                // with one entry per file and hide the single cause behind them.
-                //
-                throw;
-            }
-            catch (Exception exception)
-            {
-                //
-                // Everything which is not the provider's doing: a file which changed while it was
-                // read, one which yielded no text, a vector store which refused to store. These
-                // are about this one file, so they go into the list and not into a message which
-                // would interrupt whatever the user is doing right now.
-                //
-                failedFiles++;
-                var extractionCode = exception is FileExtractionException extractionFailure ? extractionFailure.Code : FileExtractionErrorCode.NONE;
+                    runDuration.TotalMinutes,
+                    context.Share.MaxDuration.TotalMinutes,
+                    refreshMode);
 
-                //
-                // Deliberately not the message of the exception: that one is written for the log
-                // file, in English, and repeats the path which the list shows anyway.
-                //
-                var failureMessage = extractionCode.ToIndexingUserMessage(file.Name);
-                lastError = failureMessage;
-                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, failureMessage, DateTimeOffset.UtcNow, EmbeddingProviderName: embeddingProvider.Name, ExtractionCode: extractionCode));
-                manifest.Files.Remove(file.FullName);
-                await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, file.FullName, token);
-                await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
-
-                logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, failureMessage, failureDetails, permanentlySkippedFiles));
-            }
-
-            continue;
-
-            void ReportBlockProgress(int blockNumber, int? pageNumber)
-            {
-                //
-                // The first block goes out at once, so the line is there instead of blank. After
-                // that, at most one message every BLOCK_PROGRESS_INTERVAL: each one re-renders the
-                // embedding page, the navigation bar and the table in the settings, and the blocks
-                // of a large file arrive far faster than anybody can read them.
-                //
-                var nowUtc = DateTimeOffset.UtcNow;
-                if (blockNumber > 1 && nowUtc - lastBlockReportUtc < BLOCK_PROGRESS_INTERVAL)
-                    return;
-
-                lastBlockReportUtc = nowUtc;
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails, permanentlySkippedFiles, blockNumber, pageNumber));
-            }
+            //
+            // While this run is still active, that is the follow-up run every request during a run
+            // leaves behind. It waits in the back lane, behind every data source which begins a
+            // pass and behind the other ones which carry on, so a data source which takes hours
+            // gives the others their turn, cf. GetQueueLane. Should the user ask for a run of their
+            // own in the meantime, the two merge into one.
+            //
+            if (outcome is IndexedRunOutcome.MORE_TO_DO)
+                await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.CONTINUATION);
         }
-
-        manifest.SourceHash = metadataSnapshot.SourceHash;
-        token.ThrowIfCancellationRequested();
-        await this.OptimizeCollectionIfNeededAsync(
-            optimizationTracker,
-            vectorStore,
-            collectionName,
-            dataSource,
-            "data source embedding run finished",
-            token);
-
-        token.ThrowIfCancellationRequested();
-        await indexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
-        token.ThrowIfCancellationRequested();
-
-        this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError, failureDetails, permanentlySkippedFiles));
-        logger.LogInformation(
-            "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
-            dataSource.Name,
-            dataSource.Id,
-            refreshMode,
-            completedFiles,
-            newFiles,
-            changedFiles,
-            skippedFiles,
-            permanentlySkippedFiles,
-            removedMissingFiles,
-            failedFiles,
-            totalFiles,
-            ShortHash(metadataSnapshot.SourceHash));
-    }
-
-    private async Task<int> IndexOneFileAsync(
-        IndexStoreClient indexStore,
-        VectorStoreClient vectorStore,
-        IDataSource dataSource,
-        FileInfo file,
-        string fingerprint,
-        EmbeddingProvider embeddingProvider,
-        IProvider provider,
-        DataSourceEmbeddingManifest manifest,
-        VectorStoreOptimizationTracker optimizationTracker,
-        Action<int, int?> reportBlockProgress,
-        CancellationToken token)
-    {
-        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        logger.LogDebug(
-            "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
-            file.FullName,
-            collectionName);
-        await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
-        optimizationTracker.MarkChanged();
-        await indexStore.DeleteFileAsync(dataSource.Id, file.FullName, token);
-
-        var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow);
-        await indexStore.UpsertFileAsync(dataSource.Id, parentFile, token);
-
-        var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
-        var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
-        var totalChunkCount = 0;
-
-        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, embeddingProvider, token))
-        {
-            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
-            totalChunkCount++;
-            reportBlockProgress(totalChunkCount, chunk.PageNumber);
-
-            if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
-        }
-
-        if (batch.Count > 0)
-            await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
-
-        //
-        // The extraction itself did not report a failure, but nothing usable came out of it. For
-        // the index this is the same case as a scanned page without a text layer, which is why it
-        // carries a code of its own instead of an unclassified exception:
-        //
-        if (totalChunkCount == 0)
-            throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, string.Format(TB("No text could be read from the file '{0}'."), file.Name));
-
-        logger.LogDebug(
-            "Generated {ChunkCount} chunks for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-            totalChunkCount,
-            file.FullName,
-            dataSource.Name,
-            dataSource.Id);
-
-        return totalChunkCount;
-    }
-
-    private async Task FlushBatchAsync(
-        IndexStoreClient indexStore,
-        VectorStoreClient vectorStore,
-        IDataSource dataSource,
-        FileInfo file,
-        string fingerprint,
-        EmbeddingStateFile parentFile,
-        EmbeddingProvider embeddingProvider,
-        IProvider provider,
-        DataSourceEmbeddingManifest manifest,
-        VectorStoreOptimizationTracker optimizationTracker,
-        string collectionName,
-        List<EmbeddingChunkDraft> batch,
-        CancellationToken token)
-    {
-        logger.LogDebug(
-            "Requesting embeddings for batch of {ChunkCount} chunks from file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-            batch.Count,
-            file.FullName,
-            dataSource.Name,
-            dataSource.Id);
-
-        var texts = batch.Select(item => item.Text).ToList();
-        IReadOnlyList<IReadOnlyList<float>> vectors;
-        try
-        {
-            vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, texts);
-            token.ThrowIfCancellationRequested();
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (ProviderRequestException)
+        finally
         {
             //
-            // The provider already named the cause and what to do about it. Wrapping that in a
-            // sentence about a batch of chunks would replace the one thing the user can act on
-            // with the fact that something failed:
+            // A pass lives only while the last step left more to do. Whatever else ended this run,
+            // the next one begins anew, and tries every document which failed so far once more:
             //
-            throw;
+            if (outcome is not IndexedRunOutcome.MORE_TO_DO)
+                this.passes.TryRemove(dataSource.Id, out _);
         }
-        catch (Exception exception)
-        {
-            throw new InvalidOperationException(string.Format(TB("The embedding provider was not able to embed {0} part(s) of the file '{1}'. The provider reported: {2}"), batch.Count, file.Name, exception.Message), exception);
-        }
-
-        if (vectors.Count != batch.Count)
-            throw new InvalidOperationException(string.Format(TB("The embedding provider answered with {0} vectors for {1} parts of the file '{2}'. Please select another embedding model or provider."), vectors.Count, batch.Count, file.Name));
-
-        var vectorSize = vectors.FirstOrDefault()?.Count ?? 0;
-        if (vectorSize <= 0)
-            throw new InvalidOperationException(TB("The embedding provider answered with an empty vector. Please select another embedding model or provider."));
-
-        if (vectors.Any(vector => vector.Count != vectorSize))
-            throw new InvalidOperationException(TB("The embedding provider answered with vectors of different sizes. Please select another embedding model or provider."));
-
-        if (vectors.Any(vector => vector.Any(value => !float.IsFinite(value))))
-            throw new InvalidOperationException(TB("The embedding provider answered with a vector containing an invalid number. Please select another embedding model or provider."));
-
-        if (manifest.VectorSize > 0 && manifest.VectorSize != vectorSize)
-            throw new InvalidOperationException(string.Format(TB("The size of the embedding vectors changed from {0} to {1}. Please save the data source again to index it from scratch."), manifest.VectorSize, vectorSize));
-
-        if (manifest.VectorSize == 0)
-        {
-            token.ThrowIfCancellationRequested();
-            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, vectorSize, token);
-            if (!ensureResult.Created)
-            {
-                logger.LogWarning(
-                    "Vector store '{CollectionName}' exists for data source '{DataSourceName}' ({DataSourceId}) although no persisted embedding state exists. Replacing the orphaned store before indexing.",
-                    collectionName,
-                    dataSource.Name,
-                    dataSource.Id);
-                await vectorStore.DeleteVectorStore(collectionName, token);
-                ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, vectorSize, token);
-                if (!ensureResult.Created)
-                    throw new InvalidOperationException(string.Format(TB("The local index '{0}' could not be created again. Please restart AI Studio and try once more."), collectionName));
-            }
-
-            await indexStore.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
-            manifest.VectorSize = vectorSize;
-            logger.LogInformation(
-                "Created embedding collection '{CollectionName}' with vector size {VectorSize} for data source '{DataSourceName}' ({DataSourceId}).",
-                collectionName,
-                vectorSize,
-                dataSource.Name,
-                dataSource.Id);
-        }
-
-        token.ThrowIfCancellationRequested();
-        var embeddedAtUtc = DateTimeOffset.UtcNow;
-        await this.UpsertPointsAsync(
-            vectorStore,
-            collectionName,
-            dataSource,
-            file,
-            fingerprint,
-            parentFile,
-            batch,
-            vectors,
-            embeddedAtUtc,
-            token);
-        token.ThrowIfCancellationRequested();
-        await indexStore.UpsertChunksAsync(
-            dataSource.Id,
-            this.CreateEmbeddingStateChunks(parentFile, batch, embeddedAtUtc),
-            token);
-
-        optimizationTracker.RecordStoredChunks(batch.Count);
-        if (optimizationTracker.StoredChunksSinceLastOptimization >= VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD)
-            await this.OptimizeCollectionIfNeededAsync(
-                optimizationTracker,
-                vectorStore,
-                collectionName,
-                dataSource,
-                "stored chunk threshold reached",
-                token);
-
-        logger.LogDebug(
-            "Stored {ChunkCount} embedded chunks for file '{FilePath}' in collection '{CollectionName}'.",
-            batch.Count,
-            file.FullName,
-            collectionName);
-
-        batch.Clear();
-    }
-
-    private async Task UpsertPointsAsync(
-        VectorStoreClient vectorStore,
-        string collectionName,
-        IDataSource dataSource,
-        FileInfo file,
-        string fingerprint,
-        EmbeddingStateFile parentFile,
-        IReadOnlyList<EmbeddingChunkDraft> batch,
-        IReadOnlyList<IReadOnlyList<float>> vectors,
-        DateTimeOffset embeddedAtUtc,
-        CancellationToken token)
-    {
-        var points = batch.Select((item, index) => new VectorStoragePoint(
-            item.ChunkId,
-            vectors[index],
-            dataSource.Id,
-            dataSource.Type.ToString(),
-            item.ChunkId,
-            parentFile.ParentFileId,
-            file.FullName,
-            parentFile.AbsolutePath,
-            parentFile.FileName,
-            parentFile.RelativePath,
-            parentFile.FileType,
-            item.PageNumber,
-            item.ChunkIndex,
-            item.Text,
-            fingerprint,
-            parentFile.CreationUtc,
-            parentFile.LastWriteUtc,
-            embeddedAtUtc)).ToList();
-
-        await vectorStore.InsertEmbedding(collectionName, points, token);
-    }
-
-    private async Task DeleteFilePointsAsync(VectorStoreClient vectorStore, string collectionName, string filePath, CancellationToken token)
-    {
-        await vectorStore.DeleteEmbeddingByFile(collectionName, filePath, token);
-    }
-
-    private async Task CleanupFailedFileAsync(
-        IndexStoreClient indexStore,
-        VectorStoreClient vectorStore,
-        IDataSource dataSource,
-        string collectionName,
-        string filePath,
-        VectorStoreOptimizationTracker optimizationTracker,
-        CancellationToken token)
-    {
-        try
-        {
-            await this.DeleteFilePointsAsync(vectorStore, collectionName, filePath, token);
-            optimizationTracker.MarkChanged();
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(
-                exception,
-                "Could not remove vector points while cleaning up failed embedding for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-                filePath,
-                dataSource.Name,
-                dataSource.Id);
-        }
-
-        try
-        {
-            await indexStore.DeleteFileAsync(dataSource.Id, filePath, token);
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(
-                exception,
-                "Could not remove embedding state while cleaning up failed embedding for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
-                filePath,
-                dataSource.Name,
-                dataSource.Id);
-        }
-    }
-
-    private async Task OptimizeCollectionIfNeededAsync(
-        VectorStoreOptimizationTracker optimizationTracker,
-        VectorStoreClient vectorStore,
-        string collectionName,
-        IDataSource dataSource,
-        string reason,
-        CancellationToken token)
-    {
-        if (!optimizationTracker.HasPendingChanges)
-            return;
-
-        logger.LogInformation(
-            "Optimizing embedding collection '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}', StoredChunksSinceLastOptimization={StoredChunksSinceLastOptimization}, ChunkThreshold={ChunkThreshold}.",
-            collectionName,
-            dataSource.Name,
-            dataSource.Id,
-            reason,
-            optimizationTracker.StoredChunksSinceLastOptimization,
-            VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD);
-
-        await vectorStore.OptimizeVectorStore(collectionName, token);
-        optimizationTracker.Reset();
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
@@ -1396,8 +963,40 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         token.ThrowIfCancellationRequested();
 
+        //
+        // The embedding providers and data sources of an organization come with its configuration
+        // plugin. On a new computer, or after restoring a backup, the settings do not hold them yet,
+        // and the first run would find such a data source without its embedding provider:
+        //
+        if (!await WaitForFirstPluginLoadAsync(PluginFactory.FirstLoadCompleted, FIRST_PLUGIN_LOAD_TIMEOUT, token))
+            logger.LogWarning("The plugins were not loaded within {TimeoutSeconds:F0} seconds. Indexing starts with the settings as they are, without what the configuration of an organization may add later.", FIRST_PLUGIN_LOAD_TIMEOUT.TotalSeconds);
+
+        // Before the first run: from then on, a sync may be writing an attachment there.
+        MailAttachmentFiles.DeleteLeftovers(logger);
+        await this.DeleteOrphanedMailboxIndexesAsync(token);
+
         logger.LogInformation("Embedding background service is ready. Running the initial persisted hash check before activating file watchers.");
         await this.RunInitialDataSourceHashCheckAsync(token);
+    }
+
+    /// <summary>
+    /// Waits until the plugins were loaded for the first time, but not longer than the given time.
+    /// </summary>
+    /// <param name="firstLoad">Completes once the plugins were loaded, cf. PluginFactory.FirstLoadCompleted.</param>
+    /// <param name="timeout">How long to wait at most.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when the plugins were loaded in time, false when the time ran out.</returns>
+    internal static async Task<bool> WaitForFirstPluginLoadAsync(Task firstLoad, TimeSpan timeout, CancellationToken token)
+    {
+        try
+        {
+            await firstLoad.WaitAsync(timeout, token);
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 
     private async Task RunInitialDataSourceHashCheckAsync(CancellationToken token)
@@ -1414,9 +1013,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.RemoveAllWatchers();
 
-        var supportedDataSources = settingsManager.ConfigurationData.DataSources
-            .Where(this.IsSupportedInternalDataSource)
-            .ToList();
+        var supportedDataSources = this.GetConfiguredIndexedSources();
 
         logger.LogInformation(
             "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG embedding state will be retried during this pass. File watchers will be activated after this check completes.",
@@ -1434,44 +1031,27 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             if (this.statuses.TryGetValue(dataSource.Id, out var knownStatus) && knownStatus.State is DataSourceEmbeddingState.RUNNING)
                 continue;
 
-            this.statuses[dataSource.Id] = this.CreateStatus(
-                dataSource,
-                DataSourceEmbeddingState.QUEUED,
-                knownStatus?.TotalFiles ?? 0,
-                knownStatus?.IndexedFiles ?? 0,
-                knownStatus?.FailedFiles ?? 0,
-                failures: knownStatus?.Failures ?? [],
-                permanentlySkippedFiles: knownStatus?.PermanentlySkippedFiles ?? 0);
+            this.statuses[dataSource.Id] = this.GetQueuedStatus(dataSource);
         }
 
         // One message for the whole list, rather than one per data source:
-        this.PublishStatusChanged();
+        PublishStatusChanged();
 
         foreach (var dataSource in supportedDataSources)
         {
             token.ThrowIfCancellationRequested();
-            try
+
+            //
+            // A data source which runs, or waits in the queue, gets its run that way already.
+            // Running it here as well would run it twice in a row, or next to the run going on.
+            //
+            if (!this.runQueue.TryBeginRun(dataSource.Id))
             {
-                await this.ProcessDataSourceRunAsync(dataSource, DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK, token);
+                logger.LogDebug("Skipping the initial hash check of data source '{DataSourceName}' ({DataSourceId}) because it is running or queued already.", dataSource.Name, dataSource.Id);
+                continue;
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (VectorStoreUnreadableException exception)
-            {
-                logger.LogError(
-                    exception,
-                    "The vector store of data source '{DataSourceName}' ({DataSourceId}) cannot be read. The data source is waiting for a repair.",
-                    dataSource.Name,
-                    dataSource.Id);
-                this.UpsertStatus(this.GetUnreadableVectorStoreStatus(dataSource));
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "Initial embedding hash check failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                this.UpsertStatus(this.GetFallbackStatus(dataSource, string.Format(TB("The data source '{0}' could not be processed. The log file holds the details."), dataSource.Name)));
-            }
+
+            await this.RunDataSourceAsync(dataSource.Id, DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK, token);
         }
 
         if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
@@ -1488,7 +1068,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
-    private bool IsSupportedInternalDataSource(IDataSource dataSource)
+    private bool IsSupportedIndexedSource(IDataSourceBase dataSource)
     {
         //
         // Local RAG is a preview feature, so nothing here may run while it is switched off. This is
@@ -1503,30 +1083,83 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager))
             return false;
 
-        return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
+        // Mailboxes are a preview of their own, on top of local RAG:
+        if (dataSource is DataSourceMailbox && !PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(settingsManager))
+            return false;
+
+        return this.TryGetIndexer(dataSource, out _);
     }
 
-    private bool TryGetConfiguredDataSource(string dataSourceId, [NotNullWhen(true)] out IDataSource? dataSource)
-    {
-        dataSource = settingsManager.ConfigurationData.DataSources
-            .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
+    /// <summary>
+    /// Whether an embedding provider of the given confidence level may read a data source.
+    /// </summary>
+    /// <remarks>
+    /// A mailbox is stricter than the other data sources: without a level of its own, it is closed
+    /// to every provider rather than open to all, cf. AllowsMailboxConfidenceLevel.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="embeddingProviderConfidence">The confidence level of the embedding provider.</param>
+    /// <returns>True when the provider may embed the content of the data source.</returns>
+    internal static bool AllowsEmbedding(IIndexedDataSource dataSource, ConfidenceLevel embeddingProviderConfidence) => dataSource is DataSourceMailbox
+        ? embeddingProviderConfidence.AllowsMailboxConfidenceLevel(dataSource.ConfidenceLevel)
+        : embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel);
 
+    /// <summary>
+    /// The configured data sources this service indexes, from every list which holds some.
+    /// </summary>
+    /// <remarks>
+    /// The one place which knows where data sources are kept: in DataSources those which classic
+    /// RAG and the agents see as well, in Mailboxes those which only the mail tools read. Whatever
+    /// works through all of them, or looks one up by its id, goes through here.
+    /// </remarks>
+    /// <returns>The data sources, those from DataSources first.</returns>
+    private IReadOnlyList<IIndexedDataSource> GetConfiguredIndexedSources() => settingsManager.ConfigurationData.DataSources
+        .OfType<IIndexedDataSource>()
+        .Concat(settingsManager.ConfigurationData.Mailboxes.Select(mailbox => (IIndexedDataSource)mailbox))
+        .Where(this.IsSupportedIndexedSource)
+        .ToList();
+
+    /// <summary>
+    /// Finds the indexer which reads a data source.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="indexer">The indexer, when there is one for this kind of data source.</param>
+    /// <returns>True when an indexer was found.</returns>
+    private bool TryGetIndexer(IDataSourceBase dataSource, [NotNullWhen(true)] out IIndexedSourceIndexer? indexer)
+    {
+        indexer = this.indexers.FirstOrDefault(candidate => candidate.Supports(dataSource));
+        return indexer is not null;
+    }
+
+    /// <summary>
+    /// Finds the configured data source this service indexes under a given id.
+    /// </summary>
+    /// <remarks>
+    /// The one place which looks a data source up by its id. Every run, every follow-up and every
+    /// request from the UI goes through here, so a data source which is no longer configured, or
+    /// which this service does not index, is turned away the same way everywhere.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <param name="dataSource">The data source, when it is configured and indexed by this service.</param>
+    /// <returns>True when such a data source was found.</returns>
+    private bool TryGetConfiguredIndexedSource(string dataSourceId, [NotNullWhen(true)] out IIndexedDataSource? dataSource)
+    {
+        dataSource = this.GetConfiguredIndexedSources().FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
         return dataSource is not null;
     }
 
-    private bool TryResolveEmbeddingProvider(IDataSource dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
+    private bool TryResolveEmbeddingProvider(IDataSourceBase dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
         => DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out embeddingProvider);
 
     private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(
-        IDataSource dataSource,
+        IIndexedDataSource dataSource,
         EmbeddingProvider embeddingProvider,
+        string embeddingSignature,
         string collectionName,
         VectorStoreClient vectorStore,
         IndexStoreClient indexStore,
         CancellationToken token)
     {
-        var chunkingOptions = GetChunkingOptions(dataSource, embeddingProvider);
-        var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
@@ -1575,186 +1208,78 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return manifest;
     }
 
-    private async Task<int> RemoveMissingFileEmbeddingsAsync(
-        VectorStoreClient vectorStore,
-        IndexStoreClient indexStore,
-        IDataSource dataSource,
-        string collectionName,
-        DataSourceEmbeddingManifest manifest,
-        IReadOnlyCollection<FileInfo> indexedFiles,
-        CancellationToken token)
-    {
-        var existingPaths = indexedFiles
-            .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var removedFiles = 0;
-        foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
-        {
-            await this.DeleteFilePointsAsync(vectorStore, collectionName, removedFilePath, token);
-            await indexStore.DeleteFileAsync(dataSource.Id, removedFilePath, token);
-            manifest.Files.Remove(removedFilePath);
-            removedFiles++;
-            logger.LogInformation(
-                "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
-                removedFilePath,
-                dataSource.Name,
-                dataSource.Id);
-        }
-
-        //
-        // A file which is gone needs no mark keeping it out of the index. Without this, the table
-        // would grow with every document the user ever deleted:
-        //
-        foreach (var removedFilePath in manifest.PermanentFailures.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
-            await this.ForgetPermanentFailureAsync(indexStore, dataSource, manifest, removedFilePath, token);
-
-        return removedFiles;
-    }
-
-    /// <remarks>
-    /// A file counts as settled when it was indexed or when it was skipped for good, both with a
-    /// matching fingerprint. Counting only the indexed ones would let a single unreadable document
-    /// send the whole folder through the slow path on every run.
-    /// </remarks>
-    private bool CanSkipDataSourceByHash(DataSourceEmbeddingManifest manifest, DataSourceMetadataSnapshot metadataSnapshot, IReadOnlyCollection<FileInfo> indexedFiles)
-    {
-        if (!string.Equals(manifest.SourceHash, metadataSnapshot.SourceHash, StringComparison.Ordinal))
-            return false;
-
-        if (manifest.Files.Count + manifest.PermanentFailures.Count != indexedFiles.Count)
-            return false;
-
-        foreach (var file in indexedFiles)
-        {
-            if (!metadataSnapshot.FileHashes.TryGetValue(file.FullName, out var currentHash))
-                return false;
-
-            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord))
-            {
-                if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-                    return false;
-
-                continue;
-            }
-
-            if (!manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure))
-                return false;
-
-            if (!string.Equals(permanentFailure.Fingerprint, currentHash, StringComparison.Ordinal))
-                return false;
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Drops the mark which keeps a file out of the index, in the store as well as in the manifest.
-    /// </summary>
-    /// <remarks>
-    /// Called whenever a file was read, and whenever it failed for a reason outside of itself. The
-    /// state heals on its own that way: a document which becomes readable, or a drive which comes
-    /// back, leaves nothing behind.
-    /// </remarks>
-    private async Task ForgetPermanentFailureAsync(IndexStoreClient indexStore, IDataSource dataSource, DataSourceEmbeddingManifest manifest, string filePath, CancellationToken token)
-    {
-        if (!manifest.PermanentFailures.Remove(filePath))
-            return;
-
-        await indexStore.DeletePermanentFailureAsync(dataSource.Id, filePath, token);
-        logger.LogDebug(
-            "Removed the permanent indexing failure of file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
-            filePath,
-            dataSource.Name,
-            dataSource.Id);
-    }
-
-    private static List<DataSourceEmbeddingFailure> CreatePermanentFailureDetails(DataSourceEmbeddingManifest manifest) => manifest.PermanentFailures
-        .Select(failure => new DataSourceEmbeddingFailure(failure.Key, failure.Value.Message, failure.Value.OccurredAtUtc, ExtractionCode: failure.Value.Code, IsPermanent: true))
-        .ToList();
-
-    private static string GetFileEmbeddingReason(FileInfo file, string currentHash, EmbeddedFileRecord? existingRecord)
-    {
-        if (existingRecord is null)
-            return "no stored file hash exists";
-
-        var reasons = new List<string>();
-        if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
-            reasons.Add($"stored hash {ShortHash(existingRecord.Fingerprint)} differs from current hash {ShortHash(currentHash)}");
-
-        if (existingRecord.FileSize != file.Length)
-            reasons.Add($"file size changed from {existingRecord.FileSize} to {file.Length} bytes");
-
-        if (existingRecord.LastWriteUtc != new DateTimeOffset(file.LastWriteTimeUtc))
-            reasons.Add($"last modified time changed from {existingRecord.LastWriteUtc:O} to {file.LastWriteTimeUtc:O}");
-
-        return reasons.Count == 0
-            ? "the file hash changed"
-            : string.Join("; ", reasons);
-    }
-
-    private static string ShortHash(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "<empty>";
-
-        return value.Length <= 12 ? value : value[..12];
-    }
-
     private DataSourceEmbeddingStatus CreateStatus(
-        IDataSource dataSource,
+        IDataSourceBase dataSource,
         DataSourceEmbeddingState state,
-        int totalFiles,
-        int indexedFiles,
-        int failedFiles,
-        string currentFile = "",
+        int totalDocuments,
+        int indexedDocuments,
+        int failedDocuments,
+        string currentDocument = "",
         string lastError = "",
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
-        int permanentlySkippedFiles = 0,
-        int? currentFileBlock = null,
-        int? currentFilePage = null,
-        bool vectorStoreUnreadable = false)
+        int permanentlySkippedDocuments = 0,
+        int? currentDocumentBlock = null,
+        int? currentDocumentPage = null,
+        bool vectorStoreUnreadable = false,
+        DateTimeOffset? lastSyncUtc = null)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
             dataSource.Name,
             dataSource.Type,
             state,
-            totalFiles,
-            indexedFiles,
-            failedFiles,
-            currentFile,
+            totalDocuments,
+            indexedDocuments,
+            failedDocuments,
+            currentDocument,
             lastError,
             failures?.ToList() ?? [],
-            permanentlySkippedFiles,
-            currentFileBlock,
-            currentFilePage,
-            vectorStoreUnreadable);
+            permanentlySkippedDocuments,
+            currentDocumentBlock,
+            currentDocumentPage,
+            vectorStoreUnreadable,
+            LastSyncUtc: lastSyncUtc);
     }
 
+    /// <summary>
+    /// Shows a data source as waiting for its next run.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>Its status so far as a queued one, or an empty queued status when it has none yet.</returns>
+    private DataSourceEmbeddingStatus GetQueuedStatus(IDataSourceBase dataSource) => this.statuses.TryGetValue(dataSource.Id, out var status)
+        ? AsQueued(status, dataSource)
+        : this.CreateStatus(dataSource, DataSourceEmbeddingState.QUEUED, 0, 0, 0);
+
+    /// <summary>
+    /// Turns the status of a data source into one which waits for the next run.
+    /// </summary>
     /// <remarks>
-    /// Files which were skipped for good do not make a run unsuccessful: nothing is left to try,
-    /// and a data source made of nothing but scanned images would otherwise ask for attention
-    /// forever.
+    /// Keeps what the row showed of the runs so far: the counts, the documents skipped for good, the
+    /// failures with the sentence about the data source as a whole, and the last sync. A data source
+    /// which pauses after its share of the work shows its progress that way, instead of a bar which
+    /// jumps back with every step.
+    ///
+    /// Clears what belongs to a run going on: the current document, and whatever the user was asked
+    /// to decide. The next run asks that anew when it still applies. The name comes from the data
+    /// source, since it may have been renamed in the meantime.
     /// </remarks>
-    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSource dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError, IReadOnlyList<DataSourceEmbeddingFailure>? failures = null, int permanentlySkippedFiles = 0)
+    /// <param name="status">The status so far.</param>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>The queued status.</returns>
+    internal static DataSourceEmbeddingStatus AsQueued(DataSourceEmbeddingStatus status, IDataSourceBase dataSource) => status with
     {
-        return this.CreateStatus(
-            dataSource,
-            failedFiles > 0 ? DataSourceEmbeddingState.FAILED : DataSourceEmbeddingState.COMPLETED,
-            totalFiles,
-            indexedFiles,
-            failedFiles,
-            lastError: failedFiles > 0
-                ? string.IsNullOrWhiteSpace(lastError)
-                    ? TB("Some files could not be indexed. The list below says which ones and why.")
-                    : lastError
-                : string.Empty,
-            failures: failures,
-            permanentlySkippedFiles: permanentlySkippedFiles);
-    }
+        DataSourceName = dataSource.Name,
+        DataSourceType = dataSource.Type,
+        State = DataSourceEmbeddingState.QUEUED,
+        CurrentDocument = string.Empty,
+        CurrentDocumentBlock = null,
+        CurrentDocumentPage = null,
+        VectorStoreUnreadable = false,
+        Attention = DataSourceAttention.NONE,
+        PendingRemovalCount = null,
+    };
 
-    private DataSourceEmbeddingStatus GetFallbackStatus(IDataSource dataSource, string errorMessage)
+    private DataSourceEmbeddingStatus GetFallbackStatus(IDataSourceBase dataSource, string errorMessage)
     {
         return this.CreateStatus(
             dataSource,
@@ -1771,9 +1296,23 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// path, is written in English for the log file, and says nothing about what happens next. What
     /// the user needs to read is what this means for their chats and where the way out is.
     /// </remarks>
-    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSource dataSource)
+    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSourceBase dataSource) =>
+        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+
+    /// <remarks>
+    /// The same way out as for a store which cannot be read, cf. GetUnreadableVectorStoreStatus.
+    /// </remarks>
+    private DataSourceEmbeddingStatus GetMissingVectorStoreStatus(IDataSourceBase dataSource) =>
+        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+
+    /// <summary>
+    /// Shows a data source as waiting for the user to have its index built anew, cf. NeedsIndexRepair.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="errorMessage">What is wrong with the index, and where the way out is.</param>
+    /// <returns>The failed status, which offers the repair.</returns>
+    private DataSourceEmbeddingStatus GetRepairStatus(IDataSourceBase dataSource, string errorMessage)
     {
-        var errorMessage = string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name);
         return this.CreateStatus(
             dataSource,
             DataSourceEmbeddingState.FAILED,
@@ -1785,65 +1324,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             vectorStoreUnreadable: true);
     }
 
-    private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun)
-    {
-        lock (this.queueStateLock)
-        {
-            if (this.runningIds.ContainsKey(dataSourceId))
-            {
-                if (queueAfterCurrentRun && this.pendingQueueIds.TryAdd(dataSourceId, 0))
-                    return DataSourceQueueRequestResult.RUNNING_MARKED_PENDING;
-
-                return DataSourceQueueRequestResult.RUNNING;
-            }
-
-            if (!this.queuedIds.TryAdd(dataSourceId, 0))
-                return DataSourceQueueRequestResult.ALREADY_QUEUED;
-
-            return DataSourceQueueRequestResult.QUEUED;
-        }
-    }
-
-    private void MarkDataSourceRunStarted(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-            this.runningIds.TryAdd(dataSourceId, 0);
-        }
-    }
-
-    private bool TryCompleteDataSourceRun(string dataSourceId, bool allowPendingRequeue)
-    {
-        lock (this.queueStateLock)
-        {
-            this.runningIds.TryRemove(dataSourceId, out _);
-
-            if (!this.pendingQueueIds.TryRemove(dataSourceId, out _))
-                return false;
-
-            return allowPendingRequeue && this.queuedIds.TryAdd(dataSourceId, 0);
-        }
-    }
-
-    private void ReleaseQueuedDataSourceRun(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-        }
-    }
-
-    private void ClearQueuedDataSourceState(string dataSourceId)
-    {
-        lock (this.queueStateLock)
-        {
-            this.queuedIds.TryRemove(dataSourceId, out _);
-            this.pendingQueueIds.TryRemove(dataSourceId, out _);
-        }
-    }
-
-    private DataSourceRunControl? CancelActiveDataSourceRun(IDataSource dataSource)
+    private DataSourceRunControl? CancelActiveDataSourceRun(IDataSourceBase dataSource)
     {
         if (!this.activeRuns.TryGetValue(dataSource.Id, out var activeRun))
             return null;
@@ -1852,63 +1333,147 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             "Canceling active embedding run for deleted data source '{DataSourceName}' ({DataSourceId}).",
             dataSource.Name,
             dataSource.Id);
+
+        return TryCancelRun(activeRun) ? activeRun : null;
+    }
+
+    /// <summary>
+    /// Stops the outdated run of a data source, and queues the run which starts over with the current settings.
+    /// </summary>
+    /// <remarks>
+    /// For a run already found to be outdated. The queue checks again before it stops anything, so
+    /// a run whose settings were changed back in the meantime carries on.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    private Task StopOutdatedDataSourceRunAsync(string dataSourceId)
+    {
+        // Through the queue, which stops the run once the next one is certain:
+        if (this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
+            return this.QueueDataSourceAsync(dataSource);
+
+        // The data source is gone, so there is nothing to start over:
+        this.CancelOutdatedDataSourceRun(dataSourceId);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Stops the active run of a data source when it works for embedding settings which no longer apply.
+    /// </summary>
+    /// <remarks>
+    /// Only what the run signature covers counts, cf. GetRunSignature: another embedding model, other
+    /// chunk settings, a deleted embedding provider, or one which may no longer read the data source.
+    /// A changed name or a changed document leaves the run alone. Whoever calls this has to make sure
+    /// a run follows which starts over with the current settings.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    private void CancelOutdatedDataSourceRun(string dataSourceId)
+    {
+        if (!this.activeRuns.TryGetValue(dataSourceId, out var activeRun))
+            return;
+
+        var currentRunSignature = this.GetCurrentRunSignature(dataSourceId);
+        DataSourceRunSignature? runSignature;
+        lock (this.runSignatureLock)
+        {
+            runSignature = activeRun.RunSignature;
+            if (!IsRunOutdated(runSignature, currentRunSignature))
+                return;
+        }
+
+        logger.LogInformation(
+            "Canceling the active embedding run for data source '{DataSourceId}' because its embedding settings changed or its embedding provider may no longer read it. RunSignaturePrefix={RunSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
+            dataSourceId,
+            ShortHash(runSignature?.EmbeddingSignature ?? string.Empty),
+            currentRunSignature == DataSourceRunSignature.NONE ? "<no run would start>" : ShortHash(currentRunSignature.EmbeddingSignature));
+
+        TryCancelRun(activeRun);
+    }
+
+    /// <summary>
+    /// The embedding settings a run of a data source would start with now, as GetRunSignature describes them.
+    /// </summary>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>The run signature, or NONE when no run would start: the data source is gone, its embedding provider is, or that provider may not read it.</returns>
+    private DataSourceRunSignature GetCurrentRunSignature(string dataSourceId)
+    {
+        if (!this.TryGetConfiguredIndexedSource(dataSourceId, out var dataSource))
+            return DataSourceRunSignature.NONE;
+
+        if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
+            return DataSourceRunSignature.NONE;
+
+        return GetRunSignature(dataSource, embeddingProvider, embeddingProvider.GetConfidenceLevel(settingsManager));
+    }
+
+    /// <summary>
+    /// Asks a run to stop.
+    /// </summary>
+    /// <param name="run">The run.</param>
+    /// <returns>False when the run has ended already.</returns>
+    private static bool TryCancelRun(DataSourceRunControl run)
+    {
         try
         {
-            activeRun.TokenSource.Cancel();
+            run.TokenSource.Cancel();
+            return true;
         }
         catch (ObjectDisposedException)
         {
-            return null;
+            return false;
         }
-
-        return activeRun;
     }
 
     private async Task QueuePendingDataSourceRunAsync(string dataSourceId, CancellationToken token)
     {
-        var dataSource = token.IsCancellationRequested
-            ? null
-            : settingsManager.ConfigurationData.DataSources
-                .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-        if (!this.TryCompleteDataSourceRun(dataSourceId, dataSource is not null && this.IsSupportedInternalDataSource(dataSource)))
+        IIndexedDataSource? dataSource = null;
+        var isConfigured = !token.IsCancellationRequested && this.TryGetConfiguredIndexedSource(dataSourceId, out dataSource);
+        if (!this.runQueue.TryComplete(dataSourceId, isConfigured, out var refreshMode))
             return;
 
         if (dataSource is null)
         {
-            this.ReleaseQueuedDataSourceRun(dataSourceId);
+            this.runQueue.Release(dataSourceId);
             return;
         }
 
-        logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run.", dataSource.Name, dataSource.Id);
+        var lane = this.GetQueueLane(dataSourceId);
+        logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run, or after it did its share of the work. RefreshMode={RefreshMode}, Lane={Lane}.", dataSource.Name, dataSource.Id, refreshMode, lane);
 
-        this.statuses.TryGetValue(dataSource.Id, out var currentStatus);
-        this.UpsertStatus(this.CreateStatus(
-            dataSource,
-            DataSourceEmbeddingState.QUEUED,
-            currentStatus?.TotalFiles ?? 0,
-            currentStatus?.IndexedFiles ?? 0,
-            currentStatus?.FailedFiles ?? 0,
-            lastError: currentStatus?.LastError ?? string.Empty,
-            failures: currentStatus?.Failures ?? []));
+        this.UpsertStatus(this.GetQueuedStatus(dataSource));
 
         try
         {
-            await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSourceId, DataSourceEmbeddingRefreshMode.HASH_CHECK), token);
+            await this.runQueue.EnqueueAsync(dataSourceId, lane, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            this.ReleaseQueuedDataSourceRun(dataSourceId);
+            this.runQueue.Release(dataSourceId);
         }
     }
+
+    /// <summary>
+    /// Picks the lane of the queue in which the next run of a data source waits.
+    /// </summary>
+    /// <remarks>
+    /// A data source which carries on a pass waits behind every data source which begins one. A
+    /// mailbox at its interval therefore waits for one step at most, rather than for hours behind a
+    /// large folder. Since a pass begins without one, every pass gets one step in the front lane at
+    /// most: no data source keeps the front lane to itself, however long it takes.
+    ///
+    /// Asked when the run is enqueued, and only then. For a follow-up run, that is after the run
+    /// before it ended, which kept or dropped the pass by then.
+    /// </remarks>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>The back lane while the data source has a pass, the front lane otherwise.</returns>
+    private DataSourceQueueLane GetQueueLane(string dataSourceId) => this.passes.ContainsKey(dataSourceId) ? DataSourceQueueLane.BACK : DataSourceQueueLane.FRONT;
 
     private void UpsertStatus(DataSourceEmbeddingStatus status)
     {
         this.statuses[status.DataSourceId] = status;
-        this.PublishStatusChanged();
+        PublishStatusChanged();
     }
 
-    private void PublishStatusChanged()
+    private static void PublishStatusChanged()
     {
         _ = MessageBus.INSTANCE.SendMessage(null, Event.RAG_EMBEDDING_STATUS_CHANGED, true);
     }

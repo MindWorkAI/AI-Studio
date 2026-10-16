@@ -34,6 +34,7 @@ public sealed class ChatTemplateConfigurationTests
                 DisableDataSources = false,
                 AutomaticDataSourceSelection = false,
                 AutomaticValidation = true,
+                RetrievalMode = DataSourceRetrievalMode.EVERY_MESSAGE,
                 PreselectedDataSourceIds = ["11111111-1111-1111-1111-111111111111"],
             },
         };
@@ -47,6 +48,7 @@ public sealed class ChatTemplateConfigurationTests
             Assert.That(read.DataSourceOptions!.DisableDataSources, Is.False);
             Assert.That(read.DataSourceOptions.AutomaticDataSourceSelection, Is.False);
             Assert.That(read.DataSourceOptions.AutomaticValidation, Is.True);
+            Assert.That(read.DataSourceOptions.RetrievalMode, Is.EqualTo(DataSourceRetrievalMode.EVERY_MESSAGE), "Semantic search is the default, so only the other choice shows that the export carries it.");
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(written.DataSourceOptions!.PreselectedDataSourceIds));
         });
     }
@@ -129,8 +131,32 @@ public sealed class ChatTemplateConfigurationTests
             Assert.That(read.DataSourceOptions!.DisableDataSources, Is.False, "Writing this table is already the statement that the template wants data sources, so an omitted switch must not turn them off again.");
             Assert.That(read.DataSourceOptions.AutomaticDataSourceSelection, Is.False);
             Assert.That(read.DataSourceOptions.AutomaticValidation, Is.False);
+            Assert.That(read.DataSourceOptions.RetrievalMode, Is.EqualTo(DataSourceRetrievalMode.SEMANTIC_SEARCH));
             Assert.That(read.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(new[] { "11111111-1111-1111-1111-111111111111" }));
         });
+    }
+
+    [TestCase("'EVERY_MESSAGE'", DataSourceRetrievalMode.EVERY_MESSAGE)]
+    [TestCase("'every_message'", DataSourceRetrievalMode.EVERY_MESSAGE)]
+    [TestCase("'1'", DataSourceRetrievalMode.SEMANTIC_SEARCH)]
+    [TestCase("1", DataSourceRetrievalMode.SEMANTIC_SEARCH)]
+    [TestCase("'SEMANTIC_SEARCH, EVERY_MESSAGE'", DataSourceRetrievalMode.SEMANTIC_SEARCH)]
+    [TestCase("'every message'", DataSourceRetrievalMode.SEMANTIC_SEARCH)]
+    [TestCase("true", DataSourceRetrievalMode.SEMANTIC_SEARCH)]
+    public async Task OnlyTheNameOfARetrievalModeCounts(string luaValue, DataSourceRetrievalMode expectedMode)
+    {
+        var read = await ParseAsync($$"""
+                                      CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                          ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                          ["Name"] = "Intranet Research",
+                                          ["SystemPrompt"] = "You are a research assistant.",
+                                          ["DataSourceOptions"] = {
+                                              ["RetrievalMode"] = {{luaValue}},
+                                          },
+                                      }
+                                      """);
+
+        Assert.That(read.DataSourceOptions!.RetrievalMode, Is.EqualTo(expectedMode), "Parsing alone would read a number, or several names at once, as searching with every message.");
     }
 
     [Test]

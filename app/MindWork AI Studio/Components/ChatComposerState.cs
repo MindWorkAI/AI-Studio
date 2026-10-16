@@ -56,10 +56,18 @@ public sealed class ChatComposerState
         this.HasUserDraft = false;
     }
 
-    public void RestoreFromTextBlock(ContentText textBlock)
+    /// <summary>
+    /// Brings the message the user had not sent yet back into the composer.
+    /// </summary>
+    /// <remarks>
+    /// The draft holds only what the user wrote or attached, so whatever it holds counts as their
+    /// message. An empty draft leaves the composer free for a chat template.
+    /// </remarks>
+    /// <param name="draft">The draft of the chat.</param>
+    public void RestoreFromDraft(ChatDraft draft)
     {
-        this.UserInput = textBlock.Text;
-        this.ReplaceFileAttachments(textBlock.FileAttachments);
-        this.HasUserDraft = true;
+        this.UserInput = draft.Text;
+        this.ReplaceFileAttachments(draft.FileAttachments);
+        this.HasUserDraft = !draft.IsEmpty;
     }
 }

@@ -213,7 +213,7 @@ Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by
 
 ### Custom root certificates for Flatpak deployments
 
-On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, and enterprise configuration servers.
+On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, the IMAP servers of mailboxes, and enterprise configuration servers.
 
 If your organization uses private root CAs, place a PEM bundle with the required root CA certificates in a location that is readable inside the Flatpak sandbox. The bundle should contain one or more certificates using the regular PEM marker:
 
@@ -535,16 +535,18 @@ AI Studio has a dedicated directory for this: `.config-tests`. Anything stored t
 
 Do not use the `.config` directory for this. It belongs to your configuration web server, and AI Studio removes everything there that your organization does not reference anymore.
 
-### The data directory
+### The data and configuration directories
 
-Plugins live in the data directory of AI Studio:
+Plugins live in the data directory of AI Studio. The settings live in its configuration directory:
 
-| Platform | Data directory |
-| --- | --- |
-| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
-| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
-| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
-| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+| Platform | Data directory | Configuration directory |
+| --- | --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` | `%APPDATA%\com.github.mindwork-ai.ai-studio` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` | `~/Library/Application Support/com.github.mindwork-ai.ai-studio` |
+| Linux | `$XDG_DATA_HOME/org.mindworkai.AIStudio/data`, usually `~/.local/share/org.mindworkai.AIStudio/data` | `$XDG_CONFIG_HOME/org.mindworkai.AIStudio`, usually `~/.config/org.mindworkai.AIStudio` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/org.mindworkai.AIStudio/data` | `~/.var/app/org.mindworkai.AIStudio/config/org.mindworkai.AIStudio` |
+
+The panel **Your Data Folders** on the Information page shows both directories as AI Studio resolved them on the device at hand.
 
 ### Staging a deployment
 
@@ -602,7 +604,7 @@ Enable **Show administration settings** in the app settings once. It reveals the
 |---|---|---|
 | LLM providers | the provider list in the app settings | providers you created yourself |
 | Embedding providers | the provider list in the app settings | as above, and only while the RAG preview is enabled |
-| Transcription providers | the provider list in the app settings | as above, and only while the speech-to-text preview is enabled |
+| Transcription providers | the provider list in the app settings | providers you created yourself |
 | Profiles | the profile dialog in the app settings | profiles you created yourself |
 | Chat templates | the chat template dialog in the app settings | templates you created yourself |
 | ERI data sources | the data source list in the app settings | ERI sources only, and not the ones using Kerberos |
@@ -685,20 +687,23 @@ A tool export is the one that asks the most before it writes anything. It assume
 2. Select the areas to export. All areas start selected. For Web Search, SearXNG, Staan, Tavily, and General are independent: selecting only Tavily does not include the search language, strategy, or preferred backend. Select General separately when you need those settings.
 3. Choose **Locked settings** or **Editable defaults**. Locked settings go into `DataTools.LockedToolSettings` and cannot be changed by users. Editable defaults go into `DataTools.DefaultToolSettings`; a user's saved value takes precedence over them.
 4. Optionally select **Include encrypted API keys and other secrets**, which starts off. The option is available only when the selected areas contain configured secrets and this machine has a valid enterprise encryption secret. Deploy the same secret to recipients as described in [Setting Up Encrypted API Keys](#setting-up-encrypted-api-keys). Secrets always go into `LockedToolSettings`, including when you choose editable defaults for the other fields. Managed tool secrets are used from the configuration without replacing the user's own keyring entries; removing the managed secret makes the user's own key available again.
-5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool and is locked, because a managed setting without an `AllowUserOverride` flag is locked by default. The export therefore only adds a comment about that flag instead of writing it: setting it applies to the entire confidence table, including entries for other tools, so that decision stays yours. Deselect this option if your fragment should not configure provider confidence.
+5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool, or to the whole tool collection, and is locked, because a managed setting without an `AllowUserOverride` flag is locked by default. The export therefore only adds a comment about that flag instead of writing it: setting it applies to the entire confidence table, including entries for other tools, so that decision stays yours. Deselect this option if your fragment should not configure provider confidence.
 6. Click **Export to clipboard**, then paste the fragment into your plugin after its `CONFIG["SETTINGS"] = {}` initialization and after any assignments that replace the tables you want to extend. Review the code and test the plugin using [Local staging and testing](#local-staging-and-testing) before rollout. The export dialog stays open so you can produce another selection.
 
 The export reads saved, effective settings, including organization-managed values. It does not save settings or change the keyring. Missing values are omitted, explicitly empty non-secret values are preserved, and implicit runtime defaults are not added. Incomplete configurations can be exported so that you can finish them in Lua. If encryption fails, no partial fragment is copied; an empty export also leaves the clipboard unchanged.
 
+Some tools only make sense together and form a tool collection, such as **Mailboxes** with Search Mails, Read Mail, and Count Mails. **Tool Settings** shows such a collection as one row, and its export covers all of its tools: each area names its tool, and the minimum provider confidence goes under the ID of the collection, e.g., `mailboxes`. Wherever your configuration names tools — `DataTools.DisabledToolIds`, `DataTools.MinimumProviderConfidenceByToolId`, chat templates, and document analysis policies — use the ID of the collection for them. The ID of one of its tools counts for the whole collection, so naming it switches off the whole collection or sets its confidence; of several levels set for a collection and its tools, the highest applies. Tool settings stay with each tool and keep the `"<toolId>.<fieldName>"` keys.
+
 ### Complete tool export
 
-For example, save a timeout of `30`, a content limit of `12000`, and an empty private-host list for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
+For example, save a timeout of `30`, a content limit of `12000`, an empty private-host list, and free address choice switched off for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
 
 ```lua
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.timeoutSeconds"] = "30"
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.maxContentCharacters"] = "12000"
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.allowedPrivateHosts"] = ""
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.freeAddressChoice"] = "OFF"
 
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] or {}
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"]["read_web_page"] = "VERY_LOW"
@@ -732,11 +737,112 @@ Writing such a template by hand means knowing that saying nothing and saying non
 | no `ToolIds` at all | starts with the tools the user has set as their chat default |
 | `ToolIds` present but empty | starts with no tool at all, whatever that default says |
 | no `DataSourceOptions` at all | starts with the data source options the user has set as their chat default |
-| `DataSourceOptions` present | starts with exactly those, including the choice to let an agent pick the sources |
+| `DataSourceOptions` present | starts with exactly those, including how the sources are searched and whether an agent picks them |
 
 Writing the `DataSourceOptions` table at all is already the statement that this template wants data sources, so `DisableDataSources` starts at `false` inside it, unlike everywhere else in the app.
 
+`RetrievalMode` inside that table decides how the chat searches its data sources:
+
+| Value | What happens |
+|---|---|
+| `SEMANTIC_SEARCH` (default) | The AI searches the data sources itself, through the tool `semantic_search`, whenever a question calls for it. No agent takes part: `AutomaticDataSourceSelection` lets the AI itself choose among all data sources it may use, and `AutomaticValidation` has no effect. |
+| `EVERY_MESSAGE` | AI Studio searches the data sources with every message, before the AI answers, with the agents for selection and validation as configured. |
+
+Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
+
 When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
+## Mailboxes
+
+Mailboxes are still a preview: enable `PRE_MAILBOXES_2026` together with `PRE_RAG_2024` in `DataApp.EnabledPreviewFeatures`. Users add a mailbox as a data source, with their own username and password for its IMAP server. AI Studio synchronizes it every 16 minutes and keeps a local index of it, which the tool collection `mailboxes` searches, reads, and counts.
+
+These settings decide how your organization uses them:
+
+| Setting | Effect |
+|---|---|
+| `DataApp.AllowUserToAddMailbox` | `false` keeps users from adding mailboxes. Mailboxes they added before stay. |
+| `DataMailboxes.MinimumOutboundDataRestriction` | The least strict outbound data restriction a mailbox may have, see below. |
+| `DataMailboxes.AllowOnlyOrganizationMailServers` | `true` allows mailboxes only on the mail servers you offer, see below. |
+| `DataTools.DisabledToolIds` with `mailboxes` | Keeps the AI from reading any mailbox. |
+
+Every mailbox also requires a provider confidence of its own, from `VERY_LOW` to `HIGH`. The chat provider and the embedding provider have to meet it before they see a mail. An IMAP server whose certificate chains to your private root CA works with the same settings as HTTPS, see [Custom root certificates for Flatpak deployments](#custom-root-certificates-for-flatpak-deployments).
+
+### Where a chat may send data
+
+Mails come from strangers and may contain instructions meant for the AI. That is why each mailbox decides where a chat may still send data once it has read mails from it:
+
+| Value | What the chat may still do |
+|---|---|
+| `ONLY_CONFIGURED_SERVICES` | Use only services configured in AI Studio, such as the mailbox itself or your Confluence. New mailboxes start here. |
+| `ONLY_LINKS_FROM_CHAT` | Also read web pages whose addresses stand in the chat, written by the user or returned by a tool. No web search, and no addresses the AI chooses itself. |
+| `UNRESTRICTED` | Use every tool the user selected. |
+
+With `DataMailboxes.MinimumOutboundDataRestriction`, you rule out the less strict levels. A mailbox set to one of them gets your level whenever its mails reach a chat, and its dialog no longer offers them. A chat which read mails before keeps the level it got then, until it reads mails again.
+
+### Mail servers of your organization
+
+`CONFIG["MAILBOX_PROVIDERS"]` offers your own mail servers in the mailbox dialog, ahead of the well-known public providers. Each entry names the server with its host, port, and encryption, and may add a hint on the username and a link to your instructions; users still sign in with their own username and password. A configuration may define several mail servers, and those of all your configurations are offered together. `plugin.lua` lists the fields.
+
+With `DataMailboxes.AllowOnlyOrganizationMailServers`, AI Studio connects to no other IMAP server. Before every connection, it compares the host of the mailbox with the hosts of your mail servers; port and encryption make no difference. A mailbox somebody added on another server before stops synchronizing at once, the embeddings page says why, and the AI no longer reads it. Its local index stays, so the mailbox comes back as it was, should you allow its server again. Switch it on together with your first mail servers, and nobody gets to add a mailbox elsewhere at all.
+
+## Backing up and restoring data
+
+Users can back up the data of AI Studio into a single `.mwbackup` file, for example to take it to a new computer, and restore it there. They find both under **Data Backup & Restore**, on the Information page and in the settings. Instead of replacing all their data, users may also add only the chats of a backup to the chats they have. Secrets such as API keys never go into a backup. These settings decide whether they may:
+
+| Setting | Effect |
+|---|---|
+| `DataApp.AllowUserToBackUpData` | `false` keeps users from writing a backup. The button stays visible but is disabled. |
+| `DataApp.AllowUserToRestoreData` | `false` keeps users from restoring a backup and from adding the chats of one. The buttons stay visible but are disabled. |
+
+Both settings start as `true`. A backup holds the chats, the text of indexed documents, and indexed mails in a single file. The file is not encrypted, and it can leave the computer on any USB stick or cloud drive. Where that must not happen, set `DataApp.AllowUserToBackUpData` to `false`.
+
+### What a backup holds
+
+A backup takes along what AI Studio needs to carry on with the same data on another computer:
+
+- the settings, without what your configurations manage, see [Settings and objects of your configurations](#settings-and-objects-of-your-configurations),
+- the chats in workspaces and the temporary chats, along with their transcripts,
+- the plugins of the user, such as the assistants they built,
+- the tokenizers chosen for providers,
+- the projects of the Visual Briefing Assistant,
+- the local index of data sources and mailboxes, together with its embeddings, so that nothing has to be embedded again. While a backup copies the index, the indexing pauses, and it carries on afterward.
+
+What stays out:
+
+- **Secrets.** API keys, passwords, and tokens stay in the OS keyring. After a restore on another computer, AI Studio lists the providers, data sources, mailboxes, and tools of the user which need theirs again. The secrets of your configurations come back with your configurations.
+- **Plugins of your organization.** Everything below `.config` and `.config-tests` stays out, and so does every plugin elsewhere which is marked with `DEPLOYED_USING_CONFIG_SERVER = true`, see [Important: Mark enterprise-managed plugins explicitly](#important-mark-enterprise-managed-plugins-explicitly). Your deployment brings them back. A plugin which your MDM solution placed without that marker counts as one of the user's own: it goes into backups, and a restore can replace or remove it.
+- **Files outside the folders of AI Studio**, such as documents attached to a chat, the folders of local data sources, the folders of the batch processing, or a bundle of root certificates. A backup keeps only their locations. After a restore, AI Studio lists the settings whose files or folders it cannot find on the new computer.
+- Plugins which come with AI Studio, tools AI Studio downloaded such as Pandoc, log files, and temporary files.
+
+### Settings and objects of your configurations
+
+Before the settings go into a backup, AI Studio leaves out every object which a configuration plugin manages: LLM, embedding, and transcription providers, profiles, chat templates, data sources, and document analysis policies. On a computer which receives your configurations, these objects come back from there, along with their API keys, and nothing appears twice. The same holds for configuration plugins the user installed themselves: they go into the backup as plugins and bring their objects back after a restore.
+
+A setting which your configuration locks stays in the backup, together with the configuration which locked it. After a restore, AI Studio treats it like the setting of a withdrawn configuration until your configuration locks it again, see [Withdrawing a configuration](#withdrawing-a-configuration). On a device which receives your configurations, the setting therefore ends up as you configured it. On one without them, the user gets back the value they had chosen before your configuration took the setting over.
+
+### How a restore works
+
+A restore replaces the data of the user with the backup, and it needs a restart: while AI Studio runs, its files are open, and on Windows, they cannot be replaced at all.
+
+1. AI Studio checks the backup. It refuses a backup made by a newer version of AI Studio, and one whose files do not match its list of contents.
+2. AI Studio unpacks the backup into a folder `.restore-pending`, one within the data directory and one within the configuration directory. This needs free space for the unpacked backup on top of the current data. Until the restart, the indexing pauses, and AI Studio asks the user to restart now or to discard the restore.
+3. At the next start, before AI Studio opens any of its files, it moves the current data into a folder `.restore-previous` and the restored data into its place, piece by piece. A piece for which the backup holds nothing stays as it was.
+4. Should a step fail, AI Studio moves everything back, and the user keeps their data as it was. Should even that fail, AI Studio tries again at every start.
+5. Once the restored settings have loaded, AI Studio deletes the replaced data from `.restore-previous`, reports the outcome, and lists what remains to do, such as entering API keys again.
+
+A restore leaves the plugins of your organization, the plugins which come with AI Studio, and the log files as they are. When a restore fails, the log file `events.log` in the data directory tells why, in the entries from the source `Restore`.
+
+### Backing up with a tool of your own
+
+If you back up the user profiles of your devices anyway, for example with Restic, Borg, or the backup solution of your organization, the Information page helps: its panel **Your Data Folders** shows where the data and configuration directories lie, and which of their contents belong into a backup. [The data and configuration directories](#the-data-and-configuration-directories) lists their usual places. The panel derives this from the same list the backups of AI Studio follow, and it stays complete even when you set `DataApp.AllowUserToBackUpData` to `false`.
+
+Keep in mind:
+
+- Copy the local index below `databases/` only while AI Studio is closed. While it runs, these files change, and on Windows, they are locked. A copy taken then may not be readable afterward.
+- Secrets do not lie in these folders. They stay in the OS keyring.
+- On macOS, the data directory lies within the configuration directory.
+- No pattern of paths tells the plugins which your MDM solution placed outside `.config` apart from the user's own plugins. The panel lists the folders of those marked with `DEPLOYED_USING_CONFIG_SERVER = true`, so you can leave them out.
+- AI Studio stores the paths to its own files, such as transcripts and tokenizers, relative to the data directory. A copy therefore also works on a computer whose folders lie elsewhere, for example under another user name, as long as AI Studio v26.10.1 or later ran before the copy was taken. Paths to the user's own files, such as attachments or the folders of data sources, stay as they are.
 
 ## Letting users provide their own API key
 
@@ -917,3 +1023,95 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Feature usage statistics (telemetry)
+
+When your organization runs its own AI servers, for example behind a LiteLLM gateway, you may want
+to know which features of AI Studio your colleagues use: the chat, the assistants, the agents. AI
+Studio can name the feature in the `User-Agent` header of every request it sends to these servers.
+Your servers then log it like any other header; LiteLLM, for example, shows it as a tag of the
+request. This is off by default, and AI Studio then sends no `User-Agent` at all.
+
+### What your servers receive
+
+The `User-Agent` names the app, its version, the platform, and the feature which sent the request:
+
+| Request sent by | `User-Agent` |
+|---|---|
+| The chat | `MindWorkAIStudio/26.10.1 (win-x64) Component/CHAT` |
+| The translation assistant | `MindWorkAIStudio/26.10.1 (win-x64) Component/TRANSLATION_ASSISTANT` |
+| The data source selection agent | `MindWorkAIStudio/26.10.1 (win-x64) Component/AGENT_DATA_SOURCE_SELECTION` |
+| An assistant plugin of your organization | `MindWorkAIStudio/26.10.1 (win-x64) Component/DYNAMIC_ASSISTANT Assistant/Cafe-Menu-Writer-Beta` |
+| Transcription, embeddings, and model lists | `MindWorkAIStudio/26.10.1 (win-x64)` |
+
+The platform is one of `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, and
+`osx-arm64`. The feature names are the values of the enumeration in
+`app/MindWork AI Studio/Tools/Components.cs`.
+
+Assistant plugins are named only when they come with AI Studio, when your organization deployed
+them, or when it approved them, see
+[Enterprise approval for assistant plugins](#enterprise-approval-for-assistant-plugins). Users can
+build assistants for themselves and name them as they like, possibly after a person or a private
+project; such a name never leaves the device, and the request shows up as
+`Component/DYNAMIC_ASSISTANT` only. For the header, a name is reduced to ASCII letters, digits,
+dots, underscores, and dashes, and cut after 64 characters: "Café Menu Writer (Beta)" becomes
+`Cafe-Menu-Writer-Beta`.
+
+The `User-Agent` names neither the user nor their device; the platform only says which operating
+system and processor architecture AI Studio runs on. The request itself carries what it always
+carries, such as the prompt and the API key; the `User-Agent` adds only which feature sent it.
+
+### Who receives it
+
+Only providers of the types "self-hosted" and "LiteLLM" receive it. AI Studio decides by the type
+of the provider, not by its address: a LiteLLM provider receives it wherever its server runs.
+
+- **Cloud providers never receive it**, such as OpenAI, Anthropic, Google, or Mistral, whatever the
+  setting says.
+- **Other services never learn which feature sent a request**, such as ERI servers, Confluence, or
+  web pages.
+- **AI Studio sends no usage data to its developers**, with or without this setting.
+
+### What the numbers mean
+
+- **They count requests, not uses.** A single message in the chat may cause several requests:
+  each round of tool calls is a request of its own, and the classic RAG process lets its agents
+  select and check the data sources before the answer. Some assistants work in several steps, and
+  the batch processing sends one request per file.
+- **Agents appear under their own name.** When the chat lets an agent select its data sources, the
+  request of the agent shows up as `Component/AGENT_DATA_SOURCE_SELECTION`, not as part of the chat.
+- **Transcription, embeddings, and model lists name the app only.** Which kind of request it was,
+  your server sees from the endpoint; which feature caused it is not sent.
+
+### Switching it on
+
+Switch it on for everybody, without a way to opt out:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+```
+
+Add `AllowUserOverride` to make it the default of your organization, which users may still change
+in the app settings:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators"] = true
+CONFIG["SETTINGS"]["DataApp.ShareFeatureUsageWithSelfHostedServerOperators.AllowUserOverride"] = true
+```
+
+Set it to `false` without `AllowUserOverride` to keep everybody from switching it on. Either way,
+users find the setting in the app settings, together with an explanation of what is sent; when you
+lock it, they see your value there. A change applies to the requests which follow; an embedding
+run which is already underway finishes as it started.
+
+### Before you switch it on
+
+As long as your server cannot tell the users apart, the numbers say how often each feature is
+used, and nothing about anybody in particular. This changes as soon as it can: for example, when
+every user has an API key of their own, such as a virtual key in LiteLLM, or when your logs keep
+the IP addresses of the devices. The usage data then relates to persons, and data protection law
+applies to it. In some countries, such as Germany, evaluating it may also require the consent of
+your works council, because it could be used to monitor the behavior or performance of employees.
+
+Clarify this before you switch it on, evaluate the numbers per feature rather than per person, and
+tell your colleagues that their requests name the features they use.

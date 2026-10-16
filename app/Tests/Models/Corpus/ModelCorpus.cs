@@ -29,6 +29,8 @@ public static class ModelCorpus
     [
         new(OPEN_AI, "gpt-6-astra", NAMED_BY_A_RULE),
         new(OPEN_AI, "gpt-6-astra-mini", NAMED_BY_A_RULE),
+        new(OPEN_AI, "gpt-6-sol", NAMED_BY_NO_RULE),
+        new(OPEN_AI, "gpt-6-luna", NAMED_BY_NO_RULE),
         new(OPEN_AI, "gpt-5.6", NAMED_BY_A_RULE),
         new(OPEN_AI, "gpt-5.5", ON_THE_MANUAL_TEST_LIST),
         new(OPEN_AI, "gpt-5.4", NAMED_BY_A_RULE),
@@ -53,6 +55,7 @@ public static class ModelCorpus
         new(OPEN_AI, "o1", NAMED_BY_A_RULE),
         new(OPEN_AI, "o1-pro", NAMED_BY_A_RULE),
         new(OPEN_AI, "o1-mini", NAMED_BY_A_RULE),
+        new(OPEN_AI, "o1-preview", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3-pro", NAMED_BY_A_RULE),
         new(OPEN_AI, "o3-mini", NAMED_BY_A_RULE),
@@ -109,6 +112,8 @@ public static class ModelCorpus
     private static readonly CorpusEntry[] MISTRAL_ENTRIES =
     [
         new(MISTRAL, "mistral-large-latest", NAMED_BY_A_RULE),
+        new(MISTRAL, "mistral-large-4", NAMED_BY_A_RULE),
+        new(MISTRAL, "mistral-large-4-0", NAMED_BY_NO_RULE),
         new(MISTRAL, "mistral-large-2512", NAMED_BY_A_RULE),
         new(MISTRAL, "mistral-large-2411", NAMED_BY_A_RULE),
         new(MISTRAL, "mistral-medium-latest", NAMED_BY_A_RULE),
@@ -224,6 +229,7 @@ public static class ModelCorpus
         new(OPEN_ROUTER, "google/gemini-3.7-flash", QUOTED_AS_A_NAME_SHAPE),
         new(OPEN_ROUTER, "google/gemma-4-31b-it", NAMED_BY_A_RULE),
         new(OPEN_ROUTER, "mistralai/mistral-large-3", NAMED_BY_A_RULE),
+        new(OPEN_ROUTER, "mistralai/mistral-large-4-0", NAMED_BY_NO_RULE),
         new(OPEN_ROUTER, "perplexity/sonar-reasoning", NAMED_BY_A_RULE),
         new(OPEN_ROUTER, "qwen/qwen3.8-flash-next", QUOTED_AS_A_NAME_SHAPE),
         new(OPEN_ROUTER, "deepseek/deepseek-r1-distill-llama-70b", ON_THE_MANUAL_TEST_LIST),
@@ -237,6 +243,12 @@ public static class ModelCorpus
         new(LITE_LLM, "azure/gpt-5.6", QUOTED_AS_A_NAME_SHAPE),
         new(LITE_LLM, "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0", NAMED_BY_NO_RULE),
         new(LITE_LLM, "the-fast-one", NAMED_BY_NO_RULE),
+        new(REQUESTY, "anthropic/claude-opus-5", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "google/gemma-4-31b-it", NAMED_BY_A_RULE),
+        new(REQUESTY, "bedrock/claude-opus-5@eu-central-1", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "claude-opus-5@eu", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "openai/gpt-6-sol:flex", QUOTED_AS_A_NAME_SHAPE),
+        new(REQUESTY, "novita/qwen/qwen3.8-max", QUOTED_AS_A_NAME_SHAPE),
     ];
 
     /// <summary>

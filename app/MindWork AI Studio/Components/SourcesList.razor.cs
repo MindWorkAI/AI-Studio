@@ -79,7 +79,7 @@ public partial class SourcesList : MSGComponentBase
             foreach (var numberedSource in group.Sources)
             {
                 var document = numberedSource.Source.TryGetDocumentLocation(out var location) ? location : (SourceDocumentLocation?)null;
-                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document));
+                entries.Add(new(numberedSource.Number, numberedSource.Source.Title, numberedSource.Source.URL, document, numberedSource.Source.IsMailSource()));
             }
 
             this.groups.Add(new(group.Heading, entries));
@@ -160,5 +160,6 @@ public partial class SourcesList : MSGComponentBase
     /// <param name="Title">The title of the source.</param>
     /// <param name="Link">The address of the source, which a web source is opened by.</param>
     /// <param name="Document">The document the source names, or null when it names none.</param>
-    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document);
+    /// <param name="IsMail">Whether the source names a mail, which is shown as text.</param>
+    private readonly record struct SourceEntry(int Number, string Title, string Link, SourceDocumentLocation? Document, bool IsMail);
 }

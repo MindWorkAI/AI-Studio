@@ -215,7 +215,48 @@ public sealed class ToolCallingLoopTests
             Assert.That(chunks.Select(x => x.Content), Has.None.Contains(NO_ANSWER), "A stop is not a failure to answer, so it is not reported as one.");
         });
     }
-    
+
+    [Test]
+    public async Task OnlyTheFirstRoundsUsageReachesTheAnswer()
+    {
+        //
+        // Every round is a request of its own, and every one of them reports what it cost. Only
+        // the first one describes what the next question will be sent after: every later round
+        // carries the tool calls and their results on top, none of which is sent again once the
+        // answer stands.
+        //
+        var adapter = new ScriptedAdapter(
+            [Usage(1200), Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Usage(9800), Completed(ANSWER)]);
+
+        var usages = (await Collect(adapter)).Where(chunk => chunk.Usage.IsKnown).Select(chunk => chunk.Usage.PromptTokens);
+
+        Assert.That(usages, Is.EqualTo(new[] { 1200 }), "The second round's prompt holds the tool result as well, which the next question is not sent with.");
+    }
+
+    [Test]
+    public async Task ALaterRoundsUsageLeavesItsTextAndNothingElse()
+    {
+        //
+        // Some providers send the usage next to the last piece of text rather than on a line of
+        // its own. Dropping the usage must not drop that text, and a delta which carried nothing
+        // but the usage must not turn into an empty chunk of its own.
+        //
+        var withUsage = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Usage(9800), Usage(9800, ANSWER), Completed(ANSWER)]));
+
+        var withoutUsage = await Collect(new ScriptedAdapter(
+            [Completed(string.Empty, [Call("call-1")])],
+            [Text(ANSWER), Completed(ANSWER)]));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(withUsage.Select(x => x.Content), Is.EqualTo(withoutUsage.Select(x => x.Content)), "The same chunks arrive as if the round had reported nothing.");
+            Assert.That(withUsage.Select(x => x.Usage.IsKnown), Has.None.True, "And none of them carries the usage on.");
+        });
+    }
+
     /// <summary>
     /// As many rounds calling one tool each as it takes to use up the tool budget.
     /// </summary>
@@ -225,7 +266,9 @@ public sealed class ToolCallingLoopTests
         .ToList();
     
     private static ToolCallingStreamEvent Text(string text) => ToolCallingStreamEvent.TextDelta(text);
-    
+
+    private static ToolCallingStreamEvent Usage(int promptTokens, string text = "") => ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(text, [], TokenUsage.Of(promptTokens)));
+
     private static ToolCallingStreamEvent Completed(string text, IReadOnlyList<ToolCallingRequestedCall>? calls = null, IReadOnlyList<ISource>? sources = null)
         => ToolCallingStreamEvent.RoundCompleted(new ToolCallingRound(text, calls ?? [], sources ?? []));
     

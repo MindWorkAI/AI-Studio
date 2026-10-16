@@ -8,6 +8,7 @@ using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Chat;
 
@@ -51,6 +52,21 @@ public sealed class ContentText : IContent
     public List<FileAttachment> FileAttachments { get; set; } = [];
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    /// <summary>
+    /// What the provider said everything sent along with this answer cost, where it said anything.
+    /// </summary>
+    /// <remarks>
+    /// Kept on the answer rather than beside the chat, so that it is stored, loaded, and exported
+    /// with the message it belongs to -- and so that it goes away when the message does. An edited
+    /// or regenerated answer removes its block, which removes these numbers with it. Null for every
+    /// answer written before this was recorded, and at every provider which reports nothing.
+    ///
+    /// Having a report is not the same as the report still being true. Whether it still describes
+    /// the conversation is decided by ChatThread.ReportedHistoryFor, which looks at the thread around
+    /// the answer, not just at the answer.
+    /// </remarks>
+    public ReportedTokenUsage? ReportedUsage { get; set; }
 
     [JsonIgnore]
     public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
@@ -98,6 +114,30 @@ public sealed class ContentText : IContent
     /// </remarks>
     public void EndToolRun() => this.PendingToolConversation = [];
 
+    /// <summary>
+    /// Keeps what the provider says the request behind this answer cost.
+    /// </summary>
+    /// <remarks>
+    /// The one place where a stream's usage becomes part of the answer, for every path which writes
+    /// one. It arrives on one line of the stream, usually the last one, and only where the provider
+    /// reports it at all -- so a usage which states nothing leaves what was reported before alone.
+    /// </remarks>
+    /// <param name="usage">What the current chunk of the stream says, which is mostly nothing.</param>
+    /// <param name="modelId">The model the request went to.</param>
+    /// <param name="blockCount">How many blocks the conversation had when the request went out, this answer included.</param>
+    public void RecordReportedUsage(TokenUsage usage, string modelId, int blockCount)
+    {
+        if (!usage.IsKnown)
+            return;
+
+        this.ReportedUsage = new()
+        {
+            PromptTokens = usage.PromptTokens,
+            ModelId = modelId,
+            BlockCount = blockCount,
+        };
+    }
+
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
     {
@@ -126,7 +166,7 @@ public sealed class ContentText : IContent
             try
             {
                 var rag = new AISrcSelWithRetCtxVal();
-                chatThread = await rag.ProcessAsync(provider, lastUserPrompt, chatThread, token);
+                chatThread = await rag.ProcessAsync(provider, chatModel, lastUserPrompt, chatThread, token);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -158,7 +198,10 @@ public sealed class ContentText : IContent
 
         // Get the settings manager:
         var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
-        
+
+        // What the request carries, for telling later whether a report still describes this chat:
+        var blocksSent = chatThread.Blocks.Count;
+
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
         try
@@ -186,6 +229,9 @@ public sealed class ContentText : IContent
 
                         // Merge the sources:
                         this.Sources.MergeSources(contentStreamChunk.Sources);
+
+                        // Keep what the provider says the request cost:
+                        this.RecordReportedUsage(contentStreamChunk.Usage, chatModel.Id, blocksSent);
 
                         // Notify the UI that the content has changed,
                         // depending on the energy saving mode:
@@ -310,6 +356,12 @@ public sealed class ContentText : IContent
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The reported usage stays behind on purpose. A clone continues somewhere else -- as the
+    /// example conversation of a chat template, or as an assistant's conversation carried over into
+    /// a chat -- with another system prompt around it, and what the provider stated was for the
+    /// request this answer came out of.
+    /// </remarks>
     public IContent DeepClone() => new ContentText
     {
         Text = this.Text,
@@ -335,9 +387,28 @@ public sealed class ContentText : IContent
 
     #endregion
 
-    public async Task<string> PrepareTextContentForAI()
+    /// <summary>
+    /// The web addresses in the documents attached to this message, as request keys, see
+    /// WebAddresses.CreateRequestKey.
+    /// </summary>
+    /// <remarks>
+    /// The documents are read from disk only when a message is sent, so their addresses are
+    /// collected right then, see PrepareTextContentForAI, and count as given to the model, see
+    /// ChatThread.IsWebAddressGivenToTheModel. Not stored: every request reads the documents anew,
+    /// and a document changed or gone since no longer gives an address.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlySet<string> RuntimeAttachmentWebAddresses { get; internal set; } = new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Builds the text the AI gets for this message, with the content of its attached documents.
+    /// </summary>
+    /// <param name="reportingScope">The request this message is part of, which tells the user once about everything filtered out of its attachments, or null when the request reads no documents.</param>
+    /// <returns>The text for the AI.</returns>
+    public async Task<string> PrepareTextContentForAI(PromptInjectionReportingScope? reportingScope)
     {
         var sb = new StringBuilder();
+        var attachmentWebAddresses = new HashSet<string>(StringComparer.Ordinal);
         sb.AppendLine(this.Text);
 
         if(this.FileAttachments.Count > 0)
@@ -382,13 +453,6 @@ public sealed class ContentText : IContent
                 }
 
                 //
-                // One report for the whole batch: attaching twenty documents must produce one
-                // dialog listing all of them, not twenty dialogs in a row.
-                //
-                var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-                await using var promptInjectionScope = guardService.BeginAction();
-
-                //
                 // The document blocks are collected separately, so we only announce attached
                 // files when at least one of them could actually be read. Announcing files we
                 // then hand over as empty blocks makes the AI answer about an empty document.
@@ -409,7 +473,7 @@ public sealed class ContentText : IContent
                         continue;
                     }
 
-                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: reportingScope);
                     if (!extraction.HasUsableContent)
                     {
                         LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
@@ -441,6 +505,10 @@ public sealed class ContentText : IContent
                     documentBlocks.AppendLine("````");
                     documentBlocks.AppendLine(extraction.Content);
                     documentBlocks.AppendLine("````");
+
+                    foreach (var address in WebAddresses.Find(extraction.Content))
+                        if (WebAddresses.TryCreateRequestKey(address, out var requestKey))
+                            attachmentWebAddresses.Add(requestKey);
                 }
 
                 if (documentBlocks.Length > 0)
@@ -459,7 +527,8 @@ public sealed class ContentText : IContent
                 }
             }
         }
-        
+
+        this.RuntimeAttachmentWebAddresses = attachmentWebAddresses;
         return sb.ToString();
     }
     

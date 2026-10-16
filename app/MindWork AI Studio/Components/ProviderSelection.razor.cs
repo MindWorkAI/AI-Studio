@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -33,6 +34,10 @@ public partial class ProviderSelection : MSGComponentBase
     /// <summary>
     /// Gets or sets whether provider selection is disabled.
     /// </summary>
+    /// <remarks>
+    /// A choice which reaches a disabled selection anyway is turned down. Keeping the selected provider
+    /// up to date after its settings changed is no choice, so that goes on.
+    /// </remarks>
     [Parameter]
     public bool Disabled { get; set; }
 
@@ -54,6 +59,9 @@ public partial class ProviderSelection : MSGComponentBase
     
     private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {
+        if (this.Disabled)
+            return;
+
         this.ProviderSettings = provider;
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }
@@ -99,6 +107,10 @@ public partial class ProviderSelection : MSGComponentBase
 
         if (profile.Has(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+
+        // The same check which decides whether a request offers tools, Semantic Search among them:
+        if (provider.GetToolCallingAvailability().IsAvailable)
+            capabilityIcons.Add(new(Icons.Material.Filled.Build, this.T("Tool calling possible")));
 
         var reasoningIndicatorState = provider.GetReasoningIndicatorState();
         if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)

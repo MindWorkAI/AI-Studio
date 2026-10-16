@@ -3,14 +3,16 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
+using AIStudio.Tools.Mail;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.IndexStore;
 
-public sealed class SqliteIndexStoreClientImplementation(string name, string databasePath, string basePath, string version) : IndexStoreClient(name, basePath)
+public sealed partial class SqliteIndexStoreClientImplementation(string name, string databasePath, string basePath, string version) : IndexStoreClient(name, basePath)
 {
     private const string DATABASE_NAME = "SQLite";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";
@@ -88,6 +90,13 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         yield return (TB("Indexed data sources"), OrUnknown(snapshot.DataSourceCount));
         yield return (TB("Indexed files"), OrUnknown(snapshot.FileCount));
         yield return (TB("Permanently skipped files"), OrUnknown(snapshot.FailureCount));
+
+        // Only once a mailbox brought any mails. Without one, the lines would say nothing but zero:
+        if (snapshot.MailCount > 0 || snapshot.MailFailureCount > 0)
+        {
+            yield return (TB("Indexed mails"), OrUnknown(snapshot.MailCount));
+            yield return (TB("Permanently skipped mails"), OrUnknown(snapshot.MailFailureCount));
+        }
     }
 
     public override async Task<DataSourceIndexState?> GetDataSourceStateAsync(string dataSourceId, CancellationToken token)
@@ -311,41 +320,59 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             return [];
 
         await using var context = this.CreateContext();
-        var results = await context.SearchResults
-            .FromSqlInterpolated($"""
-                                  SELECT
-                                      c.chunk_id AS ChunkId,
-                                      c.parent_file_id AS ParentFileId,
-                                      ds.data_source_id AS DataSourceId,
-                                      ds.data_source_type AS DataSourceType,
-                                      f.absolute_path AS AbsolutePath,
-                                      f.file_name AS FileName,
-                                      f.relative_path AS RelativePath,
-                                      f.file_type AS FileType,
-                                      c.page_number AS PageNumber,
-                                      c.chunk_index AS ChunkIndex,
-                                      c.chunk_text AS ChunkText,
-                                      bm25(embedding_chunks_fts) AS Score,
-                                      f.fingerprint AS Fingerprint,
-                                      f.file_size AS FileSize,
-                                      f.creation_utc AS CreationUtc,
-                                      f.last_write_utc AS LastWriteUtc,
-                                      c.embedded_at_utc AS EmbeddedAtUtc,
-                                      f.chunk_count AS ChunkCount
-                                  FROM embedding_chunks_fts
-                                  JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
-                                  JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
-                                  JOIN data_sources ds ON ds.data_source_id = f.data_source_id
-                                  WHERE ds.data_source_id = {dataSourceId}
-                                    AND embedding_chunks_fts MATCH {ftsQuery}
-                                  ORDER BY Score
-                                  LIMIT {maxMatches}
-                                  """)
-            .AsNoTracking()
+        var results = await InSearchOrder(MatchChunks(context, dataSourceId, ftsQuery))
+            .Take(maxMatches)
             .ToListAsync(token);
 
         return results.Select(ToSearchResult).ToList();
     }
+
+    /// <summary>
+    /// The chunks of a data source which match a full-text query, unordered, as a query to build on.
+    /// </summary>
+    /// <remarks>
+    /// Kept free of ORDER BY and LIMIT, so EF Core can wrap it and filter it further before either
+    /// of them applies, cf. InSearchOrder.
+    /// </remarks>
+    private static IQueryable<IndexStoreSearchResultEntity> MatchChunks(IndexStoreDbContext context, string dataSourceId, string ftsQuery) => context.SearchResults
+        .FromSqlInterpolated($"""
+                              SELECT
+                                  c.chunk_id AS ChunkId,
+                                  c.parent_file_id AS ParentFileId,
+                                  ds.data_source_id AS DataSourceId,
+                                  ds.data_source_type AS DataSourceType,
+                                  f.absolute_path AS AbsolutePath,
+                                  f.file_name AS FileName,
+                                  f.relative_path AS RelativePath,
+                                  f.file_type AS FileType,
+                                  c.page_number AS PageNumber,
+                                  c.chunk_index AS ChunkIndex,
+                                  c.chunk_text AS ChunkText,
+                                  bm25(embedding_chunks_fts) AS Score,
+                                  f.fingerprint AS Fingerprint,
+                                  f.file_size AS FileSize,
+                                  f.creation_utc AS CreationUtc,
+                                  f.last_write_utc AS LastWriteUtc,
+                                  c.embedded_at_utc AS EmbeddedAtUtc,
+                                  f.chunk_count AS ChunkCount
+                              FROM embedding_chunks_fts
+                              JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
+                              JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
+                              JOIN data_sources ds ON ds.data_source_id = f.data_source_id
+                              WHERE ds.data_source_id = {dataSourceId}
+                                AND embedding_chunks_fts MATCH {ftsQuery}
+                              """)
+        .AsNoTracking();
+
+    /// <remarks>
+    /// Chunks of the same score keep a fixed order, by their document and their place in it. The
+    /// results are cut into pages by asking for more of them each time, cf. RetrievalPaging. If
+    /// ties could fall differently with every limit, a page might show a chunk again or skip one.
+    /// </remarks>
+    private static IQueryable<IndexStoreSearchResultEntity> InSearchOrder(IQueryable<IndexStoreSearchResultEntity> results) => results
+        .OrderBy(result => result.Score)
+        .ThenBy(result => result.ParentFileId)
+        .ThenBy(result => result.ChunkIndex);
 
     public override async Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token)
     {
@@ -398,7 +425,8 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
     /// Everything the display info reads out of the database in one go.
     /// </summary>
     /// <remarks>
-    /// Every property is empty when its probe could not answer. The caller turns that into "unknown".
+    /// Every property is empty or null when its probe could not answer. The caller turns that into "unknown".
+    /// The documents of mailboxes are counted apart from files, told apart by their keys, cf. MailContentKey.
     /// </remarks>
     private sealed record DisplaySnapshot
     {
@@ -410,14 +438,20 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
 
         public string TableCount { get; init; } = string.Empty;
 
-        public string DataSourceCount { get; init; } = string.Empty;
+        public int? DataSourceCount { get; init; }
 
-        public string FileCount { get; init; } = string.Empty;
+        public int? FileCount { get; init; }
 
-        public string FailureCount { get; init; } = string.Empty;
+        public int? FailureCount { get; init; }
+
+        public int? MailCount { get; init; }
+
+        public int? MailFailureCount { get; init; }
     }
 
     private static string OrUnknown(string value) => string.IsNullOrWhiteSpace(value) ? TB("unknown") : value;
+
+    private static string OrUnknown(int? count) => count?.CompactCount() ?? TB("unknown");
 
     private async Task<DisplaySnapshot> ReadDisplaySnapshotAsync()
     {
@@ -431,9 +465,11 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
                 JournalMode = (await QueryScalarTextAsync(context, "PRAGMA journal_mode;", token)).ToUpperInvariant(),
                 SchemaVersion = await GetSchemaVersionAsync(context, token),
                 TableCount = await GetTableCountAsync(context, token),
-                DataSourceCount = await FormatCountAsync(context.DataSources, token),
-                FileCount = await FormatCountAsync(context.EmbeddedFiles, token),
-                FailureCount = await FormatCountAsync(context.PermanentIndexingFailures, token),
+                DataSourceCount = await TryCountAsync(context.DataSources, token),
+                FileCount = await TryCountAsync(context.EmbeddedFiles.Where(file => !file.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                FailureCount = await TryCountAsync(context.PermanentIndexingFailures.Where(failure => !failure.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                MailCount = await TryCountAsync(context.EmbeddedFiles.Where(file => file.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
+                MailFailureCount = await TryCountAsync(context.PermanentIndexingFailures.Where(failure => failure.AbsolutePath.StartsWith(MailContentKey.PREFIX)), token),
             };
         }
         catch (Exception exception)
@@ -518,15 +554,15 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
         }
     }
 
-    private static async Task<string> FormatCountAsync<T>(IQueryable<T> query, CancellationToken token) where T : class
+    private static async Task<int?> TryCountAsync<T>(IQueryable<T> query, CancellationToken token) where T : class
     {
         try
         {
-            return (await query.CountAsync(token)).CompactCount();
+            return await query.CountAsync(token);
         }
         catch
         {
-            return string.Empty;
+            return null;
         }
     }
 
@@ -544,6 +580,73 @@ public sealed class SqliteIndexStoreClientImplementation(string name, string dat
             .ToListAsync(token);
         return versions.FirstOrDefault() ?? string.Empty;
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// VACUUM INTO writes a consistent snapshot of the database, including what the write-ahead log
+    /// still holds, and in WAL mode, reading it holds back no writer.<br/><br/>
+    ///
+    /// It runs on connections of their own, although the databases guide has raw SQL go through
+    /// GetDbConnection. The connections of the context share one cache, and a shared cache locks
+    /// whole tables: reading the whole database for the copy would hold back every writer until the
+    /// copy is done. Without pooling, nothing keeps the copy open afterward, so the backup can
+    /// delete it on every OS.<br/><br/>
+    ///
+    /// SQLite runs its async methods synchronously, and copying and checking a large index takes a
+    /// while. The copy therefore runs on a thread of its own, so that it never holds up its caller.
+    /// </remarks>
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) => Task.Run(() => this.CopyAndCheckAsync(targetDirectory, token), token);
+
+    private async Task<string> CopyAndCheckAsync(string targetDirectory, CancellationToken token)
+    {
+        Directory.CreateDirectory(targetDirectory);
+        var targetPath = Path.Join(targetDirectory, DATABASE_FILENAME);
+
+        // VACUUM INTO refuses to write into a file which holds anything:
+        if (File.Exists(targetPath))
+            File.Delete(targetPath);
+
+        try
+        {
+            await using (var connection = new SqliteConnection(BuildBackupConnectionString(this.databasePath, SqliteOpenMode.ReadWrite)))
+            {
+                await connection.OpenAsync(token);
+                await using var command = connection.CreateCommand();
+                command.CommandText = "VACUUM INTO $targetPath;";
+                command.Parameters.AddWithValue("$targetPath", targetPath);
+                await command.ExecuteNonQueryAsync(token);
+            }
+
+            await using (var connection = new SqliteConnection(BuildBackupConnectionString(targetPath, SqliteOpenMode.ReadOnly)))
+            {
+                await connection.OpenAsync(token);
+                await using var command = connection.CreateCommand();
+                command.CommandText = "PRAGMA quick_check;";
+
+                var checkResult = (await command.ExecuteScalarAsync(token))?.ToString();
+                if (checkResult is not "ok")
+                    throw new InvalidOperationException($"The copy of the index at '{targetPath}' failed its check: '{checkResult}'.");
+            }
+
+            return targetPath;
+        }
+        catch
+        {
+            if (File.Exists(targetPath))
+                File.Delete(targetPath);
+
+            throw;
+        }
+    }
+
+    private static string BuildBackupConnectionString(string path, SqliteOpenMode mode) => new SqliteConnectionStringBuilder
+    {
+        DataSource = path,
+        Mode = mode,
+        Cache = SqliteCacheMode.Private,
+        Pooling = false,
+        DefaultTimeout = 30,
+    }.ToString();
 
     private IndexStoreDbContext CreateContext() => new(this.dbContextOptions);
 

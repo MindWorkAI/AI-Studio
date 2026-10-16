@@ -24,7 +24,7 @@ public sealed class MistralReleasesTests
     /// <summary>
     /// A release far enough in the future that no name in these tests reaches it by accident.
     /// </summary>
-    private const int SOME_LATEST_RELEASE = 2604;
+    private const int SOME_LATEST_RELEASE = 2712;
 
     [TestCase("mistral-large-2512", ExpectedResult = 2512, TestName = "The release is read from the end of the name")]
     [TestCase("ministral-14b-2512", ExpectedResult = 2512, TestName = "The size of a model is not its release")]
@@ -58,6 +58,8 @@ public sealed class MistralReleasesTests
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3"), SOME_LATEST_RELEASE), Is.EqualTo(2505));
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3.5"), SOME_LATEST_RELEASE), Is.EqualTo(2604));
             Assert.That(MistralReleases.Of(new ModelId("mistral-medium-3-5"), SOME_LATEST_RELEASE), Is.EqualTo(2604), "Mistral writes the version separator both ways for the same model.");
+            Assert.That(MistralReleases.Of(new ModelId("mistral-large-4"), SOME_LATEST_RELEASE), Is.EqualTo(2610));
+            Assert.That(MistralReleases.Of(new ModelId("mistral-large-4-0"), SOME_LATEST_RELEASE), Is.EqualTo(2610), "The model card names it with a minor version, which changes nothing about the release.");
         });
     }
 
@@ -79,6 +81,33 @@ public sealed class MistralReleasesTests
             Assert.That(afterwards.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
             Assert.That(afterwards.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL));
         });
+    }
+
+    [TestCase("mistral-large-4", TestName = "Mistral Large 4 under the name of Mistral's changelog")]
+    [TestCase("mistral-large-4-0", TestName = "Mistral Large 4 under the name of its model card")]
+    public void MistralLargeFourSeesThinksAndReadsAMillionTokens(string modelId)
+    {
+        //
+        // Its names carry the generation and no release. Without its version name, it would get
+        // the answer for a release nobody can read and offer neither images nor reasoning.
+        //
+        var profile = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, modelId);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(profile.Has(Capability.MULTIPLE_IMAGE_INPUT), Is.True);
+            Assert.That(profile.Reasoning, Is.EqualTo(ReasoningSupport.OPTIONAL));
+            Assert.That(profile.Context.DefaultTokens, Is.EqualTo(1_000_000));
+        });
+    }
+
+    [TestCase("mistral-large-2512", TestName = "Mistral Large 3 keeps its own window")]
+    [TestCase("mistral-large-latest", TestName = "The latest alias keeps the window of the release it points at")]
+    public void TheMillionTokenWindowBelongsToMistralLargeFourAlone(string modelId)
+    {
+        var profile = ModelRegistry.Shared.Profile(LLMProviders.MISTRAL, modelId);
+
+        Assert.That(profile.Context.DefaultTokens, Is.EqualTo(256_000));
     }
 
     [Test]

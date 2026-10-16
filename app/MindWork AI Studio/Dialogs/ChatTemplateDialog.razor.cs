@@ -221,7 +221,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.fileAttachments = validAttachments;
         this.attachmentsToRelink = toRelink;
         this.preselectTools = template.ToolIds is not null;
-        this.selectedToolIds = template.ToolIds is null ? new(StringComparer.Ordinal) : new(template.ToolIds, StringComparer.Ordinal);
+        this.selectedToolIds = template.ToolIds is null ? new(StringComparer.Ordinal) : this.ToolRegistry.NormalizeSelection(template.ToolIds);
         this.preselectDataSources = template.DataSourceOptions is not null;
         this.templateDataSourceOptions = template.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
         this.importReferenceIssue = await this.BuildImportReferenceIssue();
@@ -232,7 +232,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         var missingSources = this.templateDataSourceOptions.PreselectedDataSourceIds
             .Where(id => this.SettingsManager.ConfigurationData.DataSources.All(source => source.Id != id)).ToList();
         var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.CHAT))
-            .Select(item => item.Definition.Id).ToHashSet(StringComparer.Ordinal);
+            .Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
         var missingTools = this.selectedToolIds.Where(id => !availableToolIds.Contains(id)).ToList();
         var missing = missingSources.Select(ConfigurationImportFields.MissingDataSourceReference)
             .Concat(missingTools.Select(ConfigurationImportFields.MissingToolReference)).ToList();

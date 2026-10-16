@@ -450,6 +450,18 @@ public static partial class PluginFactory
     }
 
     /// <summary>
+    /// Collects the mail servers which the running configuration plugins offer for new mailboxes.
+    /// </summary>
+    /// <returns>The mail servers of all configuration plugins, ordered by name, with every ID resolved to one winner.</returns>
+    public static IReadOnlyList<DataMailboxProvider> GetMailboxProviders()
+    {
+        return ResolveLivePluginContent<PluginConfiguration, DataMailboxProvider>("mailbox provider", plugin => plugin.MailboxProviders)
+            .OrderBy(provider => provider.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(provider => provider.Id, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>
     /// Collects what the running model plugins declare about models.
     /// </summary>
     /// <remarks>

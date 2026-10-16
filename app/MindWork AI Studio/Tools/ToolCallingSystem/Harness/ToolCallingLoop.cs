@@ -39,6 +39,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
         var toolResultCharacterCount = 0L;
         var toolSources = new List<Source>();
         var hasStreamedTextBefore = false;
+        var isFirstRound = true;
 
         while (true)
         {
@@ -51,7 +52,21 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
 
             ToolCallingRound? round = null;
             var roundStreamedText = false;
-            
+
+            //
+            // Only the first round passes on what its request cost. Its prompt is the conversation up
+            // to the question, which is exactly what the next question will be sent after. Every later
+            // round carries the tool calls and their results on top, and none of that is sent again
+            // once the answer stands -- a report of such a round would count a chat far larger than
+            // the one the next request carries. What the answer adds, all rounds of text together, is
+            // counted from its text afterwards, cf. ReportedHistory.
+            //
+            // Decided here rather than in the adapters, because every wire format reports its usage
+            // per request, and which request this is only the loop knows for all of them alike.
+            //
+            var passesOnUsage = isFirstRound;
+            isFirstRound = false;
+
             //
             // The model's words go out while the round is still running. That includes what it
             // writes before a tool call -- "let me look that up" -- which used to be dropped on
@@ -68,7 +83,17 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                 if (streamEvent.Delta is null)
                     continue;
 
-                if (!string.IsNullOrWhiteSpace(streamEvent.Delta.Content))
+                var delta = streamEvent.Delta;
+                if (!passesOnUsage && delta.Usage.IsKnown)
+                {
+                    // A delta which carried nothing but the usage has nothing left to hand over:
+                    if (delta.Content.Length is 0 && delta.Sources.Count is 0)
+                        continue;
+
+                    delta = delta with { Usage = TokenUsage.UNKNOWN };
+                }
+
+                if (!string.IsNullOrWhiteSpace(delta.Content))
                 {
                     //
                     // The separator goes out once the new round actually has something to say:
@@ -76,12 +101,12 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     //
                     if (!roundStreamedText && hasStreamedTextBefore)
                         yield return new ContentStreamChunk(ROUND_TEXT_SEPARATOR, []);
-                    
+
                     roundStreamedText = true;
                     hasStreamedTextBefore = true;
                 }
-                
-                yield return streamEvent.Delta;
+
+                yield return delta;
             }
             
             //
@@ -105,10 +130,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             if (round.Calls.Any(call => string.IsNullOrWhiteSpace(call.CallId)))
             {
                 toolCallCount++;
-                var (unanswerableContent, unanswerableTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
-                await context.AddToolInvocationAsync(unanswerableTrace);
+                var unanswerable = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
+                await context.AddToolInvocationAsync(unanswerable.Trace);
                 await context.ResetToolRuntimeStatusAsync();
-                yield return new ContentStreamChunk(unanswerableContent, [..toolSources]);
+                yield return new ContentStreamChunk(unanswerable.Content, [..toolSources]);
                 yield break;
             }
 
@@ -177,10 +202,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     if (!call.IsValid)
                     {
                         toolCallCount++;
-                        var (invalidContent, invalidTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
-                        toolResultCharacterCount += invalidContent.Length;
-                        await context.AddToolInvocationAsync(invalidTrace);
-                        adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
+                        var invalid = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
+                        toolResultCharacterCount += invalid.Content.Length;
+                        await context.AddToolInvocationAsync(invalid.Trace);
+                        adapter.RecordToolResult(call.CallId, invalid.Content, isError: true);
                         await context.PublishPendingToolConversationAsync(adapter);
                         continue;
                     }
@@ -198,23 +223,27 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     }
 
                     toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence, sources) = await context.ToolExecutor.ExecuteAsync(
+                    var outcome = await context.ToolExecutor.ExecuteAsync(
                         call.CallId,
                         call.ToolName,
                         call.ArgumentsJson,
                         context.RunnableTools,
                         context.Provider,
+                        context.ChatThread,
                         toolCallCount,
                         token);
 
-                    toolResultCharacterCount += toolContent.Length;
-                    context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
-                    toolSources.MergeSources(sources);
-                    await context.AddToolInvocationAsync(trace);
+                    toolResultCharacterCount += outcome.Content.Length;
+                    context.ChatThread.RequireProviderConfidence(outcome.RequiredProviderConfidence);
+                    context.ChatThread.RequireDataSecurity(outcome.RequiredDataSecurity);
+                    context.ChatThread.RequireOutboundDataRestriction(outcome.RequiredOutboundDataRestriction);
+                    context.ChatThread.RuntimeWebAddressesFromTools.UnionWith(outcome.ReturnedWebAddresses);
+                    toolSources.MergeSources(outcome.Sources);
+                    await context.AddToolInvocationAsync(outcome.Trace);
 
                     // A blocked call counts as a failure towards the model as much as an errored
                     // one does: in both cases it did not get the data it asked for.
-                    adapter.RecordToolResult(call.CallId, toolContent, trace.Status is not ToolInvocationTraceStatus.SUCCESS);
+                    adapter.RecordToolResult(call.CallId, outcome.Content, outcome.Trace.Status is not ToolInvocationTraceStatus.SUCCESS);
                     await context.PublishPendingToolConversationAsync(adapter);
                 }
             }

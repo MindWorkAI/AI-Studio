@@ -22,6 +22,17 @@ public partial class Chat : MSGComponentBase
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
+
+    /// <summary>
+    /// Whether an answer is being written for the open chat, as the chat component last told.
+    /// </summary>
+    /// <remarks>
+    /// The provider selection is locked meanwhile. Another provider would not reach the answer, which
+    /// keeps the one it started with, but the chat would show the other one while the answer is still
+    /// being written.
+    /// </remarks>
+    private bool isAnswerBeingWritten;
+
     private bool workspaceOverlayVisible;
     private bool workspaceSearchVisible;
     private string currentWorkspaceName = string.Empty;

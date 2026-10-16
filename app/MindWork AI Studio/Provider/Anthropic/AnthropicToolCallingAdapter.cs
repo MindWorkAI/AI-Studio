@@ -57,14 +57,16 @@ public sealed class AnthropicToolCallingAdapter(Model chatModel, IList<IMessageB
 
         //
         // The text goes out while it is being written; the blocks are put back together behind
-        // it, because they have to return to the provider exactly as they arrived.
+        // it, because they have to return to the provider exactly as they arrived. The usage goes
+        // out with every round: which of them describes the conversation is the loop's decision,
+        // which knows which round this is.
         //
         var accumulator = new AnthropicMessageStreamAccumulator();
         await foreach (var serverSentEvent in streamRequestAsync(request, token))
         {
             var part = accumulator.Process(serverSentEvent);
-            if (part.HasContent)
-                yield return ToolCallingStreamEvent.TextDelta(part.TextDelta);
+            if (part.HasContent || part.Usage.IsKnown)
+                yield return ToolCallingStreamEvent.TextDelta(new ContentStreamChunk(part.TextDelta, [], Usage: part.Usage));
         }
 
         var response = accumulator.Build();

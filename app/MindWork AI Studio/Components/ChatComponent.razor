@@ -28,7 +28,7 @@
                         RegenerateFunc="@this.RegenerateBlock"
                         RegenerateEnabled="@(() => this.IsProviderSelected && this.ChatThread.IsLLMProviderAllowed(this.Provider))"
                         RollbackFunc="@this.RollbackBlock"
-                        RollbackEnabled="@(() => !this.IsCurrentChatStreaming)"
+                        BlockActionsEnabled="@(() => this.blockActions.AreAllowed(this.ChatThread))"
                         EditLastBlockFunc="@this.EditLastBlock"
                         EditLastUserBlockFunc="@this.EditLastUserBlock"/>
                 }
@@ -38,7 +38,7 @@
     <FooterContent>
         <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
         <MudElement Style="flex: 0 0 auto;">
-            <UserPromptComponent
+            <MudTextField
                 T="string"
                 @ref="@this.inputField"
                 @bind-Text="@this.UserInput"
@@ -56,7 +56,6 @@
                 OnKeyUp="@this.InputKeyEvent"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
                 Class="@this.UserInputClass"
-                DebounceTime="TimeSpan.FromSeconds(1)" 
                 HelperText="@this.TokenCountMessage"
                 Style="@this.UserInputStyle"/>
         </MudElement>
@@ -89,7 +88,7 @@
                 </MudTooltip>
             }
 
-            <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBeSaved" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
+            <ChatTemplateSelection MarginLeft="" CanChatThreadBeUsedForTemplate="@this.CanThreadBecomeTemplate" CurrentChatThread="@this.ChatThread" CurrentChatTemplate="@this.currentChatTemplate" CurrentChatTemplateChanged="@this.ChatTemplateWasChanged"/>
             
 
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
@@ -102,7 +101,7 @@
             @if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES)
             {
                 <MudTooltip Text="@T("Move the chat to a workspace, or to another if it is already in one.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeSaved || this.IsCurrentChatStreaming)" OnClick="@this.MoveChatToWorkspace"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.MoveToInbox" Disabled="@(!this.CanThreadBeMoved)" OnClick="@this.MoveChatToWorkspace"/>
                 </MudTooltip>
 
                 <MudTooltip Text="@T("Copy this chat & continue in the copy.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
@@ -110,7 +109,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)"/>
+            <AttachDocuments Name="File Attachments" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@(!this.CanAttachFiles)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
@@ -132,16 +131,16 @@
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
-            <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
+            <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.CanProfileBeChanged)" DisabledText="@this.ProfileDisabledText"/>
 
             @if (this.SettingsManager.AreToolsEnabled())
             {
-                <ToolSelection Component="Components.CHAT" LLMProvider="@this.Provider" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsCurrentChatStreaming" />
+                <ToolSelection Component="Components.CHAT" LLMProvider="@this.Provider" RequiredOutboundDataRestriction="@(this.ChatThread?.RequiredOutboundDataRestriction ?? OutboundDataRequirement.NONE)" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsCurrentChatStreaming" />
             }
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@this.DataSourceOptionsWereChanged" DataSourcesAISelected="@this.GetAgentSelectedDataSources()" ReadOnly="@this.IsCurrentChatStreaming" ReadOnlyMessage="@T("Data source changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.")"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)

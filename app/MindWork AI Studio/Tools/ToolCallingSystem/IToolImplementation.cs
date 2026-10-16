@@ -19,7 +19,64 @@ public interface IToolImplementation
     /// </remarks>
     public ToolDefinition GetDefinition();
 
+    /// <summary>
+    /// The function this tool offers the model in the request being prepared, or null when it has
+    /// nothing to offer there.
+    /// </summary>
+    /// <remarks>
+    /// A definition is registered once, but some tools cannot say what they offer until they know
+    /// the request. Semantic Search describes the data sources of the chat, and only those the
+    /// provider may search; without any of them, it has nothing to offer, and the model should not
+    /// learn about a tool which can only come back empty. Most tools offer the same function every
+    /// time, which is what this returns unless a tool says otherwise.<br/><br/>
+    /// Asked for every request, after every check of ToolRegistry has passed, so it only decides
+    /// what an allowed tool offers, never whether it is allowed. For the same reason, only the
+    /// description and the parameters of what comes back are used: the function keeps the name and
+    /// the strict mode it was registered with, and the definition everything else. A tool which
+    /// throws is left out of the request.<br/><br/>
+    /// Keep the result stable while the chat stays the same, down to the order of what it lists:
+    /// the providers cache a request from its beginning, and the tools are part of that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The function to offer, or null to leave the tool out of this request.</returns>
+    public ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult<ToolFunctionDefinition?>(definition.Function);
+
+    /// <summary>
+    /// The instructions this tool adds to the system prompt of the request being prepared.
+    /// </summary>
+    /// <remarks>
+    /// Most tools always say the same, which is what this returns unless a tool says otherwise. A
+    /// tool whose rules follow one of its settings words them here instead: Read Web Page tells the
+    /// model whether it may choose web addresses itself, depending on its free address choice.
+    /// Everything outside a request keeps reading the registered instructions, the token count
+    /// below the message field among them, so those should describe the tool's default.<br/><br/>
+    /// Asked the way ResolveFunctionAsync is: for every request, after every check of ToolRegistry
+    /// has passed, and only when the tool has a function to offer. A tool which throws is left out
+    /// of the request. Keep the result stable while the chat and the settings stay the same: the
+    /// providers cache a request from its beginning, and the system prompt is that beginning.
+    /// </remarks>
+    /// <param name="definition">The definition as registered.</param>
+    /// <param name="context">The request being prepared.</param>
+    /// <param name="token">The cancellation token of the request.</param>
+    /// <returns>The instructions to add to the system prompt, or an empty text for none.</returns>
+    public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default) =>
+        ValueTask.FromResult(definition.SystemPromptInstructions);
+
     public string Icon => Icons.Material.Filled.Build;
+
+    /// <summary>
+    /// Whether this tool exists in this installation right now.
+    /// </summary>
+    /// <remarks>
+    /// For a tool which belongs to a preview feature. While the preview is switched off, the tool
+    /// appears nowhere, neither in a selection nor in the settings, and no request offers it. A
+    /// selection which names it keeps it all the same, so it comes back with the preview. Asked
+    /// whenever tools are listed, so it has to be cheap.
+    /// </remarks>
+    public bool IsAvailable => true;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
 
@@ -36,6 +93,29 @@ public interface IToolImplementation
     /// can act on for them.
     /// </remarks>
     public bool ReturnsUntrustedExternalContent => false;
+
+    /// <summary>
+    /// Where this tool sends data when it runs, beyond AI Studio and the provider of the model.
+    /// </summary>
+    /// <remarks>
+    /// A chat which read from a mailbox keeps the tools whose data goes further than the mailbox
+    /// allows from being offered and from running, see ToolSelectionRules.IsOutboundDataAllowed.
+    /// A tool which says nothing counts as one which contacts addresses the model chooses, the most
+    /// open kind: a tool which forgot to say, or one written by a plugin author, is kept back rather
+    /// than let through.
+    /// </remarks>
+    public ToolOutboundData OutboundData => ToolOutboundData.MODEL_CHOSEN_ADDRESSES;
+
+    /// <summary>
+    /// Whether this tool keeps to the outbound data restriction of the chat itself.
+    /// </summary>
+    /// <remarks>
+    /// For a tool whose kind of outbound data would be kept back, but which can tell allowed
+    /// destinations from others on its own. Such a tool is offered whatever the chat demands, and
+    /// it has to read ToolExecutionContext.ChatThread.RequiredOutboundDataRestriction on every call
+    /// and refuse what goes too far.
+    /// </remarks>
+    public bool EnforcesOutboundDataRestriction => false;
 
     public string GetDisplayName() => TB("Tool");
 

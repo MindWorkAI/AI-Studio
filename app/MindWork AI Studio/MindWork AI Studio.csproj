@@ -17,6 +17,16 @@
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract> <!-- Include native libraries for self-extract -->
         <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> <!-- Generate embedded files manifest -->
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> <!-- Restore packages with lock file; needed for caching NuGet packages-->
+
+        <!--
+            SelfContained makes the SDK pick the RID of the machine which runs the restore, and the lock file
+            records that RID. Without a fixed list, a restore on any other platform rewrites the lock file.
+            Hence, we list all six RIDs we ship, so that the lock file stays the same everywhere. When we add a
+            platform, add its RID here as well. The price: each restore downloads the runtime packs of all six
+            platforms. Please note that `dotnet restore -r` replaces this list; use a plain `dotnet restore` or
+            `dotnet publish -r` instead.
+        -->
+        <RuntimeIdentifiers>osx-arm64;osx-x64;linux-x64;linux-arm64;win-x64;win-arm64</RuntimeIdentifiers>
         
         <PublishTrimmed>true</PublishTrimmed> <!-- Publish with trimming, to reduce size -->
         <TrimMode>partial</TrimMode> <!-- Trim unused assemblies, but keep all assemblies referenced by the project -->
@@ -62,14 +72,23 @@
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.19" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.19" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.19" />
+      <PackageReference Include="MailKit" Version="4.18.1" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.21" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.21" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.21" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
       <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
-      <PackageReference Include="LuaCSharp" Version="0.5.6" />
+      <PackageReference Include="LuaCSharp" Version="0.5.7" />
+
+      <!--
+          Not used by AI Studio directly: MailKit pulls it in through MimeKit, which asks for 10.0.0. That
+          version is affected by CVE-2026-70162 and CVE-2026-84008 (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx),
+          fixed in 10.0.13. The package wins over the older copy within the .NET runtime, so upgrading .NET
+          alone does not help. Remove this reference once MimeKit itself asks for 10.0.13 or newer.
+      -->
+      <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     </ItemGroup>
 
     <ItemGroup>
@@ -109,9 +128,15 @@
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
-            <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
-            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
-            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaVectorStoreVersion>
+
+            <!--
+                The architecture is the one the app is built for. The build script and the pipeline pass it to
+                dotnet publish; in any other build, SelfContained makes the SDK pick the RID of this machine.
+            -->
+            <MetaArchitecture>$(RuntimeIdentifier)</MetaArchitecture>
+
+            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaPdfiumVersion>
+            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaVectorStoreVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             

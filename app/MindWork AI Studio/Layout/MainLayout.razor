@@ -32,7 +32,7 @@
                                 <MudNavMenu>
                                     <MudTooltip Text="@this.EmbeddingNavigationTooltip" Placement="Placement.Right">
                                         <MudNavLink Href="@this.embeddingItem.Path" Match="@(this.embeddingItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@this.embeddingItem.Icon" Style="@this.embeddingItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
-                                            @T("Data sync")
+                                            @this.embeddingItem.Name
                                         </MudNavLink>
                                     </MudTooltip>
                                 </MudNavMenu>

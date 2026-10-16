@@ -23,9 +23,10 @@ using Provider = AIStudio.Settings.Provider;
 /// thousand-page PDF on each keystroke would be unusable. The conversation so far is remembered the
 /// same way, so typing measures the sentence being typed rather than the whole chat again.
 ///
-/// The numbers are estimates and are shown as such. Unless somebody configured the model's own
-/// tokenizer for their provider, the built-in one does the counting, and two tokenizers disagree by
-/// a few percent on prose and by more than that on code.
+/// The numbers are estimates and are shown as such, unless a provider reported what the
+/// conversation so far cost. Unless somebody configured the model's own tokenizer for their
+/// provider, the built-in one does the counting, and two tokenizers disagree by a few percent on
+/// prose and by more than that on code.
 /// </remarks>
 public sealed class ConversationTokenCounter(RustService rustService, ILogger<ConversationTokenCounter> logger)
 {
@@ -56,8 +57,8 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
     /// What the texts which were still being written cost during the previous count.
     /// </summary>
     /// <remarks>
-    /// One run's worth, replaced by the next -- so at most the draft and the answer being streamed
-    /// stand in here. It exists for the case where nothing about them changed: a draft somebody left
+    /// One run's worth, replaced by the next -- so at most the draft, the answer being streamed, and
+    /// the tool conversation of the running request stand in here. It exists for the case where nothing about them changed: a draft somebody left
     /// standing while they think would otherwise be measured again on every heartbeat, and that is a
     /// call to the tokenizer for an answer we already have.
     /// </remarks>
@@ -68,9 +69,14 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
     /// </summary>
     /// <param name="provider">The configured provider, which decides both the tokenizer and the window.</param>
     /// <param name="parts">What the conversation would send, collected beforehand.</param>
+    /// <param name="reported">
+    /// What a provider counted for the request behind the last answer, where its report still
+    /// describes this conversation. Together with that answer, it replaces everything the app would
+    /// otherwise estimate about the conversation so far.
+    /// </param>
     /// <param name="token">Ends the counting when nobody needs the answer anymore.</param>
     /// <returns>What the conversation costs, or that nothing could be counted.</returns>
-    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, CancellationToken token = default)
+    public async Task<ConversationTokens> CountAsync(Provider provider, ConversationParts parts, ReportedHistory reported, CancellationToken token = default)
     {
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             return ConversationTokens.UNAVAILABLE;
@@ -78,30 +84,47 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
         var profile = provider.GetModelProfile();
         var previouslyGrowing = this.stillGrowing;
         var growing = new Dictionary<string, int>(StringComparer.Ordinal);
-        var tokens = 0;
+        var historyTokens = 0;
+        var toolTokens = 0;
+        int draftTokens;
 
         try
         {
-            foreach (var text in parts.Texts)
-                tokens += await this.CountTextAsync(provider, text, token);
-
-            //
-            // A text which is still being written is measured whole every time rather than by its
-            // increment. Two counts meet at a token boundary, and adding up the pieces drifts
-            // further from the truth with every three seconds an answer goes on.
-            //
-            foreach (var text in parts.GrowingTexts)
+            if (reported.IsKnown)
             {
-                var key = Key(provider, text);
-                if (!previouslyGrowing.TryGetValue(key, out var known))
-                    known = await this.MeasureAsync(provider, text, token);
+                //
+                // Where a provider has said what this conversation cost, that number replaces the
+                // estimate of everything but the last answer. It is the exact one of the two, and
+                // it covers the same ground: the system prompt, the tools, every message which has
+                // been sent, and their attachments -- which is why none of those has to be read.
+                //
+                // The last answer is counted as the text it is sent as, not taken from the report:
+                // ReportedHistory says why the provider's number for it is the wrong one. It is a
+                // finished text of the conversation, so the cache mostly has it already.
+                //
+                historyTokens = reported.PromptTokens + await this.CountTextAsync(provider, reported.LastAnswer, token);
+            }
+            else
+            {
+                foreach (var text in parts.Texts)
+                    historyTokens += await this.CountTextAsync(provider, text, token);
 
-                growing[key] = known;
-                tokens += known;
+                foreach (var text in parts.GrowingTexts)
+                    historyTokens += await this.MeasureGrowingAsync(provider, text, previouslyGrowing, growing, token);
+
+                foreach (var text in parts.ToolConversation)
+                    toolTokens += await this.MeasureGrowingAsync(provider, text, previouslyGrowing, growing, token);
+
+                foreach (var document in parts.Documents)
+                    historyTokens += await this.CountDocumentAsync(provider, document, token);
+
+                // The tools' share is part of the conversation, and it is named as a share of it:
+                historyTokens += toolTokens;
             }
 
-            foreach (var document in parts.Documents)
-                tokens += await this.CountDocumentAsync(provider, document, token);
+            draftTokens = await this.MeasureGrowingAsync(provider, parts.DraftText, previouslyGrowing, growing, token);
+            foreach (var document in parts.DraftDocuments)
+                draftTokens += await this.CountDocumentAsync(provider, document, token);
         }
         catch (OperationCanceledException)
         {
@@ -114,16 +137,46 @@ public sealed class ConversationTokenCounter(RustService rustService, ILogger<Co
         }
 
         this.stillGrowing = growing;
-
         return new()
         {
             IsKnown = true,
-            Tokens = tokens,
+            HistoryTokens = historyTokens,
+            ToolTokens = toolTokens,
+            DraftTokens = draftTokens,
             IsEstimate = string.IsNullOrWhiteSpace(provider.TokenizerPath),
+            HistoryIsReported = reported.IsKnown,
             Window = profile.Context,
-            UncountedImages = parts.Images,
+            Images = parts.Images + parts.DraftImages,
+            DraftImages = parts.DraftImages,
             ImageLimits = profile.Images,
         };
+    }
+
+    /// <summary>
+    /// Measures a text which is still being written, unless it has not changed since the last count.
+    /// </summary>
+    /// <remarks>
+    /// A text which is still being written is measured whole every time rather than by its
+    /// increment. Two counts meet at a token boundary, and adding up the pieces drifts further from
+    /// the truth with every three seconds an answer goes on.
+    /// </remarks>
+    /// <param name="provider">The configured provider, which decides the tokenizer.</param>
+    /// <param name="text">The text to measure.</param>
+    /// <param name="previouslyGrowing">What the previous count measured.</param>
+    /// <param name="growing">What this count measured, for the next one.</param>
+    /// <param name="token">Ends the counting when nobody needs the answer anymore.</param>
+    /// <returns>The tokens of the text.</returns>
+    private async Task<int> MeasureGrowingAsync(Provider provider, string text, IReadOnlyDictionary<string, int> previouslyGrowing, Dictionary<string, int> growing, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return 0;
+
+        var key = Key(provider, text);
+        if (!previouslyGrowing.TryGetValue(key, out var known))
+            known = await this.MeasureAsync(provider, text, token);
+
+        growing[key] = known;
+        return known;
     }
 
     /// <summary>

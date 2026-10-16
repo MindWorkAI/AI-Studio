@@ -144,7 +144,9 @@ public sealed class ChatThreadRollbackTests
             ],
         };
 
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, "5c9e2a7b-3f1d-4e8a-b6c4-2d7f9a1e3b5c");
         thread.RequireProviderConfidence(ConfidenceLevel.HIGH);
+        thread.RequireOutboundDataRestriction(restriction);
 
         thread.RollBackTo(answer.Content!);
 
@@ -152,6 +154,7 @@ public sealed class ChatThreadRollbackTests
         {
             Assert.That(thread.DataSecurity, Is.EqualTo(DataSourceSecurity.SELF_HOSTED), "The confidential data was seen by this chat, so no cloud provider may continue it.");
             Assert.That(thread.RequiredProviderConfidence, Is.EqualTo(ConfidenceLevel.HIGH), "The confidence the data demanded stays, although the message which brought it in is gone.");
+            Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(restriction), "The mail content was read by this chat, so it may still carry it out no further than before.");
         });
     }
 

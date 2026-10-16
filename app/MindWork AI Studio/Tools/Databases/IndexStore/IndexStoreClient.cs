@@ -2,7 +2,7 @@ using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Databases.IndexStore;
 
-public abstract class IndexStoreClient(string name, string path) : DatabaseClient(name, path)
+public abstract partial class IndexStoreClient(string name, string path) : DatabaseClient(name, path)
 {
     public abstract Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token);
 
@@ -53,4 +53,16 @@ public abstract class IndexStoreClient(string name, string path) : DatabaseClien
     /// <param name="token">The cancellation token.</param>
     /// <returns>The number of chunks, or null when the index cannot tell. Null and zero mean different things here.</returns>
     public abstract Task<long?> GetTotalChunkCountAsync(CancellationToken token);
+
+    /// <summary>
+    /// Writes a consistent copy of the index into the given directory, e.g., for a backup.
+    /// </summary>
+    /// <remarks>
+    /// Pause the indexing first, cf. DataSourceEmbeddingService.PauseIndexingAsync. The copy is
+    /// consistent on its own, but the vector stores copied for the same backup have to fit to it.
+    /// </remarks>
+    /// <param name="targetDirectory">Where to write the copy. A copy written there before is replaced.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The path of the copy.</returns>
+    public abstract Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token);
 }

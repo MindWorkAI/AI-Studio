@@ -321,8 +321,25 @@ public record ChatTemplate(
             DisableDataSources = disableDataSources,
             AutomaticDataSourceSelection = automaticSelection,
             AutomaticValidation = automaticValidation,
+            RetrievalMode = ParseRetrievalMode(idx, optionsTable),
             PreselectedDataSourceIds = ParsePreselectedDataSourceIds(idx, optionsTable),
         };
+    }
+
+    /// <remarks>
+    /// Like the other options, a template which leaves this out does not take it from the chat
+    /// defaults: it gets semantic search, the default everywhere. Only a name counts, see EnumNames.
+    /// </remarks>
+    private static DataSourceRetrievalMode ParseRetrievalMode(int idx, LuaTable optionsTable)
+    {
+        if (!optionsTable.TryGetValue("RetrievalMode", out var retrievalModeValue))
+            return DataSourceRetrievalMode.SEMANTIC_SEARCH;
+
+        if (retrievalModeValue.TryRead<string>(out var retrievalModeText) && EnumNames.TryParse<DataSourceRetrievalMode>(retrievalModeText, out var retrievalMode))
+            return retrievalMode;
+
+        LOGGER.LogWarning("The RetrievalMode of chat template {IdxChatTemplate} is not one of {RetrievalModes}. The template uses semantic search instead.", idx, string.Join(", ", Enum.GetNames<DataSourceRetrievalMode>()));
+        return DataSourceRetrievalMode.SEMANTIC_SEARCH;
     }
 
     /// <remarks>
@@ -404,11 +421,7 @@ public record ChatTemplate(
         }
 
         var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? pluginRoot
-            : pluginRoot + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!combinedPath.StartsWith(pluginRootWithSeparator, comparison))
+        if (!PathTools.IsInsideDirectory(pluginRoot, combinedPath))
         {
             LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} points outside of the plugin folder and will be ignored.", attachmentNum, idx);
             return false;
@@ -603,6 +616,7 @@ public record ChatTemplate(
         builder.AppendLine($"""        ["DisableDataSources"] = {options.DisableDataSources.ToString().ToLowerInvariant()},""");
         builder.AppendLine($"""        ["AutomaticDataSourceSelection"] = {options.AutomaticDataSourceSelection.ToString().ToLowerInvariant()},""");
         builder.AppendLine($"""        ["AutomaticValidation"] = {options.AutomaticValidation.ToString().ToLowerInvariant()},""");
+        builder.AppendLine($"""        ["RetrievalMode"] = "{options.RetrievalMode}",""");
 
         if (options.PreselectedDataSourceIds.Count == 0)
             builder.AppendLine("""        ["PreselectedDataSourceIds"] = {},""");

@@ -25,10 +25,16 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
     public override Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
         Task.FromException<VectorStoreEnsureResult>(this.CreateUnavailableException());
 
+    public override Task<bool> VectorStoreExists(string storeName, CancellationToken token) =>
+        Task.FromException<bool>(this.CreateUnavailableException());
+
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
     public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token) =>
+        Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
+
+    public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) =>
         Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
 
     public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
@@ -39,6 +45,12 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
 
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
+
+    public override Task<VectorStoreBackupPreparation> PrepareBackupAsync(CancellationToken token) =>
+        Task.FromException<VectorStoreBackupPreparation>(this.CreateUnavailableException());
+
+    public override Task<long> CopyStoreForBackupAsync(string backupId, string storeName, CancellationToken token) =>
+        Task.FromException<long>(this.CreateUnavailableException());
 
     private InvalidOperationException CreateUnavailableException() =>
         new(unavailableReason ?? "The vector store is not available.");

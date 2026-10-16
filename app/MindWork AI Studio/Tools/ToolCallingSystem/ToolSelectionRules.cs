@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -8,9 +9,12 @@ public static class ToolSelectionRules
     public const int MAX_TOOL_RESULT_CHARACTERS = 300_000;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
-
-    public static HashSet<string> NormalizeSelection(IEnumerable<string> selectedToolIds)
-        => selectedToolIds.ToHashSet(StringComparer.Ordinal);
+    public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
+    public const string SEMANTIC_SEARCH_TOOL_ID = "semantic_search";
+    public const string SEARCH_MAILS_TOOL_ID = "search_mails";
+    public const string READ_MAIL_TOOL_ID = "read_mail";
+    public const string COUNT_MAILS_TOOL_ID = "count_mails";
+    public const string MAILBOXES_COLLECTION_ID = "mailboxes";
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
 
@@ -49,4 +53,22 @@ public static class ToolSelectionRules
 
     public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>
         minimumToolConfidence is ConfidenceLevel.NONE || providerConfidence >= minimumToolConfidence;
+
+    /// <summary>
+    /// Whether a tool may run in a chat with this outbound data restriction.
+    /// </summary>
+    /// <remarks>
+    /// Services configured in AI Studio stay allowed on every level. Below UNRESTRICTED, both
+    /// queries to third parties and addresses the model chooses are kept back, unless the tool
+    /// keeps to the restriction itself. That is why both stricter levels decide alike here: they
+    /// differ only in what such a tool lets through. A level this version does not know is treated
+    /// like a strict one.
+    /// </remarks>
+    /// <param name="restriction">Where the chat may still send data.</param>
+    /// <param name="implementation">The tool.</param>
+    /// <returns>True when the tool may run.</returns>
+    public static bool IsOutboundDataAllowed(OutboundDataRestriction restriction, IToolImplementation implementation) =>
+        restriction is OutboundDataRestriction.UNRESTRICTED ||
+        implementation.OutboundData is ToolOutboundData.NONE or ToolOutboundData.CONFIGURED_SERVICE ||
+        implementation.EnforcesOutboundDataRestriction;
 }

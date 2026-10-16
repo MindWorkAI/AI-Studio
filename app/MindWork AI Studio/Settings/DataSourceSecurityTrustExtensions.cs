@@ -94,6 +94,33 @@ public static class DataSourceSecurityTrustExtensions
         return providerConfidenceLevel >= requiredConfidenceLevel;
     }
 
+    /// <summary>
+    /// Whether a mailbox may require this provider confidence level.
+    /// </summary>
+    /// <remarks>
+    /// Only the levels from very low to high qualify. NONE lets every provider through, cf.
+    /// AllowsDataSourceConfidenceLevel, and UNTRUSTED and UNKNOWN do almost the same: both lie at or
+    /// below the level of a provider nobody rated, so even such a provider would meet them.
+    /// </remarks>
+    public static bool IsAllowedMailboxConfidence(this ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.VERY_LOW or ConfidenceLevel.LOW or ConfidenceLevel.MODERATE or ConfidenceLevel.MEDIUM or ConfidenceLevel.HIGH;
+
+    /// <summary>
+    /// Whether a provider of this confidence level may see the content of a mailbox.
+    /// </summary>
+    /// <remarks>
+    /// Unlike AllowsDataSourceConfidenceLevel, this closes a mailbox without an allowed level to every
+    /// provider, whether it was never chosen or edited by hand in the settings file. Every provider
+    /// which sees mail content has to pass it: the chat provider, the embedding provider, and the
+    /// provider of every agent reading mails.
+    /// </remarks>
+    public static bool AllowsMailboxConfidenceLevel(this ConfidenceLevel providerConfidenceLevel, ConfidenceLevel mailboxConfidenceLevel)
+    {
+        if (!mailboxConfidenceLevel.IsAllowedMailboxConfidence())
+            return false;
+
+        return providerConfidenceLevel >= mailboxConfidenceLevel;
+    }
+
     public static ConfidenceLevel GetRequiredConfidenceLevel(this IEnumerable<IDataSource> dataSources)
     {
         var requiredConfidenceLevel = ConfidenceLevel.NONE;
@@ -124,8 +151,6 @@ public static class DataSourceSecurityTrustExtensions
     public static bool IsTrustedByConfiguration(this EmbeddingProvider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.Id, settingsManager);
 
     public static bool IsTrustedByConfiguration(this TranscriptionProvider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.Id, settingsManager);
-
-    public static bool IsTrustedByConfiguration(this IProvider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.ConfiguredProviderId, settingsManager);
 
     private static bool IsTrustedProviderId(string providerId, SettingsManager settingsManager)
     {

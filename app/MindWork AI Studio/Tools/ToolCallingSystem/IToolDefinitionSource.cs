@@ -10,6 +10,8 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// them all the same way.<br/><br/>
 /// A source is asked once while the registry is being built. Definitions do not change while the
 /// app runs; a plugin that was loaded later needs the registry rebuilt, not the source re-read.
+/// What a tool offers in a single request may still differ from its definition: the tool tailors
+/// its function to the request then, see IToolImplementation.ResolveFunctionAsync.
 /// </remarks>
 public interface IToolDefinitionSource
 {

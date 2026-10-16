@@ -63,38 +63,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         if(!requestedSecret.Success)
             yield break;
         
-        // Unfortunately, OpenAI changed the name of the system prompt based on the model.
-        // All models that start with "o" (the omni aka reasoning models), all GPT4o models,
-        // and all newer models have the system prompt named "developer". All other models
-        // have the system prompt named "system". We need to check this to get the correct
-        // system prompt.
-        //
-        // To complicate it even more: The early versions of reasoning models, which are released
-        // before the 17th of December 2024, have no system prompt at all. We need to check this
-        // as well.
-        
-        // Apply the basic rule first:
-        var systemPromptRole =
-            chatModel.Id.StartsWith('o') ||
-            chatModel.Id.StartsWith("gpt-5", StringComparison.Ordinal) ||
-            chatModel.Id.Contains("4o") ? "developer" : "system";
-        
-        // Check if the model is an early version of the reasoning models:
-        systemPromptRole = chatModel.Id switch
-        {
-            "o1-mini" => "user",
-            "o1-mini-2024-09-12" => "user",
-            "o1-preview" => "user",
-            "o1-preview-2024-09-12" => "user",
-            
-            _ => systemPromptRole,
-        };
-
         // Read the model capabilities. Through the settings provider, so that the user's expert
         // capability overrides apply:
         var providerSettings = this.CreateSettingsProvider(chatModel);
         var modelProfile = providerSettings.GetModelProfile();
-        
+
+        // OpenAI changed the role of the system prompt from one generation to the next, and the
+        // early reasoning models take no system prompt at all. Which role a model takes is stated
+        // by the OpenAI families in Models/OpenAI:
+        var systemPromptRole = modelProfile.SystemPromptRole.ToOpenAIRole();
+
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelProfile.Has(Capability.RESPONSES_API);
         
@@ -109,18 +87,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
 
-        //
-        // The provider-native web search is held to the same confidence the local web search tool
-        // asks for: to the user it is the same act, whoever performs the search.
-        //
-        var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
-        var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
-                                 ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
-        IList<object> providerTools = modelProfile.Has(Capability.WEB_SEARCH) && isWebSearchAllowed
-            ? [ ProviderTools.WEB_SEARCH ]
-            : [];
-        
-        
         // Parse the API parameters:
         var additionalApiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
@@ -168,6 +134,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                },
                                systemPromptRole: systemPromptRole,
                                requestPath: "chat/completions",
+
+                               //
+                               // OpenAI binds a strict function's arguments to its schema -- read on
+                               // 2026-09-24 at https://developers.openai.com/api/docs/guides/function-calling.
+                               // Most other hosts of this API do not: Groq applies strict mode to
+                               // response formats only (https://console.groq.com/docs/structured-outputs,
+                               // same day) and merely validates a tool call afterward, so it rejects
+                               // every call that leaves out an argument the strict schema requires:
+                               //
+                               enforcesStrictToolSchemas: true,
                                token: token))
                 yield return content;
 
@@ -181,11 +157,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
             ? []
             : await toolRegistry.GetRunnableToolsAsync(
-                providerSettings,
-                chatThread.RuntimeComponent,
+                new ToolResolutionContext
+                {
+                    Provider = providerSettings,
+                    Component = chatThread.RuntimeComponent,
+                    ProviderConfidence = providerConfidence,
+                    ChatThread = chatThread,
+                },
                 chatThread.RuntimeSelectedToolIds,
-                providerConfidence,
-                chatThread.MayRunTools(settingsManager));
+                chatThread.MayRunTools(settingsManager),
+                token);
 
         var toolAwareDefinitions = toolExecutor is null
             ? Enumerable.Empty<ToolDefinition>()
@@ -227,7 +208,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 chatModel,
                 baseInput,
                 additionalApiParameters,
-                providerTools,
                 runnableTools,
                 (requestDto, requestToken) => this.StreamResponsesRequest(requestDto, requestedSecret, requestToken));
 
@@ -250,9 +230,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             yield break;
         }
 
-        if (runnableTools.Count > 0)
-            providerTools = [];
-        
         //
         // Create the request: either for the Responses API or the Chat Completion API
         //
@@ -284,10 +261,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 
                 // We do not want to store any data on OpenAI's servers:
                 Store = false,
-                
-                // Tools we want to use:
-                Tools = providerTools,
-                
+
                 // Additional API parameters:
                 AdditionalApiParameters = additionalApiParameters
                 
@@ -354,7 +328,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
-    /// <inhertidoc />
+    /// <inheritdoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
         var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);

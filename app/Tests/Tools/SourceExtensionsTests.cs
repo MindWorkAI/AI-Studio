@@ -230,6 +230,38 @@ public sealed class SourceExtensionsTests
         Assert.That(source.TryGetDocumentLocation(out _), Is.False, "A web source is opened by the browser and has no path to hand to a program.");
     }
 
+    [Test]
+    public void AMailIsToldApartByTheAddressItsToolGaveIt()
+    {
+        ISource mail = new Source("Mail: Budget — Alice, 2026-09-10", SourceExtensions.CreateMailSourceUrl("9e4b2c7a-1d3f-4a8e-b6c5-2f0d7e1b3a64", "5e2a9c1f-7b3d-4f8e-a6c4-1d9b0e7f3a52"), SourceOrigin.TOOL);
+        ISource webPage = new Source("Article", "https://example.org/mailbox/article", SourceOrigin.TOOL);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(mail.IsMailSource(), Is.True);
+            Assert.That(mail.TryGetDocumentLocation(out _), Is.False, "A mail is no file a program could open.");
+            Assert.That(webPage.IsMailSource(), Is.False, "What decides is the scheme, not a word somewhere in the address.");
+        });
+    }
+
+    [Test]
+    public void AMailIsNamedWithoutALinkThatLeadsNowhere()
+    {
+        IList<Source> sources =
+        [
+            new("Mail: Budget [draft] — Alice, 2026-09-10", SourceExtensions.CreateMailSourceUrl("9e4b2c7a-1d3f-4a8e-b6c5-2f0d7e1b3a64", "5e2a9c1f-7b3d-4f8e-a6c4-1d9b0e7f3a52"), SourceOrigin.TOOL),
+            new("Search result", "https://example.org/search", SourceOrigin.TOOL),
+        ];
+
+        var entries = EntriesOf(sources.ToMarkdown());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(entries[0], Is.EqualTo(@"- [1] Mail: Budget \[draft\] — Alice, 2026-09-10"), "Exported or copied, a mailbox address would be a link nobody can follow.");
+            Assert.That(entries[1], Is.EqualTo("- [2] [Search result](<https://example.org/search>)"), "Every other source keeps its link.");
+        });
+    }
+
     /// <summary>
     /// Reads where the link of a source points, and fails the test when it points nowhere.
     /// </summary>

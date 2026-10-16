@@ -1,4 +1,4 @@
-use crate::api_token::APIToken;
+use axum::http::StatusCode;
 use axum::Json;
 use log::{debug, error, info, warn};
 use serde::Serialize;
@@ -57,7 +57,7 @@ static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 static INSTALLATION_KIND: OnceLock<InstallationKind> = OnceLock::new();
 
 /// Returns the config directory.
-pub async fn get_config_directory(_token: APIToken) -> String {
+pub async fn get_config_directory() -> String {
     match CONFIG_DIRECTORY.get() {
         Some(config_directory) => config_directory.clone(),
         None => String::from(""),
@@ -65,7 +65,7 @@ pub async fn get_config_directory(_token: APIToken) -> String {
 }
 
 /// Returns the data directory.
-pub async fn get_data_directory(_token: APIToken) -> String {
+pub async fn get_data_directory() -> String {
     match DATA_DIRECTORY.get() {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
@@ -73,7 +73,7 @@ pub async fn get_data_directory(_token: APIToken) -> String {
 }
 
 /// Returns the current user's username.
-pub async fn read_user_name(_token: APIToken) -> String {
+pub async fn read_user_name() -> String {
     whoami::username().unwrap_or_else(|e| {
         error!("Failed to read the current OS username: {e}.");
         String::new()
@@ -128,7 +128,7 @@ pub struct RuntimeInfo {
     pub installation_kind: InstallationKind,
 }
 
-pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
+pub async fn get_runtime_info() -> Json<RuntimeInfo> {
     Json(RuntimeInfo {
         working_directory: env::current_dir()
             .map(|path| path.to_string_lossy().into_owned())
@@ -544,7 +544,7 @@ fn detect_user_language() -> (String, LanguageDetectionSource) {
     )
 }
 
-pub async fn read_user_language(_token: APIToken) -> String {
+pub async fn read_user_language() -> String {
     USER_LANGUAGE
         .get_or_init(|| {
             let (user_language, source) = detect_user_language();
@@ -641,35 +641,35 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-pub async fn read_enterprise_env_config_id(_token: APIToken) -> String {
-    debug!("Trying to read the effective enterprise configuration ID.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.id)
-        .unwrap_or_default()
-}
-
-pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
-    debug!("Trying to read the effective enterprise configuration server URL.");
-    resolve_effective_enterprise_config_source()
-        .configs
-        .into_iter()
-        .next()
-        .map(|config| config.server_url)
-        .unwrap_or_default()
-}
-
-pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_encryption_secret() -> Result<String, (StatusCode, String)> {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
-    resolve_effective_enterprise_secret_source().encryption_secret
+    read_enterprise_sources(|| resolve_effective_enterprise_secret_source().encryption_secret).await
 }
 
 /// Returns all enterprise configurations from the effective source.
-pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+pub async fn read_enterprise_configs() -> Result<Json<Vec<EnterpriseConfig>>, (StatusCode, String)> {
     info!("Trying to read the effective enterprise configurations.");
-    Json(resolve_effective_enterprise_config_source().configs)
+    read_enterprise_sources(|| Json(resolve_effective_enterprise_config_source().configs)).await
+}
+
+/// Reads the enterprise sources on the blocking pool.
+///
+/// Every call reads the policy files and, on Windows, the registry again. That is quick most of
+/// the time, but a slow disk must not hold up every other call of the app, because they all share
+/// one HTTP/2 connection.
+///
+/// A failure is answered as an error, never as an empty value: the app would read an empty value
+/// as "no configuration of your organization" and act on it.
+async fn read_enterprise_sources<T, F>(read: F) -> Result<T, (StatusCode, String)>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    tokio::task::spawn_blocking(read).await.map_err(|error| {
+        let issue = format!("The enterprise configuration worker failed: {error}");
+        error!("{issue}");
+        (StatusCode::INTERNAL_SERVER_ERROR, issue)
+    })
 }
 
 pub fn resolve_external_http_custom_root_certificate_policy() -> ExternalHttpCustomRootCertificatePolicy {
@@ -859,11 +859,18 @@ fn enterprise_env_key_equals(env_name: &str, expected: &str) -> bool {
 
 #[cfg(target_os = "windows")]
 fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
-    if env_name.len() < prefix.len() {
-        return None;
-    }
+    enterprise_env_key_suffix_ignoring_case(env_name, prefix)
+}
 
-    let (raw_prefix, suffix) = env_name.split_at(prefix.len());
+/// Returns the slot suffix of an environment variable name, comparing the prefix without
+/// regard to case, the way Windows compares the names of environment variables.
+///
+/// Every environment variable passes through here, whatever characters its name contains.
+/// Where the length of the prefix ends inside one of them, the name cannot start with the
+/// prefix, and splitting it there would panic.
+#[cfg(any(target_os = "windows", test))]
+fn enterprise_env_key_suffix_ignoring_case<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
+    let (raw_prefix, suffix) = env_name.split_at_checked(prefix.len())?;
     if raw_prefix.eq_ignore_ascii_case(prefix) {
         normalize_enterprise_slot_suffix(suffix)
     } else {
@@ -1368,8 +1375,9 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        directory_is_writable, enterprise_environment_key_name,
-        enterprise_policy_file_slot_suffix, has_managed_installation_marker,
+        directory_is_writable, enterprise_env_key_suffix_ignoring_case,
+        enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
+        has_managed_installation_marker,
         is_windows_machine_wide_installation, is_windows_per_user_installation,
         load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
@@ -1378,6 +1386,7 @@ mod tests {
         select_effective_enterprise_secret_source, update_target_installation_kind,
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
         ExternalHttpCustomRootCertificatePolicy, InstallationKind, LinuxPackageType,
+        ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX,
         MANAGED_INSTALLATION_MARKER_FILE_NAME,
     };
     use std::collections::HashMap;
@@ -1624,6 +1633,33 @@ mod tests {
             enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_100000"),
             None
         );
+    }
+
+    #[test]
+    fn enterprise_env_key_suffix_ignoring_case_accepts_any_case() {
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("mindwork_ai_studio_enterprise_config_id_10503", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            Some("10503")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("Mindwork_AI_Studio_Enterprise_Config_Server_URL_00000", ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX),
+            Some("00000")
+        );
+        assert_eq!(
+            enterprise_env_key_suffix_ignoring_case("MINDWORK_AI_STUDIO", ENTERPRISE_ENV_CONFIG_ID_PREFIX),
+            None
+        );
+    }
+
+    #[test]
+    fn enterprise_env_key_suffix_ignoring_case_skips_names_where_the_prefix_ends_inside_a_character() {
+        for prefix in [ENTERPRISE_ENV_CONFIG_ID_PREFIX, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX] {
+            // Every "Ä" takes two bytes, and both prefixes are an odd number of bytes long:
+            let name = "Ä".repeat(prefix.len());
+            assert!(!name.is_char_boundary(prefix.len()));
+
+            assert_eq!(enterprise_env_key_suffix_ignoring_case(&name, prefix), None);
+        }
     }
 
     #[test]
