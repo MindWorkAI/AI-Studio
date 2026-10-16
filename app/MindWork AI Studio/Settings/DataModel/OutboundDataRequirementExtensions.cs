@@ -21,8 +21,8 @@ public static class OutboundDataRequirementExtensions
     public static string GetToolBlockedMessage(this OutboundDataRequirement requirement, Data settings) => requirement.Origin switch
     {
         OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
-        OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat read pages from your Confluence wiki while the setting 'Where a chat may send data after a Confluence search' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
-        OutboundDataOrigin.PRIVATE_WEB_PAGE => string.Format(TB("This chat read a private web page on '{0}' while the setting 'Where a chat may send data after reading a private web page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Reference, requirement.Restriction.GetName()),
+        OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
+        OutboundDataOrigin.INTERNAL_WEB_PAGE => string.Format(TB("This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Reference, requirement.Restriction.GetName()),
 
         _ => string.Format(TB("This chat read internal content while the chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
     };

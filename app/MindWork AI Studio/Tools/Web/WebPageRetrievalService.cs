@@ -16,6 +16,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
     {
         var triedOsSso = false;
         var requiredProviderConfidence = ConfidenceLevel.NONE;
+        var lastAddressIsNonPublic = false;
 
         // Always overwritten: the media type is validated before the body is read, so no page
         // arrives without the check having decided what it is.
@@ -29,7 +30,10 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                 async (candidateUrl, validationToken) =>
                 {
                     var addresses = await ResolveValidatedUrlAddressesAsync(candidateUrl, options, validationToken);
-                    if (addresses.Any(IsNonPublicAddress))
+                    // Overwritten with every request, so it holds what the last one reached, the
+                    // one which returned the page:
+                    lastAddressIsNonPublic = addresses.Any(IsNonPublicAddress);
+                    if (lastAddressIsNonPublic)
                         requiredProviderConfidence = ConfidenceLevel.HIGH;
 
                     return addresses;
@@ -76,6 +80,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             },
             RetrievedAtUtc = DateTimeOffset.UtcNow,
             RequiredProviderConfidence = requiredProviderConfidence,
+            ReachedNonPublicAddress = lastAddressIsNonPublic,
         };
     }
 

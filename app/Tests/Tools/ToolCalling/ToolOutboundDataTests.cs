@@ -172,9 +172,9 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
     }
 
     [Test]
-    public void APrivateWebPageIsNamedByItsHost()
+    public void AnInternalWebPageIsNamedByItsHost()
     {
-        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.PRIVATE_WEB_PAGE, "intranet.example.org");
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.INTERNAL_WEB_PAGE, "intranet.example.org");
         var message = requirement.GetToolBlockedMessage(new Data());
 
         Assert.Multiple(() =>

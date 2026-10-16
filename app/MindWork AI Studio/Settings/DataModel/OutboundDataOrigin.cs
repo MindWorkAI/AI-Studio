@@ -15,12 +15,13 @@ public enum OutboundDataOrigin
     MAILBOX = 0,
 
     /// <summary>
-    /// The configured Confluence wiki.
+    /// A search of the configured Confluence wiki.
     /// </summary>
     CONFLUENCE_WIKI,
 
     /// <summary>
-    /// A web page on a private or otherwise non-public host, such as one in the intranet or behind a VPN.
+    /// An internal web page: one read from a private or otherwise non-public address, such as one
+    /// in the intranet or behind a VPN, or a page of the configured wiki, whatever its address.
     /// </summary>
-    PRIVATE_WEB_PAGE,
+    INTERNAL_WEB_PAGE,
 }

@@ -15,9 +15,11 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// <remarks>
 /// What the wiki returns is internal to the organization. A web search or an address the model
 /// writes itself would carry it to a third party, so a search restricts the chat as a mailbox
-/// does. By default, the chat keeps the links from the chat and the wiki itself, and an
-/// organization can tighten that to the wiki alone. The search itself needs a real Confluence and
-/// is left to a manual test; these tests start from what a successful search demands.
+/// does. The level is the one Read Web Page applies to every internal page, so a search and the
+/// wiki pages opened after it restrict the chat alike. By default, the chat keeps the links from
+/// the chat and the wiki itself, and an organization can tighten that to the wiki alone. The
+/// search itself needs a real Confluence and is left to a manual test; these tests start from what
+/// a successful search demands.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -31,38 +33,22 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
     private static readonly Uri WIKI_URL = new(WIKI);
 
     [Test]
-    public void ASearchRestrictsTheChatToLinksFromTheChatByDefault()
+    public async Task ASearchRestrictsTheChatToLinksFromTheChatByDefault()
     {
-        var requirement = ConfluenceSearchTool.GetOutboundDataRequirement(new Dictionary<string, string>());
+        var requirement = ConfluenceSearchTool.GetOutboundDataRequirement(await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(this.CreateToolSettingsService()));
         Assert.That(requirement, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty)), "The chat names the wiki, so the user learns why web search is gone.");
     }
 
-    [TestCase(nameof(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES)]
-    [TestCase(nameof(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
-    [TestCase(nameof(OutboundDataRestriction.UNRESTRICTED), OutboundDataRestriction.UNRESTRICTED)]
-    [TestCase("   ", OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
-    public void ASearchTakesTheConfiguredLevel(string configuredValue, OutboundDataRestriction expected)
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES)]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)]
+    [TestCase(OutboundDataRestriction.UNRESTRICTED)]
+    public async Task ASearchTakesTheLevelOfInternalPages(OutboundDataRestriction configured)
     {
-        var requirement = ConfluenceSearchTool.GetOutboundDataRequirement(Settings(configuredValue));
-        Assert.That(requirement.Restriction, Is.EqualTo(expected));
-    }
+        this.SettingsManager.ConfigurationData.Tools.Settings[ToolSelectionRules.READ_WEB_PAGE_TOOL_ID] = new() { ["internalPageOutboundDataRestriction"] = configured.ToString() };
 
-    [TestCase("ONLY_LINKS")]
-    [TestCase("1")]
-    [TestCase("UNRESTRICTED, ONLY_LINKS_FROM_CHAT")]
-    public async Task AValueWhichNamesNoLevelIsReportedAndCountsAsStrict(string configuredValue)
-    {
-        var tool = new ConfluenceSearchTool(null!, null!);
-        var settings = Settings(configuredValue);
-        settings["baseUrl"] = WIKI;
+        var restriction = await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(this.CreateToolSettingsService());
 
-        var state = await tool.ValidateConfigurationAsync(tool.GetDefinition(), settings);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(state?.IsConfigured, Is.False, "Guessing would decide on the organization's behalf where wiki content may go.");
-            Assert.That(ConfluenceSearchTool.GetOutboundDataRequirement(settings).Restriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), "Should the tool run anyway, a level guessed too loosely would let wiki content out.");
-        });
+        Assert.That(restriction, Is.EqualTo(configured), "One setting of Read Web Page decides for the search and for the wiki pages opened after it.");
     }
 
     [Test]
@@ -118,14 +104,12 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
     [TestCase(CHOSEN_BY_THE_MODEL, false)]
     public void AfterASearchForConfiguredServicesOnlyOnlyTheWikiIsRead(string address, bool expectedAllowed)
     {
-        var chat = ChatAfterASearch(nameof(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES));
+        var chat = ChatAfterASearch(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES);
         var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), chat.RequiredOutboundDataRestriction.Restriction, chat, WIKI_URL, out _);
         Assert.That(allowed, Is.EqualTo(expectedAllowed), "Not even an address the user pasted is read.");
     }
 
-    private static Dictionary<string, string> Settings(string outboundDataRestriction) => new() { ["outboundDataRestriction"] = outboundDataRestriction };
-
-    private static ChatThread ChatAfterASearch(string? outboundDataRestriction = null)
+    private static ChatThread ChatAfterASearch(OutboundDataRestriction internalPageRestriction = OutboundDataRestriction.ONLY_LINKS_FROM_CHAT)
     {
         var thread = new ChatThread
         {
@@ -141,7 +125,7 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
             ],
         };
 
-        thread.RequireOutboundDataRestriction(ConfluenceSearchTool.GetOutboundDataRequirement(outboundDataRestriction is null ? new Dictionary<string, string>() : Settings(outboundDataRestriction)));
+        thread.RequireOutboundDataRestriction(ConfluenceSearchTool.GetOutboundDataRequirement(internalPageRestriction));
         return thread;
     }
 }

@@ -64,9 +64,9 @@ public sealed class ChatThreadOutboundDataRestrictionTests
     {
         var thread = new ChatThread();
         thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, WORK_MAILBOX_ID));
-        thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.PRIVATE_WEB_PAGE, INTRANET_HOST));
+        thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST));
 
-        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.PRIVATE_WEB_PAGE, INTRANET_HOST)), "The level decides, not the kind of source, and the stricter source is the one to name.");
+        Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST)), "The level decides, not the kind of source, and the stricter source is the one to name.");
     }
 
     [Test]
@@ -75,7 +75,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
         var thread = new ChatThread();
         thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty));
         thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, WORK_MAILBOX_ID));
-        thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.PRIVATE_WEB_PAGE, INTRANET_HOST));
+        thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST));
 
         Assert.That(thread.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty)));
     }
@@ -102,7 +102,7 @@ public sealed class ChatThreadOutboundDataRestrictionTests
     }
 
     [TestCase(OutboundDataOrigin.CONFLUENCE_WIKI, "")]
-    [TestCase(OutboundDataOrigin.PRIVATE_WEB_PAGE, INTRANET_HOST)]
+    [TestCase(OutboundDataOrigin.INTERNAL_WEB_PAGE, INTRANET_HOST)]
     public void TheOriginSurvivesSavingTheChat(OutboundDataOrigin origin, string reference)
     {
         var thread = new ChatThread { ChatId = Guid.NewGuid() };
