@@ -81,7 +81,7 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         Assert.Multiple(() =>
         {
             Assert.That(restricted, Is.EqualTo(new[] { "wiki_search_test" }), "The configured wiki stays allowed, the web search is left out.");
-            Assert.That(unrestricted, Is.EquivalentTo(new[] { "web_search_test", "wiki_search_test" }), "A chat which read no mailbox gets every tool it selected.");
+            Assert.That(unrestricted, Is.EquivalentTo(new[] { "web_search_test", "wiki_search_test" }), "A chat which holds no internal content gets every tool it selected.");
         });
     }
 

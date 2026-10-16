@@ -62,12 +62,68 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         Assert.That(instructions.Contains("search the web before you search the wiki", StringComparison.Ordinal), Is.EqualTo(expected), "Without a restriction, the search leaves the web search in place, and the rule would only cost the model a detour.");
     }
 
-    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, true)]
-    [TestCase(OutboundDataRestriction.UNRESTRICTED, false)]
-    public void ReadWebPageSaysSoWhenAnInternalPageEndsTheWebSearch(OutboundDataRestriction internalPageRestriction, bool expected)
+    [Test]
+    public async Task TheConfluenceSearchLeavesTheOrderOutWithoutAWebSearch()
     {
-        var instructions = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.UNRESTRICTED, wiki: null, internalPageRestriction: internalPageRestriction);
+        var tool = new ConfluenceSearchTool(null!, null!, this.CreateToolSettingsService());
+
+        var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread(), ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.READ_WEB_PAGE_TOOL_ID));
+
+        Assert.That(instructions, Does.Not.Contain("web_search"), "The request does not offer the web search, so a rule about it would only confuse the model.");
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void ReadWebPageSaysSoWhenAnInternalPageEndsTheWebSearch(bool internalPageEndsWebSearch)
+    {
+        var instructions = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.UNRESTRICTED, WIKI, internalPageEndsWebSearch: internalPageEndsWebSearch);
+        Assert.That(instructions.Contains("search the web before you read such a page", StringComparison.Ordinal), Is.EqualTo(internalPageEndsWebSearch));
+    }
+
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, true, true, false, true, TestName = "An internal page of the wiki ends the web search")]
+    [TestCase(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, true, false, true, true, TestName = "An internal page on an allowed private host ends the web search")]
+    [TestCase(OutboundDataRestriction.UNRESTRICTED, true, true, true, false, TestName = "Without a restriction, an internal page leaves the web search in place")]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, false, true, true, false, TestName = "A request without a web search has none to lose")]
+    [TestCase(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, true, false, false, false, TestName = "Without a wiki and without allowed private hosts, no internal page can be read")]
+    public void ReadWebPageWarnsOnlyWhenAnInternalPageCanEndTheWebSearch(OutboundDataRestriction internalPageRestriction, bool offersWebSearch, bool hasWiki, bool hasAllowedPrivateHosts, bool expected)
+    {
+        var endsWebSearch = ReadWebPageTool.InternalPageEndsWebSearch(internalPageRestriction, offersWebSearch, hasWiki ? WIKI : null, hasAllowedPrivateHosts ? new[] { "intranet.example.org" } : null);
+        Assert.That(endsWebSearch, Is.EqualTo(expected));
+    }
+
+    [TestCase("intranet.example.org", true, true)]
+    [TestCase("intranet.example.org", false, false)]
+    [TestCase("", true, false)]
+    public async Task ARequestWarnsOfTheEndOfTheWebSearchOnlyWhenItCanHappen(string allowedPrivateHosts, bool offersWebSearch, bool expected)
+    {
+        this.SettingsManager.ConfigurationData.Tools.Settings[ToolSelectionRules.READ_WEB_PAGE_TOOL_ID] = new() { ["allowedPrivateHosts"] = allowedPrivateHosts };
+        var tool = new ReadWebPageTool(null!, null!, this.CreateToolSettingsService(), NullLogger<ReadWebPageTool>.Instance);
+        string[] candidates = offersWebSearch ? [ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, ToolSelectionRules.WEB_SEARCH_TOOL_ID] : [ToolSelectionRules.READ_WEB_PAGE_TOOL_ID];
+
+        var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread(), candidates));
+
         Assert.That(instructions.Contains("search the web before you read such a page", StringComparison.Ordinal), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public async Task EveryToolLearnsWhichOthersTheRequestMayOffer()
+    {
+        var webSearch = new TestTool(Definition("web_search_test")) { OutboundData = ToolOutboundData.THIRD_PARTY_QUERIES };
+        var wiki = new TestTool(Definition("wiki_search_test")) { OutboundData = ToolOutboundData.CONFIGURED_SERVICE };
+        var registry = this.CreateRegistry(webSearch, wiki);
+        var restrictedChat = new ChatThread();
+        restrictedChat.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty));
+
+        await registry.GetRunnableToolsAsync(this.ResolutionContext(new ChatThread()), ["web_search_test", "wiki_search_test"], mayRunTools: true);
+        var unrestricted = wiki.LastInstructionsContext?.CandidateToolIds;
+        await registry.GetRunnableToolsAsync(this.ResolutionContext(restrictedChat), ["web_search_test", "wiki_search_test"], mayRunTools: true);
+        var restricted = wiki.LastInstructionsContext?.CandidateToolIds;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(unrestricted, Is.EquivalentTo(new[] { "web_search_test", "wiki_search_test" }));
+            Assert.That(restricted, Is.EquivalentTo(new[] { "wiki_search_test" }), "The chat may no longer search the web, so no tool may tell the model to search it first.");
+        });
     }
 
     [Test]
@@ -104,7 +160,23 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
         Assert.That(instructions, Does.Contain("only reads pages on the internal hosts intranet.example.org, *.corp.example.org, whatever the rules above allow"));
     }
 
-    private ToolResolutionContext ResolutionContext(ChatThread thread)
+    [Test]
+    public void WithoutAWikiTheRulesNameNoWikiSearch()
+    {
+        var withoutWiki = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, wiki: null, ["intranet.example.org"]);
+        var withWiki = ReadWebPageTool.BuildSystemPromptInstructions(FreeAddressChoice.OFF, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, WIKI, ["intranet.example.org"]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(withoutWiki, Does.Contain("only reads pages on the internal hosts intranet.example.org whose URL appears word for word in this conversation, and refuses every other URL."));
+            Assert.That(withoutWiki, Does.Not.Contain("wiki search"), "There is no wiki whose hits could be meant.");
+            Assert.That(withWiki, Does.Contain("whose URL appears word for word in this conversation, such as the hits of a wiki search, and refuses every other URL."));
+        });
+    }
+
+    /// <param name="thread">The chat the request continues.</param>
+    /// <param name="candidateToolIds">The tools the request may offer; when left out, unknown, so every tool may be there.</param>
+    private ToolResolutionContext ResolutionContext(ChatThread thread, params string[] candidateToolIds)
     {
         var provider = ToolCapableProvider();
         return new()
@@ -113,6 +185,7 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
             Component = AIStudio.Tools.Components.CHAT,
             ProviderConfidence = provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level,
             ChatThread = thread,
+            CandidateToolIds = candidateToolIds.Length > 0 ? candidateToolIds.ToHashSet(StringComparer.Ordinal) : null,
         };
     }
 }

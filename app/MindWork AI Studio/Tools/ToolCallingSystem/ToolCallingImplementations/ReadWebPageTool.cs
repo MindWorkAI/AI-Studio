@@ -79,8 +79,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             .OptionalChoice(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION)
             .Build(),
 
-        // Those of the default free address choice in a chat which holds no internal content. A request gets
-        // the ones of the value actually set and of its chat, see ResolveSystemPromptInstructionsAsync,
+        // Those of the default free address choice in a chat which holds no internal content, with
+        // the warning that an internal page ends web search. A request gets the ones of the values
+        // actually set, of its chat, and of the tools it offers, see ResolveSystemPromptInstructionsAsync,
         // while the token count below the message field reads these:
         SystemPromptInstructions = BuildSystemPromptInstructions(DEFAULT_FREE_ADDRESS_CHOICE, OutboundDataRestriction.UNRESTRICTED, wiki: null),
         Function = new()
@@ -219,18 +220,41 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
-        var wiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
-        var allowedPrivateHosts = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED || !TryReadAllowedPrivateHostPatterns(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var patterns, out _)
-            ? null
-            : patterns.Select(pattern => pattern.ToString()).ToList();
+        var wiki = await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
+        var allowedPrivateHosts = TryReadAllowedPrivateHostPatterns(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var patterns, out _)
+            ? patterns.Select(pattern => pattern.ToString()).ToList()
+            : null;
 
         return BuildSystemPromptInstructions(
             ReadFreeAddressChoice(settingsValues.GetValueOrDefault(FREE_ADDRESS_CHOICE_SETTING)),
             outboundDataRestriction,
             wiki,
             allowedPrivateHosts,
-            ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)));
+            InternalPageEndsWebSearch(
+                ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
+                context.MayOffer(ToolSelectionRules.WEB_SEARCH_TOOL_ID),
+                wiki,
+                allowedPrivateHosts));
     }
+
+    /// <summary>
+    /// Whether reading an internal page would take away a web search which the request offers.
+    /// </summary>
+    /// <remarks>
+    /// Only then do the rules tell the model to search the web first. Without a wiki and without
+    /// allowed private hosts, the tool reaches no internal page at all: every private address is
+    /// refused, redirects included, and only the wiki counts as internal on a public address. A
+    /// chat which may no longer search the web has no web search among the candidates either.
+    /// </remarks>
+    /// <param name="internalPageRestriction">The level an internal page restricts the chat to, see ReadInternalPageOutboundDataRestriction.</param>
+    /// <param name="offersWebSearch">Whether the request may offer web search, see ToolResolutionContext.MayOffer.</param>
+    /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
+    /// <returns>True when the rules have to warn of it.</returns>
+    internal static bool InternalPageEndsWebSearch(OutboundDataRestriction internalPageRestriction, bool offersWebSearch, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts) =>
+        internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED &&
+        offersWebSearch &&
+        (wiki is not null || allowedPrivateHosts is { Count: > 0 });
 
     /// <summary>
     /// Reads the free address choice from its stored value.
@@ -259,14 +283,15 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// when its address stands in the conversation. The model learns this beforehand, so it does
     /// not spend its calls on addresses which are refused anyway.<br/><br/>
     /// A chat without a restriction learns that an internal page would bring one, and that web
-    /// search would then be gone, so it searches the web first when a task needs both.
+    /// search would then be gone, so it searches the web first when a task needs both. It learns
+    /// so only when that can happen, see InternalPageEndsWebSearch.
     /// </remarks>
     /// <param name="freeAddressChoice">The free address choice of the tool.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
     /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
-    /// <param name="internalPageRestriction">The level an internal page restricts the chat to, see ReadInternalPageOutboundDataRestriction.</param>
-    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts = null, OutboundDataRestriction internalPageRestriction = DEFAULT_INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION)
+    /// <param name="internalPageEndsWebSearch">Whether reading an internal page would take away a web search which the request offers, see InternalPageEndsWebSearch. The default is what the registered instructions assume.</param>
+    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts = null, bool internalPageEndsWebSearch = true)
     {
         var mayChooseAddresses = freeAddressChoice is FreeAddressChoice.ON;
         var addressRules = mayChooseAddresses
@@ -299,9 +324,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         const string REASON = "This chat holds internal content, such as e-mails, wiki pages, or internal web pages.";
         var chosenPages = mayChooseAddresses && configuredPage is not null ? $", or {configuredPage}" : string.Empty;
+
+        // Without a wiki, there are no hits of a wiki search to name as an example:
+        var givenPagesExample = wiki is not null ? ", such as the hits of a wiki search" : string.Empty;
         var restrictionRules = outboundDataRestriction switch
         {
-            OutboundDataRestriction.UNRESTRICTED when internalPageRestriction is OutboundDataRestriction.UNRESTRICTED => string.Empty,
+            OutboundDataRestriction.UNRESTRICTED when !internalPageEndsWebSearch => string.Empty,
             OutboundDataRestriction.UNRESTRICTED => """
 
                                                     - Reading an internal page, such as one in the intranet or the wiki, makes `web_search` unavailable for the rest of this chat. When a task also needs `web_search`, search the web before you read such a page.
@@ -319,7 +347,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
             _ => $"""
 
-                  - {REASON} AI Studio therefore only reads {configuredPages} whose URL appears word for word in this conversation, such as the hits of a wiki search, and refuses every other URL. When the user needs another web page, tell them that a new chat can read it.
+                  - {REASON} AI Studio therefore only reads {configuredPages} whose URL appears word for word in this conversation{givenPagesExample}, and refuses every other URL. When the user needs another web page, tell them that a new chat can read it.
                   """,
         };
 

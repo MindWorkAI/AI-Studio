@@ -69,8 +69,9 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     /// <inheritdoc />
     public async ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
     {
+        // A chat which may no longer search the web has no web search among the candidates either:
         var internalPageRestriction = await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService);
-        return BuildSystemPromptInstructions(endsWebSearch: internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED);
+        return BuildSystemPromptInstructions(endsWebSearch: internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED && context.MayOffer(ToolSelectionRules.WEB_SEARCH_TOOL_ID));
     }
 
     /// <summary>
@@ -79,9 +80,10 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     /// <remarks>
     /// When a search ends web search for the chat, the model learns so beforehand, so it searches
     /// the web first when a task needs both, instead of finding the web search gone. Whether it
-    /// does depends on the level of internal pages, see GetOutboundDataRequirement.
+    /// does depends on the level of internal pages, see GetOutboundDataRequirement, and on whether
+    /// the request offers web search at all.
     /// </remarks>
-    /// <param name="endsWebSearch">Whether a search keeps the chat from searching the web afterwards.</param>
+    /// <param name="endsWebSearch">Whether a search takes away a web search which the request offers.</param>
     internal static string BuildSystemPromptInstructions(bool endsWebSearch)
     {
         var webSearchRule = endsWebSearch
@@ -114,8 +116,9 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             .Optional(TIMEOUT_SECONDS_SETTING)
             .Build(),
         // Those of the default level of internal pages, which ends web search. A request gets the
-        // ones of the level actually set, see ResolveSystemPromptInstructionsAsync, while the token
-        // count below the message field reads these:
+        // ones of the level actually set and of the tools it offers, see
+        // ResolveSystemPromptInstructionsAsync, while the token count below the message field reads
+        // these:
         SystemPromptInstructions = BuildSystemPromptInstructions(endsWebSearch: true),
         Function = new()
         {
