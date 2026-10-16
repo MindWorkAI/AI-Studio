@@ -36,6 +36,11 @@ public partial class SlideAssistant
     private bool isWritingPresentation;
 
     /// <summary>
+    /// Whether the options of the template are open: its color variant and the footer.
+    /// </summary>
+    private bool advancedOptionsExpanded;
+
+    /// <summary>
     /// The answer the slide deck was read from, which the session keeps to restore the deck.
     /// </summary>
     private string slideDeckAnswer = string.Empty;
@@ -53,6 +58,7 @@ public partial class SlideAssistant
     private static readonly AssistantSessionStateKey<string> TEMPLATE_PATH_STATE_KEY = new(nameof(templatePath));
     private static readonly AssistantSessionStateKey<string> FOOTER_TEXT_STATE_KEY = new(nameof(footerText));
     private static readonly AssistantSessionStateKey<string> VARIANT_LABEL_STATE_KEY = new(nameof(variantLabel));
+    private static readonly AssistantSessionStateKey<bool> ADVANCED_OPTIONS_EXPANDED_STATE_KEY = new(nameof(advancedOptionsExpanded));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
     private static readonly AssistantSessionStateKey<List<string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));

@@ -283,6 +283,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
         state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
         state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
+        state.Set(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, this.advancedOptionsExpanded);
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
         state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
@@ -308,6 +309,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
         state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
         state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
+        state.Restore(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, value => this.advancedOptionsExpanded = value);
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
         state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
