@@ -24,7 +24,8 @@ public sealed record TranscriptionProvider(
     Host Host = Host.NONE,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<TranscriptionProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<TranscriptionProvider>();
 
@@ -105,6 +106,14 @@ public sealed record TranscriptionProvider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        // Asking the user for the key only makes sense when the user may set it, so the one implies the other:
+        var promptForUserApiKey = false;
+        if (table.TryGetValue("PromptForUserAPIKey", out var promptForUserApiKeyValue) && promptForUserApiKeyValue.TryRead<bool>(out var promptForUserApiKeyBool))
+            promptForUserApiKey = promptForUserApiKeyBool;
+
+        if (promptForUserApiKey)
+            allowUserProvidedApiKey = true;
+
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
         {
@@ -137,6 +146,7 @@ public sealed record TranscriptionProvider(
             Hostname = hostname,
             Host = host,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            PromptForUserAPIKey = promptForUserApiKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
         };

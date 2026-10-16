@@ -1,6 +1,7 @@
 using AIStudio.Components;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,6 +16,9 @@ public partial class Home : MSGComponentBase
 
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
     
@@ -45,17 +49,23 @@ public partial class Home : MSGComponentBase
         this.ReadLastChangeAsync().Observe($"{nameof(Home)}: reading the last change");
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
         if (this.SettingsManager.StartupStartPageRedirectHandled || !this.SettingsManager.HasCompletedInitialSettingsLoad)
-            return base.OnAfterRenderAsync(firstRender);
+            return;
 
         this.SettingsManager.StartupStartPageRedirectHandled = true;
         var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.ToRoute();
-        if (!string.IsNullOrWhiteSpace(startPageRoute))
-            this.NavigationManager.NavigateTo(startPageRoute, replace: true);
+        if (string.IsNullOrWhiteSpace(startPageRoute))
+            return;
 
-        return base.OnAfterRenderAsync(firstRender);
+        // The home page asks for missing API keys of the organization's providers. Stay here
+        // while one is missing, so the user sees that request no matter the chosen start page:
+        if ((await PendingUserAPIKeys.FindAsync(this.SettingsManager, this.RustService)).Count > 0)
+            return;
+
+        this.NavigationManager.NavigateTo(startPageRoute, replace: true);
     }
 
     private void InitializeAdvantagesItems()

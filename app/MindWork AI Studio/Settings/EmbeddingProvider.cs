@@ -28,7 +28,8 @@ public sealed record EmbeddingProvider(
     int TokenLimit = 0,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     public const int DEFAULT_TOKEN_LIMIT = 8192;
     public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
@@ -131,6 +132,14 @@ public sealed record EmbeddingProvider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        // Asking the user for the key only makes sense when the user may set it, so the one implies the other:
+        var promptForUserApiKey = false;
+        if (table.TryGetValue("PromptForUserAPIKey", out var promptForUserApiKeyValue) && promptForUserApiKeyValue.TryRead<bool>(out var promptForUserApiKeyBool))
+            promptForUserApiKey = promptForUserApiKeyBool;
+
+        if (promptForUserApiKey)
+            allowUserProvidedApiKey = true;
+
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
         {
@@ -166,6 +175,7 @@ public sealed record EmbeddingProvider(
             EmbeddingBatchSize = embeddingBatchSize,
             TokenLimit = tokenLimit,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            PromptForUserAPIKey = promptForUserApiKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
         };
