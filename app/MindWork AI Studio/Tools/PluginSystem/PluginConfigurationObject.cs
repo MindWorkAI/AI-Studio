@@ -282,17 +282,18 @@ public sealed record PluginConfigurationObject
     /// <summary>
     /// Parses configured data sources from a configuration plugin.
     /// </summary>
+    /// <param name="descriptor">The descriptor of the data sources.</param>
     /// <param name="mainTable">The Lua table containing entries to parse into data sources.</param>
     /// <param name="configPluginId">The unique identifier of the plugin associated with the data sources.</param>
     /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run.</param>
     /// <returns>True if the table was present and processed; otherwise false.</returns>
-    public static bool TryParseDataSources(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun)
+    public static bool TryParseDataSources(DataSourceConfigurationObjectDescriptor descriptor, LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun)
     {
-        const string LUA_TABLE_NAME = "DATA_SOURCES";
-        if (!mainTable.TryGetValue(LUA_TABLE_NAME, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
+        var luaTableName = descriptor.LuaTableName;
+        if (!mainTable.TryGetValue(luaTableName, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
         {
-            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, configPluginId);
+            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, configPluginId);
             return false;
         }
 
@@ -305,13 +306,13 @@ public sealed record PluginConfigurationObject
             var luaObjectTableValue = luaTable[i];
             if (!luaObjectTableValue.TryRead<LuaTable>(out var luaObjectTable))
             {
-                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 
             if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, dryRun, out var configObject))
             {
-                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", luaTableName, i, configPluginId);
                 continue;
             }
 

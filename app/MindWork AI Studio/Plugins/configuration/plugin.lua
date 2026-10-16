@@ -436,6 +436,21 @@ CONFIG["SETTINGS"] = {}
 -- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
 
+-- Configure the permission to import an item which somebody exported from AI Studio, such as
+-- a chat template a colleague shares. The first setting allows or locks every import, the
+-- others one type each; an import needs both. Importing a provider also needs the permission
+-- to add it by hand: DataApp.AllowUserToAddProvider and the setting for its kind, see above.
+-- When set to false, the import button stays visible but is locked. Importing plugin archives
+-- has a setting of its own, see below.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationSnippets"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportProfile"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportTranscriptionProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false

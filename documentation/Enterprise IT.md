@@ -621,6 +621,36 @@ Some exports ask a question first: a provider with an API key offers to include 
 
 Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
 
+### Importing an exported item
+
+Not everything worth sharing calls for a configuration plugin. Say somebody built a good chat template and wants to hand it to three colleagues: they export it as above, and each colleague imports it as a template of their own. Every item in the table above except tools has an **Import** button next to its **Add** button, e.g., **Import Chat Template** or **Import Provider**. It opens a dialog to paste the exported fragment into.
+
+- **Data only.** AI Studio reads the fragment with the same rules as a configuration plugin, but it never runs it. A fragment which contains anything other than values, such as a function call, a variable, or an expression, is refused.
+- **An item of the user's own.** The imported item gets an ID of its own and belongs to no configuration plugin, even when the fragment came from one. Importing the same fragment twice gives two items.
+- **Reviewed before it is saved.** Providers, profiles, chat templates, and data sources open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
+- **Hints first.** Before that, the dialog lists what the user should know: a preselected provider, profile, data source, or tool which does not exist on this computer, a tokenizer which is not on this computer and is therefore left out, an API key which cannot be decrypted, and every local file which a chat template would attach to each of its chats. Attachments which are not on this computer are relinked or removed in the form.
+- **Secrets.** An API key, token, or password which the export included in encrypted form is decrypted only where the encryption secret of your organization is configured, see [Encrypted API Keys](#encrypted-api-keys). Without it, a provider is imported without its key, and an ERI data source with a token or password cannot be imported at all. Data sources which sign in with Kerberos cannot be imported either.
+- **No connection on its own.** Importing contacts no server. The user loads the models of a provider, or tests the connection of a data source, in the form.
+
+Exporting needs **Show administration settings**; importing does not.
+
+#### Allowing or locking imports
+
+Each of these settings is `true` by default:
+
+| Setting | Allows importing |
+|---|---|
+| `DataApp.AllowUserToImportConfigurationSnippets` | anything at all |
+| `DataApp.AllowUserToImportProfile` | profiles |
+| `DataApp.AllowUserToImportLLMProvider` | LLM providers |
+| `DataApp.AllowUserToImportEmbeddingProvider` | embedding providers |
+| `DataApp.AllowUserToImportTranscriptionProvider` | transcription providers |
+| `DataApp.AllowUserToImportChatTemplate` | chat templates |
+| `DataApp.AllowUserToImportERIDataSource` | ERI data sources |
+| `DataApp.AllowUserToImportDocumentAnalysisPolicy` | document analysis policies |
+
+An import needs both the first setting and the one of its type. A provider also needs what adding one by hand needs: `DataApp.AllowUserToAddProvider` and the setting of its kind, such as `DataApp.AllowUserToAddLLMProvider`. A locked **Import** button stays visible with a lock. The permission is checked once more when the user saves, so locking imports while somebody fills in a form still holds. Importing plugin archives has a setting of its own, `DataApp.AllowUserToImportPlugins`.
+
 ## Encrypted API Keys
 
 You can include encrypted API keys in your configuration plugins for cloud providers (like OpenAI, Anthropic) or secured on-premise models. This feature provides obfuscation to prevent casual exposure of API keys in configuration files.

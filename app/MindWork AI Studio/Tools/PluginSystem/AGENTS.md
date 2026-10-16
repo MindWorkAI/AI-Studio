@@ -41,3 +41,27 @@ When adding configuration plugin capabilities:
 - For managed configuration objects, add the type to `PluginConfigurationObjectType.cs`, persist the objects in the appropriate `ConfigurationData` collection, and add a descriptor to `PluginConfigurationObjectDescriptors` and its list `ALL`: its Lua table, its parser, the collection, the next number, and where secrets are kept. Parsing and cleanup need no extra call; `PluginConfigurationObjectDescriptorsTests` fails for a type without a descriptor.
 - For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
 - Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
+
+## Importing exported configuration objects
+
+Users can paste a configuration object which somebody exported, such as a chat template, and keep it as one
+of their own. Three parts carry this:
+
+- `ConfigurationSnippetParser` reads the pasted text as data and never creates a Lua runtime: the text comes
+  from somebody else, so it earns none of the trust a deployed plugin has. It accepts only what an export
+  writes, and it reads that the way Lua does. `ConfigurationSnippetParserTests` compares both for every
+  export; extend the parser only together with that test, and never toward running code.
+- `ConfigurationSnippetImport` reads the table through `TryParseSnippet` of the descriptor, i.e., with the
+  parser a configuration plugin goes through, as a dry run. It then makes the object local: an ID of its own,
+  no plugin. Do not add a second description of the fields for the import.
+- `DataApp.CanImportConfigurationSnippet` decides who may import which type.
+
+A snippet may name things outside of itself: a file, a server, another configuration object. None of them may
+exist on this computer, and none of them may be touched before the user agreed to the import. The importer
+therefore looks up no path on a network share and contacts no server; the forms do that once the user asks.
+
+A new type of configuration object needs a decision on its import: a switch in `DataApp`, its case in
+`CanImportConfigurationSnippet`, and its documentation in `plugin.lua`, plus its export in
+`ConfigurationSnippetParserTests` and its case in `ConfigurationSnippetImport.TryImport`. The coverage tests in
+`DataAppImportPermissionTests`, `ConfigurationSnippetParserTests`, and `ConfigurationSnippetImportTests` fail
+for a type without them.

@@ -110,6 +110,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public bool IsEnterpriseConfiguration { get; set; }
 
+    /// <summary>
+    /// The API key an imported embedding provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -204,16 +210,18 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // Load the used instance names:
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.EmbeddingProviders.Select(x => x.Name.ToLowerInvariant()).ToList();
         
+        // An edited embedding provider fills the form, and so does an imported one:
+        this.dataFilePath = this.DataTokenizerPath;
+        this.dataTokenizerFingerprint = this.DataTokenizerFingerprint;
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
+                                  || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
+                                  || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
+
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
-            this.dataFilePath = this.DataTokenizerPath;
-            this.dataTokenizerFingerprint = this.DataTokenizerFingerprint;
-            this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
-                                      || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
-                                      || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
-            
+
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
             // So we try for every host and treat a missing key as the normal case (isTrying).
@@ -238,6 +246,14 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             }
 
             await this.ReloadModels();
+        }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
         }
     }
 

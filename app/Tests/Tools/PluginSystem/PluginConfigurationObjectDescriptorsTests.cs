@@ -25,4 +25,37 @@ public sealed class PluginConfigurationObjectDescriptorsTests
             Assert.That(describedTypes, Is.Unique, "A type described twice would be read and cleaned up twice.");
         });
     }
+
+    [Test]
+    public void EveryDescriptorReadsATableOfItsOwn()
+    {
+        var tableNames = PluginConfigurationObjectDescriptors.ALL.Select(descriptor => descriptor.LuaTableName).ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(tableNames, Has.None.Empty);
+            Assert.That(tableNames, Is.Unique, "Two types reading the same table would each take the objects of the other.");
+        });
+    }
+
+    [Test]
+    public void EveryDescriptorIsFoundByItsTypeAndByItsTable()
+    {
+        Assert.Multiple(() =>
+        {
+            foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
+            {
+                Assert.That(PluginConfigurationObjectDescriptors.Get(descriptor.Type), Is.SameAs(descriptor), descriptor.Type.ToString());
+                Assert.That(PluginConfigurationObjectDescriptors.TryGet(descriptor.LuaTableName, out var found), Is.True, descriptor.LuaTableName);
+                Assert.That(found, Is.SameAs(descriptor), descriptor.LuaTableName);
+            }
+        });
+    }
+
+    [TestCase(PluginConfigurationObjectType.NONE)]
+    [TestCase(PluginConfigurationObjectType.UNKNOWN)]
+    public void NoneAndUnknownHaveNoDescriptor(PluginConfigurationObjectType type) => Assert.That(() => PluginConfigurationObjectDescriptors.Get(type), Throws.TypeOf<ArgumentOutOfRangeException>());
+
+    [Test]
+    public void AnUnknownTableHasNoDescriptor() => Assert.That(PluginConfigurationObjectDescriptors.TryGet("SETTINGS", out _), Is.False);
 }
