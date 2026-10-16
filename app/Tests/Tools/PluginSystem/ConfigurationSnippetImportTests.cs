@@ -311,6 +311,25 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         });
     }
 
+    [Test]
+    public async Task AnImportedEmbeddingProviderIsStoredWithTheFingerprintOfItsTokenizer()
+    {
+        const PluginConfigurationObjectType TYPE = PluginConfigurationObjectType.EMBEDDING_PROVIDER;
+        var (original, snippet) = ExportProvider(TYPE, null, Path.Combine(this.temporaryDirectory, "tokenizer.json"));
+        var copy = this.CreateTokenizerCopy(TYPE, original.Id);
+        var imported = (EmbeddingProvider)Import(snippet, TYPE).ConfigurationObject;
+
+        // What the embedding provider dialog does while storing the imported provider:
+        var storedFingerprint = await TokenizerFingerprint.KeepOrReadAsync(imported.TokenizerPath, imported.TokenizerFingerprint);
+        var fingerprintOfTheCopiedFile = await TokenizerFingerprint.ForFileAsync(copy);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(imported.TokenizerFingerprint, Is.Empty, "The import reads no file before the user agreed to it.");
+            Assert.That(storedFingerprint, Is.Not.Empty.And.EqualTo(fingerprintOfTheCopiedFile), "Without the fingerprint, the embedding signature cannot tell the tokenizer apart from no tokenizer at all.");
+        });
+    }
+
     [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
     [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
     public void ATokenizerWhichIsNotOnThisComputerIsLeftOut(PluginConfigurationObjectType type)
