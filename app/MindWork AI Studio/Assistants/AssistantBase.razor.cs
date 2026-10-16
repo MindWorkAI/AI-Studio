@@ -113,7 +113,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowCopyResult => true;
 
     /// <summary>
-    /// Whether "Copy result" ends the result with the notice that AI generated it, when that is switched on.
+    /// Whether "Copy result", and copying or exporting the answers this assistant shows, end them with the
+    /// notice that AI generated them, when that is switched on.
     /// </summary>
     /// <remarks>
     /// An assistant whose result is meant for a program or another model rather than for a reader turns

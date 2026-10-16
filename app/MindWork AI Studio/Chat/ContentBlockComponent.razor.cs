@@ -123,7 +123,18 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     [Parameter]
     public string? ExportFileName { get; set; }
-    
+
+    /// <summary>
+    /// Whether copying or exporting an AI answer of this block ends it with the notice that AI
+    /// generated it, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose answer is meant for another model rather than for a reader, such as the
+    /// prompt optimizer, turns this off, the same way as for its "Copy result" button.
+    /// </remarks>
+    [Parameter]
+    public bool AddsAIGeneratedContentDisclosure { get; set; } = true;
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -167,6 +178,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// can be completely exported; an image, for example, has no representation our formats could write.
     /// </remarks>
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
+
+    /// <summary>
+    /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
+    /// </summary>
+    private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
     /// The files this block holds, tables and code blocks, so that the export menu can offer each of them.
@@ -768,10 +784,11 @@ public partial class ContentBlockComponent : MSGComponentBase
             // The format itself knows who writes it, so we do not have to keep a list of formats
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
+            var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
-                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, this.DisclosureService.AddDisclosureToMarkdown(markdown), this.ExportFileName);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
