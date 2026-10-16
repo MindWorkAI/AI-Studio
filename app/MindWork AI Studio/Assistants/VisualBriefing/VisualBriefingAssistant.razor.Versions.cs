@@ -129,6 +129,10 @@ public partial class VisualBriefingAssistant
             return;
         }
 
+        //
+        // The export is the version which the integrity check just verified, byte for byte. That is
+        // why it gets no notice that AI generated it: any change would make it a version nobody checked.
+        //
         await using var source = verified.Value.Stream;
         await using var destination = new FileStream(response.SaveFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 65_536, true);
         await source.CopyToAsync(destination);

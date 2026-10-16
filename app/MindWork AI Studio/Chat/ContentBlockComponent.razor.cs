@@ -758,7 +758,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
     
     /// <summary>
-    /// Exports the entire message.
+    /// Exports the entire message, ending with the notice that AI generated it when that is switched on.
     /// </summary>
     private async Task ExportDocument(FileExportFormat format)
     {
@@ -771,7 +771,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             if (format.UsesPandoc())
                 await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.DisclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
-                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown, this.ExportFileName);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, this.DisclosureService.AddDisclosureToMarkdown(markdown), this.ExportFileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -783,6 +783,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// Exports one file out of the message, along with the sources the answer rests on wherever its
     /// format has room for them.
     /// </summary>
+    /// <remarks>
+    /// Unlike the entire message, the file never gets the notice that AI generated it. It is meant for
+    /// a program as often as for a reader, a table or a web page for instance, and one sentence more
+    /// would break most of them.
+    /// </remarks>
     private async Task ExportFile(MessageFile file)
     {
         try

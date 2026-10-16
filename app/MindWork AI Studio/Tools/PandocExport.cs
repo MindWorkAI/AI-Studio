@@ -20,6 +20,8 @@ public static class PandocExport
     /// This says nothing to the user: it reports what happened and lets the caller decide. A batch
     /// run over hundreds of documents would otherwise bury the user under notifications. Pandoc
     /// must be available, which PandocAvailabilityService.EnsureAvailabilityAsync takes care of.
+    /// The text is converted as it is: whether it ends with the notice that AI generated it is up
+    /// to the caller, which knows what the text is.
     /// </remarks>
     /// <param name="rustService">The Rust service, used to build the Pandoc call.</param>
     /// <param name="markdownText">The Markdown text to convert.</param>
@@ -113,7 +115,8 @@ public static class PandocExport
     /// </summary>
     /// <param name="rustService">The Rust service, used for the save dialog and for Pandoc.</param>
     /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
-    /// <param name="disclosureService">Adds the configured disclosure to the AI-generated content.</param>
+    /// <param name="disclosureService">Ends the text with the notice that AI generated it, when that is
+    /// switched on. Only AI answers are exported this way.</param>
     /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
     /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>

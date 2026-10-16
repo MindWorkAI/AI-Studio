@@ -111,7 +111,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual bool ShowSendTo => true;
     
     protected virtual bool ShowCopyResult => true;
-    
+
+    /// <summary>
+    /// Whether "Copy result" ends the result with the notice that AI generated it, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose result is meant for a program or another model rather than for a reader turns
+    /// this off, because one sentence more would change what the result does.
+    /// </remarks>
+    protected virtual bool AddsAIGeneratedContentDisclosure => true;
+
     protected virtual bool ShowReset => true;
 
     protected virtual string? SendToChatVisibleUserPromptPrefix => null;
@@ -655,7 +664,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.DisclosureService.AddDisclosureToMarkdown(this.Result2Copy()));
+        var result = this.Result2Copy();
+        if (this.AddsAIGeneratedContentDisclosure)
+            result = this.DisclosureService.AddDisclosureToMarkdown(result);
+
+        await this.RustService.CopyText2Clipboard(result);
     }
 
     private ChatThread CreateSendToChatThread()
