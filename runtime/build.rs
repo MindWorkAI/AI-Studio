@@ -1,7 +1,24 @@
 use std::path::{PathBuf};
 
 fn main() {
-    tauri_build::build();
+    //
+    // On Windows, the dialogs need version 6 of the common controls, which
+    // the application manifest requests. Tauri's build helper embeds its
+    // manifest into the app only, not into the test programs, and Windows
+    // stops a test program without it before the first test runs. Hence,
+    // we embed the manifest ourselves wherever MSVC links, and Tauri's
+    // build helper must not add its own one as well:
+    //
+    let windows_attributes = if embed_windows_manifest() {
+        tauri_build::WindowsAttributes::new_without_app_manifest()
+    } else {
+        tauri_build::WindowsAttributes::new()
+    };
+
+    let tauri_attributes = tauri_build::Attributes::new().windows_attributes(windows_attributes);
+    if let Err(error) = tauri_build::try_build(tauri_attributes) {
+        panic!("Tauri's build helper failed: {error:#}");
+    }
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     println!("cargo:rustc-env=OUT_DIR={}", out_dir.to_str().unwrap());
@@ -42,6 +59,28 @@ fn main() {
     let version = metadata.lines().next().unwrap();
     update_cargo_toml("Cargo.toml", version);
     update_tauri_conf("tauri.conf.json", version);
+}
+
+/// Lets the linker embed our Windows application manifest into every program
+/// it links: the app as well as the test programs. Tauri's build helper adds
+/// its manifest only to the app. Tauri works around the same problem for its
+/// own tests, see https://github.com/tauri-apps/tauri/pull/4383#issuecomment-1212221864
+///
+/// Returns false for all targets other than Windows with MSVC, where Tauri's
+/// build helper keeps embedding its manifest. We read the target from Cargo,
+/// since it differs from the building machine when we cross-compile.
+fn embed_windows_manifest() -> bool {
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_env = std::env::var("CARGO_CFG_TARGET_ENV").unwrap();
+    if target_os != "windows" || target_env != "msvc" {
+        return false;
+    }
+
+    let manifest = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap()).join("windows-app-manifest.xml");
+    println!("cargo:rerun-if-changed={}", manifest.to_str().unwrap());
+    println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
+    println!("cargo:rustc-link-arg=/MANIFESTINPUT:{}", manifest.to_str().unwrap());
+    true
 }
 
 fn update_cargo_toml(cargo_path: &str, version: &str) {
