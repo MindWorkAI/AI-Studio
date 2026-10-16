@@ -18,6 +18,12 @@ namespace AIStudio.Components;
 /// </summary>
 public partial class DataSourceManagement : MSGComponentBase
 {
+    /// <summary>
+    /// Places the add menu in the dialog footer when provided, or above the table otherwise.
+    /// </summary>
+    [Parameter]
+    public object? AddMenuSectionId { get; set; }
+
     [Inject]
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
