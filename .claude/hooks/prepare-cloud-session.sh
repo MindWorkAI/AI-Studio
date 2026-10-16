@@ -21,6 +21,10 @@
 #
 set -uo pipefail
 
+# A grep behind a pipe sends its output to /dev/null instead of using -q: grep -q leaves at the first
+# match, the command in front then dies of SIGPIPE while it writes the rest, and pipefail turns the
+# found line into a failed check. Without -q, grep reads to the end.
+
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
@@ -55,7 +59,7 @@ fi
 #
 # .NET SDK
 #
-if ! "$DOTNET_ROOT/dotnet" --list-sdks 2>/dev/null | grep -q "^${dotnet_sdk_version} "; then
+if ! "$DOTNET_ROOT/dotnet" --list-sdks 2>/dev/null | grep "^${dotnet_sdk_version} " >/dev/null; then
   say "Installing the .NET SDK $dotnet_sdk_version ..."
   {
     curl -fsSL --retry 3 https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&
@@ -86,7 +90,7 @@ if ! command -v rustup >/dev/null 2>&1; then
   done
 fi
 
-if ! rustup component list --installed --toolchain "$rust_version" 2>/dev/null | grep -q '^clippy'; then
+if ! rustup component list --installed --toolchain "$rust_version" 2>/dev/null | grep '^clippy' >/dev/null; then
   say "Installing Rust $rust_version with Clippy ..."
   rustup toolchain install "$rust_version" --profile minimal --component clippy >> "$log_file" 2>&1 ||
     fail "Installing Rust $rust_version failed."
@@ -136,7 +140,7 @@ fi
 # are missing, rather than let the first build find out:
 #
 packages=""
-if ! ldconfig -p 2>/dev/null | grep -q 'libicuuc\.so'; then
+if ! ldconfig -p 2>/dev/null | grep 'libicuuc\.so' >/dev/null; then
   packages="libicu-dev"
 fi
 
