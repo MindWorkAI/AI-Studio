@@ -4,58 +4,41 @@ using AIStudio.Tools.PluginSystem;
 namespace AIStudio.Tools.Services;
 
 /// <summary>
-/// Adds a disclosure to AI-generated text before it leaves AI Studio.
+/// Adds a notice to AI-generated content before it leaves AI Studio, which says that AI generated it.
 /// </summary>
-public sealed class AIGeneratedContentDisclosureService(SettingsManager settingsManager, RustService rustService)
+/// <remarks>
+/// The notice is off by default. Whether a text has to say that AI generated it depends on what happens
+/// to it afterward, for example, whether it is published, as transparency rules such as the EU AI Act
+/// ask. Only the user or their organization knows that, so the user switches it on in the app settings,
+/// or an organization does so for everybody with a configuration plugin.
+///
+/// The notice ends the content as a paragraph of its own, in the language of the app. It leaves the
+/// answer itself untouched, and a reader finds it where the text ends, below the sources as well.
+/// It is Markdown, like everything else AI Studio copies or exports, which is why it is bold in a
+/// document and stays readable as plain text.
+///
+/// Only content a reader takes as a whole gets the notice: an answer which is copied or exported, and
+/// the files of a batch run. Where one sentence more breaks what the user wanted, it stays away: a code
+/// block, a single file or table out of an answer, the table of a batch run, and the Lua code of the
+/// assistant builder. The prompt of the prompt optimizer goes on to another model instead of a reader,
+/// and a visual briefing is exported as the very version AI Studio checked, byte for byte, so neither
+/// of them gets the notice. Messages of the user, transcripts, IDs, and paths are no AI answers.
+/// </remarks>
+public sealed class AIGeneratedContentDisclosureService(SettingsManager settingsManager)
 {
-    private const string DISCLOSURE_DE = "Dieser Inhalt wurde mit künstlicher Intelligenz (KI) erstellt.";
-    private const string DISCLOSURE_EN = "This content was generated using artificial intelligence (AI).";
-
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AIGeneratedContentDisclosureService).Namespace, nameof(AIGeneratedContentDisclosureService));
 
-    private SettingsManager SettingsManager { get; } = settingsManager;
-
-    private RustService RustService { get; } = rustService;
-
     /// <summary>
-    /// Adds the disclosure to non-empty text when the feature is enabled.
+    /// Adds the notice below the given Markdown text, when it is switched on.
     /// </summary>
-    public async Task<string> AddDisclosureToMarkdown(string text)
+    /// <param name="markdown">The Markdown text which AI generated.</param>
+    /// <returns>The text followed by the notice, or the text itself when the notice is off or there is no text.</returns>
+    public string AddDisclosureToMarkdown(string markdown)
     {
-        if (!this.SettingsManager.ConfigurationData.App.AddAIGeneratedContentDisclosure || string.IsNullOrWhiteSpace(text))
-            return text;
+        if (!settingsManager.ConfigurationData.App.AddAIGeneratedContentDisclosure || string.IsNullOrWhiteSpace(markdown))
+            return markdown;
 
-        var contentWithoutTrailingLineBreaks = text.TrimEnd('\r', '\n');
-        var disclosure = AIStudio.Tools.Markdown.EscapeInlineText(await this.GetDisclosure());
-        return $"{contentWithoutTrailingLineBreaks}{Environment.NewLine}{Environment.NewLine}**{disclosure}**";
-    }
-
-    /// <summary>
-    /// Copies AI-generated text with the configured disclosure.
-    /// </summary>
-    public async Task CopyText2Clipboard(string text)
-    {
-        if (!this.SettingsManager.ConfigurationData.App.AddAIGeneratedContentDisclosure || string.IsNullOrWhiteSpace(text))
-        {
-            await this.RustService.CopyText2Clipboard(text);
-            return;
-        }
-
-        var contentWithoutTrailingLineBreaks = text.TrimEnd('\r', '\n');
-        var disclosure = await this.GetDisclosure();
-        var plainText = $"{contentWithoutTrailingLineBreaks}{Environment.NewLine}{Environment.NewLine}{disclosure}";
-        await this.RustService.CopyText2Clipboard(plainText);
-    }
-
-    private async Task<string> GetDisclosure()
-    {
-        var translatedDisclosure = TB("This content was generated using artificial intelligence (AI).");
-        if (!string.Equals(translatedDisclosure, DISCLOSURE_EN, StringComparison.Ordinal))
-            return translatedDisclosure;
-
-        var language = await this.SettingsManager.GetActiveLanguagePlugin();
-        return language.IETFTag.StartsWith("de-", StringComparison.OrdinalIgnoreCase)
-            ? DISCLOSURE_DE
-            : translatedDisclosure;
+        var disclosure = Markdown.EscapeInlineText(TB("This content was generated using artificial intelligence (AI)."));
+        return Markdown.AppendBlock(markdown.TrimEnd('\r', '\n'), $"**{disclosure}**");
     }
 }

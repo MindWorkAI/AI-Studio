@@ -137,7 +137,7 @@ public static class PandocExport
             return false;
         }
 
-        markdownText = await disclosureService.AddDisclosureToMarkdown(markdownText);
+        markdownText = disclosureService.AddDisclosureToMarkdown(markdownText);
 
         var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)

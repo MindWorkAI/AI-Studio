@@ -655,7 +655,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.DisclosureService.CopyText2Clipboard(this.Result2Copy());
+        await this.RustService.CopyText2Clipboard(this.DisclosureService.AddDisclosureToMarkdown(this.Result2Copy()));
     }
 
     private ChatThread CreateSendToChatThread()
