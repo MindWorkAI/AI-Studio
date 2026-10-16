@@ -191,7 +191,7 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
     private static ChatThread RestrictedChat(OutboundDataRestriction restriction)
     {
         var thread = ChatWithTheUserWriting(GIVEN);
-        thread.RequireOutboundDataRestriction(new(restriction, MAILBOX_ID));
+        thread.RequireOutboundDataRestriction(new(restriction, OutboundDataOrigin.MAILBOX, MAILBOX_ID));
         return thread;
     }
 

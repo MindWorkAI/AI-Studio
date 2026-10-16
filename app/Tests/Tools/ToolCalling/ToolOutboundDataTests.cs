@@ -146,8 +146,8 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
     [Test]
     public void AMailboxRemovedSinceIsNotNamed()
     {
-        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, MAILBOX_ID);
-        var message = requirement.GetToolBlockedMessage([new DataSourceMailbox { Id = "another-mailbox", Name = "Private mailbox" }]);
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
+        var message = requirement.GetToolBlockedMessage(new Data { Mailboxes = [new DataSourceMailbox { Id = "another-mailbox", Name = "Private mailbox" }] });
 
         Assert.Multiple(() =>
         {
@@ -157,10 +157,61 @@ public sealed class ToolOutboundDataTests : ToolRegistryTestBase
         });
     }
 
+    [Test]
+    public void AConfluenceSearchIsNamedAsTheWiki()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty);
+        var message = requirement.GetToolBlockedMessage(new Data { Mailboxes = [new DataSourceMailbox { Id = MAILBOX_ID, Name = "Work mailbox" }] });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message, Does.Contain("Confluence wiki"), "The user learns that the wiki stands in the way.");
+            Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName()));
+        });
+    }
+
+    [Test]
+    public void APrivateWebPageIsNamedByItsHost()
+    {
+        var requirement = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.PRIVATE_WEB_PAGE, "intranet.example.org");
+        var message = requirement.GetToolBlockedMessage(new Data());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(message, Does.Contain("intranet.example.org"), "The user learns which page stands in the way.");
+            Assert.That(message, Does.Not.Contain("mailbox"), "No mailbox restricted the chat.");
+            Assert.That(message, Does.Contain(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()));
+        });
+    }
+
+    [Test]
+    public async Task ACallTurnedDownByTheWikiNamesTheWiki()
+    {
+        var hasRun = false;
+        var webSearch = new TestTool(Definition(), execute: _ =>
+        {
+            hasRun = true;
+            return new ToolExecutionResult { TextContent = "Results about the budget." };
+        }) { OutboundData = ToolOutboundData.THIRD_PARTY_QUERIES };
+        var thread = new ChatThread();
+        thread.RequireOutboundDataRestriction(new(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty));
+
+        var executor = new ToolExecutor(this.CreateToolSettingsService(), NullLogger<ToolExecutor>.Instance);
+        var outcome = await executor.ExecuteAsync("call-1", TOOL_ID, "{}", [(webSearch.GetDefinition(), webSearch)], new NoProvider(), thread, order: 1);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(hasRun, Is.False, "The wiki content would already have left AI Studio.");
+            Assert.That(outcome.Trace.Status, Is.EqualTo(ToolInvocationTraceStatus.BLOCKED));
+            Assert.That(outcome.Content, Does.Contain("Confluence wiki"));
+        });
+    }
+
     private static ChatThread RestrictedChat(OutboundDataRestriction restriction)
     {
         var thread = new ChatThread();
-        thread.RequireOutboundDataRestriction(new(restriction, MAILBOX_ID));
+        thread.RequireOutboundDataRestriction(new(restriction, OutboundDataOrigin.MAILBOX, MAILBOX_ID));
         return thread;
     }
 

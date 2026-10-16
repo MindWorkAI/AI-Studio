@@ -239,7 +239,7 @@ internal static class MailToolResults
             if (mailbox.ConfidenceLevel > confidence)
                 confidence = mailbox.ConfidenceLevel;
 
-            outboundData = outboundData.StricterOf(new(mailbox.OutboundDataRestriction.StricterOf(minimumOutboundDataRestriction), mailbox.Id));
+            outboundData = outboundData.StricterOf(new(mailbox.OutboundDataRestriction.StricterOf(minimumOutboundDataRestriction), OutboundDataOrigin.MAILBOX, mailbox.Id));
         }
 
         return (confidence, outboundData);

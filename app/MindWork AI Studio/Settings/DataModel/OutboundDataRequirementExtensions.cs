@@ -11,17 +11,26 @@ public static class OutboundDataRequirementExtensions
     /// </summary>
     /// <remarks>
     /// One text for the tool selection and for a call which was turned down, so the user reads the
-    /// same in both places, and the model can pass it on. It names the setting as the mailbox
-    /// dialog labels it, so the user finds it there. The level is the one the setting had when the
-    /// chat read the mails: a change made later does not loosen the chat.
+    /// same in both places, and the model can pass it on. It names the source which demands the
+    /// requirement, and the setting as the user finds it labeled. The level is the one the setting
+    /// had when the chat read the content: a change made later does not loosen the chat.
     /// </remarks>
     /// <param name="requirement">What the chat demands.</param>
-    /// <param name="mailboxes">The configured mailboxes, to find the name of the one which demands it.</param>
+    /// <param name="settings">The configuration, to find the name of the mailbox which demands it.</param>
     /// <returns>The text for the user.</returns>
-    public static string GetToolBlockedMessage(this OutboundDataRequirement requirement, IEnumerable<DataSourceMailbox> mailboxes)
+    public static string GetToolBlockedMessage(this OutboundDataRequirement requirement, Data settings) => requirement.Origin switch
+    {
+        OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
+        OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat read pages from your Confluence wiki while the setting 'Where a chat may send data after a Confluence search' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
+        OutboundDataOrigin.PRIVATE_WEB_PAGE => string.Format(TB("This chat read a private web page on '{0}' while the setting 'Where a chat may send data after reading a private web page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Reference, requirement.Restriction.GetName()),
+
+        _ => string.Format(TB("This chat read internal content while the chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
+    };
+
+    private static string GetMailboxBlockedMessage(OutboundDataRequirement requirement, IEnumerable<DataSourceMailbox> mailboxes)
     {
         var mailboxName = mailboxes
-            .Where(mailbox => string.Equals(mailbox.Id, requirement.DataSourceId, StringComparison.Ordinal))
+            .Where(mailbox => string.Equals(mailbox.Id, requirement.Reference, StringComparison.Ordinal))
             .Select(mailbox => mailbox.Name)
             .FirstOrDefault();
 
