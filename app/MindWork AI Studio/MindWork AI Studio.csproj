@@ -128,9 +128,15 @@
             <MetaMudBlazorVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 6 ])</MetaMudBlazorVersion>
             <MetaTauriVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 7 ])</MetaTauriVersion>
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
-            <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
-            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
-            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaVectorStoreVersion>
+
+            <!--
+                The architecture is the one the app is built for. The build script and the pipeline pass it to
+                dotnet publish; in any other build, SelfContained makes the SDK pick the RID of this machine.
+            -->
+            <MetaArchitecture>$(RuntimeIdentifier)</MetaArchitecture>
+
+            <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaPdfiumVersion>
+            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaVectorStoreVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             

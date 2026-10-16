@@ -163,10 +163,6 @@ again yourself when `metadata.txt` changes during the session, e.g., after a mer
 - Commit each finished piece of work as soon as the gate passes, under a short title in US English, and
   push it right away; in the incremental workflow, do so for each plan item before you stop. A machine
   idle for long may be reclaimed, and then only the conversation comes back.
-- Every Rust build, the gate's included, writes the architecture of the machine into line 10 of
-  `metadata.txt`, here `linux-x64`. Never commit that line: restore the file with
-  `git checkout -- metadata.txt` before you commit, or, when your work changed other lines of it, set
-  line 10 back to its committed value.
 - Push only to the branch of the session: the one Claude Code designated for it, or the one the developer
   named. Never push to `main` or any other branch, never force-push, and never rewrite a pushed commit;
   fix it with a new one instead.
