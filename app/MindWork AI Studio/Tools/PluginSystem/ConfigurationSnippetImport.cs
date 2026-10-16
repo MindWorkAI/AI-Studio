@@ -213,10 +213,19 @@ public static class ConfigurationSnippetImport
         return paths;
     }
 
+    /// <remarks>
+    /// An export names the tokenizer relative to the data directory, where the copy of the provider
+    /// lies on the computer it came from. Imported there, the path leads back to that copy; anywhere
+    /// else, the copy is missing.
+    /// </remarks>
     private static string KeepLocalTokenizer(string tokenizerPath, List<string> hints)
     {
-        if (string.IsNullOrWhiteSpace(tokenizerPath) || IsLocalFile(tokenizerPath))
+        if (string.IsNullOrWhiteSpace(tokenizerPath))
             return tokenizerPath;
+
+        var localPath = ExportedTokenizerPath.ToLocal(tokenizerPath, SettingsManager.DataDirectory);
+        if (IsLocalFile(localPath))
+            return localPath;
 
         hints.Add(string.Format(TB("The tokenizer '{0}' is not on this computer, so the provider is imported without it."), tokenizerPath));
         return string.Empty;

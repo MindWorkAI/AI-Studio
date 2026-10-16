@@ -5,8 +5,11 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.ToolCalling;
 using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
+
+using SharedTools;
 
 using AuthMethod = AIStudio.Tools.ERIClient.DataModel.AuthMethod;
 using Host = AIStudio.Provider.SelfHosted.Host;
@@ -42,18 +45,26 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     ];
 
     private string temporaryDirectory = string.Empty;
+    private string dataDirectory = string.Empty;
+    private string? previousDataDirectory;
 
     [SetUp]
     public void PrepareEncryptionAndFiles()
     {
         PluginFactory.InitializeEnterpriseEncryption(EnterpriseEncryption.GenerateSecret());
         this.temporaryDirectory = Directory.CreateTempSubdirectory("snippet-import-").FullName;
+
+        // The data directory is static state of the whole application, too. An exported tokenizer is found below it:
+        this.previousDataDirectory = SettingsManager.DataDirectory;
+        this.dataDirectory = Path.Combine(this.temporaryDirectory, "data");
+        SettingsManager.DataDirectory = this.dataDirectory;
     }
 
     [TearDown]
     public void RemoveEncryptionAndFiles()
     {
         RemoveEncryptionSecret();
+        SettingsManager.DataDirectory = this.previousDataDirectory;
         Directory.Delete(this.temporaryDirectory, recursive: true);
     }
 
@@ -288,12 +299,14 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
     public void ATokenizerOnThisComputerIsKept(PluginConfigurationObjectType type)
     {
-        var tokenizer = this.CreateFile("tokenizer.json");
-        var result = Import(ExportProvider(type, null, tokenizer).Snippet, type);
+        // The export keeps only the file name of the tokenizer and names the folder of the provider's copy itself:
+        var (original, snippet) = ExportProvider(type, null, Path.Combine(this.temporaryDirectory, "tokenizer.json"));
+        var copy = this.CreateTokenizerCopy(type, original.Id);
+        var result = Import(snippet, type);
 
         Assert.Multiple(() =>
         {
-            Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.EqualTo(tokenizer));
+            Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.EqualTo(copy), "Imported on the computer it came from, the export leads back to the copy of the provider.");
             Assert.That(result.Hints, Is.Empty);
         });
     }
@@ -302,13 +315,41 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
     public void ATokenizerWhichIsNotOnThisComputerIsLeftOut(PluginConfigurationObjectType type)
     {
-        var tokenizer = Path.Combine(this.temporaryDirectory, "missing-tokenizer.json");
-        var result = Import(ExportProvider(type, null, tokenizer).Snippet, type);
+        var result = Import(ExportProvider(type, null, Path.Combine(this.temporaryDirectory, "missing-tokenizer.json")).Snippet, type);
 
         Assert.Multiple(() =>
         {
             Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.Empty, "Saving the provider would fail on a tokenizer which cannot be copied.");
-            Assert.That(result.Hints, Has.Exactly(1).Contains(tokenizer));
+            Assert.That(result.Hints, Has.Exactly(1).Contains("missing-tokenizer.json"));
+        });
+    }
+
+    [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
+    [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
+    public void TheAbsoluteTokenizerPathOfAnOlderExportIsKept(PluginConfigurationObjectType type)
+    {
+        var tokenizer = this.CreateFile("tokenizer.json");
+        var result = Import(ExportProviderWithTokenizerPath(type, tokenizer), type);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.EqualTo(tokenizer), "Versions before v26.10.1 exported the absolute path of the tokenizer.");
+            Assert.That(result.Hints, Is.Empty);
+        });
+    }
+
+    [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
+    [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
+    public void AnExportCannotNameAnotherFileOfTheDataDirectoryAsItsTokenizer(PluginConfigurationObjectType type)
+    {
+        Directory.CreateDirectory(this.dataDirectory);
+        File.WriteAllText(Path.Combine(this.dataDirectory, "settings.json"), "{}");
+        var result = Import(ExportProviderWithTokenizerPath(type, "tokenizers/../settings.json"), type);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(TokenizerPathOf(result.ConfigurationObject), Is.Empty, "Only the folder of the tokenizers holds what an export may name.");
+            Assert.That(result.Hints, Has.Count.EqualTo(1));
         });
     }
 
@@ -454,6 +495,31 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var path = Path.Combine(this.temporaryDirectory, fileName);
         File.WriteAllText(path, "{}");
         return path;
+    }
+
+    /// <summary>
+    /// Creates the tokenizer copy of a provider where the runtime stores it, below the data directory.
+    /// </summary>
+    private string CreateTokenizerCopy(PluginConfigurationObjectType type, string providerId)
+    {
+        var modelId = type is PluginConfigurationObjectType.LLM_PROVIDER ? TokenizerModelId.ForProviderId(providerId) : TokenizerModelId.ForEmbeddingProviderId(providerId);
+        var path = Path.Combine(this.dataDirectory, "tokenizers", modelId, "tokenizer.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "{}");
+        return path;
+    }
+
+    /// <summary>
+    /// What an export of a provider carries when its tokenizer path was written otherwise, e.g., by
+    /// an older version or by hand.
+    /// </summary>
+    private static string ExportProviderWithTokenizerPath(PluginConfigurationObjectType type, string tokenizerPath)
+    {
+        const string EMPTY_TOKENIZER_PATH = """["TokenizerPath"] = "",""";
+        var snippet = ExportProvider(type, null).Snippet;
+        Assert.That(snippet, Does.Contain(EMPTY_TOKENIZER_PATH));
+
+        return snippet.Replace(EMPTY_TOKENIZER_PATH, $"""["TokenizerPath"] = "{LuaTools.EscapeLuaString(tokenizerPath)}",""");
     }
 
     /// <summary>
