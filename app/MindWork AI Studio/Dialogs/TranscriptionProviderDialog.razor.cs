@@ -3,10 +3,7 @@ using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Validation;
-
-using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -16,9 +13,6 @@ namespace AIStudio.Dialogs;
 
 public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 {
-    [Parameter]
-    public LuaTable? ImportedConfiguration { get; set; }
-
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -95,6 +89,12 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public bool IsEnterpriseConfiguration { get; set; }
 
+    /// <summary>
+    /// The API key an imported transcription provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -113,7 +113,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKey = string.Empty;
     private bool dataHadStoredAPIKeyOnLoad;
     private string dataAPIKeyStorageIssue = string.Empty;
-    private string importCredentialIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
 
@@ -160,33 +159,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             HFInferenceProvider = this.HFInferenceProviderId,
         };
     }
-
-    private Task ImportConfiguration(LuaTable table)
-    {
-        ConfigurationImportFields.ValidateExportId(table);
-        var modelTable = ConfigurationImportFields.Table(table, "Model");
-        var model = new Model(ConfigurationImportFields.String(modelTable, "Id"), ConfigurationImportFields.String(modelTable, "DisplayName"));
-        var name = ConfigurationImportFields.String(table, "Name");
-        var provider = ConfigurationImportFields.Enum<LLMProviders>(table, "UsedLLMProvider");
-        var host = ConfigurationImportFields.Enum<Host>(table, "Host");
-        var hostname = ConfigurationImportFields.String(table, "Hostname");
-        var hfProvider = table.TryGetValue("HFInferenceProvider", out _)
-            ? ConfigurationImportFields.Enum<HFInferenceProvider>(table, "HFInferenceProvider") : HFInferenceProvider.NONE;
-        var credential = ConfigurationImportFields.Credential(table, "APIKey", out var credentialIssue);
-
-        this.DataName = name;
-        this.DataLLMProvider = provider;
-        this.DataHost = host;
-        this.DataHostname = hostname;
-        this.HFInferenceProviderId = hfProvider;
-        this.DataModel = model;
-        this.dataAPIKey = credential;
-        this.importCredentialIssue = credentialIssue;
-        if (this.availableModels.All(candidate => candidate.Id != model.Id))
-            this.availableModels.Add(model);
-        this.form.ResetValidation();
-        return Task.CompletedTask;
-    }
     
     #region Overrides of ComponentBase
 
@@ -231,6 +203,14 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -239,15 +219,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
-
-        if (firstRender && this.ImportedConfiguration is not null)
-        {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
-                this.MudDialog.Cancel();
-            else
-                await this.ImportConfiguration(this.ImportedConfiguration);
-            this.StateHasChanged();
-        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -268,9 +239,6 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
-            return;
-
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
 

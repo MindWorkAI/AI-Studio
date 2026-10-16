@@ -10,10 +10,7 @@ using AIStudio.Tools.Rust;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Validation;
-
-using Lua;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -27,9 +24,6 @@ namespace AIStudio.Dialogs;
 /// </summary>
 public partial class ProviderDialog : MSGComponentBase, ISecretId
 {
-    [Parameter]
-    public LuaTable? ImportedConfiguration { get; set; }
-
     private enum ReasoningOverrideMode
     {
         AUTOMATIC,
@@ -123,7 +117,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     [Parameter]
     public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
-    
+
+    /// <summary>
+    /// The API key an imported provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -160,7 +160,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private bool dataHadStoredAPIKeyOnLoad;
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
-    private string importCredentialIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
     private string dataFilePath = string.Empty;
@@ -239,41 +238,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return this.DataModel;
     }
 
-    private Task ImportConfiguration(LuaTable table)
-    {
-        ConfigurationImportFields.ValidateExportId(table);
-        var modelTable = ConfigurationImportFields.Table(table, "Model");
-        var model = new Model(ConfigurationImportFields.String(modelTable, "Id"), ConfigurationImportFields.String(modelTable, "DisplayName"));
-        var name = ConfigurationImportFields.String(table, "InstanceName");
-        var provider = ConfigurationImportFields.Enum<LLMProviders>(table, "UsedLLMProvider");
-        var host = ConfigurationImportFields.Enum<Host>(table, "Host");
-        var hostname = ConfigurationImportFields.String(table, "Hostname");
-        var hfProvider = table.TryGetValue("HFInferenceProvider", out _)
-            ? ConfigurationImportFields.Enum<HFInferenceProvider>(table, "HFInferenceProvider") : HFInferenceProvider.NONE;
-        var tokenizerPath = ConfigurationImportFields.String(table, "TokenizerPath", required: false);
-        var additionalParameters = ConfigurationImportFields.String(table, "AdditionalJsonApiParameters", required: false);
-        var credential = ConfigurationImportFields.Credential(table, "APIKey", out var credentialIssue);
-        var overrides = ProviderCapabilityOverrides.TryParseFromLuaTable(0, table, Guid.Empty, this.Logger);
-
-        this.DataInstanceName = name;
-        this.DataLLMProvider = provider;
-        this.DataHost = host;
-        this.DataHostname = hostname;
-        this.HFInferenceProviderId = hfProvider;
-        this.DataModel = model;
-        this.dataManuallyModel = model.Id;
-        this.dataFilePath = tokenizerPath;
-        this.AdditionalJsonApiParameters = additionalParameters;
-        this.capabilityOverrides = overrides ?? new();
-        this.showExpertSettings = this.capabilityOverrides.HasOverrides || !string.IsNullOrWhiteSpace(this.dataFilePath) || !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters);
-        this.dataAPIKey = credential;
-        this.importCredentialIssue = credentialIssue;
-        if (this.availableModels.All(candidate => candidate.Id != model.Id))
-            this.availableModels.Add(model);
-        this.form.ResetValidation();
-        return Task.CompletedTask;
-    }
-
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -296,16 +260,18 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                   || this.capabilityOverrides.HasOverrides
                                   || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
+        // An edited provider fills the form, and so does an imported one:
+        this.dataFilePath = this.DataTokenizerPath;
+
+        // When using Fireworks, we must copy the model name:
+        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+            this.dataManuallyModel = this.DataModel.Id;
+
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            this.dataFilePath = this.DataTokenizerPath;
-            
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider.IsLLMModelProvidedManually())
-                this.dataManuallyModel = this.DataModel.Id;
-            
+
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
             // So we try for every host and treat a missing key as the normal case (isTrying).
@@ -331,6 +297,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
             await this.ReloadModels();
         }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -339,15 +313,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
-
-        if (firstRender && this.ImportedConfiguration is not null)
-        {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
-                this.MudDialog.Cancel();
-            else
-                await this.ImportConfiguration(this.ImportedConfiguration);
-            this.StateHasChanged();
-        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -368,9 +333,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
-            return;
-
         this.dataStoreWasAttempted = true;
         await this.dataTokenizerValidationTask;
         await this.form.Validate();

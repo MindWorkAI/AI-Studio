@@ -7,7 +7,6 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
-using Lua;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -188,18 +187,37 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task ImportERIDataSource()
     {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
+        if (import?.ConfigurationObject is not DataSourceERI_V1 dataSource)
+            return;
+
+        var eriDialogParameters = new DialogParameters<DataSourceERI_V1Dialog>
+        {
+            { x => x.IsEditing, false },
+            { x => x.IsImport, true },
+            { x => x.DataSource, dataSource },
+            { x => x.ImportedSecret, import.Secret },
+        };
+
+        var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Add ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
+        var eriDialogResult = await eriDialogReference.Result;
+        if (eriDialogResult is null || eriDialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported data source is stored:
+        //
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowForLuaTableAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
-            await this.AddDataSource(DataSourceType.ERI_V1, table);
+
+        var eriDataSource = (DataSourceERI_V1)eriDialogResult.Data!;
+        await this.StoreAddedDataSource(eriDataSource with { Num = this.SettingsManager.ConfigurationData.NextDataSourceNum++ });
     }
 
-    private async Task AddDataSource(DataSourceType type, LuaTable? importedConfiguration = null)
+    private async Task AddDataSource(DataSourceType type)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
-            return;
-
         IDataSource? addedDataSource = null;
         switch (type)
         {
@@ -242,13 +260,10 @@ public partial class DataSourceManagement : MSGComponentBase
                 {
                     { x => x.IsEditing, false },
                 };
-                if (importedConfiguration is not null)
-                    eriDialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
 
                 var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Add ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
                 var eriDialogResult = await eriDialogReference.Result;
-                if (eriDialogResult is null || eriDialogResult.Canceled ||
-                    (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE)))
+                if (eriDialogResult is null || eriDialogResult.Canceled)
                     return;
 
                 var eriDataSource = (DataSourceERI_V1)eriDialogResult.Data!;
@@ -260,6 +275,11 @@ public partial class DataSourceManagement : MSGComponentBase
         if(addedDataSource is null)
             return;
 
+        await this.StoreAddedDataSource(addedDataSource);
+    }
+
+    private async Task StoreAddedDataSource(IDataSource addedDataSource)
+    {
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
         await this.DataSourceEmbeddingService.QueueDataSourceAsync(addedDataSource);
