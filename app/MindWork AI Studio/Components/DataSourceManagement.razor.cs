@@ -190,7 +190,7 @@ public partial class DataSourceManagement : MSGComponentBase
     {
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
+        var table = await ConfigurationSnippetImportDialog.ShowForLuaTableAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
         if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             await this.AddDataSource(DataSourceType.ERI_V1, table);
     }

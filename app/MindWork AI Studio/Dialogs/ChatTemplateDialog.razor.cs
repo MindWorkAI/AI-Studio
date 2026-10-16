@@ -2,10 +2,6 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.ToolCallingSystem;
-
-using Lua;
 
 using Microsoft.AspNetCore.Components;
 
@@ -13,9 +9,6 @@ namespace AIStudio.Dialogs;
 
 public partial class ChatTemplateDialog : MSGComponentBase
 {
-    [Parameter]
-    public LuaTable? ImportedConfiguration { get; set; }
-
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -64,6 +57,13 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public IReadOnlyCollection<FileAttachment> FileAttachments { get; init; } = [];
 
+    /// <summary>
+    /// The attachments of an imported chat template which are not on this computer, as the
+    /// configuration snippet names them. The user relinks or removes each one before saving.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<string> AttachmentsToRelink { get; init; } = [];
+
     [Parameter]
     public bool AllowProfileUsage { get; set; } = true;
 
@@ -88,9 +88,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Inject]
     private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
 
-    [Inject]
-    private ToolRegistry ToolRegistry { get; init; } = null!;
-
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
 
     /// <summary>
@@ -103,8 +100,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private HashSet<FileAttachment> fileAttachments = [];
     private List<(string OriginalPath, string ReplacementPath)> attachmentsToRelink = [];
     private string relinkIssue = string.Empty;
-    private bool HasUnresolvedAttachments => this.attachmentsToRelink.Any(attachment => !ConfigurationImportFields.IsExistingLocalFile(attachment.ReplacementPath));
-    private string importReferenceIssue = string.Empty;
+    private bool HasUnresolvedAttachments => this.attachmentsToRelink.Any(attachment => !IsExistingFile(attachment.ReplacementPath));
     private bool preselectTools;
     private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
     private bool preselectDataSources;
@@ -144,11 +140,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
         // When editing, we need to load the data:
         if(this.IsEditing)
-        {
             this.dataEditingPreviousName = this.DataName.ToLowerInvariant();
-            this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
-            this.fileAttachments = [..this.FileAttachments];
-        }
+
+        // An edited template brings its conversation and attachments along, and so does an imported one:
+        this.dataExampleConversation = this.ExampleConversation.Select(n => n.DeepClone()).ToList();
+        this.fileAttachments = [..this.FileAttachments];
+        this.attachmentsToRelink = this.AttachmentsToRelink.Select(path => (path, string.Empty)).ToList();
 
         if (this.CreateFromExistingChatThread && this.ExistingChatThread is not null)
         {
@@ -156,9 +153,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
             this.DataName = this.ExistingChatThread.Name;
         }
-
-        if (this.ImportedConfiguration is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            await this.ImportConfiguration(this.ImportedConfiguration);
 
         await base.OnInitializedAsync();
     }
@@ -169,10 +163,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
-
-        if (firstRender && this.ImportedConfiguration is not null &&
-            !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            this.MudDialog.Cancel();
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -197,47 +187,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         IsEnterpriseConfiguration = false,
     };
 
-    private async Task ImportConfiguration(LuaTable table)
-    {
-        ConfigurationSnippetImportValidation.Validate(PluginConfigurationObjectType.CHAT_TEMPLATE, table);
-        if (!ChatTemplate.TryParseChatTemplateTable(0, table, Guid.Empty, string.Empty, out var parsed) || parsed is not ChatTemplate template)
-            throw new FormatException(T("The chat template fields are malformed."));
-        var paths = ConfigurationImportFields.Strings(table, "FileAttachments");
-        var validAttachments = new HashSet<FileAttachment>();
-        var toRelink = new List<(string OriginalPath, string ReplacementPath)>();
-        foreach (var path in paths)
-        {
-            if (ConfigurationImportFields.IsExistingLocalFile(path))
-                validAttachments.Add(FileAttachment.FromPath(path));
-            else
-                toRelink.Add((path, string.Empty));
-        }
-
-        this.DataName = template.Name;
-        this.DataSystemPrompt = template.SystemPrompt;
-        this.PredefinedUserPrompt = template.PredefinedUserPrompt;
-        this.AllowProfileUsage = template.AllowProfileUsage;
-        this.dataExampleConversation = template.ExampleConversation.Select(block => block.DeepClone()).ToList();
-        this.fileAttachments = validAttachments;
-        this.attachmentsToRelink = toRelink;
-        this.preselectTools = template.ToolIds is not null;
-        this.selectedToolIds = template.ToolIds is null ? new(StringComparer.Ordinal) : this.ToolRegistry.NormalizeSelection(template.ToolIds);
-        this.preselectDataSources = template.DataSourceOptions is not null;
-        this.templateDataSourceOptions = template.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
-        this.importReferenceIssue = await this.BuildImportReferenceIssue();
-    }
-
-    private async Task<string> BuildImportReferenceIssue()
-    {
-        var missingSources = this.templateDataSourceOptions.PreselectedDataSourceIds
-            .Where(id => this.SettingsManager.ConfigurationData.DataSources.All(source => source.Id != id)).ToList();
-        var availableToolIds = (await this.ToolRegistry.GetCatalogAsync(AIStudio.Tools.Components.CHAT))
-            .Select(item => item.Id).ToHashSet(StringComparer.Ordinal);
-        var missingTools = this.selectedToolIds.Where(id => !availableToolIds.Contains(id)).ToList();
-        var missing = missingSources.Select(ConfigurationImportFields.MissingDataSourceReference)
-            .Concat(missingTools.Select(ConfigurationImportFields.MissingToolReference)).ToList();
-        return ConfigurationImportFields.UnavailableReferencesIssue(missing);
-    }
+    private static bool IsExistingFile(string path) => Path.IsPathFullyQualified(path) && File.Exists(path);
 
     private void UpdateRelinkPath(int index, string? path)
     {
@@ -348,9 +298,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            return;
-
         if (this.IsReadOnly)
             return;
 
@@ -359,7 +306,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.relinkIssue = string.Empty;
         foreach (var (originalPath, replacementPath) in this.attachmentsToRelink)
         {
-            if (!ConfigurationImportFields.IsExistingLocalFile(replacementPath))
+            if (!IsExistingFile(replacementPath))
             {
                 this.relinkIssue = string.Format(T("Relink the missing attachment '{0}' to an existing local file or remove it before saving."), originalPath);
                 return;

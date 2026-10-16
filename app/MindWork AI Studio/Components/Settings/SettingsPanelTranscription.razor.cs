@@ -56,7 +56,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     {
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import Transcription Provider"));
+        var table = await ConfigurationSnippetImportDialog.ShowForLuaTableAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import Transcription Provider"));
         if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             await this.AddTranscriptionProvider(table);
     }

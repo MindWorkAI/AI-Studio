@@ -62,7 +62,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     {
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding Provider"));
+        var table = await ConfigurationSnippetImportDialog.ShowForLuaTableAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding Provider"));
         if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             await this.AddEmbeddingProvider(table);
     }

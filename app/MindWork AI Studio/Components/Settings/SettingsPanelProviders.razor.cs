@@ -48,7 +48,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     {
         if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.LLM_PROVIDER, T("Import LLM Provider"));
+        var table = await ConfigurationSnippetImportDialog.ShowForLuaTableAsync(this.DialogService, PluginConfigurationObjectType.LLM_PROVIDER, T("Import LLM Provider"));
         if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
             await this.AddLLMProvider(table);
     }

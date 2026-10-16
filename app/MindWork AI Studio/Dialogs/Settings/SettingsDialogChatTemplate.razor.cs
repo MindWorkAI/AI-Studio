@@ -3,8 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
 
-using Lua;
-
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
@@ -29,39 +27,46 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     #endregion
 
-    private Task AddChatTemplate() => this.AddChatTemplate(null);
-
-    private async Task ImportChatTemplate()
+    private async Task AddChatTemplate()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.CHAT_TEMPLATE, T("Import Chat Template"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            await this.AddChatTemplate(table);
-    }
-
-    private async Task AddChatTemplate(LuaTable? importedConfiguration)
-    {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
-            return;
-
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.IsEditing, false },
         };
-        if (importedConfiguration is not null)
-            dialogParameters.Add(x => x.ImportedConfiguration, importedConfiguration);
 
-        if (this.CreateTemplateFromExistingChatThread && importedConfiguration is null)
+        if (this.CreateTemplateFromExistingChatThread)
         {
             dialogParameters.Add(x => x.CreateFromExistingChatThread, this.CreateTemplateFromExistingChatThread);
             dialogParameters.Add(x => x.ExistingChatThread, this.ExistingChatThread);
         }
 
+        await this.AddChatTemplate(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportChatTemplate()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.CHAT_TEMPLATE, T("Import Chat Template"));
+        if (import?.ConfigurationObject is not ChatTemplate chatTemplate)
+            return;
+
+        var dialogParameters = CreateDialogParameters(chatTemplate, isEditing: false);
+        dialogParameters.Add(x => x.AttachmentsToRelink, import.AttachmentsToRelink);
+        await this.AddChatTemplate(dialogParameters, isImport: true);
+    }
+
+    private async Task AddChatTemplate(DialogParameters<ChatTemplateDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled ||
-            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE)))
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported chat template is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             return;
 
         var addedChatTemplate = (ChatTemplate)dialogResult.Data!;
@@ -78,22 +83,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
             return;
 
-        var dialogParameters = new DialogParameters<ChatTemplateDialog>
-        {
-            { x => x.DataNum, chatTemplate.Num },
-            { x => x.DataId, chatTemplate.Id },
-            { x => x.DataName, chatTemplate.Name },
-            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
-            { x => x.IsEditing, true },
-            { x => x.ExampleConversation, chatTemplate.ExampleConversation },
-            { x => x.FileAttachments, chatTemplate.FileAttachments },
-            { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
-            { x => x.ToolIds, chatTemplate.ToolIds },
-            { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -107,24 +97,24 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     private async Task ViewChatTemplate(ChatTemplate chatTemplate)
     {
-        var dialogParameters = new DialogParameters<ChatTemplateDialog>
-        {
-            { x => x.DataNum, chatTemplate.Num },
-            { x => x.DataId, chatTemplate.Id },
-            { x => x.DataName, chatTemplate.Name },
-            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
-            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
-            { x => x.IsEditing, true },
-            { x => x.IsReadOnly, true },
-            { x => x.ExampleConversation, chatTemplate.ExampleConversation },
-            { x => x.FileAttachments, chatTemplate.FileAttachments },
-            { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
-            { x => x.ToolIds, chatTemplate.ToolIds },
-            { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
-        };
-
-        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), CreateDialogParameters(chatTemplate, isEditing: true, isReadOnly: true), DialogOptions.FULLSCREEN);
     }
+
+    private static DialogParameters<ChatTemplateDialog> CreateDialogParameters(ChatTemplate chatTemplate, bool isEditing, bool isReadOnly = false) => new()
+    {
+        { x => x.DataNum, chatTemplate.Num },
+        { x => x.DataId, chatTemplate.Id },
+        { x => x.DataName, chatTemplate.Name },
+        { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+        { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
+        { x => x.IsEditing, isEditing },
+        { x => x.IsReadOnly, isReadOnly },
+        { x => x.ExampleConversation, chatTemplate.ExampleConversation },
+        { x => x.FileAttachments, chatTemplate.FileAttachments },
+        { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+        { x => x.ToolIds, chatTemplate.ToolIds },
+        { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
+    };
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
     {

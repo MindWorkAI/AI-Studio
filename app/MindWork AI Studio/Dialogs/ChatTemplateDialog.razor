@@ -4,13 +4,6 @@
 
 <MudDialog>
     <DialogContent>
-        @if (!this.IsEditing && !this.IsReadOnly)
-        {
-            @if (!string.IsNullOrWhiteSpace(this.importReferenceIssue))
-            {
-                <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importReferenceIssue</MudAlert>
-            }
-        }
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         @* The name for the drop state is given although nobody uses it: the messages of this dialog
            are listed in a table, whose rows would otherwise ask for the same name. *@
