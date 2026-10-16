@@ -297,6 +297,8 @@ internal static partial class PresentationWriter
 
         public P.PlaceholderShape? SlideNumber { get; private set; }
 
+        public P.PlaceholderShape? Date { get; private set; }
+
         public static LayoutPlaceholders Of(P.SlideLayout? layout)
         {
             var placeholders = new LayoutPlaceholders();
@@ -309,6 +311,8 @@ internal static partial class PresentationWriter
                     placeholders.Footer ??= placeholder;
                 else if (type == "sldNum")
                     placeholders.SlideNumber ??= placeholder;
+                else if (type == "dt")
+                    placeholders.Date ??= placeholder;
             }
 
             return placeholders;

@@ -12,7 +12,7 @@ namespace AIStudio.Tests.Tools.PowerPoint;
 
 /// <summary>
 /// Checks the presentations written from a template: valid files, filled placeholders, variants,
-/// pictures, tables, sections, and the imprint.
+/// pictures, tables, sections, the imprint, and the template slides a deck keeps.
 /// </summary>
 /// <remarks>
 /// The test template reads as L1 "Title" (A, B), L2 "Content" (A, B), L3 "Picture with text",
@@ -282,6 +282,135 @@ public sealed class PresentationWriterTests
         Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars" }));
     }
 
+    [Test]
+    public async Task KeptTemplateSlidesStayInTheOrderOfTheDeck()
+    {
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            Keep(1),
+            new SlideSpec("L2", false, "Agenda", string.Empty, [Text(new SlideParagraph("News", 0))], [], [], null),
+            Keep(2),
+            Keep(3),
+            Keep(4),
+        ]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
+        using var document = PresentationDocument.Open(file, false);
+        var slides = SlidesOf(document);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }), "The imprint of the template takes the place of the one added otherwise.");
+            Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The slide the deck leaves out is gone, part included.");
+            Assert.That(BodyParagraphsOf(slides[2]).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
+            Assert.That(slides[3].Slide!.Show, Is.Null, "The user chose the slide, so it shows although the template hides it.");
+            Assert.That(document.PresentationPart.Presentation!.SlideIdList!.Elements<P.SlideId>().Select(slideId => slideId.Id!.Value), Is.Unique);
+        });
+    }
+
+    [Test]
+    public async Task TheImprintOfTheTemplateClosesThePresentationInASectionOfItsOwn()
+    {
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            Keep(1),
+            Keep(4),
+            new SlideSpec("L2", true, "Agenda", string.Empty, [Text(new SlideParagraph("News", 0))], [], [], null),
+            Keep(2),
+        ]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
+        using var document = PresentationDocument.Open(file, false);
+        var sections = document.PresentationPart!.Presentation!.Descendants<P14.Section>().ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Impressum" }));
+            Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Weekly", "Agenda", "Impressum" }));
+            Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 1, 2, 1 }));
+        });
+    }
+
+    [Test]
+    public async Task WithoutTheImprintOfTheTemplateTheImprintIsAdded()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(2)]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
+        using var document = PresentationDocument.Open(file, false);
+        var slides = SlidesOf(document);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "News", "Impressum" }));
+            Assert.That(BodyParagraphsOf(slides[^1])[0].InnerText, Is.EqualTo("Thema: \tWeekly"), "The imprint is the one written for the presentation.");
+        });
+    }
+
+    [Test]
+    public async Task KeptSlidesTakeTheColorVariantAndTheFooterOfThePresentation()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(2)]);
+
+        var (withFooter, _) = await WriteAsync(deck, OPTIONS with { VariantLabel = "B" }, TEMPLATE_WITH_SLIDES);
+        var (withoutFooter, _) = await WriteAsync(deck, OPTIONS with { FooterText = string.Empty }, TEMPLATE_WITH_SLIDES);
+        using var document = PresentationDocument.Open(withFooter, false);
+        var slides = SlidesOf(document);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slides.Select(slide => slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value), Is.EqualTo(new[] { "B Title", "B Content", "B Content" }));
+            Assert.That(document.PresentationPart!.SlideMasterParts.Single().SlideLayoutParts.Count(), Is.EqualTo(Layouts().Length), "The layout a slide leaves stays in the template.");
+            Assert.That(FootersOf(slides[0]), Is.EqualTo(new[] { "Mission team" }));
+            Assert.That(FootersOf(slides[1]), Is.EqualTo(new[] { "Mission team" }));
+            Assert.That(FootersOfSlide(withoutFooter, 1), Is.EqualTo(new[] { "Old footer" }), "Without a footer of the presentation, a kept slide keeps its own.");
+        });
+    }
+
+    [Test]
+    public async Task AKeptSlideIsLinkedToTheIndicesOfItsNewVariant()
+    {
+        using var templateFile = TestTemplate.Create(
+            new TestTemplateOptions(Slides: [new TestSlide(0, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "A point"), (new TestPlaceholder(P.PlaceholderValues.Footer, 10), "Old footer"))]),
+            new TestLayout("A Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS), TestPlaceholder.Footer(10, FOOTER)),
+            new TestLayout("B Content", TestPlaceholder.Title(), TestPlaceholder.Text(2, TestTemplate.MASTER_BODY_BOUNDS), TestPlaceholder.Footer(12, FOOTER)));
+
+        var template = PresentationTemplate.Read(templateFile);
+        templateFile.Position = 0;
+
+        using var output = new MemoryStream();
+        await PresentationWriter.WriteAsync(templateFile, template, new SlideDeckSpec("Weekly", [Keep(1)]), OPTIONS with { VariantLabel = "B" }, new FakePictureSource(), output, CancellationToken.None);
+        output.Position = 0;
+
+        using var document = PresentationDocument.Open(output, false);
+        var slide = SlidesOf(document)[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value, Is.EqualTo("B Content"));
+            Assert.That(slide.Slide!.Descendants<P.PlaceholderShape>().Select(placeholder => (placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value)), Is.EqualTo(new (string, uint?)[] { ("title", null), ("obj", 2), ("ftr", 12) }));
+            Assert.That(FootersOf(slide), Is.EqualTo(new[] { "Mission team" }));
+        });
+    }
+
+    /// <summary>
+    /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
+    /// and one the imprint, and a hint nobody keeps.
+    /// </summary>
+    private static readonly TestTemplateOptions TEMPLATE_WITH_SLIDES = new(Slides:
+    [
+        new TestSlide(0, (TestPlaceholder.Title(), "Consultation hour"), (new TestPlaceholder(P.PlaceholderValues.SubTitle, 1), "Every Monday"), (new TestPlaceholder(P.PlaceholderValues.Footer, 10), "Old footer")),
+        new TestSlide(2, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:"), (new TestPlaceholder(P.PlaceholderValues.Footer, 10), "Old footer")),
+        new TestSlide(2, (TestPlaceholder.Title(), "Questions")) { IsHidden = true },
+        new TestSlide(2, (TestPlaceholder.Title(), "Impressum"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour\nDatum:\t2026-10-12\nAutoren:\tThe team")),
+        new TestSlide(0, (TestPlaceholder.Title(), "A hint to delete")),
+    ]);
+
+    private static SlideSpec Keep(int templateSlide, bool startsChapter = false) => new(string.Empty, startsChapter, string.Empty, string.Empty, [], [], [], null, templateSlide);
+
     private static TestLayout[] Layouts() =>
     [
         new("A Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(SUBTITLE), TestPlaceholder.Footer(10, FOOTER), TestPlaceholder.SlideNumber(11, SLIDE_NUMBER)),
@@ -318,14 +447,18 @@ public sealed class PresentationWriterTests
         .TextBody!.Elements<A.Paragraph>()
         .ToList();
 
-    private static List<string> FootersOfImprint(MemoryStream file)
+    private static List<string> FootersOfImprint(MemoryStream file) => FootersOfSlide(file, ^1);
+
+    private static List<string> FootersOfSlide(MemoryStream file, Index slide)
     {
         using var document = PresentationDocument.Open(file, false);
-        return SlidesOf(document)[^1].Slide!.Descendants<P.Shape>()
-            .Where(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => placeholder.Type?.InnerText == "ftr"))
-            .Select(shape => shape.TextBody!.InnerText)
-            .ToList();
+        return FootersOf(SlidesOf(document)[slide]);
     }
+
+    private static List<string> FootersOf(SlidePart slide) => slide.Slide!.Descendants<P.Shape>()
+        .Where(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => placeholder.Type?.InnerText == "ftr"))
+        .Select(shape => shape.TextBody!.InnerText)
+        .ToList();
 
     private static List<SlidePart> SlidesOf(PresentationDocument document)
     {

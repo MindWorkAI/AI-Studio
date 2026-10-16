@@ -16,8 +16,12 @@ namespace AIStudio.Tools.PowerPoint;
 /// corporate design applies to everything written here. Slots without content get no placeholder
 /// at all, which leaves no prompt text such as "Click to add text" behind.
 ///
+/// The template slides the deck refers to stay, with their pictures and notes. They take the color
+/// variant and the footer of the presentation, so that they look like the slides around them.
+///
 /// Every presentation ends with an imprint, written on a content layout of the template like every
 /// other slide. It is no slide of the deck, so the number of slides the user asked for leaves it out.
+/// A deck which keeps the imprint of the template gets no second one.
 ///
 /// The deck has to pass <see cref="SlideDeckSpecValidator"/> first; what fits the template is not
 /// checked again here.
@@ -73,37 +77,57 @@ internal static partial class PresentationWriter
             var presentationPart = document.PresentationPart ?? throw new InvalidDataException("The file contains no presentation.");
             var presentation = presentationPart.Presentation ?? throw new InvalidDataException("The file contains no presentation.");
 
-            RemoveSlides(presentationPart, presentation);
+            // The imprint of the template closes the presentation, wherever the model put it:
+            var slides = deck.Slides.OrderBy(template.IsImprint).ToList();
+            var keptSlideParts = RemoveSlides(presentationPart, presentation, TemplateSlidePartUrisOf(template, slides));
 
             var layoutParts = presentationPart.SlideMasterParts.SelectMany(master => master.SlideLayoutParts).ToDictionary(part => part.Uri);
             var tableStyleId = presentationPart.TableStylesPart?.TableStyleList?.Default?.Value;
             var slideIdList = presentation.SlideIdList ??= new P.SlideIdList();
             var variantLabel = VariantLabelOf(template, options);
-            var slideIds = new List<uint>(deck.Slides.Count);
-            for (var index = 0; index < deck.Slides.Count; index++)
+            var slideIds = new List<uint>(slides.Count);
+            var imprintSlideIds = new List<uint>();
+            var imprintName = ImprintTextsOf(deck).Title;
+            var usedTemplateSlides = new HashSet<Uri>();
+            for (var index = 0; index < slides.Count; index++)
             {
-                var slide = deck.Slides[index];
-                var family = template.FindFamily(slide.Layout) ?? throw new InvalidOperationException($"The slide deck uses the layout '{slide.Layout}', which the template does not have. Check the deck before writing it.");
-                var layout = family.GetLayout(variantLabel);
-                var layoutPart = LayoutPartOf(layoutParts, layout);
-                var slidePart = presentationPart.AddNewPart<SlidePart>();
-                slidePart.AddPart(layoutPart);
-                var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, (double)template.SlideWidth * template.SlideHeight);
-                slidePart.Slide = new P.Slide(
-                    new P.CommonSlideData(ShapeTreeOf(slidePart, content)),
-                    new P.ColorMapOverride(new A.MasterColorMapping()));
+                var slide = slides[index];
+                SlidePart slidePart;
+                if (slide.TemplateSlide is { } number)
+                {
+                    var templateSlide = template.FindSlide(number) ?? throw new InvalidOperationException($"The slide deck uses template slide {number}, which the template does not have. Check the deck before writing it.");
+                    slidePart = TemplateSlidePartOf(keptSlideParts, usedTemplateSlides, templateSlide);
+                    AdaptTemplateSlide(slidePart, templateSlide, template, layoutParts, variantLabel, options.FooterText);
+                }
+                else
+                {
+                    var family = template.FindFamily(slide.Layout) ?? throw new InvalidOperationException($"The slide deck uses the layout '{slide.Layout}', which the template does not have. Check the deck before writing it.");
+                    var layout = family.GetLayout(variantLabel);
+                    var layoutPart = LayoutPartOf(layoutParts, layout);
+                    slidePart = presentationPart.AddNewPart<SlidePart>();
+                    slidePart.AddPart(layoutPart);
+                    var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, (double)template.SlideWidth * template.SlideHeight);
+                    slidePart.Slide = new P.Slide(
+                        new P.CommonSlideData(ShapeTreeOf(slidePart, content)),
+                        new P.ColorMapOverride(new A.MasterColorMapping()));
+                }
 
                 var slideId = FIRST_SLIDE_ID + (uint)index;
                 slideIdList.Append(new P.SlideId { Id = slideId, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
                 slideIds.Add(slideId);
+                if (template.IsImprint(slide))
+                {
+                    imprintSlideIds.Add(slideId);
+                    if (TitleOf(slide, template) is { Length: > 0 } title)
+                        imprintName = title;
+                }
             }
 
             //
             // The imprint closes the presentation. It is no slide of the deck, so the model neither
-            // planned nor counted it:
+            // planned nor counted it. A deck which keeps the imprint of the template needs no other:
             //
-            uint? imprintSlideId = null;
-            if (ImprintFamilyOf(template) is { } imprintFamily)
+            if (imprintSlideIds.Count == 0 && ImprintFamilyOf(template) is { } imprintFamily)
             {
                 var layout = imprintFamily.GetLayout(variantLabel);
                 var layoutPart = LayoutPartOf(layoutParts, layout);
@@ -113,11 +137,12 @@ internal static partial class PresentationWriter
                     new P.CommonSlideData(ImprintShapeTreeOf(layout, layoutPart.SlideLayout, deck, options.FooterText)),
                     new P.ColorMapOverride(new A.MasterColorMapping()));
 
-                imprintSlideId = FIRST_SLIDE_ID + (uint)deck.Slides.Count;
-                slideIdList.Append(new P.SlideId { Id = imprintSlideId.Value, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
+                var imprintSlideId = FIRST_SLIDE_ID + (uint)slides.Count;
+                slideIdList.Append(new P.SlideId { Id = imprintSlideId, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
+                imprintSlideIds.Add(imprintSlideId);
             }
 
-            WriteSections(presentation, deck, slideIds, imprintSlideId);
+            WriteSections(presentation, template, deck.Title, slides, slideIds, imprintSlideIds, imprintName);
         }
 
         file.Position = 0;
@@ -146,26 +171,45 @@ internal static partial class PresentationWriter
     }
 
     /// <summary>
-    /// Removes the slides of the template, which are samples or hints for the user.
+    /// Removes the slides of the template, which are samples or hints for the user, except those the deck keeps.
     /// </summary>
     /// <remarks>
     /// Whatever lists slides by their IDs has to go with them, or PowerPoint finds references to
     /// nothing and offers to repair the file: custom shows and sections. Sections are written anew
-    /// for the new slides.
+    /// for the new slides. The kept slides lose their place in the list as well, and get it back in
+    /// the order of the deck.
     /// </remarks>
-    private static void RemoveSlides(PresentationPart presentationPart, P.Presentation presentation)
+    /// <param name="presentationPart">The presentation part, which holds the slides.</param>
+    /// <param name="presentation">The presentation, which lists the slides.</param>
+    /// <param name="keptSlides">Where the slides the deck keeps are stored inside the file.</param>
+    /// <returns>The slides the deck keeps, by where they are stored.</returns>
+    private static Dictionary<Uri, SlidePart> RemoveSlides(PresentationPart presentationPart, P.Presentation presentation, IReadOnlySet<Uri> keptSlides)
     {
+        var keptSlideParts = new Dictionary<Uri, SlidePart>();
         foreach (var slideId in presentation.SlideIdList?.Elements<P.SlideId>().ToList() ?? [])
         {
             if (slideId.RelationshipId?.Value is { } relationshipId && presentationPart.TryGetPartById(relationshipId, out var slidePart))
-                presentationPart.DeletePart(slidePart);
+            {
+                if (slidePart is SlidePart keptSlidePart && keptSlides.Contains(keptSlidePart.Uri))
+                    keptSlideParts.TryAdd(keptSlidePart.Uri, keptSlidePart);
+                else
+                    presentationPart.DeletePart(slidePart);
+            }
 
             slideId.Remove();
         }
 
         presentation.CustomShowList = null;
         RemoveSections(presentation);
+        return keptSlideParts;
     }
+
+    /// <summary>
+    /// The title of a slide of the deck: its own, or that of the template slide it keeps.
+    /// </summary>
+    private static string TitleOf(SlideSpec slide, PresentationTemplate template) => slide.Title.Length > 0
+        ? slide.Title
+        : slide.TemplateSlide is { } number ? template.FindSlide(number)?.Title ?? string.Empty : string.Empty;
 
     /// <summary>
     /// Says which variant all slides are written in: the one the user chose, or the first one of
