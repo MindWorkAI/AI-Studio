@@ -46,7 +46,6 @@ fn create_router() -> Router {
         .route("/system/qdrant-edge/backup/prepare", post(crate::qdrant_edge_database::prepare_qdrant_edge_backup))
         .route("/system/qdrant-edge/backup/copy", post(crate::qdrant_edge_database::copy_qdrant_edge_store_for_backup))
         .route("/clipboard/set", post(crate::clipboard::set_clipboard))
-        .route("/clipboard/set-rich-text", post(crate::clipboard::set_rich_clipboard))
         .route("/share/file", post(crate::share_sheet::share_file))
         .route("/events", get(crate::app_window::get_event_stream))
         .route("/updates/check", get(crate::app_window::check_for_update))

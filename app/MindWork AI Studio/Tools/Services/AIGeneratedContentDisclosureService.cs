@@ -1,5 +1,3 @@
-using System.Net;
-
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 
@@ -46,8 +44,7 @@ public sealed class AIGeneratedContentDisclosureService(SettingsManager settings
         var contentWithoutTrailingLineBreaks = text.TrimEnd('\r', '\n');
         var disclosure = await this.GetDisclosure();
         var plainText = $"{contentWithoutTrailingLineBreaks}{Environment.NewLine}{Environment.NewLine}{disclosure}";
-        var htmlText = $"<div style=\"white-space: pre-wrap;\">{WebUtility.HtmlEncode(contentWithoutTrailingLineBreaks)}</div><div style=\"font-weight: bold; margin-top: 1em;\">{WebUtility.HtmlEncode(disclosure)}</div>";
-        await this.RustService.CopyRichText2Clipboard(plainText, htmlText);
+        await this.RustService.CopyText2Clipboard(plainText);
     }
 
     private async Task<string> GetDisclosure()
