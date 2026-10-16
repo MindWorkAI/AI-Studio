@@ -35,9 +35,11 @@ public sealed class ConfigurationSnippetParserTests
     private const string QUOTED_TEXT = "He said \"hi\" to C:\\Users\\me, and 'bye'.";
 
     /// <summary>
-    /// Every kind of line break, an indentation, and the closing brackets of long strings.
+    /// A line break at the start, an empty line, an indentation, and the closing brackets of long
+    /// strings, inside and at the end. Carriage returns are left to the output rules of the policy:
+    /// a text with one is exported as a quoted string, so it would never reach a long string here.
     /// </summary>
-    private const string MULTILINE_TEXT = "First line\r\nSecond line\rThird line\n\tIndented, with ]] and ]==] and ]===] inside.";
+    private const string MULTILINE_TEXT = "\nFirst line\nSecond line\n\n\tIndented, with ]] and ]==] and ]===] inside, and ending like one: ]===";
 
     private const string WINDOWS_PATH = @"C:\Users\me\AppData\Roaming\MindWork AI Studio\tokenizer.json";
 

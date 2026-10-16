@@ -199,7 +199,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
 
         return $$"""
                  CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
-                     ["Id"] = "{{id}}",
+                     ["Id"] = "{{LuaTools.EscapeLuaString(id)}}",
                      ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.PolicyName.Trim())}},
                      ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.PolicyDescription.Trim())}},
 
@@ -219,8 +219,8 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
 
                      -- Optional: preselect a provider or profile by ID.
                      -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
-                     ["PreselectedProvider"] = "{{preselectedProvider}}",
-                     ["PreselectedProfile"] = "{{preselectedProfile}}",
+                     ["PreselectedProvider"] = "{{LuaTools.EscapeLuaString(preselectedProvider)}}",
+                     ["PreselectedProfile"] = "{{LuaTools.EscapeLuaString(preselectedProfile)}}",
 
                      -- Optional: hide the policy definition section in the UI.
                      -- When set to true, users will only see the document selection interface
