@@ -92,7 +92,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// <remarks>
     /// Carried through the dialog untouched as long as the user leaves the tokenizer alone. Rebuilding
     /// it from the path on every open would read a file for nothing, and an unreadable one would look
-    /// like another tokenizer and cost every data source of this provider its index.
+    /// like another tokenizer and cost every data source of this provider its index. Only a tokenizer
+    /// which arrives without a fingerprint, as with an imported provider, has it read while storing.
     /// </remarks>
     [Parameter]
     public string DataTokenizerFingerprint { get; set; } = string.Empty;
@@ -300,6 +301,16 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
+
+        //
+        // A tokenizer can arrive without a fingerprint: an imported provider brings only the path,
+        // because importing reads no file before the user agreed. Storing is that agreement, so the
+        // fingerprint is read here, from the file about to be copied, which the copy matches byte for
+        // byte. It has to be known before the question below, which compares the signatures. Read any
+        // later, it would change the signature after the user was asked, and the data sources of this
+        // provider would be indexed again without a word.
+        //
+        this.dataTokenizerFingerprint = await TokenizerFingerprint.KeepOrReadAsync(this.dataFilePath, this.dataTokenizerFingerprint);
 
         //
         // Ask before anything is written. Storing a tokenizer deletes the previous one before it
