@@ -1046,6 +1046,54 @@ Two things to keep in mind when you prepare the icon:
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
 
+## Labeling AI-generated content
+
+Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for
+example, when your colleagues publish it. AI Studio can add such a notice: the AI answers which users
+copy or export then end with a paragraph of its own, in bold, which says that the content was
+generated using artificial intelligence (AI). The notice is written in the language of the app. This
+is off by default.
+
+### What gets the notice
+
+- **Copied answers:** the copy button of an answer in the chat or in an assistant, and the "Copy
+  result" button of the assistants.
+- **Exported answers:** every format of the export menu, i.e., Word, OpenDocument, LaTeX, web page,
+  and Markdown.
+- **Files of the batch processing,** when it writes one file per document.
+
+Content which one more sentence would break, or which goes on to a program or another model instead
+of a reader, stays unchanged:
+
+- code blocks copied on their own, and single files or tables exported out of an answer,
+- the CSV table of the batch processing,
+- the Lua code of the assistant builder and the prompt of the prompt optimizer,
+- visual briefings, which AI Studio exports as the very version it checked, byte for byte,
+- messages of the users, transcripts, IDs, and paths.
+
+The notice covers what AI Studio copies and exports itself. Text which somebody selects and copies
+by hand carries no notice, so the setting supports the rules of your organization, but it cannot
+enforce them.
+
+### Switching on the notice
+
+Switch it on for everybody, without a way to opt out:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+```
+
+Add `AllowUserOverride` to make it the default of your organization, which users may still change
+in the app settings:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
+```
+
+Set it to `false` without `AllowUserOverride` to keep everybody from switching it on. Either way,
+users find the setting in the app settings; when you lock it, they see your value there.
+
 ## Feature usage statistics (telemetry)
 
 When your organization runs its own AI servers, for example behind a LiteLLM gateway, you may want
