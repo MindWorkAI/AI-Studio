@@ -336,7 +336,7 @@ public partial class ChatComponent : MSGComponentBase
             this.Logger);
 
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.START_NEW_CHAT_IN_WORKSPACE, Event.CONFIGURATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -1556,7 +1556,7 @@ public partial class ChatComponent : MSGComponentBase
         this.unstoredChat = null;
     }
     
-    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
+    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null)
     {
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
@@ -1662,6 +1662,14 @@ public partial class ChatComponent : MSGComponentBase
             // reset the chat thread only. The workspace id and the workspace name remain
             // the same. The new chat reaches the disk only once there is something to keep:
             //
+            // The workspace tree may ask for another workspace than the one of the chat being left,
+            // though. We switch only now, after the user had the chance to cancel, so that a canceled
+            // request leaves the open chat alone. The header follows once the parent hands the new
+            // thread back to us:
+            //
+            if (targetWorkspaceId is { } workspaceId)
+                this.currentWorkspaceId = workspaceId;
+
             this.ChatThread = this.NewChatThread(string.Empty);
             this.unstoredChat = this.ChatThread;
         }
@@ -2155,6 +2163,15 @@ public partial class ChatComponent : MSGComponentBase
             case Event.WORKSPACE_RENAMED:
                 if (data is Guid workspaceId)
                     await this.RefreshRenamedWorkspaceHeaderAsync(workspaceId);
+                break;
+
+            //
+            // The workspace tree starts its new chats here, so that they get the chat template,
+            // its data sources, tools, and example conversation just like any other new chat:
+            //
+            case Event.START_NEW_CHAT_IN_WORKSPACE:
+                if (data is Guid targetWorkspaceId && targetWorkspaceId != Guid.Empty)
+                    await this.StartNewChat(useSameWorkspace: true, targetWorkspaceId: targetWorkspaceId);
                 break;
 
             case Event.CONFIGURATION_CHANGED:

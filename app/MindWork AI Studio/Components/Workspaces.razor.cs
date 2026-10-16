@@ -1040,36 +1040,20 @@ public partial class Workspaces : MSGComponentBase
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
     
+    /// <summary>
+    /// Asks the chat component to start a new chat in the given workspace.
+    /// </summary>
+    /// <param name="workspacePath">The directory of the workspace.</param>
+    /// <remarks>
+    /// The chat component starts the chat just like its own button for a new chat in the workspace:
+    /// it asks about unsaved changes, applies the chat template with its data sources, tools, and
+    /// example conversation, and stores the chat only once it has content. Until then, the chat is
+    /// missing from the tree.
+    /// </remarks>
     private async Task AddChatAsync(string workspacePath)
     {
-        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
-        {
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
-            };
-        
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return;
-        }
-        
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        var chat = new ChatThread
-        {
-            WorkspaceId = workspaceId,
-            ChatId = Guid.NewGuid(),
-            Name = string.Empty,
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = [],
-        };
-        
-        var chatPath = Path.Join(workspacePath, chat.ChatId.ToString());
-        
-        await WorkspaceBehaviour.StoreChatAsync(chat);
-        await this.LoadChatAsync(chatPath, switchToChat: true);
-        await this.LoadTreeItemsAsync(startPrefetch: false);
+        await this.SendMessage(Event.START_NEW_CHAT_IN_WORKSPACE, workspaceId);
     }
 
     #region Overrides of MSGComponentBase

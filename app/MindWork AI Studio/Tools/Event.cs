@@ -190,6 +190,11 @@ public enum Event
     /// Notifies receivers that a workspace was created.
     /// </summary>
     WORKSPACE_CREATED,
+
+    /// <summary>
+    /// Requests the chat component to start a new chat in the workspace whose ID is carried along.
+    /// </summary>
+    START_NEW_CHAT_IN_WORKSPACE,
     
     
     
