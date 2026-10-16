@@ -32,6 +32,8 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
 
     private static readonly Uri WIKI_URL = new(WIKI);
 
+    private static readonly Func<string, bool> NO_PRIVATE_HOSTS = _ => false;
+
     [Test]
     public async Task ASearchRestrictsTheChatToLinksFromTheChatByDefault()
     {
@@ -95,7 +97,7 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
     [TestCase(CHOSEN_BY_THE_MODEL, false)]
     public void AfterASearchWikiPagesAndLinksFromTheChatAreRead(string address, bool expectedAllowed)
     {
-        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), ChatAfterASearch().RequiredOutboundDataRestriction.Restriction, ChatAfterASearch(), WIKI_URL, out _);
+        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), ChatAfterASearch().RequiredOutboundDataRestriction.Restriction, ChatAfterASearch(), WIKI_URL, NO_PRIVATE_HOSTS, out _);
         Assert.That(allowed, Is.EqualTo(expectedAllowed), "The model may follow the wiki's results and the user's links, but it cannot write an address of its own.");
     }
 
@@ -105,7 +107,7 @@ public sealed class ConfluenceOutboundDataRestrictionTests : ToolRegistryTestBas
     public void AfterASearchForConfiguredServicesOnlyOnlyTheWikiIsRead(string address, bool expectedAllowed)
     {
         var chat = ChatAfterASearch(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES);
-        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), chat.RequiredOutboundDataRestriction.Restriction, chat, WIKI_URL, out _);
+        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), chat.RequiredOutboundDataRestriction.Restriction, chat, WIKI_URL, NO_PRIVATE_HOSTS, out _);
         Assert.That(allowed, Is.EqualTo(expectedAllowed), "Not even an address the user pasted is read.");
     }
 

@@ -197,12 +197,17 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <inheritdoc />
     /// <remarks>
     /// A chat which may only reach the services configured in AI Studio can still read the pages
-    /// of the configured wiki. Without one, every address would be refused, so the tool offers
-    /// nothing instead of a function which can only fail.
+    /// of the configured wiki and of the allowed private hosts. Without either, every address
+    /// would be refused, so the tool offers nothing instead of a function which can only fail.
     /// </remarks>
     public async ValueTask<ToolFunctionDefinition?> ResolveFunctionAsync(ToolDefinition definition, ToolResolutionContext context, CancellationToken token = default)
     {
         if (!IsOnlyForConfiguredServices(context.ChatThread.RequiredOutboundDataRestriction.Restriction))
+            return definition.Function;
+
+        var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
+        ReadAllowedPrivateHosts(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var hasAllowedPrivateHosts);
+        if (hasAllowedPrivateHosts)
             return definition.Function;
 
         return await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) is null ? null : definition.Function;
@@ -294,9 +299,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         // content in its path, and the log must not hold that either. The refusal never repeats
         // the address, because a tool result which holds it would make it one a tool returned.
         //
+        if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
+            throw new InvalidOperationException(allowlistError);
+
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
         var wiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
-        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, out var mustStayInWiki))
+        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, host => IsAllowedPrivateHost(host, allowedPrivateHosts), out var redirectLimit))
         {
             logger.LogInformation("Refused a web page because the chat read from a mailbox which restricts outbound data to '{OutboundDataRestriction}'. ToolCallId={ToolCallId}", outboundDataRestriction, context.ToolCallId);
             throw new ToolExecutionBlockedException(IsOnlyForConfiguredServices(outboundDataRestriction)
@@ -317,8 +325,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, TIMEOUT_SECONDS_SETTING) ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
         var maxContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_CONTENT_CHARACTERS_SETTING) ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
-        if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
-            throw new InvalidOperationException(allowlistError);
 
         logger.LogInformation(
             "Starting web page retrieval. ToolCallId={ToolCallId}, Url={Url}, TimeoutSeconds={TimeoutSeconds}, MaxContentCharacters={MaxContentCharacters}",
@@ -339,9 +345,15 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     UseOsSso = true,
                     IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
                     OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
-                    IsTargetAllowed = mustStayInWiki && wiki is not null ? target => ConfluenceSearchTool.IsWithinWiki(wiki, target) : null,
+                    IsTargetAllowed = redirectLimit is RedirectLimit.WITHIN_WIKI && wiki is not null ? target => ConfluenceSearchTool.IsWithinWiki(wiki, target) : null,
+                    NonPublicTargetsOnly = redirectLimit is RedirectLimit.NON_PUBLIC_ONLY,
                 },
                 token);
+        }
+        catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED)
+        {
+            // Its own text, which names no address either:
+            throw new ToolExecutionBlockedException(TB("This page lies on an allowed private host, but it or one of its redirects leads to a public address. This chat read internal content, so it may not follow such an address."));
         }
         catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.TARGET_NOT_ALLOWED)
         {
@@ -460,35 +472,85 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// Whether the outbound data restriction of the chat allows reading this address.
     /// </summary>
     /// <remarks>
-    /// The pages of the configured wiki are allowed on every level, because the wiki is a service
-    /// configured in AI Studio. With ONLY_LINKS_FROM_CHAT, so are the addresses given to the model,
-    /// see ChatThread.IsWebAddressGivenToTheModel. A level this version does not know allows only
-    /// what the strictest one does.<br/><br/>
-    /// A wiki page whose address the model chose has to stay in the wiki, redirects included: the
-    /// address may carry mail content, and a redirect elsewhere could carry it on. An address given
-    /// to the model may be redirected anywhere, since whatever the redirect carries came from the
-    /// server rather than from the chat.
+    /// The services configured in AI Studio are allowed on every level: the pages of the
+    /// configured wiki, and the pages on the allowed private hosts. With ONLY_LINKS_FROM_CHAT, so
+    /// are the addresses given to the model, see ChatThread.IsWebAddressGivenToTheModel. A level
+    /// this version does not know allows only what the strictest one does.<br/><br/>
+    /// An address the model chose may carry the content which restricts the chat, so it must not
+    /// lead anywhere else, redirects included. A wiki page has to stay in the wiki. A page on an
+    /// allowed private host has to stay on non-public addresses: a pattern such as *.example.org
+    /// matches public hosts as well, so a matching name is not enough. An address given to the
+    /// model may be redirected anywhere, since whatever the redirect carries came from the server
+    /// rather than from the chat.
     /// </remarks>
     /// <param name="url">The address the model wants to read.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data.</param>
     /// <param name="chatThread">The chat, for the addresses given to the model.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
-    /// <param name="mustStayInWiki">Whether every redirect has to stay in the wiki.</param>
+    /// <param name="isAllowedPrivateHost">Whether a host matches the allowed private hosts.</param>
+    /// <param name="redirectLimit">Where the request and its redirects may lead.</param>
     /// <returns>True when the address may be read.</returns>
-    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, out bool mustStayInWiki)
+    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, Func<string, bool> isAllowedPrivateHost, out RedirectLimit redirectLimit)
     {
-        mustStayInWiki = false;
+        redirectLimit = RedirectLimit.NONE;
         if (outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED)
             return true;
 
         if (outboundDataRestriction is OutboundDataRestriction.ONLY_LINKS_FROM_CHAT && chatThread.IsWebAddressGivenToTheModel(url))
             return true;
 
-        if (wiki is null || !ConfluenceSearchTool.IsWithinWiki(wiki, url))
+        // The wiki first, so a wiki on an allowed private host stays confined to the wiki:
+        if (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, url))
+        {
+            redirectLimit = RedirectLimit.WITHIN_WIKI;
+            return true;
+        }
+
+        if (!isAllowedPrivateHost(url.Host))
             return false;
 
-        mustStayInWiki = true;
+        redirectLimit = RedirectLimit.NON_PUBLIC_ONLY;
         return true;
+    }
+
+    /// <summary>
+    /// Where a request and its redirects may lead, see IsAllowedByOutboundDataRestriction.
+    /// </summary>
+    internal enum RedirectLimit
+    {
+        /// <summary>
+        /// Anywhere the other checks allow.
+        /// </summary>
+        NONE,
+
+        /// <summary>
+        /// Only within the configured wiki.
+        /// </summary>
+        WITHIN_WIKI,
+
+        /// <summary>
+        /// Only to non-public addresses.
+        /// </summary>
+        NON_PUBLIC_ONLY,
+    }
+
+    /// <summary>
+    /// Reads the allowed private hosts into a check of a host against them.
+    /// </summary>
+    /// <remarks>
+    /// A list which cannot be read allows no host. The configuration check reports it anyway and
+    /// keeps the tool out of use until somebody corrects it.
+    /// </remarks>
+    /// <param name="rawValue">The stored value of the setting.</param>
+    /// <param name="hasAny">Whether the list allows any host at all.</param>
+    /// <returns>Whether a host matches one of the allowed private hosts.</returns>
+    internal static Func<string, bool> ReadAllowedPrivateHosts(string? rawValue, out bool hasAny)
+    {
+        if (!TryReadAllowedPrivateHostPatterns(rawValue, out var patterns, out _))
+            patterns = [];
+
+        hasAny = patterns.Count > 0;
+        return host => IsAllowedPrivateHost(host, patterns);
     }
 
     /// <summary>

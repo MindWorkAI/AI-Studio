@@ -30,15 +30,17 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
 
     private static readonly Uri WIKI_URL = new(WIKI);
 
+    private static readonly Func<string, bool> NO_PRIVATE_HOSTS = _ => false;
+
     [Test]
     public void AChatWhichReadNoMailboxReadsAnyPage()
     {
-        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri("https://example.org/chosen-by-the-model"), OutboundDataRestriction.UNRESTRICTED, ChatWithTheUserWriting(GIVEN), WIKI_URL, out var mustStayInWiki);
+        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri("https://example.org/chosen-by-the-model"), OutboundDataRestriction.UNRESTRICTED, ChatWithTheUserWriting(GIVEN), WIKI_URL, NO_PRIVATE_HOSTS, out var redirectLimit);
 
         Assert.Multiple(() =>
         {
             Assert.That(allowed, Is.True);
-            Assert.That(mustStayInWiki, Is.False);
+            Assert.That(redirectLimit, Is.EqualTo(ReadWebPageTool.RedirectLimit.NONE));
         });
     }
 
@@ -50,12 +52,12 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
     [TestCase("https://wiki.example.org/elsewhere/", false, false)]
     public void ALinkFromTheChatOrAWikiPageIsRead(string address, bool expectedAllowed, bool expectedMustStayInWiki)
     {
-        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, ChatWithTheUserWriting(GIVEN), WIKI_URL, out var mustStayInWiki);
+        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, ChatWithTheUserWriting(GIVEN), WIKI_URL, NO_PRIVATE_HOSTS, out var redirectLimit);
 
         Assert.Multiple(() =>
         {
             Assert.That(allowed, Is.EqualTo(expectedAllowed));
-            Assert.That(mustStayInWiki, Is.EqualTo(expectedMustStayInWiki), "Only an address the model chose has to stay in the wiki, redirects included.");
+            Assert.That(redirectLimit is ReadWebPageTool.RedirectLimit.WITHIN_WIKI, Is.EqualTo(expectedMustStayInWiki), "Only an address the model chose has to stay in the wiki, redirects included.");
         });
     }
 
@@ -64,7 +66,7 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
     [TestCase("https://attacker.example/?mail=board-meeting", false)]
     public void OnlyTheWikiIsReadWhenTheMailboxAllowsConfiguredServicesOnly(string address, bool expectedAllowed)
     {
-        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, ChatWithTheUserWriting(GIVEN), WIKI_URL, out _);
+        var allowed = ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(address), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, ChatWithTheUserWriting(GIVEN), WIKI_URL, NO_PRIVATE_HOSTS, out _);
         Assert.That(allowed, Is.EqualTo(expectedAllowed), "Not even an address the user wrote is read: the mailbox allows the configured services only.");
     }
 
@@ -75,14 +77,14 @@ public sealed class ReadWebPageOutboundDataRestrictionTests : ToolRegistryTestBa
 
         Assert.Multiple(() =>
         {
-            Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, chat, wiki: null, out _), Is.True);
-            Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, chat, wiki: null, out _), Is.False);
+            Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, chat, wiki: null, NO_PRIVATE_HOSTS, out _), Is.True);
+            Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, chat, wiki: null, NO_PRIVATE_HOSTS, out _), Is.False);
         });
     }
 
     [Test]
     public void ALevelThisVersionDoesNotKnowCountsAsStrict() =>
-        Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), (OutboundDataRestriction)99, ChatWithTheUserWriting(GIVEN), WIKI_URL, out _), Is.False);
+        Assert.That(ReadWebPageTool.IsAllowedByOutboundDataRestriction(new Uri(GIVEN), (OutboundDataRestriction)99, ChatWithTheUserWriting(GIVEN), WIKI_URL, NO_PRIVATE_HOSTS, out _), Is.False);
 
     [Test]
     public void ARefusalDoesNotRepeatTheAddress()

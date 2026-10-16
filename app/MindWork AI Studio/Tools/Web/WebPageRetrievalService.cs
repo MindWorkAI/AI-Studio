@@ -123,6 +123,12 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (addresses.Count == 0)
             throw new InvalidOperationException($"The host '{url.Host}' did not resolve to an IP address.");
 
+        // Before the exemption for targets the user chose, because it guards what the address may
+        // carry. Every address has to be non-public, since the connection may go to any of them.
+        // The text names no address, so a caller may hand it on without repeating one:
+        if (options.NonPublicTargetsOnly && !addresses.All(IsNonPublicAddress))
+            throw new WebPageAccessBlockedException("The web page or one of its redirects leads to a public address, which this request may not reach.", WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED);
+
         //
         // Where the target came from decides which targets are acceptable. A URL a model produced
         // may not reach into the local network, because the model was talked into it by whatever
