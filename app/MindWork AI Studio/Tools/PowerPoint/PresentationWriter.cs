@@ -17,7 +17,8 @@ namespace AIStudio.Tools.PowerPoint;
 /// at all, which leaves no prompt text such as "Click to add text" behind.
 ///
 /// The template slides the deck refers to stay, with their pictures and notes. They take the color
-/// variant and the footer of the presentation, so that they look like the slides around them.
+/// variant and the footer of the presentation, so that they look like the slides around them. A
+/// slide the model edited takes its new content into its slots, and keeps the rest.
 ///
 /// Every presentation ends with an imprint, written on a content layout of the template like every
 /// other slide. It is no slide of the deck, so the number of slides the user asked for leaves it out.
@@ -89,6 +90,7 @@ internal static partial class PresentationWriter
             var imprintSlideIds = new List<uint>();
             var imprintName = ImprintTextsOf(deck).Title;
             var usedTemplateSlides = new HashSet<Uri>();
+            var slideArea = (double)template.SlideWidth * template.SlideHeight;
             for (var index = 0; index < slides.Count; index++)
             {
                 var slide = slides[index];
@@ -97,7 +99,14 @@ internal static partial class PresentationWriter
                 {
                     var templateSlide = template.FindSlide(number) ?? throw new InvalidOperationException($"The slide deck uses template slide {number}, which the template does not have. Check the deck before writing it.");
                     slidePart = TemplateSlidePartOf(keptSlideParts, usedTemplateSlides, templateSlide);
-                    AdaptTemplateSlide(slidePart, templateSlide, template, layoutParts, variantLabel, options.FooterText);
+                    var layout = AdaptTemplateSlide(slidePart, templateSlide, template, layoutParts, variantLabel, options.FooterText);
+                    if (slide.HasContent)
+                    {
+                        if (layout is null)
+                            throw new InvalidOperationException($"The slide deck writes content into template slide {number}, whose layout has no slots for it. Check the deck before writing it.");
+
+                        EditTemplateSlide(slidePart, new SlideContent(slide, layout, slidePart.SlideLayoutPart?.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea));
+                    }
                 }
                 else
                 {
@@ -106,7 +115,7 @@ internal static partial class PresentationWriter
                     var layoutPart = LayoutPartOf(layoutParts, layout);
                     slidePart = presentationPart.AddNewPart<SlidePart>();
                     slidePart.AddPart(layoutPart);
-                    var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, (double)template.SlideWidth * template.SlideHeight);
+                    var content = new SlideContent(slide, layout, layoutPart.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea);
                     slidePart.Slide = new P.Slide(
                         new P.CommonSlideData(ShapeTreeOf(slidePart, content)),
                         new P.ColorMapOverride(new A.MasterColorMapping()));

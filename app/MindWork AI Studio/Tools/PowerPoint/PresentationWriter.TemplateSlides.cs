@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
@@ -46,20 +47,130 @@ internal static partial class PresentationWriter
     /// <param name="layoutParts">The layouts of the document being written, by where they are stored.</param>
     /// <param name="variantLabel">The color variant of the presentation; null when the template has no variants.</param>
     /// <param name="footerText">The footer text; empty to keep the footer of the template slide.</param>
-    private static void AdaptTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, PresentationTemplate template, Dictionary<Uri, SlideLayoutPart> layoutParts, string? variantLabel, string footerText)
+    /// <returns>The layout the slide is based on now; null when its layout belongs to no family, which leaves the slide without slots to fill.</returns>
+    private static TemplateLayout? AdaptTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, PresentationTemplate template, Dictionary<Uri, SlideLayoutPart> layoutParts, string? variantLabel, string footerText)
     {
         var slide = slidePart.Slide ?? throw new InvalidDataException($"The template slide {templateSlide.Number} has no content.");
         slide.Show = null;
 
+        TemplateLayout? layout = null;
         if (templateSlide.FamilyId is { } familyId && template.FindFamily(familyId) is { } family && family.Variants.FirstOrDefault(variant => variant.Layout.PartUri == templateSlide.LayoutPartUri)?.Layout is { } currentLayout)
         {
-            var targetLayout = family.GetLayout(variantLabel);
-            if (targetLayout.PartUri != currentLayout.PartUri)
-                MoveToLayout(slidePart, slide, currentLayout, targetLayout, layoutParts);
+            layout = family.GetLayout(variantLabel);
+            if (layout.PartUri != currentLayout.PartUri)
+                MoveToLayout(slidePart, slide, currentLayout, layout, layoutParts);
         }
 
         if (footerText.Length > 0)
             ReplaceFooter(slidePart, slide, footerText);
+
+        return layout;
+    }
+
+    /// <summary>
+    /// Writes the content the model wrote for a template slide into the slots of that slide.
+    /// </summary>
+    /// <remarks>
+    /// Only slots with content change; every other one keeps what the template slide holds. A text
+    /// takes the formatting the slide gave the old one. A picture or a table replaces the old one
+    /// as a whole, since nothing of its old shape fits the new content, and a picture nobody shows
+    /// any more leaves the file. A slot the slide does not carry gets its placeholder from the
+    /// layout, as on a slide written anew.
+    /// </remarks>
+    /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
+    /// <param name="content">What goes on the slide.</param>
+    private static void EditTemplateSlide(SlidePart slidePart, SlideContent content)
+    {
+        if (slidePart.Slide?.CommonSlideData?.ShapeTree is not { } shapeTree)
+            return;
+
+        // Which shape fills which slot, by the same reading as the template's:
+        var shapesBySlot = new Dictionary<TemplateSlot, OpenXmlElement>();
+        foreach (var element in shapeTree.Elements())
+        {
+            if (PlaceholderOf(element) is { } placeholder && content.Layout.SlotOf(placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value) is { } slot)
+                shapesBySlot.TryAdd(slot, element);
+        }
+
+        var layoutPlaceholders = LayoutPlaceholders.Of(content.LayoutElement);
+        var slide = content.Slide;
+        foreach (var slot in content.Layout.Slots)
+        {
+            var index = slot.Ordinal - 1;
+            var existing = shapesBySlot.GetValueOrDefault(slot);
+            var placeholder = existing is not null && PlaceholderOf(existing) is { } existingPlaceholder
+                ? (P.PlaceholderShape)existingPlaceholder.CloneNode(true)
+                : layoutPlaceholders.For(slot);
+
+            List<A.Paragraph>? paragraphs = slot.Role switch
+            {
+                PlaceholderRole.TITLE when slide.Title.Length > 0 => ParagraphsOf(slide.Title),
+                PlaceholderRole.SUBTITLE when slide.Subtitle.Length > 0 => ParagraphsOf(slide.Subtitle),
+                PlaceholderRole.TEXT when index < slide.Texts.Count && slide.Texts[index].Paragraphs.Count > 0 => slide.Texts[index].Paragraphs.Select(ParagraphOf).ToList(),
+                PlaceholderRole.LABEL when index < slide.Labels.Count && slide.Labels[index].Length > 0 => ParagraphsOf(slide.Labels[index]),
+
+                _ => null,
+            };
+
+            OpenXmlElement? replacement;
+            if (paragraphs is not null)
+            {
+                if (existing is P.Shape shape)
+                {
+                    ReplaceParagraphs(shape, paragraphs);
+                    continue;
+                }
+
+                var id = NextShapeIdOf(shapeTree);
+                var name = slot.Role switch
+                {
+                    PlaceholderRole.TITLE => "Title",
+                    PlaceholderRole.SUBTITLE => "Subtitle",
+                    PlaceholderRole.LABEL => "Label",
+
+                    _ => "Text",
+                };
+
+                replacement = TextShape(id, $"{name} {id}", placeholder, paragraphs, slot.Role is PlaceholderRole.TEXT);
+            }
+            else
+            {
+                replacement = slot.Role switch
+                {
+                    PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(NextShapeIdOf(shapeTree), placeholder, slidePart, picture, slot.Bounds, slot.Bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
+                    PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(NextShapeIdOf(shapeTree), placeholder, table, slot.Bounds, content.TableStyleId),
+
+                    _ => null,
+                };
+            }
+
+            if (replacement is null)
+                continue;
+
+            if (existing is null)
+            {
+                shapeTree.Append(replacement);
+                continue;
+            }
+
+            // In the place of the old one, so that what lay above it still does:
+            existing.InsertAfterSelf(replacement);
+            RemoveShape(slidePart, existing);
+        }
+    }
+
+    /// <summary>
+    /// Removes a shape from a slide, together with the pictures only it showed.
+    /// </summary>
+    private static void RemoveShape(SlidePart slidePart, OpenXmlElement shape)
+    {
+        var pictureIds = shape.Descendants<A.Blip>().Select(blip => blip.Embed?.Value).OfType<string>().ToList();
+        shape.Remove();
+        foreach (var pictureId in pictureIds)
+        {
+            if (slidePart.Slide?.Descendants<A.Blip>().Any(blip => blip.Embed?.Value == pictureId) is not true && slidePart.TryGetPartById(pictureId, out var picturePart))
+                slidePart.DeletePart(picturePart);
+        }
     }
 
     /// <summary>
@@ -168,27 +279,68 @@ internal static partial class PresentationWriter
     /// Replaces the text of a shape on a template slide, keeping how the slide formats it.
     /// </summary>
     /// <remarks>
-    /// The body properties and the list style stay. The new runs take over the properties of the
-    /// first run the shape had, e.g., a color its author picked by hand.
+    /// The body properties and the list style stay. A new paragraph takes the formatting of the first
+    /// old paragraph on its list level: its paragraph properties, e.g., a bullet its author turned
+    /// off, and the properties of its first run, e.g., a size or a color picked by hand. A paragraph
+    /// without text keeps the latter in its end mark, which is where an author leaves them on a slide
+    /// waiting for text.
     /// </remarks>
     private static void ReplaceParagraphs(P.Shape shape, IEnumerable<A.Paragraph> paragraphs)
     {
         var textBody = shape.TextBody ??= new P.TextBody(new A.BodyProperties(), new A.ListStyle());
-        var runProperties = textBody.Descendants<A.RunProperties>().FirstOrDefault();
-        foreach (var paragraph in textBody.Elements<A.Paragraph>().ToList())
-            paragraph.Remove();
+        var formats = new Dictionary<int, (A.ParagraphProperties? Paragraph, A.RunProperties? Run)>();
+        foreach (var oldParagraph in textBody.Elements<A.Paragraph>().ToList())
+        {
+            formats.TryAdd(LevelOf(oldParagraph), (oldParagraph.ParagraphProperties, RunPropertiesOf(oldParagraph)));
+            oldParagraph.Remove();
+        }
 
         foreach (var paragraph in paragraphs)
         {
-            if (runProperties is not null)
-                foreach (var run in paragraph.Elements<A.Run>().Where(run => run.RunProperties is null))
-                    run.RunProperties = (A.RunProperties)runProperties.CloneNode(true);
+            if (formats.TryGetValue(LevelOf(paragraph), out var format))
+            {
+                if (format.Paragraph is not null)
+                    paragraph.ParagraphProperties = (A.ParagraphProperties)format.Paragraph.CloneNode(true);
+
+                if (format.Run is not null)
+                    foreach (var run in paragraph.Elements<A.Run>().Where(run => run.RunProperties is null))
+                        run.RunProperties = (A.RunProperties)format.Run.CloneNode(true);
+            }
 
             textBody.Append(paragraph);
         }
     }
 
-    private static P.PlaceholderShape? PlaceholderOf(P.Shape shape) => shape.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape;
+    private static int LevelOf(A.Paragraph paragraph) => paragraph.ParagraphProperties?.Level?.Value ?? 0;
+
+    /// <summary>
+    /// How a paragraph formats its text: the properties of its first run, or of its end mark when it has no text.
+    /// </summary>
+    private static A.RunProperties? RunPropertiesOf(A.Paragraph paragraph)
+    {
+        if (paragraph.Elements<A.Run>().FirstOrDefault()?.RunProperties is { } runProperties)
+            return runProperties;
+
+        if (paragraph.GetFirstChild<A.EndParagraphRunProperties>() is not { } endProperties)
+            return null;
+
+        // Both carry the same properties of a text, under another name:
+        var converted = new A.RunProperties(endProperties.ChildElements.Select(child => child.CloneNode(true)));
+        converted.SetAttributes(endProperties.GetAttributes());
+        return converted;
+    }
+
+    /// <summary>
+    /// The placeholder a shape, a picture or a table of a slide fills; null for anything else.
+    /// </summary>
+    private static P.PlaceholderShape? PlaceholderOf(OpenXmlElement element) => element switch
+    {
+        P.Shape shape => shape.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
+        P.Picture picture => picture.NonVisualPictureProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
+        P.GraphicFrame frame => frame.NonVisualGraphicFrameProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
+
+        _ => null,
+    };
 
     /// <summary>
     /// The next free shape ID of a slide.

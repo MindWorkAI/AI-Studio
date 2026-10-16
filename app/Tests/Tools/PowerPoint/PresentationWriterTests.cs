@@ -396,6 +396,85 @@ public sealed class PresentationWriterTests
         });
     }
 
+    [Test]
+    public async Task AnEditedSlideTakesTheNewTextsInTheFormattingOfTheOldOnes()
+    {
+        using var templateFile = TestTemplate.Create(TEMPLATE_WITH_SLIDES, Layouts());
+        using (var templateDocument = PresentationDocument.Open(templateFile, true))
+        {
+            //
+            // The author made the title of the news slide bold by hand, and left a sub-point
+            // waiting for text: without a bullet, and in a size of its own:
+            //
+            var news = SlidesOf(templateDocument)[1];
+            foreach (var run in PlaceholderShapeOf(news, "title", null).Descendants<A.Run>().ToList())
+                run.RunProperties = new A.RunProperties { Bold = true };
+
+            PlaceholderShapeOf(news, "obj", 1).TextBody!.Append(new A.Paragraph(new A.ParagraphProperties(new A.NoBullet()) { Level = 1 }, new A.EndParagraphRunProperties { FontSize = 1600 }));
+        }
+
+        var deck = new SlideDeckSpec("Weekly", [Edit(2, "News of the week", texts: [Text(new SlideParagraph("A new release", 0), new SlideParagraph("Faster", 1))], labels: ["This week"])]);
+        var (file, _) = await WriteFromAsync(templateFile, deck, OPTIONS);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+        var paragraphs = BodyParagraphsOf(slide);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(TitleOf(slide), Is.EqualTo("News of the week"));
+            Assert.That(PlaceholderShapeOf(slide, "title", null).Descendants<A.Run>().Select(run => run.RunProperties?.Bold?.Value), Is.All.True, "The new title keeps the formatting of the old one.");
+            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "A new release", "Faster" }));
+            Assert.That(paragraphs[1].ParagraphProperties?.Level?.Value, Is.EqualTo(1));
+            Assert.That(paragraphs[1].ParagraphProperties?.GetFirstChild<A.NoBullet>(), Is.Not.Null, "A sub-point keeps what the author chose for sub-points.");
+            Assert.That(paragraphs[1].Elements<A.Run>().Single().RunProperties?.FontSize?.Value, Is.EqualTo(1600));
+            Assert.That(paragraphs[0].Elements<A.Run>().Single().RunProperties?.FontSize, Is.Null, "A main point keeps what the author chose for main points.");
+            Assert.That(PlaceholderShapeOf(slide, "body", 17).TextBody!.InnerText, Is.EqualTo("This week"), "A slot the template slide left out gets its placeholder from the layout.");
+            Assert.That(slide.Slide!.Descendants<P.NonVisualDrawingProperties>().Select(properties => properties.Id!.Value), Is.Unique);
+        });
+    }
+
+    [Test]
+    public async Task WhatAnEditedSlideLeavesEmptyKeepsTheContentOfTheTemplate()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Edit(2, labels: ["This week"])]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(TitleOf(slide), Is.EqualTo("News"));
+            Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
+        });
+    }
+
+    [Test]
+    public async Task APictureOfAnEditedSlideReplacesTheOneOfTheTemplate()
+    {
+        // Last week's presentation is this week's template:
+        var (lastWeek, _) = await WriteAsync(DECK, OPTIONS, pictures: new FakePictureSource(WIDE_PICTURE, WIDE_PICTURE));
+        var tallPicture = new SlidePicture([4, 5, 6], "image/png", 100, 400);
+        var deck = new SlideDeckSpec("Mars", [Edit(3, pictures: [1])]);
+
+        var (file, _) = await WriteFromAsync(lastWeek, deck, OPTIONS, new FakePictureSource(tallPicture));
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+        using var pictureData = new MemoryStream();
+        using (var stream = slide.ImageParts.Single().GetStream(FileMode.Open, FileAccess.Read))
+            stream.CopyTo(pictureData);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(TitleOf(slide), Is.EqualTo("The rocket"));
+            Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Reusable" }));
+            Assert.That(slide.Slide!.Descendants<P.Picture>().Count(), Is.EqualTo(1));
+            Assert.That(pictureData.ToArray(), Is.EqualTo(new byte[] { 4, 5, 6 }), "The old picture leaves the file along with its shape.");
+        });
+    }
+
     /// <summary>
     /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
     /// and one the imprint, and a hint nobody keeps.
@@ -411,6 +490,14 @@ public sealed class PresentationWriterTests
 
     private static SlideSpec Keep(int templateSlide, bool startsChapter = false) => new(string.Empty, startsChapter, string.Empty, string.Empty, [], [], [], null, templateSlide);
 
+    private static SlideSpec Edit(int templateSlide, string title = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null, IReadOnlyList<int>? pictures = null) => new(string.Empty, false, title, string.Empty, texts ?? [], labels ?? [], pictures ?? [], null, templateSlide);
+
+    /// <summary>
+    /// The shape of a slide which fills the placeholder of the given type and index.
+    /// </summary>
+    private static P.Shape PlaceholderShapeOf(SlidePart slide, string type, uint? index) => slide.Slide!.Descendants<P.Shape>()
+        .Single(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => (placeholder.Type?.InnerText ?? "obj") == type && placeholder.Index?.Value == index));
+
     private static TestLayout[] Layouts() =>
     [
         new("A Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(SUBTITLE), TestPlaceholder.Footer(10, FOOTER), TestPlaceholder.SlideNumber(11, SLIDE_NUMBER)),
@@ -425,6 +512,15 @@ public sealed class PresentationWriterTests
     private static async Task<(MemoryStream File, PresentationWriteResult Result)> WriteAsync(SlideDeckSpec deck, PresentationWriteOptions options, TestTemplateOptions? templateOptions = null, IPictureSource? pictures = null)
     {
         using var templateFile = TestTemplate.Create(templateOptions ?? new TestTemplateOptions(), Layouts());
+        return await WriteFromAsync(templateFile, deck, options, pictures);
+    }
+
+    /// <summary>
+    /// Writes a presentation from a template file of the test's own, e.g., from a presentation written before.
+    /// </summary>
+    private static async Task<(MemoryStream File, PresentationWriteResult Result)> WriteFromAsync(Stream templateFile, SlideDeckSpec deck, PresentationWriteOptions options, IPictureSource? pictures = null)
+    {
+        templateFile.Position = 0;
         var template = PresentationTemplate.Read(templateFile);
         templateFile.Position = 0;
 
