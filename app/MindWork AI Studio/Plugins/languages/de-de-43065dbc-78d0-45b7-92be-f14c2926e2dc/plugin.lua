@@ -1122,6 +1122,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Common settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1963959073"] = "Allgemeine Einstellungen"
 
+-- Import policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1965764758"] = "Import-Richtlinie"
+
 -- Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1984494439"] = "Hinweis: Diese Einstellung wird nur wirksam, wenn dieses Regelwerk exportiert und über ein Konfigurations-Plugin an andere Nutzer verteilt wird. Wenn sie aktiviert ist, sehen Nutzer nur die Oberfläche zur Dokumentauswahl und können die Details des Regelwerks weder anzeigen noch ändern. Diese Einstellung wirkt sich NICHT auf Ihre lokale Ansicht aus – Sie sehen bei von Ihnen erstellten Regelwerken immer die Definition."
 
@@ -1217,9 +1220,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- A policy with this name already exists. Please choose a different name.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3584374593"] = "Ein Regelwerk mit diesem Namen existiert bereits. Bitte wählen Sie einen anderen Namen."
-
--- Import document analysis policy
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3800115485"] = "Regelwerk importieren"
 
 -- Load analysis rules from document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3813558135"] = "Regeln für die Analyse aus einem Dokument laden"
@@ -4173,6 +4173,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lo
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Nicht verfügbar"
 
+-- Import Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T381231449"] = "Datenquelle importieren"
+
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "ERI-Datenquelle exportieren"
 
@@ -4199,9 +4202,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Die
 
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T774473996"] = "Externe Daten (ERI-Server v1)"
-
--- Import ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T777621786"] = "ERI-v1-Datenquelle importieren"
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T782820095"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Authentifizierung konfiguriert ist. Das Problem war: {0}"
@@ -5214,6 +5214,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T16449
 -- Test Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1655784761"] = "Anbieter für Einbettung testen"
 
+-- Import Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1681763001"] = "Embedding importieren"
+
 -- Add Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Einbettung hinzufügen"
 
@@ -5237,9 +5240,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T21748
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2189814010"] = "Modell"
-
--- Import Embedding Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T229678442"] = "Einbettung importieren"
 
 -- Embeddings are a way to represent words, sentences, entire documents, or even images and videos as digital fingerprints. Just like each person has a unique fingerprint, embedding models create unique digital patterns that capture the meaning and characteristics of the content they analyze. When two things are similar in meaning or content, their digital fingerprints will look very similar. For example, the fingerprints for 'happy' and 'joyful' would be more alike than those for 'happy' and 'sad'.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T2419962612"] = "Einbettungen sind eine Methode, um Wörter, Sätze, ganze Dokumente oder sogar Bilder und Videos als digitale Fingerabdrücke darzustellen. So wie jeder Mensch einen einzigartigen Fingerabdruck hat, erzeugen Einbettungs-Modelle einzigartige digitale Muster, die die Bedeutung und Eigenschaften der von ihnen analysierten Inhalte erfassen. Wenn zwei Dinge sich in ihrer Bedeutung oder ihrem Inhalt ähneln, sehen auch ihre digitalen Fingerabdrücke sehr ähnlich aus. Zum Beispiel wären die Fingerabdrücke für „glücklich“ und „freudig“ einander ähnlicher als die für „glücklich“ und „traurig“."
@@ -5316,9 +5316,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T146957
 -- Uses the provider-configured model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1760715963"] = "Verwendet das vom Anbieter konfigurierte Modell"
 
--- Import LLM Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T178720520"] = "Anbieter importieren"
-
 -- Add Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1806589097"] = "Anbieter hinzufügen"
 
@@ -5345,6 +5342,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T301987
 
 -- What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-6 Luna. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3032087963"] = "Was wir als „Anbieter“ bezeichnen, ist die Kombination aus einem LLM-Anbieter wie OpenAI und einem Modell wie GPT-6 Luna. Sie können beliebig viele Anbieter einrichten. So können Sie für jede Aufgabe das passende Modell nutzen. Als LLM-Anbieter können Sie auch lokale Anbieter auswählen. Um diese App zu verwenden, müssen Sie jedoch mindestens einen Anbieter konfigurieren."
+
+-- Import Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3160005705"] = "Anbieter importieren"
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3267849393"] = "Bearbeiten"
@@ -5457,8 +5457,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T58
 -- This transcription provider is trusted by your organization for data source security checks.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T601264181"] = "Ihre Organisation vertraut diesem Anbieter für Transkriptionen bei der Sicherheitsprüfung von Datenquellen."
 
--- Import Transcription Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T682006405"] = "Anbieter für Transkriptionen importieren"
+-- Import transcription provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T644492997"] = "Transkriptionsanbieter importieren"
 
 -- This transcription provider is managed by your organization. You can set your own API key.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T690752279"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet. Sie können Ihren eigenen API-Schlüssel festlegen."
@@ -6099,6 +6099,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Bitte g
 -- Yes, this template decides which data a chat starts with
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Ja, diese Vorlage legt fest, mit welchen Daten ein Chat startet"
 
+-- Enter the full path of a file on this computer, or remove the attachment.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Geben Sie den vollständigen Pfad zu einer Datei auf diesem Computer ein oder entfernen Sie den Anhang."
+
 -- Load predefined user input from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Vordefinierte Benutzereingabe aus Datei laden"
 
@@ -6141,9 +6144,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579080722"] = "Nein, d
 -- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700"] = "Sie können eine Nachricht vordefinieren, die als Benutzereingabe verwendet wird, wenn Sie diese Chat-Vorlage verwenden. Diese Nachricht könnte beispielsweise eine Vorlage für eine strukturierte Nachricht sein, für die diese Chat-Vorlage entwickelt wurde."
 
--- Enter an absolute path to an existing local file, or remove this attachment.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2603688456"] = "Geben Sie einen vollständigen Pfad zu einer vorhandenen lokalen Datei ein, oder entfernen Sie diesen Anhang."
-
 -- Predefined User Input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2607897066"] = "Vordefinierte Benutzereingabe"
 
@@ -6158,6 +6158,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "Die Nac
 
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Name der Chat-Vorlage"
+
+-- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Bitte verknüpfe den Anhang '{0}' vor dem Speichern erneut mit einer Datei auf diesem Computer oder entferne ihn."
 
 -- Commit Changes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2996302517"] = "Änderungen übernehmen"
@@ -6183,9 +6186,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "Nein, C
 -- A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3329415439"] = "Eine Chat-Vorlage kann festlegen, mit welchen Werkzeugen ein Chat startet. Ohne eine solche Festlegung starten diese Chats mit den Werkzeugen, die Sie in den Chat-Optionen als Standard ausgewählt haben. Legen Sie es fest und wählen dann nichts aus, ist das eine andere Aussage: Solche Chats starten ohne jedes Werkzeug, ganz gleich, was Ihr Standard vorsieht."
 
--- Some attachments in this chat template are missing. Relink or remove them before adding the template.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3342669429"] = "Einige Anhänge in dieser Chatvorlage fehlen. Verknüpfen Sie sie erneut oder entfernen Sie sie, bevor Sie die Vorlage hinzufügen."
-
 -- Add a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3372872324"] = "Nachricht hinzufügen"
 
@@ -6194,9 +6194,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3448155331"] = "Schlie�
 
 -- Unsupported content type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3570316759"] = "Nicht unterstützter Inhaltstyp"
-
--- Relink the missing attachment '{0}' to an existing local file or remove it before saving.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3582611137"] = "Verknüpfen Sie den fehlenden Anhang '{0}' erneut mit einer vorhandenen Datei auf Ihrem Computer oder entfernen Sie ihn vor dem Speichern."
 
 -- What system prompt do you want to use?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3652587353"] = "Welchen System-Prompt möchten Sie verwenden?"
@@ -6231,14 +6228,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Verwend
 -- Tell the AI your predefined user input.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Teilen Sie der KI Ihre vordefinierte Benutzereingabe mit."
 
+-- Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Einige Anhänge dieser Chatvorlage sind auf diesem Computer nicht verfügbar. Bitte verknüpfe sie erneut oder entferne sie, bevor du die Vorlage hinzufügst."
+
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Erstellen Sie Ihre eigene Chat-Vorlage, um das Verhalten des LLMs für bestimmte Aufgaben oder Bereiche anzupassen. Definieren Sie einen individuellen System-Prompt und geben Sie eine Beispiel-Konversation vor, um eine KI-Erfahrung zu gestalten, die genau auf Ihre Anforderungen zugeschnitten ist."
 
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Nachricht eingeben"
-
--- The chat template fields are malformed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T539301384"] = "Die Felder der Chat-Vorlage sind fehlerhaft."
 
 -- Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T558345131"] = "Datenquellen"
@@ -6348,14 +6345,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T767586087"
 -- {0} embedding provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T818101181"] = "{0} Anbieter für Einbettungen"
 
--- Configuration snippet
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T3867536704"] = "Konfigurationsauszug"
+-- Exported configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T1297128668"] = "Exportierte Konfiguration"
 
--- Import is locked by your organization.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T4101825749"] = "Der Import ist von Ihrer Organisation gesperrt."
+-- Your organization does not allow importing this type of configuration.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2349213174"] = "Ihre Organisation erlaubt den Import dieser Konfigurationsart nicht."
 
--- Copy one exported configuration snippet from the item's Export configuration control and paste it below. You can review and change the filled form before saving a new local item.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T4214407984"] = "Kopiere einen exportierten Konfigurationsausschnitt aus dem Steuerelement „Konfiguration exportieren“ des Elements und füge ihn unten ein. Du kannst das ausgefüllte Formular überprüfen und ändern, bevor du ein neues lokales Element speicherst."
+-- Paste a configuration which was exported from AI Studio, for example by a colleague. AI Studio only reads its values and never runs the pasted text. You can review and change everything afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2598895568"] = "Füge eine Konfiguration ein, die aus AI Studio exportiert wurde, zum Beispiel von einer Kollegin oder einem Kollegen. AI Studio liest daraus nur die Werte aus und führt den eingefügten Text niemals aus. Anschließend kannst du alles überprüfen und ändern."
+
+-- Continue anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2843058989"] = "Trotzdem fortfahren"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T900713019"] = "Abbrechen"
@@ -6444,9 +6444,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3980336073"] = "Ih
 -- The ERI server '{0}' writes into a folder which does not exist on this computer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T472632172"] = "Der ERI-Server „{0}“ schreibt in einen Ordner, der auf diesem Rechner nicht existiert."
 
--- The imported retrieval process '{0}' is unavailable. Select another process before saving.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1759490982"] = "Der importierte Abrufprozess '{0}' ist nicht verfügbar. Bitte wählen Sie vor dem Speichern einen anderen Prozess aus."
-
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
 
@@ -6500,6 +6497,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T449168182"] = "Verb
 
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T470340825"] = "Benutzername"
+
+-- The server does not offer the imported retrieval process '{0}'. Please select another one before you save.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T653836675"] = "Der Server unterstützt das importierte Abrufverfahren „{0}“ nicht. Bitte wählen Sie vor dem Speichern ein anderes aus."
 
 -- Password
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T750979128"] = "Passwort"
@@ -7235,84 +7235,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T854110894
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T900713019"] = "Abbrechen"
-
--- No, the policy can be edited
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1286595725"] = "Nein, die Richtlinie kann bearbeitet werden."
-
--- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1291179736"] = "Below is a clear set of **analysis rules** you can use to instruct an AI on how to analyze documents.  ---  ## Document Analysis Rules  ### 1. Purpose of Analysis The AI must analyze each document by extracting the most important information, identifying its meaning, and presenting the results in a clear, structured, and useful way.  ---  ### 2. Focus on the Document Content The AI must base its analysis only on the information contained in the document.  It should: - Use facts, statements, and data from the document. - Not invent missing information. - Clearly mark uncertainty if something is unclear.  ---  ### 3. Identify the Document Type The AI should first determine what kind of document it is, for example: - Report - Contract - Email - Article - Presentation - Form - Policy - Invoice - Manual - Legal document  If the type cannot be determined, the AI should state that it is uncertain.  ---  ### 4. Extract Key Information The AI should identify the most important elements of the document, such as: - Title or main topic - Author or sender, if available - Date or timeline - Purpose of the document - Main points or arguments - Key entities, such as people, organizations, places, or products - Important numbers, dates, deadlines, or references - Any required actions or recommendations  ---  ### 5. Summarize the Document The AI should provide a short and clear summary that captures the main meaning of the document.  The summary should: - Be concise - Stay factual - Include only the most important information - Avoid unnecessary details  ---  ### 6. Identify Structure and Organization The AI should analyze how the document is organized, including: - Sections or headings - Logical flow of information - Presence of tables, lists, or attachments - Whether the structure helps the reader understand the content  ---  ### 7. Analyze Tone and Style The AI should evaluate the writing style and tone of the document.  Possible tone categories include: - Formal - Informal - Technical - Legal - Persuasive - Neutral - Urgent - Instructional  The AI should also note if the tone is appropriate for the document type and audience.  ---  ### 8. Assess Clarity and Quality The AI should evaluate how clear and understandable the document is.  It should consider: - Whether the main message is easy to understand - Whether important information is missing or unclear - Whether the language is precise or vague - Whether the document contains contradictions or errors - Whether the formatting supports easy reading  ---  ### 9. Detect Risks, Issues, or Gaps The AI should point out anything that may be important, risky, incomplete, or inconsistent.  For example: - Missing dates or signatures - Unclear obligations - Conflicting statements - Undefined terms - Potentially incorrect data - Missing explanations - Ambiguous instructions  ---  ### 10. Identify Actions, Decisions, or Requirements If the document asks the reader to do something, the AI must identify those actions clearly.  It should extract: - Required tasks - Deadlines - Responsibilities - Approval requests - Conditions - Next steps  ---  ### 11. Compare Information If Multiple Documents Are Given If more than one document is provided, the AI should compare them and identify: - Similarities - Differences - Contradictions - Repeated information - New or updated content  ---  ### 12. Present Results in a Structured Format The AI should return its analysis in a clear structure, for example:  **1. Document type**   **2. Main purpose**   **3. Summary**   **4. Key information**   **5. Important points**   **6. Missing or unclear items**   **7. Risks or issues**   **8. Suggested actions**   **9. Conclusion**  If the user requests a different format, the AI should follow that format.  ---  ### 13. Use Simple and Understandable Language The AI should explain the document in a way that is easy to understand, even for non-experts.  It should: - Avoid unnecessary technical language - Explain complex terms if needed - Make the analysis useful for regular users  ---  ### 14. Be Objective and Neutral The AI should analyze the document without adding personal opinions, unless the user explicitly asks for evaluation or recommendation.  It should: - Stay factual - Separate facts from interpretation - Avoid exaggeration or assumptions  ---  ### 15. Handle Unclear or Low-Quality Input Carefully If the document is incomplete, unreadable, or unclear, the AI should: - Explain what is missing or unclear - Describe what can still be understood - Suggest what additional information is needed  It should not pretend to understand something that is not supported by the document.  ---  ## Optional Standard Output Format  The AI may respond using this structure:  ```text 1. Document Overview 2. Main Purpose 3. Key Points 4. Important Data 5. Unclear or Missing Information 6. Risks or Issues 7. Recommended Actions 8. Final Summary ```  ---  If you want, I can also turn this into: 1. a **system prompt** for an AI assistant,   2. a **checklist for document review**, or   3. a **shorter version for practical use**."
-
--- Yes, protect this policy
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1762380857"] = "Ja, diese Richtlinie schützen"
-
--- Hide the policy definition when distributed via configuration plugin?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T1875622568"] = "Richtliniendefinition ausblenden, wenn sie über das Konfigurations-Plugin verteilt wird?"
-
--- No profile
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2028602035"] = "Kein Profil"
-
--- Load output rules from document
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2168201568"] = "Ausgaberegeln aus Dokument laden"
-
--- Preselect a profile
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2322771068"] = "Profil vorauswählen"
-
--- The name of your policy must be between 6 and 60 characters long.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2435013256"] = "Der Name deiner Richtlinie muss zwischen 6 und 60 Zeichen lang sein."
-
--- Preselect a provider
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2440815970"] = "Anbieter vorab auswählen"
-
--- Add
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2646845972"] = "Hinzufügen"
-
--- Policy name
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T2879019438"] = "Richtlinienname"
-
--- Analysis rules
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3108719748"] = "Analyseregeln"
-
--- Tools this policy permits
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T31356122"] = "Von dieser Richtlinie erlaubte Tools"
-
--- No, show the policy definition
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3166091879"] = "Nein, Definition der Richtlinie anzeigen"
-
--- The description of your policy must be between 32 and 512 characters long.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3285636934"] = "Die Beschreibung Ihrer Richtlinie muss zwischen 32 und 512 Zeichen lang sein."
-
--- A policy with this name already exists. Please choose a different name.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3584374593"] = "Eine Richtlinie mit diesem Namen ist bereits vorhanden. Bitte wählen Sie einen anderen Namen."
-
--- Use app default profile
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3587225583"] = "App-Standardprofil verwenden"
-
--- No provider
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3740605451"] = "Kein Anbieter"
-
--- Load analysis rules from document
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3813558135"] = "Analyse-Regeln aus Dokument laden"
-
--- Output rules
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T3918193587"] = "- Gib nur die Übersetzung zurück, ohne zusätzliche Kommentare. - Keine Erklärungen, Beispiele oder Hinweise. - Behalte Platzhalter, Variablen, HTML, Markdown und Sonderzeichen genau bei. - Nutze einfache, verständliche deutsche Sprache. - Übersetze UI-Elemente kurz, eindeutig und passend zum Kontext. - Korrigiere Rechtschreibung und Grammatik, ohne den Sinn zu ändern. - Erfinde keine neuen Informationen und ergänze keine Inhalte."
-
--- Please provide a name for your policy. This name will be used to identify the policy in AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T4040507702"] = "Bitte geben Sie einen Namen für Ihre Richtlinie an. Dieser Name wird zur Identifizierung der Richtlinie in AI Studio verwendet."
-
--- Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T652187065"] = "Output rules for the analysis/localization task:  1. Return only the requested output.    - Do not add introductions, explanations, comments, notes, or conclusions.    - If the task is translation, output only the translated text.  2. Use German as the target language.    - Use German from Germany.    - Keep the language simple and easy to understand for non-technical users.    - Prefer natural, common German wording over literal translation.    - Avoid unnecessary technical jargon.  3. Translate faithfully without adding new information.    - Preserve the original meaning, intent, and tone.    - Do not add features, explanations, warnings, benefits, or context that are not present in the source text.  4. Correct obvious spelling and grammar issues in the source text.    - Fix only clear mistakes.    - Do not change the meaning while correcting.  5. Preserve placeholders, variables, and code elements.    - Keep all placeholders unchanged, for example: `{name}`, `{{variable}}`, `%s`, `<tag>`, `#tag`, `[[link]]`.    - Keep formatting syntax unchanged when present, such as Markdown, HTML, JSON keys, or line breaks.    - Do not translate variable names, function names, API names, file paths, or identifiers.  6. Preserve brand names and product names.    - Keep proper names unchanged unless there is a known localized form.    - Examples: “MindWork AI Studio”, “AI Studio”, “macOS”, “Windows”, “Linux”.  7. Match the UI context and intended function.    - Buttons and menu labels should be short, clear, and actionable.    - Headings should be concise.    - Descriptions should sound helpful and easy to understand.    - If the original text is a label, do not turn it into a sentence unless the original implies a full sentence.  8. Keep tone and style consistent.    - Use a friendly, professional, and neutral tone suitable for general users.    - If an address form is needed, prefer formal “Sie” unless the source clearly uses casual language or the app context requires “Du”.  9. Preserve length where practical.    - Try to keep the translated text within a similar character length as the source, especially for UI elements like buttons, tabs, and labels.    - Shorten wording if needed without losing meaning.  10. Follow German writing conventions.    - Use correct German capitalization.    - Use German punctuation when appropriate.    - Remove unnecessary spaces before punctuation only if the source style allows it.    - Keep quotation marks, dashes, and special characters in a way that fits German conventions unless they are technical elements.  11. Do not alter the structure unless required by grammar.    - If the source contains bullet points, numbered items, line breaks, or multiple sentences, preserve that structure in the output.    - Do not merge or split content unless needed for natural German.  12. If the source is unclear, ambiguous, or incomplete, choose the safest direct interpretation.    - Do not invent missing information.    - If a text cannot be translated meaningfully, return a minimal, faithful translation based only on the available source."
-
--- Policy description
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T748735777"] = "Richtlinienbeschreibung"
-
--- Would you like to protect this policy so that you cannot accidentally edit or delete it?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T80597472"] = "Möchtest du diese Richtlinie schützen, damit du sie nicht versehentlich bearbeiten oder löschen kannst?"
-
--- Cancel
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T900713019"] = "Abbrechen"
-
--- Yes, hide the policy definition
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTANALYSISPOLICYDIALOG::T940701960"] = "Ja, Richtliniendefinition ausblenden"
 
 -- Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1205126512"] = "Bitte warten Sie, während wir den Inhalt Ihrer Datei laden. Je nach Dateityp und -größe kann dies einen Moment dauern."
@@ -12708,113 +12630,92 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "Der Plugin-Code wurde nach der letzten Sicherheitsprüfung geändert. Das gespeicherte Ergebnis stimmt nicht mehr mit dem aktuellen Code überein, daher muss dieses Assistenten-Plugin erneut geprüft werden, bevor es aktiviert oder verwendet werden darf."
 
--- The embedded credential could not be decrypted on this device. Enter your own credential before saving.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T1017166692"] = "Die eingebetteten Zugangsdaten konnten auf diesem Gerät nicht entschlüsselt werden. Geben Sie Ihre eigenen Zugangsdaten vor dem Speichern ein."
+-- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "Das Token oder Passwort der Datenquelle lässt sich auf diesem Computer nicht entschlüsseln. Datenquellen dieser Art können nur auf einem Computer importiert werden, auf dem das Verschlüsselungsgeheimnis deiner Organisation eingerichtet ist."
 
--- tool {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T1561005241"] = "Werkzeug {0}"
+-- Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T206419407"] = "Datenquellen, die Kerberos zur Anmeldung verwenden, können noch nicht importiert werden. Bitte füge sie selbst hinzu."
 
--- provider {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T1867642302"] = "Anbieter {0}"
+-- The tokenizer '{0}' is not on this computer, so the provider is imported without it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2556276619"] = "Der Tokenizer „{0}“ ist auf diesem Computer nicht vorhanden. Daher wird der Anbieter ohne ihn importiert."
 
--- The '{0}' field must be a string.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T224834942"] = "Das Feld „{0}“ muss eine Zeichenfolge sein."
+-- The chat template preselects data sources which do not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2608225446"] = "Die Chatvorlage enthält vorausgewählte Datenquellen, die auf diesem Computer nicht vorhanden sind: {0}."
 
--- The exported item has an invalid ID.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T2640740755"] = "Das exportierte Element hat eine ungültige ID."
+-- The chat template preselects tools which are not available on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "Die Chatvorlage wählt standardmäßig Tools aus, die auf diesem Computer nicht verfügbar sind: {0}."
 
--- The '{0}' field has an unknown value.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T2930445640"] = "Das Feld '{0}' hat einen unbekannten Wert."
+-- The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "Der API-Schlüssel in der eingefügten Konfiguration kann auf diesem Computer nicht entschlüsselt werden. Gib deinen API-Schlüssel ein, bevor du den Anbieter speicherst."
 
--- data source {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T3277968944"] = "Datenquelle {0}"
+-- The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3702015680"] = "Die Chatvorlage fügt jedem damit gestarteten Chat folgende Dateien von diesem Computer hinzu: {0}. Bitte vergewissere dich, dass du diese Dateien teilen möchtest."
 
--- The '{0}' field must be a whole number.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T3419687389"] = "Das Feld „{0}“ muss eine ganze Zahl sein."
+-- The policy preselects a provider which does not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3849646238"] = "Die Richtlinie hat einen Anbieter vorausgewählt, der auf diesem Computer nicht verfügbar ist: {0}."
 
--- profile {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T3445783292"] = "Profil {0}"
+-- The pasted configuration is not a valid configuration of the type '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T4231596123"] = "Die eingefügte Konfiguration ist keine gültige Konfiguration vom Typ „{0}“."
 
--- The '{0}' field must be true or false.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T3600915840"] = "Das Feld „{0}“ muss wahr oder falsch sein."
+-- The policy permits tools which are not available on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "Die Richtlinie erlaubt Tools, die auf diesem Computer nicht verfügbar sind: {0}."
 
--- Unavailable references: {0}. Review the selections before saving.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T3637224236"] = "Nicht verfügbare Verweise: {0}. Überprüfen Sie die Auswahl, bevor Sie speichern."
+-- The policy preselects a profile which does not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T600255824"] = "Die Richtlinie wählt ein Profil vorab aus, das auf diesem Computer nicht vorhanden ist: {0}."
 
--- The '{0}' field must contain an ENC:v1 credential.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T4261018324"] = "Das Feld '{0}' muss einen ENC:v1-Anmeldedatensatz enthalten."
-
--- The '{0}' field must be a table.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T432554775"] = "Das Feld '{0}' muss eine Tabelle sein."
-
--- The '{0}' field contains an invalid entry.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONIMPORTFIELDS::T948874113"] = "Das Feld „{0}“ enthält einen ungültigen Eintrag."
-
--- The 'Port' field must be between 1 and 65535.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T1817689659"] = "Das Feld „Port“ muss zwischen 1 und 65535 liegen."
-
--- The 'MaxMatches' field is outside the allowed range.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T2009159518"] = "Das Feld „MaxMatches“ liegt außerhalb des zulässigen Bereichs."
-
--- This configuration section cannot be imported here.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T2657742500"] = "Dieser Konfigurationsbereich kann hier nicht importiert werden."
-
--- An example conversation message is empty.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T3131294453"] = "Eine Nachricht einer Beispielkonversation ist leer."
-
--- An example conversation entry is not a table.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T3912378391"] = "Ein Beispiel-Gesprächseintrag ist keine Tabelle."
-
--- Kerberos data sources cannot be imported from configuration snippets.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T4019138476"] = "Kerberos-Datenquellen können nicht aus Konfigurations-Snippets importiert werden."
-
--- The chat template fields are malformed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T539301384"] = "Die Felder der Chat-Vorlage sind fehlerhaft."
-
--- This data source is not an ERI v1 data source.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORTVALIDATION::T724971220"] = "Diese Datenquelle ist keine ERI-v1-Datenquelle."
-
--- Only literal values are allowed at character {0}; executable Lua is not accepted.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1200702179"] = "An Zeichen {0} sind nur Literalwerte erlaubt; ausführbarer Lua-Code wird nicht akzeptiert."
+-- The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T639320638"] = "Die eingefügte Konfiguration enthält einen unverschlüsselten API-Schlüssel. Dieser wurde daher ausgelassen. Bitte gib deinen API-Schlüssel ein, bevor du den Anbieter speicherst."
 
 -- Expected a quoted string at character {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1235695745"] = "Es wurde ein Text in Anführungszeichen bei Zeichen {0} erwartet."
 
--- Unterminated long string.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1583706986"] = "Nicht abgeschlossene lange Zeichenkette."
-
--- The configuration section names do not match.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1700453124"] = "Die Namen der Konfigurationsbereiche stimmen nicht überein."
-
--- The snippet contains too many nested tables.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1872841947"] = "Der Ausschnitt enthält zu viele verschachtelte Tabellen."
+-- The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1957713080"] = "Die eingefügte Konfiguration beschreibt den Typ „{0}“, aber hier kann nur der Typ „{1}“ importiert werden."
 
 -- Expected '{0}' at character {1}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2092509274"] = "„{0}“ an Zeichenposition {1} erwartet."
 
--- Unsupported string escape sequence: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2686740263"] = "Nicht unterstützte Escape-Sequenz in der Zeichenfolge: {0}"
+-- A quoted string contains a line break, which Lua does not allow.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2204852708"] = "Eine Zeichenfolge in Anführungszeichen enthält einen Zeilenumbruch, der in Lua nicht zulässig ist."
 
--- Paste one exported configuration snippet (up to 1 MB).
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2743278967"] = ""
+-- Please paste one exported configuration of at most 1 MB.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2312733854"] = "Bitte fügen Sie eine exportierte Konfiguration mit maximal 1 MB ein."
+
+-- The pasted configuration does not describe the type '{0}', which can be imported here.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2537838739"] = "Die eingefügte Konfiguration beschreibt nicht den Typ „{0}“, der hier importiert werden kann."
+
+-- A quoted string is not closed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2729613384"] = "Eine Zeichenfolge in Anführungszeichen wurde nicht geschlossen."
+
+-- The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2765542892"] = "Der Blockkommentar an Zeichenposition {0} wird nicht unterstützt. Bitte verwenden Sie Zeilenkommentare, die mit -- beginnen und am Zeilenende enden."
+
+-- The pasted configuration names two different types of configuration.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2938094482"] = "Die eingefügte Konfiguration gibt zwei unterschiedliche Konfigurationstypen an."
+
+-- The pasted configuration contains too many nested tables.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3064118429"] = "Die eingefügte Konfiguration enthält zu viele verschachtelte Tabellen."
 
 -- Expected a comma or closing brace at character {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3466555352"] = "An Position {0} wurde ein Komma oder eine schließende geschweifte Klammer erwartet."
 
--- This is a {0} snippet. Paste a {1} snippet here.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3577683445"] = "Dies ist ein {0}-Snippet. Fügen Sie hier ein {1}-Snippet ein."
+-- The value nil at character {0} is not supported. Leave the field out instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3903177263"] = "Der Wert nil an Position {0} wird nicht unterstützt. Lassen Sie das Feld stattdessen weg."
 
--- Unterminated quoted string.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3882373828"] = "Zeichenkette in Anführungszeichen nicht abgeschlossen."
+-- At character {0}, the pasted configuration contains code. Only plain values such as texts, numbers, true, and false are allowed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3962550160"] = "An Position {0} enthält die eingefügte Konfiguration Code. Erlaubt sind nur einfache Werte wie Texte, Zahlen, `true` und `false`."
 
--- A quoted string contains an unescaped newline.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T4168367785"] = "Ein String in Anführungszeichen enthält einen nicht maskierten Zeilenumbruch."
+-- A long string is not closed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T39989546"] = "Eine lange Zeichenfolge ist nicht abgeschlossen."
+
+-- The escape sequence {0} is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T459116273"] = "Die Escape-Sequenz {0} wird nicht unterstützt."
 
 -- The field '{0}' occurs more than once.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T560836334"] = "Das Feld „{0}“ kommt mehr als einmal vor."
 
--- The snippet must contain exactly one table assignment and no executable code.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T873986754"] = "table: {}"
+-- The pasted configuration must consist of exactly one exported item, without any further code.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T949973671"] = "Die eingefügte Konfiguration muss aus genau einem exportierten Element bestehen und darf keinen weiteren Code enthalten."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
@@ -12977,6 +12878,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "Die Tabelle CONFIG existiert nicht oder ist keine gültige Tabelle."
+
+-- Document Analysis Policy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Richtlinie zur Dokumentenanalyse"
+
+-- Chat Template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T2515475479"] = "Chat-Vorlage"
+
+-- Unknown configuration
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3189461731"] = "Unbekannte Konfiguration"
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3440849550"] = "Profil"
+
+-- LLM Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3612415205"] = "LLM-Anbieter"
+
+-- Transcription Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T4094182084"] = "Transkriptionsanbieter"
+
+-- Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T858938618"] = "Datenquelle"
+
+-- Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T981047123"] = "Embedding-Anbieter"
 
 -- The field IETF_TAG does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T1796010240"] = "Das Feld IETF_TAG existiert nicht oder ist keine gültige Zeichenkette."
