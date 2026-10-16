@@ -43,6 +43,51 @@ internal sealed partial class PresentationTemplate
     }
 
     /// <summary>
+    /// Describes the template slides the user chose for the model, one line per slide.
+    /// </summary>
+    /// <remarks>
+    /// The model learns what each slide says, so that a new slide does not repeat a kept one, and
+    /// which slots an edited slide offers, by the layout it shares with the catalog. Slides the user
+    /// leaves out are not mentioned at all. The texts come from the template file, so the caller
+    /// passes them through the prompt injection filter.
+    /// </remarks>
+    /// <param name="uses">What the user chose for each slide of the template, by its number.</param>
+    /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 "AI Studio: / EINSTEIN:"</c>; empty when the user chose no slide.</returns>
+    public string ToTemplateSlidesPrompt(IReadOnlyList<TemplateSlideUse> uses)
+    {
+        var list = new StringBuilder();
+        foreach (var slide in this.Slides)
+        {
+            var use = slide.Number <= uses.Count ? uses[slide.Number - 1] : TemplateSlideUse.OMIT;
+            if (use is TemplateSlideUse.OMIT)
+                continue;
+
+            if (list.Length > 0)
+                list.Append('\n');
+
+            list.Append("- Template slide ").Append(slide.Number).Append(use is TemplateSlideUse.KEEP ? ", to keep unchanged" : ", to edit");
+            if (slide.IsImprint)
+                list.Append(", the imprint");
+
+            if (use is TemplateSlideUse.EDIT && slide.FamilyId is { } familyId)
+                list.Append(", with the slots of layout ").Append(familyId);
+
+            var slots = this.FindFamily(slide.FamilyId ?? string.Empty)?.Slots ?? slide.Contents.Select(content => content.Slot).ToList();
+            list.Append(": ");
+            if (slide.Contents.Count == 0)
+                list.Append("no content");
+            else
+                list.AppendJoin("; ", slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}"));
+        }
+
+        return list.ToString();
+    }
+
+    private static string DescribeContent(TemplateSlideContent content) => content.Slot.Role is PlaceholderRole.PICTURE
+        ? "(a picture)"
+        : $"\"{content.Text.ReplaceLineEndings(" / ")}\"";
+
+    /// <summary>
     /// What the layout types a template may state mean; most templates state none.
     /// </summary>
     private static string? PurposeOf(string layoutType) => layoutType switch

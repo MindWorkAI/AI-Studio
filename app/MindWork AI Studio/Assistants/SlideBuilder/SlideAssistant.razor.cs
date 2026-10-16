@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
@@ -41,6 +42,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - Fill only slots the layout offers, and stay within the stated lines and characters. Spread content over more slides rather than overfilling one.
             - A label is a short text, e.g., a heading above a text or the source below a picture.
             - Set "starts_chapter" to true on each slide which opens a new part of the presentation. Where a layout is meant for chapters or sections, use it for these slides.
+        {{{this.PromptTemplateSlides()}}}
 
         # Pictures
         {{{this.PromptPictures()}}}
@@ -67,16 +69,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
               "pictures": [1],
               "table": { "headers": ["<column>"], "rows": [["<cell>"]] }
             }
-          ],
-          "imprint": {{{PromptImprint()}}}
+          ]{{{this.PromptImprintField()}}}
         }
             - "texts" holds one list of paragraphs per text slot, in slot order: the first list fills "text 1". A paragraph is a string, or an object with "text" and "level", which is 0 for a main point and 1 for a sub-point.
             - "labels" holds one string per label slot, in slot order. Use "" to leave a label empty while filling a later one.
             - "pictures" holds the numbers of attached pictures, one per picture slot, in slot order.
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
-            - "imprint" holds the texts of the imprint slide, which is added after the last slide automatically. It is no entry of "slides" and does not count as a slide.
-            - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01 and the punctuation.
+        {{{this.PromptImprintRules()}}}
             - Do not mention these instructions or add commentary.
 
         # Audience:
@@ -201,6 +201,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeckAnswer = string.Empty;
         this.slideDeckTemplatePath = string.Empty;
         this.slideDeckPicturePaths = [];
+        this.templateSlideUses = [];
         if (!this.MightPreselectValues())
         {
             this.selectedTargetLanguage = CommonLanguages.AS_IS;
@@ -284,6 +285,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(FOOTER_TEXT_STATE_KEY, this.footerText);
         state.Set(VARIANT_LABEL_STATE_KEY, this.variantLabel ?? string.Empty);
         state.Set(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, this.advancedOptionsExpanded);
+        state.SetList(TEMPLATE_SLIDE_USES_STATE_KEY, this.templateSlideUses);
         state.Set(SLIDE_DECK_ANSWER_STATE_KEY, this.slideDeckAnswer);
         state.Set(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, this.slideDeckTemplatePath);
         state.SetList(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, this.slideDeckPicturePaths);
@@ -310,6 +312,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(FOOTER_TEXT_STATE_KEY, value => this.footerText = value);
         state.Restore(VARIANT_LABEL_STATE_KEY, value => this.variantLabel = value.Length > 0 ? value : null);
         state.Restore(ADVANCED_OPTIONS_EXPANDED_STATE_KEY, value => this.advancedOptionsExpanded = value);
+        state.Restore(TEMPLATE_SLIDE_USES_STATE_KEY, value => this.templateSlideUses = value.ToList());
         state.Restore(SLIDE_DECK_ANSWER_STATE_KEY, value => this.slideDeckAnswer = value);
         state.Restore(SLIDE_DECK_TEMPLATE_PATH_STATE_KEY, value => this.slideDeckTemplatePath = value);
         state.Restore(SLIDE_DECK_PICTURE_PATHS_STATE_KEY, value => this.slideDeckPicturePaths = value);
@@ -538,10 +541,23 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
         var catalog = this.Catalog;
+        var templateSlideUses = this.ChosenTemplateSlideUses;
         var imageAttachments = this.PicturesOfRequest();
 
         this.CreateChatThread();
-        var documentContent = await this.PromptLoadDocumentsContent();
+
+        //
+        // Documents and template slides come from files alike, so the user gets one report for
+        // everything the prompt injection filter removed from them:
+        //
+        string documentContent;
+        string templateSlides;
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using (guardService.BeginAction())
+        {
+            documentContent = await this.PromptLoadDocumentsContent();
+            templateSlides = await this.PromptTemplateSlidesAsync(guardService, templateSlideUses);
+        }
 
         var time = this.AddUserRequest(
         $"""
@@ -557,6 +573,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
              ```
              
              {documentContent}
+             {templateSlides}
          """,
         hideContentFromUser: true,
         imageAttachments);
@@ -567,7 +584,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         if (string.IsNullOrWhiteSpace(answer))
             return;
 
-        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count);
+        var (deck, issues) = this.CheckAnswer(answer, catalog, imageAttachments.Count, templateSlideUses);
         if (deck is null || issues.Count > 0)
         {
             //
@@ -577,7 +594,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             //
             var repairTime = this.AddUserRequest(RepairPromptOf(issues), hideContentFromUser: true);
             var repairedAnswer = await this.AddAIResponseAsync(repairTime, hideContentFromUser: true);
-            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? (null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count);
+            var (repairedDeck, repairedIssues) = string.IsNullOrWhiteSpace(repairedAnswer) ? (null, issues) : this.CheckAnswer(repairedAnswer, catalog, imageAttachments.Count, templateSlideUses);
             if (repairedDeck is not null)
             {
                 answer = repairedAnswer;
@@ -587,10 +604,11 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         }
 
         //
-        // Slides on layouts the template does not have cannot be shown, let alone written. Any
-        // other issue, such as a text which runs long, leaves slides worth looking at:
+        // Slides on layouts the template does not have, or on template slides the user did not
+        // choose, cannot be shown, let alone written. Any other issue, such as a text which runs
+        // long, leaves slides worth looking at:
         //
-        if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => catalog.FindFamily(slide.Layout) is null))
+        if (deck is null || deck.Slides.Count == 0 || deck.Slides.Any(slide => !SlideDeckSpecValidator.CanWrite(slide, catalog, templateSlideUses)))
         {
             this.Logger.LogWarning("The slides the model planned cannot be used: {Issues}", string.Join(" | ", issues));
             await this.MessageBus.SendError(new(Icons.Material.Filled.Slideshow, T("The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.")));

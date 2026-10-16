@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PowerPoint;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
 
@@ -36,9 +37,14 @@ public partial class SlideAssistant
     private bool isWritingPresentation;
 
     /// <summary>
-    /// Whether the options of the template are open: its color variant and the footer.
+    /// Whether the options of the template are open: its color variant, the footer, and its slides.
     /// </summary>
     private bool advancedOptionsExpanded;
+
+    /// <summary>
+    /// What the user chose for each slide of the template, by its number.
+    /// </summary>
+    private List<TemplateSlideUse> templateSlideUses = [];
 
     /// <summary>
     /// The answer the slide deck was read from, which the session keeps to restore the deck.
@@ -59,6 +65,7 @@ public partial class SlideAssistant
     private static readonly AssistantSessionStateKey<string> FOOTER_TEXT_STATE_KEY = new(nameof(footerText));
     private static readonly AssistantSessionStateKey<string> VARIANT_LABEL_STATE_KEY = new(nameof(variantLabel));
     private static readonly AssistantSessionStateKey<bool> ADVANCED_OPTIONS_EXPANDED_STATE_KEY = new(nameof(advancedOptionsExpanded));
+    private static readonly AssistantSessionStateKey<List<TemplateSlideUse>> TEMPLATE_SLIDE_USES_STATE_KEY = new(nameof(templateSlideUses));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_ANSWER_STATE_KEY = new(nameof(slideDeckAnswer));
     private static readonly AssistantSessionStateKey<string> SLIDE_DECK_TEMPLATE_PATH_STATE_KEY = new(nameof(slideDeckTemplatePath));
     private static readonly AssistantSessionStateKey<List<string>> SLIDE_DECK_PICTURE_PATHS_STATE_KEY = new(nameof(slideDeckPicturePaths));
@@ -69,6 +76,18 @@ public partial class SlideAssistant
     private PresentationTemplate Catalog => this.template ?? DEFAULT_CATALOG;
 
     private bool IsTemplateLocked => ManagedConfiguration.TryGet(x => x.SlideBuilder, x => x.TemplatePath, out var meta) && meta.IsLocked;
+
+    /// <summary>
+    /// What the user chose for the slides of the template, as the model and the check of its answer see it; empty without a template.
+    /// </summary>
+    private IReadOnlyList<TemplateSlideUse> ChosenTemplateSlideUses => this.template is null ? [] : this.templateSlideUses.ToList();
+
+    private bool HasChosenTemplateSlides => this.template is not null && this.templateSlideUses.Any(use => use is not TemplateSlideUse.OMIT);
+
+    /// <summary>
+    /// The imprint of the template, when the user keeps or edits it; it takes the place of the one added otherwise.
+    /// </summary>
+    private TemplateSlide? ChosenTemplateImprint => this.template?.Slides.FirstOrDefault(slide => slide.IsImprint && this.TemplateSlideUseOf(slide.Number) is not TemplateSlideUse.OMIT);
 
     /// <summary>
     /// How many slides the user asked for, or 0 when the model may choose.
@@ -126,17 +145,82 @@ public partial class SlideAssistant
             return;
         }
 
-        // A variant of another template means nothing for this one:
+        // A variant of another template means nothing for this one, nor do choices for its slides:
         if (this.variantLabel is null || !this.template.VariantLabels.Contains(this.variantLabel))
             this.variantLabel = this.template.VariantLabels.FirstOrDefault();
+
+        if (this.templateSlideUses.Count != this.template.Slides.Count)
+            this.templateSlideUses = DefaultTemplateSlideUsesOf(this.template);
     }
 
     private async Task OnTemplateChanged(string path)
     {
         this.templatePath = path;
+        this.templateSlideUses = [];
         this.LoadTemplate();
         if (this.Form is not null)
             await this.Form.Validate();
+    }
+
+    /// <summary>
+    /// What the presentation does with the slides of a template unless the user says otherwise.
+    /// </summary>
+    /// <remarks>
+    /// The slides of a template are mostly samples and hints, so they stay out. An imprint is the
+    /// exception: the LLM updates its topic and date, so that the imprint keeps the details its
+    /// author wrote and the presentation gets no second one. An imprint the LLM cannot edit is kept
+    /// as it is.
+    /// </remarks>
+    private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => template.Slides
+        .Select(slide => slide.IsImprint ? (slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT) : TemplateSlideUse.OMIT)
+        .ToList();
+
+    private TemplateSlideUse TemplateSlideUseOf(int number) => number >= 1 && number <= this.templateSlideUses.Count ? this.templateSlideUses[number - 1] : TemplateSlideUse.OMIT;
+
+    private void SetTemplateSlideUse(int number, TemplateSlideUse use)
+    {
+        if (number >= 1 && number <= this.templateSlideUses.Count)
+            this.templateSlideUses[number - 1] = use;
+    }
+
+    private string? ValidateTemplateSlideUse(TemplateSlide slide, TemplateSlideUse use)
+    {
+        if (use is TemplateSlideUse.EDIT && slide.FamilyId is null)
+            return T("The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.");
+
+        return null;
+    }
+
+    /// <summary>
+    /// How the form names a slide of the template: by its number and title, and what is special about it.
+    /// </summary>
+    private string TemplateSlideLabelOf(TemplateSlide slide)
+    {
+        var label = slide.Title.Length > 0
+            ? string.Format(T("Slide {0}: {1}"), slide.Number, slide.Title)
+            : string.Format(T("Slide {0}"), slide.Number);
+
+        if (slide.IsImprint)
+            label = $"{label} ({T("imprint")})";
+
+        if (slide.IsHidden)
+            label = $"{label} ({T("hidden")})";
+
+        return label;
+    }
+
+    /// <summary>
+    /// What a slide of the template holds besides its title, on a single line, for the user to recognize it.
+    /// </summary>
+    private string TemplateSlidePreviewOf(TemplateSlide slide)
+    {
+        const int MAX_LENGTH = 160;
+        var parts = slide.Contents
+            .Where(content => content.Slot.Role is not PlaceholderRole.TITLE)
+            .Select(content => content.Slot.Role is PlaceholderRole.PICTURE ? T("Picture") : content.Text.ReplaceLineEndings(" · "));
+
+        var preview = string.Join(" · ", parts);
+        return preview.Length > MAX_LENGTH ? $"{preview[..MAX_LENGTH].TrimEnd()}…" : preview;
     }
 
     private async Task UseNoTemplate() => await this.OnTemplateChanged(string.Empty);
@@ -179,15 +263,88 @@ public partial class SlideAssistant
     private string PromptSlideCount()
     {
         var expectedSlideCount = this.ExpectedSlideCount;
-        return expectedSlideCount > 0
-            ? $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included."
-            : "    - Choose as many slides as the content needs.";
+        if (expectedSlideCount <= 0)
+            return "    - Choose as many slides as the content needs.";
+
+        return this.HasChosenTemplateSlides
+            ? $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included, but not the imprint."
+            : $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included.";
     }
 
     /// <summary>
     /// The texts of the imprint for the model to translate, in German as the corporate template states them.
     /// </summary>
     private static string PromptImprint() => ImprintTexts.GERMAN.ToPromptJson();
+
+    /// <summary>
+    /// The field of the answer holding the imprint, which follows the slides; missing when the user
+    /// keeps or edits the imprint of the template, which needs no texts of its own.
+    /// </summary>
+    private string PromptImprintField() => this.ChosenTemplateImprint is null
+        ? $",{Environment.NewLine}  \"imprint\": {PromptImprint()}"
+        : string.Empty;
+
+    private string PromptImprintRules() => this.ChosenTemplateImprint is null
+        ? """
+               - "imprint" holds the texts of the imprint slide, which is added after the last slide automatically. It is no entry of "slides" and does not count as a slide.
+               - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01 and the punctuation.
+           """
+        : string.Empty;
+
+    /// <summary>
+    /// The rules for the slides of the template the user chose; empty when the user chose none.
+    /// </summary>
+    /// <remarks>
+    /// The slides themselves come with the user's request, as TEMPLATE_SLIDES, since their texts are
+    /// content of a file rather than instructions.
+    /// </remarks>
+    private string PromptTemplateSlides()
+    {
+        if (!this.HasChosenTemplateSlides)
+            return string.Empty;
+
+        var imprintRule = string.Empty;
+        if (this.ChosenTemplateImprint is { } imprint)
+        {
+            imprintRule = this.TemplateSlideUseOf(imprint.Number) is TemplateSlideUse.EDIT
+                ? $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation. Change only its topic to the title of the presentation and its date to {DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, in the format the slide uses; keep every other line exactly as it is, in its language."
+                : $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation.";
+        }
+
+        return $$"""
+
+                 # Template slides
+                 The user chose slides of the template to use in the presentation. TEMPLATE_SLIDES lists them in their order, each one either to keep unchanged or to edit.
+                     - Write a slide to keep as { "template_slide": <its number> } and nothing else. Add "starts_chapter": true where it opens a chapter.
+                     - Write a slide to edit with "template_slide": <its number> and its new content in the usual fields, which fill the slots its entry names. Leave out "layout": the slide keeps its own. A slot you leave out keeps the content of the template slide.
+                     - Use every listed slide exactly once, in the listed order. Add new slides before, between, and after them, wherever the content calls for it.
+                     - Do not repeat on a new slide what a kept slide says already.{{imprintRule}}
+                     - Example: "slides": [{ "template_slide": 1 }, { "layout": "L3", "title": "..." }, { "template_slide": 3, "title": "...", "texts": [["..."]] }]
+                 """;
+    }
+
+    /// <summary>
+    /// The slides of the template the user chose, with what they hold, for the user's request.
+    /// </summary>
+    /// <remarks>
+    /// Their texts come from a file, which may carry instructions of somebody else, so they pass the
+    /// prompt injection filter like every attached document.
+    /// </remarks>
+    /// <param name="guardService">The prompt injection filter, within the action of the request.</param>
+    /// <param name="templateSlideUses">What the user chose for each slide of the template.</param>
+    /// <returns>The section of the request; empty when the user chose no slide.</returns>
+    private async Task<string> PromptTemplateSlidesAsync(PromptInjectionGuardService guardService, IReadOnlyList<TemplateSlideUse> templateSlideUses)
+    {
+        if (this.template is not { } loadedTemplate || loadedTemplate.ToTemplateSlidesPrompt(templateSlideUses) is not { Length: > 0 } templateSlides)
+            return string.Empty;
+
+        var sanitizedTemplateSlides = await guardService.SanitizeAsync(templateSlides, PromptInjectionSource.FileContent(this.templatePath));
+        return $"""
+
+                # TEMPLATE_SLIDES
+                {sanitizedTemplateSlides}
+                """;
+    }
 
     private string PromptBulletPoints()
     {
@@ -205,12 +362,12 @@ public partial class SlideAssistant
     /// Reads the slide deck out of an answer and checks it against the layouts it was planned for.
     /// </summary>
     /// <returns>The deck, or null when the answer cannot be read; and the issues, written for the model.</returns>
-    private (SlideDeckSpec? Deck, IReadOnlyList<string> Issues) CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount)
+    private (SlideDeckSpec? Deck, IReadOnlyList<string> Issues) CheckAnswer(string answer, PresentationTemplate catalog, int pictureCount, IReadOnlyList<TemplateSlideUse> templateSlideUses)
     {
         if (!SlideDeckSpec.TryParse(answer, out var deck, out var issue))
             return (null, [issue]);
 
-        return (deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount));
+        return (deck, SlideDeckSpecValidator.Validate(deck, catalog, pictureCount, this.ExpectedSlideCount, templateSlideUses));
     }
 
     private static string RepairPromptOf(IReadOnlyList<string> issues)
