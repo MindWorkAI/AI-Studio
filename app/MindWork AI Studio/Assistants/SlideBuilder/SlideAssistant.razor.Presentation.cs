@@ -166,13 +166,13 @@ public partial class SlideAssistant
     /// What the presentation does with the slides of a template unless the user says otherwise.
     /// </summary>
     /// <remarks>
-    /// The slides of a template are mostly samples and hints, so they stay out. An imprint is the
-    /// exception: the LLM updates its topic and date, so that the imprint keeps the details its
-    /// author wrote and the presentation gets no second one. An imprint the LLM cannot edit is kept
-    /// as it is.
+    /// The LLM edits every slide it can, so that a presentation used as a template becomes the next
+    /// one in its structure, the imprint included: the LLM updates its topic and date, and the
+    /// presentation gets no second one. A slide whose layout has no slots for content is kept as it
+    /// is. Samples and hints of a template are for the user to leave out.
     /// </remarks>
     private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => template.Slides
-        .Select(slide => slide.IsImprint ? (slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT) : TemplateSlideUse.OMIT)
+        .Select(slide => slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT)
         .ToList();
 
     private TemplateSlideUse TemplateSlideUseOf(int number) => number >= 1 && number <= this.templateSlideUses.Count ? this.templateSlideUses[number - 1] : TemplateSlideUse.OMIT;
