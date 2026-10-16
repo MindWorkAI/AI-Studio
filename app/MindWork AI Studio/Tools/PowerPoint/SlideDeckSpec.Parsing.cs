@@ -108,7 +108,8 @@ internal sealed partial record SlideDeckSpec
         (slide.Texts ?? []).Select(ToTextBlock).ToList(),
         (slide.Labels ?? []).Select(TextOf).ToList(),
         slide.Pictures ?? [],
-        slide.Table is null ? null : ToTable(slide.Table));
+        slide.Table is null ? null : ToTable(slide.Table),
+        slide.TemplateSlide);
 
     private static SlideTextBlock ToTextBlock(JsonElement element) => element.ValueKind switch
     {
@@ -200,6 +201,8 @@ internal sealed partial record SlideDeckSpec
 
     private sealed class SlideDto
     {
+        public int? TemplateSlide { get; set; }
+
         public string? Layout { get; set; }
 
         public bool? StartsChapter { get; set; }

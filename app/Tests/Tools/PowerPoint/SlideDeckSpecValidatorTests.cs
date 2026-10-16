@@ -7,7 +7,8 @@ namespace AIStudio.Tests.Tools.PowerPoint;
 /// </summary>
 /// <remarks>
 /// Uses the default catalog: L1 title slide, L2 section header, L3 title and content, L4 two
-/// content, L5 content with picture, and L6 table.
+/// content, L5 content with picture, and L6 table. Template slides need a template with slides,
+/// which <see cref="TemplateWithSlides"/> builds.
 /// </remarks>
 [TestFixture]
 public sealed class SlideDeckSpecValidatorTests
@@ -115,6 +116,125 @@ public sealed class SlideDeckSpecValidatorTests
             Assert.That(SlideDeckSpecValidator.Validate(deck, TEMPLATE, 0, 0), Is.Empty, "0 leaves the number to the model.");
         });
     }
+
+    [Test]
+    public void TemplateSlidesKeptAndEditedInTheirOrderHaveNoIssues()
+    {
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            Keep(1),
+            Slide("L2", "Agenda", texts: [Text("News", "Questions")]),
+            Edit(2, "News", texts: [Text("AI Studio: a new release", "EINSTEIN: a new model")]),
+            Keep(3),
+            Edit(4, texts: [Text("Thema:\tWeekly", "Datum:\t2026-10-19")]),
+        ]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Is.Empty, "The imprint of the template counts as little as the one added otherwise.");
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 5, USES), Has.Some.Contains("has 4 slides, but exactly 5 were asked for"));
+        });
+    }
+
+    [Test]
+    public void EveryChosenTemplateSlideAppearsExactlyOnce()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(1), Keep(5), Edit(4, texts: [Text("Thema:\tWeekly")])]);
+
+        var issues = SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 0, USES);
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues, Has.Some.Contains("Slide 3 refers to template slide 5, which is not offered. Refer only to template slides 1, 2, 3, 4."));
+            Assert.That(issues, Has.Some.Contains("Template slide 1 appears 2 times."));
+            Assert.That(issues, Has.Some.Contains("Template slide 2 is missing. Add it at its place with \"template_slide\": 2 and its new content."));
+            Assert.That(issues, Has.Some.Contains("Template slide 3 is missing. Add it at its place as { \"template_slide\": 3 }."));
+        });
+    }
+
+    [Test]
+    public void AKeptSlideTakesNoContentAndAnEditedOneNeedsContentWhichFits()
+    {
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            Edit(1, "A new title"),
+            Keep(2),
+            Edit(3, "Questions", subtitle: "Ask us"),
+            Edit(4, texts: [Text("Thema:\tWeekly")]),
+        ]);
+
+        var issues = SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 0, USES);
+        Assert.Multiple(() =>
+        {
+            Assert.That(issues, Has.Some.Contains("Slide 1 keeps template slide 1 unchanged, so it takes no content."));
+            Assert.That(issues, Has.Some.Contains("Slide 2 is to edit template slide 2, but writes no content."));
+            Assert.That(issues, Has.Some.Contains("Slide 3 keeps template slide 3 unchanged"), "Slide 3 of the template is to be kept, so the edit is sent back.");
+        });
+
+        var editedDeck = new SlideDeckSpec("Weekly", [Keep(1), Edit(2, "News", subtitle: "This week"), Keep(3), Edit(4, texts: [Text("Thema:\tWeekly")])]);
+        Assert.That(SlideDeckSpecValidator.Validate(editedDeck, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("Slide 2 has a subtitle, but layout L2 has none"), "An edited slide has the slots of its template slide.");
+    }
+
+    [Test]
+    public void TheTemplateSlidesKeepTheirOrderAndTheImprintClosesThePresentation()
+    {
+        var unordered = new SlideDeckSpec("Weekly", [Keep(3), Edit(2, "News", texts: [Text("New")]), Keep(1), Edit(4, texts: [Text("Thema:\tWeekly")])]);
+        var imprintInBetween = new SlideDeckSpec("Weekly", [Keep(1), Edit(2, "News", texts: [Text("New")]), Keep(3), Edit(4, texts: [Text("Thema:\tWeekly")]), Slide("L2", "Thanks")]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.Validate(unordered, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("The template slides are out of order. Keep them in the order 1, 2, 3, 4"));
+            Assert.That(SlideDeckSpecValidator.Validate(imprintInBetween, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("Slide 4 is the imprint of the template, which closes the presentation. Move it to the end."));
+        });
+    }
+
+    [Test]
+    public void OnlySlidesOnKnownLayoutsAndChosenTemplateSlidesCanBeWritten()
+    {
+        var template = TemplateWithSlides();
+        TemplateSlideUse[] uses = [TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.OMIT, TemplateSlideUse.KEEP, TemplateSlideUse.KEEP];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(SlideDeckSpecValidator.CanWrite(Slide("L2"), template, uses), Is.True);
+            Assert.That(SlideDeckSpecValidator.CanWrite(Slide("L9"), template, uses), Is.False);
+            Assert.That(SlideDeckSpecValidator.CanWrite(Keep(5), template, uses), Is.True, "A slide on a layout without room for content can be kept.");
+            Assert.That(SlideDeckSpecValidator.CanWrite(Edit(5, "Thanks"), template, uses), Is.False, "Such a slide has no slots to write content into.");
+            Assert.That(SlideDeckSpecValidator.CanWrite(Keep(3), template, uses), Is.False, "The user left this slide out.");
+            Assert.That(SlideDeckSpecValidator.CanWrite(Keep(9), template, uses), Is.False);
+        });
+    }
+
+    /// <summary>
+    /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the imprint is
+    /// edited, and the closing slide is left out.
+    /// </summary>
+    private static readonly TemplateSlideUse[] USES = [TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.OMIT];
+
+    /// <summary>
+    /// A template with a title slide, two content slides, an imprint, and a closing slide on a
+    /// layout without room for content. Its families are L1 for the title and L2 for the content.
+    /// </summary>
+    private static PresentationTemplate TemplateWithSlides()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Consultation hour")),
+                new TestSlide(1, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:")),
+                new TestSlide(1, (TestPlaceholder.Title(), "Questions")),
+                new TestSlide(1, (TestPlaceholder.Title(), "Impressum"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour")),
+                new TestSlide(2, (TestPlaceholder.Title(), "Thank you")),
+            ]),
+            new TestLayout("Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(new SlotBounds(838_200, 3_602_038, 10_515_600, 1_655_762))),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)),
+            new TestLayout("Title Only", TestPlaceholder.Title()));
+
+        return PresentationTemplate.Read(file);
+    }
+
+    private static SlideSpec Keep(int templateSlide) => new(string.Empty, false, string.Empty, string.Empty, [], [], [], null, templateSlide);
+
+    private static SlideSpec Edit(int templateSlide, string title = "", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null) => new(string.Empty, false, title, subtitle, texts ?? [], [], [], null, templateSlide);
 
     private static SlideSpec Slide(
         string layout,

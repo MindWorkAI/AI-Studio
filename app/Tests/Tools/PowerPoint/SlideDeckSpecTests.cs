@@ -1,5 +1,7 @@
 using AIStudio.Tools.PowerPoint;
 
+using P = DocumentFormat.OpenXml.Presentation;
+
 namespace AIStudio.Tests.Tools.PowerPoint;
 
 /// <summary>
@@ -175,5 +177,76 @@ public sealed class SlideDeckSpecTests
 
         // The literal takes the line breaks of this file, which depend on the checkout:
         Assert.That(deck.ToMarkdownOutline(PresentationTemplate.CreateDefault(), ["rocket.png"]), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
+    }
+
+    [Test]
+    public void TheTemplateSlideAnEntryRefersToIsRead()
+    {
+        const string ANSWER = """
+            { "title": "Weekly", "slides": [
+              { "template_slide": 1 },
+              { "template_slide": "2", "title": "News", "texts": [["A new release"]] },
+              { "layout": "L3", "title": "Example" }
+            ] }
+            """;
+
+        Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
+        Assert.Multiple(() =>
+        {
+            Assert.That(spec.Slides.Select(slide => slide.TemplateSlide), Is.EqualTo(new int?[] { 1, 2, null }));
+            Assert.That(spec.Slides.Select(slide => slide.HasContent), Is.EqualTo(new[] { false, true, true }), "Only content of its own makes a slide more than a reference.");
+            Assert.That(spec.Slides[0].Layout, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void TheOutlineShowsWhatTheTemplateSlidesKeep()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Consultation hour"), (new TestPlaceholder(P.PlaceholderValues.SubTitle, 1), "Every Monday")),
+                new TestSlide(1, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:")),
+                new TestSlide(1, (TestPlaceholder.Title(), "Questions"), (new TestPlaceholder(null, 1), "Ask us")),
+            ]),
+            new TestLayout("Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(new SlotBounds(838_200, 3_602_038, 10_515_600, 1_655_762))),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)));
+
+        var deck = new SlideDeckSpec("Weekly",
+        [
+            new SlideSpec(string.Empty, false, string.Empty, string.Empty, [], [], [], null, 1),
+            new SlideSpec(string.Empty, false, string.Empty, string.Empty, [new SlideTextBlock([new SlideParagraph("A new release", 0)])], [], [], null, 2),
+            new SlideSpec(string.Empty, false, "Your questions", string.Empty, [], [], [], null, 3),
+        ]);
+
+        const string EXPECTED = """
+            # Weekly
+
+            ***
+
+            ### Consultation hour
+
+            *Slide 1 of the template, unchanged*
+
+            _Every Monday_
+
+            ***
+
+            ### News
+
+            *Slide 2 of the template, edited*
+
+            - A new release
+
+            ***
+
+            ### Your questions
+
+            *Slide 3 of the template, edited*
+
+            - Ask us
+            """;
+
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
     }
 }

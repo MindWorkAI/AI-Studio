@@ -59,4 +59,19 @@ internal sealed partial class PresentationTemplate
     /// <param name="number">The number, starting at 1.</param>
     /// <returns>The slide, or null when the template has no slide with this number.</returns>
     public TemplateSlide? FindSlide(int number) => number >= 1 && number <= this.Slides.Count ? this.Slides[number - 1] : null;
+
+    /// <summary>
+    /// Finds the family a slide of a deck is written on: that of the template slide it refers to, or the one it names.
+    /// </summary>
+    /// <param name="slide">The slide of the deck.</param>
+    /// <returns>The family, or null when there is none, e.g., because the template slide is on a layout without room for content.</returns>
+    public LayoutFamily? FamilyOf(SlideSpec slide) => slide.TemplateSlide is { } number
+        ? this.FindSlide(number)?.FamilyId is { } familyId ? this.FindFamily(familyId) : null
+        : this.FindFamily(slide.Layout);
+
+    /// <summary>
+    /// Whether a slide of a deck is the imprint of the template, which takes the place of the one every presentation gets otherwise.
+    /// </summary>
+    /// <param name="slide">The slide of the deck.</param>
+    public bool IsImprint(SlideSpec slide) => slide.TemplateSlide is { } number && this.FindSlide(number) is { IsImprint: true };
 }

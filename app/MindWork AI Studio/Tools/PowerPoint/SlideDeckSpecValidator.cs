@@ -38,9 +38,11 @@ internal static class SlideDeckSpecValidator
     /// <param name="template">The template whose layout families the deck uses.</param>
     /// <param name="pictureCount">How many pictures are attached, which the slides may refer to by number.</param>
     /// <param name="expectedSlideCount">How many slides the user asked for, or 0 when the model may choose.</param>
+    /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number; null or empty when the deck uses no template slides.</param>
     /// <returns>The issues, written for the model; empty when the deck fits.</returns>
-    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount)
+    public static IReadOnlyList<string> Validate(SlideDeckSpec spec, PresentationTemplate template, int pictureCount, int expectedSlideCount, IReadOnlyList<TemplateSlideUse>? templateSlideUses = null)
     {
+        var uses = templateSlideUses ?? [];
         var issues = new List<string>();
         if (spec.Title.Length == 0)
             issues.Add("The presentation has no title.");
@@ -51,17 +53,41 @@ internal static class SlideDeckSpecValidator
             return issues;
         }
 
-        if (expectedSlideCount > 0 && spec.Slides.Count != expectedSlideCount)
-            issues.Add($"The presentation has {spec.Slides.Count} slides, but exactly {expectedSlideCount} were asked for.");
+        // The imprint of the template counts as little as the one every presentation gets otherwise:
+        var slideCount = spec.Slides.Count(slide => !template.IsImprint(slide));
+        if (expectedSlideCount > 0 && slideCount != expectedSlideCount)
+            issues.Add($"The presentation has {slideCount} slides, but exactly {expectedSlideCount} were asked for.");
 
         for (var index = 0; index < spec.Slides.Count; index++)
-            ValidateSlide(spec.Slides[index], index + 1, template, pictureCount, issues);
+            ValidateSlide(spec.Slides[index], index + 1, template, uses, pictureCount, issues);
 
+        ValidateTemplateSlides(spec, template, uses, issues);
         return issues;
     }
 
-    private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, int pictureCount, List<string> issues)
+    /// <summary>
+    /// Says whether a slide can be written at all.
+    /// </summary>
+    /// <remarks>
+    /// A slide on a layout the template does not have, or one referring to a template slide the user
+    /// did not choose, cannot be written. Any other issue, such as a text which runs long, leaves a
+    /// slide worth writing and looking at.
+    /// </remarks>
+    /// <param name="slide">The slide.</param>
+    /// <param name="template">The template whose layout families and slides the deck uses.</param>
+    /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number.</param>
+    public static bool CanWrite(SlideSpec slide, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> templateSlideUses) => slide.TemplateSlide is { } number
+        ? UseOf(templateSlideUses, number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null && (!slide.HasContent || template.FamilyOf(slide) is not null)
+        : template.FindFamily(slide.Layout) is not null;
+
+    private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
     {
+        if (slide.TemplateSlide is { } templateSlideNumber)
+        {
+            ValidateTemplateSlideEntry(slide, number, templateSlideNumber, template, uses, pictureCount, issues);
+            return;
+        }
+
         var family = template.FindFamily(slide.Layout);
         if (family is null)
         {
@@ -69,6 +95,100 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
+        ValidateContent(slide, number, family, pictureCount, issues);
+    }
+
+    /// <summary>
+    /// Checks a slide which refers to a template slide: a kept one takes no content, an edited one
+    /// needs some, and it has to fit the slots of the template slide.
+    /// </summary>
+    private static void ValidateTemplateSlideEntry(SlideSpec slide, int number, int templateSlideNumber, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
+    {
+        var use = UseOf(uses, templateSlideNumber);
+        if (use is TemplateSlideUse.OMIT || template.FindSlide(templateSlideNumber) is null)
+        {
+            var offered = OfferedNumbersOf(uses, template);
+            issues.Add(offered.Count > 0
+                ? $"Slide {number} refers to template slide {templateSlideNumber}, which is not offered. Refer only to template slides {string.Join(", ", offered)}."
+                : $"Slide {number} refers to template slide {templateSlideNumber}, but no template slides are offered. Leave out \"template_slide\".");
+
+            return;
+        }
+
+        if (use is TemplateSlideUse.KEEP)
+        {
+            if (slide.HasContent)
+                issues.Add($"Slide {number} keeps template slide {templateSlideNumber} unchanged, so it takes no content. Write only \"template_slide\", and \"starts_chapter\" where it opens a chapter.");
+
+            return;
+        }
+
+        if (!slide.HasContent)
+        {
+            issues.Add($"Slide {number} is to edit template slide {templateSlideNumber}, but writes no content. Write the new content of the slide.");
+            return;
+        }
+
+        if (template.FamilyOf(slide) is not { } family)
+        {
+            issues.Add($"Template slide {templateSlideNumber} has no slots to fill. Keep it unchanged: write only \"template_slide\".");
+            return;
+        }
+
+        ValidateContent(slide, number, family, pictureCount, issues);
+    }
+
+    /// <summary>
+    /// Checks that every template slide the user chose appears exactly once, in the order of the
+    /// template, and that the imprint of the template closes the presentation.
+    /// </summary>
+    /// <remarks>
+    /// References to slides the user did not choose are reported with the slide which makes them.
+    /// </remarks>
+    private static void ValidateTemplateSlides(SlideDeckSpec spec, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, List<string> issues)
+    {
+        var references = spec.Slides
+            .Select(slide => slide.TemplateSlide)
+            .OfType<int>()
+            .Where(number => UseOf(uses, number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null)
+            .ToList();
+
+        foreach (var number in OfferedNumbersOf(uses, template))
+        {
+            var count = references.Count(reference => reference == number);
+            if (count == 0)
+            {
+                issues.Add(UseOf(uses, number) is TemplateSlideUse.KEEP
+                    ? $"Template slide {number} is missing. Add it at its place as {{ \"template_slide\": {number} }}."
+                    : $"Template slide {number} is missing. Add it at its place with \"template_slide\": {number} and its new content.");
+            }
+            else if (count > 1)
+                issues.Add($"Template slide {number} appears {count} times. Use every template slide exactly once.");
+        }
+
+        var order = references.Distinct().ToList();
+        if (!order.SequenceEqual(order.Order()))
+            issues.Add($"The template slides are out of order. Keep them in the order {string.Join(", ", order.Order())}, and put new slides before, between, or after them.");
+
+        // The imprint closes the presentation, like the one every presentation gets otherwise:
+        for (var index = 0; index < spec.Slides.Count - 1; index++)
+        {
+            if (spec.Slides[index] is { TemplateSlide: { } number } slide && template.IsImprint(slide) && UseOf(uses, number) is not TemplateSlideUse.OMIT)
+                issues.Add($"Slide {index + 1} is the imprint of the template, which closes the presentation. Move it to the end.");
+        }
+    }
+
+    /// <summary>
+    /// The numbers of the template slides the user chose to keep or to edit, in the order of the template.
+    /// </summary>
+    private static List<int> OfferedNumbersOf(IReadOnlyList<TemplateSlideUse> uses, PresentationTemplate template) => Enumerable.Range(1, uses.Count)
+        .Where(number => uses[number - 1] is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null)
+        .ToList();
+
+    private static TemplateSlideUse UseOf(IReadOnlyList<TemplateSlideUse> uses, int number) => number >= 1 && number <= uses.Count ? uses[number - 1] : TemplateSlideUse.OMIT;
+
+    private static void ValidateContent(SlideSpec slide, int number, LayoutFamily family, int pictureCount, List<string> issues)
+    {
         ValidateSingleText(slide.Title, PlaceholderRole.TITLE, number, family, issues);
         ValidateSingleText(slide.Subtitle, PlaceholderRole.SUBTITLE, number, family, issues);
 
