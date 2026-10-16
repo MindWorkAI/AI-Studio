@@ -33,6 +33,17 @@ public partial class Workspaces : MSGComponentBase
     [Parameter]
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
+    /// <summary>
+    /// Asks the page to start a new chat in the workspace with the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The page hands the request to its chat component. A message on the bus would not do: the bus
+    /// also serves the chat components of windows which were reloaded long ago, and each of them would
+    /// start a chat of its own, storing what it still holds on its way.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<Guid> StartNewChatRequested { get; set; }
+
     [Parameter]
     public bool ExpandRootNodes { get; set; } = true;
 
@@ -1053,7 +1064,7 @@ public partial class Workspaces : MSGComponentBase
     private async Task AddChatAsync(string workspacePath)
     {
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        await this.SendMessage(Event.START_NEW_CHAT_IN_WORKSPACE, workspaceId);
+        await this.StartNewChatRequested.InvokeAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase

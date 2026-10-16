@@ -336,7 +336,7 @@ public partial class ChatComponent : MSGComponentBase
             this.Logger);
 
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.START_NEW_CHAT_IN_WORKSPACE, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -1556,6 +1556,19 @@ public partial class ChatComponent : MSGComponentBase
         this.unstoredChat = null;
     }
     
+    /// <summary>
+    /// Starts a new chat in the given workspace, on behalf of the workspace tree.
+    /// </summary>
+    /// <remarks>
+    /// The chat starts just like one from the button for a new chat in the workspace: the user is
+    /// asked about unsaved changes, and the chat gets its chat template with the data sources, tools,
+    /// and example conversation the template asks for.
+    /// </remarks>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    public Task StartNewChatInWorkspaceAsync(Guid workspaceId) => workspaceId == Guid.Empty
+        ? Task.CompletedTask
+        : this.StartNewChat(targetWorkspaceId: workspaceId);
+
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null)
     {
         //
@@ -1643,9 +1656,10 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         //
-        // Reset the chat thread or create a new one:
+        // Reset the chat thread or create a new one. A target workspace always means a new chat in
+        // that workspace, no matter what useSameWorkspace says:
         //
-        if (!useSameWorkspace)
+        if (!useSameWorkspace && targetWorkspaceId is null)
         {
             //
             // When the user wants to start a new chat outside the current workspace,
@@ -2163,15 +2177,6 @@ public partial class ChatComponent : MSGComponentBase
             case Event.WORKSPACE_RENAMED:
                 if (data is Guid workspaceId)
                     await this.RefreshRenamedWorkspaceHeaderAsync(workspaceId);
-                break;
-
-            //
-            // The workspace tree starts its new chats here, so that they get the chat template,
-            // its data sources, tools, and example conversation just like any other new chat:
-            //
-            case Event.START_NEW_CHAT_IN_WORKSPACE:
-                if (data is Guid targetWorkspaceId && targetWorkspaceId != Guid.Empty)
-                    await this.StartNewChat(useSameWorkspace: true, targetWorkspaceId: targetWorkspaceId);
                 break;
 
             case Event.CONFIGURATION_CHANGED:
