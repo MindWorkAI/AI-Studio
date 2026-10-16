@@ -16,4 +16,13 @@
       />
     </dependentAssembly>
   </dependency>
+  <!--
+    Not part of Tauri's manifest: lets the programs use paths longer than 260 characters,
+    when long paths are enabled in Windows. The vector stores nest deep enough to exceed it.
+  -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings xmlns:ws2="http://schemas.microsoft.com/SMI/2016/WindowsSettings">
+      <ws2:longPathAware>true</ws2:longPathAware>
+    </windowsSettings>
+  </application>
 </assembly>
