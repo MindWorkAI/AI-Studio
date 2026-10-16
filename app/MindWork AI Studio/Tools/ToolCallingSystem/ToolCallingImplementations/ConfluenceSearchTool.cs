@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
@@ -24,7 +26,10 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// which is why selecting this tool also selects that one, see ToolRegistry.NormalizeSelection.<br/><br/>
 /// Whatever the wiki returns is internal to the organization. The tool is therefore offered to
 /// High-confidence providers only, checks that again before each search, and raises the chat's
-/// required confidence to High, so the results never reach a less trusted provider later on.
+/// required confidence to High, so the results never reach a less trusted provider later on.<br/><br/>
+/// For the same reason, a search restricts where the chat may still send data afterwards, as a
+/// mailbox does: a web search or an address the model writes could otherwise carry what the wiki
+/// returned to a third party. The level is a setting of this tool, which an organization can lock.
 /// </remarks>
 public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService) : IToolImplementation
 {
@@ -32,6 +37,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
 
     private const string BASE_URL_SETTING = "baseUrl";
     private const string TIMEOUT_SECONDS_SETTING = "timeoutSeconds";
+    private const string OUTBOUND_DATA_RESTRICTION_SETTING = "outboundDataRestriction";
     private const string QUERY_ARGUMENT = "query";
     private const string SPACE_KEY_ARGUMENT = "spaceKey";
 
@@ -40,6 +46,10 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     private const int MAX_QUERY_CHARACTERS = 200;
     private const int MAX_SPACE_KEY_CHARACTERS = 255;
     private const int MAX_CONTENT_CHARACTERS = 30000;
+
+    // Keeps web search out and the model from writing addresses, while the links the wiki returns
+    // and the ones the user pastes stay readable:
+    private const OutboundDataRestriction DEFAULT_OUTBOUND_DATA_RESTRICTION = OutboundDataRestriction.ONLY_LINKS_FROM_CHAT;
 
     public string ImplementationKey => ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID;
 
@@ -69,6 +79,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
         SettingsSchema = ToolSettingsSchemaBuilder.Create()
             .Required(BASE_URL_SETTING)
             .Optional(TIMEOUT_SECONDS_SETTING)
+            .OptionalChoice(OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION)
             .Build(),
         SystemPromptInstructions = """
                                    Use `search_confluence` for the internal knowledge of the user's organization, such as processes, projects, guidelines, or documentation, which its wiki holds and public sources do not.
@@ -107,6 +118,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     {
         BASE_URL_SETTING => TB("Confluence Base URL"),
         TIMEOUT_SECONDS_SETTING => TB("Timeout Seconds"),
+        OUTBOUND_DATA_RESTRICTION_SETTING => TB("Where a chat may send data after a Confluence search"),
         _ => TB(fieldDefinition.Title),
     };
 
@@ -114,6 +126,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     {
         BASE_URL_SETTING => TB("The HTTPS address of your Confluence Data Center wiki, including its path if present, such as https://wiki.example.org/confluence/. Confluence Cloud is not supported yet. When your wiki has a private or VPN address, also add its host to the allowed private hosts of Read Web Page, which opens the pages found."),
         TIMEOUT_SECONDS_SETTING => TB("(Optional) Search request timeout in seconds."),
+        OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Once a chat searched your wiki, a web search or a web address chosen by the AI could carry wiki content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads wiki pages and web pages whose addresses stand in the chat. With '{1}', it reads wiki pages only. A change applies to new searches; a chat keeps the level it had when it searched."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName(), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -136,7 +149,37 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
                 TB("The setting '{0}' must be a positive integer."), TB("The setting '{0}' must be less than or equal to {1}."), out _, out var timeoutError))
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState { IsConfigured = false, Message = timeoutError });
 
+        //
+        // A misspelled value from an organization's configuration is reported instead of guessed:
+        // guessing would decide on the organization's behalf where wiki content may go.
+        //
+        if (!ToolSettingsValueParser.TryValidateOptionValue(settingsValues, OUTBOUND_DATA_RESTRICTION_SETTING, ToolSettingsOptionSources.OUTBOUND_DATA_RESTRICTION, TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), out var restrictionError))
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState { IsConfigured = false, Message = restrictionError });
+
         return Task.FromResult<ToolConfigurationState?>(null);
+    }
+
+    /// <summary>
+    /// What a successful search demands of the chat, from the settings of the tool.
+    /// </summary>
+    /// <remarks>
+    /// An unset value reads as the default. Anything else that is not the name of a level reads as
+    /// the strictest one, because a level guessed too loosely would let wiki content out. The
+    /// configuration check reports such a value anyway and keeps the tool out of use until
+    /// somebody corrects it. The wiki needs no reference: there is only one.
+    /// </remarks>
+    /// <param name="settingsValues">The settings of the tool.</param>
+    /// <returns>The requirement the chat takes on with the search result.</returns>
+    internal static OutboundDataRequirement GetOutboundDataRequirement(IReadOnlyDictionary<string, string> settingsValues)
+    {
+        var configuredValue = settingsValues.GetValueOrDefault(OUTBOUND_DATA_RESTRICTION_SETTING);
+        var restriction = string.IsNullOrWhiteSpace(configuredValue)
+            ? DEFAULT_OUTBOUND_DATA_RESTRICTION
+            : EnumNames.TryParse<OutboundDataRestriction>(configuredValue, out var configured)
+                ? configured
+                : OutboundDataRestriction.ONLY_CONFIGURED_SERVICES;
+
+        return new(restriction, OutboundDataOrigin.CONFLUENCE_WIKI, string.Empty);
     }
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
@@ -228,6 +271,10 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
             // once read_web_page loads them:
             Sources = [new Source(string.Format(TB("Confluence search for “{0}”"), query), page.FinalUrl.ToString(), SourceOrigin.TOOL)],
             RequiredProviderConfidence = ConfidenceLevel.HIGH,
+
+            // Set here only, on a search which returned content: a refused or failed one brought
+            // nothing of the wiki into the chat.
+            RequiredOutboundDataRestriction = GetOutboundDataRequirement(context.SettingsValues),
         };
     }
 
