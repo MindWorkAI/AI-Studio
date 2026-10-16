@@ -81,7 +81,9 @@ public sealed class ConfigurationSnippetParserTests
     }
 
     [Test]
+    // ReSharper disable RedundantArgumentDefaultValue
     public void ASnippetOfAnUnknownSectionIsRefused() => AssertRefused("""CONFIG["SETTINGS"][#CONFIG["SETTINGS"]+1] = { ["a"] = 1 }""", PluginConfigurationObjectType.PROFILE);
+    // ReSharper restore RedundantArgumentDefaultValue
 
     [TestCase("""["a"] = "q\"b\\c\n\r\t\a\b\f\v'" """, TestName = "Escapes in a double-quoted string")]
     [TestCase("""["a"] = 'it\'s "fine"' """, TestName = "Escapes in a single-quoted string")]
