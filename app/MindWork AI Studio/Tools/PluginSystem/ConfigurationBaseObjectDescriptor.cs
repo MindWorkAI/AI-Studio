@@ -21,10 +21,8 @@ public sealed class ConfigurationBaseObjectDescriptor<TClass>(PluginConfiguratio
     /// <inheritdoc />
     public override PluginConfigurationObjectType Type => type;
 
-    /// <summary>
-    /// The Lua table in which a configuration plugin defines these objects.
-    /// </summary>
-    public string LuaTableName => luaTableName;
+    /// <inheritdoc />
+    public override string LuaTableName => luaTableName;
 
     /// <summary>
     /// Where the settings keep these objects.

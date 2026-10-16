@@ -1,5 +1,6 @@
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -134,5 +135,5 @@
             </MudMenuItem>
         }
     </MudMenu>
-    <LockableButton Text="@T("Import ERI v1 Data Source")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportERIDataSource" ButtonVariant="Variant.Outlined" NoMargin="true" />
+    <LockableButton Text="@T("Import ERI v1 Data Source")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportERIDataSource" ButtonVariant="Variant.Outlined" NoMargin="true" />
 </MudStack>

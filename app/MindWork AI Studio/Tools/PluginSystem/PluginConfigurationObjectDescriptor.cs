@@ -23,6 +23,11 @@ public abstract class PluginConfigurationObjectDescriptor
     public abstract PluginConfigurationObjectType Type { get; }
 
     /// <summary>
+    /// The Lua table in which a configuration plugin defines these objects, e.g., LLM_PROVIDERS.
+    /// </summary>
+    public abstract string LuaTableName { get; }
+
+    /// <summary>
     /// Reads the configuration objects of this type which a configuration plugin defines, and stores
     /// them in the settings unless the plugin is only checked.
     /// </summary>

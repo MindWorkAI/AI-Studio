@@ -242,7 +242,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 
         if (firstRender && this.ImportedConfiguration is not null)
         {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
                 this.MudDialog.Cancel();
             else
                 await this.ImportConfiguration(this.ImportedConfiguration);
@@ -268,7 +268,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             return;
 
         await this.form.Validate();

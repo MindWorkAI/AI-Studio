@@ -342,7 +342,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (firstRender && this.ImportedConfiguration is not null)
         {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
                 this.MudDialog.Cancel();
             else
                 await this.ImportConfiguration(this.ImportedConfiguration);
@@ -368,7 +368,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("LLM_PROVIDERS"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.LLM_PROVIDER))
             return;
 
         this.dataStoreWasAttempted = true;

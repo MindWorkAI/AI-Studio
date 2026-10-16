@@ -12,7 +12,7 @@ public partial class ConfigurationSnippetImportDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
-    public string Section { get; set; } = string.Empty;
+    public PluginConfigurationObjectType Type { get; set; } = PluginConfigurationObjectType.NONE;
 
     [Parameter]
     public string ImportLabel { get; set; } = string.Empty;
@@ -22,18 +22,18 @@ public partial class ConfigurationSnippetImportDialog : MSGComponentBase
 
     private void Import()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(this.Section))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(this.Type))
         {
             this.issue = T("Import is locked by your organization.");
             return;
         }
 
-        if (!ConfigurationSnippetParser.TryParse(this.snippet, this.Section, out var table, out this.issue))
+        if (!ConfigurationSnippetParser.TryParse(this.snippet, this.Type, out var table, out this.issue))
             return;
 
         try
         {
-            ConfigurationSnippetImportValidation.Validate(this.Section, table);
+            ConfigurationSnippetImportValidation.Validate(this.Type, table);
             this.MudDialog.Close(DialogResult.Ok(table));
         }
         catch (FormatException exception)
@@ -44,11 +44,11 @@ public partial class ConfigurationSnippetImportDialog : MSGComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
 
-    public static async Task<LuaTable?> ShowAsync(IDialogService service, string section, string title)
+    public static async Task<LuaTable?> ShowAsync(IDialogService service, PluginConfigurationObjectType type, string title)
     {
         var parameters = new DialogParameters<ConfigurationSnippetImportDialog>
         {
-            { x => x.Section, section },
+            { x => x.Type, type },
             { x => x.ImportLabel, title },
         };
         var dialog = await service.ShowAsync<ConfigurationSnippetImportDialog>(title, parameters, DialogOptions.FULLSCREEN);

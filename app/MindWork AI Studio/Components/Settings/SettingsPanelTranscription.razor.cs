@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -53,16 +54,16 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 
     private async Task ImportTranscriptionProvider()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "TRANSCRIPTION_PROVIDERS", T("Import Transcription Provider"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import Transcription Provider"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             await this.AddTranscriptionProvider(table);
     }
 
     private async Task AddTranscriptionProvider(LuaTable? importedConfiguration)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS"))
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
             return;
 
         var dialogParameters = new DialogParameters<TranscriptionProviderDialog>
@@ -75,7 +76,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Add Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled ||
-            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("TRANSCRIPTION_PROVIDERS")))
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER)))
             return;
         
         var addedTranscription = (TranscriptionProvider)dialogResult.Data!;

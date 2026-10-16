@@ -29,11 +29,11 @@ public sealed class ConfigurationSnippetParser
     /// Reads a snippet of the form <c>CONFIG["SECTION"][#CONFIG["SECTION"]+1] = { ... }</c>.
     /// </summary>
     /// <param name="source">The pasted snippet.</param>
-    /// <param name="expectedSection">The Lua table the snippet must add to, e.g., PROFILES.</param>
+    /// <param name="type">The type of configuration object the snippet must describe.</param>
     /// <param name="table">The table the snippet assigns, when it could be read.</param>
     /// <param name="issue">Why the snippet could not be read, otherwise empty.</param>
     /// <returns>True when the snippet could be read.</returns>
-    public static bool TryParse(string source, string expectedSection, out LuaTable table, out string issue)
+    public static bool TryParse(string source, PluginConfigurationObjectType type, out LuaTable table, out string issue)
     {
         table = new LuaTable();
         issue = string.Empty;
@@ -45,11 +45,14 @@ public sealed class ConfigurationSnippetParser
 
         try
         {
+            var expectedSection = PluginConfigurationObjectDescriptors.Get(type).LuaTableName;
             var parser = new ConfigurationSnippetParser(source);
             parser.ExpectWord("CONFIG");
             var section = parser.ReadBracketedString();
             if (section != expectedSection)
-                throw new FormatException(string.Format(TB("This is a {0} snippet. Paste a {1} snippet here."), section, expectedSection));
+                throw new FormatException(PluginConfigurationObjectDescriptors.TryGet(section, out var otherDescriptor)
+                    ? string.Format(TB("The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here."), otherDescriptor.Type.GetName(), type.GetName())
+                    : string.Format(TB("The pasted configuration does not describe the type '{0}', which can be imported here."), type.GetName()));
 
             parser.Expect('[');
             parser.Expect('#');

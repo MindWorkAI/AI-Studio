@@ -157,7 +157,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
         if (firstRender && this.ImportedConfiguration is not null)
         {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
                 this.MudDialog.Cancel();
             else
                 await this.ImportConfiguration(this.ImportedConfiguration);
@@ -199,7 +199,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private Task ImportConfiguration(LuaTable table)
     {
-        ConfigurationSnippetImportValidation.Validate("DATA_SOURCES", table);
+        ConfigurationSnippetImportValidation.Validate(PluginConfigurationObjectType.DATA_SOURCE, table);
         var name = ConfigurationImportFields.String(table, "Name");
         var hostname = ConfigurationImportFields.String(table, "Hostname");
         var port = ConfigurationImportFields.Int(table, "Port");
@@ -384,7 +384,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             return;
 
         await this.form.Validate();

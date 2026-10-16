@@ -291,7 +291,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
         if (firstRender && this.ImportedConfiguration is not null)
         {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
                 this.MudDialog.Cancel();
             else
                 await this.ImportConfiguration(this.ImportedConfiguration);
@@ -317,7 +317,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             return;
 
         this.dataStoreWasAttempted = true;

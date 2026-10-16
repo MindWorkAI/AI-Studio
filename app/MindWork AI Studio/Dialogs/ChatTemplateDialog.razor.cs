@@ -157,7 +157,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.DataName = this.ExistingChatThread.Name;
         }
 
-        if (this.ImportedConfiguration is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+        if (this.ImportedConfiguration is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             await this.ImportConfiguration(this.ImportedConfiguration);
 
         await base.OnInitializedAsync();
@@ -171,7 +171,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.form.ResetValidation();
 
         if (firstRender && this.ImportedConfiguration is not null &&
-            !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+            !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             this.MudDialog.Cancel();
 
         await base.OnAfterRenderAsync(firstRender);
@@ -199,7 +199,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private async Task ImportConfiguration(LuaTable table)
     {
-        ConfigurationSnippetImportValidation.Validate("CHAT_TEMPLATES", table);
+        ConfigurationSnippetImportValidation.Validate(PluginConfigurationObjectType.CHAT_TEMPLATE, table);
         if (!ChatTemplate.TryParseChatTemplateTable(0, table, Guid.Empty, string.Empty, out var parsed) || parsed is not ChatTemplate template)
             throw new FormatException(T("The chat template fields are malformed."));
         var paths = ConfigurationImportFields.Strings(table, "FileAttachments");
@@ -348,7 +348,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             return;
 
         if (this.IsReadOnly)

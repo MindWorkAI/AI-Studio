@@ -18,7 +18,10 @@ public sealed class DataSourceConfigurationObjectDescriptor : PluginConfiguratio
     public override PluginConfigurationObjectType Type => PluginConfigurationObjectType.DATA_SOURCE;
 
     /// <inheritdoc />
-    public override bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) => PluginConfigurationObject.TryParseDataSources(mainTable, configPluginId, configObjects, dryRun);
+    public override string LuaTableName => "DATA_SOURCES";
+
+    /// <inheritdoc />
+    public override bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) => PluginConfigurationObject.TryParseDataSources(this, mainTable, configPluginId, configObjects, dryRun);
 
     /// <inheritdoc />
     /// <remarks>

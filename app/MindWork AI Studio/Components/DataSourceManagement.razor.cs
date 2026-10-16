@@ -188,16 +188,16 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task ImportERIDataSource()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "DATA_SOURCES", T("Import ERI v1 Data Source"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import ERI v1 Data Source"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             await this.AddDataSource(DataSourceType.ERI_V1, table);
     }
 
     private async Task AddDataSource(DataSourceType type, LuaTable? importedConfiguration = null)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES"))
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
             return;
 
         IDataSource? addedDataSource = null;
@@ -248,7 +248,7 @@ public partial class DataSourceManagement : MSGComponentBase
                 var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Add ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
                 var eriDialogResult = await eriDialogReference.Result;
                 if (eriDialogResult is null || eriDialogResult.Canceled ||
-                    (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DATA_SOURCES")))
+                    (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE)))
                     return;
 
                 var eriDataSource = (DataSourceERI_V1)eriDialogResult.Data!;

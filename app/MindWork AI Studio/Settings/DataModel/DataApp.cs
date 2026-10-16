@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = null)
@@ -190,29 +192,6 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// </summary>
     public bool AllowUserToAddTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddTranscriptionProvider, true);
 
-    /// <summary>Should the user be allowed to import exported configuration snippets?</summary>
-    public bool AllowUserToImportConfigurationSnippets { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationSnippets, true);
-
-    public bool AllowUserToImportProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportProfile, true);
-    public bool AllowUserToImportLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportLLMProvider, true);
-    public bool AllowUserToImportEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportEmbeddingProvider, true);
-    public bool AllowUserToImportTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportTranscriptionProvider, true);
-    public bool AllowUserToImportChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChatTemplate, true);
-    public bool AllowUserToImportERIDataSource { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportERIDataSource, true);
-    public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
-
-    public bool CanImportConfigurationSnippet(string section) => this.AllowUserToImportConfigurationSnippets && (section switch
-    {
-        "PROFILES" => this.AllowUserToImportProfile,
-        "LLM_PROVIDERS" => this.AllowUserToImportLLMProvider && this.AllowUserToAddProvider && this.AllowUserToAddLLMProvider,
-        "EMBEDDING_PROVIDERS" => this.AllowUserToImportEmbeddingProvider && this.AllowUserToAddProvider && this.AllowUserToAddEmbeddingProvider,
-        "TRANSCRIPTION_PROVIDERS" => this.AllowUserToImportTranscriptionProvider && this.AllowUserToAddProvider && this.AllowUserToAddTranscriptionProvider,
-        "CHAT_TEMPLATES" => this.AllowUserToImportChatTemplate,
-        "DATA_SOURCES" => this.AllowUserToImportERIDataSource,
-        "DOCUMENT_ANALYSIS_POLICIES" => this.AllowUserToImportDocumentAnalysisPolicy,
-        _ => false,
-    });
-
     /// <summary>
     /// Should the user be allowed to add mailboxes?
     /// </summary>
@@ -221,6 +200,77 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Mailboxes the user added before stay, and the user may still edit or delete them.
     /// </remarks>
     public bool AllowUserToAddMailbox { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddMailbox, true);
+
+    /// <summary>
+    /// Should the user be allowed to import configurations which others exported?
+    /// </summary>
+    /// <remarks>
+    /// The master switch of the import: the switch of each type allows its import only while this
+    /// one does as well. Use CanImportConfigurationSnippet rather than reading the switches one by one.
+    /// </remarks>
+    public bool AllowUserToImportConfigurationSnippets { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationSnippets, true);
+
+    /// <summary>
+    /// Should the user be allowed to import profiles?
+    /// </summary>
+    public bool AllowUserToImportProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportProfile, true);
+
+    /// <summary>
+    /// Should the user be allowed to import LLM providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddLLMProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportLLMProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportLLMProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import embedding providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddEmbeddingProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportEmbeddingProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportEmbeddingProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import transcription providers?
+    /// </summary>
+    /// <remarks>
+    /// An import adds a provider, so AllowUserToAddProvider and AllowUserToAddTranscriptionProvider must allow it as well.
+    /// </remarks>
+    public bool AllowUserToImportTranscriptionProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportTranscriptionProvider, true);
+
+    /// <summary>
+    /// Should the user be allowed to import chat templates?
+    /// </summary>
+    public bool AllowUserToImportChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportChatTemplate, true);
+
+    /// <summary>
+    /// Should the user be allowed to import external data sources (ERI servers)?
+    /// </summary>
+    public bool AllowUserToImportERIDataSource { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportERIDataSource, true);
+
+    /// <summary>
+    /// Should the user be allowed to import document analysis policies?
+    /// </summary>
+    public bool AllowUserToImportDocumentAnalysisPolicy { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportDocumentAnalysisPolicy, true);
+
+    /// <summary>
+    /// May the user import a configuration of this type, which somebody else exported?
+    /// </summary>
+    /// <param name="type">The type of configuration object to import.</param>
+    /// <returns>True when the master switch and the switch of the type allow it, and for providers also the permission to add one.</returns>
+    public bool CanImportConfigurationSnippet(PluginConfigurationObjectType type) => this.AllowUserToImportConfigurationSnippets && type switch
+    {
+        PluginConfigurationObjectType.PROFILE => this.AllowUserToImportProfile,
+        PluginConfigurationObjectType.LLM_PROVIDER => this.AllowUserToImportLLMProvider && this.AllowUserToAddProvider && this.AllowUserToAddLLMProvider,
+        PluginConfigurationObjectType.EMBEDDING_PROVIDER => this.AllowUserToImportEmbeddingProvider && this.AllowUserToAddProvider && this.AllowUserToAddEmbeddingProvider,
+        PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => this.AllowUserToImportTranscriptionProvider && this.AllowUserToAddProvider && this.AllowUserToAddTranscriptionProvider,
+        PluginConfigurationObjectType.CHAT_TEMPLATE => this.AllowUserToImportChatTemplate,
+        PluginConfigurationObjectType.DATA_SOURCE => this.AllowUserToImportERIDataSource,
+        PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => this.AllowUserToImportDocumentAnalysisPolicy,
+
+        _ => false,
+    };
 
     /// <summary>
     /// Should the user be allowed to import plugin archives from disk?

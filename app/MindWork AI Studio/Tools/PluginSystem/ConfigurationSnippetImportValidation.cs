@@ -16,28 +16,28 @@ public static class ConfigurationSnippetImportValidation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSnippetImportValidation).Namespace, nameof(ConfigurationSnippetImportValidation));
 
-    public static void Validate(string section, LuaTable table)
+    public static void Validate(PluginConfigurationObjectType type, LuaTable table)
     {
         ConfigurationImportFields.ValidateExportId(table);
-        switch (section)
+        switch (type)
         {
-            case "PROFILES":
+            case PluginConfigurationObjectType.PROFILE:
                 ConfigurationImportFields.String(table, "Name");
                 ConfigurationImportFields.String(table, "NeedToKnow");
                 ConfigurationImportFields.String(table, "Actions");
                 break;
-            case "LLM_PROVIDERS":
-            case "EMBEDDING_PROVIDERS":
-            case "TRANSCRIPTION_PROVIDERS":
-                ValidateProvider(section, table);
+            case PluginConfigurationObjectType.LLM_PROVIDER:
+            case PluginConfigurationObjectType.EMBEDDING_PROVIDER:
+            case PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER:
+                ValidateProvider(type, table);
                 break;
-            case "CHAT_TEMPLATES":
+            case PluginConfigurationObjectType.CHAT_TEMPLATE:
                 ValidateChatTemplate(table);
                 break;
-            case "DATA_SOURCES":
+            case PluginConfigurationObjectType.DATA_SOURCE:
                 ValidateERIDataSource(table);
                 break;
-            case "DOCUMENT_ANALYSIS_POLICIES":
+            case PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY:
                 ConfigurationImportFields.String(table, "PolicyName");
                 ConfigurationImportFields.String(table, "PolicyDescription");
                 ConfigurationImportFields.String(table, "AnalysisRules");
@@ -53,22 +53,22 @@ public static class ConfigurationSnippetImportValidation
         }
     }
 
-    private static void ValidateProvider(string section, LuaTable table)
+    private static void ValidateProvider(PluginConfigurationObjectType type, LuaTable table)
     {
         var model = ConfigurationImportFields.Table(table, "Model");
         ConfigurationImportFields.String(model, "Id");
         ConfigurationImportFields.String(model, "DisplayName");
-        ConfigurationImportFields.String(table, section == "LLM_PROVIDERS" ? "InstanceName" : "Name");
+        ConfigurationImportFields.String(table, type is PluginConfigurationObjectType.LLM_PROVIDER ? "InstanceName" : "Name");
         ConfigurationImportFields.Enum<LLMProviders>(table, "UsedLLMProvider");
         ConfigurationImportFields.Enum<Host>(table, "Host");
         ConfigurationImportFields.String(table, "Hostname");
         if (table.TryGetValue("HFInferenceProvider", out _))
             ConfigurationImportFields.Enum<HFInferenceProvider>(table, "HFInferenceProvider");
-        if (section != "TRANSCRIPTION_PROVIDERS")
+        if (type is not PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER)
             ConfigurationImportFields.String(table, "TokenizerPath", required: false);
-        if (section == "LLM_PROVIDERS")
+        if (type is PluginConfigurationObjectType.LLM_PROVIDER)
             ConfigurationImportFields.String(table, "AdditionalJsonApiParameters", required: false);
-        if (section == "EMBEDDING_PROVIDERS")
+        if (type is PluginConfigurationObjectType.EMBEDDING_PROVIDER)
         {
             ConfigurationImportFields.Int(table, "TokenLimit", EmbeddingProvider.DEFAULT_TOKEN_LIMIT);
             ConfigurationImportFields.Int(table, "EmbeddingBatchSize", EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE);

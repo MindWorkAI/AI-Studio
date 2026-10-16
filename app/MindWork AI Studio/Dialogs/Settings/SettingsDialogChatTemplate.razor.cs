@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
 
 using Lua;
@@ -32,16 +33,16 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     private async Task ImportChatTemplate()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "CHAT_TEMPLATES", T("Import Chat Template"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.CHAT_TEMPLATE, T("Import Chat Template"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             await this.AddChatTemplate(table);
     }
 
     private async Task AddChatTemplate(LuaTable? importedConfiguration)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))
             return;
 
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
@@ -60,7 +61,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Add Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled ||
-            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES")))
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE)))
             return;
 
         var addedChatTemplate = (ChatTemplate)dialogResult.Data!;

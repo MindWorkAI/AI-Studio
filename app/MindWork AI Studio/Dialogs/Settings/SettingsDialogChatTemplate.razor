@@ -1,3 +1,4 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -85,7 +86,7 @@
             <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddChatTemplate">
                 @T("Add Chat Template")
             </MudButton>
-            <LockableButton Text="@T("Import Chat Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("CHAT_TEMPLATES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportChatTemplate" ButtonVariant="Variant.Outlined" NoMargin="true" />
+            <LockableButton Text="@T("Import Chat Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportChatTemplate" ButtonVariant="Variant.Outlined" NoMargin="true" />
         </MudStack>
     </DialogContent>
     <DialogActions>

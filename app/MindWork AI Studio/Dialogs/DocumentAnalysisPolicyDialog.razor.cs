@@ -40,7 +40,7 @@ public partial class DocumentAnalysisPolicyDialog : MSGComponentBase
     {
         if (firstRender && this.ImportedConfiguration is not null)
         {
-            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))
+            if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY))
                 this.MudDialog.Cancel();
             else
                 await this.ImportConfiguration(this.ImportedConfiguration);
@@ -87,7 +87,7 @@ public partial class DocumentAnalysisPolicyDialog : MSGComponentBase
 
     private async Task Store()
     {
-        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))
+        if (this.ImportedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY))
             return;
 
         await this.form.Validate();

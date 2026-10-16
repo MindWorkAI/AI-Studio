@@ -2,6 +2,7 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -59,16 +60,16 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task ImportEmbeddingProvider()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "EMBEDDING_PROVIDERS", T("Import Embedding Provider"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding Provider"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             await this.AddEmbeddingProvider(table);
     }
 
     private async Task AddEmbeddingProvider(LuaTable? importedConfiguration)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS"))
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             return;
 
         var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
@@ -81,7 +82,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled ||
-            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("EMBEDDING_PROVIDERS")))
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER)))
             return;
 
         var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;

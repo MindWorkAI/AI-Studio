@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Lua;
 
@@ -10,16 +11,16 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
 
     private async Task ImportProfile()
     {
-        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))
             return;
-        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, "PROFILES", T("Import Profile"));
-        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+        var table = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.PROFILE, T("Import Profile"));
+        if (table is not null && this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))
             await this.AddProfile(table);
     }
 
     private async Task AddProfile(LuaTable? importedConfiguration)
     {
-        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))
+        if (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))
             return;
 
         var dialogParameters = new DialogParameters<ProfileDialog>
@@ -32,7 +33,7 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
         var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Add Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled ||
-            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES")))
+            (importedConfiguration is not null && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE)))
             return;
 
         var addedProfile = (Profile)dialogResult.Data!;

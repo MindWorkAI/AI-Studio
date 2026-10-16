@@ -2,6 +2,7 @@
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 
 <div class="mb-6"></div>
 
@@ -47,7 +48,7 @@ else
     <MudButton OnClick="@this.AddPolicy" Disabled="@this.ArePolicyControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
         @T("Add policy")
     </MudButton>
-    <LockableButton Text="@T("Import document analysis policy")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("DOCUMENT_ANALYSIS_POLICIES"))" Disabled="@(() => this.ArePolicyControlsDisabled)" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportPolicy" ButtonVariant="Variant.Outlined" NoMargin="true" />
+    <LockableButton Text="@T("Import document analysis policy")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY))" Disabled="@(() => this.ArePolicyControlsDisabled)" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportPolicy" ButtonVariant="Variant.Outlined" NoMargin="true" />
     <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.ArePolicyControlsDisabled || (this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
         @T("Delete this policy")
     </MudButton>

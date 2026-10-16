@@ -41,20 +41,47 @@ public sealed class ConfigurationSnippetParserTests
 
     private const string WINDOWS_PATH = @"C:\Users\me\AppData\Roaming\MindWork AI Studio\tokenizer.json";
 
-    [TestCase("LLM_PROVIDERS")]
-    [TestCase("EMBEDDING_PROVIDERS")]
-    [TestCase("TRANSCRIPTION_PROVIDERS")]
-    [TestCase("PROFILES")]
-    [TestCase("CHAT_TEMPLATES")]
-    [TestCase("DATA_SOURCES")]
-    [TestCase("DOCUMENT_ANALYSIS_POLICIES")]
-    public async Task EveryExportIsReadAsLuaReadsIt(string section)
-    {
-        var snippet = Export(section);
+    /// <summary>
+    /// Every type of configuration object which configuration plugins provide, and thus can be exported.
+    /// </summary>
+    private static readonly PluginConfigurationObjectType[] EXPORTABLE_TYPES =
+    [
+        PluginConfigurationObjectType.LLM_PROVIDER,
+        PluginConfigurationObjectType.EMBEDDING_PROVIDER,
+        PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER,
+        PluginConfigurationObjectType.PROFILE,
+        PluginConfigurationObjectType.CHAT_TEMPLATE,
+        PluginConfigurationObjectType.DATA_SOURCE,
+        PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+    ];
 
-        Assert.That(ConfigurationSnippetParser.TryParse(snippet, section, out var parsed, out var issue), Is.True, issue);
-        AssertSameTable(await ReadWithLuaAsync(section, snippet), parsed, section);
+    [TestCaseSource(nameof(EXPORTABLE_TYPES))]
+    public async Task EveryExportIsReadAsLuaReadsIt(PluginConfigurationObjectType type)
+    {
+        var snippet = Export(type);
+
+        Assert.That(ConfigurationSnippetParser.TryParse(snippet, type, out var parsed, out var issue), Is.True, issue);
+        AssertSameTable(await ReadWithLuaAsync(type, snippet), parsed, type.ToString());
     }
+
+    [Test]
+    public void EveryTypeOfConfigurationObjectHasAnExport() => Assert.That(EXPORTABLE_TYPES, Is.EquivalentTo(PluginConfigurationObjectDescriptors.ALL.Select(descriptor => descriptor.Type)), "A new type of configuration object needs its export in the round trip above.");
+
+    private static IEnumerable<TestCaseData> PairsOfDifferentTypes() =>
+        from snippetType in EXPORTABLE_TYPES
+        from expectedType in EXPORTABLE_TYPES
+        where snippetType != expectedType
+        select new TestCaseData(snippetType, expectedType);
+
+    [TestCaseSource(nameof(PairsOfDifferentTypes))]
+    public void ASnippetOfAnotherTypeIsRefused(PluginConfigurationObjectType snippetType, PluginConfigurationObjectType expectedType)
+    {
+        var section = PluginConfigurationObjectDescriptors.Get(snippetType).LuaTableName;
+        AssertRefused($$"""CONFIG["{{section}}"][#CONFIG["{{section}}"]+1] = { ["a"] = 1 }""", expectedType);
+    }
+
+    [Test]
+    public void ASnippetOfAnUnknownSectionIsRefused() => AssertRefused("""CONFIG["SETTINGS"][#CONFIG["SETTINGS"]+1] = { ["a"] = 1 }""", PluginConfigurationObjectType.PROFILE);
 
     [TestCase("""["a"] = "q\"b\\c\n\r\t\a\b\f\v'" """, TestName = "Escapes in a double-quoted string")]
     [TestCase("""["a"] = 'it\'s "fine"' """, TestName = "Escapes in a single-quoted string")]
@@ -67,31 +94,13 @@ public sealed class ConfigurationSnippetParserTests
     [TestCase("""["a"] = true; ["b"] = false, ["c"] = { "x", 'y', [[z]], { ["d"] = 1 }, },""", TestName = "Lists, nested tables, and both separators")]
     [TestCase("""["a"] = {}, ["b"] = { {} }""", TestName = "Empty tables")]
     [TestCase("-- before\n[\"a\"] = -- after the equals sign\n 1, --[ not a block comment\n-- [[ neither\n[\"b\"] = 2 -- last\n", TestName = "Line comments everywhere")]
-    public async Task AHandwrittenSnippetIsReadAsLuaReadsIt(string fields)
-    {
-        var snippet = Snippet(fields);
-
-        Assert.That(ConfigurationSnippetParser.TryParse(snippet, "PROFILES", out var parsed, out var issue), Is.True, issue);
-        AssertSameTable(await ReadWithLuaAsync("PROFILES", snippet), parsed, "PROFILES");
-    }
+    public async Task AHandwrittenSnippetIsReadAsLuaReadsIt(string fields) => await AssertReadAsLuaReadsItAsync(Snippet(fields));
 
     [Test]
-    public async Task CommentsBeforeTheAssignmentAreAllowed()
-    {
-        var snippet = "-- Exported from the laptop of a colleague.\r\n-- Check the IDs below.\r\n\r\n" + Snippet("""["a"] = 1""");
-
-        Assert.That(ConfigurationSnippetParser.TryParse(snippet, "PROFILES", out var parsed, out var issue), Is.True, issue);
-        AssertSameTable(await ReadWithLuaAsync("PROFILES", snippet), parsed, "PROFILES");
-    }
+    public async Task CommentsBeforeTheAssignmentAreAllowed() => await AssertReadAsLuaReadsItAsync("-- Exported from the laptop of a colleague.\r\n-- Check the IDs below.\r\n\r\n" + Snippet("""["a"] = 1"""));
 
     [Test]
-    public async Task ThirtyNestedTablesAreStillRead()
-    {
-        var snippet = Snippet($"""["a"] = {string.Concat(Enumerable.Repeat("{ ", 30))}1{string.Concat(Enumerable.Repeat(" }", 30))}""");
-
-        Assert.That(ConfigurationSnippetParser.TryParse(snippet, "PROFILES", out var parsed, out var issue), Is.True, issue);
-        AssertSameTable(await ReadWithLuaAsync("PROFILES", snippet), parsed, "PROFILES");
-    }
+    public async Task ThirtyNestedTablesAreStillRead() => await AssertReadAsLuaReadsItAsync(Snippet($"""["a"] = {string.Concat(Enumerable.Repeat("{ ", 30))}1{string.Concat(Enumerable.Repeat(" }", 30))}"""));
 
     [TestCase("""["a"] = print("x")""", TestName = "A function call")]
     [TestCase("""["a"] = function() return 1 end""", TestName = "A function")]
@@ -110,36 +119,42 @@ public sealed class ConfigurationSnippetParserTests
     [TestCase("""["a"] = "unterminated""", TestName = "An unterminated string")]
     [TestCase("""["a"] = [==[unterminated]=]""", TestName = "An unterminated long string")]
     [TestCase("""["a"] = 0x10""", TestName = "A hexadecimal number")]
-    public void CodeAndConstructsBeyondPlainDataAreRefused(string fields) => AssertRefused(Snippet(fields), "PROFILES");
+    public void CodeAndConstructsBeyondPlainDataAreRefused(string fields) => AssertRefused(Snippet(fields));
 
     [Test]
-    public void ASecondStatementIsRefused() => AssertRefused(Snippet("""["a"] = 1""") + "\nos.exit()", "PROFILES");
+    public void ASecondStatementIsRefused() => AssertRefused(Snippet("""["a"] = 1""") + "\nos.exit()");
 
     [Test]
-    public void ASecondAssignmentIsRefused() => AssertRefused(Snippet("""["a"] = 1""") + "\n" + Snippet("""["b"] = 2"""), "PROFILES");
+    public void ASecondAssignmentIsRefused() => AssertRefused(Snippet("""["a"] = 1""") + "\n" + Snippet("""["b"] = 2"""));
 
     [Test]
-    public void ASnippetOfAnotherSectionIsRefused() => AssertRefused(Snippet("""["a"] = 1"""), "CHAT_TEMPLATES");
+    public void AnAssignmentWhichCountsAnotherSectionIsRefused() => AssertRefused("""CONFIG["PROFILES"][#CONFIG["CHAT_TEMPLATES"]+1] = { ["a"] = 1 }""");
 
     [Test]
-    public void AnAssignmentWhichCountsAnotherSectionIsRefused() => AssertRefused("""CONFIG["PROFILES"][#CONFIG["CHAT_TEMPLATES"]+1] = { ["a"] = 1 }""", "PROFILES");
+    public void AnAssignmentToAFixedIndexIsRefused() => AssertRefused("""CONFIG["PROFILES"][1] = { ["a"] = 1 }""");
 
     [Test]
-    public void AnAssignmentToAFixedIndexIsRefused() => AssertRefused("""CONFIG["PROFILES"][1] = { ["a"] = 1 }""", "PROFILES");
+    public void ATooLargeSnippetIsRefused() => AssertRefused(Snippet($"""["a"] = "{new string('x', 1_000_000)}" """));
 
     [Test]
-    public void ATooLargeSnippetIsRefused() => AssertRefused(Snippet($"""["a"] = "{new string('x', 1_000_000)}" """), "PROFILES");
-
-    [Test]
-    public void TooManyNestedTablesAreRefused() => AssertRefused(Snippet($"""["a"] = {string.Concat(Enumerable.Repeat("{ ", 40))}1{string.Concat(Enumerable.Repeat(" }", 40))}"""), "PROFILES");
+    public void TooManyNestedTablesAreRefused() => AssertRefused(Snippet($"""["a"] = {string.Concat(Enumerable.Repeat("{ ", 40))}1{string.Concat(Enumerable.Repeat(" }", 40))}"""));
 
     [TestCase("")]
     [TestCase("   \r\n  ")]
-    public void AnEmptySnippetIsRefused(string snippet) => AssertRefused(snippet, "PROFILES");
+    public void AnEmptySnippetIsRefused(string snippet) => AssertRefused(snippet);
 
-    private static void AssertRefused(string snippet, string section)
+    /// <summary>
+    /// Reads a profile snippet with the parser and with Lua, and compares both.
+    /// </summary>
+    private static async Task AssertReadAsLuaReadsItAsync(string snippet)
     {
-        var accepted = ConfigurationSnippetParser.TryParse(snippet, section, out _, out var issue);
+        Assert.That(ConfigurationSnippetParser.TryParse(snippet, PluginConfigurationObjectType.PROFILE, out var parsed, out var issue), Is.True, issue);
+        AssertSameTable(await ReadWithLuaAsync(PluginConfigurationObjectType.PROFILE, snippet), parsed, "PROFILES");
+    }
+
+    private static void AssertRefused(string snippet, PluginConfigurationObjectType type = PluginConfigurationObjectType.PROFILE)
+    {
+        var accepted = ConfigurationSnippetParser.TryParse(snippet, type, out _, out var issue);
         Assert.Multiple(() =>
         {
             Assert.That(accepted, Is.False);
@@ -147,6 +162,9 @@ public sealed class ConfigurationSnippetParserTests
         });
     }
 
+    /// <summary>
+    /// A profile snippet with these fields.
+    /// </summary>
     private static string Snippet(string fields) => $$"""CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = { {{fields}} }""";
 
     /// <summary>
@@ -156,9 +174,9 @@ public sealed class ConfigurationSnippetParserTests
     /// The items are made here rather than in a test case source: NUnit reads such a source before
     /// TestHost runs, and the provider types need its logger factory.
     /// </remarks>
-    private static string Export(string section) => section switch
+    private static string Export(PluginConfigurationObjectType type) => type switch
     {
-        "LLM_PROVIDERS" => new AIStudio.Settings.Provider(
+        PluginConfigurationObjectType.LLM_PROVIDER => new AIStudio.Settings.Provider(
             1,
             Guid.NewGuid().ToString(),
             QUOTED_TEXT,
@@ -172,7 +190,7 @@ public sealed class ConfigurationSnippetParserTests
             CapabilityOverrides: new ProviderCapabilityOverrides { FunctionCalling = true, ContextWindowTokens = 32_768, MaxImagesPerMessage = 0 })
             .ExportAsConfigurationSection("ENC:v1:c2VjcmV0"),
 
-        "EMBEDDING_PROVIDERS" => new EmbeddingProvider(
+        PluginConfigurationObjectType.EMBEDDING_PROVIDER => new EmbeddingProvider(
             1,
             Guid.NewGuid().ToString(),
             QUOTED_TEXT,
@@ -185,7 +203,7 @@ public sealed class ConfigurationSnippetParserTests
             TokenLimit: 512)
             .ExportAsConfigurationSection("ENC:v1:c2VjcmV0"),
 
-        "TRANSCRIPTION_PROVIDERS" => new TranscriptionProvider(
+        PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => new TranscriptionProvider(
             1,
             Guid.NewGuid().ToString(),
             QUOTED_TEXT,
@@ -195,11 +213,11 @@ public sealed class ConfigurationSnippetParserTests
             Host: Host.WHISPER_CPP)
             .ExportAsConfigurationSection(),
 
-        "PROFILES" => new Profile(1, Guid.NewGuid().ToString(), QUOTED_TEXT, MULTILINE_TEXT, "Short actions.").ExportAsConfigurationSection(),
+        PluginConfigurationObjectType.PROFILE => new Profile(1, Guid.NewGuid().ToString(), QUOTED_TEXT, MULTILINE_TEXT, "Short actions.").ExportAsConfigurationSection(),
 
-        "CHAT_TEMPLATES" => ExportChatTemplate(),
+        PluginConfigurationObjectType.CHAT_TEMPLATE => ExportChatTemplate(),
 
-        "DATA_SOURCES" => new DataSourceERI_V1
+        PluginConfigurationObjectType.DATA_SOURCE => new DataSourceERI_V1
         {
             Num = 1,
             Id = Guid.NewGuid().ToString(),
@@ -214,7 +232,7 @@ public sealed class ConfigurationSnippetParserTests
             MaxMatches = 25,
         }.ExportAsConfigurationSection("ENC:v1:c2VjcmV0", DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD),
 
-        "DOCUMENT_ANALYSIS_POLICIES" => new DataDocumentAnalysisPolicy
+        PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => new DataDocumentAnalysisPolicy
         {
             Id = Guid.NewGuid().ToString(),
             PolicyName = QUOTED_TEXT,
@@ -227,7 +245,7 @@ public sealed class ConfigurationSnippetParserTests
             HidePolicyDefinition = true,
         }.ExportAsConfigurationSection(),
 
-        _ => throw new ArgumentOutOfRangeException(nameof(section), section, "This test knows no export for this section."),
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type."),
     };
 
     private static string ExportChatTemplate()
@@ -259,8 +277,9 @@ public sealed class ConfigurationSnippetParserTests
     /// <summary>
     /// Reads a snippet the way a configuration plugin containing it would be read.
     /// </summary>
-    private static async Task<LuaTable> ReadWithLuaAsync(string section, string snippet)
+    private static async Task<LuaTable> ReadWithLuaAsync(PluginConfigurationObjectType type, string snippet)
     {
+        var section = PluginConfigurationObjectDescriptors.Get(type).LuaTableName;
         var state = LuaState.Create();
         state.OpenBasicLibrary();
         state.OpenTableLibrary();

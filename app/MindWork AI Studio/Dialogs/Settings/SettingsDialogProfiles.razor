@@ -1,3 +1,4 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -68,7 +69,7 @@
             <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddProfile">
                 @T("Add Profile")
             </MudButton>
-            <LockableButton Text="@T("Import Profile")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet("PROFILES"))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProfile" ButtonVariant="Variant.Outlined" NoMargin="true" />
+            <LockableButton Text="@T("Import Profile")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProfile" ButtonVariant="Variant.Outlined" NoMargin="true" />
         </MudStack>
     </DialogContent>
     <DialogActions>
