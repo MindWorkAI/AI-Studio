@@ -6,6 +6,16 @@ using Lua;
 namespace AIStudio.Tools.PluginSystem;
 
 /// <summary>Reads one exported configuration assignment as data. No Lua state is created.</summary>
+/// <remarks>
+/// A snippet is text somebody else wrote, pasted by a user who cannot tell what it does. Running it,
+/// even in the sandbox of the plugins, would let it do whatever Lua allows: loop forever, fill the
+/// memory, or compute its values from anything within reach. Configuration plugins may run code
+/// because an organization deploys them; a snippet earns no such trust. This parser therefore
+/// accepts only what an export writes: one assignment of a table made of strings, numbers,
+/// booleans, and tables, with comments in between. Whatever it accepts, it reads as Lua would, so a
+/// snippet means the same here as in a configuration plugin. Anything else is refused, never
+/// guessed: a construct which Lua would read differently must not slip through as data.
+/// </remarks>
 public sealed class ConfigurationSnippetParser
 {
     private readonly string source;
@@ -15,6 +25,14 @@ public sealed class ConfigurationSnippetParser
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ConfigurationSnippetParser).Namespace, nameof(ConfigurationSnippetParser));
 
+    /// <summary>
+    /// Reads a snippet of the form <c>CONFIG["SECTION"][#CONFIG["SECTION"]+1] = { ... }</c>.
+    /// </summary>
+    /// <param name="source">The pasted snippet.</param>
+    /// <param name="expectedSection">The Lua table the snippet must add to, e.g., PROFILES.</param>
+    /// <param name="table">The table the snippet assigns, when it could be read.</param>
+    /// <param name="issue">Why the snippet could not be read, otherwise empty.</param>
+    /// <returns>True when the snippet could be read.</returns>
     public static bool TryParse(string source, string expectedSection, out LuaTable table, out string issue)
     {
         table = new LuaTable();
@@ -69,7 +87,7 @@ public sealed class ConfigurationSnippetParser
             if (this.Take('}'))
                 return table;
 
-            // "[[" or "[=" opens a long string, which is an array value rather than a bracketed key:
+            // "[[" or "[==[" opens a long string, which is an array value rather than a bracketed key:
             if (this.Peek() == '[' && !this.IsLongStringStart())
             {
                 this.position++;
@@ -102,8 +120,10 @@ public sealed class ConfigurationSnippetParser
             return true;
         if (this.TakeWord("false"))
             return false;
+
+        // In Lua, nil leaves a field out, and in a list it ends what the parsers read of it:
         if (this.TakeWord("nil"))
-            return LuaValue.Nil;
+            throw new FormatException(string.Format(TB("The value nil at character {0} is not supported. Leave the field out instead."), this.position - 2));
 
         var start = this.position;
         if (this.Peek() == '-')
@@ -121,7 +141,63 @@ public sealed class ConfigurationSnippetParser
         throw new FormatException(string.Format(TB("Only literal values are allowed at character {0}; executable Lua is not accepted."), start + 1));
     }
 
-    private bool IsLongStringStart() => this.position + 1 < this.source.Length && this.source[this.position + 1] is '[' or '=';
+    private bool IsLongStringStart() => this.IsLongBracketAt(this.position);
+
+    /// <summary>
+    /// Whether a long bracket opens at this index: '[', any number of '=', and '[' again.
+    /// </summary>
+    private bool IsLongBracketAt(int index)
+    {
+        if (index >= this.source.Length || this.source[index] != '[')
+            return false;
+
+        index++;
+        while (index < this.source.Length && this.source[index] == '=')
+            index++;
+
+        return index < this.source.Length && this.source[index] == '[';
+    }
+
+    /// <summary>
+    /// Skips one line break, which Lua counts as one whether it is \n, \r, \r\n, or \n\r.
+    /// </summary>
+    private void SkipLineBreak()
+    {
+        var first = this.Peek();
+        if (first is not ('\r' or '\n'))
+            return;
+
+        this.position++;
+        var second = this.Peek();
+        if (second is '\r' or '\n' && second != first)
+            this.position++;
+    }
+
+    /// <summary>
+    /// Turns every line break of a long string into \n, as Lua does.
+    /// </summary>
+    private static string NormalizeLineBreaks(string text)
+    {
+        if (!text.Contains('\r'))
+            return text;
+
+        var builder = new StringBuilder(text.Length);
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (c is not ('\r' or '\n'))
+            {
+                builder.Append(c);
+                continue;
+            }
+
+            builder.Append('\n');
+            if (i + 1 < text.Length && text[i + 1] is '\r' or '\n' && text[i + 1] != c)
+                i++;
+        }
+
+        return builder.ToString();
+    }
 
     private string ReadBracketedString()
     {
@@ -145,17 +221,13 @@ public sealed class ConfigurationSnippetParser
             if (this.Peek() != '[')
                 throw new FormatException(string.Format(TB("Expected '{0}' at character {1}."), '[', this.position + 1));
             this.position++;
-            if (this.Peek() is '\r' or '\n')
-            {
-                if (this.Take('\r'))
-                    this.Take('\n');
-                else
-                    this.position++;
-            }
+
+            // Like Lua, a line break right after the opening bracket is not part of the string:
+            this.SkipLineBreak();
             var end = this.source.IndexOf("]" + equals + "]", this.position, StringComparison.Ordinal);
             if (end < 0)
                 throw new FormatException(TB("Unterminated long string."));
-            var value = this.source[this.position..end];
+            var value = NormalizeLineBreaks(this.source[this.position..end]);
             this.position = end + equals.Length + 2;
             return value;
         }
@@ -199,6 +271,14 @@ public sealed class ConfigurationSnippetParser
             }
             if (this.source.AsSpan(this.position).StartsWith("--"))
             {
+                //
+                // A block comment may end in the middle of a line and continue with data, which a
+                // line comment would swallow. Rather than reading it differently than Lua does, it
+                // is refused:
+                //
+                if (this.IsLongBracketAt(this.position + 2))
+                    throw new FormatException(string.Format(TB("The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line."), this.position + 1));
+
                 this.position += 2;
                 while (this.position < this.source.Length && this.source[this.position] != '\n')
                     this.position++;

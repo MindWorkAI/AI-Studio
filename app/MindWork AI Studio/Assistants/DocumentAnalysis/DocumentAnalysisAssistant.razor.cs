@@ -11,8 +11,6 @@ using AIStudio.Tools.AssistantSessions;
 using Microsoft.AspNetCore.Components;
 using LuaTable = Lua.LuaTable;
 
-using SharedTools;
-
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 using AIStudio.Tools.Security;
 
@@ -1019,7 +1017,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
         }
 
-        var luaCode = this.GenerateLuaPolicyExport();
+        var luaCode = this.selectedPolicy!.ExportAsConfigurationSection();
         await this.RustService.CopyText2Clipboard(luaCode);
     }
 
@@ -1042,50 +1040,5 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         return issues;
-    }
-
-    private string GenerateLuaPolicyExport()
-    {
-        if(this.selectedPolicy is null)
-            return string.Empty;
-        
-        var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
-        var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? string.Empty : this.selectedPolicy.PreselectedProfile;
-        var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
-        var allowedToolIds = string.Join(", ", this.selectedPolicy.AllowedToolIds.OrderBy(x => x, StringComparer.Ordinal).Select(x => LuaTools.ToLuaStringLiteral(x)));
-        
-        return $$"""
-                 CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
-                     ["Id"] = "{{id}}",
-                     ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyName.Trim())}},
-                     ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyDescription.Trim())}},
-                 
-                     ["AnalysisRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.AnalysisRules.Trim(), forceLongString: true)}},
-                 
-                     ["OutputRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.OutputRules.Trim(), forceLongString: true)}},
-                 
-                     -- Optional: minimum provider confidence required for this policy.
-                     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
-                     ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
-                 
-                     -- The tools an analysis with this policy may use, by tool ID.
-                     -- This is a limit, not a preselection: a tool which is not listed here cannot
-                     -- be used for this policy. An empty list means no tools. A listed tool must
-                     -- still meet the confidence requirements of the provider in use.
-                     ["AllowedToolIds"] = { {{allowedToolIds}} },
-
-                     -- Optional: preselect a provider or profile by ID.
-                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
-                     ["PreselectedProvider"] = "{{preselectedProvider}}",
-                     ["PreselectedProfile"] = "{{preselectedProfile}}",
-                 
-                     -- Optional: hide the policy definition section in the UI.
-                     -- When set to true, users will only see the document selection interface
-                     -- and cannot view or modify the policy settings.
-                     -- This is useful for enterprise configurations where policy details should remain hidden.
-                     -- Allowed values are: true, false (default: false)
-                     ["HidePolicyDefinition"] = {{this.selectedPolicy.HidePolicyDefinition.ToString().ToLowerInvariant()}},
-                 }
-                 """;
     }
 }
