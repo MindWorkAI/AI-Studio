@@ -169,6 +169,26 @@ internal static class TestTemplate
                 sectionSlideIds.Append(new P14.SectionSlideIdListEntry { Id = 256U + (uint)index });
             }
 
+            // A presentation used as a template carries slides worth keeping, after the samples:
+            var slides = options.Slides ?? [];
+            var contentSectionSlideIds = new P14.SectionSlideIdList();
+            for (var index = 0; index < slides.Count; index++)
+            {
+                var relationshipId = $"rId{200 + index}";
+                var slidePart = presentationPart.AddNewPart<SlidePart>(relationshipId);
+                slidePart.AddPart(layoutParts[slides[index].Layout]);
+                slidePart.Slide = new P.Slide(
+                    new P.CommonSlideData(ShapeTreeOf(slides[index].Texts.Select(text => text.Placeholder).ToList(), slides[index].Texts.Select(text => text.Text).ToList())),
+                    new P.ColorMapOverride(new A.MasterColorMapping()));
+
+                if (slides[index].IsHidden)
+                    slidePart.Slide.Show = false;
+
+                var slideId = 256U + (uint)(options.ExampleSlides + index);
+                slideIds.Append(new P.SlideId { Id = slideId, RelationshipId = relationshipId });
+                contentSectionSlideIds.Append(new P14.SectionSlideIdListEntry { Id = slideId });
+            }
+
             presentationPart.Presentation = new P.Presentation(
                 new P.SlideMasterIdList(new P.SlideMasterId { Id = 2_147_483_648U, RelationshipId = "rId1" }),
                 slideIds,
@@ -177,8 +197,12 @@ internal static class TestTemplate
 
             if (options.ExampleSlides > 0)
             {
+                var sections = new P14.SectionList(new P14.Section(sectionSlideIds) { Name = "Hints", Id = "{8A7F8F2C-6E59-4C61-9D3E-5B4D2D8F0A11}" });
+                if (slides.Count > 0)
+                    sections.Append(new P14.Section(contentSectionSlideIds) { Name = "Slides", Id = "{3C1E6B0D-2F4A-4E8B-9C7D-1A5F6E2B8D40}" });
+
                 presentationPart.Presentation.PresentationExtensionList = new P.PresentationExtensionList(
-                    new P.PresentationExtension(new P14.SectionList(new P14.Section(sectionSlideIds) { Name = "Hints", Id = "{8A7F8F2C-6E59-4C61-9D3E-5B4D2D8F0A11}" })) { Uri = SECTION_LIST_URI });
+                    new P.PresentationExtension(sections) { Uri = SECTION_LIST_URI });
             }
         }
 
@@ -195,7 +219,12 @@ internal static class TestTemplate
         return PresentationTemplate.Read(stream);
     }
 
-    private static P.ShapeTree ShapeTreeOf(IReadOnlyList<TestPlaceholder> placeholders)
+    /// <summary>
+    /// The shape tree of a layout, a master or a slide.
+    /// </summary>
+    /// <param name="placeholders">The placeholders.</param>
+    /// <param name="texts">The text of each placeholder, for a slide; a line break starts a new paragraph.</param>
+    private static P.ShapeTree ShapeTreeOf(IReadOnlyList<TestPlaceholder> placeholders, IReadOnlyList<string>? texts = null)
     {
         var shapeTree = new P.ShapeTree(
             new P.NonVisualGroupShapeProperties(
@@ -205,12 +234,12 @@ internal static class TestTemplate
             new P.GroupShapeProperties(new A.TransformGroup()));
 
         for (var index = 0; index < placeholders.Count; index++)
-            shapeTree.Append(ShapeOf((uint)index + 2, placeholders[index]));
+            shapeTree.Append(ShapeOf((uint)index + 2, placeholders[index], texts?[index] ?? string.Empty));
 
         return shapeTree;
     }
 
-    private static P.Shape ShapeOf(uint id, TestPlaceholder placeholder)
+    private static P.Shape ShapeOf(uint id, TestPlaceholder placeholder, string text)
     {
         var placeholderShape = new P.PlaceholderShape();
         if (placeholder.Type is { } type)
@@ -229,13 +258,19 @@ internal static class TestTemplate
             ? new A.ListStyle(new A.Level1ParagraphProperties(new A.DefaultRunProperties { FontSize = fontSize }))
             : new A.ListStyle();
 
+        var textBody = new P.TextBody(new A.BodyProperties(), listStyle);
+        if (text.Length == 0)
+            textBody.Append(new A.Paragraph());
+        else
+            textBody.Append(text.Split('\n').Select(line => new A.Paragraph(new A.Run(new A.Text(line)))));
+
         return new P.Shape(
             new P.NonVisualShapeProperties(
                 new P.NonVisualDrawingProperties { Id = id, Name = $"Placeholder {id}" },
                 new P.NonVisualShapeDrawingProperties(),
                 new P.ApplicationNonVisualDrawingProperties(placeholderShape)),
             shapeProperties,
-            new P.TextBody(new A.BodyProperties(), listStyle, new A.Paragraph()));
+            textBody);
     }
 }
 
@@ -244,7 +279,21 @@ internal static class TestTemplate
 /// </summary>
 /// <param name="ExampleSlides">How many sample slides the template carries, grouped into one section.</param>
 /// <param name="AsTemplate">Whether the file is a template (.potx) rather than a presentation.</param>
-internal sealed record TestTemplateOptions(int ExampleSlides = 0, bool AsTemplate = false);
+/// <param name="Slides">The slides with content the template carries after the sample slides.</param>
+internal sealed record TestTemplateOptions(int ExampleSlides = 0, bool AsTemplate = false, IReadOnlyList<TestSlide>? Slides = null);
+
+/// <summary>
+/// A slide of a test template, based on one of its layouts.
+/// </summary>
+/// <param name="Layout">The position of the layout in the template, starting at 0.</param>
+/// <param name="Texts">The placeholders of the slide with their texts; a line break starts a new paragraph. Placeholders without bounds take the place of the layout's.</param>
+internal sealed record TestSlide(int Layout, params (TestPlaceholder Placeholder, string Text)[] Texts)
+{
+    /// <summary>
+    /// Whether the slide is hidden in the slide show.
+    /// </summary>
+    public bool IsHidden { get; init; }
+}
 
 /// <summary>
 /// A slide layout of a test template.

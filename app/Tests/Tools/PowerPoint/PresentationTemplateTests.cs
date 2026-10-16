@@ -1,5 +1,7 @@
 using AIStudio.Tools.PowerPoint;
 
+using P = DocumentFormat.OpenXml.Presentation;
+
 namespace AIStudio.Tests.Tools.PowerPoint;
 
 /// <summary>
@@ -189,5 +191,80 @@ public sealed class PresentationTemplateTests
             Assert.That(family?.GetLayout("Z").Name, Is.EqualTo("A Content"), "A variant the family lacks falls back to its first one.");
             Assert.That(template.FindFamily("L9"), Is.Null);
         });
+    }
+
+    [Test]
+    public void TheSlidesOfATemplateAreReadWithWhatTheirSlotsHold()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Consultation hour"), (new TestPlaceholder(P.PlaceholderValues.SubTitle, 1), "Every Monday\n10:00 to 10:45")),
+                new TestSlide(2, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:"), (new TestPlaceholder(P.PlaceholderValues.Footer, 12), "Team, 2026-10-12")) { IsHidden = true },
+            ]),
+            new TestLayout("A Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(SUBTITLE)),
+            new TestLayout("A Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT), TestPlaceholder.Footer(12, LABEL_BELOW_RIGHT_PICTURE)),
+            new TestLayout("B Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT), TestPlaceholder.Footer(12, LABEL_BELOW_RIGHT_PICTURE)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Slides.Select(slide => slide.Number), Is.EqualTo(new[] { 1, 2 }));
+            Assert.That(template.Slides.Select(slide => slide.Title), Is.EqualTo(new[] { "Consultation hour", "News" }));
+            Assert.That(template.Slides.Select(slide => slide.FamilyId), Is.EqualTo(new[] { "L1", "L2" }), "A slide on the second color of a layout belongs to the layout's family all the same.");
+            Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Consultation hour"), (PlaceholderRole.SUBTITLE, "Every Monday\n10:00 to 10:45") }));
+            Assert.That(template.Slides[1].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "News"), (PlaceholderRole.TEXT, "AI Studio:\nEINSTEIN:") }), "The footer is no slot of the slide.");
+            Assert.That(template.Slides.Select(slide => slide.IsHidden), Is.EqualTo(new[] { false, true }));
+            Assert.That(template.Slides.Select(slide => slide.IsImprint), Is.EqualTo(new[] { false, false }));
+            Assert.That(template.FindSlide(2), Is.SameAs(template.Slides[1]));
+            Assert.That(template.FindSlide(0), Is.Null);
+            Assert.That(template.FindSlide(3), Is.Null);
+        });
+    }
+
+    [Test]
+    public void APlaceholderOfASlideFindsItsSlotByIndexWhateverTypeTheSlideStates()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (new TestPlaceholder(P.PlaceholderValues.CenteredTitle), "Questions"), (new TestPlaceholder(null, 13), "Image by somebody")),
+            ]),
+            new TestLayout("Picture", TestPlaceholder.Title(), TestPlaceholder.Picture(11, RIGHT_PICTURE), TestPlaceholder.Label(13, LABEL_BELOW_RIGHT_PICTURE)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Questions"), (PlaceholderRole.LABEL, "Image by somebody") }));
+    }
+
+    [Test]
+    public void ASlideOnALayoutWithoutRoomForContentBelongsToNoFamily()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides: [new TestSlide(1, (TestPlaceholder.Title(), "Thank you"))]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)),
+            new TestLayout("Title Only", TestPlaceholder.Title()));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Slides[0].FamilyId, Is.Null);
+            Assert.That(template.Slides[0].Title, Is.EqualTo("Thank you"), "What the slide holds is read all the same, so the user knows which slide it is.");
+        });
+    }
+
+    [Test]
+    public void AnImprintIsFoundByItsTitleOrByItsLines()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), " impressum "), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour")),
+                new TestSlide(0, (TestPlaceholder.Title(), "About this presentation"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour\nDatum:\t2026-10-12\nAutoren:\tThe team\nBildquellen:\tPixabay")),
+                new TestSlide(0, (TestPlaceholder.Title(), "Agenda"), (new TestPlaceholder(null, 1), "Datum: today\nThema: news")),
+            ]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.That(template.Slides.Select(slide => slide.IsImprint), Is.EqualTo(new[] { true, true, false }), "Two lines alike are no imprint yet.");
     }
 }

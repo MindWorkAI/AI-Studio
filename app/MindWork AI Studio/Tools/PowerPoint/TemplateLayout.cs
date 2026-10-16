@@ -11,4 +11,30 @@ internal sealed record TemplateLayout(
     string Name,
     Uri PartUri,
     string LayoutType,
-    IReadOnlyList<TemplateSlot> Slots);
+    IReadOnlyList<TemplateSlot> Slots)
+{
+    /// <summary>
+    /// Finds the slot a placeholder of a slide based on this layout fills.
+    /// </summary>
+    /// <remarks>
+    /// PowerPoint links the placeholders of a slide to those of its layout by their index, and a
+    /// placeholder without an index, such as the title, by its type. A slide often states the type
+    /// less precisely than its layout does, e.g., none at all for a body, so the index wins.
+    /// </remarks>
+    /// <param name="placeholderType">The placeholder type as the slide spells it; "obj" when it states none.</param>
+    /// <param name="placeholderIndex">The placeholder index the slide states, if any.</param>
+    /// <returns>The slot, or null when the placeholder fills none, e.g., because it is the footer.</returns>
+    public TemplateSlot? SlotOf(string placeholderType, uint? placeholderIndex)
+    {
+        if (placeholderIndex is { } index && this.Slots.FirstOrDefault(slot => slot.PlaceholderIndex == index) is { } slotByIndex)
+            return slotByIndex;
+
+        var typeGroup = TypeGroupOf(placeholderType);
+        return this.Slots.FirstOrDefault(slot => (slot.PlaceholderIndex is null || placeholderIndex is null) && TypeGroupOf(slot.PlaceholderType) == typeGroup);
+    }
+
+    /// <summary>
+    /// The type a placeholder is matched by: a title is a title, whether it is centered or not.
+    /// </summary>
+    private static string TypeGroupOf(string placeholderType) => placeholderType == "ctrTitle" ? "title" : placeholderType;
+}

@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
@@ -57,12 +58,13 @@ internal sealed partial class PresentationTemplate
     private const int READING_ROWS = 50;
 
     /// <summary>
-    /// Reads the layouts of a template.
+    /// Reads the layouts of a template, and the slides it carries.
     /// </summary>
     /// <remarks>
     /// Works for presentations (.pptx) and templates (.potx) alike. The slides the file contains are
-    /// ignored: in a template they are samples or hints for the user, and the presentation written
-    /// later starts without them. The Open XML SDK throws when the file is no presentation at all.
+    /// read with what they hold, yet a presentation written later starts without them: in a template
+    /// they are mostly samples or hints for the user, and only those the user chooses are kept. The
+    /// Open XML SDK throws when the file is no presentation at all.
     /// </remarks>
     /// <param name="stream">The file, opened for reading.</param>
     /// <returns>The template.</returns>
@@ -92,7 +94,8 @@ internal sealed partial class PresentationTemplate
         }
 
         var (families, variantLabels) = GroupIntoFamilies(layouts, slideWidth, slideHeight);
-        return new PresentationTemplate(slideWidth, slideHeight, families, variantLabels);
+        var slides = ReadSlides(presentationPart, presentation, layouts, families);
+        return new PresentationTemplate(slideWidth, slideHeight, families, variantLabels, slides);
     }
 
     private static MasterStyles MasterOf(P.SlideMaster master, int defaultFontSize)
@@ -183,7 +186,8 @@ internal sealed partial class PresentationTemplate
                 placeholder.Index?.Value,
                 bounds,
                 FontSizeOf(textBody?.ListStyle?.Level1ParagraphProperties),
-                InsetsOf(textBody?.BodyProperties));
+                InsetsOf(textBody?.BodyProperties),
+                element);
         }
     }
 
@@ -277,9 +281,10 @@ internal sealed partial class PresentationTemplate
         bodyProperties?.BottomInset?.Value ?? DEFAULT_VERTICAL_INSET);
 
     /// <summary>
-    /// A placeholder as the layout or the slide master states it, before anything is inherited.
+    /// A placeholder as the slide, the layout or the slide master states it, before anything is inherited.
     /// </summary>
-    private sealed record PlaceholderInfo(string Type, uint? Index, SlotBounds? Bounds, int? FontSize, TextInsets Insets);
+    /// <param name="Element">The shape, picture or graphic frame which is the placeholder, e.g., to read its text.</param>
+    private sealed record PlaceholderInfo(string Type, uint? Index, SlotBounds? Bounds, int? FontSize, TextInsets Insets, OpenXmlElement Element);
 
     /// <summary>
     /// What the layouts of one slide master inherit from it: its placeholders, keyed by the type

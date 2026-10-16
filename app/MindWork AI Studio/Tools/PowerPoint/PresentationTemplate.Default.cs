@@ -48,7 +48,7 @@ internal sealed partial class PresentationTemplate
         ];
 
         var families = layouts.Select((layout, index) => new LayoutFamily($"L{index + 1}", layout.Name, [new LayoutVariant(null, layout)])).ToList();
-        return new PresentationTemplate(DEFAULT_SLIDE_WIDTH, DEFAULT_SLIDE_HEIGHT, families, []);
+        return new PresentationTemplate(DEFAULT_SLIDE_WIDTH, DEFAULT_SLIDE_HEIGHT, families, [], []);
     }
 
     private static TemplateLayout DefaultLayout(int number, string name, string layoutType, params (PlaceholderRole Role, SlotBounds Bounds, int FontSize)[] slots)

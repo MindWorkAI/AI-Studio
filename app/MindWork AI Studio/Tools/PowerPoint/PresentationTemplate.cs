@@ -11,12 +11,13 @@ namespace AIStudio.Tools.PowerPoint;
 /// </remarks>
 internal sealed partial class PresentationTemplate
 {
-    private PresentationTemplate(long slideWidth, long slideHeight, IReadOnlyList<LayoutFamily> families, IReadOnlyList<string> variantLabels)
+    private PresentationTemplate(long slideWidth, long slideHeight, IReadOnlyList<LayoutFamily> families, IReadOnlyList<string> variantLabels, IReadOnlyList<TemplateSlide> slides)
     {
         this.SlideWidth = slideWidth;
         this.SlideHeight = slideHeight;
         this.Families = families;
         this.VariantLabels = variantLabels;
+        this.Slides = slides;
     }
 
     /// <summary>
@@ -41,9 +42,21 @@ internal sealed partial class PresentationTemplate
     public IReadOnlyList<string> VariantLabels { get; }
 
     /// <summary>
+    /// The slides the template carries, in the order of the file; empty for a template without slides.
+    /// </summary>
+    public IReadOnlyList<TemplateSlide> Slides { get; }
+
+    /// <summary>
     /// Finds a family by the ID the model used for it.
     /// </summary>
     /// <param name="id">The ID, e.g., "L3".</param>
     /// <returns>The family, or null when there is none with this ID.</returns>
     public LayoutFamily? FindFamily(string id) => this.Families.FirstOrDefault(family => string.Equals(family.Id, id.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Finds a slide of the template by its number.
+    /// </summary>
+    /// <param name="number">The number, starting at 1.</param>
+    /// <returns>The slide, or null when the template has no slide with this number.</returns>
+    public TemplateSlide? FindSlide(int number) => number >= 1 && number <= this.Slides.Count ? this.Slides[number - 1] : null;
 }
