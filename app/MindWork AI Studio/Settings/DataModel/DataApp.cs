@@ -316,6 +316,14 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
+    /// Should AI answers which are copied or exported end with a notice that AI generated them?
+    /// </summary>
+    /// <remarks>
+    /// Off by default. AIGeneratedContentDisclosureService explains which content gets the notice and why.
+    /// </remarks>
+    public bool AddAIGeneratedContentDisclosure { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddAIGeneratedContentDisclosure, false);
+
+    /// <summary>
     /// Settings for indexing local data sources.
     /// </summary>
     public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();

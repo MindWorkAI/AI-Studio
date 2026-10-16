@@ -482,6 +482,21 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
+-- Configure whether AI answers which users copy or export end with a notice that they were
+-- generated using artificial intelligence (AI). The notice is written in the language of the app.
+-- It also ends the files of the batch processing. Code blocks, single files or tables taken from
+-- an answer, visual briefings, and the results of the prompt optimizer and the assistant builder
+-- stay unchanged. The default is false: AI Studio then adds no notice. The Enterprise IT
+-- documentation describes what gets the notice.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
+
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
 -- Please note:
