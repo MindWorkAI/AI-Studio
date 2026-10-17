@@ -373,6 +373,23 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         //
+        // A file whose indexing never came to an end, e.g., since its run was canceled or the app
+        // was closed meanwhile, left a row without chunks and perhaps some vectors. Indexing it again
+        // would replace both, but a file which is gone or no longer selected is never indexed again:
+        //
+        foreach (var unfinishedFilePath in GetGoneFiles(manifest.UnfinishedFiles, inputFiles.Files, inputFiles.UnreadableDirectories))
+        {
+            await context.DeleteDocumentPointsAsync(unfinishedFilePath, token);
+            await context.IndexStore.DeleteFileAsync(context.DataSource.Id, unfinishedFilePath, token);
+            manifest.UnfinishedFiles.Remove(unfinishedFilePath);
+            logger.LogInformation(
+                "Removed what the unfinished indexing of file '{FilePath}' left behind in data source '{DataSourceName}' ({DataSourceId}), since the file is gone or no longer selected.",
+                unfinishedFilePath,
+                context.DataSource.Name,
+                context.DataSource.Id);
+        }
+
+        //
         // A file which is gone needs no mark keeping it out of the index. Without this, the table
         // would grow with every document the user ever deleted:
         //

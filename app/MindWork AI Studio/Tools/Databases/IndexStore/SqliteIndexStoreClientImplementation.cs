@@ -128,10 +128,21 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
 
         var files = await context.EmbeddedFiles
             .AsNoTracking()
-            .Where(file => file.DataSourceId == dataSourceId && file.ChunkCount > 0)
+            .Where(file => file.DataSourceId == dataSourceId)
             .ToListAsync(token);
         foreach (var file in files)
         {
+            //
+            // A row is written without chunks before the first chunk arrives, and gets its real
+            // count once the file is indexed. A row which still has none belongs to an indexing
+            // which never came to an end:
+            //
+            if (file.ChunkCount <= 0)
+            {
+                manifest.UnfinishedFiles.Add(file.AbsolutePath);
+                continue;
+            }
+
             manifest.Files[file.AbsolutePath] = new EmbeddedFileRecord(
                 file.Fingerprint,
                 file.FileSize,
