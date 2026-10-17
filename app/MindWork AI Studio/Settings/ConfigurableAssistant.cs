@@ -28,6 +28,7 @@ public enum ConfigurableAssistant
     LOG_VIEWER_ASSISTANT,
     VISUAL_BRIEFING_ASSISTANT,
     BATCH_PROCESSING_ASSISTANT,
+    MODEL_COMPARISON_ASSISTANT,
 
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,
