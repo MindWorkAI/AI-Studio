@@ -3,8 +3,8 @@ namespace AIStudio.Tools;
 public static class DirectoryInfoExtensions
 {
     /// <summary>
-    /// Determines the size and file count of a directory, optionally including its subdirectories
-    /// and restricted by a file predicate. When desired, it reports the found files up to a limit.
+    /// Determines the size and file count of the files a selection takes from a directory. When
+    /// desired, it reports the found files up to a limit.
     /// </summary>
     /// <remarks>
     /// You might set reportMaxFiles to a negative value to report all files. Any positive value will limit the number
@@ -24,25 +24,24 @@ public static class DirectoryInfoExtensions
     /// <param name="reportMaxFiles">The maximum number of files to report. A negative value reports all files.</param>
     /// <param name="done">The callback to report that the operation is done.</param>
     /// <param name="cancellationToken">The cancellation token to stop the operation.</param>
-    /// <param name="includeFile">An optional predicate which limits the files included in the totals and reports.</param>
-    /// <param name="includeSubdirectories">Whether files in subdirectories are included.</param>
-    /// <param name="includeHiddenFilesAndFolders">Whether hidden files and the files in hidden subdirectories are included.</param>
-    /// <param name="includeHiddenFile">Asked for each hidden file while hidden files and folders are left out: whether this one is included anyway.</param>
-    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, Func<FileInfo, bool>? includeFile = null, bool includeSubdirectories = true, bool includeHiddenFilesAndFolders = true, Func<string, bool>? includeHiddenFile = null)
+    /// <param name="selection">Which files count, e.g., those a data source indexes. Every file counts when it is missing.</param>
+    internal static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, FolderFileSelection? selection = null)
     {
         var rootDirectoryLen = directoryInfo.FullName.Length;
+        var filesToCount = selection ?? FolderFileSelection.EVERY_FILE;
         long totalSize = 0;
         long numFiles = 0;
-        
+
         await Task.Factory.StartNew(() => {
-            foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(directoryInfo.FullName, includeSubdirectories, includeHiddenFilesAndFolders, includeHiddenFile))
+            foreach (var filePath in filesToCount.EnumerateCandidates(directoryInfo.FullName))
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;
 
-                var file = new FileInfo(filePath);
-                if (includeFile is not null && !includeFile(file))
+                if (!filesToCount.Selects(filePath))
                     continue;
+
+                var file = new FileInfo(filePath);
 
                 totalSize += file.Length;
                 numFiles++;

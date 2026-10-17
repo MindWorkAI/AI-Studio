@@ -9,6 +9,9 @@ namespace AIStudio.Tools;
 /// for, hidden folders are not entered and hidden files are not returned, just as * in a shell
 /// does not match .env. A caller can still ask for single hidden files, e.g., because a file
 /// pattern begins with a dot itself, as .gitignore does.
+///
+/// The metadata of operating systems, such as Thumbs.db or __MACOSX, is never returned, cf.
+/// FileExclusions.
 /// </remarks>
 internal static class DirectoryFileTraversal
 {
@@ -65,6 +68,9 @@ internal static class DirectoryFileTraversal
 
             foreach (var file in files)
             {
+                if (FileExclusions.IsAlwaysExcludedFile(file.Name))
+                    continue;
+
                 if (!includeHiddenFilesAndFolders && IsHiddenFileLeftOut(file, includeHiddenFile))
                     continue;
 
@@ -73,7 +79,7 @@ internal static class DirectoryFileTraversal
 
             foreach (var subdirectory in subdirectories)
             {
-                if (includeDirectory is not null && !includeDirectory(subdirectory.FullName))
+                if (FileExclusions.IsAlwaysExcludedFolder(subdirectory.Name))
                     continue;
 
                 try
@@ -89,6 +95,13 @@ internal static class DirectoryFileTraversal
                     reportInaccessibleDirectory?.Invoke(subdirectory.FullName, exception);
                     continue;
                 }
+
+                //
+                // Asked last, so that the caller hears only about folders which would have been
+                // entered otherwise, e.g., to tell the user which folders a list left out:
+                //
+                if (includeDirectory is not null && !includeDirectory(subdirectory.FullName))
+                    continue;
 
                 pendingDirectories.Push(subdirectory.FullName);
             }

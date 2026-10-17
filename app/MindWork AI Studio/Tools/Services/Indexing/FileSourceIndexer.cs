@@ -36,7 +36,6 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
 internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
-    private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
     private const int MAX_LOGGED_EXCLUDED_FILE_EXAMPLES = 3;
 
@@ -89,12 +88,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // hence the time it took:
         //
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, ExcludedFolders={ExcludedFolders}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
             inputFiles.IgnoredFiles.Count,
             inputFiles.FilePatternExclusionCount,
+            inputFiles.ExcludedFolderCount,
             inputFiles.FailedFiles,
             enumerationDuration.TotalMilliseconds,
             context.CollectionName);
@@ -113,7 +113,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count,
             removedMissingFiles);
 
-        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger, inputFiles.IgnoredFiles, inputFiles.FilePatternExclusions);
+        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger, inputFiles.IgnoredFiles, inputFiles.FilePatternExclusions, inputFiles.ExcludedFolders);
         if (CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
         {
             logger.LogInformation(
@@ -355,17 +355,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     }
 
     /// <summary>
-    /// Whether a file name marks a file which is never indexed, whatever its type.
-    /// </summary>
-    /// <param name="fileName">The name of the file.</param>
-    /// <returns>True for shortcuts and the lock files of office suites.</returns>
-    private static bool IsSkippedRagFileName(string fileName)
-    {
-        return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
-               || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
-    }
-
-    /// <summary>
     /// Whether a file has a type whose text can be indexed.
     /// </summary>
     /// <param name="filePath">The path of the file.</param>
@@ -540,7 +529,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
     private void EnumerateAccessibleFiles(DataSourceLocalDirectory dataSource, FileEnumerationResult result)
     {
-        var patterns = FileNamePatterns.Parse(dataSource.EffectiveFilePatterns);
+        var selection = FolderFileSelection.Of(dataSource);
 
         //
         // Every log line travels to the runtime as a request of its own. A folder holding many
@@ -549,21 +538,20 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var excludedFiles = 0;
         var excludedFileExamples = new List<string>(MAX_LOGGED_EXCLUDED_FILE_EXAMPLES);
 
-        foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(
+        foreach (var filePath in selection.EnumerateCandidates(
                      dataSource.Path,
-                     dataSource.IncludeSubdirectories,
-                     dataSource.IncludeHiddenFilesAndFolders,
-                     includeHiddenFile: filePath => FileNamePatterns.NamesHiddenFile(filePath, patterns),
+                     reportExcludedFolder: result.AddExcludedFolder,
                      reportInaccessibleDirectory: (directoryPath, exception) =>
                      {
                          logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
                          result.AddUnreadableDirectory(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
                      }))
         {
-            if (!FileNamePatterns.Matches(filePath, patterns))
+            if (!selection.Selects(filePath))
             {
                 // Everything in a folder the user chose to scan is useful transparency when a
-                // pattern was mistyped or was narrower than intended:
+                // pattern was mistyped or was narrower than intended, or when the exclusion list
+                // caught a file somebody wanted:
                 result.AddFilePatternExclusion(filePath);
                 continue;
             }
@@ -649,7 +637,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
     private bool IsSkippedRagFile(FileInfo file)
     {
-        if (IsSkippedRagFileName(file.Name))
+        if (FileExclusions.IsAlwaysExcludedFile(file.Name))
             return true;
 
         try

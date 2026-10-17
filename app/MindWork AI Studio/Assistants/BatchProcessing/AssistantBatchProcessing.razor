@@ -27,6 +27,13 @@
     </MudButton>
 </MudStack>
 
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
+    <MudTextField T="string" @bind-Text="@this.excludePatterns" Validation="@this.ValidateExcludePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" Lines="@FileExclusions.DEFAULT_LINE_COUNT" AutoGrow="@true" HelperText="@T("These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.")" AdornmentIcon="@Icons.Material.Filled.FilterAltOff" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultExcludePatterns">
+        @T("Restore default")
+    </MudButton>
+</MudStack>
+
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
 </MudJustifiedText>

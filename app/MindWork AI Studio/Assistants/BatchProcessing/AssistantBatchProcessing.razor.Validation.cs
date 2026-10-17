@@ -16,6 +16,8 @@ public partial class AssistantBatchProcessing
 
     private string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
+    private string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
+
     private string? ValidateCsvFileName(string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -78,7 +80,7 @@ public partial class AssistantBatchProcessing
 
     private IReadOnlyList<string> FindInputFiles(string resolvedOutputDirectory)
     {
-        var patterns = FileNamePatterns.Parse(this.filePatterns);
+        var selection = new FolderFileSelection(FileNamePatterns.Parse(this.filePatterns), FileExclusions.Parse(this.excludePatterns), this.includeSubdirectories, this.includeHiddenFilesAndFolders);
         var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var normalizedInputDirectory = TrimDirectorySeparator(Path.GetFullPath(this.inputDirectory));
@@ -94,18 +96,15 @@ public partial class AssistantBatchProcessing
         // would also exclude a document named 'output-notes.md':
         var outputDirectoryPrefix = normalizedOutputDirectory + Path.DirectorySeparatorChar;
 
-        foreach (var file in DirectoryFileTraversal.EnumerateFiles(
+        foreach (var file in selection.EnumerateCandidates(
                      this.inputDirectory,
-                     this.includeSubdirectories,
-                     this.includeHiddenFilesAndFolders,
-                     includeHiddenFile: file => FileNamePatterns.NamesHiddenFile(file, patterns),
                      includeDirectory: directory => !isOutputSeparateFolder
                                                     || !string.Equals(TrimDirectorySeparator(Path.GetFullPath(directory)), normalizedOutputDirectory, StringComparison.OrdinalIgnoreCase),
                      reportInaccessibleDirectory: (directory, exception) =>
                          throw new IOException($"Could not access directory '{directory}'.", exception)))
         {
             var normalizedFile = Path.GetFullPath(file);
-            if (!FileNamePatterns.Matches(normalizedFile, patterns) || IsTranscriptArtifact(normalizedFile))
+            if (!selection.Selects(normalizedFile) || IsTranscriptArtifact(normalizedFile))
                 continue;
 
             if (isOutputSeparateFolder)

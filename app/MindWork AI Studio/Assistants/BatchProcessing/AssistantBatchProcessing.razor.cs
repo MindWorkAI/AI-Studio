@@ -102,6 +102,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string inputDirectory = string.Empty;
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
+    private string excludePatterns = FileExclusions.DEFAULT_PATTERNS;
     private bool includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
     private bool includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
@@ -160,6 +161,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
 
+    private void RestoreDefaultExcludePatterns() => this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
+
     private ConfidenceLevel GetMinimumConfidenceLevel()
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
@@ -179,6 +182,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.inputDirectory = string.Empty;
             this.outputDirectory = string.Empty;
             this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
+            this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
             this.includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
             this.includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
             this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
@@ -199,6 +203,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.inputDirectory = settings.InputDirectory;
         this.outputDirectory = settings.OutputDirectory;
         this.filePatterns = settings.FilePatterns;
+        this.excludePatterns = settings.ExcludePatterns;
         this.includeSubdirectories = settings.IncludeSubdirectories;
         this.includeHiddenFilesAndFolders = settings.IncludeHiddenFilesAndFolders;
         this.promptSource = settings.PromptSource;

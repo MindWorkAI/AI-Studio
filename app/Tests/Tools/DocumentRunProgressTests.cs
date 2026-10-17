@@ -383,10 +383,12 @@ public sealed class DocumentRunProgressTests
             new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "diagram.png"), DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
         };
         var filePatternExclusions = new[] { new DataSourceEmbeddingFilePatternGroup(".pdf", 42) };
+        var excludedFolders = new[] { new DataSourceEmbeddingExcludedFolderGroup("node_modules", 3) };
         var (progress, statuses, _) = CreateProgress(
             totalDocuments: ignoredFiles.Length,
             ignoredFiles: ignoredFiles,
-            filePatternExclusions: filePatternExclusions);
+            filePatternExclusions: filePatternExclusions,
+            excludedFolders: excludedFolders);
 
         progress.Publish();
         progress.PublishStoredState(workedThrough: true);
@@ -396,7 +398,8 @@ public sealed class DocumentRunProgressTests
             Assert.That(statuses, Has.Count.EqualTo(2));
             Assert.That(statuses.All(status => status.IgnoredFiles.SequenceEqual(ignoredFiles)), Is.True);
             Assert.That(statuses.All(status => status.FilePatternExclusions.SequenceEqual(filePatternExclusions)), Is.True);
-            Assert.That(statuses.All(status => status.SkippedDocuments == ignoredFiles.Length), Is.True);
+            Assert.That(statuses.All(status => status.ExcludedFolders.SequenceEqual(excludedFolders)), Is.True);
+            Assert.That(statuses.All(status => status.SkippedDocuments == ignoredFiles.Length), Is.True, "Excluded folders are intentional and count as nothing skipped.");
             Assert.That(statuses.All(status => status.ProgressPercent == 100), Is.True);
         });
     }
@@ -444,7 +447,8 @@ public sealed class DocumentRunProgressTests
         int failedInputs = 0,
         IndexingPass? pass = null,
         IEnumerable<DataSourceEmbeddingIgnoredFile>? ignoredFiles = null,
-        IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null)
+        IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null,
+        IEnumerable<DataSourceEmbeddingExcludedFolderGroup>? excludedFolders = null)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest();
@@ -474,7 +478,7 @@ public sealed class DocumentRunProgressTests
             statuses.Add,
             NullLogger.Instance);
 
-        return (new DocumentRunProgress(context, totalDocuments, failedInputs, string.Empty, [], NullLogger.Instance, ignoredFiles, filePatternExclusions), statuses, manifest);
+        return (new DocumentRunProgress(context, totalDocuments, failedInputs, string.Empty, [], NullLogger.Instance, ignoredFiles, filePatternExclusions, excludedFolders), statuses, manifest);
     }
 
     private static EmbeddingDocument Document(string path) => Document(path, Path.GetFileName(path));

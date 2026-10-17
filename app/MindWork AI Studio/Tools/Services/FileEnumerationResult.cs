@@ -6,6 +6,8 @@ public sealed class FileEnumerationResult
 {
     private readonly Dictionary<string, int> filePatternExclusionCounts = new(StringComparer.OrdinalIgnoreCase);
 
+    private readonly Dictionary<string, int> excludedFolderCounts = new(StringComparer.OrdinalIgnoreCase);
+
     public List<FileInfo> Files { get; } = [];
 
     public List<DataSourceEmbeddingFailure> Failures { get; } = [];
@@ -18,6 +20,13 @@ public sealed class FileEnumerationResult
         .ToList();
 
     public int FilePatternExclusionCount => this.filePatternExclusionCounts.Values.Sum();
+
+    public IReadOnlyList<DataSourceEmbeddingExcludedFolderGroup> ExcludedFolders => this.excludedFolderCounts
+        .Select(group => new DataSourceEmbeddingExcludedFolderGroup(group.Key, group.Value))
+        .OrderBy(group => group.FolderName, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    public int ExcludedFolderCount => this.excludedFolderCounts.Values.Sum();
 
     public int FailedFiles { get; set; }
 
@@ -53,6 +62,12 @@ public sealed class FileEnumerationResult
     {
         var fileType = GetFilePatternExclusionType(filePath);
         this.filePatternExclusionCounts[fileType] = this.filePatternExclusionCounts.GetValueOrDefault(fileType) + 1;
+    }
+
+    public void AddExcludedFolder(string directoryPath)
+    {
+        var folderName = Path.GetFileName(Path.TrimEndingDirectorySeparator(directoryPath));
+        this.excludedFolderCounts[folderName] = this.excludedFolderCounts.GetValueOrDefault(folderName) + 1;
     }
 
     private static string GetFilePatternExclusionType(string filePath)

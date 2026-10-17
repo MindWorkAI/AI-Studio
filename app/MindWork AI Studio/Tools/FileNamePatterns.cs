@@ -41,7 +41,10 @@ internal static class FileNamePatterns
         INVALID_CHARACTER,
     }
 
-    private static readonly char[] INVALID_PATTERN_CHARACTERS = Path.GetInvalidFileNameChars()
+    /// <summary>
+    /// What a file name pattern must not contain: what no file name may contain, apart from the wildcards.
+    /// </summary>
+    internal static readonly char[] INVALID_PATTERN_CHARACTERS = Path.GetInvalidFileNameChars()
         .Where(character => character is not '*' and not '?')
         .ToArray();
 
@@ -160,7 +163,7 @@ internal static class FileNamePatterns
 
     private static bool IsSelector(string pattern, string selector) => string.Equals(pattern, selector, StringComparison.OrdinalIgnoreCase);
 
-    private static bool LooksLikeSelector(string pattern) => pattern.StartsWith(SELECTOR_DELIMITER) && pattern.EndsWith(SELECTOR_DELIMITER);
+    internal static bool LooksLikeSelector(string pattern) => pattern.StartsWith(SELECTOR_DELIMITER) && pattern.EndsWith(SELECTOR_DELIMITER);
 
     private static bool IsMediaFile(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.MEDIA);
 }

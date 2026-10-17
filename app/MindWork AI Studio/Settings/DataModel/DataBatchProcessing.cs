@@ -38,6 +38,8 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public bool IncludeHiddenFilesAndFolders { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeHiddenFilesAndFolders, DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS);
 
+    public string ExcludePatterns { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ExcludePatterns, FileExclusions.DEFAULT_PATTERNS);
+
     public BatchProcessingPromptSource PromptSource { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptSource, BatchProcessingPromptSource.FREE_PROMPT);
 
     public string FreePrompt { get; set; } = ManagedConfiguration.Register(configSelection, value => value.FreePrompt, string.Empty);

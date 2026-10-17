@@ -166,6 +166,8 @@ public sealed class DataSourceValidation
 
     public string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
 
+    public string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
+
     public string? ValidateEmbeddingId(string embeddingId)
     {
         if(string.IsNullOrWhiteSpace(embeddingId))

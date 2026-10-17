@@ -63,6 +63,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
     private string dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
+    private string dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
     private bool dataIncludeSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_SUBDIRECTORIES;
     private bool dataIncludeHiddenFilesAndFolders = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private int dataMaxChunkTokenLength;
@@ -117,6 +118,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
             this.dataFilePatterns = this.DataSource.EffectiveFilePatterns;
+            this.dataExcludePatterns = this.DataSource.EffectiveExcludePatterns;
             this.dataIncludeSubdirectories = this.DataSource.IncludeSubdirectories;
             this.dataIncludeHiddenFilesAndFolders = this.DataSource.IncludeHiddenFilesAndFolders;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
@@ -191,6 +193,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // indexed data source somewhere else:
         Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
         FilePatterns = this.NormalizeFilePatterns(),
+
+        // Kept as typed, since the line breaks group the entries for the eye:
+        ExcludePatterns = this.dataExcludePatterns,
         IncludeSubdirectories = this.dataIncludeSubdirectories,
         IncludeHiddenFilesAndFolders = this.dataIncludeHiddenFilesAndFolders,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
@@ -226,6 +231,8 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private void Cancel() => this.MudDialog.Cancel();
 
     private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
+
+    private void RestoreDefaultExcludePatterns() => this.dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

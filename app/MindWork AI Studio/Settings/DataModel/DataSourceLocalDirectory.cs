@@ -85,6 +85,13 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string FilePatterns { get; init; } = DEFAULT_FILE_PATTERNS;
 
     /// <summary>
+    /// The files and folders below the path which are left out, even when a file pattern selects
+    /// them, cf. FileExclusions. Data sources from before this list existed get the default list,
+    /// so their build outputs and dependencies leave the index during the next run.
+    /// </summary>
+    public string ExcludePatterns { get; init; } = FileExclusions.DEFAULT_PATTERNS;
+
+    /// <summary>
     /// Whether files in folders below <see cref="this.Path"/> are considered for indexing.
     /// </summary>
     public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
@@ -109,4 +116,13 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string EffectiveFilePatterns => FileNamePatterns.IsValid(this.FilePatterns)
         ? this.FilePatterns
         : DEFAULT_FILE_PATTERNS;
+
+    /// <summary>
+    /// The exclusion list used at runtime. Like the patterns, an invalid value can only come from
+    /// malformed or hand-edited settings, and the default list takes its place.
+    /// </summary>
+    [JsonIgnore]
+    public string EffectiveExcludePatterns => FileExclusions.IsValid(this.ExcludePatterns)
+        ? this.ExcludePatterns
+        : FileExclusions.DEFAULT_PATTERNS;
 }

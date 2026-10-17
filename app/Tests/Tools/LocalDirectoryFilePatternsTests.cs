@@ -112,7 +112,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => totalSize = size,
                 count => fileCount = count,
                 reportedFiles.Add,
-                includeSubdirectories: false);
+                selection: new FolderFileSelection(["*"], [], false, false));
 
             Assert.Multiple(() =>
             {
@@ -147,8 +147,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => visibleSize = size,
                 count => visibleCount = count,
                 _ => { },
-                includeSubdirectories: true,
-                includeHiddenFilesAndFolders: false);
+                selection: new FolderFileSelection(["*"], [], true, false));
 
             long completeSize = 0;
             long completeCount = 0;
@@ -156,8 +155,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => completeSize = size,
                 count => completeCount = count,
                 _ => { },
-                includeSubdirectories: true,
-                includeHiddenFilesAndFolders: true);
+                selection: new FolderFileSelection(["*"], [], true, true));
 
             Assert.Multiple(() =>
             {
@@ -392,13 +390,13 @@ public sealed class LocalDirectoryFilePatternsTests
             long totalSize = 0;
             long fileCount = 0;
             var reportedFiles = new List<string>();
-            var patterns = FileNamePatterns.Parse("*.tf");
+            var selection = new FolderFileSelection(FileNamePatterns.Parse("*.tf"), [], true, false);
 
             await new DirectoryInfo(directoryPath).DetermineContentSize(
                 size => totalSize = size,
                 count => fileCount = count,
                 reportedFiles.Add,
-                includeFile: file => FileNamePatterns.Matches(file.FullName, patterns));
+                selection: selection);
 
             Assert.Multiple(() =>
             {

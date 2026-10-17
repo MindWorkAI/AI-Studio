@@ -13,6 +13,7 @@
         <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.FilterAlt" Label="@T("File patterns")" Value="@this.DataSource.EffectiveFilePatterns" ClipboardTooltipSubject="@T("the file patterns")"/>
+        <TextInfoLines Label="@T("Excluded files and folders")" Value="@this.DataSource.EffectiveExcludePatterns" ClipboardTooltipSubject="@T("the excluded files and folders")"/>
         @if (!this.IsDirectoryAvailable)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">

@@ -351,6 +351,11 @@ public partial class Embeddings : MSGComponentBase
         ? string.Format(T("Files without an extension ({0})"), this.FormatNumber(group.FileCount))
         : string.Format(T("{0} files ({1})"), group.FileType, this.FormatNumber(group.FileCount));
 
+    /// <remarks>
+    /// Written the way the exclusion list names folders, so the entry which caught a folder is easy to find.
+    /// </remarks>
+    private string GetExcludedFolderGroupText(DataSourceEmbeddingExcludedFolderGroup group) => $"{group.FolderName}{FileExclusions.FOLDER_SUFFIX} ({this.FormatNumber(group.FolderCount)})";
+
     private static string GetFileName(string filePath)
     {
         var fileName = Path.GetFileName(filePath);

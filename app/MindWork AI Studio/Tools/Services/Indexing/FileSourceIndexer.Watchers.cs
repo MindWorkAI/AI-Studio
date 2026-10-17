@@ -264,7 +264,7 @@ internal sealed partial class FileSourceIndexer
         if (Directory.Exists(path))
             return true;
 
-        if (IsSkippedRagFileName(fileName))
+        if (FileExclusions.IsAlwaysExcludedFile(fileName))
             return false;
 
         if (configuration.FilePatterns is { } patterns)

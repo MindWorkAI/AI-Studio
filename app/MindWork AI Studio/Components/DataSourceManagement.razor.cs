@@ -85,7 +85,7 @@ public partial class DataSourceManagement : MSGComponentBase
     /// <remarks>
     /// Files which were skipped for good are none of the failed ones, so an otherwise usable data
     /// source stays green. The shared health policy warns when none of the selected documents could
-    /// be indexed, or when a transcription provider can make selected media indexable.
+    /// be indexed.
     /// </remarks>
     private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
     {

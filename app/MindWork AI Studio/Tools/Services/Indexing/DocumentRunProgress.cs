@@ -24,9 +24,9 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="inputFailures">The failures of those which could not be looked at.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
 /// <param name="inputIgnoredFiles">Files found during enumeration but intentionally not selected for indexing.</param>
-/// <param name="filePatternExclusions">Files intentionally excluded by the configured patterns, summarized by file type.</param>
-internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDocuments, int failedInputs, string lastInputError, IEnumerable<DataSourceEmbeddingFailure> inputFailures, ILogger logger,
-    IEnumerable<DataSourceEmbeddingIgnoredFile>? inputIgnoredFiles = null, IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null)
+/// <param name="filePatternExclusions">Files intentionally excluded by the configured patterns or the exclusion list, summarized by file type.</param>
+/// <param name="excludedFolders">Folders intentionally left out by the exclusion list, summarized by name.</param>
+internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDocuments, int failedInputs, string lastInputError, IEnumerable<DataSourceEmbeddingFailure> inputFailures, ILogger logger, IEnumerable<DataSourceEmbeddingIgnoredFile>? inputIgnoredFiles = null, IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null, IEnumerable<DataSourceEmbeddingExcludedFolderGroup>? excludedFolders = null)
 {
     /// <summary>
     /// How often the block progress within one document is reported to the user interface at most.
@@ -38,6 +38,8 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     private readonly IReadOnlyList<DataSourceEmbeddingIgnoredFile> ignoredFiles = inputIgnoredFiles?.ToList() ?? [];
 
     private readonly IReadOnlyList<DataSourceEmbeddingFilePatternGroup> filePatternExclusions = filePatternExclusions?.ToList() ?? [];
+
+    private readonly IReadOnlyList<DataSourceEmbeddingExcludedFolderGroup> excludedFolders = excludedFolders?.ToList() ?? [];
 
     /// <summary>
     /// The documents this run read, whether indexing them worked or not, cf. HasDoneItsShare.
@@ -556,5 +558,6 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     {
         IgnoredFiles = this.ignoredFiles,
         FilePatternExclusions = this.filePatternExclusions,
+        ExcludedFolders = this.excludedFolders,
     };
 }
