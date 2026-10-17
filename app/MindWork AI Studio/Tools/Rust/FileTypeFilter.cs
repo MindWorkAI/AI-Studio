@@ -2,7 +2,7 @@ namespace AIStudio.Tools.Rust;
 
 /// <summary>
 /// Represents a file type that can optionally contain child file types.
-/// Use the static helpers <see cref="Leaf"/>, <see cref="Parent"/> and <see cref="Composite"/> to build readable trees.
+/// Use the static helpers Leaf, Parent, and Composite to build readable trees.
 /// </summary>
 /// <param name="FilterName">Display name of the type (e.g., "Document").</param>
 /// <param name="FilterExtensions">File extensions belonging to this type (without dot).</param>
@@ -11,14 +11,14 @@ public sealed record FileTypeFilter(string FilterName, string[] FilterExtensions
 {
     /// <summary>
     /// Factory for a leaf node.
-    /// Example: <c>FileType.Leaf(".NET", "cs", "razor")</c>
+    /// Example: <c>FileTypeFilter.Leaf(".NET", "cs", "razor")</c>
     /// </summary>
     public static FileTypeFilter Leaf(string name, params string[] extensions) =>
         new(name, extensions, []);
 
     /// <summary>
     /// Factory for a parent node that only has children.
-    /// Example: <c>FileType.Parent("Source Code", dotnet, java)</c>
+    /// Example: <c>FileTypeFilter.Parent("Source Code", dotnet, java)</c>
     /// </summary>
     public static FileTypeFilter Parent(string name, params FileTypeFilter[]? children) =>
         new(name, [], children ?? []);
