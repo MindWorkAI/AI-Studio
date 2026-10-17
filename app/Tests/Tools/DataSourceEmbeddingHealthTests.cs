@@ -26,17 +26,17 @@ public sealed class DataSourceEmbeddingHealthTests
     }
 
     [Test]
-    public void ATranscriptionProviderWarningRemainsActionableWhenOtherFilesWereIndexed()
+    public void AnIgnoredMediaFileKeepsAUsableDataSourceHealthy()
     {
         var status = Status(indexedDocuments: 1, totalDocuments: 2) with
         {
             IgnoredFiles =
             [
-                new DataSourceEmbeddingIgnoredFile("/data/interview.mp3", DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING),
+                new DataSourceEmbeddingIgnoredFile("/data/interview.mp3", DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
             ],
         };
 
-        Assert.That(status.Health, Is.EqualTo(DataSourceEmbeddingHealth.WARNING));
+        Assert.That(status.Health, Is.EqualTo(DataSourceEmbeddingHealth.HEALTHY));
     }
 
     [Test]

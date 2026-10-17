@@ -133,10 +133,10 @@ public class FileTypesTests
     [TestCase("recording.mp3")]
     [TestCase("meeting.mp4")]
     [TestCase("voice-recording.webm")]
-    public void LocalFileDataSourcesAcceptTranscribableMedia(string fileName)
+    public void LocalFileDataSourcesRejectMedia(string fileName)
     {
         var validation = new DataSourceValidation();
-        WithFile([1, 2, 3], fileName, path => Assert.That(validation.ValidateFilePath(path), Is.Null));
+        WithFile([1, 2, 3], fileName, path => Assert.That(validation.ValidateFilePath(path), Is.Not.Null));
     }
 
     private static void AssertPath(string content, string fileName, Encoding encoding, bool expected, FileTypeFilter? type = null)

@@ -80,7 +80,7 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select the file patterns this data source should index. Matching audio and video files without a reusable transcript are sent to your configured transcription provider and stored as Markdown transcripts; without a usable transcription provider, those files are skipped.")
+                @T("Select the file patterns this data source should index.")
             </MudJustifiedText>
 
             <MudTextField
@@ -90,7 +90,7 @@
                 Class="mb-3"
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidateFilePatterns"
-                HelperText="@T("Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :text: for every readable text file, or * to inspect every file including audio and video.")"
+                HelperText="@T("Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :text: for every readable text file, or * for every file.")"
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.FilterAlt"
                 AdornmentColor="Color.Info"

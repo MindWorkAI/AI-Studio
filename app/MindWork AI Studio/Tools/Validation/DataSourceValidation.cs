@@ -158,8 +158,8 @@ public sealed class DataSourceValidation
         if(!File.Exists(filePath))
             return TB("The file does not exist. Please select a valid file.");
 
-        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO))
-            return TB("The selected file is not a supported document, readable text file, audio file, or video file.");
+        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
+            return TB("The selected file is not a supported document or readable text file.");
         
         return null;
     }

@@ -137,7 +137,7 @@
                                                     }
                                                     @if (group.Cause.NeedsProviderSettings)
                                                     {
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenEmbeddingProviderSettings">
                                                             @T("Open the settings")
                                                         </MudButton>
                                                     }
@@ -198,13 +198,6 @@
                                                     <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
                                                         @T("Not added to the index")
                                                     </MudChip>
-                                                    @if (group.Cause.NeedsTranscriptionSettings)
-                                                    {
-                                                        <MudSpacer/>
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
-                                                            @T("Open the transcription settings")
-                                                        </MudButton>
-                                                    }
                                                 </MudStack>
                                                 <MudTable Items="@group.Files" Dense="@true" Hover="@true" Elevation="0" Breakpoint="Breakpoint.None" RowsPerPage="10" Class="border-dashed border rounded-lg">
                                                     <ColGroup>

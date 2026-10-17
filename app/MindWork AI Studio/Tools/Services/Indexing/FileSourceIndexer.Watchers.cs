@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Media;
 
 namespace AIStudio.Tools.Services.Indexing;
 
@@ -267,19 +266,8 @@ internal sealed partial class FileSourceIndexer
 
         if (configuration.FilePatterns is { } patterns)
         {
-            // When the media itself is selected, its generated Markdown is only the text backing
-            // that document. Ignoring its writes avoids a redundant watcher run and a duplicate
-            // document. A transcript can still be indexed on its own when only *.md is selected.
-            if (PersistentMediaTranscript.IsCoveredArtifact(path, patterns))
-                return false;
-
             if (FileNamePatterns.Matches(path, patterns))
                 return true;
-
-            // A transcript which is not selected as a Markdown document is generated data, not
-            // an ignored user file, so its creation must not schedule a pointless status refresh.
-            if (PersistentMediaTranscript.IsArtifactPath(path))
-                return false;
 
             // A newly found file which lies outside the patterns belongs in the exclusion summary.
             // A deleted path can have been a directory, but FileSystemWatcher does not tell us

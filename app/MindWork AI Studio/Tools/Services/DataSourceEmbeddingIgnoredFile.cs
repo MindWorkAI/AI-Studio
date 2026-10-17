@@ -5,8 +5,7 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 public enum DataSourceEmbeddingIgnoreReason
 {
-    IMAGE_NOT_SUPPORTED,
-    TRANSCRIPTION_PROVIDER_MISSING,
+    MEDIA_NOT_SUPPORTED,
 }
 
 /// <summary>
@@ -15,8 +14,7 @@ public enum DataSourceEmbeddingIgnoreReason
 /// </summary>
 /// <remarks>
 /// Files below folders the user chose not to scan never reach enumeration and therefore do not
-/// appear here. Generated transcript artifacts and temporary/system files are implementation
-/// details and stay hidden as well.
+/// appear here. Temporary and system files are implementation details and stay hidden as well.
 /// </remarks>
 /// <param name="FilePath">The absolute path of the ignored file.</param>
 /// <param name="Reason">Why the file was ignored.</param>

@@ -199,7 +199,7 @@ public sealed class UnreachableDataSourceTests
             NullLogger.Instance);
 
         // A run which reaches no file reads none, so it needs neither the runtime nor the chunker:
-        var indexer = new FileSourceIndexer(settingsManager, null!, null!, null!, NullLogger.Instance);
+        var indexer = new FileSourceIndexer(settingsManager, null!, null!, NullLogger.Instance);
         var outcome = await indexer.ProcessAsync(context, DataSourceEmbeddingRefreshMode.HASH_CHECK, CancellationToken.None);
 
         return new(outcome, statuses, manifest);

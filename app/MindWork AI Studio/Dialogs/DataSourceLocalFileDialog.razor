@@ -43,7 +43,7 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select a document, readable text file, audio file, or video file for this data source. Audio and video without a reusable transcript are sent to your configured transcription provider and stored as Markdown transcripts; without a usable transcription provider, those files are skipped.")
+                @T("Select a file for this data source. The content of this file will be processed for the data source.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {

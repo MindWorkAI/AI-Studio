@@ -62,12 +62,6 @@ public sealed record DataSourceEmbeddingStatus(
     public int SkippedDocuments => this.PermanentlySkippedDocuments + this.IgnoredFiles.Count;
 
     /// <summary>
-    /// Whether selected media files need a transcription provider before they can be indexed.
-    /// </summary>
-    public bool HasMissingTranscriptionProvider => this.IgnoredFiles.Any(file =>
-        file.Reason is DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING);
-
-    /// <summary>
     /// The settled health of this data source. Activity is represented by <see cref="State"/>
     /// instead, so queued and running sources can keep their activity indicator.
     /// </summary>
@@ -83,8 +77,7 @@ public sealed record DataSourceEmbeddingStatus(
             if (this.State is DataSourceEmbeddingState.FAILED || this.FailedDocuments > 0)
                 return DataSourceEmbeddingHealth.ERROR;
 
-            if (this.HasMissingTranscriptionProvider ||
-                this.State is DataSourceEmbeddingState.COMPLETED && this.IndexedDocuments == 0 && this.SkippedDocuments > 0)
+            if (this.State is DataSourceEmbeddingState.COMPLETED && this.IndexedDocuments == 0 && this.SkippedDocuments > 0)
                 return DataSourceEmbeddingHealth.WARNING;
 
             return DataSourceEmbeddingHealth.HEALTHY;

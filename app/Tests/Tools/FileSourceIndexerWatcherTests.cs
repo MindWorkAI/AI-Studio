@@ -1,5 +1,4 @@
 using AIStudio.Tools;
-using AIStudio.Tools.Media;
 using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tests.Tools;
@@ -179,61 +178,6 @@ public sealed class FileSourceIndexerWatcherTests
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(visibleDirectoriesOnly, filePath, WatcherChangeTypes.Changed), Is.False);
                 Assert.That(FileSourceIndexer.IsRelevantWatcherPath(includingHiddenDirectories, filePath, WatcherChangeTypes.Changed), Is.True);
             });
-        }
-        finally
-        {
-            Directory.Delete(directoryPath, true);
-        }
-    }
-
-    [Test]
-    public async Task DirectoryWatcherIgnoresTheGeneratedTranscriptWhenTheMediaIsSelected()
-    {
-        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-watcher-{Guid.NewGuid():N}");
-        var mediaPath = Path.Combine(directoryPath, "recording.mp3");
-        Directory.CreateDirectory(directoryPath);
-
-        try
-        {
-            await File.WriteAllBytesAsync(mediaPath, [1, 2, 3]);
-            var transcriptPath = PersistentMediaTranscript.GetFilePath(mediaPath);
-            var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(
-                directoryPath,
-                true,
-                FilePatterns: FileNamePatterns.Parse("*"));
-            var unrelatedPatterns = configuration with { FilePatterns = FileNamePatterns.Parse("*.tf") };
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, mediaPath, WatcherChangeTypes.Changed), Is.True);
-                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, transcriptPath, WatcherChangeTypes.Created), Is.False);
-                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(unrelatedPatterns, transcriptPath, WatcherChangeTypes.Created), Is.False);
-            });
-        }
-        finally
-        {
-            Directory.Delete(directoryPath, true);
-        }
-    }
-
-    [Test]
-    public async Task DirectoryWatcherKeepsTranscriptAsADocumentWhenTheMediaIsNotSelected()
-    {
-        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-document-{Guid.NewGuid():N}");
-        var mediaPath = Path.Combine(directoryPath, "recording.mp3");
-        Directory.CreateDirectory(directoryPath);
-
-        try
-        {
-            await File.WriteAllBytesAsync(mediaPath, [1, 2, 3]);
-            var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(
-                directoryPath,
-                true,
-                FilePatterns: FileNamePatterns.Parse("*.md"));
-
-            Assert.That(
-                FileSourceIndexer.IsRelevantWatcherPath(configuration, PersistentMediaTranscript.GetFilePath(mediaPath), WatcherChangeTypes.Changed),
-                Is.True);
         }
         finally
         {

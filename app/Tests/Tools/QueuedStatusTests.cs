@@ -82,7 +82,7 @@ public sealed class QueuedStatusTests
         PendingRemovalCount: 42,
         LastSyncUtc: NOW)
     {
-        IgnoredFiles = [new("/tmp/test-data/interview.mp3", DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING)],
+        IgnoredFiles = [new("/tmp/test-data/interview.mp3", DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED)],
         FilePatternExclusions = [new(".png", 5)],
     };
 

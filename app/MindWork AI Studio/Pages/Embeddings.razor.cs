@@ -276,7 +276,7 @@ public partial class Embeddings : MSGComponentBase
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
 
-    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsTranscriptionSettings);
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color);
 
     private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
 
@@ -315,9 +315,8 @@ public partial class Embeddings : MSGComponentBase
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 
-        var showsMessagePerFile = !hasCauseName || failure.ExtractionCode is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED;
         return failure.IsPermanent
-            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, showsMessagePerFile)
+            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, !hasCauseName)
             : new FailureCause(2, title, Icons.Material.Filled.ReportProblem, Color.Warning, false, false, !hasCauseName);
     }
 
@@ -337,20 +336,12 @@ public partial class Embeddings : MSGComponentBase
 
     private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingIgnoredFile file) => file.Reason switch
     {
-        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING => new IgnoredFileCause(
+        DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED => new IgnoredFileCause(
             0,
-            T("No transcription provider"),
-            T("These audio or video files match the data source patterns, but no usable transcription provider is configured. A reusable transcript is used when one is available."),
-            Icons.Material.Filled.MicOff,
-            Color.Warning,
-            true),
-        DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED => new IgnoredFileCause(
-            1,
-            FileTypes.IMAGE.FilterName,
-            T("These image files match the data source patterns, but images cannot currently be added to the index."),
-            Icons.Material.Filled.ImageNotSupported,
-            Color.Default,
-            false),
+            FileTypes.MEDIA.FilterName,
+            T("These image, audio, or video files match the data source patterns, but they cannot currently be added to the index."),
+            Icons.Material.Filled.PermMedia,
+            Color.Default),
         _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
     };
 
@@ -425,9 +416,7 @@ public partial class Embeddings : MSGComponentBase
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
                status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
-               (status.State is DataSourceEmbeddingState.FAILED
-                || status.FailedDocuments > 0
-                || status.HasMissingTranscriptionProvider);
+               (status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
     }
 
     /// <remarks>
@@ -442,13 +431,13 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes the user to the settings, where embedding and transcription providers are configured.
+    /// Takes the user to the settings, where the embedding providers are configured.
     /// </summary>
     /// <remarks>
-    /// Offered only for a problem a provider setting fixes. Reading what went wrong and then
-    /// having to find the right page is where people give up.
+    /// Offered only for the failures a setting fixes, such as a rejected API key. Reading what
+    /// went wrong and then having to find the right page is where people give up.
     /// </remarks>
-    private void OpenProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
+    private void OpenEmbeddingProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
 
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {
