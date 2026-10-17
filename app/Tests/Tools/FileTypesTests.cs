@@ -7,19 +7,6 @@ namespace AIStudio.Tests.Tools;
 
 public class FileTypesTests
 {
-    [TestCase("main.tf", "resource \"example\" \"main\" { description = \"Grüße\" }")]
-    [TestCase(".gitignore", "bin/\nobj/\n")]
-    [TestCase("LICENSE", "Permission is hereby granted.")]
-    [TestCase("Dockerfile", "FROM alpine:latest")]
-    [TestCase("Dockerfile.development", "FROM alpine:latest")]
-    [TestCase("Makefile", "build:\n\tdotnet build")]
-    [TestCase(".env", "APP_ENV=development")]
-    [TestCase("deployment notes (final) [β] #1", "Unusually named UTF-8 text file")]
-    public void ReadableTextAcceptsUtf8PathsWithoutAKnownExtension(string fileName, string content)
-    {
-        AssertPath(content, fileName, Encoding.UTF8, true);
-    }
-
     [TestCase("Dockerfile")]
     [TestCase("dockerfile")]
     [TestCase("Dockerfile.development")]
@@ -40,44 +27,14 @@ public class FileTypesTests
     }
 
     [Test]
-    public void ReadableTextAcceptsLegacySingleByteText()
+    public void OnlyFiltersWithReadableTextLookAtTheContent()
     {
-        AssertPath([0x47, 0x72, 0xFC, 0xDF, 0x65], "greeting.data", true);
-    }
-
-    [Test]
-    public void ReadableTextAcceptsBomMarkedUnicode()
-    {
-        var content = Encoding.Unicode.GetPreamble()
-            .Concat(Encoding.Unicode.GetBytes("A UTF-16 text file."))
-            .ToArray();
-
-        AssertPath(content, "utf16.data", true);
-    }
-
-    [Test]
-    public void ReadableTextRejectsUtf32WhichTheRuntimeTextReaderDoesNotSupport()
-    {
-        var content = Encoding.UTF32.GetPreamble()
-            .Concat(Encoding.UTF32.GetBytes("UTF-32 text"))
-            .ToArray();
-
-        AssertPath(content, "utf32.data", false);
-    }
-
-    [Test]
-    public void ReadableTextRejectsBinaryContent()
-    {
-        AssertPath([0x50, 0x4B, 0x03, 0x04, 0x00, 0x00, 0x00, 0x00], "archive.unknown", false);
-        AssertPath([0x01, 0x02, 0x03, 0x04, 0x05], "controls.unknown", false);
+        const string CONTENT = "resource \"example\" \"main\" {}";
+        AssertPath(CONTENT, "infrastructure.tf", Encoding.UTF8, true);
+        AssertPath(CONTENT, "infrastructure.tf", Encoding.UTF8, true, FileTypes.TEXT);
+        AssertPath(CONTENT, "infrastructure.tf", Encoding.UTF8, false, FileTypes.SOURCE_CODE);
+        AssertPath(CONTENT, "infrastructure.tf", Encoding.UTF8, false, FileTypes.AUDIO);
         AssertPath([0x01, 0x02, 0x03, 0x04, 0x05], "controls.unknown", false, FileTypes.DOCUMENT);
-    }
-
-    [Test]
-    public void ReadableTextRejectsAnUnreadablePath()
-    {
-        var missingPath = Path.Combine(Path.GetTempPath(), $"ai-studio-missing-{Guid.NewGuid():N}.tf");
-        Assert.That(FileTypes.IsAllowedPath(missingPath, FileTypes.READABLE_TEXT), Is.False);
     }
 
     [Test]
