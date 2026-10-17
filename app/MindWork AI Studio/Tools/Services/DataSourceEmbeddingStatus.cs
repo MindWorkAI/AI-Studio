@@ -69,7 +69,7 @@ public sealed record DataSourceEmbeddingStatus(
     public int SkippedDocuments => this.PermanentlySkippedDocuments + this.IgnoredFiles.Count;
 
     /// <summary>
-    /// The settled health of this data source. Activity is represented by <see cref="State"/>
+    /// The settled health of this data source. Activity is represented by State
     /// instead, so queued and running sources can keep their activity indicator.
     /// </summary>
     /// <remarks>

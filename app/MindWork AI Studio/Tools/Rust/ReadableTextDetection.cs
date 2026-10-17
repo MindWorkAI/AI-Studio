@@ -17,6 +17,10 @@ internal static class ReadableTextDetection
     /// <summary>
     /// How many bytes at the beginning of a file are read at most.
     /// </summary>
+    /// <remarks>
+    /// The same size as BINARY_PROBE_SIZE in runtime/src/file_data.rs, where the text reader looks
+    /// for NUL bytes. Change both together, so that this check and the reader agree on what is binary.
+    /// </remarks>
     public const int PROBE_SIZE = 8_192;
 
     /// <summary>

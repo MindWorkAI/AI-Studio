@@ -79,7 +79,7 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string Path { get; init; } = string.Empty;
 
     /// <summary>
-    /// Semicolon-separated file-name patterns which decide which files below <see cref="this.Path"/>
+    /// Semicolon-separated file-name patterns which decide which files below the path
     /// are considered for indexing.
     /// </summary>
     public string FilePatterns { get; init; } = DEFAULT_FILE_PATTERNS;
@@ -98,7 +98,7 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public int MaxFileSizeMegabytes { get; init; } = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
 
     /// <summary>
-    /// Whether files in folders below <see cref="this.Path"/> are considered for indexing.
+    /// Whether files in folders below the path are considered for indexing.
     /// </summary>
     public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
 

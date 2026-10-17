@@ -489,6 +489,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             lane);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
             this.UpsertStatus(this.GetQueuedStatus(dataSource));
+
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
         await this.runQueue.EnqueueAsync(dataSource.Id, lane);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
@@ -1196,8 +1197,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         string currentDocument = "",
         string lastError = "",
         IReadOnlyList<DataSourceEmbeddingFailure>? failures = null,
-        IReadOnlyList<DataSourceEmbeddingIgnoredFile>? ignoredFiles = null,
-        IReadOnlyList<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null,
         int permanentlySkippedDocuments = 0,
         int? currentDocumentBlock = null,
         int? currentDocumentPage = null,
@@ -1219,11 +1218,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentDocumentBlock,
             currentDocumentPage,
             vectorStoreUnreadable,
-            LastSyncUtc: lastSyncUtc)
-        {
-            IgnoredFiles = ignoredFiles?.ToList() ?? [],
-            FilePatternExclusions = filePatternExclusions?.ToList() ?? [],
-        };
+            LastSyncUtc: lastSyncUtc);
     }
 
     /// <summary>
