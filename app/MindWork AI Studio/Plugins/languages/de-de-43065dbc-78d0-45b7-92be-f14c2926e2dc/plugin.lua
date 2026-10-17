@@ -5154,6 +5154,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] 
 -- AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T476576809"] = "AI Studio kann in dieser Installation keine Updates installieren. Wenden Sie sich für neue Versionen an die Person oder Organisation, die die Installation vorgenommen hat."
 
+-- Applies when you export providers, data sources, or tool settings with their API keys, tokens, or passwords. The protected format makes AI Studio refuse every value which was encrypted with another secret, but versions before v26.10.1 cannot read it. Keep the compatible format until every computer in your organization runs v26.10.1 or newer. Both formats use the same encryption secret.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602260056"] = "Gilt, wenn Sie Anbieter, Datenquellen oder Werkzeugeinstellungen zusammen mit den zugehörigen API-Schlüsseln, Token oder Passwörtern exportieren. Im geschützten Format lehnt AI Studio alle Werte ab, die mit einem anderen Geheimnis verschlüsselt wurden. Versionen vor v26.10.1 können dieses Format jedoch nicht lesen. Verwenden Sie weiterhin das kompatible Format, bis auf allen Rechnern Ihrer Organisation v26.10.1 oder eine neuere Version installiert ist. Beide Formate verwenden dasselbe Geheimnis für die Verschlüsselung."
+
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"
 
@@ -5186,6 +5189,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T922066419"] 
 
 -- Administration settings are not visible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Die Optionen für die Administration sind nicht sichtbar."
+
+-- Format for encrypted secrets in exports
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T938676916"] = "Format für verschlüsselte Geheimnisse in Exporten"
 
 -- Show provider's confidence level?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1052533048"] = "Vertrauensniveau des Anbieters anzeigen?"
@@ -11553,6 +11559,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3137986690
 -- Delete disappearing chats older than 180 days
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3491430707"] = "Selbstlöschende Chats: lösche Chats die älter als 180 Tage sind"
 
+-- Compatible with all versions of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3559426588"] = "Kompatibel mit allen Versionen von AI Studio"
+
 -- Install updates automatically
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3569059463"] = "Updates automatisch installieren"
 
@@ -11564,6 +11573,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107
 
 -- Toggle the sidebar: show the workspaces next to the chat when desired
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137"] = "Seitenleiste umschalten: Arbeitsbereiche bei Bedarf neben dem Chat anzeigen"
+
+-- Protected against wrong encryption secrets, needs AI Studio v26.10.1 or newer
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3831574746"] = "Geschützt vor falschen Geheimnissen für die Verschlüsselung, erfordert AI Studio v26.10.1 oder neuer"
 
 -- Updates disabled by your organization
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4048970098"] = "Updates wurden von Ihrer Organisation deaktiviert"
