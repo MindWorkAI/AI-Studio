@@ -198,7 +198,7 @@ public sealed class UnreachableDataSourceTests
             new NoIndexStoreClient("Test index store", "Not available in tests."),
             manifest,
             new RunShare(RunShare.DEFAULT_DURATION),
-            new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE")),
+            new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty)),
             new PromptInjectionGuardService(null!, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction(),
             settingsManager,
             statuses.Add,

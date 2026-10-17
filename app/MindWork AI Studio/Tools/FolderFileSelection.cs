@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Tools;
@@ -58,6 +60,19 @@ internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IR
     public long MaxFileSizeBytes => MegabytesToBytes(maxFileSizeMegabytes);
 
     public static long MegabytesToBytes(int megabytes) => megabytes * BYTES_PER_MEGABYTE;
+
+    /// <summary>
+    /// Describes the selection as text, which is the same for two selections exactly when they
+    /// select the same files.
+    /// </summary>
+    /// <remarks>
+    /// File patterns and exclusions ignore case and order, so the description does as well. It names
+    /// every argument of this class: whoever adds one adds it here, or changing it would not restart
+    /// a run which still works with the old selection, cf. DataSourceEmbeddingService.BuildSelectionSignature.
+    /// </remarks>
+    public string Describe() => string.Create(
+        CultureInfo.InvariantCulture,
+        $"patterns:{Canonical(filePatterns)}|exclusions:{Canonical(exclusions)}|subfolders:{includeSubdirectories}|hidden:{includeHiddenFilesAndFolders}|max-mb:{maxFileSizeMegabytes}");
 
     /// <summary>
     /// Enumerates the files below a folder which are neither hidden nor in an excluded or a hidden
@@ -154,6 +169,11 @@ internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IR
 
     private bool LeavesOutFile(string filePath) => FileExclusions.ExcludesFile(filePath, exclusions)
                                                    || (!includeHiddenFilesAndFolders && DirectoryFileTraversal.IsHiddenPath(filePath) && !FileNamePatterns.NamesHiddenFile(filePath, filePatterns));
+
+    private static string Canonical(IEnumerable<string> entries) => string.Join(';', entries
+        .Select(entry => entry.ToLowerInvariant())
+        .Distinct(StringComparer.Ordinal)
+        .Order(StringComparer.Ordinal));
 
     private bool IsNotExcluded(string directoryPath, Action<string>? reportExcludedFolder)
     {

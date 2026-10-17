@@ -81,7 +81,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion, DataSourceEmbeddingRefreshMode RefreshMode)
     {
         /// <summary>
-        /// The embedding settings the run works for, as GetRunSignature describes them.
+        /// The embedding settings and the selection of documents the run works for, as GetRunSignature describes them.
         /// </summary>
         /// <remarks>
         /// Null until the run has resolved its embedding provider. Read and written under
@@ -810,11 +810,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Id);
 
         //
-        // From here on, a change of the embedding settings stops this run, cf. CancelOutdatedDataSourceRun.
-        // The provider passed the confidence check above, so this is the run signature as well.
+        // From here on, a change of the embedding settings or of the documents the data source
+        // selects stops this run, cf. CancelOutdatedDataSourceRun. The provider passed the
+        // confidence check above, so this is the run signature as well. Both parts come from the
+        // data source this run works with, not from the one stored now.
         //
         var embeddingSignature = BuildEmbeddingSignature(dataSource, embeddingProvider);
-        var runSignature = new DataSourceRunSignature(embeddingSignature);
+        var runSignature = new DataSourceRunSignature(embeddingSignature, BuildSelectionSignature(dataSource));
         lock (this.runSignatureLock)
             runControl.RunSignature = runSignature;
 
@@ -837,7 +839,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         //
         // Only now, with the run signature recorded and checked, and with whatever an outdated
-        // manifest threw away: a pass belongs to the embedding settings it began with.
+        // manifest threw away: a pass belongs to the embedding settings and the selection it began with.
         //
         var lastPass = this.passes.GetValueOrDefault(dataSource.Id);
         var pass = IndexingPass.ContinueOrBegin(lastPass, refreshMode, runSignature);
@@ -1337,13 +1339,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     /// <summary>
-    /// Stops the active run of a data source when it works for embedding settings which no longer apply.
+    /// Stops the active run of a data source when it works for embedding settings or a selection of
+    /// documents which no longer apply.
     /// </summary>
     /// <remarks>
     /// Only what the run signature covers counts, cf. GetRunSignature: another embedding model, other
-    /// chunk settings, a deleted embedding provider, or one which may no longer read the data source.
-    /// A changed name or a changed document leaves the run alone. Whoever calls this has to make sure
-    /// a run follows which starts over with the current settings.
+    /// chunk settings, other file patterns, exclusions, switches, or size limit of a folder, a deleted
+    /// embedding provider, or one which may no longer read the data source. A changed name or a
+    /// changed document leaves the run alone. Whoever calls this has to make sure a run follows which
+    /// starts over with the current settings.
     /// </remarks>
     /// <param name="dataSourceId">The id of the data source.</param>
     private void CancelOutdatedDataSourceRun(string dataSourceId)
@@ -1360,17 +1364,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return;
         }
 
+        //
+        // The selection is a long text, of which a prefix tells nothing apart. Whether it changed is
+        // what the log needs:
+        //
         logger.LogInformation(
-            "Canceling the active embedding run for data source '{DataSourceId}' because its embedding settings changed or its embedding provider may no longer read it. RunSignaturePrefix={RunSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
+            "Canceling the active embedding run for data source '{DataSourceId}' because its embedding settings or the documents it selects changed, or its embedding provider may no longer read it. RunSignaturePrefix={RunSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}, SelectionChanged={SelectionChanged}.",
             dataSourceId,
             ShortHash(runSignature?.EmbeddingSignature ?? string.Empty),
-            currentRunSignature == DataSourceRunSignature.NONE ? "<no run would start>" : ShortHash(currentRunSignature.EmbeddingSignature));
+            currentRunSignature == DataSourceRunSignature.NONE ? "<no run would start>" : ShortHash(currentRunSignature.EmbeddingSignature),
+            currentRunSignature != DataSourceRunSignature.NONE && !string.Equals(runSignature?.SelectionSignature, currentRunSignature.SelectionSignature, StringComparison.Ordinal));
 
         TryCancelRun(activeRun);
     }
 
     /// <summary>
-    /// The embedding settings a run of a data source would start with now, as GetRunSignature describes them.
+    /// The embedding settings and the selection of documents a run of a data source would start with now, as GetRunSignature describes them.
     /// </summary>
     /// <param name="dataSourceId">The id of the data source.</param>
     /// <returns>The run signature, or NONE when no run would start: the data source is gone, its embedding provider is, or that provider may not read it.</returns>
