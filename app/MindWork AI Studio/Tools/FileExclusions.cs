@@ -82,6 +82,12 @@ internal static class FileExclusions
     /// </summary>
     public static readonly int DEFAULT_LINE_COUNT = DEFAULT_PATTERNS.Split('\n').Length;
 
+    /// <summary>
+    /// How many lines a field for the list grows to before it scrolls: the default list, with room for
+    /// a few entries of the user.
+    /// </summary>
+    public const int MAX_LINE_COUNT = 12;
+
     private const string OFFICE_LOCK_FILE_PATTERN = "~$*";
 
     /// <summary>
