@@ -114,7 +114,7 @@ public sealed partial class ToolSettingsService
                 if (encryption?.IsAvailable is not true)
                     return TB("Cannot export encrypted tool secrets: No enterprise encryption secret is configured.");
 
-                if (!encryption.TryEncrypt(value, out var encrypted))
+                if (!encryption.TryEncrypt(value, EnterpriseEncryptionFormat.V1, out var encrypted))
                     return TB("The tool secrets could not be encrypted. Nothing was exported.");
 
                 lockedValues[key] = encrypted;
