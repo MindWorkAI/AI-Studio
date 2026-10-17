@@ -13,12 +13,12 @@ public static class FileTypes
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypes).Namespace, nameof(FileTypes));
     
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.ByFileName(TB("Source like"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Makefile", "GNUmakefile", "Procfile", "Vagrantfile",
         "Tiltfile", "Justfile", "Brewfile", "Caddyfile", "Gemfile", "Podfile", "Fastfile", "Appfile", "Rakefile", "Dangerfile",
         "BUILD", "WORKSPACE", "BUCK");
 
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.Leaf(TB("Source like prefix"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.ByFileNamePrefix(TB("Source like prefix"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Procfile", "Caddyfile");
     
     // Source code hierarchy: SourceCode -> (.NET, Java, Python, Web, C/C++, Config, ...)
@@ -138,15 +138,29 @@ public static class FileTypes
     /// <returns>True, when reading the file needs Pandoc.</returns>
     public static bool RequiresPandoc(string filePath) => IsAllowedPath(filePath, PANDOC_CONVERTED);
 
-    public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
+    /// <summary>
+    /// Turns the given file types into the one flat filter a native file dialog takes.
+    /// </summary>
+    /// <remarks>
+    /// The filter holds the extensions of all given types and of their children. It is named after
+    /// the type when there is only one. Files recognized by their name or content only, such as
+    /// Dockerfile or LICENSE, cannot be expressed by extension: the dialog does not offer them once
+    /// other types narrow the list, whereas drag and drop accepts them. When no extension remains at
+    /// all, there is no filter, the dialog shows every file, and the caller checks the selection
+    /// with IsAllowedPath.
+    /// </remarks>
+    /// <param name="types">The file types to show, or none for all files.</param>
+    /// <returns>The filter, or null when the dialog should show all files.</returns>
+    public static FileDialogFilter? ToFileDialogFilter(params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0)
             return null;
-        
-        if (types.Length == 1)
-            return types[0];
 
-        return FileTypeFilter.Composite(TB("Custom"), OnlyAllowTypes(types));
+        var extensions = OnlyAllowTypes(types);
+        if (extensions.Length == 0)
+            return null;
+
+        return new FileDialogFilter(types.Length == 1 ? types[0].FilterName : TB("Custom"), extensions);
     }
     
     public static string[] OnlyAllowTypes(params FileTypeFilter[] types)
@@ -155,7 +169,6 @@ public static class FileTypes
             return [];
 
         return types
-            .Where(t => t != SOURCE_LIKE_FILE_NAMES && t != SOURCE_LIKE_FILE_NAME_PREFIXES)
             .SelectMany(t => t.FlattenExtensions())
             .Select(ext => ext.ToLowerInvariant())
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -192,16 +205,11 @@ public static class FileTypes
         if (string.IsNullOrWhiteSpace(fileName))
             return false;
 
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
-        { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
-        
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAME_PREFIXES))){
-            if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
-                return true;
-        }
+        if (types.SelectMany(t => t.FlattenFileNames()).Contains(fileName, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        if (types.SelectMany(t => t.FlattenFileNamePrefixes()).Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            return true;
 
         if (types.Any(type => type.ContainsType(READABLE_TEXT)) && ReadableTextDetection.IsReadableTextFile(filePath))
             return true;

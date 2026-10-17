@@ -77,7 +77,7 @@ public sealed class FileEnumerationResult
             return extension;
 
         var fileName = Path.GetFileName(filePath);
-        return FileTypes.SOURCE_LIKE_FILE_NAMES.FilterExtensions
+        return FileTypes.SOURCE_LIKE_FILE_NAMES.FileNames
             .FirstOrDefault(knownFileName => string.Equals(knownFileName, fileName, StringComparison.OrdinalIgnoreCase))
             ?? string.Empty;
     }
