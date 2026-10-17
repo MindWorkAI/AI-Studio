@@ -138,15 +138,29 @@ public static class FileTypes
     /// <returns>True, when reading the file needs Pandoc.</returns>
     public static bool RequiresPandoc(string filePath) => IsAllowedPath(filePath, PANDOC_CONVERTED);
 
-    public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
+    /// <summary>
+    /// Turns the given file types into the one flat filter a native file dialog takes.
+    /// </summary>
+    /// <remarks>
+    /// The filter holds the extensions of all given types and of their children. It is named after
+    /// the type when there is only one. Files recognized by their name or content only, such as
+    /// Dockerfile or LICENSE, cannot be expressed by extension: the dialog does not offer them once
+    /// other types narrow the list, whereas drag and drop accepts them. When no extension remains at
+    /// all, there is no filter, the dialog shows every file, and the caller checks the selection
+    /// with IsAllowedPath.
+    /// </remarks>
+    /// <param name="types">The file types to show, or none for all files.</param>
+    /// <returns>The filter, or null when the dialog should show all files.</returns>
+    public static FileDialogFilter? ToFileDialogFilter(params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0)
             return null;
-        
-        if (types.Length == 1)
-            return types[0];
 
-        return FileTypeFilter.Composite(TB("Custom"), OnlyAllowTypes(types));
+        var extensions = OnlyAllowTypes(types);
+        if (extensions.Length == 0)
+            return null;
+
+        return new FileDialogFilter(types.Length == 1 ? types[0].FilterName : TB("Custom"), extensions);
     }
     
     public static string[] OnlyAllowTypes(params FileTypeFilter[] types)

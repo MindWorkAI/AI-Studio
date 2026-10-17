@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Validation;
@@ -62,6 +63,71 @@ public class FileTypesTests
     }
 
     [Test]
+    public void DialogFilterOfAParentHoldsTheExtensionsOfItsChildren()
+    {
+        var filter = FileTypes.ToFileDialogFilter(FileTypes.DOCUMENT);
+        var fileNames = FileTypes.SOURCE_LIKE_FILE_NAMES.FileNames.Concat(FileTypes.SOURCE_LIKE_FILE_NAME_PREFIXES.FileNamePrefixes);
+
+        Assert.That(filter, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(filter!.FilterName, Is.EqualTo(FileTypes.DOCUMENT.FilterName));
+            Assert.That(filter.FilterExtensions, Is.SupersetOf(new[] { "pdf", "docx", "xlsx", "cs", "csv", "txt", "tex" }));
+            Assert.That(filter.FilterExtensions.Intersect(fileNames, StringComparer.OrdinalIgnoreCase), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void DialogFilterOfTextHoldsOnlyItsExtensions()
+    {
+        var filter = FileTypes.ToFileDialogFilter(FileTypes.TEXT);
+
+        Assert.That(filter, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(filter!.FilterName, Is.EqualTo(FileTypes.TEXT.FilterName));
+            Assert.That(filter.FilterExtensions, Is.EquivalentTo(new[] { "txt", "md", "rtf" }));
+        });
+    }
+
+    [Test]
+    public void DialogFilterOfOneLeafKeepsItsName()
+    {
+        var filter = FileTypes.ToFileDialogFilter(FileTypes.JSON);
+        var combinedFilter = FileTypes.ToFileDialogFilter(FileTypes.JSON, FileTypes.CSV);
+
+        Assert.That(filter, Is.Not.Null);
+        Assert.That(combinedFilter, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(filter!.FilterName, Is.EqualTo("JSON"));
+            Assert.That(filter.FilterExtensions, Is.EqualTo(new[] { "json" }));
+            Assert.That(combinedFilter!.FilterExtensions, Is.EquivalentTo(new[] { "json", "csv" }));
+        });
+    }
+
+    [Test]
+    public void TypesWithoutExtensionsGiveNoDialogFilter()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileTypes.ToFileDialogFilter(FileTypes.SOURCE_LIKE_FILE_NAMES), Is.Null);
+            Assert.That(FileTypes.ToFileDialogFilter(FileTypes.SOURCE_LIKE_FILE_NAME_PREFIXES), Is.Null);
+            Assert.That(FileTypes.ToFileDialogFilter(), Is.Null);
+            Assert.That(FileTypes.ToFileDialogFilter(null), Is.Null);
+        });
+    }
+
+    [Test]
+    public void DialogFilterMatchesTheRuntimeContract()
+    {
+        // The struct FileTypeFilter in runtime/src/file_actions.rs knows exactly these two fields:
+        var json = JsonSerializer.Serialize(FileTypes.ToFileDialogFilter(FileTypes.JSON), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+
+        Assert.That(json, Is.EqualTo("""{"filter_name":"JSON","filter_extensions":["json"]}"""));
+    }
+
+    [Test]
     public void OnlyFiltersWithReadableTextLookAtTheContent()
     {
         const string CONTENT = "resource \"example\" \"main\" {}";
@@ -81,14 +147,13 @@ public class FileTypesTests
     [Test]
     public void ReadableTextDoesNotChangeExtensionFilters()
     {
-        var combinedFilter = FileTypes.AsOneFileType(FileTypes.JSON, FileTypes.READABLE_TEXT);
+        var combinedFilter = FileTypes.ToFileDialogFilter(FileTypes.JSON, FileTypes.READABLE_TEXT);
 
         Assert.Multiple(() =>
         {
-            Assert.That(FileTypes.AsOneFileType(FileTypes.READABLE_TEXT), Is.SameAs(FileTypes.READABLE_TEXT));
+            Assert.That(FileTypes.ToFileDialogFilter(FileTypes.READABLE_TEXT), Is.Null);
             Assert.That(combinedFilter, Is.Not.Null);
             Assert.That(combinedFilter!.FilterExtensions, Is.EqualTo(new[] { "json" }));
-            Assert.That(FileTypes.AsOneFileType(FileTypes.JSON), Is.SameAs(FileTypes.JSON));
         });
     }
 
@@ -101,7 +166,7 @@ public class FileTypesTests
             Assert.That(FileTypes.TEXT.ContainsType(FileTypes.READABLE_TEXT), Is.True);
             Assert.That(FileTypes.DOCUMENT.Children, Does.Not.Contain(FileTypes.READABLE_TEXT));
             Assert.That(FileTypes.DOCUMENT.ContainsType(FileTypes.READABLE_TEXT), Is.True);
-            Assert.That(FileTypes.AsOneFileType(FileTypes.DOCUMENT), Is.Not.Null);
+            Assert.That(FileTypes.ToFileDialogFilter(FileTypes.DOCUMENT), Is.Not.Null);
         });
 
         AssertPath("resource \"example\" \"main\" {}", "infrastructure.tf", Encoding.UTF8, true, FileTypes.DOCUMENT);
