@@ -48,6 +48,13 @@ internal static class FileExclusions
     private const string GENERATED_FILES = "*.min.js; *.min.css; *.js.map; *.css.map";
 
     //
+    // The tokenizers of language models are JSON files of several megabytes, which :documents:
+    // would select as configuration files. The entry also covers names with a prefix, such as
+    // chat_tokenizer.json, but not the small tokenizer_config.json:
+    //
+    private const string TOKENIZER_FILES = "*tokenizer.json";
+
+    //
     // Programs, databases, and disk images are binary, so :documents: never selects them. The list
     // names them anyway, so that * does not fill the embedding page with skipped files. SQLite
     // prescribes no extension, these are the common ones; -* covers its -wal, -shm, and -journal
@@ -65,6 +72,7 @@ internal static class FileExclusions
         VIRTUAL_MACHINE_FOLDERS + "\n" +
         LOCK_FILES + "\n" +
         GENERATED_FILES + "\n" +
+        TOKENIZER_FILES + "\n" +
         PROGRAM_FILES + "\n" +
         DATABASE_FILES + "\n" +
         DISK_IMAGE_FILES;

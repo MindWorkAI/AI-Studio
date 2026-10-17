@@ -91,6 +91,8 @@ public sealed class FileExclusionsTests
     [TestCase("package-lock.json")]
     [TestCase("app.min.js")]
     [TestCase("app.js.map")]
+    [TestCase("tokenizer.json")]
+    [TestCase("chat_tokenizer.json")]
     [TestCase("tool.dll")]
     [TestCase("index.sqlite-wal")]
     [TestCase("disk.vmdk")]
@@ -104,6 +106,7 @@ public sealed class FileExclusionsTests
     [TestCase("package.json")]
     [TestCase("notes.md")]
     [TestCase("city.map")]
+    [TestCase("tokenizer_config.json")]
     [TestCase("bin")]
     public void TheDefaultListKeepsTheseFiles(string fileName)
     {

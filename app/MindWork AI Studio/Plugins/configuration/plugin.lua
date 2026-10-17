@@ -618,7 +618,7 @@ CONFIG["SETTINGS"] = {}
 -- Separate entries with semicolons or line breaks. An entry which ends with a slash excludes every
 -- folder of that name; every other entry is a file name pattern. An empty string excludes nothing
 -- beyond the metadata of operating systems, which is always left out. The default is:
--- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns"] = "node_modules/; bower_components/; Pods/; venv/; env/; __pycache__/; bin/; obj/; Debug/; Release/; target/; build/; dist/; DerivedData/; cmake-build-*/; TestResults/; htmlcov/; *.vmwarevm/; *.pvm/; *.utm/; package-lock.json; yarn.lock; pnpm-lock.yaml; packages.lock.json; Cargo.lock; poetry.lock; Pipfile.lock; composer.lock; Gemfile.lock; go.sum; *.min.js; *.min.css; *.js.map; *.css.map; *.exe; *.dll; *.so; *.dylib; *.pdb; *.db; *.db3; *.db-*; *.sqlite; *.sqlite3; *.sqlite-*; *.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns"] = "node_modules/; bower_components/; Pods/; venv/; env/; __pycache__/; bin/; obj/; Debug/; Release/; target/; build/; dist/; DerivedData/; cmake-build-*/; TestResults/; htmlcov/; *.vmwarevm/; *.pvm/; *.utm/; package-lock.json; yarn.lock; pnpm-lock.yaml; packages.lock.json; Cargo.lock; poetry.lock; Pipfile.lock; composer.lock; Gemfile.lock; go.sum; *.min.js; *.min.css; *.js.map; *.css.map; *tokenizer.json; *.exe; *.dll; *.so; *.dylib; *.pdb; *.db; *.db3; *.db-*; *.sqlite; *.sqlite3; *.sqlite-*; *.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img"
 --
 -- Configure the size limit in megabytes. Larger files are left out of a batch run. The value must
 -- be at least 1; the default is 1024, i.e., 1 GB.
