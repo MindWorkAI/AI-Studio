@@ -71,9 +71,12 @@
         <MudButton StartIcon="@Icons.Material.Filled.Key"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
+                   Class="mb-6"
                    OnClick="@this.GenerateEncryptionSecret">
             @T("Generate an encryption secret and copy it to the clipboard")
         </MudButton>
+
+        <ConfigurationSelect OptionDescription="@T("Format for encrypted secrets in exports")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat)" Data="@ConfigurationSelectDataFactory.GetEnterpriseEncryptionFormatData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat = selectedValue)" OptionHelp="@T("Applies when you export providers, data sources, or tool settings with their API keys, tokens, or passwords. The protected format makes AI Studio refuse every value which was encrypted with another secret, but versions before v26.10.1 cannot read it. Keep the compatible format until every computer in your organization runs v26.10.1 or newer. Both formats use the same encryption secret.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.EnterpriseEncryptionExportFormat, out var meta) && meta.IsLocked"/>
 
         <MudText Typo="Typo.h6" Class="mt-6 mb-3">
             @T("External HTTPS certificates")
