@@ -13,12 +13,6 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
     public string SourcePath { get; set; } = string.Empty;
 
     [Parameter]
-    public bool IncludeSubdirectories { get; set; } = true;
-
-    [Parameter]
-    public bool IncludeHiddenSubdirectories { get; set; }
-
-    [Parameter]
     public bool UserAcknowledged { get; set; }
 
     [Parameter]
@@ -38,14 +32,17 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
         }
     }
 
+    /// <remarks>
+    /// Which files of a folder are sent depends on its file patterns and switches. The sentence does
+    /// not repeat them: they are right next to it in the dialog, and a sentence per combination would
+    /// have to change with every new setting.
+    /// </remarks>
     private string GetSubjectText()
     {
         if (string.IsNullOrWhiteSpace(this.SourcePath))
             return this.DataSourceType switch
             {
-                DataSourceType.LOCAL_DIRECTORY when this.IncludeSubdirectories && this.IncludeHiddenSubdirectories => T("Files matching the configured patterns in this folder and its subfolders, including hidden subfolders"),
-                DataSourceType.LOCAL_DIRECTORY when this.IncludeSubdirectories => T("Files matching the configured patterns in this folder and its non-hidden subfolders"),
-                DataSourceType.LOCAL_DIRECTORY => T("Files matching the configured patterns directly in this folder"),
+                DataSourceType.LOCAL_DIRECTORY => T("Every file this data source selects from this folder"),
                 DataSourceType.LOCAL_FILE => T("The selected file"),
                 DataSourceType.MAILBOX => T("Every mail of this mailbox in the selected folder and period, together with the text of its attachments,"),
                 _ => T("The selected data")
@@ -53,9 +50,7 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
 
         return this.DataSourceType switch
         {
-            DataSourceType.LOCAL_DIRECTORY when this.IncludeSubdirectories && this.IncludeHiddenSubdirectories => string.Format(T("Files matching the configured patterns in the folder '{0}' and its subfolders, including hidden subfolders"), this.SourcePath),
-            DataSourceType.LOCAL_DIRECTORY when this.IncludeSubdirectories => string.Format(T("Files matching the configured patterns in the folder '{0}' and its non-hidden subfolders"), this.SourcePath),
-            DataSourceType.LOCAL_DIRECTORY => string.Format(T("Files matching the configured patterns directly in the folder '{0}'"), this.SourcePath),
+            DataSourceType.LOCAL_DIRECTORY => string.Format(T("Every file this data source selects from the folder '{0}'"), this.SourcePath),
             DataSourceType.LOCAL_FILE => string.Format(T("The file '{0}'"), this.SourcePath),
             DataSourceType.MAILBOX => string.Format(T("Every mail of the mailbox '{0}' in the selected folder and period, together with the text of its attachments,"), this.SourcePath),
             _ => string.Format(T("The data source '{0}'"), this.SourcePath)

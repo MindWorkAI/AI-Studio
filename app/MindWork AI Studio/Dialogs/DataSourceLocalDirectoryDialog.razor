@@ -121,7 +121,7 @@
             {
                 if (this.SelectedCloudEmbedding)
                 {
-                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" IncludeSubdirectories="@this.dataIncludeSubdirectories" IncludeHiddenSubdirectories="@this.dataIncludeHiddenSubdirectories" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {

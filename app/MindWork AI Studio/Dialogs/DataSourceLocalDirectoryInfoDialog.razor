@@ -33,11 +33,7 @@
         @if (this.IsCloudEmbedding)
         {
             <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                @(this.DataSource.IncludeSubdirectories
-                    ? this.DataSource.IncludeHiddenSubdirectories
-                        ? string.Format(T("The embedding runs in the cloud. Files matching the configured patterns in the folder '{0}' and its subfolders, including hidden subfolders, will be sent to the cloud."), this.DataSource.Path)
-                        : string.Format(T("The embedding runs in the cloud. Files matching the configured patterns in the folder '{0}' and its non-hidden subfolders will be sent to the cloud."), this.DataSource.Path)
-                    : string.Format(T("The embedding runs in the cloud. Files matching the configured patterns directly in the folder '{0}' will be sent to the cloud."), this.DataSource.Path))
+                @string.Format(T("The embedding runs in the cloud. Every file this data source selects from the folder '{0}' will be sent to the cloud."), this.DataSource.Path)
             </MudJustifiedText>
         }
         else
