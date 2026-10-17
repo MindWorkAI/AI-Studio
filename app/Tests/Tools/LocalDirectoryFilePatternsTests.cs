@@ -17,7 +17,7 @@ public sealed class LocalDirectoryFilePatternsTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(dataSource.FilePatterns, Is.EqualTo(DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS));
+            Assert.That(dataSource.FilePatterns, Is.EqualTo(FileNamePatterns.ALL_DOCUMENTS_PATTERN), "A data source from before file patterns has to keep indexing what it indexed.");
             Assert.That(dataSource.IncludeSubdirectories, Is.True);
             Assert.That(dataSource.IncludeHiddenSubdirectories, Is.False);
         });
@@ -268,14 +268,65 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             var binaryPath = Path.Combine(directoryPath, "archive.data");
             var mediaPath = Path.Combine(directoryPath, "recording.mp3");
+            var imagePath = Path.Combine(directoryPath, "drawing.svg");
             await File.WriteAllBytesAsync(binaryPath, [0x50, 0x4B, 0x03, 0x04, 0x00]);
             await File.WriteAllTextAsync(mediaPath, "This has readable bytes but a media file name.");
+            await File.WriteAllTextAsync(imagePath, "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>");
             var patterns = FileNamePatterns.Parse(":text:");
 
             Assert.Multiple(() =>
             {
                 Assert.That(FileNamePatterns.Matches(binaryPath, patterns), Is.False);
                 Assert.That(FileNamePatterns.Matches(mediaPath, patterns), Is.False);
+                Assert.That(FileNamePatterns.Matches(imagePath, patterns), Is.False, "An image cannot be indexed, even when it is written as text.");
+            });
+        }
+        finally
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
+    [TestCase("report.pdf")]
+    [TestCase("letter.docx")]
+    [TestCase("budget.xlsx")]
+    [TestCase("notes.md")]
+    [TestCase("Program.cs")]
+    public void DocumentsSelectorKeepsWhatFolderDataSourcesIndexedBefore(string fileName)
+    {
+        // Known document types are told by their extension, so the file needs no content:
+        var filePath = Path.Combine(Path.GetTempPath(), "test-data", fileName);
+
+        Assert.That(FileNamePatterns.Matches(filePath, FileNamePatterns.Parse(FileNamePatterns.ALL_DOCUMENTS_PATTERN)), Is.True);
+    }
+
+    [Test]
+    public async Task DocumentsSelectorAddsReadableTextButNoMediaOrBinaries()
+    {
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-documents-pattern-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directoryPath);
+
+        try
+        {
+            var terraformPath = Path.Combine(directoryPath, "main.tf");
+            var photoPath = Path.Combine(directoryPath, "photo.png");
+            var drawingPath = Path.Combine(directoryPath, "drawing.svg");
+            var recordingPath = Path.Combine(directoryPath, "recording.mp3");
+            var archivePath = Path.Combine(directoryPath, "archive.zip");
+            await File.WriteAllTextAsync(terraformPath, "resource \"example\" \"main\" {}");
+            await File.WriteAllBytesAsync(photoPath, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]);
+            await File.WriteAllTextAsync(drawingPath, "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>");
+            await File.WriteAllTextAsync(recordingPath, "This has readable bytes but a media file name.");
+            await File.WriteAllBytesAsync(archivePath, [0x50, 0x4B, 0x03, 0x04, 0x00]);
+            var patterns = FileNamePatterns.Parse(FileNamePatterns.ALL_DOCUMENTS_PATTERN);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(FileNamePatterns.Matches(terraformPath, patterns), Is.True, "Readable text is what the selector adds to the documents.");
+                Assert.That(FileNamePatterns.Matches(photoPath, patterns), Is.False);
+                Assert.That(FileNamePatterns.Matches(drawingPath, patterns), Is.False, "An image cannot be indexed, even when it is written as text.");
+                Assert.That(FileNamePatterns.Matches(recordingPath, patterns), Is.False);
+                Assert.That(FileNamePatterns.Matches(archivePath, patterns), Is.False);
             });
         }
         finally
@@ -347,6 +398,8 @@ public sealed class LocalDirectoryFilePatternsTests
     [TestCase("*")]
     [TestCase(":text:")]
     [TestCase(":TEXT:;*.pdf")]
+    [TestCase(":documents:")]
+    [TestCase(":DOCUMENTS:;*.tf")]
     [TestCase("report-??.md")]
     public void DataSourceValidationAcceptsSimplePatterns(string patterns)
     {
@@ -357,6 +410,8 @@ public sealed class LocalDirectoryFilePatternsTests
     [TestCase("*.txt;")]
     [TestCase("**/*.txt")]
     [TestCase("folder/*.txt")]
+    [TestCase(":document:")]
+    [TestCase("*.txt;:docs:")]
     public void DataSourceValidationRejectsInvalidPatterns(string patterns)
     {
         Assert.That(new DataSourceValidation().ValidateFilePatterns(patterns), Is.Not.Null);

@@ -12,7 +12,10 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 public readonly record struct DataSourceLocalDirectory : IInternalDataSource
 {
-    public const string DEFAULT_FILE_PATTERNS = "*";
+    // Selects what folder data sources indexed before they had file patterns, plus every other
+    // file whose content is readable text, e.g., a Terraform file or a script without an extension.
+    // Existing data sources get it as well, so an update neither adds images nor binaries to them:
+    public const string DEFAULT_FILE_PATTERNS = FileNamePatterns.ALL_DOCUMENTS_PATTERN;
 
     // Folder data sources were recursive before this option existed. Keeping true as the
     // deserialization default preserves every document of existing data sources.
@@ -94,7 +97,8 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
 
     /// <summary>
     /// The patterns used at runtime. An invalid value can only come from malformed or hand-edited
-    /// settings; treating it like the legacy default prevents an accidental removal of the index.
+    /// settings; falling back to the default, which selects what folder data sources indexed before
+    /// they had file patterns, prevents an accidental removal of the index.
     /// </summary>
     [JsonIgnore]
     public string EffectiveFilePatterns => FileNamePatterns.IsValid(this.FilePatterns)

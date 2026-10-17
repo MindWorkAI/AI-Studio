@@ -12,16 +12,30 @@ namespace AIStudio.Tools;
 internal static class FileNamePatterns
 {
     /// <summary>
+    /// A semantic pattern for every document AI Studio can read: the known document types, such as
+    /// PDF, Office files, and source code, plus every other file whose contents can be read as text.
+    /// Unlike <c>*</c>, it does not select media or binary files.
+    /// </summary>
+    public const string ALL_DOCUMENTS_PATTERN = ":documents:";
+
+    /// <summary>
     /// A semantic pattern for every file whose contents can be read as text, including files
     /// without a known extension. Unlike <c>*</c>, it does not select media or binary documents.
     /// </summary>
     public const string ALL_TEXT_FILES_PATTERN = ":text:";
+
+    /// <summary>
+    /// What every selector begins and ends with, so that a mistyped selector can be told apart from
+    /// a file name pattern.
+    /// </summary>
+    private const char SELECTOR_DELIMITER = ':';
 
     private enum ValidationIssue
     {
         NONE,
         MISSING,
         EMPTY_ENTRY,
+        UNKNOWN_SELECTOR,
         RECURSIVE_WILDCARD,
         PATH,
         INVALID_CHARACTER,
@@ -44,9 +58,7 @@ internal static class FileNamePatterns
     {
         var fileName = Path.GetFileName(filePath);
         return !string.IsNullOrWhiteSpace(fileName)
-               && patterns.Any(pattern => IsAllTextFilesPattern(pattern)
-                   ? IsReadableNonMediaFile(filePath)
-                   : FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true));
+               && patterns.Any(pattern => MatchesPattern(filePath, fileName, pattern));
     }
 
     public static bool AreEquivalent(IReadOnlyCollection<string>? left, IReadOnlyCollection<string>? right)
@@ -65,8 +77,9 @@ internal static class FileNamePatterns
     public static string? Validate(string? patterns) => GetValidationIssue(patterns) switch
     {
         ValidationIssue.NONE => null,
-        ValidationIssue.MISSING => TB("Please provide at least one file pattern, e.g., *.txt or :text:. Separate multiple patterns with a semicolon."),
+        ValidationIssue.MISSING => TB("Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon."),
         ValidationIssue.EMPTY_ENTRY => TB("Please remove empty file patterns. Separate valid patterns with a single semicolon."),
+        ValidationIssue.UNKNOWN_SELECTOR => TB("One of the file patterns is an unknown selector. Please use :documents: or :text:, or a file name pattern such as *.txt."),
         ValidationIssue.RECURSIVE_WILDCARD => TB("Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."),
         ValidationIssue.PATH => TB("Please use file name patterns without folder paths, e.g., *.txt or report-*.md."),
         ValidationIssue.INVALID_CHARACTER => TB("One of the file patterns contains an invalid character."),
@@ -85,8 +98,16 @@ internal static class FileNamePatterns
         foreach (var patternEntry in individualPatterns)
         {
             var pattern = patternEntry.Trim();
-            if (IsAllTextFilesPattern(pattern))
+            if (IsSelector(pattern))
                 continue;
+
+            //
+            // Colons are allowed in file names on macOS and Linux, so a mistyped selector such as
+            // ':document:' would be a valid pattern which matches nothing. Every file would then
+            // leave the index:
+            //
+            if (LooksLikeSelector(pattern))
+                return ValidationIssue.UNKNOWN_SELECTOR;
 
             if (pattern.Contains("**", StringComparison.Ordinal))
                 return ValidationIssue.RECURSIVE_WILDCARD;
@@ -103,11 +124,27 @@ internal static class FileNamePatterns
         return ValidationIssue.NONE;
     }
 
-    private static bool IsAllTextFilesPattern(string pattern) => string.Equals(pattern, ALL_TEXT_FILES_PATTERN, StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsReadableNonMediaFile(string filePath)
+    private static bool MatchesPattern(string filePath, string fileName, string pattern)
     {
-        return !FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO, FileTypes.VIDEO)
-               && FileTypes.IsAllowedPath(filePath, FileTypes.READABLE_TEXT);
+        //
+        // Media never matches a selector: a data source cannot index it, and an SVG or a renamed
+        // file would pass the check for readable text. The media check looks at the extension
+        // only, so it comes first and saves reading the file:
+        //
+        if (IsSelector(pattern, ALL_DOCUMENTS_PATTERN))
+            return !IsMediaFile(filePath) && FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
+
+        if (IsSelector(pattern, ALL_TEXT_FILES_PATTERN))
+            return !IsMediaFile(filePath) && FileTypes.IsAllowedPath(filePath, FileTypes.READABLE_TEXT);
+
+        return FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true);
     }
+
+    private static bool IsSelector(string pattern) => IsSelector(pattern, ALL_DOCUMENTS_PATTERN) || IsSelector(pattern, ALL_TEXT_FILES_PATTERN);
+
+    private static bool IsSelector(string pattern, string selector) => string.Equals(pattern, selector, StringComparison.OrdinalIgnoreCase);
+
+    private static bool LooksLikeSelector(string pattern) => pattern.StartsWith(SELECTOR_DELIMITER) && pattern.EndsWith(SELECTOR_DELIMITER);
+
+    private static bool IsMediaFile(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.MEDIA);
 }
