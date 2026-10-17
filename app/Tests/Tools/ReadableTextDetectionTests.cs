@@ -68,20 +68,19 @@ public class ReadableTextDetectionTests
     [Test]
     public void ReadsOnlyTheBeginningOfAFile()
     {
-        var text = Enumerable.Repeat((byte)'a', ReadableTextDetection.PROBE_SIZE);
-        var binary = Enumerable.Repeat((byte)0, ReadableTextDetection.PROBE_SIZE);
+        var text = Enumerable.Repeat((byte)'a', ReadableTextDetection.PROBE_SIZE).ToArray();
+        var binary = new byte[ReadableTextDetection.PROBE_SIZE];
 
-        AssertFile(text.Concat(binary).ToArray(), "text-then-binary.unknown", true);
-        AssertFile(binary.Concat(text).ToArray(), "binary-then-text.unknown", false);
+        AssertFile([..text, ..binary], "text-then-binary.unknown", true);
+        AssertFile([..binary, ..text], "binary-then-text.unknown", false);
     }
 
     [Test]
     public void AcceptsACharacterWhichTheEndOfTheProbeCutsInHalf()
     {
-        var text = Enumerable.Repeat((byte)'a', ReadableTextDetection.PROBE_SIZE - 1);
-        var content = text.Concat(Encoding.UTF8.GetBytes("ü")).ToArray();
+        var text = Enumerable.Repeat((byte)'a', ReadableTextDetection.PROBE_SIZE - 1).ToArray();
 
-        AssertFile(content, "cut-character.unknown", true);
+        AssertFile([..text, .."ü"u8], "cut-character.unknown", true);
     }
 
     private static void AssertFile(byte[] content, string fileName, bool expected)

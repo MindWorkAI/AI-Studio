@@ -146,7 +146,6 @@ public sealed class FileSourceIndexerWatcherTests
         var visibleDirectoriesOnly = new FileSourceIndexer.DataSourceWatcherConfiguration(
             Path.GetTempPath(),
             true,
-            false,
             FilePatterns: FileNamePatterns.Parse("*.txt"));
         var includingHiddenDirectories = new FileSourceIndexer.DataSourceWatcherConfiguration(
             Path.GetTempPath(),
@@ -171,7 +170,6 @@ public sealed class FileSourceIndexerWatcherTests
             var visibleDirectoriesOnly = new FileSourceIndexer.DataSourceWatcherConfiguration(
                 directoryPath,
                 true,
-                false,
                 FilePatterns: FileNamePatterns.Parse("*.txt"));
             var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenFilesAndFolders = true };
 
