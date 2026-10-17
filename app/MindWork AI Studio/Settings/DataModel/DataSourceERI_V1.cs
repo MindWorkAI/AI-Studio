@@ -391,7 +391,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
         {
-            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             return false;
         }
 

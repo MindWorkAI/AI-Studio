@@ -676,7 +676,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
 
 3. **Export encrypted API keys from AI Studio:**
-   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v1:<base64-encoded data>`.
+   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v2:<base64-encoded data>` or `ENC:v1:<base64-encoded data>`, see [Formats of encrypted values](#formats-of-encrypted-values).
 
 4. **Add encrypted keys to your configuration:**
    Copy the exported configuration (including the encrypted API key) into your configuration plugin.
@@ -690,7 +690,7 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
     ["UsedLLMProvider"] = "OPEN_AI",
     ["Host"] = "NONE",
     ["Hostname"] = "",
-    ["APIKey"] = "ENC:v1:MTIzNDU2Nzg5MDEyMzQ1NkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFla...",
+    ["APIKey"] = "ENC:v2:MTIzNDU2Nzg5MDEyMzQ1NkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFla...",
     ["AdditionalJsonApiParameters"] = "",
     ["Model"] = {
         ["Id"] = "gpt-4",
@@ -700,6 +700,29 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+### Formats of encrypted values
+
+AI Studio encrypts API keys, tokens, and passwords in one of two formats. Both use the same encryption secret, so you neither generate nor deploy a new one.
+
+| Format | Starts with | Read by | A value encrypted with another secret |
+|---|---|---|---|
+| Protected | `ENC:v2:` | AI Studio v26.10.1 or newer | is always refused |
+| Compatible | `ENC:v1:` | every version of AI Studio | is usually refused, but in rare cases decrypted into a wrong key |
+
+AI Studio reads both formats, and it keeps reading `ENC:v1:` for good: the configuration plugins you have already deployed keep working.
+
+**Which format your exports write** is set by **Format for encrypted secrets in exports** in the **Enterprise Administration** section of the app settings. New installations start with the protected format. Installations which existed before v26.10.1 keep the compatible format until you switch, because a version of AI Studio before v26.10.1 takes an `ENC:v2:` value for plaintext and leaves the key out.
+
+**When you roll out updates yourself**, your administrators run a new version weeks before everybody else. Keep the compatible format until every computer in your organization runs v26.10.1 or newer, then switch to the protected one. You can also set the format centrally:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat"] = "V1"
+```
+
+Change the value to `"V2"` once the update has arrived everywhere. While a configuration sets the format, the choice in the app settings is locked; with `DataApp.EnterpriseEncryptionExportFormat.AllowUserOverride` set to `true`, the configured format becomes a default instead.
+
+Switching the format leaves the values in your configuration plugins as they are. To protect a value you have already deployed, export it again and replace it in your plugin.
 
 ## Exporting tool configurations
 
@@ -738,7 +761,7 @@ For **Web Search**, select only Tavily, choose **Editable defaults**, enable enc
 
 ```lua
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
-CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>"
 
 CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] or {}
 CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"]["web_search.tavily.searchDepth"] = "basic"

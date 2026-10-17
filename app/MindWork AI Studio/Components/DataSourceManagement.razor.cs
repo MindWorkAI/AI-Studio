@@ -366,7 +366,7 @@ public partial class DataSourceManagement : MSGComponentBase
         }
 
         var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
-        if (!encryption.TryEncrypt(decryptedSecret, out var encryptedSecret))
+        if (!encryption.TryEncrypt(decryptedSecret, this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, out var encryptedSecret))
         {
             await this.DialogService.ShowMessageBox(
                 T("Export ERI Data Source"),

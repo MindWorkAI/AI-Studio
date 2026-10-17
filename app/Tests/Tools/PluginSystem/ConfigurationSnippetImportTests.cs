@@ -185,7 +185,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     public void AnAPIKeyOfAnotherOrganizationLeavesAHint(PluginConfigurationObjectType type)
     {
         var otherOrganization = new EnterpriseEncryption(NullLogger<EnterpriseEncryption>.Instance, EnterpriseEncryption.GenerateSecret());
-        Assert.That(otherOrganization.TryEncrypt(API_KEY, out var foreignApiKey), Is.True);
+        Assert.That(otherOrganization.TryEncrypt(API_KEY, EnterpriseEncryptionFormat.V2, out var foreignApiKey), Is.True);
 
         AssertAPIKeyLeftOut(Import(ExportProvider(type, foreignApiKey).Snippet, type));
     }
@@ -481,9 +481,13 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     /// </summary>
     private static void RemoveEncryptionSecret() => PluginFactory.InitializeEnterpriseEncryption(encryptionSecret: null);
 
+    /// <summary>
+    /// Encrypts in the authenticated format. In the legacy format, a wrong secret passes in rare
+    /// cases, so the tests with the secret of another organization would fail now and then.
+    /// </summary>
     private static string Encrypt(string secret)
     {
-        Assert.That(PluginFactory.EnterpriseEncryption!.TryEncrypt(secret, out var encryptedSecret), Is.True);
+        Assert.That(PluginFactory.EnterpriseEncryption!.TryEncrypt(secret, EnterpriseEncryptionFormat.V2, out var encryptedSecret), Is.True);
         return encryptedSecret;
     }
 

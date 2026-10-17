@@ -154,12 +154,15 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
 --     -- The API key must be encrypted using the enterprise encryption secret.
---     -- Format: "ENC:v1:<base64-encoded encrypted data>"
+--     -- Format: "ENC:v2:<base64-encoded encrypted data>", which AI Studio v26.10.1 or newer reads,
+--     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
+--     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
+--     -- one your exports write.
 --     -- The encryption secret must be configured via:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked provider,
 --     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
@@ -193,7 +196,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked transcription
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
@@ -230,7 +233,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: tokenizer path for this provider relative to the plugin directory.
 --     -- ["TokenizerPath"] = "",
@@ -269,7 +272,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Hostname"] = "<https address of the ERI server>",
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "TOKEN",
---     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
+--     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -285,7 +288,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "SHARED_USERNAME_AND_PASSWORD",
 --     ["Username"] = "<shared username>",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -300,7 +303,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -481,6 +484,22 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
+
+-- Configure the format in which exports encrypt API keys, tokens, and passwords with the
+-- enterprise encryption secret. Both formats use the same secret.
+-- Allowed values are: V1, V2
+-- V2 is protected: AI Studio refuses every value which was encrypted with another secret. It
+-- needs AI Studio v26.10.1 or newer on every computer which reads it. V1 is read by every
+-- version of AI Studio, and AI Studio keeps reading it for good. New installations start with
+-- V2, installations which existed before v26.10.1 keep V1. Keep V1 until every computer in
+-- your organization runs v26.10.1 or newer, then switch to V2.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat"] = "V1"
+--
+-- Allow users to change the export format locally.
+-- Allowed values are: true, false
+-- When set to true, the configured format becomes the organization default,
+-- but users can still choose another format in the enterprise administration settings.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat.AllowUserOverride"] = true
 
 -- Configure whether AI answers which users copy or export end with a notice that they were
 -- generated using artificial intelligence (AI). The notice is written in the language of the app.
@@ -896,10 +915,10 @@ CONFIG["SETTINGS"] = {}
 --   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
 --
 -- A tool field marked as secret, such as an API key, can be rolled out as well — but only
--- encrypted with the enterprise encryption secret, in the same "ENC:v1:<base64>" form the
--- providers above use, and only through LockedToolSettings. A locked secret leaves whatever
--- the user entered untouched, so their own key returns when you stop deploying yours. A
--- plaintext secret is refused with a warning in the log rather than used.
+-- encrypted with the enterprise encryption secret, in the same "ENC:v2:<base64>" or
+-- "ENC:v1:<base64>" form the providers above use, and only through LockedToolSettings. A locked
+-- secret leaves whatever the user entered untouched, so their own key returns when you stop
+-- deploying yours. A plaintext secret is refused with a warning in the log rather than used.
 --
 -- Field names of the Web Search tool. At least one of its search services has to be configured
 -- before the tool can be used; which one you pick is up to you, since all three can be rolled
@@ -979,7 +998,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
---     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"

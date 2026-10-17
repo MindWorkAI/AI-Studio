@@ -61,10 +61,10 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// known at compile time, yet an organization has to be able to configure them the same way.
     /// <br/><br/>
     /// A secret field travels here too, but only encrypted with the enterprise secret, in the
-    /// same "ENC:v1:" form the providers use for their API keys. What is stored is therefore
-    /// ciphertext, worthless without a secret that lives outside every deployed file. A plaintext
-    /// secret is refused rather than used, and a secret is never accepted as a pre-filled default
-    /// — see the tool settings service for both rules.
+    /// same "ENC:v2:" or "ENC:v1:" form the providers use for their API keys. What is stored is
+    /// therefore ciphertext, worthless without a secret that lives outside every deployed file. A
+    /// plaintext secret is refused rather than used, and a secret is never accepted as a
+    /// pre-filled default — see the tool settings service for both rules.
     /// </remarks>
     public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register(
         configSelection,

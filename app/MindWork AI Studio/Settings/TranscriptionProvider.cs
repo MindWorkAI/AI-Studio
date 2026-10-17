@@ -152,7 +152,7 @@ public sealed record TranscriptionProvider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured transcription provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured transcription provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;

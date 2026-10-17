@@ -316,6 +316,17 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
+    /// In which format do exports encrypt API keys, tokens, and passwords with the enterprise encryption secret?
+    /// </summary>
+    /// <remarks>
+    /// New installations write the authenticated format v2. Installations which existed before
+    /// v26.10.1 keep writing v1, which older versions read as well: large organizations package
+    /// updates themselves, so their administrators run a new version weeks before everybody else.
+    /// SettingsManager tells the two kinds of installations apart.
+    /// </remarks>
+    public EnterpriseEncryptionFormat EnterpriseEncryptionExportFormat { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnterpriseEncryptionExportFormat, EnterpriseEncryptionFormat.V2);
+
+    /// <summary>
     /// Should AI answers which are copied or exported end with a notice that AI generated them?
     /// </summary>
     /// <remarks>
