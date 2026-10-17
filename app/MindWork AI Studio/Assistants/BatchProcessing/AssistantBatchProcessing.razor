@@ -11,8 +11,6 @@
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
 
-<MudTextSwitch Label="@T("Include hidden files and folders?")" Disabled="@this.isProcessingBatch" Value="@this.includeHiddenFilesAndFolders" ValueChanged="@(v => this.includeHiddenFilesAndFolders = v)" LabelOn="@T("Yes, process hidden files and folders as well")" LabelOff="@T("No, ignore hidden files and folders")"/>
-
 @if (this.includeSubdirectories)
 {
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
@@ -23,15 +21,28 @@
 <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file.")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <RestoreDefaultButton Text="@T("Restore default patterns")" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultFilePatterns" Class="mb-1"/>
 
-@* Without an icon: in a field of several lines, it floats in the middle of the text. *@
-<MudTextField T="string" @bind-Text="@this.excludePatterns" Validation="@this.ValidateExcludePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" Lines="@FileExclusions.DEFAULT_LINE_COUNT" AutoGrow="@true" MaxLines="@FileExclusions.MAX_LINE_COUNT" HelperText="@T("These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.")" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-<RestoreDefaultButton Text="@T("Restore default")" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultExcludePatterns" Class="mb-1"/>
-
-<MudNumericField T="int" @bind-Value="@this.maxFileSizeMegabytes" Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Ignore files larger than")" HelperText="@T("Matching files above this size are left out, e.g., images of virtual machines.")" Adornment="Adornment.End" AdornmentText="MB" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3"/>
-
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
 </MudJustifiedText>
+
+<MudStack Class="mb-3">
+    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+    </MudButton>
+    <MudDivider/>
+    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+        <MudTextSwitch Label="@T("Include hidden files and folders?")" Disabled="@this.isProcessingBatch" Value="@this.includeHiddenFilesAndFolders" ValueChanged="@(v => this.includeHiddenFilesAndFolders = v)" LabelOn="@T("Yes, process hidden files and folders as well")" LabelOff="@T("No, ignore hidden files and folders")"/>
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
+        </MudJustifiedText>
+
+        @* Without an icon: in a field of several lines, it floats in the middle of the text. *@
+        <MudTextField T="string" @bind-Text="@this.excludePatterns" Validation="@this.ValidateExcludePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Excluded files and folders")" Lines="@FileExclusions.DEFAULT_LINE_COUNT" AutoGrow="@true" MaxLines="@FileExclusions.MAX_LINE_COUNT" HelperText="@T("These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.")" Variant="Variant.Outlined" Margin="Margin.Normal" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+        <RestoreDefaultButton Text="@T("Restore default")" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultExcludePatterns" Class="mb-1"/>
+
+        <MudNumericField T="int" @bind-Value="@this.maxFileSizeMegabytes" Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Ignore files larger than")" HelperText="@T("Matching files above this size are left out, e.g., images of virtual machines.")" Adornment="Adornment.End" AdornmentText="MB" Variant="Variant.Outlined" Margin="Margin.Normal"/>
+    </MudCollapse>
+</MudStack>
 
 <MudText Typo="Typo.h5" Class="mb-3 mt-6">
     @T("Instructions")

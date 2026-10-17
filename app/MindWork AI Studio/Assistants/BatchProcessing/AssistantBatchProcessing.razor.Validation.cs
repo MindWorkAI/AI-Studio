@@ -172,6 +172,13 @@ public partial class AssistantBatchProcessing
     {
         await this.Form!.Validate();
 
+        //
+        // The exclusion list sits in the expert settings, which are folded away by default. Unfold
+        // them, so the user sees the message next to the list:
+        //
+        if (this.ValidateExcludePatterns(this.excludePatterns) is not null)
+            this.showExpertSettings = true;
+
         var instructionIssue = this.ValidateInstructionSource();
         if (instructionIssue is not null)
         {
