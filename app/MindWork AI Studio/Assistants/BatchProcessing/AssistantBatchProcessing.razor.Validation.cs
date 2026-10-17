@@ -80,8 +80,9 @@ public partial class AssistantBatchProcessing
 
     private IReadOnlyList<string> FindInputFiles(string resolvedOutputDirectory)
     {
-        var selection = new FolderFileSelection(FileNamePatterns.Parse(this.filePatterns), FileExclusions.Parse(this.excludePatterns), this.includeSubdirectories, this.includeHiddenFilesAndFolders);
+        var selection = new FolderFileSelection(FileNamePatterns.Parse(this.filePatterns), FileExclusions.Parse(this.excludePatterns), this.includeSubdirectories, this.includeHiddenFilesAndFolders, this.maxFileSizeMegabytes);
         var files = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+        this.numTooLargeFiles = 0;
 
         var normalizedInputDirectory = TrimDirectorySeparator(Path.GetFullPath(this.inputDirectory));
         var normalizedOutputDirectory = TrimDirectorySeparator(Path.GetFullPath(resolvedOutputDirectory));
@@ -115,8 +116,21 @@ public partial class AssistantBatchProcessing
             else if (this.IsOwnOutputArtifact(normalizedFile))
                 continue;
 
+            //
+            // Left out without a status of its own: the file never becomes part of the run. The
+            // line below the file list tells the user, and the log names the limit:
+            //
+            if (selection.IsTooLarge(new FileInfo(normalizedFile)))
+            {
+                this.numTooLargeFiles++;
+                continue;
+            }
+
             files.Add(normalizedFile);
         }
+
+        if (this.numTooLargeFiles > 0)
+            this.Logger.LogInformation("Left out {NumTooLargeFiles} matching file(s) in '{InputDirectory}' from the batch run because they are larger than {MaxFileSize}.", this.numTooLargeFiles, this.inputDirectory, selection.MaxFileSizeBytes.FileSize());
 
         return [.. files];
     }
@@ -183,7 +197,9 @@ public partial class AssistantBatchProcessing
 
         if (files.Count == 0)
         {
-            this.AddInputIssue(T("No matching files were found in the selected folder."));
+            this.AddInputIssue(this.numTooLargeFiles > 0
+                ? string.Format(T("Every matching file in the selected folder is larger than {0}. Raise the size limit to process them."), FolderFileSelection.MegabytesToBytes(this.maxFileSizeMegabytes).FileSize())
+                : T("No matching files were found in the selected folder."));
             return null;
         }
 

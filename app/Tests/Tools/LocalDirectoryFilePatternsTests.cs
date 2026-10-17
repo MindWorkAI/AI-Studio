@@ -112,7 +112,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => totalSize = size,
                 count => fileCount = count,
                 reportedFiles.Add,
-                selection: new FolderFileSelection(["*"], [], false, false));
+                selection: new FolderFileSelection(["*"], [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
 
             Assert.Multiple(() =>
             {
@@ -147,7 +147,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => visibleSize = size,
                 count => visibleCount = count,
                 _ => { },
-                selection: new FolderFileSelection(["*"], [], true, false));
+                selection: new FolderFileSelection(["*"], [], true, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
 
             long completeSize = 0;
             long completeCount = 0;
@@ -155,7 +155,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 size => completeSize = size,
                 count => completeCount = count,
                 _ => { },
-                selection: new FolderFileSelection(["*"], [], true, true));
+                selection: new FolderFileSelection(["*"], [], true, true, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES));
 
             Assert.Multiple(() =>
             {
@@ -390,7 +390,7 @@ public sealed class LocalDirectoryFilePatternsTests
             long totalSize = 0;
             long fileCount = 0;
             var reportedFiles = new List<string>();
-            var selection = new FolderFileSelection(FileNamePatterns.Parse("*.tf"), [], true, false);
+            var selection = new FolderFileSelection(FileNamePatterns.Parse("*.tf"), [], true, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
             await new DirectoryInfo(directoryPath).DetermineContentSize(
                 size => totalSize = size,

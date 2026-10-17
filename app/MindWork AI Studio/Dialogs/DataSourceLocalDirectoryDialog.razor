@@ -179,6 +179,17 @@
                             @T("Restore default")
                         </MudButton>
                     </MudStack>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataMaxFileSizeMegabytes"
+                        Label="@T("Ignore files larger than")"
+                        Class="mb-3"
+                        Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES"
+                        Immediate="@true"
+                        HelperText="@T("Selected files above this size are not indexed, e.g., images of virtual machines. The embedding page lists them, so you can raise the limit when needed.")"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.End"
+                        AdornmentText="MB"/>
                     @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
                     {
                         <MudTextField

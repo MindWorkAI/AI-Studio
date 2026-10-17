@@ -198,6 +198,13 @@
                                                     <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
                                                         @T("Not added to the index")
                                                     </MudChip>
+                                                    @if (group.Cause.NeedsDataSourceSettings)
+                                                    {
+                                                        <MudSpacer/>
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings">
+                                                            @T("Manage the data sources")
+                                                        </MudButton>
+                                                    }
                                                 </MudStack>
                                                 <MudTable Items="@group.Files" Dense="@true" Hover="@true" Elevation="0" Breakpoint="Breakpoint.None" RowsPerPage="10" Class="border-dashed border rounded-lg">
                                                     <ColGroup>

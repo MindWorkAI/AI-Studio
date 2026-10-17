@@ -46,6 +46,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         INDEXABLE,
         EXCLUDED,
         MEDIA_NOT_SUPPORTED,
+        TOO_LARGE,
     }
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
@@ -489,7 +490,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             yield return chunk;
     }
 
-    private FileEnumerationResult GetInputFiles(IDataSource dataSource)
+    internal FileEnumerationResult GetInputFiles(IDataSource dataSource)
     {
         var result = new FileEnumerationResult();
 
@@ -497,7 +498,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                if (this.AddInputFile(file, result) is RagFileIndexingDecision.EXCLUDED)
+
+                // No size limit: the user chose this very file, cf. FolderFileSelection.IsTooLarge.
+                if (this.AddInputFile(file, null, result) is RagFileIndexingDecision.EXCLUDED)
                     logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
 
                 return result;
@@ -570,7 +573,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 continue;
             }
 
-            if (this.AddInputFile(fileInfo, result) is not RagFileIndexingDecision.EXCLUDED)
+            if (this.AddInputFile(fileInfo, selection, result) is not RagFileIndexingDecision.EXCLUDED)
                 continue;
 
             excludedFiles++;
@@ -582,9 +585,12 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, dataSource.Path, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
     }
 
-    private RagFileIndexingDecision AddInputFile(FileInfo file, FileEnumerationResult result)
+    /// <param name="file">The file.</param>
+    /// <param name="selection">The files of a folder data source, or null for a single file, which has no size limit.</param>
+    /// <param name="result">Where the file goes, if anywhere.</param>
+    private RagFileIndexingDecision AddInputFile(FileInfo file, FolderFileSelection? selection, FileEnumerationResult result)
     {
-        var decision = this.GetRagFileIndexingDecision(file);
+        var decision = this.GetRagFileIndexingDecision(file, selection);
         switch (decision)
         {
             case RagFileIndexingDecision.INDEXABLE:
@@ -596,6 +602,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
             case RagFileIndexingDecision.MEDIA_NOT_SUPPORTED:
                 result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED);
+                break;
+
+            case RagFileIndexingDecision.TOO_LARGE:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TOO_LARGE);
                 break;
         }
 
@@ -613,7 +623,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
     }
 
-    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
+    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file, FolderFileSelection? selection)
     {
         if (this.IsSkippedRagFile(file))
             return RagFileIndexingDecision.EXCLUDED;
@@ -627,6 +637,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         //
         if (FileTypes.IsAllowedPath(file.FullName, FileTypes.AUDIO, FileTypes.VIDEO))
             return RagFileIndexingDecision.MEDIA_NOT_SUPPORTED;
+
+        if (selection?.IsTooLarge(file) is true)
+            return RagFileIndexingDecision.TOO_LARGE;
 
         // A directory source reaches this point only after its user-configured pattern selected
         // the file. A single-file source was validated before it was stored. Extraction is the

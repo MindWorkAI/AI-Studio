@@ -82,6 +82,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.hasReportedWriteFailure = false;
         this.numProcessedFiles = 0;
         this.pauseBeforeNextFileSeconds = 0;
+        this.numTooLargeFiles = 0;
     }
 
     protected override bool MightPreselectValues()
@@ -103,6 +104,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
     private string excludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private int maxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
     private bool includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
     private bool includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
@@ -126,6 +128,11 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private bool hasReportedWriteFailure;
     private int numProcessedFiles;
     private int pauseBeforeNextFileSeconds;
+
+    /// <summary>
+    /// How many matching files the last search left out for their size, cf. FindInputFiles.
+    /// </summary>
+    private int numTooLargeFiles;
 
     /// <summary>
     /// The header of the column of the results table that holds the AI answer.
@@ -183,6 +190,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.outputDirectory = string.Empty;
             this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
             this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
+            this.maxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
             this.includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
             this.includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
             this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
@@ -204,6 +212,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputDirectory = settings.OutputDirectory;
         this.filePatterns = settings.FilePatterns;
         this.excludePatterns = settings.ExcludePatterns;
+        this.maxFileSizeMegabytes = Math.Max(settings.MaxFileSizeMegabytes, FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
         this.includeSubdirectories = settings.IncludeSubdirectories;
         this.includeHiddenFilesAndFolders = settings.IncludeHiddenFilesAndFolders;
         this.promptSource = settings.PromptSource;

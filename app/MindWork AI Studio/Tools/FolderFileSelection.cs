@@ -15,12 +15,32 @@ namespace AIStudio.Tools;
 /// <param name="exclusions">The parsed list of excluded files and folders.</param>
 /// <param name="includeSubdirectories">Whether files in subfolders are selected as well.</param>
 /// <param name="includeHiddenFilesAndFolders">Whether hidden files and the files in hidden folders are selected as well.</param>
-internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IReadOnlyList<string> exclusions, bool includeSubdirectories, bool includeHiddenFilesAndFolders)
+/// <param name="maxFileSizeMegabytes">The largest file the feature works with, in megabytes, cf. IsTooLarge.</param>
+internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IReadOnlyList<string> exclusions, bool includeSubdirectories, bool includeHiddenFilesAndFolders, int maxFileSizeMegabytes)
 {
     /// <summary>
-    /// Every file below a folder, hidden ones included. Only what nobody ever wants is left out.
+    /// The size limit of files unless the user or the organization chooses another one.
     /// </summary>
-    public static readonly FolderFileSelection EVERY_FILE = new(["*"], [], true, true);
+    /// <remarks>
+    /// A safety net, not a brake on costs: large scanned PDFs, often 100 to 500 MB, still pass. It
+    /// catches the images of virtual machines, ISO files, database dumps, and huge logs, which end
+    /// up in a selection by * or by an unknown extension. There is no value for "no limit"; the
+    /// limit can be raised instead.
+    /// </remarks>
+    public const int DEFAULT_MAX_FILE_SIZE_MEGABYTES = 1024;
+
+    /// <summary>
+    /// The smallest size limit which can be set.
+    /// </summary>
+    public const int SMALLEST_MAX_FILE_SIZE_MEGABYTES = 1;
+
+    private const long BYTES_PER_MEGABYTE = 1024 * 1024;
+
+    /// <summary>
+    /// Every file below a folder, hidden ones included, whatever its size. Only what nobody ever
+    /// wants is left out.
+    /// </summary>
+    public static readonly FolderFileSelection EVERY_FILE = new(["*"], [], true, true, int.MaxValue);
 
     /// <summary>
     /// The files a local folder data source indexes.
@@ -29,7 +49,15 @@ internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IR
         FileNamePatterns.Parse(dataSource.EffectiveFilePatterns),
         FileExclusions.Parse(dataSource.EffectiveExcludePatterns),
         dataSource.IncludeSubdirectories,
-        dataSource.IncludeHiddenFilesAndFolders);
+        dataSource.IncludeHiddenFilesAndFolders,
+        dataSource.EffectiveMaxFileSizeMegabytes);
+
+    /// <summary>
+    /// The size limit in bytes.
+    /// </summary>
+    public long MaxFileSizeBytes => MegabytesToBytes(maxFileSizeMegabytes);
+
+    public static long MegabytesToBytes(int megabytes) => megabytes * BYTES_PER_MEGABYTE;
 
     /// <summary>
     /// Enumerates the files below a folder which are neither hidden nor in an excluded or a hidden
@@ -57,6 +85,15 @@ internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IR
     /// it, and one of the file patterns does. Exclusion comes first.
     /// </summary>
     public bool Selects(string filePath) => !FileExclusions.ExcludesFile(filePath, exclusions) && FileNamePatterns.Matches(filePath, filePatterns);
+
+    /// <summary>
+    /// Whether a selected file is larger than the limit. A file of exactly the limit is not.
+    /// </summary>
+    /// <remarks>
+    /// Kept apart from Selects on purpose: a file the user selected but which is too large is no
+    /// intentional exclusion, so the caller tells the user about it.
+    /// </remarks>
+    public bool IsTooLarge(FileInfo file) => file.Length > this.MaxFileSizeBytes;
 
     private bool IsNotExcluded(string directoryPath, Action<string>? reportExcludedFolder)
     {

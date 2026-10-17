@@ -6,6 +6,7 @@ namespace AIStudio.Tools.Services;
 public enum DataSourceEmbeddingIgnoreReason
 {
     MEDIA_NOT_SUPPORTED,
+    TOO_LARGE,
 }
 
 /// <summary>

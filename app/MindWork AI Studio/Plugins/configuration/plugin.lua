@@ -620,6 +620,10 @@ CONFIG["SETTINGS"] = {}
 -- beyond the metadata of operating systems, which is always left out. The default is:
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns"] = "node_modules/; bower_components/; Pods/; venv/; env/; __pycache__/; bin/; obj/; Debug/; Release/; target/; build/; dist/; DerivedData/; cmake-build-*/; TestResults/; htmlcov/; *.vmwarevm/; *.pvm/; *.utm/; package-lock.json; yarn.lock; pnpm-lock.yaml; packages.lock.json; Cargo.lock; poetry.lock; Pipfile.lock; composer.lock; Gemfile.lock; go.sum; *.min.js; *.min.css; *.js.map; *.css.map; *.exe; *.dll; *.so; *.dylib; *.pdb; *.db; *.db3; *.db-*; *.sqlite; *.sqlite3; *.sqlite-*; *.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img"
 --
+-- Configure the size limit in megabytes. Larger files are left out of a batch run. The value must
+-- be at least 1; the default is 1024, i.e., 1 GB.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes"] = 1024
+--
 -- Configure the default instruction source.
 -- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource"] = "FREE_PROMPT"
@@ -666,6 +670,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true

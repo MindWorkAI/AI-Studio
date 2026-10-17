@@ -40,6 +40,8 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public string ExcludePatterns { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ExcludePatterns, FileExclusions.DEFAULT_PATTERNS);
 
+    public int MaxFileSizeMegabytes { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MaxFileSizeMegabytes, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
+
     public BatchProcessingPromptSource PromptSource { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptSource, BatchProcessingPromptSource.FREE_PROMPT);
 
     public string FreePrompt { get; set; } = ManagedConfiguration.Register(configSelection, value => value.FreePrompt, string.Empty);

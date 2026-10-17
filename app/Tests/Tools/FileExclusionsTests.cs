@@ -143,7 +143,7 @@ public sealed class FileExclusionsTests
             await File.WriteAllTextAsync(Path.Combine(packagePath, "index.js"), "module.exports = {};");
             await File.WriteAllTextAsync(Path.Combine(binPath, "app.txt"), "build output");
 
-            var selection = new FolderFileSelection(FileNamePatterns.Parse("*.json;*.ts;*.js;*.txt"), FileExclusions.Parse(FileExclusions.DEFAULT_PATTERNS), true, false);
+            var selection = new FolderFileSelection(FileNamePatterns.Parse("*.json;*.ts;*.js;*.txt"), FileExclusions.Parse(FileExclusions.DEFAULT_PATTERNS), true, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
             var excludedFolders = new List<string>();
             var candidates = selection.EnumerateCandidates(directoryPath, reportExcludedFolder: excludedFolders.Add).ToList();
 
@@ -177,7 +177,7 @@ public sealed class FileExclusionsTests
             await File.WriteAllBytesAsync(Path.Combine(directoryPath, "Thumbs.db"), [0, 1, 2]);
             await File.WriteAllTextAsync(Path.Combine(archiveFolderPath, "notes.md"), "Resource fork");
 
-            var selection = new FolderFileSelection(["*"], [], true, true);
+            var selection = new FolderFileSelection(["*"], [], true, true, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
             Assert.That(selection.EnumerateCandidates(directoryPath), Is.EqualTo(new[] { notesPath }));
         }
@@ -197,7 +197,7 @@ public sealed class FileExclusionsTests
         try
         {
             await File.WriteAllTextAsync(Path.Combine(machinePath, "config.pvs"), "<ParallelsVirtualMachine/>");
-            var selection = new FolderFileSelection(FileNamePatterns.Parse(FileNamePatterns.ALL_DOCUMENTS_PATTERN), FileExclusions.Parse(FileExclusions.DEFAULT_PATTERNS), true, false);
+            var selection = new FolderFileSelection(FileNamePatterns.Parse(FileNamePatterns.ALL_DOCUMENTS_PATTERN), FileExclusions.Parse(FileExclusions.DEFAULT_PATTERNS), true, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
             Assert.That(selection.EnumerateCandidates(directoryPath), Is.Empty, "The readable text check would select config.pvs.");
         }
@@ -222,7 +222,7 @@ public sealed class FileExclusionsTests
             await File.WriteAllTextAsync(reportPath, "Report");
             await File.WriteAllTextAsync(Path.Combine(outputPath, "report_result.md"), "Result");
             await File.WriteAllTextAsync(Path.Combine(binPath, "notes.md"), "Build output");
-            var selection = new FolderFileSelection(["*.md"], FileExclusions.Parse("bin/"), true, false);
+            var selection = new FolderFileSelection(["*.md"], FileExclusions.Parse("bin/"), true, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
 
             var candidates = selection.EnumerateCandidates(
                 directoryPath,

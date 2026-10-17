@@ -34,6 +34,8 @@
     </MudButton>
 </MudStack>
 
+<MudNumericField T="int" @bind-Value="@this.maxFileSizeMegabytes" Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Ignore files larger than")" HelperText="@T("Matching files above this size are left out, e.g., images of virtual machines.")" Adornment="Adornment.End" AdornmentText="MB" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3"/>
+
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
     @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
 </MudJustifiedText>
@@ -278,4 +280,11 @@ else
             }
         </tbody>
     </MudSimpleTable>
+
+    @if (this.numTooLargeFiles > 0)
+    {
+        <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+            @string.Format(T("{0} matching files were left out because they are larger than {1}."), this.numTooLargeFiles, FolderFileSelection.MegabytesToBytes(this.maxFileSizeMegabytes).FileSize())
+        </MudJustifiedText>
+    }
 }

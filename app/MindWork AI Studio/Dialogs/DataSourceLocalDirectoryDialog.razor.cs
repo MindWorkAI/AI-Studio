@@ -64,6 +64,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string dataPath = string.Empty;
     private string dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
     private string dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private int dataMaxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
     private bool dataIncludeSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_SUBDIRECTORIES;
     private bool dataIncludeHiddenFilesAndFolders = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private int dataMaxChunkTokenLength;
@@ -119,6 +120,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataPath = this.DataSource.Path;
             this.dataFilePatterns = this.DataSource.EffectiveFilePatterns;
             this.dataExcludePatterns = this.DataSource.EffectiveExcludePatterns;
+            this.dataMaxFileSizeMegabytes = this.DataSource.EffectiveMaxFileSizeMegabytes;
             this.dataIncludeSubdirectories = this.DataSource.IncludeSubdirectories;
             this.dataIncludeHiddenFilesAndFolders = this.DataSource.IncludeHiddenFilesAndFolders;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
@@ -196,6 +198,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
         // Kept as typed, since the line breaks group the entries for the eye:
         ExcludePatterns = this.dataExcludePatterns,
+        MaxFileSizeMegabytes = this.dataMaxFileSizeMegabytes,
         IncludeSubdirectories = this.dataIncludeSubdirectories,
         IncludeHiddenFilesAndFolders = this.dataIncludeHiddenFilesAndFolders,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,

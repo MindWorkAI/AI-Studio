@@ -42,6 +42,8 @@ public static class DirectoryInfoExtensions
                     continue;
 
                 var file = new FileInfo(filePath);
+                if (filesToCount.IsTooLarge(file))
+                    continue;
 
                 totalSize += file.Length;
                 numFiles++;

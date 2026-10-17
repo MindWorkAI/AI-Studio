@@ -92,6 +92,12 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string ExcludePatterns { get; init; } = FileExclusions.DEFAULT_PATTERNS;
 
     /// <summary>
+    /// The largest file below the path which is indexed, in megabytes. A larger file which the
+    /// patterns select is not indexed, and the embedding page tells the user about it.
+    /// </summary>
+    public int MaxFileSizeMegabytes { get; init; } = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
+
+    /// <summary>
     /// Whether files in folders below <see cref="this.Path"/> are considered for indexing.
     /// </summary>
     public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
@@ -125,4 +131,13 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public string EffectiveExcludePatterns => FileExclusions.IsValid(this.ExcludePatterns)
         ? this.ExcludePatterns
         : FileExclusions.DEFAULT_PATTERNS;
+
+    /// <summary>
+    /// The size limit used at runtime. A limit below the smallest one can only come from malformed
+    /// or hand-edited settings, and the default takes its place.
+    /// </summary>
+    [JsonIgnore]
+    public int EffectiveMaxFileSizeMegabytes => this.MaxFileSizeMegabytes >= FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES
+        ? this.MaxFileSizeMegabytes
+        : FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
 }

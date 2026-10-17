@@ -276,7 +276,7 @@ public partial class Embeddings : MSGComponentBase
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
 
-    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color);
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsDataSourceSettings);
 
     private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
 
@@ -327,23 +327,47 @@ public partial class Embeddings : MSGComponentBase
     private static string GetGroupHeader(FailureGroup group) => $"{group.Cause.Title} ({group.Failures.Count})";
 
     private IReadOnlyList<IgnoredFileGroup> GetIgnoredFileGroups(DataSourceEmbeddingStatus status) => status.IgnoredFiles
-        .GroupBy(this.GetIgnoredFileCause)
+        .GroupBy(file => this.GetIgnoredFileCause(status, file))
         .Select(group => new IgnoredFileGroup(group.Key, group.OrderBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
         .OrderBy(group => group.Cause.Priority)
         .ThenByDescending(group => group.Files.Count)
         .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
         .ToList();
 
-    private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingIgnoredFile file) => file.Reason switch
+    private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingStatus status, DataSourceEmbeddingIgnoredFile file) => file.Reason switch
     {
-        DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED => new IgnoredFileCause(
+        DataSourceEmbeddingIgnoreReason.TOO_LARGE => new IgnoredFileCause(
             0,
+            T("Too large"),
+            string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
+            Icons.Material.Filled.Straighten,
+            Color.Warning,
+            true),
+        DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED => new IgnoredFileCause(
+            1,
             FileTypes.MEDIA.FilterName,
             T("These image, audio, or video files match the data source patterns, but they cannot currently be added to the index."),
             Icons.Material.Filled.PermMedia,
-            Color.Default),
+            Color.Default,
+            false),
         _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
     };
+
+    /// <remarks>
+    /// Read from the settings rather than carried by the status: the user who raised the limit
+    /// right away reads the new one, and the next run, which the change starts, settles the list.
+    /// </remarks>
+    private string GetMaxFileSizeText(DataSourceEmbeddingStatus status)
+    {
+        var maxFileSizeMegabytes = this.SettingsManager.ConfigurationData.DataSources
+            .OfType<DataSourceLocalDirectory>()
+            .Where(dataSource => dataSource.Id == status.DataSourceId)
+            .Select(dataSource => dataSource.EffectiveMaxFileSizeMegabytes)
+            .DefaultIfEmpty(FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES)
+            .First();
+
+        return FolderFileSelection.MegabytesToBytes(maxFileSizeMegabytes).FileSize();
+    }
 
     private static string GetIgnoredGroupHeader(IgnoredFileGroup group) => $"{group.Cause.Title} ({group.Files.Count})";
 
