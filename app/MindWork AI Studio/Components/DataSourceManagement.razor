@@ -42,9 +42,18 @@
     <RowTemplate>
         @{ var embeddingStatus = embeddingStatuses.GetValueOrDefault(context.Id); }
         <MudTd>@context.Num</MudTd>
-        <MudTd Style="white-space: normal; overflow-wrap: anywhere;">@context.Name</MudTd>
-        <MudTd Style="white-space: nowrap;">@context.Type.GetDisplayName()</MudTd>
-        <MudTd Style="white-space: nowrap;">@this.GetEmbeddingName(context)</MudTd>
+        @*
+            The name gets the room the other columns leave, which in the dialog was next to nothing: it
+            may break anywhere, so a single character was enough for the browser. The minimum width
+            keeps it readable, and the type and the embedding wrap instead, so that the table still fits.
+            The minimum sits on a div, since browsers differ in whether they honor it on a table cell.
+            With "break-word" instead, a long name without spaces would push the table out of the dialog.
+        *@
+        <MudTd Style="white-space: normal; overflow-wrap: anywhere;">
+            <div style="min-width: 10em;">@context.Name</div>
+        </MudTd>
+        <MudTd>@context.Type.GetDisplayName()</MudTd>
+        <MudTd>@this.GetEmbeddingName(context)</MudTd>
         <MudTd>
             @if (context is IIndexedDataSource)
             {
