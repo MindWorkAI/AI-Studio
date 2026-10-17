@@ -348,6 +348,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis ko
 -- The transcription provider returned an empty transcript.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1080540822"] = "Der Anbieter für Transkriptionen hat eine leere Transkription zurückgegeben."
 
+-- Hide Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1108876344"] = "Experten-Einstellungen ausblenden"
+
 -- We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1124333059"] = "Wir schreiben stets ein durch Semikolons getrenntes Protokoll namens „log.csv“. Es enthält jedes Dokument mit seiner Verarbeitungszeit, dem Modell, dem Status und den Details zu möglichen Fehlern. Wenn Sie einen weiteren Durchlauf mit demselben Ausgabeordner starten, fragen wir Sie, ob Sie diesen Durchlauf fortsetzen möchten: Dokumente, deren Verarbeitung fehlgeschlagen ist oder die im Protokoll fehlen, werden dann erneut verarbeitet. Wenn kein Ausgabeordner ausgewählt ist, wird alles im Unterordner „ai-results“ innerhalb des Eingabeordners gespeichert."
 
@@ -410,6 +413,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Select the output folder
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1598970341"] = "Wählen Sie den Ausgabeordner aus"
+
+-- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1624717965"] = "Als versteckt gelten Dateien und Ordner, deren Namen mit einem Punkt beginnen, z. B. .git oder .env, sowie solche, die das Betriebssystem als versteckt kennzeichnet. Ein Dateimuster, das mit einem Punkt beginnt, z. B. .gitignore, wählt solche Dateien trotzdem aus."
 
 -- The configured default policy no longer exists. Please select another document analysis policy.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T169666151"] = "Das konfigurierte Standardregelwerk existiert nicht mehr. Bitte wählen Sie ein anderes Regelwerk für die Dokumentenanalyse aus."
@@ -548,6 +554,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3353866230"] = "Dateien ignorieren, die größer sind als"
+
+-- Show Expert Settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3361153305"] = "Experten-Einstellungen anzeigen"
 
 -- Header of the result column (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Überschrift der Ergebnisspalte (optional)"
