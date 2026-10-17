@@ -233,6 +233,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: what should be the start page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
 
+        // Config: save energy while the AI streams its answers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.IsSavingEnergy, this.Id, settingsTable, dryRun);
+
         // Config: show prompt-injection alert dialogs?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowPromptInjectionAlert, this.Id, settingsTable, dryRun);
 

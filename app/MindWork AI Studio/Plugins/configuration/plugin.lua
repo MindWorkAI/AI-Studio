@@ -406,6 +406,13 @@ CONFIG["SETTINGS"] = {}
 -- but users can still choose another start page in the app settings.
 -- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
 
+-- Configure whether AI Studio saves energy while the AI writes its answers.
+-- Allowed values are: true, false
+-- When set to true, streamed answers are updated once every third second instead of as soon
+-- as new text arrives. This helps on battery-powered devices and on virtual desktops, where
+-- every redraw of the screen is costly.
+-- CONFIG["SETTINGS"]["DataApp.IsSavingEnergy"] = true
+
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
