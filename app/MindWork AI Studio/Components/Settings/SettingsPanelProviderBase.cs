@@ -41,7 +41,7 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
                 if (encryption?.IsAvailable == true)
                 {
                     var decryptedApiKey = await apiKeyResponse.Secret.Decrypt(Program.ENCRYPTION);
-                    if (encryption.TryEncrypt(decryptedApiKey, EnterpriseEncryptionFormat.V1, out var encrypted))
+                    if (encryption.TryEncrypt(decryptedApiKey, this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, out var encrypted))
                         encryptedApiKey = encrypted;
                 }
                 else

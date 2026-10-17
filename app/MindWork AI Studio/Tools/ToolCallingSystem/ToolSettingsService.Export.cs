@@ -73,7 +73,7 @@ public sealed partial class ToolSettingsService
                 continue;
 
             var values = await this.GetSettingsAsync(tool.Definition);
-            var issue = CollectSettings(tool.Definition, areasOfTool, values, options, PluginFactory.EnterpriseEncryption, lockedValues, defaultValues);
+            var issue = CollectSettings(tool.Definition, areasOfTool, values, options, PluginFactory.EnterpriseEncryption, settingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, lockedValues, defaultValues);
             if (issue is not null)
                 return new(ErrorMessage: issue);
         }
@@ -98,7 +98,7 @@ public sealed partial class ToolSettingsService
     /// Adds the selected settings of one tool to the values to export, by their managed key.
     /// </summary>
     /// <returns>Why the export failed, or null when it may go on.</returns>
-    private static string? CollectSettings(ToolDefinition definition, IEnumerable<ExportableSettings> selectedAreas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, EnterpriseEncryption? encryption, Dictionary<string, string> lockedValues, Dictionary<string, string> defaultValues)
+    private static string? CollectSettings(ToolDefinition definition, IEnumerable<ExportableSettings> selectedAreas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, EnterpriseEncryption? encryption, EnterpriseEncryptionFormat encryptionFormat, Dictionary<string, string> lockedValues, Dictionary<string, string> defaultValues)
     {
         foreach (var fieldName in GetSelectedFieldNames(definition, selectedAreas))
         {
@@ -114,7 +114,7 @@ public sealed partial class ToolSettingsService
                 if (encryption?.IsAvailable is not true)
                     return TB("Cannot export encrypted tool secrets: No enterprise encryption secret is configured.");
 
-                if (!encryption.TryEncrypt(value, EnterpriseEncryptionFormat.V1, out var encrypted))
+                if (!encryption.TryEncrypt(value, encryptionFormat, out var encrypted))
                     return TB("The tool secrets could not be encrypted. Nothing was exported.");
 
                 lockedValues[key] = encrypted;
