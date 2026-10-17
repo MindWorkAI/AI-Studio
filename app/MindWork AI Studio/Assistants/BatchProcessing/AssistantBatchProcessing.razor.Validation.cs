@@ -97,7 +97,8 @@ public partial class AssistantBatchProcessing
         foreach (var file in DirectoryFileTraversal.EnumerateFiles(
                      this.inputDirectory,
                      this.includeSubdirectories,
-                     this.includeHiddenSubdirectories,
+                     this.includeHiddenFilesAndFolders,
+                     includeHiddenFile: file => FileNamePatterns.NamesHiddenFile(file, patterns),
                      includeDirectory: directory => !isOutputSeparateFolder
                                                     || !string.Equals(TrimDirectorySeparator(Path.GetFullPath(directory)), normalizedOutputDirectory, StringComparison.OrdinalIgnoreCase),
                      reportInaccessibleDirectory: (directory, exception) =>

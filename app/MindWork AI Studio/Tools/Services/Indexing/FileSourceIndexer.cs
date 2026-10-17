@@ -552,7 +552,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(
                      dataSource.Path,
                      dataSource.IncludeSubdirectories,
-                     dataSource.IncludeHiddenSubdirectories,
+                     dataSource.IncludeHiddenFilesAndFolders,
+                     includeHiddenFile: filePath => FileNamePatterns.NamesHiddenFile(filePath, patterns),
                      reportInaccessibleDirectory: (directoryPath, exception) =>
                      {
                          logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);

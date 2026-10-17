@@ -9,7 +9,7 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<string> OUTPUT_DIRECTORY_STATE_KEY = new(nameof(outputDirectory));
     private static readonly AssistantSessionStateKey<string> FILE_PATTERNS_STATE_KEY = new(nameof(filePatterns));
     private static readonly AssistantSessionStateKey<bool> INCLUDE_SUBDIRECTORIES_STATE_KEY = new(nameof(includeSubdirectories));
-    private static readonly AssistantSessionStateKey<bool> INCLUDE_HIDDEN_SUBDIRECTORIES_STATE_KEY = new(nameof(includeHiddenSubdirectories));
+    private static readonly AssistantSessionStateKey<bool> INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY = new(nameof(includeHiddenFilesAndFolders));
     private static readonly AssistantSessionStateKey<BatchProcessingPromptSource> PROMPT_SOURCE_STATE_KEY = new(nameof(promptSource));
     private static readonly AssistantSessionStateKey<string> FREE_PROMPT_STATE_KEY = new(nameof(freePrompt));
     private static readonly AssistantSessionStateKey<string> IMPORTED_PROMPT_STATE_KEY = new(nameof(importedPrompt));
@@ -38,7 +38,7 @@ public partial class AssistantBatchProcessing
         state.Set(OUTPUT_DIRECTORY_STATE_KEY, this.outputDirectory);
         state.Set(FILE_PATTERNS_STATE_KEY, this.filePatterns);
         state.Set(INCLUDE_SUBDIRECTORIES_STATE_KEY, this.includeSubdirectories);
-        state.Set(INCLUDE_HIDDEN_SUBDIRECTORIES_STATE_KEY, this.includeHiddenSubdirectories);
+        state.Set(INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY, this.includeHiddenFilesAndFolders);
         state.Set(PROMPT_SOURCE_STATE_KEY, this.promptSource);
         state.Set(FREE_PROMPT_STATE_KEY, this.freePrompt);
         state.Set(IMPORTED_PROMPT_STATE_KEY, this.importedPrompt);
@@ -68,7 +68,7 @@ public partial class AssistantBatchProcessing
         state.Restore(OUTPUT_DIRECTORY_STATE_KEY, value => this.outputDirectory = value);
         state.Restore(FILE_PATTERNS_STATE_KEY, value => this.filePatterns = value);
         state.Restore(INCLUDE_SUBDIRECTORIES_STATE_KEY, value => this.includeSubdirectories = value);
-        state.Restore(INCLUDE_HIDDEN_SUBDIRECTORIES_STATE_KEY, value => this.includeHiddenSubdirectories = value);
+        state.Restore(INCLUDE_HIDDEN_FILES_AND_FOLDERS_STATE_KEY, value => this.includeHiddenFilesAndFolders = value);
         state.Restore(PROMPT_SOURCE_STATE_KEY, value => this.promptSource = value);
         state.Restore(FREE_PROMPT_STATE_KEY, value => this.freePrompt = value);
         state.Restore(IMPORTED_PROMPT_STATE_KEY, value => this.importedPrompt = value);

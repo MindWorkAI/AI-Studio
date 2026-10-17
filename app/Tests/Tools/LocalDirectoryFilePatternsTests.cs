@@ -19,12 +19,12 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             Assert.That(dataSource.FilePatterns, Is.EqualTo(FileNamePatterns.ALL_DOCUMENTS_PATTERN), "A data source from before file patterns has to keep indexing what it indexed.");
             Assert.That(dataSource.IncludeSubdirectories, Is.True);
-            Assert.That(dataSource.IncludeHiddenSubdirectories, Is.False);
+            Assert.That(dataSource.IncludeHiddenFilesAndFolders, Is.False);
         });
     }
 
     [Test]
-    public void ExistingBatchSettingsDefaultToSkippingHiddenSubdirectories()
+    public void ExistingBatchSettingsDefaultToSkippingHiddenFilesAndFolders()
     {
         var settings = JsonSerializer.Deserialize<DataBatchProcessing>("{}", SettingsManager.JSON_OPTIONS);
 
@@ -32,7 +32,7 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings!.IncludeSubdirectories, Is.EqualTo(DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES));
-            Assert.That(settings.IncludeHiddenSubdirectories, Is.EqualTo(DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES));
+            Assert.That(settings.IncludeHiddenFilesAndFolders, Is.EqualTo(DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS));
         });
     }
 
@@ -76,7 +76,7 @@ public sealed class LocalDirectoryFilePatternsTests
             Type = DataSourceType.LOCAL_DIRECTORY,
             FilePatterns = "*.txt;*.tf;.gitignore",
             IncludeSubdirectories = false,
-            IncludeHiddenSubdirectories = true,
+            IncludeHiddenFilesAndFolders = true,
         };
 
         var json = JsonSerializer.Serialize(written, SettingsManager.JSON_OPTIONS);
@@ -88,7 +88,7 @@ public sealed class LocalDirectoryFilePatternsTests
             Assert.That(read, Is.TypeOf<DataSourceLocalDirectory>());
             Assert.That(((DataSourceLocalDirectory)read!).FilePatterns, Is.EqualTo("*.txt;*.tf;.gitignore"));
             Assert.That(((DataSourceLocalDirectory)read).IncludeSubdirectories, Is.False);
-            Assert.That(((DataSourceLocalDirectory)read).IncludeHiddenSubdirectories, Is.True);
+            Assert.That(((DataSourceLocalDirectory)read).IncludeHiddenFilesAndFolders, Is.True);
         });
     }
 
@@ -129,7 +129,7 @@ public sealed class LocalDirectoryFilePatternsTests
     }
 
     [Test]
-    public async Task DirectoryStatisticsUseTheConfiguredHiddenSubdirectoryRule()
+    public async Task DirectoryStatisticsUseTheConfiguredHiddenFilesAndFoldersRule()
     {
         var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-hidden-statistics-{Guid.NewGuid():N}");
         var hiddenDirectoryPath = Path.Combine(directoryPath, ".hidden");
@@ -138,6 +138,7 @@ public sealed class LocalDirectoryFilePatternsTests
         try
         {
             await File.WriteAllBytesAsync(Path.Combine(directoryPath, "visible.txt"), new byte[5]);
+            await File.WriteAllBytesAsync(Path.Combine(directoryPath, ".env"), new byte[20]);
             await File.WriteAllBytesAsync(Path.Combine(hiddenDirectoryPath, "hidden.txt"), new byte[10]);
 
             long visibleSize = 0;
@@ -147,7 +148,7 @@ public sealed class LocalDirectoryFilePatternsTests
                 count => visibleCount = count,
                 _ => { },
                 includeSubdirectories: true,
-                includeHiddenSubdirectories: false);
+                includeHiddenFilesAndFolders: false);
 
             long completeSize = 0;
             long completeCount = 0;
@@ -156,14 +157,14 @@ public sealed class LocalDirectoryFilePatternsTests
                 count => completeCount = count,
                 _ => { },
                 includeSubdirectories: true,
-                includeHiddenSubdirectories: true);
+                includeHiddenFilesAndFolders: true);
 
             Assert.Multiple(() =>
             {
                 Assert.That(visibleSize, Is.EqualTo(5));
                 Assert.That(visibleCount, Is.EqualTo(1));
-                Assert.That(completeSize, Is.EqualTo(15));
-                Assert.That(completeCount, Is.EqualTo(2));
+                Assert.That(completeSize, Is.EqualTo(35));
+                Assert.That(completeCount, Is.EqualTo(3));
             });
         }
         finally
@@ -285,6 +286,25 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             Directory.Delete(directoryPath, true);
         }
+    }
+
+    [TestCase(".env", "*")]
+    [TestCase(".env", ":text:")]
+    [TestCase(".env", ":documents:")]
+    [TestCase(".env", "*.env")]
+    [TestCase("notes.txt", ".*")]
+    public void OnlyAPatternWhichBeginsWithADotNamesAHiddenFile(string fileName, string patterns)
+    {
+        Assert.That(FileNamePatterns.NamesHiddenFile(fileName, FileNamePatterns.Parse(patterns)), Is.False);
+    }
+
+    [TestCase(".env", ".env")]
+    [TestCase(".gitignore", "*.md;.gitignore")]
+    [TestCase(".env.local", ".env*")]
+    [TestCase(".editorconfig", ".*")]
+    public void APatternWhichBeginsWithADotNamesHiddenFiles(string fileName, string patterns)
+    {
+        Assert.That(FileNamePatterns.NamesHiddenFile(fileName, FileNamePatterns.Parse(patterns)), Is.True);
     }
 
     [TestCase("report.pdf")]

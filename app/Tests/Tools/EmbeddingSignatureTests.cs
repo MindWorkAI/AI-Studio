@@ -56,7 +56,7 @@ public sealed class EmbeddingSignatureTests
     public void ChangingHiddenDirectoryInclusionKeepsTheStoredEmbeddingsOfRetainedFiles()
     {
         var visibleDirectoriesOnly = DataSource(ConfidenceLevel.LOW);
-        var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenSubdirectories = true };
+        var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenFilesAndFolders = true };
 
         Assert.That(
             Signature(includingHiddenDirectories),

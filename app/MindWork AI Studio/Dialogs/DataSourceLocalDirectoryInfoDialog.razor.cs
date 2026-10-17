@@ -42,7 +42,8 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
                 this.cts.Token,
                 file => FileNamePatterns.Matches(file.FullName, filePatterns),
                 this.DataSource.IncludeSubdirectories,
-                this.DataSource.IncludeHiddenSubdirectories);
+                this.DataSource.IncludeHiddenFilesAndFolders,
+                filePath => FileNamePatterns.NamesHiddenFile(filePath, filePatterns));
             this.refreshTimer.Elapsed += (_, _) => this.InvokeAsync(this.StateHasChanged);
             this.refreshTimer.Start();
         }

@@ -26,15 +26,16 @@ public static class DirectoryInfoExtensions
     /// <param name="cancellationToken">The cancellation token to stop the operation.</param>
     /// <param name="includeFile">An optional predicate which limits the files included in the totals and reports.</param>
     /// <param name="includeSubdirectories">Whether files in subdirectories are included.</param>
-    /// <param name="includeHiddenSubdirectories">Whether files in hidden subdirectories are included.</param>
-    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, Func<FileInfo, bool>? includeFile = null, bool includeSubdirectories = true, bool includeHiddenSubdirectories = true)
+    /// <param name="includeHiddenFilesAndFolders">Whether hidden files and the files in hidden subdirectories are included.</param>
+    /// <param name="includeHiddenFile">Asked for each hidden file while hidden files and folders are left out: whether this one is included anyway.</param>
+    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, Func<FileInfo, bool>? includeFile = null, bool includeSubdirectories = true, bool includeHiddenFilesAndFolders = true, Func<string, bool>? includeHiddenFile = null)
     {
         var rootDirectoryLen = directoryInfo.FullName.Length;
         long totalSize = 0;
         long numFiles = 0;
         
         await Task.Factory.StartNew(() => {
-            foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(directoryInfo.FullName, includeSubdirectories, includeHiddenSubdirectories))
+            foreach (var filePath in DirectoryFileTraversal.EnumerateFiles(directoryInfo.FullName, includeSubdirectories, includeHiddenFilesAndFolders, includeHiddenFile))
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;

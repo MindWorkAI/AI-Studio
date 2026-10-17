@@ -608,11 +608,11 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory"] = ""
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory"] = ""
 --
--- Configure the default file patterns and whether subfolders, including hidden subfolders, are included.
+-- Configure the default file patterns and whether subfolders as well as hidden files and folders are included.
 -- Separate multiple patterns with semicolons.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
--- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenSubdirectories"] = false
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders"] = false
 --
 -- Configure the default instruction source.
 -- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
@@ -658,7 +658,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenSubdirectories.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true

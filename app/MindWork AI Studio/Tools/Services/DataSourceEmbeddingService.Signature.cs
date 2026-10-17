@@ -95,10 +95,10 @@ public sealed partial class DataSourceEmbeddingService
     /// made that a different signature, so opening the expert settings of a data source — which
     /// fills an empty limit with the provider's — threw the whole index away for nothing.
     ///
-    /// The file patterns and subfolder choices of a directory are omitted as well. They change
-    /// which documents belong to the source, not how retained documents are embedded; the file
-    /// indexer adds and removes the affected document rows and vectors during its ordinary
-    /// hash-check run.
+    /// The file patterns of a directory and whether it includes subfolders and hidden files and
+    /// folders are omitted as well. They change which documents belong to the source, not how
+    /// retained documents are embedded; the file indexer adds and removes the affected document
+    /// rows and vectors during its ordinary hash-check run.
     ///
     /// The confidence level a data source asks of a provider is deliberately not among them. It
     /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks

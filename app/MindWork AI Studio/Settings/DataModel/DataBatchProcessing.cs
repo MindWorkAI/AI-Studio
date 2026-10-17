@@ -17,7 +17,7 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     public const int DEFAULT_MIN_DELAY_SECONDS = 6;
     public const int DEFAULT_MAX_DELAY_SECONDS = 10;
     public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = false;
-    public const bool DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES = false;
+    public const bool DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS = false;
 
     /// <summary>
     /// Initializes an unmanaged Batch Processing settings instance.
@@ -36,7 +36,7 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public bool IncludeSubdirectories { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeSubdirectories, DEFAULT_INCLUDE_SUBDIRECTORIES);
 
-    public bool IncludeHiddenSubdirectories { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeHiddenSubdirectories, DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES);
+    public bool IncludeHiddenFilesAndFolders { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeHiddenFilesAndFolders, DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS);
 
     public BatchProcessingPromptSource PromptSource { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptSource, BatchProcessingPromptSource.FREE_PROMPT);
 

@@ -20,7 +20,7 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     // Folder data sources were recursive before this option existed. Keeping true as the
     // deserialization default preserves every document of existing data sources.
     public const bool DEFAULT_INCLUDE_SUBDIRECTORIES = true;
-    public const bool DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES = false;
+    public const bool DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS = false;
 
     public DataSourceLocalDirectory()
     {
@@ -90,10 +90,15 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     public bool IncludeSubdirectories { get; init; } = DEFAULT_INCLUDE_SUBDIRECTORIES;
 
     /// <summary>
-    /// Whether files in hidden folders below <see cref="this.Path"/> are considered for indexing.
-    /// Has no effect when <see cref="this.IncludeSubdirectories"/> is false.
+    /// Whether hidden files and the files in hidden folders below the path are considered for
+    /// indexing. Hidden are those whose names begin with a dot and those the operating system hides.
     /// </summary>
-    public bool IncludeHiddenSubdirectories { get; init; } = DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
+    /// <remarks>
+    /// Even while this is off, a file pattern which begins with a dot, such as .gitignore, selects
+    /// the hidden files it names, cf. FileNamePatterns.NamesHiddenFile. Hidden folders are entered
+    /// only while this is on.
+    /// </remarks>
+    public bool IncludeHiddenFilesAndFolders { get; init; } = DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
 
     /// <summary>
     /// The patterns used at runtime. An invalid value can only come from malformed or hand-edited

@@ -61,6 +61,22 @@ internal static class FileNamePatterns
                && patterns.Any(pattern => MatchesPattern(filePath, fileName, pattern));
     }
 
+    /// <summary>
+    /// Whether one of the patterns asks for a hidden file by itself.
+    /// </summary>
+    /// <remarks>
+    /// As in a shell, only a pattern which begins with a dot, such as .gitignore or .*, selects a
+    /// hidden file while hidden files are left out. Neither * nor a selector does, so .env does not
+    /// end up in an index by accident, cf. DirectoryFileTraversal.
+    /// </remarks>
+    public static bool NamesHiddenFile(string filePath, IReadOnlyList<string> patterns)
+    {
+        var fileName = Path.GetFileName(filePath);
+        return !string.IsNullOrWhiteSpace(fileName)
+               && patterns.Any(pattern => pattern.StartsWith(DirectoryFileTraversal.HIDDEN_NAME_PREFIX)
+                                          && FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true));
+    }
+
     public static bool AreEquivalent(IReadOnlyCollection<string>? left, IReadOnlyCollection<string>? right)
     {
         if (left is null || right is null)

@@ -253,9 +253,12 @@ internal sealed partial class FileSourceIndexer
             return string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase);
 
         if (configuration.IncludeSubdirectories
-            && !configuration.IncludeHiddenSubdirectories
+            && !configuration.IncludeHiddenFilesAndFolders
             && changeType is not WatcherChangeTypes.Deleted and not WatcherChangeTypes.Renamed
             && DirectoryFileTraversal.IsInHiddenSubdirectory(configuration.RootPath, path))
+            return false;
+
+        if (!configuration.IncludeHiddenFilesAndFolders && IsLeftOutAsHidden(configuration, path))
             return false;
 
         if (Directory.Exists(path))
@@ -282,12 +285,27 @@ internal sealed partial class FileSourceIndexer
                && string.IsNullOrWhiteSpace(Path.GetExtension(path));
     }
 
+    /// <summary>
+    /// Whether a path is a hidden file or folder the data source leaves out, cf. DirectoryFileTraversal.
+    /// </summary>
+    /// <remarks>
+    /// A hidden folder is never entered, while a file pattern which begins with a dot, such as
+    /// .gitignore, asks for a hidden file by itself.
+    /// </remarks>
+    private static bool IsLeftOutAsHidden(DataSourceWatcherConfiguration configuration, string path)
+    {
+        if (!DirectoryFileTraversal.IsHiddenPath(path))
+            return false;
+
+        return Directory.Exists(path) || !FileNamePatterns.NamesHiddenFile(path, configuration.FilePatterns ?? []);
+    }
+
     private static DataSourceWatcherConfiguration? GetWatchConfiguration(IDataSourceBase dataSource) => dataSource switch
     {
         DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path) => new DataSourceWatcherConfiguration(
             localDirectory.Path,
             localDirectory.IncludeSubdirectories,
-            localDirectory.IncludeHiddenSubdirectories,
+            localDirectory.IncludeHiddenFilesAndFolders,
             FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns)),
         DataSourceLocalFile localFile when File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
             Path.GetDirectoryName(localFile.FilePath)!,
@@ -299,7 +317,7 @@ internal sealed partial class FileSourceIndexer
     internal static bool IsSameWatchConfiguration(DataSourceWatcherConfiguration left, DataSourceWatcherConfiguration right)
     {
         return left.IncludeSubdirectories == right.IncludeSubdirectories
-               && left.IncludeHiddenSubdirectories == right.IncludeHiddenSubdirectories
+               && left.IncludeHiddenFilesAndFolders == right.IncludeHiddenFilesAndFolders
                && string.Equals(left.RootPath, right.RootPath, StringComparison.OrdinalIgnoreCase)
                && string.Equals(left.TargetFileName, right.TargetFileName, StringComparison.OrdinalIgnoreCase)
                && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns);
@@ -308,7 +326,7 @@ internal sealed partial class FileSourceIndexer
     internal sealed record DataSourceWatcherConfiguration(
         string RootPath,
         bool IncludeSubdirectories,
-        bool IncludeHiddenSubdirectories = false,
+        bool IncludeHiddenFilesAndFolders = false,
         string? TargetFileName = null,
         IReadOnlyList<string>? FilePatterns = null);
 

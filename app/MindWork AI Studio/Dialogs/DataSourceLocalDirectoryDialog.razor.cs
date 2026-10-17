@@ -64,7 +64,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string dataPath = string.Empty;
     private string dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
     private bool dataIncludeSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_SUBDIRECTORIES;
-    private bool dataIncludeHiddenSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
+    private bool dataIncludeHiddenFilesAndFolders = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private int dataMaxChunkTokenLength;
     private int dataChunkOverlapTokenLength = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     private ushort dataMaxMatches = 10;
@@ -118,7 +118,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataPath = this.DataSource.Path;
             this.dataFilePatterns = this.DataSource.EffectiveFilePatterns;
             this.dataIncludeSubdirectories = this.DataSource.IncludeSubdirectories;
-            this.dataIncludeHiddenSubdirectories = this.DataSource.IncludeHiddenSubdirectories;
+            this.dataIncludeHiddenFilesAndFolders = this.DataSource.IncludeHiddenFilesAndFolders;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
@@ -192,7 +192,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
         FilePatterns = this.NormalizeFilePatterns(),
         IncludeSubdirectories = this.dataIncludeSubdirectories,
-        IncludeHiddenSubdirectories = this.dataIncludeHiddenSubdirectories,
+        IncludeHiddenFilesAndFolders = this.dataIncludeHiddenFilesAndFolders,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,

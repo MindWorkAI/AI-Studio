@@ -148,16 +148,16 @@
                 </MudButton>
                 <MudDivider/>
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
-                    @if (this.dataIncludeSubdirectories)
-                    {
-                        <MudTextSwitch
-                            Label="@T("Include hidden subfolders?")"
-                            Value="@this.dataIncludeHiddenSubdirectories"
-                            ValueChanged="@(value => this.dataIncludeHiddenSubdirectories = value)"
-                            LabelOn="@T("Yes, index files in hidden subfolders as well")"
-                            LabelOff="@T("No, ignore hidden subfolders")"
-                        />
-                    }
+                    <MudTextSwitch
+                        Label="@T("Include hidden files and folders?")"
+                        Value="@this.dataIncludeHiddenFilesAndFolders"
+                        ValueChanged="@(value => this.dataIncludeHiddenFilesAndFolders = value)"
+                        LabelOn="@T("Yes, index hidden files and folders as well")"
+                        LabelOff="@T("No, ignore hidden files and folders")"
+                    />
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                        @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
+                    </MudJustifiedText>
                     @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
                     {
                         <MudTextField

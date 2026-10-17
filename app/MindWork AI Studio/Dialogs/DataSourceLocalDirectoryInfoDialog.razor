@@ -11,10 +11,7 @@
 
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
-        @if (this.DataSource.IncludeSubdirectories)
-        {
-            <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden subfolders")" Value="@(this.DataSource.IncludeHiddenSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden subfolders are included")"/>
-        }
+        <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.FilterAlt" Label="@T("File patterns")" Value="@this.DataSource.EffectiveFilePatterns" ClipboardTooltipSubject="@T("the file patterns")"/>
         @if (!this.IsDirectoryAvailable)
         {

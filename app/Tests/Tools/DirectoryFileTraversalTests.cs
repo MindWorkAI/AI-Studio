@@ -5,31 +5,94 @@ namespace AIStudio.Tests.Tools;
 public sealed class DirectoryFileTraversalTests
 {
     [Test]
-    public async Task HiddenSubdirectoriesAreExcludedByDefaultAndCanBeIncluded()
+    public async Task HiddenFilesAndFoldersAreLeftOutByDefaultAndCanBeIncluded()
     {
         var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-hidden-folders-{Guid.NewGuid():N}");
         var hiddenDirectoryPath = Path.Combine(directoryPath, ".hidden");
-        var visibleFilePath = Path.Combine(directoryPath, ".gitignore");
-        var hiddenFilePath = Path.Combine(hiddenDirectoryPath, "notes.txt");
+        var visibleFilePath = Path.Combine(directoryPath, "notes.md");
+        var hiddenFilePath = Path.Combine(directoryPath, ".env");
+        var fileInHiddenDirectoryPath = Path.Combine(hiddenDirectoryPath, "notes.txt");
         Directory.CreateDirectory(hiddenDirectoryPath);
 
         try
         {
-            await File.WriteAllTextAsync(visibleFilePath, "bin/");
-            await File.WriteAllTextAsync(hiddenFilePath, "Hidden notes");
+            await File.WriteAllTextAsync(visibleFilePath, "Visible notes");
+            await File.WriteAllTextAsync(hiddenFilePath, "API_KEY=secret");
+            await File.WriteAllTextAsync(fileInHiddenDirectoryPath, "Hidden notes");
 
-            var visibleDirectoriesOnly = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, false).ToList();
-            var includingHiddenDirectories = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, true).ToList();
+            var visibleOnly = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, false).ToList();
+            var includingHidden = DirectoryFileTraversal.EnumerateFiles(directoryPath, true, true).ToList();
 
             Assert.Multiple(() =>
             {
-                Assert.That(visibleDirectoriesOnly, Does.Contain(visibleFilePath), "A hidden file directly in the selected folder remains eligible.");
-                Assert.That(visibleDirectoriesOnly, Does.Not.Contain(hiddenFilePath));
-                Assert.That(includingHiddenDirectories, Does.Contain(hiddenFilePath));
+                Assert.That(visibleOnly, Is.EqualTo(new[] { visibleFilePath }), "Like * in a shell, nothing hidden is found unless asked for.");
+                Assert.That(includingHidden, Is.EquivalentTo(new[] { visibleFilePath, hiddenFilePath, fileInHiddenDirectoryPath }));
             });
         }
         finally
         {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
+    [Test]
+    public async Task APatternWhichBeginsWithADotSelectsHiddenFilesButEntersNoHiddenFolder()
+    {
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-hidden-pattern-{Guid.NewGuid():N}");
+        var hiddenDirectoryPath = Path.Combine(directoryPath, ".github");
+        var gitignorePath = Path.Combine(directoryPath, ".gitignore");
+        var environmentPath = Path.Combine(directoryPath, ".env");
+        var fileInHiddenDirectoryPath = Path.Combine(hiddenDirectoryPath, ".gitignore");
+        Directory.CreateDirectory(hiddenDirectoryPath);
+
+        try
+        {
+            await File.WriteAllTextAsync(gitignorePath, "bin/");
+            await File.WriteAllTextAsync(environmentPath, "API_KEY=secret");
+            await File.WriteAllTextAsync(fileInHiddenDirectoryPath, "obj/");
+            var patterns = FileNamePatterns.Parse("*;.gitignore");
+
+            var files = DirectoryFileTraversal.EnumerateFiles(
+                directoryPath,
+                true,
+                false,
+                includeHiddenFile: filePath => FileNamePatterns.NamesHiddenFile(filePath, patterns)).ToList();
+
+            Assert.That(files, Is.EqualTo(new[] { gitignorePath }), "The pattern .gitignore names that file; * names no hidden file, and no pattern opens a hidden folder.");
+        }
+        finally
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
+    [Test]
+    public async Task AFileHiddenByTheOperatingSystemIsLeftOutAsWell()
+    {
+        if (OperatingSystem.IsLinux())
+            Assert.Ignore("Linux hides files by their names only.");
+
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-hidden-attribute-{Guid.NewGuid():N}");
+        var hiddenFilePath = Path.Combine(directoryPath, "notes.txt");
+        Directory.CreateDirectory(directoryPath);
+
+        try
+        {
+            await File.WriteAllTextAsync(hiddenFilePath, "Hidden notes");
+            File.SetAttributes(hiddenFilePath, File.GetAttributes(hiddenFilePath) | FileAttributes.Hidden);
+            if (!File.GetAttributes(hiddenFilePath).HasFlag(FileAttributes.Hidden))
+                Assert.Ignore("The file system of the temporary folder cannot hide files.");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(DirectoryFileTraversal.EnumerateFiles(directoryPath, false, false), Is.Empty);
+                Assert.That(DirectoryFileTraversal.EnumerateFiles(directoryPath, false, true), Is.EqualTo(new[] { hiddenFilePath }));
+                Assert.That(DirectoryFileTraversal.IsHiddenPath(hiddenFilePath), Is.True);
+            });
+        }
+        finally
+        {
+            File.SetAttributes(hiddenFilePath, FileAttributes.Normal);
             Directory.Delete(directoryPath, true);
         }
     }

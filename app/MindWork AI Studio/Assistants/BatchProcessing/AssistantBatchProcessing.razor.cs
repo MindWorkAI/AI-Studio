@@ -103,7 +103,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string outputDirectory = string.Empty;
     private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
     private bool includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
-    private bool includeHiddenSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
+    private bool includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
     private string freePrompt = string.Empty;
     private string importedPrompt = string.Empty;
@@ -180,7 +180,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.outputDirectory = string.Empty;
             this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
             this.includeSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_SUBDIRECTORIES;
-            this.includeHiddenSubdirectories = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_SUBDIRECTORIES;
+            this.includeHiddenFilesAndFolders = DataBatchProcessing.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
             this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
             this.freePrompt = string.Empty;
             this.promptFilePath = string.Empty;
@@ -200,7 +200,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputDirectory = settings.OutputDirectory;
         this.filePatterns = settings.FilePatterns;
         this.includeSubdirectories = settings.IncludeSubdirectories;
-        this.includeHiddenSubdirectories = settings.IncludeHiddenSubdirectories;
+        this.includeHiddenFilesAndFolders = settings.IncludeHiddenFilesAndFolders;
         this.promptSource = settings.PromptSource;
         this.freePrompt = settings.FreePrompt;
         this.promptFilePath = settings.PromptFilePath;
