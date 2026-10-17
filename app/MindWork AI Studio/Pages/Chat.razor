@@ -62,7 +62,7 @@
                             </MudStack>
                         </HeaderContent>
                         <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
                         </ChildContent>
                     </InnerScrolling>
                 }
@@ -88,13 +88,14 @@
                             </MudStack>
                         </HeaderContent>
                         <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
                         </ChildContent>
                     </InnerScrolling>
                 }
             </StartContent>
             <EndContent>
                 <ChatComponent
+                    @ref="this.chatComponent"
                     @bind-ChatThread="@this.chatThread"
                     @bind-Provider="@this.providerSettings"
                     IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
@@ -123,6 +124,7 @@
             </MudPaper>
 
             <ChatComponent
+                @ref="this.chatComponent"
                 @bind-ChatThread="@this.chatThread"
                 @bind-Provider="@this.providerSettings"
                 IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
@@ -135,6 +137,7 @@
     {
         // Case: Workspaces are disabled or shown in an overlay
         <ChatComponent
+            @ref="this.chatComponent"
             @bind-ChatThread="@this.chatThread"
             @bind-Provider="@this.providerSettings"
             IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
@@ -167,7 +170,7 @@
                 </MudStack>
             </MudDrawerHeader>
             <MudDrawerContainer Class="ml-6">
-                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible" StartNewChatRequested="@this.StartNewChatInWorkspace"/>
             </MudDrawerContainer>
         </MudDrawer>
     }

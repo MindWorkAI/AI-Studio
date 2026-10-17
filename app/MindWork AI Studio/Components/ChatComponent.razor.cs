@@ -1556,7 +1556,20 @@ public partial class ChatComponent : MSGComponentBase
         this.unstoredChat = null;
     }
     
-    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
+    /// <summary>
+    /// Starts a new chat in the given workspace, on behalf of the workspace tree.
+    /// </summary>
+    /// <remarks>
+    /// The chat starts just like one from the button for a new chat in the workspace: the user is
+    /// asked about unsaved changes, and the chat gets its chat template with the data sources, tools,
+    /// and example conversation the template asks for.
+    /// </remarks>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    public Task StartNewChatInWorkspaceAsync(Guid workspaceId) => workspaceId == Guid.Empty
+        ? Task.CompletedTask
+        : this.StartNewChat(targetWorkspaceId: workspaceId);
+
+    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null)
     {
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
@@ -1643,9 +1656,10 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         //
-        // Reset the chat thread or create a new one:
+        // Reset the chat thread or create a new one. A target workspace always means a new chat in
+        // that workspace, no matter what useSameWorkspace says:
         //
-        if (!useSameWorkspace)
+        if (!useSameWorkspace && targetWorkspaceId is null)
         {
             //
             // When the user wants to start a new chat outside the current workspace,
@@ -1662,6 +1676,14 @@ public partial class ChatComponent : MSGComponentBase
             // reset the chat thread only. The workspace id and the workspace name remain
             // the same. The new chat reaches the disk only once there is something to keep:
             //
+            // The workspace tree may ask for another workspace than the one of the chat being left,
+            // though. We switch only now, after the user had the chance to cancel, so that a canceled
+            // request leaves the open chat alone. The header follows once the parent hands the new
+            // thread back to us:
+            //
+            if (targetWorkspaceId is { } workspaceId)
+                this.currentWorkspaceId = workspaceId;
+
             this.ChatThread = this.NewChatThread(string.Empty);
             this.unstoredChat = this.ChatThread;
         }
