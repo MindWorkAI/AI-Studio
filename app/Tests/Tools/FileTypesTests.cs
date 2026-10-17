@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 
 using AIStudio.Tools.Rust;
@@ -24,6 +25,40 @@ public class FileTypesTests
         var path = Path.Combine(Path.GetTempPath(), $"ai-studio-source-name-{Guid.NewGuid():N}", fileName);
 
         Assert.That(FileTypes.IsAllowedPath(path, FileTypes.DOCUMENT), Is.True);
+    }
+
+    [TestCase("build")]
+    [TestCase("dockerfile")]
+    [TestCase("makefile")]
+    [TestCase("workspace")]
+    public void FileNamesAreNoExtensions(string extension)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileTypes.IsAllowedExtension(extension, FileTypes.DOCUMENT), Is.False);
+            Assert.That(FileTypes.IsAllowedExtension(extension, FileTypes.SOURCE_CODE), Is.False);
+        });
+    }
+
+    [Test]
+    public void FlattenedExtensionsHoldNoFileNames()
+    {
+        var fileNames = FileTypes.SOURCE_LIKE_FILE_NAMES.FileNames.Concat(FileTypes.SOURCE_LIKE_FILE_NAME_PREFIXES.FileNamePrefixes);
+
+        Assert.That(FileTypes.OnlyAllowTypes(FileTypes.DOCUMENT).Intersect(fileNames, StringComparer.OrdinalIgnoreCase), Is.Empty);
+    }
+
+    [Test]
+    public void EveryExtensionIsLowercaseWithoutDot()
+    {
+        var extensions = typeof(FileTypes)
+            .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(FileTypeFilter))
+            .SelectMany(field => ((FileTypeFilter)field.GetValue(null)!).FlattenExtensions())
+            .ToArray();
+
+        Assert.That(extensions, Is.Not.Empty);
+        Assert.That(extensions, Has.All.Matches<string>(extension => extension == extension.ToLowerInvariant() && !extension.Contains('.')));
     }
 
     [Test]

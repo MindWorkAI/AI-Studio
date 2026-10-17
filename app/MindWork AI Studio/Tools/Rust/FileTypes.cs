@@ -13,12 +13,12 @@ public static class FileTypes
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypes).Namespace, nameof(FileTypes));
     
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.ByFileName(TB("Source like"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Makefile", "GNUmakefile", "Procfile", "Vagrantfile",
         "Tiltfile", "Justfile", "Brewfile", "Caddyfile", "Gemfile", "Podfile", "Fastfile", "Appfile", "Rakefile", "Dangerfile",
         "BUILD", "WORKSPACE", "BUCK");
 
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.Leaf(TB("Source like prefix"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.ByFileNamePrefix(TB("Source like prefix"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Procfile", "Caddyfile");
     
     // Source code hierarchy: SourceCode -> (.NET, Java, Python, Web, C/C++, Config, ...)
@@ -155,7 +155,6 @@ public static class FileTypes
             return [];
 
         return types
-            .Where(t => t != SOURCE_LIKE_FILE_NAMES && t != SOURCE_LIKE_FILE_NAME_PREFIXES)
             .SelectMany(t => t.FlattenExtensions())
             .Select(ext => ext.ToLowerInvariant())
             .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -192,16 +191,11 @@ public static class FileTypes
         if (string.IsNullOrWhiteSpace(fileName))
             return false;
 
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
-        { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
-        
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAME_PREFIXES))){
-            if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
-                return true;
-        }
+        if (types.SelectMany(t => t.FlattenFileNames()).Contains(fileName, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        if (types.SelectMany(t => t.FlattenFileNamePrefixes()).Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            return true;
 
         if (types.Any(type => type.ContainsType(READABLE_TEXT)) && ReadableTextDetection.IsReadableTextFile(filePath))
             return true;
