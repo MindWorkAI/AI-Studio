@@ -953,6 +953,10 @@ async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> 
 }
 
 /// How many bytes we inspect for NUL bytes to tell binary content from text.
+///
+/// The .NET app reads the same number of bytes before it takes a file without a known extension for
+/// text, cf. `ReadableTextDetection.PROBE_SIZE`. Change both together, so that both agree on what is
+/// binary.
 const BINARY_PROBE_SIZE: usize = 8_192;
 
 /// Reads a text file and decodes it, no matter which encoding it uses.

@@ -43,7 +43,7 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
+                @T("Select a root directory for this data source.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {
@@ -70,6 +70,33 @@
                     Variant="Variant.Outlined"
                 />
             }
+
+            <MudTextSwitch
+                Label="@T("Include subfolders?")"
+                Value="@this.dataIncludeSubdirectories"
+                ValueChanged="@(value => this.dataIncludeSubdirectories = value)"
+                LabelOn="@T("Yes, index files in subfolders as well")"
+                LabelOff="@T("No, only index files in the selected folder")"
+            />
+
+            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                @T("Select the file patterns this data source should index.")
+            </MudJustifiedText>
+
+            <MudTextField
+                T="string"
+                @bind-Text="@this.dataFilePatterns"
+                Label="@T("File patterns")"
+                Class="mb-3"
+                Immediate="@true"
+                Validation="@this.dataSourceValidation.ValidateFilePatterns"
+                HelperText="@T("Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file.")"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.FilterAlt"
+                AdornmentColor="Color.Info"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                Variant="Variant.Outlined"
+            />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
@@ -121,6 +148,42 @@
                 </MudButton>
                 <MudDivider/>
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    <MudTextSwitch
+                        Label="@T("Include hidden files and folders?")"
+                        Value="@this.dataIncludeHiddenFilesAndFolders"
+                        ValueChanged="@(value => this.dataIncludeHiddenFilesAndFolders = value)"
+                        LabelOn="@T("Yes, index hidden files and folders as well")"
+                        LabelOff="@T("No, ignore hidden files and folders")"
+                    />
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                        @T("Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.")
+                    </MudJustifiedText>
+                    @* Without an icon: in a field of several lines, it floats in the middle of the text. *@
+                    <MudTextField
+                        T="string"
+                        @bind-Text="@this.dataExcludePatterns"
+                        Label="@T("Excluded files and folders")"
+                        Lines="@FileExclusions.DEFAULT_LINE_COUNT"
+                        AutoGrow="@true"
+                        MaxLines="@FileExclusions.MAX_LINE_COUNT"
+                        Immediate="@true"
+                        Validation="@this.dataSourceValidation.ValidateExcludePatterns"
+                        HelperText="@T("These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.")"
+                        UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                        Variant="Variant.Outlined"
+                    />
+                    <RestoreDefaultButton Text="@T("Restore default")" OnClick="@this.RestoreDefaultExcludePatterns" Class="mb-3"/>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataMaxFileSizeMegabytes"
+                        Label="@T("Ignore files larger than")"
+                        Class="mb-3"
+                        Min="@FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES"
+                        Immediate="@true"
+                        HelperText="@T("Selected files above this size are not indexed, e.g., images of virtual machines. The embedding page lists them, so you can raise the limit when needed.")"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.End"
+                        AdornmentText="MB"/>
                     @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
                     {
                         <MudTextField

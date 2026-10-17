@@ -99,7 +99,9 @@ internal sealed partial class FileSourceIndexer
         {
             var watcher = new FileSystemWatcher(configuration.RootPath)
             {
-                Filter = configuration.Filter,
+                // Filtering in managed code keeps rename events reliable: a native filter for one
+                // file may suppress the event when that file is renamed to a different name.
+                Filter = "*",
                 IncludeSubdirectories = configuration.IncludeSubdirectories,
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Size,
             };
@@ -227,7 +229,7 @@ internal sealed partial class FileSourceIndexer
         }
     }
 
-    private static bool IsRelevantWatcherEvent(DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
+    internal static bool IsRelevantWatcherEvent(DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
     {
         if (args is RenamedEventArgs renamedArgs)
         {
@@ -238,7 +240,7 @@ internal sealed partial class FileSourceIndexer
         return IsRelevantWatcherPath(configuration, args.FullPath, args.ChangeType);
     }
 
-    private static bool IsRelevantWatcherPath(DataSourceWatcherConfiguration configuration, string path, WatcherChangeTypes changeType)
+    internal static bool IsRelevantWatcherPath(DataSourceWatcherConfiguration configuration, string path, WatcherChangeTypes changeType)
     {
         if (string.IsNullOrWhiteSpace(path))
             return false;
@@ -247,43 +249,85 @@ internal sealed partial class FileSourceIndexer
         if (string.IsNullOrWhiteSpace(fileName))
             return true;
 
-        if (!configuration.IncludeSubdirectories && !string.Equals(fileName, configuration.Filter, StringComparison.OrdinalIgnoreCase))
+        if (configuration.TargetFileName is { } targetFileName)
+            return string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase);
+
+        //
+        // Git renames .git/index.lock to .git/index with almost every command, and a build or
+        // npm install writes thousands of files into bin, obj, or node_modules. None of them is
+        // part of the data source, so none of them may start a run over the whole folder:
+        //
+        var selection = configuration.Selection;
+        if (selection.LeavesOut(configuration.RootPath, path))
             return false;
 
+        //
+        // A folder which appears may have been moved here with all its files, and the watcher
+        // reports the folder only:
+        //
         if (Directory.Exists(path))
             return true;
 
-        if (IsSkippedRagFileName(fileName))
-            return false;
-
-        if (IsSupportedRagFilePath(path))
+        if (selection.Selects(path))
             return true;
 
-        return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed
-               && string.IsNullOrWhiteSpace(Path.GetExtension(path));
+        //
+        // A new or changed file outside the selection changes nothing in the index. The summary of
+        // files outside the selection catches up with the next run, whatever starts it.
+        //
+        if (changeType is not WatcherChangeTypes.Deleted and not WatcherChangeTypes.Renamed)
+            return false;
+
+        //
+        // Once a path is gone, the watcher no longer tells whether it was a folder. A path
+        // without an extension may have been one, with indexed files below it. A file whose
+        // content a selector read may have been indexed as well:
+        //
+        return string.IsNullOrWhiteSpace(Path.GetExtension(path)) || selection.CouldHaveSelected(path);
     }
 
     private static DataSourceWatcherConfiguration? GetWatchConfiguration(IDataSourceBase dataSource) => dataSource switch
     {
         DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path) => new DataSourceWatcherConfiguration(
             localDirectory.Path,
-            "*.*",
-            true),
+            localDirectory.IncludeSubdirectories,
+            localDirectory.IncludeHiddenFilesAndFolders,
+            FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns),
+            ExcludePatterns: FileExclusions.Parse(localDirectory.EffectiveExcludePatterns)),
         DataSourceLocalFile localFile when File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
             Path.GetDirectoryName(localFile.FilePath)!,
-            Path.GetFileName(localFile.FilePath),
-            false),
+            false,
+            TargetFileName: Path.GetFileName(localFile.FilePath)),
         _ => null,
     };
 
-    private static bool IsSameWatchConfiguration(DataSourceWatcherConfiguration left, DataSourceWatcherConfiguration right)
+    internal static bool IsSameWatchConfiguration(DataSourceWatcherConfiguration left, DataSourceWatcherConfiguration right)
     {
         return left.IncludeSubdirectories == right.IncludeSubdirectories
+               && left.IncludeHiddenFilesAndFolders == right.IncludeHiddenFilesAndFolders
                && string.Equals(left.RootPath, right.RootPath, StringComparison.OrdinalIgnoreCase)
-               && string.Equals(left.Filter, right.Filter, StringComparison.OrdinalIgnoreCase);
+               && string.Equals(left.TargetFileName, right.TargetFileName, StringComparison.OrdinalIgnoreCase)
+               && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns)
+               && FileNamePatterns.AreEquivalent(left.ExcludePatterns, right.ExcludePatterns);
     }
 
-    private sealed record DataSourceWatcherConfiguration(string RootPath, string Filter, bool IncludeSubdirectories);
+    internal sealed record DataSourceWatcherConfiguration(
+        string RootPath,
+        bool IncludeSubdirectories,
+        bool IncludeHiddenFilesAndFolders = false,
+        string? TargetFileName = null,
+        IReadOnlyList<string>? FilePatterns = null,
+        IReadOnlyList<string>? ExcludePatterns = null)
+    {
+        /// <summary>
+        /// The files of a folder data source, judged the way its runs judge them, cf. FolderFileSelection.
+        /// </summary>
+        /// <remarks>
+        /// Built on every call, so that a copy made with "with" judges by its own values. The size
+        /// limit plays no part: a file which grew beyond it has to leave the index during a run.
+        /// </remarks>
+        public FolderFileSelection Selection => new(this.FilePatterns ?? [], this.ExcludePatterns ?? [], this.IncludeSubdirectories, this.IncludeHiddenFilesAndFolders, int.MaxValue);
+    }
 
     private sealed record DataSourceWatcherRegistration(FileSystemWatcher Watcher, DataSourceWatcherConfiguration Configuration);
 }

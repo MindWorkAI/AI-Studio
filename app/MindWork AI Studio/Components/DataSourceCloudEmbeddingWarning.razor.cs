@@ -32,12 +32,17 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
         }
     }
 
+    /// <remarks>
+    /// Which files of a folder are sent depends on its file patterns and switches. The sentence does
+    /// not repeat them: they are right next to it in the dialog, and a sentence per combination would
+    /// have to change with every new setting.
+    /// </remarks>
     private string GetSubjectText()
     {
         if (string.IsNullOrWhiteSpace(this.SourcePath))
             return this.DataSourceType switch
             {
-                DataSourceType.LOCAL_DIRECTORY => T("All files in this folder and its subfolders"),
+                DataSourceType.LOCAL_DIRECTORY => T("Every file this data source selects from this folder"),
                 DataSourceType.LOCAL_FILE => T("The selected file"),
                 DataSourceType.MAILBOX => T("Every mail of this mailbox in the selected folder and period, together with the text of its attachments,"),
                 _ => T("The selected data")
@@ -45,7 +50,7 @@ public partial class DataSourceCloudEmbeddingWarning : MSGComponentBase
 
         return this.DataSourceType switch
         {
-            DataSourceType.LOCAL_DIRECTORY => string.Format(T("All files in the folder '{0}' and its subfolders"), this.SourcePath),
+            DataSourceType.LOCAL_DIRECTORY => string.Format(T("Every file this data source selects from the folder '{0}'"), this.SourcePath),
             DataSourceType.LOCAL_FILE => string.Format(T("The file '{0}'"), this.SourcePath),
             DataSourceType.MAILBOX => string.Format(T("Every mail of the mailbox '{0}' in the selected folder and period, together with the text of its attachments,"), this.SourcePath),
             _ => string.Format(T("The data source '{0}'"), this.SourcePath)

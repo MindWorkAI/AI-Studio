@@ -36,7 +36,6 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
 internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
-    private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
     private const int MAX_LOGGED_EXCLUDED_FILE_EXAMPLES = 3;
 
@@ -46,7 +45,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         INDEXABLE,
         EXCLUDED,
-        UNSUPPORTED,
+        MEDIA_NOT_SUPPORTED,
+        TOO_LARGE,
     }
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
@@ -72,7 +72,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             return this.StopWithoutRoot(context, dataSource, unreachableRootReason);
 
         var indexedFiles = inputFiles.Files;
-        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
+        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
         foreach (var failure in inputFiles.Failures)
         {
@@ -89,10 +89,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // hence the time it took:
         //
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, ExcludedFolders={ExcludedFolders}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
+            inputFiles.IgnoredFiles.Count,
+            inputFiles.FilePatternExclusionCount,
+            inputFiles.ExcludedFolderCount,
             inputFiles.FailedFiles,
             enumerationDuration.TotalMilliseconds,
             context.CollectionName);
@@ -111,7 +114,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count,
             removedMissingFiles);
 
-        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger);
+        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger, inputFiles.IgnoredFiles, inputFiles.FilePatternExclusions, inputFiles.ExcludedFolders);
         if (CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
         {
             logger.LogInformation(
@@ -352,27 +355,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return IndexedRunOutcome.DONE;
     }
 
-    /// <summary>
-    /// Whether a file name marks a file which is never indexed, whatever its type.
-    /// </summary>
-    /// <param name="fileName">The name of the file.</param>
-    /// <returns>True for shortcuts and the lock files of office suites.</returns>
-    private static bool IsSkippedRagFileName(string fileName)
-    {
-        return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
-               || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    /// Whether a file has a type whose text can be indexed.
-    /// </summary>
-    /// <param name="filePath">The path of the file.</param>
-    /// <returns>True for every document type the runtime can read.</returns>
-    private static bool IsSupportedRagFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
-    }
-
     private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, FileEnumerationResult inputFiles, CancellationToken token)
     {
         var manifest = context.Manifest;
@@ -386,6 +368,23 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             logger.LogInformation(
                 "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
                 removedFilePath,
+                context.DataSource.Name,
+                context.DataSource.Id);
+        }
+
+        //
+        // A file whose indexing never came to an end, e.g., since its run was canceled or the app
+        // was closed meanwhile, left a row without chunks and perhaps some vectors. Indexing it again
+        // would replace both, but a file which is gone or no longer selected is never indexed again:
+        //
+        foreach (var unfinishedFilePath in GetGoneFiles(manifest.UnfinishedFiles, inputFiles.Files, inputFiles.UnreadableDirectories))
+        {
+            await context.DeleteDocumentPointsAsync(unfinishedFilePath, token);
+            await context.IndexStore.DeleteFileAsync(context.DataSource.Id, unfinishedFilePath, token);
+            manifest.UnfinishedFiles.Remove(unfinishedFilePath);
+            logger.LogInformation(
+                "Removed what the unfinished indexing of file '{FilePath}' left behind in data source '{DataSourceName}' ({DataSourceId}), since the file is gone or no longer selected.",
+                unfinishedFilePath,
                 context.DataSource.Name,
                 context.DataSource.Id);
         }
@@ -498,7 +497,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             yield return chunk;
     }
 
-    private FileEnumerationResult GetInputFiles(IDataSource dataSource)
+    internal FileEnumerationResult GetInputFiles(IDataSource dataSource)
     {
         var result = new FileEnumerationResult();
 
@@ -506,25 +505,15 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                switch (this.GetRagFileIndexingDecision(file))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(file);
-                        break;
 
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
-                        break;
-
-                    default:
-                        result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' has a type AI Studio cannot index."), localFile.FilePath));
-                        break;
-                }
+                // No size limit: the user chose this very file, cf. FolderFileSelection.IsTooLarge.
+                if (this.AddInputFile(file, null, result) is RagFileIndexingDecision.EXCLUDED)
+                    logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
 
                 return result;
 
             case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
-                this.EnumerateAccessibleFiles(localDirectory.Path, result);
+                this.EnumerateAccessibleFiles(localDirectory, result);
                 if (result.UnreadableDirectories.Contains(localDirectory.Path))
                     result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
 
@@ -548,77 +537,86 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return result;
     }
 
-    private void EnumerateAccessibleFiles(string rootPath, FileEnumerationResult result)
+    private void EnumerateAccessibleFiles(DataSourceLocalDirectory dataSource, FileEnumerationResult result)
     {
-        var pendingDirectories = new Stack<string>();
-        pendingDirectories.Push(rootPath);
+        var selection = FolderFileSelection.Of(dataSource);
 
         //
-        // Every log line travels to the runtime as a request of its own. A folder full of icons
-        // would flood the log with one line per file, so the excluded files get one line in total:
+        // Every log line travels to the runtime as a request of its own. A folder holding many
+        // temporary or system files gets one line in total rather than one per file:
         //
         var excludedFiles = 0;
         var excludedFileExamples = new List<string>(MAX_LOGGED_EXCLUDED_FILE_EXAMPLES);
 
-        while (pendingDirectories.Count > 0)
+        foreach (var filePath in selection.EnumerateCandidates(
+                     dataSource.Path,
+                     reportExcludedFolder: result.AddExcludedFolder,
+                     reportInaccessibleDirectory: (directoryPath, exception) =>
+                     {
+                         logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
+                         result.AddUnreadableDirectory(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
+                     }))
         {
-            var currentPath = pendingDirectories.Pop();
-            IEnumerable<string> subDirectories;
-            IEnumerable<string> files;
-
-            try
+            if (!selection.Selects(filePath))
             {
-                subDirectories = Directory.EnumerateDirectories(currentPath);
-                files = Directory.EnumerateFiles(currentPath);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
-                result.AddUnreadableDirectory(currentPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), currentPath));
+                // Everything in a folder the user chose to scan is useful transparency when a
+                // pattern was mistyped or was narrower than intended, or when the exclusion list
+                // caught a file somebody wanted:
+                result.AddFilePatternExclusion(filePath);
                 continue;
             }
 
-            foreach (var filePath in files)
+            FileInfo fileInfo;
+            try
             {
-                FileInfo fileInfo;
-                try
-                {
-                    fileInfo = new FileInfo(filePath);
-                    if (!fileInfo.Exists)
-                        continue;
-                }
-                catch (Exception exception)
-                {
-                    logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                    result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
+                fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists)
                     continue;
-                }
-
-                switch (this.GetRagFileIndexingDecision(fileInfo))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(fileInfo);
-                        break;
-
-                    case RagFileIndexingDecision.EXCLUDED:
-                        excludedFiles++;
-                        if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
-                            excludedFileExamples.Add(Path.GetRelativePath(rootPath, fileInfo.FullName));
-                        break;
-                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
+                result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
+                continue;
             }
 
-            foreach (var subDirectory in subDirectories)
-            {
-                if (this.IsSkippedRagDirectory(subDirectory))
-                    continue;
+            if (this.AddInputFile(fileInfo, selection, result) is not RagFileIndexingDecision.EXCLUDED)
+                continue;
 
-                pendingDirectories.Push(subDirectory);
-            }
+            excludedFiles++;
+            if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
+                excludedFileExamples.Add(Path.GetRelativePath(dataSource.Path, fileInfo.FullName));
         }
 
         if (excludedFiles > 0)
-            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, rootPath, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
+            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, dataSource.Path, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
+    }
+
+    /// <param name="file">The file.</param>
+    /// <param name="selection">The files of a folder data source, or null for a single file, which has no size limit.</param>
+    /// <param name="result">Where the file goes, if anywhere.</param>
+    private RagFileIndexingDecision AddInputFile(FileInfo file, FolderFileSelection? selection, FileEnumerationResult result)
+    {
+        var decision = this.GetRagFileIndexingDecision(file, selection);
+        switch (decision)
+        {
+            case RagFileIndexingDecision.INDEXABLE:
+                result.Files.Add(file);
+                break;
+
+            case RagFileIndexingDecision.EXCLUDED:
+                break;
+
+            case RagFileIndexingDecision.MEDIA_NOT_SUPPORTED:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED);
+                break;
+
+            case RagFileIndexingDecision.TOO_LARGE:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TOO_LARGE);
+                break;
+        }
+
+        return decision;
     }
 
     private string TryGetRelativePath(IDataSource dataSource, FileInfo file) => dataSource switch
@@ -632,22 +630,34 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
     }
 
-    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
+    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file, FolderFileSelection? selection)
     {
         if (this.IsSkippedRagFile(file))
             return RagFileIndexingDecision.EXCLUDED;
 
         if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
-            return RagFileIndexingDecision.EXCLUDED;
+            return RagFileIndexingDecision.MEDIA_NOT_SUPPORTED;
 
-        return IsSupportedRagFilePath(file.FullName)
-            ? RagFileIndexingDecision.INDEXABLE
-            : RagFileIndexingDecision.UNSUPPORTED;
+        //
+        // Audio and video hold no text until they are transcribed, and data sources do not
+        // transcribe them yet:
+        //
+        if (FileTypes.IsAllowedPath(file.FullName, FileTypes.AUDIO, FileTypes.VIDEO))
+            return RagFileIndexingDecision.MEDIA_NOT_SUPPORTED;
+
+        if (selection?.IsTooLarge(file) is true)
+            return RagFileIndexingDecision.TOO_LARGE;
+
+        // A directory source reaches this point only after its user-configured pattern selected
+        // the file. A single-file source was validated before it was stored. Extraction is the
+        // authoritative capability check and records an unreadable selected file through the
+        // ordinary per-document failure path instead of silently overriding the user's selection.
+        return RagFileIndexingDecision.INDEXABLE;
     }
 
     private bool IsSkippedRagFile(FileInfo file)
     {
-        if (IsSkippedRagFileName(file.Name))
+        if (FileExclusions.IsAlwaysExcludedFile(file.Name))
             return true;
 
         try
@@ -660,22 +670,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
-            return true;
-        }
-    }
-
-    private bool IsSkippedRagDirectory(string path)
-    {
-        try
-        {
-            var directory = new DirectoryInfo(path);
-            return directory.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                   || directory.Attributes.HasFlag(FileAttributes.Offline)
-                   || directory.Attributes.HasFlag(FileAttributes.System);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
             return true;
         }
     }

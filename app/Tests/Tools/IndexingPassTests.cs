@@ -15,7 +15,7 @@ namespace AIStudio.Tests.Tools;
 [TestFixture]
 public sealed class IndexingPassTests
 {
-    private static readonly DataSourceRunSignature SIGNATURE = new("EMBEDDING-SIGNATURE");
+    private static readonly DataSourceRunSignature SIGNATURE = new("EMBEDDING-SIGNATURE", "SELECTION");
 
     [Test]
     public void TheNextStepCarriesOnThePass()
@@ -45,7 +45,7 @@ public sealed class IndexingPassTests
     public void OtherEmbeddingSettingsBeginANewPass()
     {
         var pass = new IndexingPass(SIGNATURE);
-        var otherSignature = new DataSourceRunSignature("OTHER-EMBEDDING-SIGNATURE");
+        var otherSignature = new DataSourceRunSignature("OTHER-EMBEDDING-SIGNATURE", "SELECTION");
 
         var nextPass = IndexingPass.ContinueOrBegin(pass, DataSourceEmbeddingRefreshMode.CONTINUATION, otherSignature);
 
@@ -54,6 +54,15 @@ public sealed class IndexingPassTests
             Assert.That(nextPass, Is.Not.SameAs(pass), "What failed with the old embedding provider may well work with the new one.");
             Assert.That(nextPass.RunSignature, Is.EqualTo(otherSignature));
         });
+    }
+
+    [Test]
+    public void AnotherSelectionBeginsANewPass()
+    {
+        var pass = new IndexingPass(SIGNATURE);
+        var otherSelection = SIGNATURE with { SelectionSignature = "OTHER-SELECTION" };
+
+        Assert.That(IndexingPass.ContinueOrBegin(pass, DataSourceEmbeddingRefreshMode.CONTINUATION, otherSelection), Is.Not.SameAs(pass), "The data source selects other documents, so the run goes through it anew.");
     }
 
     [Test]

@@ -36,6 +36,8 @@ public sealed class QueuedStatusTests
             Assert.That(queued.PermanentlySkippedDocuments, Is.EqualTo(status.PermanentlySkippedDocuments), "Dropping them made the bar jump back.");
             Assert.That(queued.ProgressPercent, Is.EqualTo(status.ProgressPercent), "The bar must not jump back between two steps of the same data source.");
             Assert.That(queued.Failures, Is.EqualTo(new[] { FAILURE }));
+            Assert.That(queued.IgnoredFiles, Is.EqualTo(status.IgnoredFiles));
+            Assert.That(queued.FilePatternExclusions, Is.EqualTo(status.FilePatternExclusions));
             Assert.That(queued.LastError, Is.EqualTo(status.LastError), "The sentence about the data source as a whole belongs next to its failures.");
             Assert.That(queued.LastSyncUtc, Is.EqualTo(NOW));
         });
@@ -78,7 +80,11 @@ public sealed class QueuedStatusTests
         VectorStoreUnreadable: true,
         Attention: DataSourceAttention.MASS_REMOVAL_PENDING,
         PendingRemovalCount: 42,
-        LastSyncUtc: NOW);
+        LastSyncUtc: NOW)
+    {
+        IgnoredFiles = [new("/tmp/test-data/interview.mp3", DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED)],
+        FilePatternExclusions = [new(".png", 5)],
+    };
 
     private static DataSourceLocalDirectory DataSource() => new()
     {

@@ -50,7 +50,7 @@ public partial class Embeddings : MSGComponentBase
     /// </remarks>
     private int TotalIndexedDocuments => this.Statuses.Sum(status => status.IndexedDocuments);
 
-    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.PermanentlySkippedDocuments));
+    private int TotalPendingDocuments => this.Statuses.Sum(status => Math.Max(0, status.TotalDocuments - status.IndexedDocuments - status.FailedDocuments - status.SkippedDocuments));
 
     private int TotalFailedDocuments => this.Statuses.Sum(status => status.FailedDocuments);
 
@@ -147,7 +147,8 @@ public partial class Embeddings : MSGComponentBase
     /// data source at once.
     /// </remarks>
     private static bool IsWorthOpening(DataSourceEmbeddingStatus status) =>
-        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0;
+        status.State is DataSourceEmbeddingState.RUNNING or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.FAILED
+        || status.Health is not DataSourceEmbeddingHealth.HEALTHY;
 
     /// <remarks>
     /// MudBlazor keeps track of which panel is open on its own, so this only records the decision.
@@ -210,7 +211,7 @@ public partial class Embeddings : MSGComponentBase
         // that: they are behind us in the folder, and leaving them out would let the number fall
         // behind the file whose name is shown right next to it.
         //
-        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.PermanentlySkippedDocuments + status.FailedDocuments + 1));
+        var currentNumber = this.FormatNumber(Math.Min(status.TotalDocuments, status.IndexedDocuments + status.SkippedDocuments + status.FailedDocuments + 1));
         var total = this.FormatNumber(status.TotalDocuments);
         if (isMailbox)
         {
@@ -229,7 +230,7 @@ public partial class Embeddings : MSGComponentBase
 
     private string GetSkippedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Skipped mails: {0}."), this.FormatNumber(status.PermanentlySkippedDocuments))
-        : string.Format(T("Skipped files: {0}. AI Studio reads them again once they change."), this.FormatNumber(status.PermanentlySkippedDocuments));
+        : string.Format(T("Skipped files: {0}. Open a group below to see why and what you can do."), this.FormatNumber(status.SkippedDocuments));
 
     private string GetFailedText(DataSourceEmbeddingStatus status) => IsMailbox(status)
         ? string.Format(T("Failed mails: {0}"), this.FormatNumber(status.FailedDocuments))
@@ -255,10 +256,13 @@ public partial class Embeddings : MSGComponentBase
     {
         DataSourceEmbeddingState.RUNNING => Color.Warning,
         DataSourceEmbeddingState.QUEUED => Color.Info,
-        DataSourceEmbeddingState.FAILED => Color.Error,
-        DataSourceEmbeddingState.COMPLETED when status.FailedDocuments > 0 => Color.Warning,
-        DataSourceEmbeddingState.COMPLETED => Color.Success,
-        _ => Color.Default,
+        _ => status.Health switch
+        {
+            DataSourceEmbeddingHealth.ERROR => Color.Error,
+            DataSourceEmbeddingHealth.WARNING => Color.Warning,
+            DataSourceEmbeddingHealth.HEALTHY => Color.Success,
+            _ => Color.Default,
+        },
     };
 
     /// <summary>
@@ -271,6 +275,10 @@ public partial class Embeddings : MSGComponentBase
     private sealed record FailureCause(int Priority, string Title, string Icon, Color Color, bool IsPermanent, bool NeedsProviderSettings, bool ShowsMessagePerFile);
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
+
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsDataSourceSettings);
+
+    private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
 
     /// <summary>
     /// Puts the failures of a data source into one group per cause, the most pressing one first.
@@ -318,6 +326,60 @@ public partial class Embeddings : MSGComponentBase
 
     private static string GetGroupHeader(FailureGroup group) => $"{group.Cause.Title} ({group.Failures.Count})";
 
+    private IReadOnlyList<IgnoredFileGroup> GetIgnoredFileGroups(DataSourceEmbeddingStatus status) => status.IgnoredFiles
+        .GroupBy(file => this.GetIgnoredFileCause(status, file))
+        .Select(group => new IgnoredFileGroup(group.Key, group.OrderBy(file => file.FilePath, StringComparer.OrdinalIgnoreCase).ToList()))
+        .OrderBy(group => group.Cause.Priority)
+        .ThenByDescending(group => group.Files.Count)
+        .ThenBy(group => group.Cause.Title, StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private IgnoredFileCause GetIgnoredFileCause(DataSourceEmbeddingStatus status, DataSourceEmbeddingIgnoredFile file) => file.Reason switch
+    {
+        DataSourceEmbeddingIgnoreReason.TOO_LARGE => new IgnoredFileCause(
+            0,
+            T("Too large"),
+            string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
+            Icons.Material.Filled.Straighten,
+            Color.Warning,
+            true),
+        DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED => new IgnoredFileCause(
+            1,
+            FileTypes.MEDIA.FilterName,
+            T("These image, audio, or video files match the data source patterns, but they cannot currently be added to the index."),
+            Icons.Material.Filled.PermMedia,
+            Color.Default,
+            false),
+        _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
+    };
+
+    /// <remarks>
+    /// Read from the settings rather than carried by the status: the user who raised the limit
+    /// right away reads the new one, and the next run, which the change starts, settles the list.
+    /// </remarks>
+    private string GetMaxFileSizeText(DataSourceEmbeddingStatus status)
+    {
+        var maxFileSizeMegabytes = this.SettingsManager.ConfigurationData.DataSources
+            .OfType<DataSourceLocalDirectory>()
+            .Where(dataSource => dataSource.Id == status.DataSourceId)
+            .Select(dataSource => dataSource.EffectiveMaxFileSizeMegabytes)
+            .DefaultIfEmpty(FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES)
+            .First();
+
+        return FolderFileSelection.MegabytesToBytes(maxFileSizeMegabytes).FileSize();
+    }
+
+    private static string GetIgnoredGroupHeader(IgnoredFileGroup group) => $"{group.Cause.Title} ({group.Files.Count})";
+
+    private string GetFilePatternExclusionGroupText(DataSourceEmbeddingFilePatternGroup group) => string.IsNullOrWhiteSpace(group.FileType)
+        ? string.Format(T("Files without an extension ({0})"), this.FormatNumber(group.FileCount))
+        : string.Format(T("{0} files ({1})"), group.FileType, this.FormatNumber(group.FileCount));
+
+    /// <remarks>
+    /// Written the way the exclusion list names folders, so the entry which caught a folder is easy to find.
+    /// </remarks>
+    private string GetExcludedFolderGroupText(DataSourceEmbeddingExcludedFolderGroup group) => $"{group.FolderName}{FileExclusions.FOLDER_SUFFIX} ({this.FormatNumber(group.FolderCount)})";
+
     private static string GetFileName(string filePath)
     {
         var fileName = Path.GetFileName(filePath);
@@ -332,6 +394,8 @@ public partial class Embeddings : MSGComponentBase
     /// lies on a server.
     /// </remarks>
     private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, DataSourceEmbeddingFailure failure) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(failure.DocumentKey) && Path.IsPathRooted(failure.DocumentKey);
+
+    private static bool CanShowInFileManager(DataSourceEmbeddingStatus status, string filePath) => !IsMailbox(status) && !string.IsNullOrWhiteSpace(filePath) && Path.IsPathRooted(filePath);
 
     /// <summary>
     /// How a failed mail is called in the list: by its subject, which is all the user knows it by.
@@ -350,12 +414,14 @@ public partial class Embeddings : MSGComponentBase
     /// file has to be opened, replaced, or run through an OCR. This is the same way out the log
     /// viewer offers for the log files.
     /// </remarks>
-    private async Task ShowInFileManager(DataSourceEmbeddingFailure failure)
+    private Task ShowInFileManager(DataSourceEmbeddingFailure failure) => this.ShowInFileManager(failure.DocumentKey);
+
+    private async Task ShowInFileManager(string filePath)
     {
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.TryOpenPathInRuntimeFileManager(failure.DocumentKey);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(filePath);
         }
         catch (Exception e)
         {

@@ -374,6 +374,37 @@ public sealed class DocumentRunProgressTests
     }
 
     [Test]
+    public void EveryStatusOfAFileRunCarriesTheIgnoredFiles()
+    {
+        var testDataPath = Path.Combine(Path.GetTempPath(), "test-data");
+        var ignoredFiles = new[]
+        {
+            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "recording.mp3"), DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
+            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "diagram.png"), DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
+        };
+        var filePatternExclusions = new[] { new DataSourceEmbeddingFilePatternGroup(".pdf", 42) };
+        var excludedFolders = new[] { new DataSourceEmbeddingExcludedFolderGroup("node_modules", 3) };
+        var (progress, statuses, _) = CreateProgress(
+            totalDocuments: ignoredFiles.Length,
+            ignoredFiles: ignoredFiles,
+            filePatternExclusions: filePatternExclusions,
+            excludedFolders: excludedFolders);
+
+        progress.Publish();
+        progress.PublishStoredState(workedThrough: true);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(statuses, Has.Count.EqualTo(2));
+            Assert.That(statuses.All(status => status.IgnoredFiles.SequenceEqual(ignoredFiles)), Is.True);
+            Assert.That(statuses.All(status => status.FilePatternExclusions.SequenceEqual(filePatternExclusions)), Is.True);
+            Assert.That(statuses.All(status => status.ExcludedFolders.SequenceEqual(excludedFolders)), Is.True);
+            Assert.That(statuses.All(status => status.SkippedDocuments == ignoredFiles.Length), Is.True, "Excluded folders are intentional and count as nothing skipped.");
+            Assert.That(statuses.All(status => status.ProgressPercent == 100), Is.True);
+        });
+    }
+
+    [Test]
     public async Task AFailedMailIsCalledByItsSubject()
     {
         var mailbox = new DataSourceMailbox { Num = 2, Id = DATA_SOURCE_ID, Name = "Work", EmbeddingId = EMBEDDING_ID, ConfidenceLevel = ConfidenceLevel.LOW };
@@ -401,7 +432,7 @@ public sealed class DocumentRunProgressTests
         Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
     }
 
-    private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE"));
+    private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty));
 
     /// <summary>
     /// The run as an action of a prompt injection filter which never meets the runtime: the progress
@@ -409,7 +440,15 @@ public sealed class DocumentRunProgressTests
     /// </summary>
     private static PromptInjectionReportingScope NewPromptInjectionScope() => new PromptInjectionGuardService(null!, new SettingsManager(NullLogger<SettingsManager>.Instance, null!), NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction();
 
-    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(int totalDocuments, IIndexedDataSource? indexedDataSource = null, RunShare? share = null, int failedInputs = 0, IndexingPass? pass = null)
+    private static (DocumentRunProgress Progress, List<DataSourceEmbeddingStatus> Statuses, DataSourceEmbeddingManifest Manifest) CreateProgress(
+        int totalDocuments,
+        IIndexedDataSource? indexedDataSource = null,
+        RunShare? share = null,
+        int failedInputs = 0,
+        IndexingPass? pass = null,
+        IEnumerable<DataSourceEmbeddingIgnoredFile>? ignoredFiles = null,
+        IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null,
+        IEnumerable<DataSourceEmbeddingExcludedFolderGroup>? excludedFolders = null)
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest();
@@ -439,7 +478,7 @@ public sealed class DocumentRunProgressTests
             statuses.Add,
             NullLogger.Instance);
 
-        return (new DocumentRunProgress(context, totalDocuments, failedInputs, string.Empty, [], NullLogger.Instance), statuses, manifest);
+        return (new DocumentRunProgress(context, totalDocuments, failedInputs, string.Empty, [], NullLogger.Instance, ignoredFiles, filePatternExclusions, excludedFolders), statuses, manifest);
     }
 
     private static EmbeddingDocument Document(string path) => Document(path, Path.GetFileName(path));

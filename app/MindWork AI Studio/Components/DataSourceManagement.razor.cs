@@ -83,17 +83,21 @@ public partial class DataSourceManagement : MSGComponentBase
     }
 
     /// <remarks>
-    /// Files which were skipped for good are none of the failed ones, so a data source made of
-    /// scanned documents stays green: there is nothing here for the user to fix.
+    /// Files which were skipped for good are none of the failed ones, so an otherwise usable data
+    /// source stays green. The shared health policy warns when none of the selected documents could
+    /// be indexed.
     /// </remarks>
     private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
     {
         if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
             return Color.Warning;
 
-        return status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0
-            ? Color.Error
-            : Color.Success;
+        return status.Health switch
+        {
+            DataSourceEmbeddingHealth.ERROR => Color.Error,
+            DataSourceEmbeddingHealth.WARNING => Color.Warning,
+            _ => Color.Success,
+        };
     }
 
     /// <summary>
@@ -109,11 +113,11 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null)
             return T("Waiting for indexing status");
 
-        // Only files are skipped for want of readable text. A mail is read from the server, never from a file:
-        if (status.PermanentlySkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
+        // Only files have enumeration exclusions. A mail is read from the server, never from a file:
+        if (status.SkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
             return status.StateLabel;
 
-        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)}";
+        return $"{status.StateLabel} — {string.Format(T("Skipped files: {0}. Open Background embeddings to see why and what you can do."), status.SkippedDocuments)}";
     }
 
     private string GetEmbeddingName(IDataSourceBase dataSource)

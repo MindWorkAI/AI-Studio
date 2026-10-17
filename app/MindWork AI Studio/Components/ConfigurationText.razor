@@ -7,7 +7,7 @@
         Text="@this.Text()"
         TextChanged="@this.InternalUpdate"
         Disabled="@this.IsDisabled"
-        Adornment="Adornment.Start"
+        Adornment="@this.IconAdornment"
         AdornmentIcon="@this.Icon"
         AdornmentColor="@this.IconColor"
         UserAttributes="@SPELLCHECK_ATTRIBUTES"
@@ -21,13 +21,14 @@
 }
 else
 {
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    @* One element, since a locked option places it next to its lock icon: *@
+    <div>
         <MudTextField
             T="string"
             Text="@this.Text()"
             TextChanged="@this.InternalUpdate"
             Disabled="@this.IsDisabled"
-            Adornment="Adornment.Start"
+            Adornment="@this.IconAdornment"
             AdornmentIcon="@this.Icon"
             AdornmentColor="@this.IconColor"
             UserAttributes="@SPELLCHECK_ATTRIBUTES"
@@ -37,10 +38,7 @@ else
             Immediate="@true"
             Validation="@this.Validation"
             Underline="false"
-            Class="flex-grow-1"
         />
-        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.IsDisabled" OnClick="@this.ResetTextAsync" Class="mb-1">
-            @this.ResetButtonText
-        </MudButton>
-    </MudStack>
+        <RestoreDefaultButton Text="@this.ResetButtonText" Disabled="@this.IsDisabled" OnClick="@this.ResetTextAsync"/>
+    </div>
 }

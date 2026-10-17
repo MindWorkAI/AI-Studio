@@ -58,7 +58,19 @@ public static class FileTypes
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter MARKDOWN    = FileTypeFilter.Leaf("Markdown", "md");
-    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+
+    /// <summary>
+    /// Text whose file name or extension is not known in advance, such as LICENSE or main.tf.
+    /// </summary>
+    /// <remarks>
+    /// It is recognized by its content, cf. ReadableTextDetection, and therefore names no extension:
+    /// in a filter of the native file picker, only the extensions of the other types count. The
+    /// runtime's text reader has the final say when it extracts the text.
+    /// </remarks>
+    public static readonly FileTypeFilter READABLE_TEXT = FileTypeFilter.Leaf(TB("Readable text"));
+
+    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Composite(TB("Text"), ["txt", "md", "rtf"], READABLE_TEXT);
+
     public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
     public static readonly FileTypeFilter CSV         = FileTypeFilter.Leaf("CSV", "csv");
     public static readonly FileTypeFilter TSV         = FileTypeFilter.Leaf("TSV", "tsv");
@@ -160,8 +172,13 @@ public static class FileTypes
 
     /// <summary>
     /// Validates a file path against the provided filters.
-    /// Supports extension-based matching and source-like file names (e.g. Dockerfile).
+    /// Supports extension-based matching, source-like file names (e.g. Dockerfile), and readable
+    /// text recognized directly from file contents.
     /// </summary>
+    /// <remarks>
+    /// When a filter holds READABLE_TEXT and neither the extension nor the file name matches, this
+    /// reads up to the first 8 KB of the file, cf. ReadableTextDetection. TEXT and DOCUMENT hold it.
+    /// </remarks>
     public static bool IsAllowedPath(string filePath, params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0 || string.IsNullOrWhiteSpace(filePath))
@@ -185,6 +202,9 @@ public static class FileTypes
             if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
                 return true;
         }
+
+        if (types.Any(type => type.ContainsType(READABLE_TEXT)) && ReadableTextDetection.IsReadableTextFile(filePath))
+            return true;
         
         return false;
     }

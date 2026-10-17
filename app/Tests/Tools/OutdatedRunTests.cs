@@ -6,21 +6,26 @@ using AIStudio.Tools.Services;
 namespace AIStudio.Tests.Tools;
 
 /// <summary>
-/// Checks when an indexing run stops because the embedding settings of its data source changed.
+/// Checks when an indexing run stops because the embedding settings of its data source, or the
+/// documents it selects, changed.
 /// </summary>
 /// <remarks>
 /// A run resolves its data source and its embedding provider once, when it starts, and may then run
 /// for hours. A run which carries on after a change of those settings embeds for an index the next
 /// run throws away, at a cloud embedding provider for real money. Worse, it keeps sending documents
-/// to a provider which was deleted or may no longer read them. Stopping a run for nothing is not free
-/// either: everything it did so far is done again.
+/// to a provider which was deleted or may no longer read them. A run which carries on after the
+/// data source selects other files embeds files which no longer belong to it, while the ones which
+/// now do wait for the next run. Stopping a run for nothing is not free either: everything it did
+/// so far is done again.
 /// </remarks>
 [TestFixture]
 public sealed class OutdatedRunTests
 {
-    private static readonly DataSourceRunSignature RUN_SIGNATURE = new("2|b0a4c4d2|OPEN_AI|text-embedding-3-small|512|100");
+    private const string SELECTION = "patterns::documents:|exclusions:bin/|subfolders:True|hidden:False|max-mb:1024";
 
-    private static readonly DataSourceRunSignature OTHER_SIGNATURE = new("2|b0a4c4d2|OPEN_AI|text-embedding-3-large|512|100");
+    private static readonly DataSourceRunSignature RUN_SIGNATURE = new("2|b0a4c4d2|OPEN_AI|text-embedding-3-small|512|100", SELECTION);
+
+    private static readonly DataSourceRunSignature OTHER_SIGNATURE = new("2|b0a4c4d2|OPEN_AI|text-embedding-3-large|512|100", SELECTION);
 
     [Test]
     public void ARunWhichIsStillPreparingCarriesOn()
@@ -35,14 +40,92 @@ public sealed class OutdatedRunTests
     [Test]
     public void ARunForTheCurrentSettingsCarriesOn()
     {
-        var sameSignature = new DataSourceRunSignature(RUN_SIGNATURE.EmbeddingSignature);
-        Assert.That(DataSourceEmbeddingService.IsRunOutdated(RUN_SIGNATURE, sameSignature), Is.False, "Nothing the vectors depend on changed, so stopping the run would only repeat its work.");
+        var sameSignature = new DataSourceRunSignature(RUN_SIGNATURE.EmbeddingSignature, RUN_SIGNATURE.SelectionSignature);
+        Assert.That(DataSourceEmbeddingService.IsRunOutdated(RUN_SIGNATURE, sameSignature), Is.False, "Nothing the vectors depend on changed, and neither did the documents, so stopping the run would only repeat its work.");
     }
 
     [Test]
     public void ARunForOtherSettingsStops()
     {
         Assert.That(DataSourceEmbeddingService.IsRunOutdated(RUN_SIGNATURE, OTHER_SIGNATURE), Is.True, "The next run throws away whatever this run embeds.");
+    }
+
+    [Test]
+    public void ARunForAnotherSelectionStops()
+    {
+        var otherSelection = RUN_SIGNATURE with { SelectionSignature = SELECTION.Replace(":documents:", "*.md", StringComparison.Ordinal) };
+        Assert.That(DataSourceEmbeddingService.IsRunOutdated(RUN_SIGNATURE, otherSelection), Is.True, "The run works with files which no longer belong to the data source.");
+    }
+
+    [TestCase("file patterns")]
+    [TestCase("exclusions")]
+    [TestCase("size limit")]
+    [TestCase("subfolders")]
+    [TestCase("hidden files and folders")]
+    public void AFolderWhichSelectsOtherFilesStopsTheRunButKeepsItsIndex(string change)
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW);
+        var changedDataSource = change switch
+        {
+            "file patterns" => dataSource with { FilePatterns = "*.md" },
+            "exclusions" => dataSource with { ExcludePatterns = "node_modules/" },
+            "size limit" => dataSource with { MaxFileSizeMegabytes = 1 },
+            "subfolders" => dataSource with { IncludeSubdirectories = !dataSource.IncludeSubdirectories },
+            "hidden files and folders" => dataSource with { IncludeHiddenFilesAndFolders = !dataSource.IncludeHiddenFilesAndFolders },
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+
+        var embeddingProvider = TestEmbeddingProvider();
+        var runSignature = DataSourceEmbeddingService.GetRunSignature(dataSource, embeddingProvider, ConfidenceLevel.MEDIUM);
+        var currentRunSignature = DataSourceEmbeddingService.GetRunSignature(changedDataSource, embeddingProvider, ConfidenceLevel.MEDIUM);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(DataSourceEmbeddingService.IsRunOutdated(runSignature, currentRunSignature), Is.True, "The run works with files which no longer belong to the data source, or misses the ones which now do.");
+            Assert.That(currentRunSignature.EmbeddingSignature, Is.EqualTo(runSignature.EmbeddingSignature), "Every vector stored so far stays valid, so the index must not be built anew.");
+        });
+    }
+
+    [TestCase("name and description")]
+    [TestCase("order of the file patterns")]
+    [TestCase("case of the file patterns")]
+    [TestCase("spaces in the file patterns")]
+    [TestCase("order and case of the exclusions")]
+    public void AFolderWhichSelectsTheSameFilesKeepsTheRun(string change)
+    {
+        var dataSource = DataSource(ConfidenceLevel.LOW) with { FilePatterns = "*.md;*.pdf", ExcludePatterns = "bin/;obj/" };
+        var changedDataSource = change switch
+        {
+            "name and description" => dataSource with { Name = "Other name", Description = "Other description" },
+            "order of the file patterns" => dataSource with { FilePatterns = "*.pdf;*.md" },
+            "case of the file patterns" => dataSource with { FilePatterns = "*.MD;*.PDF" },
+            "spaces in the file patterns" => dataSource with { FilePatterns = " *.md ;  *.pdf " },
+            "order and case of the exclusions" => dataSource with { ExcludePatterns = "OBJ/\nbin/" },
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+
+        var embeddingProvider = TestEmbeddingProvider();
+        Assert.That(
+            DataSourceEmbeddingService.GetRunSignature(changedDataSource, embeddingProvider, ConfidenceLevel.MEDIUM),
+            Is.EqualTo(DataSourceEmbeddingService.GetRunSignature(dataSource, embeddingProvider, ConfidenceLevel.MEDIUM)),
+            "File patterns and exclusions ignore case and order, so the run works with the same files as before.");
+    }
+
+    [Test]
+    public void ASingleFileHasNoSelection()
+    {
+        var dataSource = new DataSourceLocalFile
+        {
+            Num = 1,
+            Id = "6f1d6a4e-6a5e-4c62-9a4f-0f2d2c8b7a11",
+            Name = "Test file",
+            Type = DataSourceType.LOCAL_FILE,
+            EmbeddingId = "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01",
+            ConfidenceLevel = ConfidenceLevel.LOW,
+            FilePath = "/tmp/test-data/report.pdf",
+        };
+
+        Assert.That(DataSourceEmbeddingService.GetRunSignature(dataSource, TestEmbeddingProvider(), ConfidenceLevel.MEDIUM).SelectionSignature, Is.Empty, "The file is the one document of its data source, so there is nothing to choose among.");
     }
 
     [Test]

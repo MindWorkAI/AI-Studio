@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Validation;
 
@@ -156,9 +157,16 @@ public sealed class DataSourceValidation
         
         if(!File.Exists(filePath))
             return TB("The file does not exist. Please select a valid file.");
+
+        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
+            return TB("The selected file is not a supported document or readable text file.");
         
         return null;
     }
+
+    public string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
+
+    public string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
 
     public string? ValidateEmbeddingId(string embeddingId)
     {
