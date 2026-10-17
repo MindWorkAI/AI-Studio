@@ -159,11 +159,11 @@ internal static class FileNamePatterns
         return FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true);
     }
 
-    private static bool IsSelector(string pattern) => IsSelector(pattern, ALL_DOCUMENTS_PATTERN) || IsSelector(pattern, ALL_TEXT_FILES_PATTERN);
+    internal static bool IsSelector(string pattern) => IsSelector(pattern, ALL_DOCUMENTS_PATTERN) || IsSelector(pattern, ALL_TEXT_FILES_PATTERN);
 
     private static bool IsSelector(string pattern, string selector) => string.Equals(pattern, selector, StringComparison.OrdinalIgnoreCase);
 
     internal static bool LooksLikeSelector(string pattern) => pattern.StartsWith(SELECTOR_DELIMITER) && pattern.EndsWith(SELECTOR_DELIMITER);
 
-    private static bool IsMediaFile(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.MEDIA);
+    internal static bool IsMediaFile(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.MEDIA);
 }

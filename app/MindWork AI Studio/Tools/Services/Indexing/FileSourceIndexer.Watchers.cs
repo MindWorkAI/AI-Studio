@@ -252,52 +252,38 @@ internal sealed partial class FileSourceIndexer
         if (configuration.TargetFileName is { } targetFileName)
             return string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase);
 
-        if (configuration.IncludeSubdirectories
-            && !configuration.IncludeHiddenFilesAndFolders
-            && changeType is not WatcherChangeTypes.Deleted and not WatcherChangeTypes.Renamed
-            && DirectoryFileTraversal.IsInHiddenSubdirectory(configuration.RootPath, path))
+        //
+        // Git renames .git/index.lock to .git/index with almost every command, and a build or
+        // npm install writes thousands of files into bin, obj, or node_modules. None of them is
+        // part of the data source, so none of them may start a run over the whole folder:
+        //
+        var selection = configuration.Selection;
+        if (selection.LeavesOut(configuration.RootPath, path))
             return false;
 
-        if (!configuration.IncludeHiddenFilesAndFolders && IsLeftOutAsHidden(configuration, path))
-            return false;
-
+        //
+        // A folder which appears may have been moved here with all its files, and the watcher
+        // reports the folder only:
+        //
         if (Directory.Exists(path))
             return true;
 
-        if (FileExclusions.IsAlwaysExcludedFile(fileName))
-            return false;
-
-        if (configuration.FilePatterns is { } patterns)
-        {
-            if (FileNamePatterns.Matches(path, patterns))
-                return true;
-
-            // A newly found file which lies outside the patterns belongs in the exclusion summary.
-            // A deleted path can have been a directory, but FileSystemWatcher does not tell us
-            // that after it is gone. Refresh conservatively so the index and that list stay current.
-            return changeType is WatcherChangeTypes.Created or WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed;
-        }
-
-        if (IsSupportedRagFilePath(path))
+        if (selection.Selects(path))
             return true;
 
-        return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed
-               && string.IsNullOrWhiteSpace(Path.GetExtension(path));
-    }
-
-    /// <summary>
-    /// Whether a path is a hidden file or folder the data source leaves out, cf. DirectoryFileTraversal.
-    /// </summary>
-    /// <remarks>
-    /// A hidden folder is never entered, while a file pattern which begins with a dot, such as
-    /// .gitignore, asks for a hidden file by itself.
-    /// </remarks>
-    private static bool IsLeftOutAsHidden(DataSourceWatcherConfiguration configuration, string path)
-    {
-        if (!DirectoryFileTraversal.IsHiddenPath(path))
+        //
+        // A new or changed file outside the selection changes nothing in the index. The summary of
+        // files outside the selection catches up with the next run, whatever starts it.
+        //
+        if (changeType is not WatcherChangeTypes.Deleted and not WatcherChangeTypes.Renamed)
             return false;
 
-        return Directory.Exists(path) || !FileNamePatterns.NamesHiddenFile(path, configuration.FilePatterns ?? []);
+        //
+        // Once a path is gone, the watcher no longer tells whether it was a folder. A path
+        // without an extension may have been one, with indexed files below it. A file whose
+        // content a selector read may have been indexed as well:
+        //
+        return string.IsNullOrWhiteSpace(Path.GetExtension(path)) || selection.CouldHaveSelected(path);
     }
 
     private static DataSourceWatcherConfiguration? GetWatchConfiguration(IDataSourceBase dataSource) => dataSource switch
@@ -306,7 +292,8 @@ internal sealed partial class FileSourceIndexer
             localDirectory.Path,
             localDirectory.IncludeSubdirectories,
             localDirectory.IncludeHiddenFilesAndFolders,
-            FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns)),
+            FilePatterns: FileNamePatterns.Parse(localDirectory.EffectiveFilePatterns),
+            ExcludePatterns: FileExclusions.Parse(localDirectory.EffectiveExcludePatterns)),
         DataSourceLocalFile localFile when File.Exists(localFile.FilePath) && !string.IsNullOrWhiteSpace(Path.GetDirectoryName(localFile.FilePath)) => new DataSourceWatcherConfiguration(
             Path.GetDirectoryName(localFile.FilePath)!,
             false,
@@ -320,7 +307,8 @@ internal sealed partial class FileSourceIndexer
                && left.IncludeHiddenFilesAndFolders == right.IncludeHiddenFilesAndFolders
                && string.Equals(left.RootPath, right.RootPath, StringComparison.OrdinalIgnoreCase)
                && string.Equals(left.TargetFileName, right.TargetFileName, StringComparison.OrdinalIgnoreCase)
-               && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns);
+               && FileNamePatterns.AreEquivalent(left.FilePatterns, right.FilePatterns)
+               && FileNamePatterns.AreEquivalent(left.ExcludePatterns, right.ExcludePatterns);
     }
 
     internal sealed record DataSourceWatcherConfiguration(
@@ -328,7 +316,18 @@ internal sealed partial class FileSourceIndexer
         bool IncludeSubdirectories,
         bool IncludeHiddenFilesAndFolders = false,
         string? TargetFileName = null,
-        IReadOnlyList<string>? FilePatterns = null);
+        IReadOnlyList<string>? FilePatterns = null,
+        IReadOnlyList<string>? ExcludePatterns = null)
+    {
+        /// <summary>
+        /// The files of a folder data source, judged the way its runs judge them, cf. FolderFileSelection.
+        /// </summary>
+        /// <remarks>
+        /// Built on every call, so that a copy made with "with" judges by its own values. The size
+        /// limit plays no part: a file which grew beyond it has to leave the index during a run.
+        /// </remarks>
+        public FolderFileSelection Selection => new(this.FilePatterns ?? [], this.ExcludePatterns ?? [], this.IncludeSubdirectories, this.IncludeHiddenFilesAndFolders, int.MaxValue);
+    }
 
     private sealed record DataSourceWatcherRegistration(FileSystemWatcher Watcher, DataSourceWatcherConfiguration Configuration);
 }

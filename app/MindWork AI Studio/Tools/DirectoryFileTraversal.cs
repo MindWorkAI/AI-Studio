@@ -109,39 +109,6 @@ internal static class DirectoryFileTraversal
     }
 
     /// <summary>
-    /// Whether an existing path is inside a hidden descendant of the root. Hidden files directly
-    /// in a visible folder are deliberately not treated as hidden directories.
-    /// </summary>
-    public static bool IsInHiddenSubdirectory(string rootPath, string path)
-    {
-        try
-        {
-            var root = new DirectoryInfo(Path.GetFullPath(rootPath));
-            var current = Directory.Exists(path)
-                ? new DirectoryInfo(Path.GetFullPath(path))
-                : new FileInfo(Path.GetFullPath(path)).Directory;
-
-            while (current is not null && !string.Equals(current.FullName, root.FullName, StringComparison.OrdinalIgnoreCase))
-            {
-                if (!IsBelowRoot(root.FullName, current.FullName))
-                    return false;
-
-                if (IsHidden(current))
-                    return true;
-
-                current = current.Parent;
-            }
-        }
-        catch
-        {
-            // A watcher event can race with a rename or deletion. Let the caller refresh
-            // conservatively when the former directory attributes can no longer be inspected.
-        }
-
-        return false;
-    }
-
-    /// <summary>
     /// Whether a path, e.g., one a file system watcher reports, is a hidden file or folder.
     /// </summary>
     /// <remarks>
@@ -186,13 +153,5 @@ internal static class DirectoryFileTraversal
         }
 
         return includeHiddenFile?.Invoke(file.FullName) is not true;
-    }
-
-    private static bool IsBelowRoot(string rootPath, string candidatePath)
-    {
-        var relativePath = Path.GetRelativePath(rootPath, candidatePath);
-        return relativePath is not ".."
-               && !relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-               && !Path.IsPathRooted(relativePath);
     }
 }

@@ -95,6 +95,66 @@ internal sealed class FolderFileSelection(IReadOnlyList<string> filePatterns, IR
     /// </remarks>
     public bool IsTooLarge(FileInfo file) => file.Length > this.MaxFileSizeBytes;
 
+    /// <summary>
+    /// Whether a path below the folder lies where EnumerateCandidates never looks: in a hidden or
+    /// an excluded folder, or as a hidden or an excluded file itself.
+    /// </summary>
+    /// <remarks>
+    /// Meant for the file system watcher. It judges each folder between the root and the path by
+    /// its name, so it also works for a path which is gone, e.g., after a rename. Whether the
+    /// operating system hid something can be told only while it exists. A path which is gone can
+    /// have been a file or a folder, so it is left out only when it would be either way.
+    /// </remarks>
+    /// <param name="rootPath">The folder.</param>
+    /// <param name="path">The path below it.</param>
+    public bool LeavesOut(string rootPath, string path)
+    {
+        var relativePath = Path.GetRelativePath(rootPath, path);
+        //
+        // The folder itself, or a path outside of it, is nothing this selection has a say about:
+        //
+        if (relativePath is "." or ".." || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) || Path.IsPathRooted(relativePath))
+            return false;
+
+        var names = relativePath.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries);
+        if (!includeSubdirectories && names.Length > 1)
+            return true;
+
+        var folderPath = rootPath;
+        foreach (var folderName in names[..^1])
+        {
+            folderPath = Path.Combine(folderPath, folderName);
+            if (this.LeavesOutFolder(folderPath))
+                return true;
+        }
+
+        if (Directory.Exists(path))
+            return this.LeavesOutFolder(path);
+
+        if (File.Exists(path))
+            return this.LeavesOutFile(path);
+
+        return this.LeavesOutFolder(path) && this.LeavesOutFile(path);
+    }
+
+    /// <summary>
+    /// Whether a file which is gone now could have been selected.
+    /// </summary>
+    /// <remarks>
+    /// A selector reads the content of a file, which is gone. So any file which a selector may
+    /// have taken counts, i.e., every one but media, which never matches a selector.
+    /// </remarks>
+    public bool CouldHaveSelected(string filePath) => this.Selects(filePath)
+                                                     || (filePatterns.Any(FileNamePatterns.IsSelector)
+                                                         && !FileExclusions.ExcludesFile(filePath, exclusions)
+                                                         && !FileNamePatterns.IsMediaFile(filePath));
+
+    private bool LeavesOutFolder(string folderPath) => FileExclusions.ExcludesFolder(folderPath, exclusions)
+                                                       || (!includeHiddenFilesAndFolders && DirectoryFileTraversal.IsHiddenPath(folderPath));
+
+    private bool LeavesOutFile(string filePath) => FileExclusions.ExcludesFile(filePath, exclusions)
+                                                   || (!includeHiddenFilesAndFolders && DirectoryFileTraversal.IsHiddenPath(filePath) && !FileNamePatterns.NamesHiddenFile(filePath, filePatterns));
+
     private bool IsNotExcluded(string directoryPath, Action<string>? reportExcludedFolder)
     {
         if (!FileExclusions.ExcludesFolder(directoryPath, exclusions))

@@ -355,16 +355,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return IndexedRunOutcome.DONE;
     }
 
-    /// <summary>
-    /// Whether a file has a type whose text can be indexed.
-    /// </summary>
-    /// <param name="filePath">The path of the file.</param>
-    /// <returns>True for every document type the runtime can read.</returns>
-    private static bool IsSupportedRagFilePath(string filePath)
-    {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
-    }
-
     private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, FileEnumerationResult inputFiles, CancellationToken token)
     {
         var manifest = context.Manifest;
