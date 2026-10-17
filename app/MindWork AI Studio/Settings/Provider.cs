@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -36,7 +37,7 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
-    string TokenizerPath = "",
+    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
@@ -279,14 +280,15 @@ public sealed record Provider(
         }
 
         var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForProvider(this), "    ");
 
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+
+                    {{tokenizerPathLine}}
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

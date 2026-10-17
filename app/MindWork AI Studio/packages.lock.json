@@ -42,43 +42,43 @@
       },
       "Microsoft.Data.Sqlite.Core": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "fh7kGdTZ/3UGydwTFTuCgMQ/JFkkjYrOEU/195ITmp9kddjn0FCNEusAi4XDxOnZ0QiHG6azpgjVjrSxvfPdjw==",
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "8gLGoX8uqtEdoULSRjk0Ws3EpWuxwTz5ru8ulabzpq0tq7KnNhp8rLqIdeAzERA6Js1PZVpk9rcaP4ZhLMbORA==",
         "dependencies": {
-          "SQLitePCLRaw.core": "2.1.12"
+          "SQLitePCLRaw.core": "2.1.13"
         }
       },
       "Microsoft.EntityFrameworkCore.Sqlite": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "iOYqUXpR8sXhw2Y4sPmEZokI1sXp4AN66FGMnSAxX8kzplrhq/h3VMQB2RP3RWV4Kmgh3YCbTHHK08DCc7d4MA==",
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "kRvTtLhhVoOP3u0Z/FRfJjhrVhMNaow4tUFKuUkg+w24Zgj1NLRVdS6ogRhgmM6qeBspNdpl3MJUh4/BG8bcUQ==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Sqlite.Core": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Configuration.Abstractions": "9.0.20",
-          "Microsoft.Extensions.DependencyModel": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20",
-          "SQLitePCLRaw.bundle_e_sqlite3": "2.1.12",
-          "SQLitePCLRaw.core": "2.1.12",
-          "System.Text.Json": "9.0.20"
+          "Microsoft.EntityFrameworkCore.Sqlite.Core": "9.0.21",
+          "Microsoft.Extensions.Caching.Memory": "9.0.21",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.21",
+          "Microsoft.Extensions.DependencyModel": "9.0.21",
+          "Microsoft.Extensions.Logging": "9.0.21",
+          "SQLitePCLRaw.bundle_e_sqlite3": "2.1.13",
+          "SQLitePCLRaw.core": "2.1.13",
+          "System.Text.Json": "9.0.21"
         }
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "xcWGVQKYhFgHnB7GOpq4e8T/ZbbtgaPPqDTYDNVPkPmXpJyVzjYmennb89iuvxdpqB6iA1ckvna7z7p9G6mMtw==",
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "l+daceqd/hww6K0bER5Rq+flof3aMTmtW9wgDi1jHou+rQLb8bBX74PyaGfnXo1eKaxROmM5jbiLoQ1cgyxaEw==",
         "dependencies": {
-          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.20"
+          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.21"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[9.0.20, )",
-        "resolved": "9.0.20",
-        "contentHash": "oPFydtjCgow3DXnL8z5gPbq3R1zGvBpcypgRhW172Hn8asJcI8oy7isudAnAAALIWyK+uRWCDP+/+om3s0PZHA=="
+        "requested": "[9.0.21, )",
+        "resolved": "9.0.21",
+        "contentHash": "ryionTSVk0ZU5/gW6r6Kh6LxvUzuF8HIcO0CLHoHhn7ZHZLbpGGYSe3duYzaNTtZK/AOQfqtYLUEW5LfbhSw3w=="
       },
       "MudBlazor": {
         "type": "Direct",
@@ -118,6 +118,16 @@
         "dependencies": {
           "SQLite": "3.53.4",
           "SQLitePCLRaw.config.e_sqlite3": "3.0.5"
+        }
+      },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
         }
       },
       "BouncyCastle.Cryptography": {
@@ -196,108 +206,108 @@
       },
       "Microsoft.Bcl.Cryptography": {
         "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "2iilO1H+fkDBOsfYbFO57N1ElPsbWxNXyAekEtZ7b0sPrfm1akvLj+Wr7DzZy0fcEGUrez2jSyqAn4sTxDsgbg=="
+        "resolved": "10.0.13",
+        "contentHash": "6H3QqvjxTgCt4gxVVCJVjo35Zh/gzjw7NXidIx0ghZrgYYMUja/7JJ4g39ynE/OH5YBBbUhlmirGR/AuYpNIuA=="
       },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "52/3+48fTVcVQopie1SZLLenAuyrG0Enr1eAEbw05b22dl6nbC8V0UHLFknodJOrVcqdYR1Pf6FMbNvvWuhB5A==",
+        "resolved": "9.0.21",
+        "contentHash": "wegRGNmcRUBc5IbSZo6BpcpdOYelvIDBO+78ykXl7RE+5oCGGaIRE+qbRDnrXn/K3iFcUFcg9PyHz7rpD4yI4A==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Abstractions": "9.0.20",
-          "Microsoft.EntityFrameworkCore.Analyzers": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20"
+          "Microsoft.EntityFrameworkCore.Abstractions": "9.0.21",
+          "Microsoft.EntityFrameworkCore.Analyzers": "9.0.21",
+          "Microsoft.Extensions.Caching.Memory": "9.0.21",
+          "Microsoft.Extensions.Logging": "9.0.21"
         }
       },
       "Microsoft.EntityFrameworkCore.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "ity/Y3MG2hAxK/na+9vp0XQ6kDDwZ8thJfCl+MSBhRNyXgaBtb16SyX2W0uFL44k6BHDmohybJQSRXnjkI4jtA=="
+        "resolved": "9.0.21",
+        "contentHash": "XtqW90Od/0Ua+Fs+Gtdlyf4xCaDzdWwXWkENMCFti/me4EY4HlZteG7pM9UzpHwov7PeUw/AhjnFgRMmS0cX3g=="
       },
       "Microsoft.EntityFrameworkCore.Analyzers": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "WCNEWRZGuYycp0vU9aAfEKGZOr7hGrJP4SpJkl2KzXzKqH9UY/2h6j2L3JYa/AZbKD7EffQGk09NmyEcml/OwQ=="
+        "resolved": "9.0.21",
+        "contentHash": "5k05vM84ipVL/bBMUo05zjRIbp3pY4RMmMflXW3wmQhCtuEsOHLgX36zA4XPrdjAhSjk4QqqPuVTlo4WbJeVGg=="
       },
       "Microsoft.EntityFrameworkCore.Relational": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "84oLYJjAA8hSrwPfkq0cm9dBdf3uFbBwqJVYjmS4zEoKJ87cj/Knyp1iYAHe95ToJHeo8APAPG0OlA6S4GUUlw==",
+        "resolved": "9.0.21",
+        "contentHash": "an6YjYP8I2/24pNbKTssh9S6P2K+v7iVNRAjR++sx0U358+SGEGCE+qmomP7LZD1f5iXZO6Tf3SNUZxLpeZakA==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Configuration.Abstractions": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20"
+          "Microsoft.EntityFrameworkCore": "9.0.21",
+          "Microsoft.Extensions.Caching.Memory": "9.0.21",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.21",
+          "Microsoft.Extensions.Logging": "9.0.21"
         }
       },
       "Microsoft.EntityFrameworkCore.Sqlite.Core": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "vyUXyy2OSAtzZaVSSU/oeE+k/lVj77gUw3PjX9ABHGOz9ySuWQCr5IL9TCc9XWNTmExrSa4uc/7NfOPPooNWMw==",
+        "resolved": "9.0.21",
+        "contentHash": "FtJqSblkC/kYhrQ0kiSAzO2weMWseP1nd5IEpXLQteGZnrNy54FvUSIhz4FZBUZrcbFCHB9VM/2LcrlN5WuNYQ==",
         "dependencies": {
-          "Microsoft.Data.Sqlite.Core": "9.0.20",
-          "Microsoft.EntityFrameworkCore.Relational": "9.0.20",
-          "Microsoft.Extensions.Caching.Memory": "9.0.20",
-          "Microsoft.Extensions.Configuration.Abstractions": "9.0.20",
-          "Microsoft.Extensions.DependencyModel": "9.0.20",
-          "Microsoft.Extensions.Logging": "9.0.20",
-          "SQLitePCLRaw.core": "2.1.12",
-          "System.Text.Json": "9.0.20"
+          "Microsoft.Data.Sqlite.Core": "9.0.21",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.21",
+          "Microsoft.Extensions.Caching.Memory": "9.0.21",
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.21",
+          "Microsoft.Extensions.DependencyModel": "9.0.21",
+          "Microsoft.Extensions.Logging": "9.0.21",
+          "SQLitePCLRaw.core": "2.1.13",
+          "System.Text.Json": "9.0.21"
         }
       },
       "Microsoft.Extensions.Caching.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "OsNAsYqXXI6RlPKnQGqyxYkgtnPJ9gTv+rHjE1FqfyGgKAdZ7kQqR0IXNTYLDNfcWr024ZDw+wKvoljr2KVnwg==",
+        "resolved": "9.0.21",
+        "contentHash": "F2kLO07nTYGeS3ygjOcu1yEWT6gHLsoUrd5XIvL9YQlZcbSLxjfVQS6iHx/cp65kaUTJFVIC6s3V32ZFk7i4YA==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.20"
+          "Microsoft.Extensions.Primitives": "9.0.21"
         }
       },
       "Microsoft.Extensions.Caching.Memory": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "/bUrdA5TTk17H36s1qBl5eBK1ZtVYkVw27rOpGU7tnSa/yzXG/VSacs6jvBhy4oypO7qo6PTzBqer+0VfJ9XJw==",
+        "resolved": "9.0.21",
+        "contentHash": "k5l5tMZe21AXHdqw/L92lol7HDzvDpgL5MSXtTdnch5c2fHtWqUsYqF3Y69xyMAnfQwPKWv625Rz6WlLPFZbpg==",
         "dependencies": {
-          "Microsoft.Extensions.Caching.Abstractions": "9.0.20",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.20",
-          "Microsoft.Extensions.Logging.Abstractions": "9.0.20",
-          "Microsoft.Extensions.Options": "9.0.20",
-          "Microsoft.Extensions.Primitives": "9.0.20"
+          "Microsoft.Extensions.Caching.Abstractions": "9.0.21",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.21",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.21",
+          "Microsoft.Extensions.Options": "9.0.21",
+          "Microsoft.Extensions.Primitives": "9.0.21"
         }
       },
       "Microsoft.Extensions.Configuration.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "wNR2jEXCTwMKXKi/iWvi3PfRaxtU2j3VmzYHsbVhllQTKRpr1HmHewdwkLhlYk/VatbqDmprW1+tN2O/BA5OKA==",
+        "resolved": "9.0.21",
+        "contentHash": "DHIDx9DJIBcpA7/lpZdWEZd8gY0l56nLYBaTCeUZXFVhKiZStnF3DiIO/ATm4bYW3NIWWSf04u7Y/sv69BQttw==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.20"
+          "Microsoft.Extensions.Primitives": "9.0.21"
         }
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "SnnIHEHfbYGvd91ZNvYeJcQVSaICdSQWXficKuBkT0Jzfx34XsqZ9aHj0y/7a/eZWY05B3SI0dQA/gKfIVZgWw==",
+        "resolved": "9.0.21",
+        "contentHash": "BZDtK5I7dA2ekIqyFqHscLXSX/vavkgF3TmoF18LEOPIY1B8obw16bLw5CFJ4pgrgNny2WeEO7nafUzVybADjw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.20"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.21"
         }
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "EsRc4piTdI3Ti5+cZwdpxn+mHwDCqT+b9ecmgYTTttpHFkYDyc4CenRNC9LrU0A+lTYsbQE8EvWC6sNp1Op0YA=="
+        "resolved": "9.0.21",
+        "contentHash": "qHgkGpzmAqxBE1+uib0KMwHyukwyRdIC8JHHnzGCP7IKfySgEQn/KeVnXybFYrYJkOG5uzzEjchRB6dT4lmWTw=="
       },
       "Microsoft.Extensions.DependencyModel": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "bhUlryY1AIFsB9kpR6/KMPWryLHoBPBpRSi79GQa4XVcYyW1PGA3Zi+rdu1wxJ5DWuA1Jr6DAVRgrgPnYOu8eg=="
+        "resolved": "9.0.21",
+        "contentHash": "yD3YU0gS+AU9/2HFHUV3vkkZ9WHUFQqNncY3IgblK2RZqWQaRq1XyYV9powj38mF6iRW+MsfuhXtFAE4iuv52g=="
       },
       "Microsoft.Extensions.FileProviders.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "lXph8HG8+ndo+qDKlxO9oQQlmwTWELWnO8Gs/LsTzzqMyonQAhOv366bDL4hyFL8nfI9sl2UWKBx87YIacZnSw==",
+        "resolved": "9.0.21",
+        "contentHash": "mhjalUmWcXPN3VsUcg7DMbvYn60MdwWiVUfTKtvxXXYL9a8Bn2DHB0PMVFzSJ1lBzcpdqB/JzepvHd1VD59SUA==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.20"
+          "Microsoft.Extensions.Primitives": "9.0.21"
         }
       },
       "Microsoft.Extensions.Localization": {
@@ -318,35 +328,35 @@
       },
       "Microsoft.Extensions.Logging": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "EJXNsngA3CycEVzMwZXkjAMMF4mlh3T8M9UyyJXFjPNSpNtdeKsSWzXtFG2qyC9JIGWFd5r2XlgBXtOCw2JYzQ==",
+        "resolved": "9.0.21",
+        "contentHash": "phTc7XOoEef3ACFHIe7ce9TMsCWPkZl2oi/2i4YrrF2NV3NitJDQI3somYmwihxTrHN9kI2/HK0Db5XepfbsVw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "9.0.20",
-          "Microsoft.Extensions.Logging.Abstractions": "9.0.20",
-          "Microsoft.Extensions.Options": "9.0.20"
+          "Microsoft.Extensions.DependencyInjection": "9.0.21",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.21",
+          "Microsoft.Extensions.Options": "9.0.21"
         }
       },
       "Microsoft.Extensions.Logging.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "ZTbbB2mz0MxOMVQF7/yKhRD9ok6QR5Kq+Ifsk7XfdGC3zJTfMeJZeKR8/DfnlyvrlQnaWEmMkrnM8d1sBs3afA==",
+        "resolved": "9.0.21",
+        "contentHash": "y1yIJYal4AgJ5P+tWnWHwB4zEODSzG2eSN/PamXxs7Qw16Z/kRK87UH9LIfKOahlnet5GSYYqHgctq4m03nWOQ==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.20"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.21"
         }
       },
       "Microsoft.Extensions.Options": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "dX5P4j3++0g0iSlV+NhhPuCI/2moNbWvYEb8ZWlO84GEX1fbEg+hygNlHtw7SKHWaTe176ZrmvFsfhIMjB+AUQ==",
+        "resolved": "9.0.21",
+        "contentHash": "oWSBxUMtAFKDRZXhItBEFpXCE1TpDi410JT/vvPJmgh1HNNgQmbtSx/Ly3HmoleNIYH9k5nPhykms6d9jMvd6w==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.20",
-          "Microsoft.Extensions.Primitives": "9.0.20"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.21",
+          "Microsoft.Extensions.Primitives": "9.0.21"
         }
       },
       "Microsoft.Extensions.Primitives": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "F9PkV2d5cHwibxxgklXhXtvVgZlPCJ0rkuY+jpa34o3vdUr0DcGX7XQkZouWuoDSZoYF0gUydM778d0wNpwB+Q=="
+        "resolved": "9.0.21",
+        "contentHash": "WBOg9sKnfnfFfjo+w5Osk73BMFabRHxpbDefxgK16KGLbrLljUCaRPsHfOHpTpM7bcIbkRJKBtWypHQOewy1tw=="
       },
       "Microsoft.JSInterop": {
         "type": "Transitive",
@@ -390,41 +400,118 @@
       },
       "System.Formats.Asn1": {
         "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "0QCZNYeRswlUVyo9N3hXrt5X9dqqRup53loU4K4JatdoYPhXHLrK9PwRtg5vP0Sr9QbdCOKk2luEdip/kV5Sig=="
-      },
-      "System.Security.Cryptography.Pkcs": {
-        "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "UPWqLSygJlFerRi9XNIuM0a1VC8gHUIufyP24xQ0sc+XimqUAEcjpOz9DhKpyDjH+5B/wO3RpC0KpkEeDj/ddg==",
-        "dependencies": {
-          "Microsoft.Bcl.Cryptography": "10.0.0",
-          "System.Formats.Asn1": "10.0.0"
-        }
+        "resolved": "10.0.13",
+        "contentHash": "uwKFGyJaUQ8xsf+wddv512+UIU1O4reOveom3y0gpQr86P1ReAKcQa/UdOZtg1etTIHgb01/grXp00tgeGBxqA=="
       },
       "System.Text.Json": {
         "type": "Transitive",
-        "resolved": "9.0.20",
-        "contentHash": "BTRIxPnDLRAQLJI3Q7/ezyfJLp/KAi5k2NwGfAwrkiWPa/nS+bcVu2GX3dXt8jO5u8gcf2AJ04mIhvdtchDG9A=="
+        "resolved": "9.0.21",
+        "contentHash": "VrYLYCFG9bkv2fW2JrZI5OKjDSthyuJb72xFH4FgkYNZ2llcBo+4UqQk0TzT0KEuKvtjWd9a0xKHgPhsu7CE6w=="
       },
       "sharedtools": {
         "type": "Project"
       }
     },
-    "net9.0/osx-arm64": {
+    "net9.0/linux-arm64": {
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
+        }
+      },
       "SQLite": {
         "type": "Transitive",
         "resolved": "3.53.4",
         "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
-      },
+      }
+    },
+    "net9.0/linux-x64": {
       "System.Security.Cryptography.Pkcs": {
-        "type": "Transitive",
-        "resolved": "10.0.0",
-        "contentHash": "UPWqLSygJlFerRi9XNIuM0a1VC8gHUIufyP24xQ0sc+XimqUAEcjpOz9DhKpyDjH+5B/wO3RpC0KpkEeDj/ddg==",
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
         "dependencies": {
-          "Microsoft.Bcl.Cryptography": "10.0.0",
-          "System.Formats.Asn1": "10.0.0"
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
         }
+      },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+      }
+    },
+    "net9.0/osx-arm64": {
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
+        }
+      },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+      }
+    },
+    "net9.0/osx-x64": {
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
+        }
+      },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+      }
+    },
+    "net9.0/win-arm64": {
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
+        }
+      },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+      }
+    },
+    "net9.0/win-x64": {
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Direct",
+        "requested": "[10.0.13, )",
+        "resolved": "10.0.13",
+        "contentHash": "a+EovgC1fBnwdlQ6cn3j4JFBfKqiFaFvoAhjisOoSvazLAcIznaBzPQP0oYnvccmeXfqUH1KebVZOxSeH6rMaw==",
+        "dependencies": {
+          "Microsoft.Bcl.Cryptography": "10.0.13",
+          "System.Formats.Asn1": "10.0.13"
+        }
+      },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
       }
     }
   }

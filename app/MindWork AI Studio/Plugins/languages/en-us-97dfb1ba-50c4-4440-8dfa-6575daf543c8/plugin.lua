@@ -1104,6 +1104,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Common settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1963959073"] = "Common settings"
 
+-- Import policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1965764758"] = "Import policy"
+
 -- Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1984494439"] = "Note: This setting only takes effect when this policy is exported and distributed via a configuration plugin to other users. When enabled, users will only see the document selection interface and cannot view or modify the policy details. This setting does NOT affect your local view - you will always see the full policy definition for policies you create."
 
@@ -3756,6 +3759,237 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "C
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
 
+-- Keep the existing chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1274903302"] = "Keep the existing chat"
+
+-- The backup goes on when you leave this page.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1298413158"] = "The backup goes on when you leave this page."
+
+-- Unpacking file {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1496386567"] = "Unpacking file {0} of {1}"
+
+-- Created on {0} with AI Studio {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1503285113"] = "Created on {0} with AI Studio {1}"
+
+-- AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1555678613"] = "AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first."
+
+-- Replace All Data
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1670691112"] = "Replace All Data"
+
+-- Reading the backup
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1731783566"] = "Reading the backup"
+
+-- Please stay on this page until this is done. Leaving the page stops adding the chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1758163038"] = "Please stay on this page until this is done. Leaving the page stops adding the chats."
+
+-- Back up
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T1823019579"] = "Back up"
+
+-- When a chat already exists
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2117204104"] = "When a chat already exists"
+
+-- Restoring this backup replaces your settings, your chats, your plugins, and the indexes of your data sources with those of the backup. Whatever you changed since the backup was made is lost. Afterward, AI Studio restarts. Do you want to restore this backup?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2176422849"] = "Restoring this backup replaces your settings, your chats, your plugins, and the indexes of your data sources with those of the backup. Whatever you changed since the backup was made is lost. Afterward, AI Studio restarts. Do you want to restore this backup?"
+
+-- 1 chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2301695346"] = "1 chat"
+
+-- Writing file {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2416389933"] = "Writing file {0} of {1}"
+
+-- Temporary chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2532369939"] = "Temporary chats"
+
+-- Adding the chats was stopped. The chats added until then were kept.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2586532370"] = "Adding the chats was stopped. The chats added until then were kept."
+
+-- Restore
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T267943793"] = "Restore"
+
+-- Replaces your settings, chats, plugins, and the indexes of your data sources with those of the backup. AI Studio restarts to do so. The plugins and settings of your organization stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T2693525709"] = "Replaces your settings, chats, plugins, and the indexes of your data sources with those of the backup. AI Studio restarts to do so. The plugins and settings of your organization stay as they are."
+
+-- Chats which already existed and stayed as they are: {0}.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T29276052"] = "Chats which already existed and stayed as they are: {0}."
+
+-- The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3006171489"] = "The indexes of your data sources are not part of this backup, because they were not available. After a restore, AI Studio indexes your data sources anew."
+
+-- Preparing the backup
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3082169282"] = "Preparing the backup"
+
+-- Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3087579229"] = "Back up all your data into one file: your settings, chats, plugins, and the indexes of your data sources. Your API keys and passwords stay out of it. AI Studio keeps them in the secure storage of your OS."
+
+-- Choose backup
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3114985646"] = "Choose backup"
+
+-- Select a backup
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T311951952"] = "Select a backup"
+
+-- Add chats only
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3238328507"] = "Add chats only"
+
+-- Chat {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T355446621"] = "Chat {0} of {1}"
+
+-- {0} chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3562573794"] = "{0} chats"
+
+-- Add {0} chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3585479613"] = "Add {0} chats"
+
+-- Backed up {0} files into: {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3630348902"] = "Backed up {0} files into: {1}"
+
+-- Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3657899737"] = "Restore a backup: replace all your data with those of the backup, e.g., on a new computer, or add only its chats to the chats you have."
+
+-- Add it as an additional chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3966117123"] = "Add it as an additional chat"
+
+-- Chats added: {0}. Workspaces they went into: {1}.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T3972560517"] = "Chats added: {0}. Workspaces they went into: {1}."
+
+-- The backup was stopped. No file was left behind.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T431814261"] = "The backup was stopped. No file was left behind."
+
+-- Adds the chats of the backup to the chats you have. Nothing else changes.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T457177394"] = "Adds the chats of the backup to the chats you have. Nothing else changes."
+
+-- Chats which could not be added: {0}.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T611768714"] = "Chats which could not be added: {0}."
+
+-- The restore was stopped. All your data stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T749188343"] = "The restore was stopped. All your data stay as they are."
+
+-- Back up data
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T796613169"] = "Back up data"
+
+-- Replace all data
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T819832488"] = "Replace all data"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T900713019"] = "Cancel"
+
+-- Copying the indexes of your data sources: {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T907141309"] = "Copying the indexes of your data sources: {0} of {1}"
+
+-- Add 1 chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATABACKUPPANEL::T938996955"] = "Add 1 chat"
+
+-- Folder
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T104168189"] = "Folder"
+
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1093747001"] = "Reason"
+
+-- Configuration folder
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1191404447"] = "Configuration folder"
+
+-- Could not open the folder.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1215994612"] = "Could not open the folder."
+
+-- Your projects in the Visual Briefing Assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1259707710"] = "Your projects in the Visual Briefing Assistant."
+
+-- Your temporary chats, along with their transcripts.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1293614512"] = "Your temporary chats, along with their transcripts."
+
+-- What belongs into a backup
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1682175486"] = "What belongs into a backup"
+
+-- The index of your local data sources: which files AI Studio embedded, and their text.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T170332953"] = "The index of your local data sources: which files AI Studio embedded, and their text."
+
+-- Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1981169629"] = "Keys with which AI Studio protects data in its user interface. Only the Flatpak keeps them here, and on another computer, AI Studio creates new ones."
+
+-- Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T1992121437"] = "Tools which AI Studio downloaded for this OS, such as Pandoc. On another computer, AI Studio downloads them again."
+
+-- What a backup can leave out
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2120934651"] = "What a backup can leave out"
+
+-- Good to know
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2373663376"] = "Good to know"
+
+-- Data folder
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2422278827"] = "Data folder"
+
+-- Explanation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2840582448"] = "Explanation"
+
+-- Copies of your settings, which every version of AI Studio keeps for itself. Your current settings are all a backup needs.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2851981238"] = "Copies of your settings, which every version of AI Studio keeps for itself. Your current settings are all a backup needs."
+
+-- The tokenizers you chose for your providers.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2892362083"] = "The tokenizers you chose for your providers."
+
+-- To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore on this page or in the settings instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2906063884"] = "To back up your data with AI Studio itself, or to move it to another computer, use Data Backup & Restore on this page or in the settings instead."
+
+-- Your plugins, such as the assistants you built, apart from the folders listed below.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2979110360"] = "Your plugins, such as the assistants you built, apart from the folders listed below."
+
+-- Open in your file manager
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2986518596"] = "Open in your file manager"
+
+-- Your organization deployed some plugins among your own ones, for example, with a device management. Their folders do not show this, so the list above names them one by one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3156743605"] = "Your organization deployed some plugins among your own ones, for example, with a device management. Their folders do not show this, so the list above names them one by one."
+
+-- Content
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3244793698"] = "Content"
+
+-- The embeddings of your local data sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3301102729"] = "The embeddings of your local data sources."
+
+-- The folder is not known yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3310368654"] = "The folder is not known yet."
+
+-- Could not open the folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3380661810"] = "Could not open the folder: {0}"
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3461425987"] = "Unknown error"
+
+-- Plugins of your organization. Your organization brings them back.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T346886000"] = "Plugins of your organization. Your organization brings them back."
+
+-- Back up the indexes of your data sources only while AI Studio is closed. AI Studio writes to them while it runs, so a copy made meanwhile may not fit together, and AI Studio would have to embed your data sources anew.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3655837348"] = "Back up the indexes of your data sources only while AI Studio is closed. AI Studio writes to them while it runs, so a copy made meanwhile may not fit together, and AI Studio would have to embed your data sources anew."
+
+-- Files which AI Studio needs only for a moment and deletes again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T366353671"] = "Files which AI Studio needs only for a moment and deletes again."
+
+-- Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3877928356"] = "Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself."
+
+-- Path
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T3949388886"] = "Path"
+
+-- Your API keys, tokens, and passwords are not in these folders. AI Studio keeps them in the secure storage of your OS. After you restored your data on another computer, enter them there once more.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T4093107108"] = "Your API keys, tokens, and passwords are not in these folders. AI Studio keeps them in the secure storage of your OS. After you restored your data on another computer, enter them there once more."
+
+-- Your chats in workspaces, along with their transcripts.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T509585668"] = "Your chats in workspaces, along with their transcripts."
+
+-- Log files. They help when something goes wrong, but they hold none of your data.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T53143530"] = "Log files. They help when something goes wrong, but they hold none of your data."
+
+-- AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T69622543"] = "AI Studio keeps your data in two folders on this computer. When you back up your computer with a tool of your own, such as [Restic](https://restic.net), [Borg](https://www.borgbackup.org), or [Time Machine](https://support.apple.com/en-us/104984), this shows which of their contents belong into the backup and which it can leave out. Click a path to copy it to the clipboard, or use the folder button to open it in your file manager."
+
+-- Your settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T790727583"] = "Your settings."
+
+-- The following is meant for experts who back up their computer with a tool of their own.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T813925103"] = "The following is meant for experts who back up their computer with a tool of their own."
+
+-- On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T91194331"] = "On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along."
+
 -- Yes, please send my data to the external embedding provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107763"] = "Yes, please send my data to the external embedding provider"
 
@@ -3803,6 +4037,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3793916
 
 -- The selected file
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3999057817"] = "The selected file"
+
+-- AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1006756723"] = "AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."
 
 -- You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026"] = "You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task."
@@ -3929,6 +4166,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lo
 
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Not available"
+
+-- Import Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T381231449"] = "Import Data Source"
 
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "Export ERI Data Source"
@@ -4704,6 +4944,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T148008546"] 
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Select the desired behavior for the navigation bar."
 
+-- When enabled, AI answers which you copy or export end with a notice that they were generated using artificial intelligence (AI), in the language of the app. The same holds for the files of the Batch Processing Assistant. Code blocks, single files or tables taken from an answer, visual briefings, and the results of the Prompt Optimizer and the Assistant Builder stay unchanged. Rules on transparency, such as the EU AI Act, may require such a notice, for example, when you publish a text.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1594053136"] = "When enabled, AI answers which you copy or export end with a notice that they were generated using artificial intelligence (AI), in the language of the app. The same holds for the files of the Batch Processing Assistant. Code blocks, single files or tables taken from an answer, visual briefings, and the results of the Prompt Optimizer and the Assistant Builder stay unchanged. Rules on transparency, such as the EU AI Act, may require such a notice, for example, when you publish a text."
+
 -- Color theme
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1599198973"] = "Color theme"
 
@@ -4764,6 +5007,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"]
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Update installation method"
 
+-- AI-generated content gets no notice
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2533412202"] = "AI-generated content gets no notice"
+
+-- AI-generated content gets a notice
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2544374612"] = "AI-generated content gets a notice"
+
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Language"
 
@@ -4784,6 +5033,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2918560776"]
 
 -- Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"] = "Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates."
+
+-- Add a notice to AI-generated content?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3070682674"] = "Add a notice to AI-generated content?"
 
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Save energy?"
@@ -4968,6 +5220,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T16449
 -- Test Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1655784761"] = "Test Embedding Provider"
 
+-- Import Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1681763001"] = "Import Embedding"
+
 -- Add Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1738753945"] = "Add Embedding"
 
@@ -5094,6 +5349,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T301987
 -- What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-6 Luna. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3032087963"] = "What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-6 Luna. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider."
 
+-- Import Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3160005705"] = "Import Provider"
+
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3267849393"] = "Edit"
 
@@ -5204,6 +5462,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T58
 
 -- This transcription provider is trusted by your organization for data source security checks.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T601264181"] = "This transcription provider is trusted by your organization for data source security checks."
+
+-- Import transcription provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T644492997"] = "Import transcription provider"
 
 -- This transcription provider is managed by your organization. You can set your own API key.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T690752279"] = "This transcription provider is managed by your organization. You can set your own API key."
@@ -5844,6 +6105,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Please 
 -- Yes, this template decides which data a chat starts with
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Yes, this template decides which data a chat starts with"
 
+-- Enter the full path of a file on this computer, or remove the attachment.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Enter the full path of a file on this computer, or remove the attachment."
+
 -- Load predefined user input from file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Load predefined user input from file"
 
@@ -5855,6 +6119,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T204496403"] = "The chat
 
 -- Profile Usage
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profile Usage"
+
+-- Relink attachment: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2234793579"] = "Relink attachment: {0}"
 
 -- Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Add messages of an example conversation (user prompt followed by assistant prompt) to demonstrate the desired interaction pattern. These examples help the AI understand your expectations by showing it the correct format, style, and content of responses before it receives actual user inputs."
@@ -5897,6 +6164,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "The mes
 
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Chat Template Name"
+
+-- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Please relink the attachment '{0}' to a file on this computer or remove it before you save."
 
 -- Commit Changes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2996302517"] = "Commit Changes"
@@ -5964,6 +6234,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Use the
 -- Tell the AI your predefined user input.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Tell the AI your predefined user input."
 
+-- Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template."
+
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements."
 
@@ -5978,6 +6251,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T628396066"] = "System P
 
 -- A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T650711085"] = "A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself."
+
+-- Remove this attachment
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T70791272"] = "Remove this attachment"
 
 -- The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T722788866"] = "The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use."
@@ -6075,11 +6351,104 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T767586087"
 -- {0} embedding provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T818101181"] = "{0} embedding provider"
 
+-- Exported configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T1297128668"] = "Exported configuration"
+
+-- Your organization does not allow importing this type of configuration.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2349213174"] = "Your organization does not allow importing this type of configuration."
+
+-- Paste a configuration which was exported from AI Studio, for example by a colleague. AI Studio only reads its values and never runs the pasted text. You can review and change everything afterward.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2598895568"] = "Paste a configuration which was exported from AI Studio, for example by a colleague. AI Studio only reads its values and never runs the pasted text. You can review and change everything afterward."
+
+-- Continue anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T2843058989"] = "Continue anyway"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONSNIPPETIMPORTDIALOG::T900713019"] = "Cancel"
+
 -- No
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "No"
 
 -- Yes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T3013883440"] = "Yes"
+
+-- Restart now
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T1409292924"] = "Restart now"
+
+-- Discard the restore
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T3017406920"] = "Discard the restore"
+
+-- Your backup is ready. AI Studio restarts to put it in place. Whatever you changed until then would be lost, so please restart now.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T495853773"] = "Your backup is ready. AI Studio restarts to put it in place. Whatever you changed until then would be lost, so please restart now."
+
+-- AI Studio could not restart by itself. Please quit AI Studio and start it again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREPENDINGDIALOG::T573887863"] = "AI Studio could not restart by itself. Please quit AI Studio and start it again."
+
+-- Restoring your backup failed. AI Studio put all your data back the way they were before.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1057857006"] = "Restoring your backup failed. AI Studio put all your data back the way they were before."
+
+-- Your backup was not restored
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1193456690"] = "Your backup was not restored"
+
+-- Restoring your backup failed, and AI Studio could not yet put all your data back the way they were. It tries again at the next start, so please restart AI Studio. If this message appears again, please contact the support, and keep the folders '.restore-previous' and '.restore-pending' in your data folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T123391329"] = "Restoring your backup failed, and AI Studio could not yet put all your data back the way they were. It tries again at the next start, so please restart AI Studio. If this message appears again, please contact the support, and keep the folders '.restore-previous' and '.restore-pending' in your data folder."
+
+-- The batch processing uses '{0}', which does not exist on this computer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1314976065"] = "The batch processing uses '{0}', which does not exist on this computer."
+
+-- The backup is from {0} and was made with AI Studio {1}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1363238678"] = "The backup is from {0} and was made with AI Studio {1}."
+
+-- A backup holds no API keys or passwords, and some files and folders are not on this computer. Please check the following:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1633897333"] = "A backup holds no API keys or passwords, and some files and folders are not on this computer. Please check the following:"
+
+-- Enter the API key of the provider '{0}' again, if it needs one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T1645175373"] = "Enter the API key of the provider '{0}' again, if it needs one."
+
+-- Restoring your backup is not finished
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T2415452768"] = "Restoring your backup is not finished"
+
+-- Enter the API key of the embedding provider '{0}' again, if it needs one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T2492749778"] = "Enter the API key of the embedding provider '{0}' again, if it needs one."
+
+-- Enter the API key of the transcription provider '{0}' again, if it needs one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T2568556297"] = "Enter the API key of the transcription provider '{0}' again, if it needs one."
+
+-- Nothing else to do: every provider and every data source has what it needs on this computer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T2671436044"] = "Nothing else to do: every provider and every data source has what it needs on this computer."
+
+-- The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T270687216"] = "The data source '{0}' names a file or folder which does not exist on this computer. Choose it anew."
+
+-- The file with your own root certificates, '{0}', does not exist on this computer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T2844911500"] = "The file with your own root certificates, '{0}', does not exist on this computer."
+
+-- AI Studio could not start restoring your backup, so all your data stayed as they were.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3044053464"] = "AI Studio could not start restoring your backup, so all your data stayed as they were."
+
+-- Enter the password of the mailbox '{0}' again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3083231765"] = "Enter the password of the mailbox '{0}' again."
+
+-- Enter the password or token of the data source '{0}' again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3430781520"] = "Enter the password or token of the data source '{0}' again."
+
+-- Technical details: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3436390766"] = "Technical details: {0}"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3448155331"] = "Close"
+
+-- Enter the setting '{1}' of the tool '{0}' again, if you used it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3658964195"] = "Enter the setting '{1}' of the tool '{0}' again, if you used it."
+
+-- AI Studio replaced your data with those of the backup. The plugins and settings of your organization stayed as they were.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3896631626"] = "AI Studio replaced your data with those of the backup. The plugins and settings of your organization stayed as they were."
+
+-- Your backup was restored
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T3980336073"] = "Your backup was restored"
+
+-- The ERI server '{0}' writes into a folder which does not exist on this computer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATARESTOREREPORTDIALOG::T472632172"] = "The ERI server '{0}' writes into a folder which does not exist on this computer."
 
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T1827669611"] = "How many matches do you want at most per query?"
@@ -6134,6 +6503,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T449168182"] = "Fail
 
 -- Username
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T470340825"] = "Username"
+
+-- The server does not offer the imported retrieval process '{0}'. Please select another one before you save.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T653836675"] = "The server does not offer the imported retrieval process '{0}'. Please select another one before you save."
 
 -- Password
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1DIALOG::T750979128"] = "Password"
@@ -8352,6 +8724,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T23198
 -- This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2563631533"] = "This chat template preselects data sources which exist on this machine only: {0}. They cannot be rolled out, so a chat started with this template elsewhere begins without them. Do you want to export the template anyway?"
 
+-- Import Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T263213584"] = "Import Chat Template"
+
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T275026390"] = "Chat Template Name"
 
@@ -8672,6 +9047,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGMYTASKS::T711745239"
 
 -- Edit Profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1143111468"] = "Edit Profile"
+
+-- Import Profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1215374025"] = "Import Profile"
 
 -- No profiles configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T1433534732"] = "No profiles configured yet."
@@ -9452,6 +9830,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2800137365"] = "An update to ver
 
 -- Please wait for the update to complete...
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2864211629"] = "Please wait for the update to complete..."
+
+-- Restore of a Backup
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2912921801"] = "Restore of a Backup"
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Supporters"
@@ -10290,6 +10671,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3294830584"] = "Discover MindWor
 -- External HTTPS custom root certificates
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3315279770"] = "External HTTPS custom root certificates"
 
+-- Data Backup & Restore
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3317700277"] = "Data Backup & Restore"
+
 -- User-language provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3334355246"] = "User-language provided by the OS"
 
@@ -10445,6 +10829,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T551035563"] = "Open Log Viewer"
 
 -- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow."
+
+-- Your Data Folders
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T570573187"] = "Your Data Folders"
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
@@ -10629,14 +11016,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "The plugin could not 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Settings"
 
+-- Data Backup & Restore
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T3317700277"] = "Data Backup & Restore"
+
 -- Thank you very much, Kerstin, for creating the Wiki, for advising us on ERI with real use cases, and for your work on version 2 of the ERI protocol.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1367356224"] = "Thank you very much, Kerstin, for creating the Wiki, for advising us on ERI with real use cases, and for your work on version 2 of the ERI protocol."
 
 -- Thank you for being the first to contribute a one-time donation.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1470916504"] = "Thank you for being the first to contribute a one-time donation."
-
--- Thank you, Jens, for the Batch Processing Assistant, the exact token count in the chat, and everything else you are building for AI Studio with so much dedication.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1701321325"] = "Thank you, Jens, for the Batch Processing Assistant, the exact token count in the chat, and everything else you are building for AI Studio with so much dedication."
 
 -- Thank you, Peer, for your courage in being the second person to support the project financially.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T1714878838"] = "Thank you, Peer, for your courage in being the second person to support the project financially."
@@ -10724,6 +11111,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T686206269"] = "Thanks for your bu
 
 -- Business Contributors
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T838479287"] = "Business Contributors"
+
+-- Thank you, Jens, for the Batch Processing Assistant, the exact token count in the chat, the backups of all data, and everything else you are building for AI Studio with so much dedication.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T882777973"] = "Thank you, Jens, for the Batch Processing Assistant, the exact token count in the chat, the backups of all data, and everything else you are building for AI Studio with so much dedication."
 
 -- Thanks, Oliver, for making sure no spaces get lost in answers from OpenAI.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SUPPORTERS::T916186976"] = "Thanks, Oliver, for making sure no spaces get lost in answers from OpenAI."
@@ -11367,6 +11757,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T810547195"] = "No au
 -- Username & Password
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T863358904"] = "Username & Password"
 
+-- Unexpected error: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T2350673880"] = "Unexpected error: {0}"
+
+-- This file is no backup of AI Studio, or it was not written completely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T3123318432"] = "This file is no backup of AI Studio, or it was not written completely."
+
+-- Imported workspace
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::CHATARCHIVE::CHATARCHIVEIMPORTER::T722364324"] = "Imported workspace"
+
 -- Spanish (Spain)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMMONLANGUAGEEXTENSIONS::T1269145091"] = "Spanish (Spain)"
 
@@ -11501,6 +11900,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T3893997203"] = "
 
 -- Trust all LLM providers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "Trust all LLM providers"
+
+-- This file is no backup of AI Studio, or it was not written completely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATABACKUPREADER::T3123318432"] = "This file is no backup of AI Studio, or it was not written completely."
+
+-- This backup was made by a newer version of AI Studio. Please update AI Studio first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATABACKUPREADER::T3812849494"] = "This backup was made by a newer version of AI Studio. Please update AI Studio first."
+
+-- The content list of this backup could not be read.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATABACKUPREADER::T3954689017"] = "The content list of this backup could not be read."
+
+-- This file is no backup of AI Studio, or it was not written completely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATARESTOREPREPARER::T3123318432"] = "This file is no backup of AI Studio, or it was not written completely."
+
+-- The backup is damaged: the file '{0}' does not match its content list.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATARESTOREPREPARER::T3493230602"] = "The backup is damaged: the file '{0}' does not match its content list."
+
+-- This backup was made by a newer version of AI Studio. Please update AI Studio first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABACKUP::DATARESTOREPREPARER::T3812849494"] = "This backup was made by a newer version of AI Studio. Please update AI Studio first."
 
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::INDEXSTORE::NOINDEXSTORECLIENT::T1093747001"] = "Reason"
@@ -11651,6 +12068,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T858000918"] = "Thes
 
 -- Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T874850580"] = "Everything prepared for them is thrown away, and every one of their documents goes to your embedding provider once more. With a large data source, this takes a while."
+
+-- AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T1006756723"] = "AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T3448155331"] = "Close"
 
 -- Repair Data Source
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Repair Data Source"
@@ -12360,6 +12783,93 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used."
 
+-- The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T186946778"] = "The token or password of the data source cannot be decrypted on this computer. Such data sources can only be imported where the encryption secret of your organization is configured."
+
+-- Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T206419407"] = "Data sources which sign in with Kerberos cannot be imported yet. Please add them yourself."
+
+-- The tokenizer '{0}' is not on this computer, so the provider is imported without it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2556276619"] = "The tokenizer '{0}' is not on this computer, so the provider is imported without it."
+
+-- The chat template preselects data sources which do not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2608225446"] = "The chat template preselects data sources which do not exist on this computer: {0}."
+
+-- The chat template preselects tools which are not available on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "The chat template preselects tools which are not available on this computer: {0}."
+
+-- The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider."
+
+-- The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3702015680"] = "The chat template attaches these files from this computer to every chat started with it: {0}. Please check that you want to share them."
+
+-- The policy preselects a provider which does not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3849646238"] = "The policy preselects a provider which does not exist on this computer: {0}."
+
+-- The pasted configuration is not a valid configuration of the type '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T4231596123"] = "The pasted configuration is not a valid configuration of the type '{0}'."
+
+-- The policy permits tools which are not available on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "The policy permits tools which are not available on this computer: {0}."
+
+-- The policy preselects a profile which does not exist on this computer: {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T600255824"] = "The policy preselects a profile which does not exist on this computer: {0}."
+
+-- The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T639320638"] = "The pasted configuration contains an API key which is not encrypted, so it was left out. Please enter your API key before you save the provider."
+
+-- Expected a quoted string at character {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1235695745"] = "Expected a quoted string at character {0}."
+
+-- The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T1957713080"] = "The pasted configuration describes the type '{0}', but only the type '{1}' can be imported here."
+
+-- Expected '{0}' at character {1}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2092509274"] = "Expected '{0}' at character {1}."
+
+-- A quoted string contains a line break, which Lua does not allow.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2204852708"] = "A quoted string contains a line break, which Lua does not allow."
+
+-- Please paste one exported configuration of at most 1 MB.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2312733854"] = "Please paste one exported configuration of at most 1 MB."
+
+-- The pasted configuration does not describe the type '{0}', which can be imported here.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2537838739"] = "The pasted configuration does not describe the type '{0}', which can be imported here."
+
+-- A quoted string is not closed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2729613384"] = "A quoted string is not closed."
+
+-- The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2765542892"] = "The block comment at character {0} is not supported. Please use line comments, which start with -- and end at the end of the line."
+
+-- The pasted configuration names two different types of configuration.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T2938094482"] = "The pasted configuration names two different types of configuration."
+
+-- The pasted configuration contains too many nested tables.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3064118429"] = "The pasted configuration contains too many nested tables."
+
+-- Expected a comma or closing brace at character {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3466555352"] = "Expected a comma or closing brace at character {0}."
+
+-- The value nil at character {0} is not supported. Leave the field out instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3903177263"] = "The value nil at character {0} is not supported. Leave the field out instead."
+
+-- At character {0}, the pasted configuration contains code. Only plain values such as texts, numbers, true, and false are allowed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T3962550160"] = "At character {0}, the pasted configuration contains code. Only plain values such as texts, numbers, true, and false are allowed."
+
+-- A long string is not closed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T39989546"] = "A long string is not closed."
+
+-- The escape sequence {0} is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T459116273"] = "The escape sequence {0} is not supported."
+
+-- The field '{0}' occurs more than once.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T560836334"] = "The field '{0}' occurs more than once."
+
+-- The pasted configuration must consist of exactly one exported item, without any further code.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETPARSER::T949973671"] = "The pasted configuration must consist of exactly one exported item, without any further code."
+
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "The table AUTHORS does not exist or is using an invalid syntax."
 
@@ -12522,6 +13032,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "The CONFIG table does not exist or is not a valid table."
 
+-- Document Analysis Policy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Document Analysis Policy"
+
+-- Chat Template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T2515475479"] = "Chat Template"
+
+-- Unknown configuration
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3189461731"] = "Unknown configuration"
+
+-- Profile
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3440849550"] = "Profile"
+
+-- LLM Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T3612415205"] = "LLM Provider"
+
+-- Transcription Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T4094182084"] = "Transcription Provider"
+
+-- Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T858938618"] = "Data Source"
+
+-- Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T981047123"] = "Embedding Provider"
+
 -- The field IETF_TAG does not exist or is not a valid string.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINLANGUAGE::T1796010240"] = "The field IETF_TAG does not exist or is not a valid string."
 
@@ -12623,6 +13157,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T377
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
+
+-- AI Studio backup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1046878067"] = "AI Studio backup"
 
 -- Office Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office Files"
@@ -12752,6 +13289,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS:
 
 -- Mail content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T841590371"] = "Mail content"
+
+-- This content was generated using artificial intelligence (AI).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::AIGENERATEDCONTENTDISCLOSURESERVICE::T3440957850"] = "This content was generated using artificial intelligence (AI)."
 
 -- The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1002777578"] = "The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."
@@ -12888,8 +13428,44 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T5
 -- Workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T658612054"] = "Workspace"
 
+-- A backup is running already.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATABACKUPSERVICE::T1319749333"] = "A backup is running already."
+
+-- The backup is too large for the chosen drive, which takes no files beyond 4 GB. USB sticks formatted with FAT32 are such drives. Please choose another drive.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATABACKUPSERVICE::T1869616367"] = "The backup is too large for the chosen drive, which takes no files beyond 4 GB. USB sticks formatted with FAT32 are such drives. Please choose another drive."
+
+-- The backup failed: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATABACKUPSERVICE::T1915001713"] = "The backup failed: {0}"
+
+-- Your organization does not allow backups.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATABACKUPSERVICE::T2011318013"] = "Your organization does not allow backups."
+
+-- AI Studio is still writing an answer or a transcript. Please start the backup once it is done.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATABACKUPSERVICE::T4161531565"] = "AI Studio is still writing an answer or a transcript. Please start the backup once it is done."
+
+-- Your organization does not allow restoring backups.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T1032491606"] = "Your organization does not allow restoring backups."
+
+-- AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T1555678613"] = "AI Studio has not finished restoring an earlier backup yet. Please restart AI Studio first."
+
+-- AI Studio is still writing an answer or a transcript. Please restore once it is done.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T1847516630"] = "AI Studio is still writing an answer or a transcript. Please restore once it is done."
+
+-- The restore could not be prepared: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T2653345012"] = "The restore could not be prepared: {0}"
+
+-- A restore is being prepared already.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T4157700208"] = "A restore is being prepared already."
+
+-- A backup is running. Please restore once it is done.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATARESTORESERVICE::T553866901"] = "A backup is running. Please restore once it is done."
+
 -- The local RAG index database is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T1738200026"] = "The local RAG index database is not available."
+
+-- The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T204783307"] = "The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."
 
 -- The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGSERVICE::T2186533187"] = "The selected embedding provider is not allowed to index this data source. The data source asks for the confidence level '{0}', while the embedding provider has '{1}'."
@@ -12999,20 +13575,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T2967
 -- The mail '{0}' could not be indexed. AI Studio tries again during the next sync.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T804280374"] = "The mail '{0}' could not be indexed. AI Studio tries again during the next sync."
 
+-- The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1214987337"] = "The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."
+
+-- The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1393648320"] = "The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."
+
 -- The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1935191670"] = "The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."
 
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3230000698"] = "The folder '{0}' could not be opened. Please check whether you are allowed to read it."
 
+-- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3722338131"] = "The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."
+
 -- The file '{0}' could not be read. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3924882233"] = "The file '{0}' could not be read. Please check whether you are allowed to read it."
-
--- The file '{0}' does not exist.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T451561215"] = "The file '{0}' does not exist."
-
--- The folder '{0}' does not exist.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T871336081"] = "The folder '{0}' does not exist."
 
 -- The local index '{0}' could not be created again. Please restart AI Studio and try once more.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::INDEXEDRUNCONTEXT::T1394295123"] = "The local index '{0}' could not be created again. Please restart AI Studio and try once more."

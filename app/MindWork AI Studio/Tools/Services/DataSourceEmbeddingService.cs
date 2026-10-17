@@ -28,6 +28,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private static readonly TimeSpan REINDEX_CHECK_TIMEOUT = TimeSpan.FromSeconds(2);
 
     /// <summary>
+    /// How long the first run waits for the plugins to be loaded, cf. WaitForFirstPluginLoadAsync.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin may take ten seconds to load and ten more to start, and the configuration of an
+    /// organization may have to be downloaded first. Should loading fail, the data sources are
+    /// indexed all the same, with whatever the settings hold by then.
+    /// </remarks>
+    private static readonly TimeSpan FIRST_PLUGIN_LOAD_TIMEOUT = TimeSpan.FromMinutes(2);
+
+    /// <summary>
     /// One indexer per kind of data source this service indexes.
     /// </summary>
     private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, mediaTranscriptionService, logger);
@@ -57,7 +67,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
-    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion)
+    /// <summary>
+    /// The pauses of the indexing, cf. PauseIndexingAsync.
+    /// </summary>
+    private readonly IndexingPauses pauses = new();
+
+    /// <summary>
+    /// An active run.
+    /// </summary>
+    /// <param name="TokenSource">Stops the run.</param>
+    /// <param name="Completion">Completes once the run has ended.</param>
+    /// <param name="RefreshMode">Why the run was asked for.</param>
+    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion, DataSourceEmbeddingRefreshMode RefreshMode)
     {
         /// <summary>
         /// The embedding settings the run works for, as GetRunSignature describes them.
@@ -366,11 +387,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     /// <summary>
-    /// Whether a data source cannot be searched because its vector store cannot be read anymore.
+    /// Whether a data source cannot be searched because its vector store cannot be read anymore, or is missing.
     /// </summary>
     /// <remarks>
     /// Unlike the re-index check above, this reads no database at all: the state comes from the run
-    /// or the search which ran into the unreadable store, and is kept in memory only. That it does
+    /// or the search which ran into the unreadable or missing store, and is kept in memory only. That it does
     /// not survive a restart is deliberate. The very same store may well open on the next start,
     /// and a mark written to disk would then be wrong with nobody noticing. Until something touches
     /// the store again, the data source counts as usable, and a failing search says so on its own.
@@ -490,6 +511,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id);
             await activeRun.Completion.Task;
         }
+
+        // A backup copies the stores during a pause, and the copies would no longer fit together:
+        await this.pauses.WaitWhilePausedAsync(CancellationToken.None);
 
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
@@ -612,7 +636,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var runTokenSource = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
         var runControl = new DataSourceRunControl(
             runTokenSource,
-            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously));
+            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously),
+            refreshMode);
 
         if (!this.activeRuns.TryAdd(dataSource.Id, runControl))
         {
@@ -631,8 +656,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             // One run at a time, whichever way it started: the startup check goes on next to the
             // queue once the automatic refresh is switched on while the app runs. The wait counts as
             // part of the run, so deleting or repairing the data source ends the wait as well,
-            // instead of waiting for the run before it to finish first.
+            // instead of waiting for the run before it to finish first. A paused indexing holds
+            // every run back in front of the gate, cf. PauseIndexingAsync:
             //
+            await this.pauses.WaitWhilePausedAsync(runTokenSource.Token);
             await this.runGate.WaitAsync(runTokenSource.Token);
             try
             {
@@ -725,16 +752,27 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var persistedState = await indexStore.GetDataSourceStateAsync(dataSource.Id, token);
         if (persistedState is { VectorSize: > 0 })
         {
-            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedState.VectorSize, token);
-            if (ensureResult.Created)
+            //
+            // The index database knows what was indexed, but the vectors are gone, e.g. because the
+            // folder of the vector database was deleted, or restored from another backup than the
+            // index database. Rebuilding sends every document to the embedding provider once more,
+            // which costs money and hours, so it is for the user to decide, cf. RepairDataSourceAsync.
+            // Until then, the data source stays out of every search.
+            //
+            if (!await vectorStore.VectorStoreExists(collectionName, token))
             {
                 logger.LogWarning(
-                    "Vector store '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}) was missing although persisted embedding state exists. Resetting the stale state so all vectors are rebuilt.",
+                    "Vector store '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}) is missing although persisted embedding state exists. The data source is waiting for a repair.",
                     collectionName,
                     dataSource.Name,
                     dataSource.Id);
-                await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, indexStore, token);
+                token.ThrowIfCancellationRequested();
+                this.UpsertStatus(this.GetMissingVectorStoreStatus(dataSource));
+                return null;
             }
+
+            // Opens the store, so one which cannot be read shows up before the run starts:
+            await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedState.VectorSize, token);
         }
 
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
@@ -904,12 +942,40 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         token.ThrowIfCancellationRequested();
 
+        //
+        // The embedding providers and data sources of an organization come with its configuration
+        // plugin. On a new computer, or after restoring a backup, the settings do not hold them yet,
+        // and the first run would find such a data source without its embedding provider:
+        //
+        if (!await WaitForFirstPluginLoadAsync(PluginFactory.FirstLoadCompleted, FIRST_PLUGIN_LOAD_TIMEOUT, token))
+            logger.LogWarning("The plugins were not loaded within {TimeoutSeconds:F0} seconds. Indexing starts with the settings as they are, without what the configuration of an organization may add later.", FIRST_PLUGIN_LOAD_TIMEOUT.TotalSeconds);
+
         // Before the first run: from then on, a sync may be writing an attachment there.
         MailAttachmentFiles.DeleteLeftovers(logger);
         await this.DeleteOrphanedMailboxIndexesAsync(token);
 
         logger.LogInformation("Embedding background service is ready. Running the initial persisted hash check before activating file watchers.");
         await this.RunInitialDataSourceHashCheckAsync(token);
+    }
+
+    /// <summary>
+    /// Waits until the plugins were loaded for the first time, but not longer than the given time.
+    /// </summary>
+    /// <param name="firstLoad">Completes once the plugins were loaded, cf. PluginFactory.FirstLoadCompleted.</param>
+    /// <param name="timeout">How long to wait at most.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>True when the plugins were loaded in time, false when the time ran out.</returns>
+    internal static async Task<bool> WaitForFirstPluginLoadAsync(Task firstLoad, TimeSpan timeout, CancellationToken token)
+    {
+        try
+        {
+            await firstLoad.WaitAsync(timeout, token);
+            return true;
+        }
+        catch (TimeoutException)
+        {
+            return false;
+        }
     }
 
     private async Task RunInitialDataSourceHashCheckAsync(CancellationToken token)
@@ -1215,9 +1281,23 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// path, is written in English for the log file, and says nothing about what happens next. What
     /// the user needs to read is what this means for their chats and where the way out is.
     /// </remarks>
-    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSourceBase dataSource)
+    private DataSourceEmbeddingStatus GetUnreadableVectorStoreStatus(IDataSourceBase dataSource) =>
+        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+
+    /// <remarks>
+    /// The same way out as for a store which cannot be read, cf. GetUnreadableVectorStoreStatus.
+    /// </remarks>
+    private DataSourceEmbeddingStatus GetMissingVectorStoreStatus(IDataSourceBase dataSource) =>
+        this.GetRepairStatus(dataSource, string.Format(TB("The index of the data source '{0}' is missing. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name));
+
+    /// <summary>
+    /// Shows a data source as waiting for the user to have its index built anew, cf. NeedsIndexRepair.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="errorMessage">What is wrong with the index, and where the way out is.</param>
+    /// <returns>The failed status, which offers the repair.</returns>
+    private DataSourceEmbeddingStatus GetRepairStatus(IDataSourceBase dataSource, string errorMessage)
     {
-        var errorMessage = string.Format(TB("The index of the data source '{0}' cannot be read anymore. The data source stays out of your chats until its index was built anew. Use the repair action to start that."), dataSource.Name);
         return this.CreateStatus(
             dataSource,
             DataSourceEmbeddingState.FAILED,

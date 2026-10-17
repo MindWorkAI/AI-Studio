@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Dialogs.Settings;
 
@@ -11,9 +12,31 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
             { x => x.IsEditing, false },
         };
 
+        await this.AddProfile(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportProfile()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.PROFILE, T("Import Profile"));
+        if (import?.ConfigurationObject is not Profile profile)
+            return;
+
+        await this.AddProfile(CreateDialogParameters(profile, isEditing: false), isImport: true);
+    }
+
+    private async Task AddProfile(DialogParameters<ProfileDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Add Profile"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported profile is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))
             return;
 
         var addedProfile = (Profile)dialogResult.Data!;
@@ -27,17 +50,7 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
 
     private async Task EditProfile(Profile profile)
     {
-        var dialogParameters = new DialogParameters<ProfileDialog>
-        {
-            { x => x.DataNum, profile.Num },
-            { x => x.DataId, profile.Id },
-            { x => x.DataName, profile.Name },
-            { x => x.DataNeedToKnow, profile.NeedToKnow },
-            { x => x.DataActions, profile.Actions },
-            { x => x.IsEditing, true },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Edit Profile"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<ProfileDialog>(T("Edit Profile"), CreateDialogParameters(profile, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -51,19 +64,19 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
 
     private async Task ViewProfile(Profile profile)
     {
-        var dialogParameters = new DialogParameters<ProfileDialog>
-        {
-            { x => x.DataNum, profile.Num },
-            { x => x.DataId, profile.Id },
-            { x => x.DataName, profile.Name },
-            { x => x.DataNeedToKnow, profile.NeedToKnow },
-            { x => x.DataActions, profile.Actions },
-            { x => x.IsEditing, true },
-            { x => x.IsReadOnly, true },
-        };
-
-        await this.DialogService.ShowAsync<ProfileDialog>(T("View Profile"), dialogParameters, DialogOptions.FULLSCREEN);
+        await this.DialogService.ShowAsync<ProfileDialog>(T("View Profile"), CreateDialogParameters(profile, isEditing: true, isReadOnly: true), DialogOptions.FULLSCREEN);
     }
+
+    private static DialogParameters<ProfileDialog> CreateDialogParameters(Profile profile, bool isEditing, bool isReadOnly = false) => new()
+    {
+        { x => x.DataNum, profile.Num },
+        { x => x.DataId, profile.Id },
+        { x => x.DataName, profile.Name },
+        { x => x.DataNeedToKnow, profile.NeedToKnow },
+        { x => x.DataActions, profile.Actions },
+        { x => x.IsEditing, isEditing },
+        { x => x.IsReadOnly, isReadOnly },
+    };
 
     private async Task ExportProfile(Profile profile)
     {

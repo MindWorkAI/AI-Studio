@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -22,7 +23,7 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    string TokenizerPath = "",
+    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     string TokenizerFingerprint = "",
     int EmbeddingBatchSize = 0,
     int TokenLimit = 0,
@@ -257,13 +258,15 @@ public sealed record EmbeddingProvider(
                           """;
         }
 
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForEmbeddingProvider(this), "    ");
+
         return $$"""
                 CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    {{tokenizerPathLine}}
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 

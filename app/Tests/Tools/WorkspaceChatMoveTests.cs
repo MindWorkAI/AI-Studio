@@ -94,20 +94,18 @@ public sealed class WorkspaceChatMoveTests
     }
 
     [Test]
-    public async Task ATranscriptOutsideTheChatDirectoryKeepsItsPath()
+    public async Task AFileOutsideTheChatDirectoryKeepsItsPath()
     {
         var chatId = Guid.NewGuid();
         Directory.CreateDirectory(Path.Combine(this.testDirectory, "tempChats", chatId.ToString()));
 
-        // A transcript which is still waiting in the staging area, because its chat was not stored yet when it was made:
-        var stagingDirectory = Path.Combine(this.testDirectory, "media-staging", Guid.NewGuid().ToString("N"));
-        var staged = WriteTranscript(stagingDirectory, $"{Guid.NewGuid():N}.md", "meeting", isStaged: true);
+        var document = FileAttachment.FromPath(Path.Combine(this.testDirectory, "documents", "agenda.pdf"));
         var chat = new ChatThread { ChatId = chatId, Name = "Meeting notes" };
-        chat.Draft.AddAttachments([staged]);
+        chat.Draft.AddAttachments([document]);
 
         await WorkspaceBehaviour.MoveChatAsync(chat, Guid.NewGuid());
 
-        Assert.That(chat.Draft.MediaTranscripts.Single().FilePath, Is.EqualTo(staged.FilePath), "The move takes only the chat directory along, so a path elsewhere is still right.");
+        Assert.That(chat.Draft.FileAttachments.Single(), Is.SameAs(document), "The move takes only the chat directory along, so a path elsewhere is still right.");
     }
 
     [Test]
@@ -145,14 +143,11 @@ public sealed class WorkspaceChatMoveTests
     private ManagedTranscriptAttachment CreateTranscript(Guid chatId, string stem, int number)
     {
         var transcriptDirectory = Path.Combine(this.testDirectory, "tempChats", chatId.ToString(), "attachments", "transcripts");
-        return WriteTranscript(transcriptDirectory, $"{stem}-transcript-{number:D4}.md", stem, isStaged: false);
-    }
+        Directory.CreateDirectory(transcriptDirectory);
 
-    private static ManagedTranscriptAttachment WriteTranscript(string directory, string fileName, string stem, bool isStaged)
-    {
-        Directory.CreateDirectory(directory);
-        var path = Path.Combine(directory, fileName);
+        var fileName = $"{stem}-transcript-{number:D4}.md";
+        var path = Path.Combine(transcriptDirectory, fileName);
         File.WriteAllText(path, $"# Transcription: {stem}.mp4{Environment.NewLine}{Environment.NewLine}Hello and welcome.");
-        return new ManagedTranscriptAttachment(fileName, path, new FileInfo(path).Length, $"{stem}.mp4", isStaged);
+        return new ManagedTranscriptAttachment(fileName, path, new FileInfo(path).Length, $"{stem}.mp4", false);
     }
 }

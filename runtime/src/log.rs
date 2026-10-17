@@ -17,6 +17,14 @@ use crate::environment::{is_dev, is_flatpak};
 
 const FLATPAK_PERSISTENT_DATA_DIRECTORY: &str = "/var/data";
 
+/// The name of the log file, without its extension. On Unix systems,
+/// the file starts with a dot to be hidden.
+const LOG_BASENAME: &str = if cfg!(unix) {
+    ".AI Studio Events"
+} else {
+    "AI Studio Events"
+};
+
 /// The key under which a log record carries the time its event happened, in microseconds
 /// since the Unix epoch. A record without it happened when it reached the logger. The
 /// formatters start the line with this time and never write the key itself.
@@ -77,18 +85,10 @@ pub fn init_logging(bundle_identifier: &str) {
     log_config.push_str("qdrant_edge::common::mmap::ops=error, ");
     log_config.push_str("qdrant_edge::common::mmap::advice=info");
 
-    // Configure the initial filename. On Unix systems, the file should start
-    // with a dot to be hidden.
-    let log_basename = match cfg!(unix)
-    {
-        true => ".AI Studio Events",
-        false => "AI Studio Events",
-    };
-
     let (startup_log_directory, fallback_warning) = get_startup_log_path(bundle_identifier);
     let log_path = FileSpec::default()
         .directory(startup_log_directory)
-        .basename(log_basename)
+        .basename(LOG_BASENAME)
         .suppress_timestamp()
         .suffix("log");
 
@@ -243,12 +243,8 @@ where
 
 fn ensure_log_directory_is_writable(directory: &Path) -> Result<(), String> {
     create_dir_all(directory).map_err(|error| format!("could not create '{}': {error}", directory.display()))?;
-    let log_file_path = directory.join(if cfg!(unix) {
-        ".AI Studio Events.log"
-    } else {
-        "AI Studio Events.log"
-    });
-    
+    let log_file_path = directory.join(format!("{LOG_BASENAME}.log"));
+
     OpenOptions::new()
         .create(true)
         .append(true)
@@ -773,12 +769,14 @@ mod tests {
 
     #[test]
     fn startup_log_path_storage_uses_selected_fallback_path() {
-        let temporary = PathBuf::from("/tmp").join(BUNDLE_IDENTIFIER).join("data");
+        // The temporary directory is absolute on every OS, while "/tmp" is not on Windows,
+        // where the stored path would then gain a drive letter and backslashes:
+        let temporary = temp_dir().join(BUNDLE_IDENTIFIER).join("data");
         let (selected, _) = select_flatpak_startup_log_path(
             BUNDLE_IDENTIFIER,
             None,
             PathBuf::from("/var/data"),
-            PathBuf::from("/tmp"),
+            temp_dir(),
             |candidate| {
                 if candidate == temporary {
                     Ok(())
@@ -787,16 +785,16 @@ mod tests {
                 }
             },
         ).unwrap();
+        let expected = selected.join(format!("{LOG_BASENAME}.log"));
         let log_path = FileSpec::default()
             .directory(selected)
-            .basename(".AI Studio Events")
+            .basename(LOG_BASENAME)
             .suppress_timestamp()
             .suffix("log");
         let storage = OnceLock::new();
-        let expected = absolute(temporary.join(".AI Studio Events.log")).unwrap();
 
         store_startup_log_path(&storage, &log_path);
 
-        assert_eq!(PathBuf::from(storage.get().unwrap().as_str()), expected);
+        assert_eq!(Path::new(storage.get().unwrap()), expected);
     }
 }

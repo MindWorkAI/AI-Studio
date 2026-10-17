@@ -2,6 +2,7 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -59,10 +60,34 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         {
             { x => x.IsEditing, false },
         };
-        
+
+        await this.AddEmbeddingProvider(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportEmbeddingProvider()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.EMBEDDING_PROVIDER, T("Import Embedding"));
+        if (import?.ConfigurationObject is not EmbeddingProvider embeddingProvider)
+            return;
+
+        var dialogParameters = CreateDialogParameters(embeddingProvider, isEditing: false);
+        dialogParameters.Add(x => x.ImportedAPIKey, import.Secret);
+        await this.AddEmbeddingProvider(dialogParameters, isImport: true);
+    }
+
+    private async Task AddEmbeddingProvider(DialogParameters<EmbeddingProviderDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported embedding provider is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.EMBEDDING_PROVIDER))
             return;
 
         var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
@@ -81,27 +106,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         if (embeddingProvider.IsEnterpriseConfiguration && !embeddingProvider.AllowUserProvidedAPIKey)
             return;
 
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.DataNum, embeddingProvider.Num },
-            { x => x.DataId, embeddingProvider.Id },
-            { x => x.DataName, embeddingProvider.Name },
-            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
-            { x => x.DataCustomIconDataUrl, embeddingProvider.CustomIconDataUrl },
-            { x => x.DataModel, embeddingProvider.Model },
-            { x => x.DataHostname, embeddingProvider.Hostname },
-            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, embeddingProvider.Host },
-            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
-            { x => x.DataTokenizerFingerprint, embeddingProvider.TokenizerFingerprint },
-            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
-            { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
-            { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
-            { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), CreateDialogParameters(embeddingProvider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -130,6 +135,26 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    private static DialogParameters<EmbeddingProviderDialog> CreateDialogParameters(EmbeddingProvider embeddingProvider, bool isEditing) => new()
+    {
+        { x => x.DataNum, embeddingProvider.Num },
+        { x => x.DataId, embeddingProvider.Id },
+        { x => x.DataName, embeddingProvider.Name },
+        { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
+        { x => x.DataCustomIconDataUrl, embeddingProvider.CustomIconDataUrl },
+        { x => x.DataModel, embeddingProvider.Model },
+        { x => x.DataHostname, embeddingProvider.Hostname },
+        { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
+        { x => x.IsEditing, isEditing },
+        { x => x.DataHost, embeddingProvider.Host },
+        { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
+        { x => x.DataTokenizerFingerprint, embeddingProvider.TokenizerFingerprint },
+        { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
+        { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
+        { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
+        { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
+    };
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {

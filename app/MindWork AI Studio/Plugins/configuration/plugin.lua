@@ -436,6 +436,21 @@ CONFIG["SETTINGS"] = {}
 -- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
 
+-- Configure the permission to import an item which somebody exported from AI Studio, such as
+-- a chat template a colleague shares. The first setting allows or locks every import, the
+-- others one type each; an import needs both. Importing a provider also needs the permission
+-- to add it by hand: DataApp.AllowUserToAddProvider and the setting for its kind, see above.
+-- When set to false, the import button stays visible but is locked. Importing plugin archives
+-- has a setting of its own, see below.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationSnippets"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportProfile"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportTranscriptionProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
@@ -452,8 +467,35 @@ CONFIG["SETTINGS"] = {}
 -- On Linux, this button exports the plugin archive instead of using a native share sheet.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToSharePlugins"] = false
 
+-- Configure the user permission to back up the data of AI Studio into a file, e.g. to take it
+-- to a new computer. When set to false, the backup button stays visible but is disabled.
+-- A backup holds chats and other confidential content in a single file, which can leave the
+-- computer on any stick or cloud drive. Secrets such as API keys never go into a backup.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToBackUpData"] = false
+
+-- Configure the user permission to restore the data of AI Studio from a backup file, or to add
+-- the chats of a backup. When set to false, the restore button stays visible but is disabled.
+-- A backup brings along the locations of documents and local data sources, and those are read
+-- again afterward.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToRestoreData"] = false
+
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
+
+-- Configure whether AI answers which users copy or export end with a notice that they were
+-- generated using artificial intelligence (AI). The notice is written in the language of the app.
+-- It also ends the files of the batch processing. Code blocks, single files or tables taken from
+-- an answer, visual briefings, and the results of the prompt optimizer and the assistant builder
+-- stay unchanged. The default is false: AI Studio then adds no notice. The Enterprise IT
+-- documentation describes what gets the notice.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
 
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL

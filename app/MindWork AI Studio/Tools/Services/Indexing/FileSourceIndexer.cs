@@ -71,6 +71,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var enumerationStartedUtc = DateTimeOffset.UtcNow;
         var inputFiles = this.GetInputFiles(dataSource, manifest);
         var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
+        if (inputFiles.UnreachableRootReason is { } unreachableRootReason)
+            return this.StopWithoutRoot(context, dataSource, unreachableRootReason);
+
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
@@ -100,7 +103,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             context.CollectionName);
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
-        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, indexedFiles, token);
+        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, inputFiles, token);
         token.ThrowIfCancellationRequested();
 
         logger.LogInformation(
@@ -332,6 +335,32 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     }
 
     /// <summary>
+    /// Ends a run which cannot reach the file or the folder of its data source, and keeps the index as it is.
+    /// </summary>
+    /// <remarks>
+    /// A folder out of reach is never the same as an empty one. Read that way, a drive which is not
+    /// connected, or a network share while the VPN is down, would remove every embedding of the
+    /// data source, and embedding it all again once the folder is back costs as long as it took the
+    /// first time. Nothing is written: the stored hash still tells which state of the data source
+    /// the index holds, so the next run picks up from there.
+    /// </remarks>
+    /// <param name="context">The run.</param>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="reason">Why the file or the folder cannot be reached, and what the user can do about it.</param>
+    /// <returns>DONE, since nothing can be done until the file or the folder is back.</returns>
+    private IndexedRunOutcome StopWithoutRoot(IndexedRunContext context, IDataSource dataSource, string reason)
+    {
+        logger.LogWarning(
+            "Cannot reach the file or folder of data source '{DataSourceName}' ({DataSourceId}). The run stops, and nothing is removed from the index. StoredFiles={StoredFiles}.",
+            dataSource.Name,
+            dataSource.Id,
+            context.Manifest.Files.Count);
+
+        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason);
+        return IndexedRunOutcome.DONE;
+    }
+
+    /// <summary>
     /// Whether a file name marks a file which is never indexed, whatever its type.
     /// </summary>
     /// <param name="fileName">The name of the file.</param>
@@ -352,15 +381,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO);
     }
 
-    private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, IReadOnlyCollection<FileInfo> indexedFiles, CancellationToken token)
+    private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, FileEnumerationResult inputFiles, CancellationToken token)
     {
         var manifest = context.Manifest;
-        var existingPaths = indexedFiles
-            .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         var removedFiles = 0;
-        foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
+        foreach (var removedFilePath in GetGoneFiles(manifest.Files.Keys, inputFiles.Files, inputFiles.UnreadableDirectories))
         {
             await context.DeleteDocumentPointsAsync(removedFilePath, token);
             await context.IndexStore.DeleteFileAsync(context.DataSource.Id, removedFilePath, token);
@@ -377,10 +402,42 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // A file which is gone needs no mark keeping it out of the index. Without this, the table
         // would grow with every document the user ever deleted:
         //
-        foreach (var removedFilePath in manifest.PermanentFailures.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
+        foreach (var removedFilePath in GetGoneFiles(manifest.PermanentFailures.Keys, inputFiles.Files, inputFiles.UnreadableDirectories))
             await context.ForgetPermanentFailureAsync(removedFilePath, token);
 
         return removedFiles;
+    }
+
+    /// <summary>
+    /// Picks the files which are gone from the data source, out of those the index knows about.
+    /// </summary>
+    /// <remarks>
+    /// A file below a folder which could not be listed is not gone, only out of reach, e.g. while the
+    /// user may not read that folder. Removing it would throw away its index, and embedding it again
+    /// once the folder can be read costs as long as it took the first time.
+    /// <br /><br />
+    /// Paths are compared ignoring their case, as everywhere in the manifest. On Linux and macOS, that
+    /// keeps a file whose path differs from an unreadable folder in its case alone, which costs no more
+    /// than a stale entry until the folder can be read again.
+    /// </remarks>
+    /// <param name="storedPaths">The paths of the files the index knows about.</param>
+    /// <param name="files">The files this run found.</param>
+    /// <param name="unreadableDirectories">The folders this run could not list.</param>
+    /// <returns>The paths of the files which are gone.</returns>
+    internal static List<string> GetGoneFiles(IEnumerable<string> storedPaths, IEnumerable<FileInfo> files, IEnumerable<string> unreadableDirectories)
+    {
+        var existingPaths = files
+            .Select(file => file.FullName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var unreadablePrefixes = unreadableDirectories
+            .Select(directory => Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)) + Path.DirectorySeparatorChar)
+            .ToList();
+
+        return storedPaths
+            .Where(path => !existingPaths.Contains(path))
+            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
     }
 
     /// <remarks>
@@ -499,17 +556,23 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
             case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
                 this.EnumerateAccessibleFiles(localDirectory, manifest, result);
+                if (result.UnreadableDirectories.Contains(localDirectory.Path))
+                    result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
+
                 return result;
         }
 
+        //
+        // Missing is not the same as empty, cf. StopWithoutRoot:
+        //
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' does not exist."), localFile.FilePath));
+                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.AddFailure(localDirectory.Path, string.Format(TB("The folder '{0}' does not exist."), localDirectory.Path));
+                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."), localDirectory.Path);
                 break;
         }
 
@@ -534,7 +597,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                      reportInaccessibleDirectory: (directoryPath, exception) =>
                      {
                          logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
-                         result.AddFailure(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
+                         result.AddUnreadableDirectory(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
                      }))
         {
             if (!FileNamePatterns.Matches(filePath, patterns))

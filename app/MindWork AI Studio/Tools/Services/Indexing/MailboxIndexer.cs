@@ -569,16 +569,8 @@ internal sealed partial class MailboxIndexer(SettingsManager settingsManager, Ru
         foreach (var folder in await context.IndexStore.GetMailFoldersAsync(dataSourceId, token))
             locationCount += (await context.IndexStore.GetMailLocationsAsync(dataSourceId, folder.Path, token)).Count;
 
-        var permanentFailures = context.Manifest.PermanentFailures;
-        var progress = new DocumentRunProgress(context, locationCount + permanentFailures.Count, 0, string.Empty, [], logger)
-        {
-            LastSyncUtc = (await context.IndexStore.GetMailboxSyncStateAsync(dataSourceId, token)).LastSyncCompletedUtc,
-        };
-
-        progress.RecordUnchanged(locationCount);
-        foreach (var (key, failure) in permanentFailures)
-            progress.RecordStillUnreadable(key, failure);
-
+        var progress = DocumentRunProgress.FromStoredState(context, locationCount, logger);
+        progress.LastSyncUtc = (await context.IndexStore.GetMailboxSyncStateAsync(dataSourceId, token)).LastSyncCompletedUtc;
         return progress;
     }
 

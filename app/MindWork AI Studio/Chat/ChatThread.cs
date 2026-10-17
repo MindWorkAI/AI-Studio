@@ -556,6 +556,53 @@ public sealed record ChatThread
     }
 
     /// <summary>
+    /// Replaces every attachment of the chat, in its messages as well as in its draft, with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// The one place which knows where a chat keeps attachments. Moving a chat, copying it, and
+    /// writing it into a backup or reading it back from one all go through here, so none of them
+    /// forgets the draft or a kind of message.
+    /// </remarks>
+    /// <param name="replace">Gives the attachment to keep in place of the given one, or the given one itself when nothing changes.</param>
+    public void ReplaceAttachments(Func<FileAttachment, FileAttachment> replace)
+    {
+        foreach (var content in this.Blocks.Select(block => block.Content).OfType<IContent>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+                content.FileAttachments[index] = replace(content.FileAttachments[index]);
+        }
+
+        this.Draft.ReplaceAttachments(replace);
+    }
+
+    /// <summary>
+    /// Replaces every file path the chat stores with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// Covers the attachments, cf. ReplaceAttachments, and the images of the messages which are held
+    /// by a local path. An attachment whose path the function returns unchanged stays as it is, and
+    /// so does one without a path.
+    /// </remarks>
+    /// <param name="rewrite">Maps a path to its replacement, or returns it unchanged.</param>
+    public void RewriteFilePaths(Func<string, string> rewrite)
+    {
+        this.ReplaceAttachments(attachment =>
+        {
+            if (string.IsNullOrWhiteSpace(attachment.FilePath))
+                return attachment;
+
+            var rewrittenPath = rewrite(attachment.FilePath);
+            return rewrittenPath == attachment.FilePath ? attachment : attachment.WithFilePath(rewrittenPath);
+        });
+
+        foreach (var image in this.Blocks.Select(block => block.Content).OfType<ContentImage>())
+        {
+            if (image.SourceType is ContentImageSource.LOCAL_PATH && !string.IsNullOrWhiteSpace(image.Source))
+                image.Source = rewrite(image.Source);
+        }
+    }
+
+    /// <summary>
     /// Finds what a provider reported for this conversation, as long as the report still describes it.
     /// </summary>
     /// <remarks>
