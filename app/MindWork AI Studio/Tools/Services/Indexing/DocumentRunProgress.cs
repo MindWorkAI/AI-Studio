@@ -226,7 +226,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         var embeddedAtUtc = DateTimeOffset.UtcNow;
         var state = document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = embeddedAtUtc };
         await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
-        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount);
+        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount, state.TranscriptKey);
         await context.ForgetPermanentFailureAsync(document.Key, token);
         context.Pass.Forget(document.Key);
 
