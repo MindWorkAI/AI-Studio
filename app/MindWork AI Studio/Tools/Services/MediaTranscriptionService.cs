@@ -548,7 +548,7 @@ public sealed class MediaTranscriptionService(
                     "The transcription provider failed for '{FileName}' (operation {OperationId}): {Diagnostic}",
                     fileName,
                     operation.Id,
-                    providerResult.ErrorMessage);
+                    string.IsNullOrWhiteSpace(providerResult.ErrorMessage) ? "<empty>" : providerResult.ErrorMessage);
 
                 //
                 // When the provider told us why it failed, the user gets to read it. Only that

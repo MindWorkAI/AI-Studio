@@ -1582,7 +1582,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (this.IsTimeoutException(e, token))
                 await this.SendTimeoutError("transcribing audio");
 
-            this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
+            this.logger.LogError(e, "Failed to perform transcription request: '{Message}'.", e.Message);
             return TranscriptionResult.Failure();
         }
     }
