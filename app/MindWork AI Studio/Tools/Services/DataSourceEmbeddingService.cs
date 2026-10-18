@@ -16,7 +16,7 @@ using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
+    PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
 {
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
@@ -40,7 +40,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// One indexer per kind of data source this service indexes.
     /// </summary>
-    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, mediaTranscriptionService, logger);
 
     private readonly DataSourceRunQueue runQueue = new();
 
@@ -93,12 +93,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// Creates one indexer per kind of data source, all of them cutting their text with the same chunker.
     /// </summary>
-    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, ILogger logger)
+    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ILogger logger)
     {
         var textChunker = new TextChunker(rustService, logger);
         return
         [
-            new FileSourceIndexer(settingsManager, rustService, textChunker, logger),
+            new FileSourceIndexer(settingsManager, rustService, mediaTranscriptionService, textChunker, logger),
             new MailboxIndexer(settingsManager, rustService, guardService, textChunker, logger),
         ];
     }

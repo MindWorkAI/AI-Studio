@@ -25,14 +25,33 @@ public sealed class DataSourceEmbeddingHealthTests
         Assert.That(status.Health, Is.EqualTo(DataSourceEmbeddingHealth.WARNING));
     }
 
-    [Test]
-    public void AnIgnoredMediaFileKeepsAUsableDataSourceHealthy()
+    [TestCase(DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING)]
+    [TestCase(DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED)]
+    public void ATranscriptionProviderWarningRemainsActionableWhenOtherFilesWereIndexed(DataSourceEmbeddingIgnoreReason reason)
     {
         var status = Status(indexedDocuments: 1, totalDocuments: 2) with
         {
             IgnoredFiles =
             [
-                new DataSourceEmbeddingIgnoredFile("/data/interview.mp3", DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
+                new DataSourceEmbeddingIgnoredFile("/data/interview.mp3", reason),
+            ],
+        };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.Health, Is.EqualTo(DataSourceEmbeddingHealth.WARNING));
+            Assert.That(status.NeedsTranscriptionProvider, Is.True, "The embedding page offers the way to the settings only then.");
+        });
+    }
+
+    [Test]
+    public void AnIgnoredImageKeepsAUsableDataSourceHealthy()
+    {
+        var status = Status(indexedDocuments: 1, totalDocuments: 2) with
+        {
+            IgnoredFiles =
+            [
+                new DataSourceEmbeddingIgnoredFile("/data/photo.png", DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED),
             ],
         };
 

@@ -137,7 +137,7 @@
                                                     }
                                                     @if (group.Cause.NeedsProviderSettings)
                                                     {
-                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenEmbeddingProviderSettings">
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
                                                             @T("Open the settings")
                                                         </MudButton>
                                                     }
@@ -198,9 +198,18 @@
                                                     <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
                                                         @T("Not added to the index")
                                                     </MudChip>
-                                                    @if (group.Cause.NeedsDataSourceSettings)
+                                                    @if (group.Cause.NeedsDataSourceSettings || group.Cause.NeedsTranscriptionSettings)
                                                     {
                                                         <MudSpacer/>
+                                                    }
+                                                    @if (group.Cause.NeedsTranscriptionSettings)
+                                                    {
+                                                        <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenProviderSettings">
+                                                            @T("Open the transcription settings")
+                                                        </MudButton>
+                                                    }
+                                                    @if (group.Cause.NeedsDataSourceSettings)
+                                                    {
                                                         <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@this.OpenDataSourceSettings">
                                                             @T("Manage the data sources")
                                                         </MudButton>

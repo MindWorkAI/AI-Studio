@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 
 namespace AIStudio.Tools.Services.Indexing;
 
@@ -267,6 +268,14 @@ internal sealed partial class FileSourceIndexer
         //
         if (Directory.Exists(path))
             return true;
+
+        //
+        // The Batch Processing assistant writes the transcript of a media file next to it. When
+        // the data source selects the media file itself, the transcript is no document of its
+        // own, so writing it must not start a run either:
+        //
+        if (MediaSidecarTranscripts.IsCoveredArtifact(path, selection))
+            return false;
 
         if (selection.Selects(path))
             return true;

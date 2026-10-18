@@ -44,6 +44,25 @@ internal sealed class MediaSidecarTranscripts : IMediaTranscriptLocation
     }
 
     /// <summary>
+    /// Whether a file is the transcript of a media file which the selection of a folder data source selects as well.
+    /// </summary>
+    /// <remarks>
+    /// Such a transcript holds the same text the data source gets from transcribing the media file,
+    /// so indexing it as a document of its own would only duplicate that text. A transcript whose
+    /// media file is gone, or not selected, stays a document like every other Markdown file.
+    /// </remarks>
+    /// <param name="path">The path of the file.</param>
+    /// <param name="selection">The files the folder data source selects.</param>
+    /// <returns>True when the data source indexes the media file of this transcript.</returns>
+    public static bool IsCoveredArtifact(string path, FolderFileSelection selection)
+    {
+        if (!TryGetMediaPath(path, out var mediaPath))
+            return false;
+
+        return PersistentMediaTranscript.IsMediaPath(mediaPath) && File.Exists(mediaPath) && selection.Selects(mediaPath);
+    }
+
+    /// <summary>
     /// Whether a media file has a transcript next to it, so no transcription provider is needed for it.
     /// </summary>
     /// <param name="mediaPath">The audio or video file.</param>
@@ -61,5 +80,28 @@ internal sealed class MediaSidecarTranscripts : IMediaTranscriptLocation
             // processed. Here we only decide whether a provider is required.
             return File.Exists(transcriptFilePath);
         }
+    }
+
+    /// <summary>
+    /// The media file a transcript or one of its temporary files belongs to.
+    /// </summary>
+    private static bool TryGetMediaPath(string path, out string mediaPath)
+    {
+        var suffixIndex = path.LastIndexOf(FILE_SUFFIX, StringComparison.OrdinalIgnoreCase);
+        if (suffixIndex <= 0)
+        {
+            mediaPath = string.Empty;
+            return false;
+        }
+
+        var remainder = path[(suffixIndex + FILE_SUFFIX.Length)..];
+        if (remainder.Length > 0 && !(remainder[0] is '.' && remainder.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase)))
+        {
+            mediaPath = string.Empty;
+            return false;
+        }
+
+        mediaPath = path[..suffixIndex];
+        return true;
     }
 }

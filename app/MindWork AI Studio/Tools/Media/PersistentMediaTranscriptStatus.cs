@@ -3,7 +3,7 @@ namespace AIStudio.Tools.Media;
 /// <summary>
 /// How the request for a persistent transcript ended, cf. PersistentMediaTranscript.
 /// </summary>
-internal enum PersistentMediaTranscriptStatus
+public enum PersistentMediaTranscriptStatus
 {
     /// <summary>
     /// The transcript is stored at its place and holds text.
