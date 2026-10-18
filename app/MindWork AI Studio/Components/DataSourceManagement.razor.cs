@@ -40,6 +40,20 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private bool MayAddMailbox => this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
+    /// <summary>
+    /// Whether an embedding provider exists, which every local data source needs.
+    /// </summary>
+    private bool HasEmbeddingProvider => !EmbeddingProviderSetup.IsMissing(this.SettingsManager);
+
+    /// <remarks>
+    /// The rule of the organization comes first: an embedding provider would not make the mailbox possible.
+    /// </remarks>
+    private string MailboxMenuText => !this.MayAddMailbox
+        ? T("Mailbox (IMAP), not allowed by your organization")
+        : this.HasEmbeddingProvider
+            ? T("Mailbox (IMAP)")
+            : T("Mailbox (IMAP), requires an embedding provider");
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -208,6 +222,10 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddDataSource(DataSourceType type)
     {
+        // The menu offers no local data source without an embedding provider, but the last one may have gone since it was drawn:
+        if (type is DataSourceType.LOCAL_FILE or DataSourceType.LOCAL_DIRECTORY && !this.HasEmbeddingProvider)
+            return;
+
         IDataSource? addedDataSource = null;
         switch (type)
         {
@@ -521,7 +539,7 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddMailbox()
     {
-        if (!this.MayAddMailbox)
+        if (!this.MayAddMailbox || !this.HasEmbeddingProvider)
             return;
 
         var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
