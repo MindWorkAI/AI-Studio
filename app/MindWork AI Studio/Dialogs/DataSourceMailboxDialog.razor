@@ -41,6 +41,12 @@
                 </MudAlert>
             }
 
+            @* A way out which leads nowhere is worse than none: the mailbox could not be added anyway. *@
+            @if (!this.IsAddingNotAllowed)
+            {
+                <DataSourceMissingEmbeddingWarning IsInDataSourceDialog="@true" EmbeddingProviderAdded="@this.SelectAddedEmbeddingProvider"/>
+            }
+
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"

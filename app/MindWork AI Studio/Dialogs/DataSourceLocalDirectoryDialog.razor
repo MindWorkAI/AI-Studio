@@ -8,6 +8,8 @@
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         <PathDropZone IsArea="@true">
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
+            <DataSourceMissingEmbeddingWarning IsInDataSourceDialog="@true" EmbeddingProviderAdded="@this.SelectAddedEmbeddingProvider"/>
+
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"

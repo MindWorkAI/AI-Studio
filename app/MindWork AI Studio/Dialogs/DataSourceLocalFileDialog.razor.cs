@@ -321,5 +321,22 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         this.revalidateAfterRender = true;
     }
 
+    /// <summary>
+    /// Selects the embedding provider the user just added from within this dialog, so that what they
+    /// entered so far can be saved right away.
+    /// </summary>
+    /// <remarks>
+    /// Only when no existing provider is selected, which includes the provider of a data source that
+    /// was deleted since. Like the token limit in ToggleExpertSettings, the field learns its new value
+    /// only with the next render, so it is checked after that.
+    /// </remarks>
+    private void SelectAddedEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (this.SelectedEmbedding is null)
+            this.dataEmbeddingId = provider.Id;
+
+        this.revalidateAfterRender = true;
+    }
+
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 }
