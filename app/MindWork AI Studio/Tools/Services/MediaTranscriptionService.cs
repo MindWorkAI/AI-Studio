@@ -63,7 +63,7 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Gets whether the currently configured transcription provider can be used.</summary>
-    public bool HasUsableTranscriptionProvider => this.ResolveProvider() is not null;
+    public bool HasUsableTranscriptionProvider => this.GetUsableProvider() is not null;
 
     /// <summary>Gets the last retained state for one owner.</summary>
     public MediaImportSnapshot? GetSnapshot(MediaImportOwner owner)
@@ -411,14 +411,31 @@ public sealed class MediaTranscriptionService(
     /// <param name="mediaPath">Audio or video file path.</param>
     /// <param name="token">Caller cancellation token.</param>
     /// <returns>A typed terminal result.</returns>
-    public async Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, CancellationToken token = default)
+    public Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, CancellationToken token = default) => this.TranscribeWithoutImportAsync(mediaPath, null, token);
+
+    /// <summary>
+    /// Transcribes an audio or video file with exactly the given provider, without starting a visible import operation.
+    /// </summary>
+    /// <remarks>
+    /// For callers which checked the provider against rules of their own, such as the confidence
+    /// level of a data source. The provider is used as given and not resolved from the settings
+    /// again, so a change of the settings between that check and the upload cannot send the media
+    /// to another provider.
+    /// </remarks>
+    /// <param name="mediaPath">Audio or video file path.</param>
+    /// <param name="provider">The transcription provider the caller checked.</param>
+    /// <param name="token">Caller cancellation token.</param>
+    /// <returns>A typed terminal result.</returns>
+    public Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, TranscriptionProvider provider, CancellationToken token = default) => this.TranscribeWithoutImportAsync(mediaPath, provider, token);
+
+    private async Task<MediaTranscriptionResult> TranscribeWithoutImportAsync(string mediaPath, TranscriptionProvider? provider, CancellationToken token)
     {
         this.ThrowIfDisposed();
         var operation = this.CreateOperation(null, token);
-        
+
         try
         {
-            return await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: false);
+            return await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: false, provider);
         }
         finally
         {
@@ -458,8 +475,9 @@ public sealed class MediaTranscriptionService(
     /// <param name="mediaPath">Source media path.</param>
     /// <param name="operation">Operation-specific cancellation and Rust-job state.</param>
     /// <param name="updateImportState">Whether progress belongs to the visible import lane.</param>
+    /// <param name="checkedProvider">The provider a caller checked itself, or null for the configured one.</param>
     /// <returns>A typed terminal result.</returns>
-    private async Task<MediaTranscriptionResult> TranscribeCoreAsync(string mediaPath, MediaOperation operation, bool updateImportState)
+    private async Task<MediaTranscriptionResult> TranscribeCoreAsync(string mediaPath, MediaOperation operation, bool updateImportState, TranscriptionProvider? checkedProvider = null)
     {
         var normalizedPath = Path.Combine(Path.GetTempPath(), "mindwork-ai-studio-media", $"{operation.Id:N}.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(normalizedPath)!);
@@ -497,7 +515,7 @@ public sealed class MediaTranscriptionService(
                 return MediaTranscriptionResult.NoAudibleSignal(TB("The audio track contains no audible signal, so there is nothing to transcribe."));
             }
 
-            var providerSettings = this.ResolveProvider();
+            var providerSettings = checkedProvider ?? this.GetUsableProvider();
             if (providerSettings is null)
                 return MediaTranscriptionResult.Failed(TB("No usable transcription provider is configured."));
 
@@ -719,7 +737,12 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Resolves the configured provider after confidence validation.</summary>
-    private TranscriptionProvider? ResolveProvider()
+    /// <remarks>
+    /// Checks the global minimum confidence only. A caller with rules of its own, such as the
+    /// confidence level of a data source, checks the provider against them as well.
+    /// </remarks>
+    /// <returns>The configured provider, or null when none is configured or it falls short of the global minimum.</returns>
+    public TranscriptionProvider? GetUsableProvider()
     {
         var providerId = settingsManager.ConfigurationData.App.UseTranscriptionProvider;
         if (string.IsNullOrWhiteSpace(providerId))

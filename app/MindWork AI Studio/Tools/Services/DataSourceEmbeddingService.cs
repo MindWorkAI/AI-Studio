@@ -1087,6 +1087,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         : embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel);
 
     /// <summary>
+    /// Whether a transcription provider of the given confidence level may hear the audio and video files of a data source.
+    /// </summary>
+    /// <remarks>
+    /// The transcription provider receives the content of the data source just like the embedding
+    /// provider does, so the same rule applies to both, cf. AllowsEmbedding.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="transcriptionProviderConfidence">The confidence level of the transcription provider.</param>
+    /// <returns>True when the provider may transcribe the media files of the data source.</returns>
+    internal static bool AllowsTranscription(IIndexedDataSource dataSource, ConfidenceLevel transcriptionProviderConfidence) => AllowsEmbedding(dataSource, transcriptionProviderConfidence);
+
+    /// <summary>
     /// The configured data sources this service indexes, from every list which holds some.
     /// </summary>
     /// <remarks>
