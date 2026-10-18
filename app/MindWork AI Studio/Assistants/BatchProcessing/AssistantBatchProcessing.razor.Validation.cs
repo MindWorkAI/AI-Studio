@@ -1,3 +1,4 @@
+using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -160,8 +161,7 @@ public partial class AssistantBatchProcessing
     /// </summary>
     private static bool IsTranscriptArtifact(string filePath)
     {
-        var fileName = Path.GetFileName(filePath);
-        return fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX + ".tmp", StringComparison.OrdinalIgnoreCase);
+        return MediaSidecarTranscripts.IsArtifactPath(filePath);
     }
 
     /// <summary>

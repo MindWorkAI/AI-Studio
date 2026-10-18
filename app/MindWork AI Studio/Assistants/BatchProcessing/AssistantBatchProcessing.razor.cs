@@ -19,7 +19,6 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
     private const string RESULT_FILE_SUFFIX = "_result";
-    private const string TRANSCRIPT_FILE_SUFFIX = ".transcript.md";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
 

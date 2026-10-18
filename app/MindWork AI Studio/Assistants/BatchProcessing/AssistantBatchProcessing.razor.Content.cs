@@ -1,5 +1,3 @@
-using System.Text;
-
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 
@@ -69,108 +67,37 @@ public partial class AssistantBatchProcessing
 
     private async Task<string?> LoadMediaTranscriptAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
-        var transcriptFilePath = GetTranscriptFilePath(fileResult.FilePath);
-        if (File.Exists(transcriptFilePath))
-        {
-            try
-            {
-                var existingTranscript = await File.ReadAllTextAsync(transcriptFilePath, token);
-                if (!string.IsNullOrWhiteSpace(existingTranscript))
-                {
-                    this.Logger.LogInformation("Reusing the existing batch transcript '{TranscriptFilePath}' for media file '{MediaFilePath}'.", transcriptFilePath, fileResult.FilePath);
-                    return existingTranscript;
-                }
-
-                this.Logger.LogWarning("The existing batch transcript '{TranscriptFilePath}' for media file '{MediaFilePath}' is empty and will be replaced.", transcriptFilePath, fileResult.FilePath);
-            }
-            catch (OperationCanceledException)
-            {
-                this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
-                return null;
-            }
-            catch (Exception e)
-            {
-                this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the existing transcript: {0}"), e.Message), e);
-                return null;
-            }
-        }
-
-        if (!this.MediaTranscriptionService.HasUsableTranscriptionProvider)
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("No usable transcription provider is configured."));
-            return null;
-        }
-
-        var transcription = await this.MediaTranscriptionService.TranscribeAsync(fileResult.FilePath, token);
-        if (transcription.Status is MediaTranscriptionResultStatus.CANCELLED)
+        var provider = this.MediaTranscriptionService.GetUsableProvider();
+        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, fileResult.FilePath, provider, this.MediaTranscriptionService.TranscribeAsync, this.Logger, token);
+        if (transcript.Status is PersistentMediaTranscriptStatus.CANCELLED)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
             return null;
         }
 
-        if (transcription.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
+        if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, transcription.UserMessage);
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, transcript.UserMessage);
             return null;
         }
 
-        if (string.IsNullOrWhiteSpace(transcription.Text))
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The transcription provider returned an empty transcript."));
-            return null;
-        }
-
-        return await this.StoreMediaTranscriptAsync(fileResult, transcriptFilePath, transcription.Text);
-    }
-
-    private async Task<string?> StoreMediaTranscriptAsync(BatchProcessingFileResult fileResult, string transcriptFilePath, string transcript)
-    {
-        var tempFilePath = transcriptFilePath + ".tmp";
         try
         {
-            // Complete the small persistence step even if cancellation arrived
-            // after transcription, so the expensive provider result can be
-            // reused when the interrupted batch is continued.
-            await File.WriteAllTextAsync(tempFilePath, transcript, new UTF8Encoding(false), CancellationToken.None);
-            File.Move(tempFilePath, transcriptFilePath, true);
-            this.Logger.LogInformation("Stored the batch transcript '{TranscriptFilePath}' next to media file '{MediaFilePath}'.", transcriptFilePath, fileResult.FilePath);
-            return transcript;
+            return await File.ReadAllTextAsync(transcript.TranscriptPath, token);
+        }
+        catch (OperationCanceledException)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
+            return null;
         }
         catch (Exception e)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to store the transcript next to the media file: {0}"), e.Message), e);
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the existing transcript: {0}"), e.Message), e);
             return null;
         }
-        finally
-        {
-            try
-            {
-                if (File.Exists(tempFilePath))
-                    File.Delete(tempFilePath);
-            }
-            catch (Exception e)
-            {
-                this.Logger.LogWarning(e, "Was not able to remove the temporary batch transcript '{TempFilePath}'.", tempFilePath);
-            }
-        }
     }
 
-    private static bool IsTranscribableMedia(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO, FileTypes.VIDEO);
+    private static bool IsTranscribableMedia(string filePath) => PersistentMediaTranscript.IsMediaPath(filePath);
 
-    private static string GetTranscriptFilePath(string mediaFilePath) => mediaFilePath + TRANSCRIPT_FILE_SUFFIX;
-
-    private static bool HasReusableTranscript(string mediaFilePath)
-    {
-        var transcriptFilePath = GetTranscriptFilePath(mediaFilePath);
-        try
-        {
-            return File.Exists(transcriptFilePath) && new FileInfo(transcriptFilePath).Length > 0;
-        }
-        catch
-        {
-            // The concrete read error is reported when the affected file is
-            // processed. Here we only decide whether a provider is required.
-            return File.Exists(transcriptFilePath);
-        }
-    }
+    private static bool HasReusableTranscript(string mediaFilePath) => MediaSidecarTranscripts.HasReusableTranscript(mediaFilePath);
 }
