@@ -14464,7 +14464,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1013354736"
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1120586536"] = "Bitte wählen Sie ein erforderliches Vertrauensniveau des Anbieters aus."
 
 -- The connection test failed. Please check the connection settings.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T132896331"] = "Der Verbindungstest ist fehlgeschlagen. Bitte überprüfe die Verbindungseinstellungen."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T132896331"] = "Der Verbindungstest ist fehlgeschlagen. Bitte überprüfen Sie die Verbindungseinstellungen."
 
 -- Please select an embedding provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1461238528"] = "Bitte wählen Sie einen Anbieter für die Einbettung aus."
@@ -14473,7 +14473,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1461238528"
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1481612527"] = "Bitte wählen Sie aus, wie die Verbindung zum Server verschlüsselt wird."
 
 -- The file does not exist. Please select a valid file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T148464502"] = "Die Datei existiert nicht. Bitte wähle eine gültige Datei aus."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T148464502"] = "Die Datei existiert nicht. Bitte wählen Sie eine gültige Datei aus."
 
 -- Please select one retrieval process.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T1515898234"] = "Bitte wählen Sie einen Abrufprozess aus."
