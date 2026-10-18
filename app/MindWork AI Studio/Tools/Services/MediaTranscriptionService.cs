@@ -555,9 +555,13 @@ public sealed class MediaTranscriptionService(
                 // message says whether to wait, to check the API key, or to ask the provider for
                 // a format it can read:
                 //
-                return MediaTranscriptionResult.Failed(string.IsNullOrWhiteSpace(providerResult.ErrorMessage)
+                var failureMessage = string.IsNullOrWhiteSpace(providerResult.ErrorMessage)
                     ? TB("The transcription provider could not transcribe the media file.")
-                    : providerResult.ErrorMessage);
+                    : providerResult.ErrorMessage;
+
+                return providerResult.FileRejected
+                    ? MediaTranscriptionResult.Rejected(failureMessage)
+                    : MediaTranscriptionResult.Failed(failureMessage);
             }
 
             return MediaTranscriptionResult.Succeeded(providerResult.Text.Trim());

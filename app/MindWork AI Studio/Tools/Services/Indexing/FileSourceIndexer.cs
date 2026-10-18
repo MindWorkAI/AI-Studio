@@ -634,8 +634,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// </summary>
     /// <remarks>
     /// A FileExtractionException records the file for good, until it changes; any other exception
-    /// lets the next pass try again. A transcription without text, or a file which the media
-    /// pipeline cannot read, would fail the same way every time and cost money every time.
+    /// lets the next pass try again. A transcription without text, a file which the media pipeline
+    /// cannot read, and a file which the transcription provider refused would fail the same way
+    /// every time, and every attempt would cost money or another upload.
     /// </remarks>
     /// <param name="transcript">The outcome of the request for the transcript.</param>
     /// <param name="token">The cancellation token of the run.</param>
@@ -646,6 +647,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         PersistentMediaTranscriptStatus.CANCELLED => throw new OperationCanceledException(token),
         PersistentMediaTranscriptStatus.EMPTY or PersistentMediaTranscriptStatus.NO_AUDIBLE_SIGNAL => throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, transcript.UserMessage),
         PersistentMediaTranscriptStatus.TRANSCRIPTION_FAILED when IsPermanentMediaFailure(transcript.ErrorCode) => throw new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, transcript.UserMessage),
+        PersistentMediaTranscriptStatus.REJECTED => throw new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, transcript.UserMessage),
         _ => throw new IOException(transcript.UserMessage),
     };
 

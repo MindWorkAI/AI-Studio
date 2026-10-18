@@ -545,10 +545,24 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
             return string.Format(
                 TB("The media file '{0}' could not be processed, so it was not indexed. Reason: {1} AI Studio reads it again as soon as the file changes."),
                 document.DisplayName,
-                details);
+                AsSentence(details));
         }
 
         return code.ToIndexingUserMessage(document.DisplayName);
+    }
+
+    /// <summary>
+    /// Ends a reason with a full stop, so the sentence after it does not run into it.
+    /// </summary>
+    /// <remarks>
+    /// Providers write their error messages as they like, often without a full stop at the end.
+    /// </remarks>
+    /// <param name="reason">The reason.</param>
+    /// <returns>The reason, ending with a punctuation mark.</returns>
+    internal static string AsSentence(string reason)
+    {
+        var sentence = reason.TrimEnd();
+        return sentence.Length is 0 || sentence[^1] is '.' or '!' or '?' or '…' ? sentence : $"{sentence}.";
     }
 
     private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null) => new(

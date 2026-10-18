@@ -453,6 +453,15 @@ public sealed class DocumentRunProgressTests
         Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
     }
 
+    [TestCase("Audio file might be corrupted or unsupported", "Audio file might be corrupted or unsupported.")]
+    [TestCase("The container is damaged. ", "The container is damaged.")]
+    [TestCase("Is it damaged?", "Is it damaged?")]
+    [TestCase("", "")]
+    public void AReasonEndsAsASentence(string reason, string sentence)
+    {
+        Assert.That(DocumentRunProgress.AsSentence(reason), Is.EqualTo(sentence));
+    }
+
     private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty));
 
     /// <summary>

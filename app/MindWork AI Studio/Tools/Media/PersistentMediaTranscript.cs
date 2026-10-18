@@ -104,6 +104,9 @@ internal static class PersistentMediaTranscript
             case MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL:
                 return PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.NO_AUDIBLE_SIGNAL, slot, transcription.UserMessage);
 
+            case MediaTranscriptionResultStatus.FAILED when transcription.FileRejected:
+                return PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.REJECTED, slot, transcription.UserMessage);
+
             case MediaTranscriptionResultStatus.FAILED:
                 return PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.TRANSCRIPTION_FAILED, slot, transcription.UserMessage, transcription.ErrorCode);
         }

@@ -31,6 +31,12 @@ public enum PersistentMediaTranscriptStatus
     TRANSCRIPTION_FAILED,
 
     /// <summary>
+    /// The transcription provider refused the media file itself, e.g., because it is too large
+    /// or damaged. It would refuse the unchanged file again.
+    /// </summary>
+    REJECTED,
+
+    /// <summary>
     /// The media file holds no audible signal, so there was nothing to transcribe.
     /// </summary>
     NO_AUDIBLE_SIGNAL,

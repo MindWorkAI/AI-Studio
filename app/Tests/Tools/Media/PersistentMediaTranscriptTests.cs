@@ -179,6 +179,19 @@ public sealed class PersistentMediaTranscriptTests
     }
 
     [Test]
+    public async Task AFileTheProviderRefusedIsReportedAsSuch()
+    {
+        var result = await this.ReadOrCreateAsync(new CountingTranscriber(() => MediaTranscriptionResult.Rejected("The file is too large.")), this.provider);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Status, Is.EqualTo(PersistentMediaTranscriptStatus.REJECTED));
+            Assert.That(result.UserMessage, Is.EqualTo("The file is too large."));
+            Assert.That(File.Exists(MediaSidecarTranscripts.GetFilePath(this.mediaPath)), Is.False);
+        });
+    }
+
+    [Test]
     public async Task ATranscriptWhichCannotBeStoredIsReportedAndLeavesNoTemporaryFile()
     {
         //

@@ -635,6 +635,30 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
 
+    /// <summary>
+    /// Reads which parameter of the request a provider blamed in the body of a failed response.
+    /// </summary>
+    /// <remarks>
+    /// OpenAI and the APIs compatible with it name it in the field 'param' of their error object.
+    /// </remarks>
+    /// <param name="responseBody">The body of the failed response.</param>
+    /// <returns>The name of the parameter, or null when the body names none.</returns>
+    private static string? ReadProviderErrorParameter(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            return TryGetErrorElement(document.RootElement, out var errorElement) ? TryGetString(errorElement, "param") : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
     private static bool TryGetErrorElement(JsonElement root, out JsonElement errorElement)
     {
         if (root.ValueKind is JsonValueKind.Object &&
@@ -1473,7 +1497,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (!string.IsNullOrWhiteSpace(classifiedMessage))
             return classifiedMessage;
 
-        if (statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase))
+        if (IsUndecodableFormatFailure(statusCode, responseBody))
             return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
 
         var providerMessage = ReadProviderErrorMessage(responseBody);
@@ -1481,6 +1505,33 @@ public abstract class BaseProvider : IProvider, ISecretId
             return string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
 
         return string.Empty;
+    }
+
+    private static bool IsUndecodableFormatFailure(HttpStatusCode statusCode, string responseBody) => statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether a transcription provider refused the media file itself rather than the request.
+    /// </summary>
+    /// <remarks>
+    /// The provider gives the same answer for the same file every time, so sending it again only
+    /// repeats the upload. That holds for a file which is too large or of a type the provider does
+    /// not accept, and for a bad request which names the file as the faulty parameter, as OpenAI and
+    /// the APIs compatible with it do, e.g., for a damaged recording. A provider which cannot decode
+    /// WebM/Opus at all is the exception: it refuses every file the same way, and the user fixes
+    /// that by choosing another provider, not by changing the file. Everything else, such as rate
+    /// limits, keys, models, and outages, may pass.
+    /// </remarks>
+    /// <param name="statusCode">The status code the provider answered with.</param>
+    /// <param name="responseBody">The body the provider answered with.</param>
+    /// <returns>True, when the provider would refuse the unchanged file again.</returns>
+    internal static bool IsMediaFileRejection(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is HttpStatusCode.RequestEntityTooLarge or HttpStatusCode.UnsupportedMediaType)
+            return true;
+
+        return statusCode is HttpStatusCode.BadRequest
+               && !IsUndecodableFormatFailure(statusCode, responseBody)
+               && string.Equals(ReadProviderErrorParameter(responseBody), "file", StringComparison.OrdinalIgnoreCase);
     }
 
     protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
@@ -1561,7 +1612,10 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return TranscriptionResult.Failure(this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody));
+                var failureMessage = this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody);
+                return IsMediaFileRejection(response.StatusCode, responseBody)
+                    ? TranscriptionResult.Rejection(failureMessage)
+                    : TranscriptionResult.Failure(failureMessage);
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);

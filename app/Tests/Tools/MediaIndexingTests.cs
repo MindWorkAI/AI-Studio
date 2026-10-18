@@ -217,6 +217,15 @@ public sealed class MediaIndexingTests
         Assert.That(exception!.Code, Is.EqualTo(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED));
     }
 
+    [Test]
+    public void ARecordingTheProviderRefusedIsRecordedForGood()
+    {
+        var transcript = PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.REJECTED, null, "The provider 'Cloud' reported an error: Audio file might be corrupted or unsupported");
+
+        var exception = Assert.Throws<FileExtractionException>(() => FileSourceIndexer.GetTranscriptOrThrow(transcript, CancellationToken.None));
+        Assert.That(exception!.Code, Is.EqualTo(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED), "Tried again with every run, the same file would be uploaded again with every run.");
+    }
+
     [TestCase(PersistentMediaTranscriptStatus.TRANSCRIPTION_FAILED)]
     [TestCase(PersistentMediaTranscriptStatus.STORE_FAILED)]
     [TestCase(PersistentMediaTranscriptStatus.SOURCE_CHANGED)]
