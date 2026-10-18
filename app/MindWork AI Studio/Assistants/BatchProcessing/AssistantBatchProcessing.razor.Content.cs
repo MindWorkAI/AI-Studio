@@ -28,6 +28,14 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
+        return await this.TakeExtractedContentAsync(fileResult, extraction);
+    }
+
+    /// <summary>
+    /// Hands on what the runtime read for a file, or records why there is nothing to hand on.
+    /// </summary>
+    private async Task<string?> TakeExtractedContentAsync(BatchProcessingFileResult fileResult, FileExtractionResult extraction)
+    {
         //
         // The user stopped the batch run while we were reading this file. That says nothing about
         // the file, so it gets the same status as a cancelled AI request instead of a failure:
@@ -80,20 +88,23 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
+        //
+        // Through the runtime like every document, so its filter for prompt injections checks the
+        // transcript as well. Like the documents of a run, a filtered transcript is reported right
+        // away instead of when the run ends, which may be hours later:
+        //
+        FileExtractionResult extraction;
         try
         {
-            return await File.ReadAllTextAsync(transcript.TranscriptPath, token);
-        }
-        catch (OperationCanceledException)
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
-            return null;
+            extraction = await PersistentMediaTranscript.ReadTranscriptAsync(this.RustService, transcript, fileResult.FilePath, reportingScope: null, token);
         }
         catch (Exception e)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the existing transcript: {0}"), e.Message), e);
             return null;
         }
+
+        return await this.TakeExtractedContentAsync(fileResult, extraction);
     }
 
     private static bool IsTranscribableMedia(string filePath) => PersistentMediaTranscript.IsMediaPath(filePath);
