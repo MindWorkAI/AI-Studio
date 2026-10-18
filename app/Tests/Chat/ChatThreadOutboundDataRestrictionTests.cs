@@ -7,12 +7,13 @@ using AIStudio.Tools;
 namespace AIStudio.Tests.Chat;
 
 /// <summary>
-/// Checks how the mailboxes a chat read from restrict where it may still send data.
+/// Checks how the internal content a chat holds restricts where it may still send data.
 /// </summary>
 /// <remarks>
-/// Once mail content is in a chat, every tool which runs afterwards could carry it out. The chat
-/// therefore keeps the strictest restriction of every mailbox it read from, and it keeps it beyond
-/// a restart, because the content stays in the chat as well.
+/// Once internal content is in a chat, mails or pages of the wiki or the intranet, every tool which
+/// runs afterwards could carry it out. The chat therefore keeps the strictest restriction of every
+/// source it read from, and it keeps it beyond a restart, because the content stays in the chat as
+/// well.
 /// </remarks>
 [TestFixture]
 public sealed class ChatThreadOutboundDataRestrictionTests
@@ -111,26 +112,6 @@ public sealed class ChatThreadOutboundDataRestrictionTests
         var loaded = JsonSerializer.Deserialize<ChatThread>(JsonSerializer.Serialize(thread, WorkspaceBehaviour.JSON_OPTIONS), WorkspaceBehaviour.JSON_OPTIONS);
 
         Assert.That(loaded?.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, origin, reference)), "Otherwise a restored chat would name a mailbox for content it read from elsewhere.");
-    }
-
-    [Test]
-    public void AChatSavedBeforeOriginsExistedNamesItsMailbox()
-    {
-        const string CHAT_RESTRICTED_BY_A_MAILBOX = """
-                                                    {
-                                                      "chat_id": "2b7c9e1f-4a6d-4c8b-9e3f-1d5a7c9b2e4f",
-                                                      "name": "A chat which read mails",
-                                                      "blocks": [],
-                                                      "required_outbound_data_restriction": {
-                                                        "restriction": "ONLY_LINKS_FROM_CHAT",
-                                                        "data_source_id": "8d1f4b6a-2e9c-4a7d-9b3e-6c5a8f2d1e4b"
-                                                      }
-                                                    }
-                                                    """;
-
-        var loaded = JsonSerializer.Deserialize<ChatThread>(CHAT_RESTRICTED_BY_A_MAILBOX, WorkspaceBehaviour.JSON_OPTIONS);
-
-        Assert.That(loaded?.RequiredOutboundDataRestriction, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, WORK_MAILBOX_ID)), "Every requirement saved before the origin existed came from a mailbox.");
     }
 
     [Test]

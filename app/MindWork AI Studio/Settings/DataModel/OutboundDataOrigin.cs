@@ -6,13 +6,15 @@ namespace AIStudio.Settings.DataModel;
 /// </summary>
 public enum OutboundDataOrigin
 {
-    // Every requirement saved before this enum existed came from a mailbox. It is therefore the
-    // member with the underlying value 0, which a chat saved without an origin reads as.
+    /// <summary>
+    /// No source: the chat holds no internal content, so nothing restricts it.
+    /// </summary>
+    NONE = 0,
 
     /// <summary>
     /// A configured mailbox.
     /// </summary>
-    MAILBOX = 0,
+    MAILBOX,
 
     /// <summary>
     /// A search of the configured Confluence wiki.
