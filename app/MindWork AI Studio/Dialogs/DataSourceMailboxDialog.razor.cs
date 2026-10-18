@@ -46,9 +46,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     [Parameter]
     public bool LockSource { get; set; }
 
-    [Parameter]
-    public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -369,12 +366,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string TestResultIcon => this.testedSettings != this.CurrentSettings
         ? Icons.Material.Outlined.HourglassEmpty
         : this.testFailure is null ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
-
-    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
-    {
-        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
-        return provider == EmbeddingProvider.NONE ? null : provider;
-    }
 
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);

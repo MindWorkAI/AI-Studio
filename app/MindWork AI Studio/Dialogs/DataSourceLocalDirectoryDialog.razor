@@ -102,17 +102,10 @@
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
             </MudJustifiedText>
             <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
-                @foreach (var embedding in this.AvailableEmbeddings)
+                @foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
                 {
-                    <MudSelectItem Value="@embedding.Value">
-                        @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
-                        {
-                            <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
-                        }
-                        else
-                        {
-                            @embedding.Name
-                        }
+                    <MudSelectItem Value="@provider.Id">
+                        <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@provider.Name" />
                     </MudSelectItem>
                 }
             </MudSelect>
