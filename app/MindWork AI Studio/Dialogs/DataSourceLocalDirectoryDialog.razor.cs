@@ -33,9 +33,6 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     [Parameter]
     public bool LockSource { get; set; }
 
-    [Parameter]
-    public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -134,6 +131,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         }
         
         await base.OnInitializedAsync();
+
+        // The embedding providers may change while the dialog is open, e.g., through a configuration plugin:
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -155,12 +155,25 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     #endregion
 
-    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
-        return provider == EmbeddingProvider.NONE ? null : provider;
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                // The embedding providers are listed anew, and the fields checked so far get a fresh verdict once they hold the new values:
+                this.revalidateAfterRender = true;
+                this.StateHasChanged();
+                break;
+        }
+
+        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
-    
+
+    #endregion
+
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
 
@@ -325,6 +338,23 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
         // The token limits are only checked while they are shown. The field learns the limit set
         // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
+    }
+
+    /// <summary>
+    /// Selects the embedding provider the user just added from within this dialog, so that what they
+    /// entered so far can be saved right away.
+    /// </summary>
+    /// <remarks>
+    /// Only when no existing provider is selected, which includes the provider of a data source that
+    /// was deleted since. Like the token limit in ToggleExpertSettings, the field learns its new value
+    /// only with the next render, so it is checked after that.
+    /// </remarks>
+    private void SelectAddedEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (this.SelectedEmbedding is null)
+            this.dataEmbeddingId = provider.Id;
+
         this.revalidateAfterRender = true;
     }
 

@@ -14,6 +14,8 @@
     }
 </MudJustifiedText>
 
+<DataSourceMissingEmbeddingWarning/>
+
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
     <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@(this.AreMailboxesEnabled ? T("Local data sources refresh when files change, mailboxes every 16 minutes.") : T("Local data sources refresh when files change."))" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
     <MudTooltip Text="@T("Refresh all")">
@@ -130,17 +132,21 @@
         <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
             @T("External Data (ERI-Server v1)")
         </MudMenuItem>
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))">
-            @T("Local Directory")
+        @*
+            Without an embedding provider, the dialogs of the local data sources could never be saved.
+            They stay listed with the reason, so nobody concludes that AI Studio cannot read local files:
+        *@
+        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))" Disabled="@(!this.HasEmbeddingProvider)">
+            @(this.HasEmbeddingProvider ? T("Local Directory") : T("Local Directory, requires an embedding provider"))
         </MudMenuItem>
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))">
-            @T("Local File")
+        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))" Disabled="@(!this.HasEmbeddingProvider)">
+            @(this.HasEmbeddingProvider ? T("Local File") : T("Local File, requires an embedding provider"))
         </MudMenuItem>
         @if (PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager))
         {
             @* Shown with a lock rather than left out, like the locked buttons for adding providers: *@
-            <MudMenuItem OnClick="@this.AddMailbox" Disabled="@(!this.MayAddMailbox)" Icon="@(this.MayAddMailbox ? null : Icons.Material.Filled.Lock)">
-                @(this.MayAddMailbox ? T("Mailbox (IMAP)") : T("Mailbox (IMAP), not allowed by your organization"))
+            <MudMenuItem OnClick="@this.AddMailbox" Disabled="@(!this.MayAddMailbox || !this.HasEmbeddingProvider)" Icon="@(this.MayAddMailbox ? null : Icons.Material.Filled.Lock)">
+                @this.MailboxMenuText
             </MudMenuItem>
         }
     </MudMenu>

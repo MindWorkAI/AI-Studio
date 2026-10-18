@@ -4083,6 +4083,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Au
 -- Edit Local Directory Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
 
+-- Local File, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1317002733"] = "Lokale Datei, erfordert einen Einbettungsanbieter"
+
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Aktualisieren"
 
@@ -4118,6 +4121,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "In
 
 -- Edit ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T221059217"] = "ERI v1 Datenquelle bearbeiten"
+
+-- Mailbox (IMAP), requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2363290424"] = "Postfach (IMAP), erfordert einen Einbettungsanbieter"
 
 -- Edit Local File Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
@@ -4197,6 +4203,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zu
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern."
 
+-- Local Directory, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3698039736"] = "Lokaler Ordner, erfordert einen Einbettungsanbieter"
+
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Nicht verfügbar"
 
@@ -4244,6 +4253,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T87980240"] = "Das 
 
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Lokaler Ordner"
+
+-- Import Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1681763001"] = "Einbettung importieren"
+
+-- Add Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1738753945"] = "Einbettung hinzufügen"
+
+-- No embedding provider is configured yet, but this data source needs one.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1792425555"] = "Es ist noch kein Einbettungsanbieter konfiguriert, doch diese Datenquelle benötigt einen."
+
+-- You can add one right here; everything you entered in this dialog stays as it is.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T2076959501"] = "Sie können hier direkt einen hinzufügen. Ihre Eingaben in diesem Dialog bleiben erhalten."
+
+-- Your organization manages the embedding providers and has not provided one yet. Please ask your IT department.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T215225643"] = "Ihre Organisation verwaltet die Einbettungsanbieter und hat noch keinen bereitgestellt. Bitte wenden Sie sich an Ihre IT-Abteilung."
+
+-- No embedding provider is configured yet. Local data sources, such as your files and folders, need one: it prepares your data so that the AI can search it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T863764937"] = "Es ist noch kein Einbettungsanbieter konfiguriert. Lokale Datenquellen wie Ihre Dateien und Ordner benötigen einen: Er bereitet Ihre Daten so auf, dass die KI sie durchsuchen kann."
 
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Ja, die KI soll entscheiden, welche Datenquellen benötigt werden."
@@ -5270,9 +5297,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T17607
 
 -- Are you sure you want to delete the embedding provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1825371968"] = "Sind Sie sicher, dass Sie den Einbettungsanbieter '{0}' löschen möchten?"
-
--- Add Embedding Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
 
 -- This embedding provider is managed by your organization. You can set your own API key.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1931890418"] = "Dieser Anbieter für Einbettungen wird von Ihrer Organisation verwaltet. Sie können Ihren eigenen API-Schlüssel festlegen."
@@ -12189,6 +12213,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T4175865785"] = "Datenquelle
 -- The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREPAIR::T857336889"] = "Der Index der Datenquelle „{0}“ kann nicht mehr gelesen werden. Bei einer Reparatur wird der Index vollständig neu erstellt: Alle bisher indexierten Daten werden verworfen und jedes Dokument dieser Datenquelle erneut an Ihren Einbettungsanbieter gesendet. Bei einem Cloud-Anbieter entstehen dadurch Kosten, und bei einer großen Datenquelle kann dies einige Zeit dauern. Möchten Sie diese Datenquelle jetzt reparieren?"
 
+-- Import Embedding
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EMBEDDINGPROVIDERSETUP::T1681763001"] = "Einbettung importieren"
+
+-- Add Embedding Provider
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EMBEDDINGPROVIDERSETUP::T190634634"] = "Einbettungsanbieter hinzufügen"
+
 -- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "Die zugehörigen Daten dürfen an keinen LLM-Anbieter gesendet werden. Das bedeutet, dass diese Datenquelle momentan nicht verwendet werden kann."
 
@@ -14540,6 +14570,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T4001510395"
 
 -- The name must not contain control characters.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T4234589878"] = "Der Name darf keine Steuerzeichen enthalten."
+
+-- The embedding provider of this data source no longer exists. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T4288009003"] = "Der Einbettungsanbieter dieser Datenquelle existiert nicht mehr. Bitte wählen Sie einen anderen aus."
 
 -- Please enter the host of the IMAP server, e.g., imap.example.org.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T471173229"] = "Bitte geben Sie den Hostnamen des IMAP-Servers ein, z. B. imap.example.org."

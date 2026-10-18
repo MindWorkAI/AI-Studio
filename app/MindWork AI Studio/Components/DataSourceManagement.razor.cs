@@ -30,8 +30,6 @@ public partial class DataSourceManagement : MSGComponentBase
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
-    private readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
-
     /// <summary>
     /// The data sources and then the mailboxes, which the table shows together.
     /// </summary>
@@ -42,13 +40,26 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private bool MayAddMailbox => this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
+    /// <summary>
+    /// Whether an embedding provider exists, which every local data source needs.
+    /// </summary>
+    private bool HasEmbeddingProvider => !EmbeddingProviderSetup.IsMissing(this.SettingsManager);
+
+    /// <remarks>
+    /// The rule of the organization comes first: an embedding provider would not make the mailbox possible.
+    /// </remarks>
+    private string MailboxMenuText => !this.MayAddMailbox
+        ? T("Mailbox (IMAP), not allowed by your organization")
+        : this.HasEmbeddingProvider
+            ? T("Mailbox (IMAP)")
+            : T("Mailbox (IMAP), requires an embedding provider");
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED ]);
-        this.UpdateEmbeddingProviders();
     }
 
     #endregion
@@ -61,10 +72,6 @@ public partial class DataSourceManagement : MSGComponentBase
         {
             case Event.CONFIGURATION_CHANGED:
             case Event.PLUGINS_RELOADED:
-                this.UpdateEmbeddingProviders();
-                this.StateHasChanged();
-                break;
-
             case Event.RAG_EMBEDDING_STATUS_CHANGED:
                 this.StateHasChanged();
                 break;
@@ -74,13 +81,6 @@ public partial class DataSourceManagement : MSGComponentBase
     }
 
     #endregion
-
-    private void UpdateEmbeddingProviders()
-    {
-        this.availableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
-            this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
-    }
 
     /// <remarks>
     /// Files which were skipped for good are none of the failed ones, so an otherwise usable data
@@ -222,6 +222,10 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddDataSource(DataSourceType type)
     {
+        // The menu offers no local data source without an embedding provider, but the last one may have gone since it was drawn:
+        if (type is DataSourceType.LOCAL_FILE or DataSourceType.LOCAL_DIRECTORY && !this.HasEmbeddingProvider)
+            return;
+
         IDataSource? addedDataSource = null;
         switch (type)
         {
@@ -229,7 +233,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Add Local File as Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -246,7 +249,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Add Local Directory as Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -400,7 +402,6 @@ public partial class DataSourceManagement : MSGComponentBase
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
                     { x => x.LockSource, lockDataSourceOrigin },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -417,7 +418,6 @@ public partial class DataSourceManagement : MSGComponentBase
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
                     { x => x.LockSource, lockDataSourceOrigin },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -539,13 +539,12 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddMailbox()
     {
-        if (!this.MayAddMailbox)
+        if (!this.MayAddMailbox || !this.HasEmbeddingProvider)
             return;
 
         var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
         {
             { x => x.IsEditing, false },
-            { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
         };
 
         var dialogReference = await this.DialogService.ShowAsync<DataSourceMailboxDialog>(T("Add Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);
