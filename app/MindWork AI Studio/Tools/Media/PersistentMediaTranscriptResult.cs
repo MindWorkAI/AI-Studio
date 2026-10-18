@@ -8,7 +8,9 @@ namespace AIStudio.Tools.Media;
 /// <remarks>
 /// The transcript itself is not part of it: whoever needs the text reads the file at
 /// TranscriptPath, so a transcript reaches the AI by the same path no matter whether it was just
-/// made or stored long ago.
+/// made or stored long ago. That read always goes through the runtime, which filters prompt
+/// injections: PersistentMediaTranscript.ReadTranscriptAsync reads a transcript as a whole, and a
+/// data source reads it in pieces for its index.
 /// </remarks>
 /// <param name="Status">How the request ended.</param>
 /// <param name="TranscriptPath">The path of the transcript; empty when the place could not be determined.</param>

@@ -3,6 +3,8 @@ using System.Text;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Media;
 
@@ -153,6 +155,29 @@ internal static class PersistentMediaTranscript
                 logger.LogWarning(exception, "Could not remove the temporary transcript '{TempFilePath}'.", temporaryPath);
             }
         }
+    }
+
+    /// <summary>
+    /// Reads a transcript for an AI, through the runtime like every document.
+    /// </summary>
+    /// <remarks>
+    /// The runtime filters prompt injections while it reads, so a transcript must never reach an AI
+    /// by any other way, such as reading the file directly. What the filter removed is reported under
+    /// the recording: the transcript is a file AI Studio made, while the recording is the file the
+    /// user chose.
+    /// </remarks>
+    /// <param name="rustService">The runtime service.</param>
+    /// <param name="transcript">A transcript with the status READY.</param>
+    /// <param name="mediaPath">The audio or video file the transcript belongs to.</param>
+    /// <param name="reportingScope">The action the transcript is read for, or null when it is read for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The filtered text of the transcript, or why it could not be read.</returns>
+    public static Task<FileExtractionResult> ReadTranscriptAsync(RustService rustService, PersistentMediaTranscriptResult transcript, string mediaPath, PromptInjectionReportingScope? reportingScope, CancellationToken token)
+    {
+        if (transcript.Status is not PersistentMediaTranscriptStatus.READY)
+            throw new ArgumentException($"Only a ready transcript can be read, but its status is {transcript.Status}.", nameof(transcript));
+
+        return rustService.ReadArbitraryFileData(transcript.TranscriptPath, int.MaxValue, reportAs: PromptInjectionSource.FileContent(mediaPath), reportingScope: reportingScope, token: token);
     }
 
     private static PersistentMediaTranscriptResult SourceChanged(MediaTranscriptSlot slot) => PersistentMediaTranscriptResult.Unavailable(PersistentMediaTranscriptStatus.SOURCE_CHANGED, slot, TB("The media file changed while it was being transcribed, so its transcript was not kept."));

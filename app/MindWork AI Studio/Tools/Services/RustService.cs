@@ -62,6 +62,22 @@ public sealed partial class RustService : BackgroundService
         this.extractionHttp = CreateHttpClient(apiPort, certificateFingerprint, Timeout.InfiniteTimeSpan);
     }
 
+    /// <summary>
+    /// Talks to a runtime which a test plays itself.
+    /// </summary>
+    /// <remarks>
+    /// Only for tests. The runtime filters prompt injections out of every file and text, so without
+    /// it no test could check which file the app asks for, or what it does with the answer.
+    /// </remarks>
+    /// <param name="runtime">Answers every request in place of the runtime.</param>
+    internal RustService(HttpMessageHandler runtime)
+    {
+        this.apiPort = string.Empty;
+        this.certificateFingerprint = string.Empty;
+        this.http = new HttpClient(runtime, disposeHandler: false) { BaseAddress = new Uri("https://127.0.0.1"), Timeout = TimeSpan.FromSeconds(100) };
+        this.extractionHttp = new HttpClient(runtime, disposeHandler: false) { BaseAddress = new Uri("https://127.0.0.1"), Timeout = Timeout.InfiniteTimeSpan };
+    }
+
     private static HttpClient CreateHttpClient(string apiPort, string certificateFingerprint, TimeSpan timeout)
     {
         var certificateValidationHandler = new HttpClientHandler
