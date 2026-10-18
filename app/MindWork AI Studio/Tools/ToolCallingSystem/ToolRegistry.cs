@@ -714,14 +714,7 @@ public sealed class ToolRegistry
         // which others the request may offer, and its instructions name no tool the model does
         // not get:
         //
-        var resolutionContext = new ToolResolutionContext
-        {
-            Provider = context.Provider,
-            Component = context.Component,
-            ProviderConfidence = context.ProviderConfidence,
-            ChatThread = context.ChatThread,
-            CandidateToolIds = candidates.Select(candidate => candidate.Definition.Id).ToHashSet(StringComparer.Ordinal),
-        };
+        var resolutionContext = context with { CandidateToolIds = candidates.Select(candidate => candidate.Definition.Id).ToHashSet(StringComparer.Ordinal) };
 
         var result = new List<(ToolDefinition, IToolImplementation)>(candidates.Count);
         foreach (var (definition, implementation) in candidates)

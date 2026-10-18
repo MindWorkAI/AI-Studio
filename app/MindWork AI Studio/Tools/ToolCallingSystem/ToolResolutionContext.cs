@@ -9,9 +9,11 @@ namespace AIStudio.Tools.ToolCallingSystem;
 /// <remarks>
 /// What a tool may look at when it tailors its function to a request, see
 /// IToolImplementation.ResolveFunctionAsync. Semantic Search, for instance, reads the data sources
-/// of the chat and describes exactly those which this provider may search.
+/// of the chat and describes exactly those which this provider may search.<br/><br/>
+/// A record, so whoever adds to a request copies it with all it holds, see
+/// ToolRegistry.GetRunnableToolsAsync, and a property added later is not lost on the way.
 /// </remarks>
-public sealed class ToolResolutionContext
+public sealed record ToolResolutionContext
 {
     /// <summary>
     /// The provider the request goes to, with the expert settings of the user.
