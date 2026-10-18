@@ -1159,11 +1159,22 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    """, true);
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
 
-        // Is this an update of the ERI server? If so, we need to delete the previously generated files:
+        //
+        // Is this an update of the ERI server? If so, we need to delete the previously generated files.
+        // Only those within the current base directory, though: the list names files by their full path,
+        // and it outlives a change of the base directory, as well as a restore on another computer.
+        // There, the same path may belong to files of somebody else:
+        //
         if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
         {
             foreach (var file in previouslyGeneratedFilesSnapshot)
             {
+                if (!PathTools.IsInsideDirectory(baseDirectorySnapshot, file))
+                {
+                    this.Logger.LogWarning($"The previously created file '{file}' is not inside the base directory '{baseDirectorySnapshot}' and was kept.");
+                    continue;
+                }
+
                 try
                 {
                     if (File.Exists(file))
@@ -1212,7 +1223,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                 // Security check: ensure that the desired file path is inside the base directory.
                 // We cannot trust the beginning of the file path because it would be possible
                 // to escape by using `..` in the file path.
-                if (!desiredFilePath.StartsWith(baseDirectorySnapshot, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
+                if (!PathTools.IsInsideDirectory(baseDirectorySnapshot, desiredFilePath))
                     this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
                 
                 else

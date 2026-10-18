@@ -1,7 +1,7 @@
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
-/// How far back the index of a mailbox reaches, by the date the server received a mail. Flagged mails are indexed regardless of their age.
+/// How far back the index of a mailbox reaches, by the date the server received a mail. Flagged mails and drafts are indexed regardless of their age.
 /// </summary>
 public enum MailboxMaxAge
 {

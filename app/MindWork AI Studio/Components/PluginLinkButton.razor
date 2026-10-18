@@ -1,0 +1,18 @@
+@using AIStudio.Tools.PluginSystem
+@inherits MSGComponentBase
+
+@if (PluginLinks.TryParse(this.Url, out var link) && !PluginLinks.IsPlaceholder(this.Url))
+{
+    if (PluginLinks.IsMail(link))
+    {
+        <MudTooltip Text="@T("Send a mail")">
+            <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@link.AbsoluteUri" Target="_blank" Size="@this.Size"/>
+        </MudTooltip>
+    }
+    else
+    {
+        <MudTooltip Text="@T("Open website")">
+            <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@link.AbsoluteUri" Target="_blank" Size="@this.Size"/>
+        </MudTooltip>
+    }
+}

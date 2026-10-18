@@ -64,20 +64,21 @@ This example shows:
 Treat the example as the recommended minimum viable pattern for assistant plugins, not as a feature-by-feature clone of `AssistantTranslation.razor`.
 
 ## Directory Structure
-Each assistant plugin lives in its own directory under the assistants plugin root. In practice, you usually keep the manifest in `plugin.lua`, optional icon rendering in `icon.lua`, and any bundled media in `assets/`.
+Each assistant plugin lives in its own directory under the assistants plugin root, `plugins/assistants/` in the data directory of AI Studio. The panel **Your Data Folders** on the Information page shows where the data directory lies on your computer. In practice, you usually keep the manifest in `plugin.lua`, optional icon rendering in `icon.lua`, and any bundled media in `assets/`.
 
 ```
 .
-└── com.github.mindwork-ai.ai-studio/
-    └── data/
-        └── plugins/
-            └── assistants/
-                └── your-assistant-directory/
-                    ├── assets/
-                    │   └── your-media-files.jpg
-                    ├── icon.lua
-                    └── plugin.lua
+└── <data directory>/
+    └── plugins/
+        └── assistants/
+            └── your-assistant-directory/
+                ├── assets/
+                │   └── your-media-files.jpg
+                ├── icon.lua
+                └── plugin.lua
 ```
+
+A plugin may split its Lua code into several files and load them with `require`. Name the file relative to the plugin directory and without `.lua`, and separate subdirectories with a slash: `require("icon")` loads `icon.lua`, and `require("lib/helpers")` loads `lib/helpers.lua`. A plugin can only load files from its own directory, and `dofile` and `loadfile` are not available.
 
 ## Structure
 - `ASSISTANT` is the root table. Every assistant requires `Title` and `Description`.

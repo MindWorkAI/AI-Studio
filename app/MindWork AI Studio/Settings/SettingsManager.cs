@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Text;
 using System.Text.Json;
 
 using AIStudio.Provider;
@@ -29,6 +31,16 @@ public sealed class SettingsManager
         WriteIndented = true,
         Converters = { new TolerantEnumConverter() },
     };
+
+    /// <summary>
+    /// From this duration on, storing the settings is reported as slow.
+    /// </summary>
+    /// <remarks>
+    /// The settings file is a few hundred kilobytes at most, so storing it usually takes some
+    /// milliseconds. Far beyond that, something is blocking: on one machine, every store took 18
+    /// seconds, and each one held up the start of AI Studio.
+    /// </remarks>
+    private static readonly TimeSpan SLOW_STORE_THRESHOLD = TimeSpan.FromSeconds(1);
 
     private readonly ILogger<SettingsManager> logger;
     private readonly RustService rustService;
@@ -174,6 +186,11 @@ public sealed class SettingsManager
 
             this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
             settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+
+            // Compatibility shim, remove after 2027-10-31, see KeepTheLegacyEncryptionExportFormat.
+            // Settings of an older version always come from before the export format existed:
+            settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
+
             this.PrepareLoadedSettings(settingsData);
             await this.StoreSettingsSnapshot(settingsData, settingsPath);
             await this.StoreCurrentVersionBackup(settingsData);
@@ -279,7 +296,8 @@ public sealed class SettingsManager
     {
         try
         {
-            var settingsData = JsonSerializer.Deserialize<Data>(await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            var settingsJson = await File.ReadAllTextAsync(settingsPath);
+            var settingsData = JsonSerializer.Deserialize<Data>(settingsJson, JSON_OPTIONS);
             if(settingsData is null)
             {
                 this.logger.LogError($"Failed to parse the {sourceDescription} '{settingsPath}'.");
@@ -292,6 +310,7 @@ public sealed class SettingsManager
                 return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
             }
 
+            KeepTheLegacyEncryptionExportFormat(settingsData, settingsJson);
             return new(settingsData, SettingsWriteBlockReason.NONE);
         }
         catch(Exception e)
@@ -299,6 +318,28 @@ public sealed class SettingsManager
             this.logger.LogError(e, $"Failed to parse the {sourceDescription} '{settingsPath}'.");
             return new(null, SettingsWriteBlockReason.FILE_UNREADABLE);
         }
+    }
+
+    /// <summary>
+    /// Lets an installation which existed before v26.10.1 keep exporting encrypted secrets in the
+    /// format v1, which every version of AI Studio reads.
+    /// </summary>
+    /// <remarks>
+    /// Compatibility shim, remove after 2027-10-31, see
+    /// documentation/compatibility-shims/2026-10-enterprise-encryption-export-format.md.<br/><br/>
+    /// New installations export in the authenticated format v2. An existing installation, however,
+    /// may belong to an administrator whose organization still runs an older version, which reads
+    /// v1 only. Settings written before v26.10.1 lack the export format, and nothing else tells
+    /// such an installation apart. Once the settings are stored, they hold the format, and this
+    /// changes nothing anymore.
+    /// </remarks>
+    private static void KeepTheLegacyEncryptionExportFormat(Data settingsData, string settingsJson)
+    {
+        using var settingsDocument = JsonDocument.Parse(settingsJson);
+        if(settingsDocument.RootElement.TryGetProperty(nameof(Data.App), out var appElement) && appElement.ValueKind is JsonValueKind.Object && appElement.TryGetProperty(nameof(DataApp.EnterpriseEncryptionExportFormat), out _))
+            return;
+
+        settingsData.App.EnterpriseEncryptionExportFormat = EnterpriseEncryptionFormat.V1;
     }
 
     private void BlockSettingsWrites(SettingsWriteBlockReason reason, string message)
@@ -337,10 +378,24 @@ public sealed class SettingsManager
                 return;
             }
 
+            //
+            // Serializing and writing are measured on their own, because a slow store has two
+            // different causes: a property which asks the file system or the network while it is
+            // serialized, or a file system which is slow to write, e.g., because of a virus scanner
+            // or a synchronized profile folder. Only the two durations tell them apart:
+            //
+            var serializingStartedAt = Stopwatch.GetTimestamp();
             var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
+            var serializingDuration = Stopwatch.GetElapsedTime(serializingStartedAt);
+
+            var writingStartedAt = Stopwatch.GetTimestamp();
             var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
             await this.StoreSerializedSettings(settingsJson, settingsPath);
             await this.StoreSerializedVersionBackup(this.ConfigurationData.Version, settingsJson);
+            var writingDuration = Stopwatch.GetElapsedTime(writingStartedAt);
+
+            if (serializingDuration + writingDuration >= SLOW_STORE_THRESHOLD)
+                this.logger.LogWarning($"Storing the settings took {(serializingDuration + writingDuration).TotalMilliseconds:F0} ms, which is unusually long: serializing took {serializingDuration.TotalMilliseconds:F0} ms, writing took {writingDuration.TotalMilliseconds:F0} ms. The settings are {Encoding.UTF8.GetByteCount(settingsJson) / 1024} KB. A slow serialization points to a setting which reaches out to the file system or the network while it is serialized; slow writing points to the file system itself, e.g., a virus scanner or a synchronized profile folder.");
         }
         finally
         {

@@ -20,4 +20,10 @@ internal enum DataSourceEmbeddingRefreshMode
     /// changes, e.g. a mailbox on a server.
     /// </summary>
     INTERVAL_CHECK,
+
+    /// <summary>
+    /// A tool is about to read what may have changed since the last run, e.g. the drafts of a
+    /// mailbox. Unlike a retry of the user, it never signs in despite a refused sign-in.
+    /// </summary>
+    TOOL_REQUEST,
 }

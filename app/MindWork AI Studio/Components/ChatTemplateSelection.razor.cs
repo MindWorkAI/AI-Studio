@@ -64,6 +64,9 @@ public partial class ChatTemplateSelection : MSGComponentBase
 
     private async Task CreateNewChatTemplateFromChat()
     {
+        if (!this.CanChatThreadBeUsedForTemplate)
+            return;
+
         var dialogParameters = new DialogParameters<SettingsDialogChatTemplate>
         {
             { x => x.CreateTemplateFromExistingChatThread, true },

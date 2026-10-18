@@ -45,7 +45,7 @@ internal sealed partial class MailboxIndexer
                 await connector.FetchAttachmentAsync(uid, part, file, token);
 
             // Filtered by the runtime while it reads, and reported as content of the mailbox, not of a file the user never saw:
-            var content = await ExtractedFileText.ReadAsync(rustService, path, context.EmbeddingProvider, PromptInjectionSource.MailContent(mailbox.Name), token);
+            var content = await ExtractedFileText.ReadAsync(rustService, path, context.EmbeddingProvider, PromptInjectionSource.MailContent(mailbox.Name), context.PromptInjectionScope, token);
             return new(part, name, MailPartTextState.EXTRACTED, content, TextChunker.GetStrategyForFile(path));
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)

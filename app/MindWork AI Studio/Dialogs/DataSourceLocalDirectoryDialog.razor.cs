@@ -42,6 +42,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     [Inject]
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private readonly DataSourceValidation dataSourceValidation;
@@ -59,9 +62,14 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string dataId = Guid.NewGuid().ToString();
     private string dataName = string.Empty;
     private string dataDescription = string.Empty;
-    private bool dataUserAcknowledgedCloudEmbedding;
+    private CloudProcessing acknowledgedCloudProcessing;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
+    private string dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
+    private string dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private int dataMaxFileSizeMegabytes = FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES;
+    private bool dataIncludeSubdirectories = DataSourceLocalDirectory.DEFAULT_INCLUDE_SUBDIRECTORIES;
+    private bool dataIncludeHiddenFilesAndFolders = DataSourceLocalDirectory.DEFAULT_INCLUDE_HIDDEN_FILES_AND_FOLDERS;
     private int dataMaxChunkTokenLength;
     private int dataChunkOverlapTokenLength = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     private ushort dataMaxMatches = 10;
@@ -83,6 +91,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         this.dataSourceValidation = new()
         {
             GetSelectedCloudEmbedding = () => this.SelectedCloudEmbedding,
+            GetSelectedCloudTranscription = () => this.SelectedCloudTranscription,
             GetSelectedEmbeddingProvider = () => this.SelectedEmbedding,
             GetConfidenceLevel = () => this.dataConfidenceLevel,
             GetSettingsManager = () => this.SettingsManager,
@@ -113,6 +122,11 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataDescription = this.DataSource.Description;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
+            this.dataFilePatterns = this.DataSource.EffectiveFilePatterns;
+            this.dataExcludePatterns = this.DataSource.EffectiveExcludePatterns;
+            this.dataMaxFileSizeMegabytes = this.DataSource.EffectiveMaxFileSizeMegabytes;
+            this.dataIncludeSubdirectories = this.DataSource.IncludeSubdirectories;
+            this.dataIncludeHiddenFilesAndFolders = this.DataSource.IncludeHiddenFilesAndFolders;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
@@ -152,6 +166,42 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
+    /// <summary>
+    /// Whether the file patterns may select audio or video files, which the data source transcribes.
+    /// </summary>
+    private bool SelectsMedia => FileNamePatterns.MaySelectMedia(FileNamePatterns.Parse(this.dataFilePatterns));
+
+    /// <summary>
+    /// The transcription provider which may hear the audio and video files of this data source, or null.
+    /// </summary>
+    private TranscriptionProvider? AllowedTranscriptionProvider => this.MediaTranscriptionService.GetUsableProvider(this.CreateDataSource());
+
+    private bool SelectedCloudTranscription => this.SelectsMedia && this.AllowedTranscriptionProvider is { IsSelfHosted: false };
+
+    private string CloudTranscriptionProviderName => this.SelectedCloudTranscription ? this.AllowedTranscriptionProvider?.Name ?? string.Empty : string.Empty;
+
+    private CloudProcessing CurrentCloudProcessing => (this.SelectedCloudEmbedding ? CloudProcessing.EMBEDDING : CloudProcessing.NONE) | (this.SelectedCloudTranscription ? CloudProcessing.TRANSCRIPTION : CloudProcessing.NONE);
+
+    /// <remarks>
+    /// The acknowledgment holds for the providers it was given for, cf. CloudProcessingExtensions.Covers.
+    /// </remarks>
+    private bool UserAcknowledgedCloudProcessing
+    {
+        get => this.acknowledgedCloudProcessing.Covers(this.CurrentCloudProcessing);
+        set => this.acknowledgedCloudProcessing = value ? this.CurrentCloudProcessing : CloudProcessing.NONE;
+    }
+
+    /// <summary>
+    /// Why audio and video files which the patterns select would not be indexed, or null when they would.
+    /// </summary>
+    private string? MediaTranscriptionHint => !this.SelectsMedia
+        ? null
+        : this.MediaTranscriptionService.GetUsableProvider() is null
+            ? T("Audio and video files which this data source selects are skipped until you choose a transcription provider in the settings.")
+            : this.AllowedTranscriptionProvider is null
+                ? T("Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires.")
+                : null;
+
     private bool CanChangeSource => !this.IsEditing || !this.LockSource;
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
@@ -184,6 +234,13 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         // Kept out of reach of the form while the source is locked, so a stale field cannot point an
         // indexed data source somewhere else:
         Path = this.CanChangeSource ? this.dataPath : this.DataSource.Path,
+        FilePatterns = this.NormalizeFilePatterns(),
+
+        // Kept as typed, since the line breaks group the entries for the eye:
+        ExcludePatterns = this.dataExcludePatterns,
+        MaxFileSizeMegabytes = this.dataMaxFileSizeMegabytes,
+        IncludeSubdirectories = this.dataIncludeSubdirectories,
+        IncludeHiddenFilesAndFolders = this.dataIncludeHiddenFilesAndFolders,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
@@ -215,6 +272,10 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     }
     
     private void Cancel() => this.MudDialog.Cancel();
+
+    private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
+
+    private void RestoreDefaultExcludePatterns() => this.dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

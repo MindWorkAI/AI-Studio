@@ -66,6 +66,9 @@ internal static class MailToolResults
         if (conditions.Folder is { } folder)
             description[MailToolArguments.FOLDER_ARGUMENT] = folder;
 
+        if (conditions.SpecialFolder is { } specialFolder)
+            description[MailToolArguments.SPECIAL_FOLDER_ARGUMENT] = MailToolArguments.ToArgumentValue(specialFolder);
+
         return description;
     }
 
@@ -112,19 +115,55 @@ internal static class MailToolResults
         coverage.Folders.Take(MAX_LISTED_FOLDERS).Select(folder => texts.Add(folder.Path, mailbox)).ToList();
 
     /// <summary>
-    /// Lists the folders of a mailbox which has no folder with the path the model gave, so the model can pick one.
+    /// Lists the folders of a mailbox which has no folder of those the model named, so the model can pick one.
     /// </summary>
+    /// <remarks>
+    /// The folder of the sent mails or of the drafts is missing from the index when the mailbox
+    /// leaves it out, or when the server does not mark it as such. Only in the second case does a
+    /// folder of the list hold these mails, so the model may pick it by its name.
+    /// </remarks>
     /// <param name="description">What the model learns about the mailbox.</param>
     /// <param name="issues">What kept the result from covering the whole mailbox.</param>
+    /// <param name="specialFolder">What the folder the model asked for is for, or null when it gave a path.</param>
     /// <param name="listedFolders">The folder paths to list, filtered for prompt injections.</param>
     /// <param name="folderCount">How many folders the mailbox has.</param>
-    public static void DescribeMissingFolder(JsonObject description, JsonArray issues, IReadOnlyList<string> listedFolders, int folderCount)
+    public static void DescribeMissingFolder(JsonObject description, JsonArray issues, MailFolderSpecialUse? specialFolder, IReadOnlyList<string> listedFolders, int folderCount)
     {
-        issues.Add(folderCount > listedFolders.Count
-            ? $"This mailbox has no folder with the path given in '{MailToolArguments.FOLDER_ARGUMENT}'. The first {listedFolders.Count} of its {folderCount} folders are listed in 'folders'."
-            : $"This mailbox has no folder with the path given in '{MailToolArguments.FOLDER_ARGUMENT}'. Its folders are listed in 'folders'.");
+        var missingFolder = specialFolder switch
+        {
+            MailFolderSpecialUse.SENT => "This mailbox has no folder for sent mails in the index of AI Studio, either because the user left it out or because the server does not mark it as such.",
+            MailFolderSpecialUse.DRAFTS => "This mailbox has no folder for drafts in the index of AI Studio, either because the user left it out or because the server does not mark it as such.",
+            _ => $"This mailbox has no folder with the path given in '{MailToolArguments.FOLDER_ARGUMENT}'.",
+        };
+
+        var folderList = folderCount > listedFolders.Count
+            ? $"The first {listedFolders.Count} of its {folderCount} folders are listed in 'folders'."
+            : "Its folders are listed in 'folders'.";
+
+        issues.Add(specialFolder is null
+            ? $"{missingFolder} {folderList}"
+            : $"{missingFolder} {folderList} When one of them holds these mails, pass its path in '{MailToolArguments.FOLDER_ARGUMENT}' instead of '{MailToolArguments.SPECIAL_FOLDER_ARGUMENT}'.");
 
         description["folders"] = new JsonArray([..listedFolders.Select(folder => (JsonNode?)folder)]);
+    }
+
+    /// <summary>
+    /// Whether a mail lies among the sent mails or the drafts, as the value of the special folder argument.
+    /// </summary>
+    /// <remarks>
+    /// Lets the model tell what the user wrote from what the user received. A mail in the folder of
+    /// the sent mails counts as sent, even when a copy of it lies among the drafts as well.
+    /// </remarks>
+    /// <param name="folderPaths">The folders the mail lies in.</param>
+    /// <param name="folders">The folders of the mailbox.</param>
+    /// <returns>The value for the sent mails or the drafts, or null for a mail in neither.</returns>
+    public static string? GetSpecialFolder(IReadOnlyCollection<string> folderPaths, IReadOnlyList<MailFolderRecord> folders)
+    {
+        var specialUses = folders.Where(folder => folderPaths.Contains(folder.Path, StringComparer.Ordinal)).Select(folder => folder.SpecialUse).ToList();
+        if (specialUses.Contains(MailFolderSpecialUse.SENT))
+            return MailToolArguments.ToArgumentValue(MailFolderSpecialUse.SENT);
+
+        return specialUses.Contains(MailFolderSpecialUse.DRAFTS) ? MailToolArguments.ToArgumentValue(MailFolderSpecialUse.DRAFTS) : null;
     }
 
     /// <summary>

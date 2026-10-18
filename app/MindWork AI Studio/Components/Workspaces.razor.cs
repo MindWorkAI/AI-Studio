@@ -382,10 +382,14 @@ public partial class Workspaces : MSGComponentBase
 
     private bool IsChatTreeItemBusy(TreeItemData treeItem)
     {
-        return treeItem.Type is TreeItemType.CHAT
-               && (this.AIJobService.IsChatGenerationActive(treeItem.ChatId)
-                   || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(treeItem.ChatId)));
+        return treeItem.Type is TreeItemType.CHAT && this.IsChatBusy(treeItem.ChatId);
     }
+
+    /// <summary>
+    /// Whether an answer is being written for the given chat, or a transcript is being made for it.
+    /// </summary>
+    /// <param name="chatId">The chat to check.</param>
+    private bool IsChatBusy(Guid chatId) => this.AIJobService.IsChatGenerationActive(chatId) || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(chatId));
 
     private string GetChatTreeItemTextStyle(TreeItemData treeItem)
     {
@@ -922,6 +926,18 @@ public partial class Workspaces : MSGComponentBase
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         
+        //
+        // Deleting a workspace while one of its chats is being worked on would pull the ground from
+        // under that work. The button cannot tell, since the chats of a workspace may not be loaded
+        // yet, so we check before asking: nobody should confirm something that cannot happen anyway.
+        //
+        var chatIds = this.ReadChatIdsOfWorkspace(workspaceId);
+        if (chatIds.Any(this.IsChatBusy))
+        {
+            await this.WarnAboutBusyWorkspaceAsync(workspaceName);
+            return;
+        }
+
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -933,17 +949,73 @@ public partial class Workspaces : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        Directory.Delete(workspacePath, true);
-        await WorkspaceBehaviour.RemoveWorkspaceFromCacheAsync(workspaceId);
+        if (!await WorkspaceBehaviour.DeleteWorkspaceAsync(workspaceId, this.IsChatBusy))
+        {
+            await this.WarnAboutBusyWorkspaceAsync(workspaceName);
+            return;
+        }
+
+        foreach (var chatId in chatIds)
+            this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(chatId));
+
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        // The open chat went along with its workspace. Left on the screen, it would be stored again sooner or later:
+        if (this.CurrentChatThread?.WorkspaceId == workspaceId)
+        {
+            this.CurrentChatThread = null;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+        }
+    }
+
+    /// <summary>
+    /// Reads the chats of the given workspace, together with the open chat when it belongs there.
+    /// </summary>
+    /// <remarks>
+    /// A new chat started in a workspace reaches the disk only with its first message. Until then, it
+    /// is missing from the workspace on the disk, but it may already wait for a transcript.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace to read.</param>
+    private HashSet<Guid> ReadChatIdsOfWorkspace(Guid workspaceId)
+    {
+        var chatIds = WorkspaceBehaviour.ReadChatIdsOfWorkspace(workspaceId).ToHashSet();
+        if (this.CurrentChatThread is { } openChat && openChat.WorkspaceId == workspaceId)
+            chatIds.Add(openChat.ChatId);
+
+        return chatIds;
+    }
+
+    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FolderDelete, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
+    
+    /// <summary>
+    /// Moves the given chat into another workspace and shows it there in the tree.
+    /// </summary>
+    /// <param name="chat">The chat to move. It gets the new workspace and the new paths of its attachments.</param>
+    /// <param name="targetWorkspaceId">The workspace to move the chat into.</param>
+    /// <remarks>
+    /// Neither asks for the target workspace nor follows the chat in the chat view: both depend on
+    /// where the move was asked for. Whoever moves a chat while this component exists goes through
+    /// here, though, since the tree draws what it has built before and would otherwise keep showing
+    /// the chat in its old place.
+    /// </remarks>
+    public async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
+    {
+        await WorkspaceBehaviour.MoveChatAsync(chat, targetWorkspaceId);
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
-    
-    private async Task MoveChatAsync(string? chatPath)
+
+    private async Task MoveChatFromTreeAsync(string? chatPath)
     {
-        var chat = await this.LoadChatAsync(chatPath, false);
-        if (chat is null)
+        var storedChat = await this.LoadChatAsync(chatPath, false);
+        if (storedChat is null)
             return;
 
+        //
+        // The open chat moves as it stands on the screen, just like with the button in the chat
+        // itself. The copy from the disk lacks whatever is not stored yet, such as a message being
+        // edited, and the chat would continue with that copy afterward:
+        //
+        var chat = this.CurrentChatThread is { } openChat && openChat.ChatId == storedChat.ChatId ? openChat : storedChat;
         if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
         
@@ -963,14 +1035,9 @@ public partial class Workspaces : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
-        if (this.CurrentChatThread?.ChatId == chat.ChatId)
-        {
-            this.CurrentChatThread = chat;
+        await this.MoveChatAsync(chat, workspaceId);
+        if (ReferenceEquals(chat, this.CurrentChatThread))
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-        }
-
-        await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
     private async Task AddChatAsync(string workspacePath)

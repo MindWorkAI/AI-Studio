@@ -12,7 +12,6 @@ namespace AIStudio.Tools.PluginSystem;
 public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type), ILivePluginContentSource
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
-    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
 
     private List<PluginConfigurationObject> configObjects = [];
@@ -77,14 +76,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (!dryRun)
         {
-            await PluginConfigurationObject.SyncManagedTokenizersAsync(this.Id, this.PluginPath);
+            await PluginConfigurationObject.SyncManagedTokenizersAsync(this.Id, this.PluginPath, this.configObjects);
 
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
             await StoreEnterpriseSecretsAsync();
 
-            await SettingsManagerAccess.StoreSettings();
-            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+            //
+            // The settings are not stored here: PluginFactory.LoadAll does that once, after all
+            // plugins have started. Storing them per configuration plugin wrote the whole settings
+            // file again for each one, which made the start of every further plugin wait for it.
+            //
         }
     }
 
@@ -231,6 +233,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: what should be the start page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
 
+        // Config: save energy while the AI streams its answers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.IsSavingEnergy, this.Id, settingsTable, dryRun);
+
         // Config: show prompt-injection alert dialogs?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowPromptInjectionAlert, this.Id, settingsTable, dryRun);
 
@@ -261,6 +266,30 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to add mailboxes?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddMailbox, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to import configurations which others exported?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportConfigurationSnippets, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import profiles?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportProfile, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import LLM providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportLLMProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import embedding providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportEmbeddingProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import transcription providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportTranscriptionProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import chat templates?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportChatTemplate, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import external data sources (ERI servers)?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportERIDataSource, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import document analysis policies?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportDocumentAnalysisPolicy, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
 
@@ -270,8 +299,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to share or export plugins?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToSharePlugins, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to back up the data of AI Studio?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToBackUpData, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to restore the data of AI Studio from a backup?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToRestoreData, this.Id, settingsTable, dryRun);
+
         // Config: show administration settings?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
+
+        // Config: in which format do exports encrypt secrets?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.EnterpriseEncryptionExportFormat, this.Id, settingsTable, dryRun);
+
+        // Config: add a disclosure to copied and exported AI-generated content?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AddAIGeneratedContentDisclosure, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
@@ -347,26 +388,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         
-        // Handle configured LLM providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured transcription providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, x => x.NextTranscriptionNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured embedding providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, x => x.NextEmbeddingNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured chat templates:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured data sources:
-        PluginConfigurationObject.TryParseDataSources(mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured profiles:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured document analysis policies:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        // Handle configured objects such as LLM providers, chat templates, or data sources:
+        foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
+            descriptor.TryParse(mainTable, this.Id, this.configObjects, dryRun, this.PluginPath);
 
         // Handle configured mandatory infos:
         this.TryReadMandatoryInfos(mainTable);
@@ -401,6 +425,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputDirectory, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FilePatterns, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeSubdirectories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeHiddenFilesAndFolders, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ExcludePatterns, this.Id, settingsTable, dryRun);
+
+        var maxFileSizeIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MaxFileSizeMegabytes, this.Id, settingsTable, dryRun, validator: value => value >= FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+        if (!maxFileSizeIsValid && settingsTable.TryGetValue("DataBatchProcessing.MaxFileSizeMegabytes", out _))
+            LOG.LogWarning("The Batch Processing size limit configured by plugin {ConfigPluginId} must be at least {SmallestMaxFileSizeMegabytes} MB.", this.Id, FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptSource, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FreePrompt, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
@@ -418,6 +449,19 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        // Config: Visual Briefing Assistant defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceProfile, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceAgeGroup, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceOrganizationalLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceExpertise, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.ShowSourceReferences, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);

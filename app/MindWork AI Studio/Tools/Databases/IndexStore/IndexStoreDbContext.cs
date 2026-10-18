@@ -80,6 +80,7 @@ internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> 
             entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
+            entity.Property(file => file.TranscriptKey).HasColumnName("transcript_key");
 
             entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
             entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");

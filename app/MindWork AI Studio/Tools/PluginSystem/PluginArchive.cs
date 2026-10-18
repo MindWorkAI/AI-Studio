@@ -22,16 +22,12 @@ public static class PluginArchive
         using var archive = ZipFile.OpenRead(sourceArchiveFileName);
         Directory.CreateDirectory(destinationDirectory);
 
-        var destinationDirectoryFullPath = Path.GetFullPath(destinationDirectory);
-        if (!destinationDirectoryFullPath.EndsWith(Path.DirectorySeparatorChar))
-            destinationDirectoryFullPath += Path.DirectorySeparatorChar;
-
         foreach (var entry in archive.Entries)
         {
-            var normalizedEntryName = NormalizeEntryName(entry.FullName);
-            var destinationPath = GetEntryDestinationPath(destinationDirectoryFullPath, normalizedEntryName);
+            var normalizedEntryName = ZipEntryNames.Normalize(entry.FullName);
+            var destinationPath = ZipEntryNames.GetDestinationPath(destinationDirectory, normalizedEntryName);
 
-            if (normalizedEntryName.EndsWith('/'))
+            if (normalizedEntryName.EndsWith(ZipEntryNames.SEPARATOR))
             {
                 if (entry.Length != 0)
                     throw new InvalidDataException($"The plugin archive contains a directory entry with data: '{entry.FullName}'.");
@@ -43,38 +39,5 @@ public static class PluginArchive
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             entry.ExtractToFile(destinationPath);
         }
-    }
-
-    private static string NormalizeEntryName(string entryName)
-    {
-        var normalizedEntryName = entryName.Replace('\\', '/');
-        if (string.IsNullOrWhiteSpace(normalizedEntryName))
-            throw new InvalidDataException("The plugin archive contains an empty entry name.");
-
-        if (normalizedEntryName.Contains('\0'))
-            throw new InvalidDataException($"The plugin archive contains an invalid entry name: '{entryName}'.");
-
-        if (normalizedEntryName.StartsWith('/'))
-            throw new InvalidDataException($"The plugin archive contains a rooted entry name: '{entryName}'.");
-
-        if (normalizedEntryName is [_, ':', ..])
-            throw new InvalidDataException($"The plugin archive contains a drive-qualified entry name: '{entryName}'.");
-
-        var pathSegments = normalizedEntryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (pathSegments.Length == 0 || pathSegments.Any(segment => segment is "." or ".."))
-            throw new InvalidDataException($"The plugin archive contains an unsafe entry name: '{entryName}'.");
-
-        return normalizedEntryName;
-    }
-
-    private static string GetEntryDestinationPath(string destinationDirectoryFullPath, string normalizedEntryName)
-    {
-        var pathSegments = normalizedEntryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var relativePath = Path.Combine(pathSegments);
-        var destinationPath = Path.GetFullPath(Path.Combine(destinationDirectoryFullPath, relativePath));
-        if (!destinationPath.StartsWith(destinationDirectoryFullPath, StringComparison.Ordinal))
-            throw new InvalidDataException($"The plugin archive contains an entry outside the destination directory: '{normalizedEntryName}'.");
-
-        return destinationPath;
     }
 }

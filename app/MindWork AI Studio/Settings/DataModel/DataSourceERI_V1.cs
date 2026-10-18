@@ -24,6 +24,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
 
+    /// <summary>
+    /// What an export writes as the shared username when the data source has none to export.
+    /// </summary>
+    public const string SHARED_USERNAME_PLACEHOLDER = "<shared username>";
+
     public DataSourceERI_V1()
     {
     }
@@ -186,7 +191,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         return null;
     }
 
-    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
+    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, bool dryRun, out DataSourceERI_V1 dataSource)
     {
         dataSource = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -301,7 +306,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             EnterpriseConfigurationPluginId = configPluginId,
         };
 
-        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
+        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource, dryRun);
     }
 
     /// <summary>
@@ -319,7 +324,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         switch (this.AuthMethod)
         {
             case AuthMethod.TOKEN:
-                secretLine = CreateSecretLine("Token", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.TOKEN), encryptedSecret);
                 break;
 
             case AuthMethod.USERNAME_PASSWORD:
@@ -332,13 +337,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
                 if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD)
                 {
-                    var username = string.IsNullOrWhiteSpace(this.Username) ? "<shared username>" : this.Username;
+                    var username = string.IsNullOrWhiteSpace(this.Username) ? SHARED_USERNAME_PLACEHOLDER : this.Username;
                     usernameLine = $"""
                                    ["Username"] = "{LuaTools.EscapeLuaString(username)}",
                                    """;
                 }
 
-                secretLine = CreateSecretLine("Password", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.USERNAME_PASSWORD), encryptedSecret);
                 break;
         }
 
@@ -360,15 +365,21 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 """;
     }
 
-    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
+    /// <summary>
+    /// The field of a configuration which holds the encrypted secret of an auth method.
+    /// </summary>
+    /// <param name="authMethod">How the data source signs in.</param>
+    /// <returns>The name of the field, or an empty string for an auth method without a secret.</returns>
+    public static string GetSecretFieldName(AuthMethod authMethod) => authMethod switch
     {
-        var secretFieldName = dataSource.AuthMethod switch
-        {
-            AuthMethod.TOKEN => "Token",
-            AuthMethod.USERNAME_PASSWORD => "Password",
-            _ => string.Empty,
-        };
+        AuthMethod.TOKEN => "Token",
+        AuthMethod.USERNAME_PASSWORD => "Password",
+        _ => string.Empty,
+    };
 
+    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource, bool dryRun)
+    {
+        var secretFieldName = GetSecretFieldName(dataSource.AuthMethod);
         if (string.IsNullOrWhiteSpace(secretFieldName))
             return true;
 
@@ -380,7 +391,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
         {
-            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             return false;
         }
 
@@ -396,6 +407,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             LOGGER.LogWarning($"Failed to decrypt the {secretFieldName} for data source {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
             return false;
         }
+
+        //
+        // A dry run only checks the configuration, so it queues nothing: the start which follows it
+        // would otherwise store the secret once more for every dry run before it:
+        //
+        if (dryRun)
+            return true;
 
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",

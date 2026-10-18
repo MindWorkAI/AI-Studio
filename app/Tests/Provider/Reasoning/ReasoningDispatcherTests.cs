@@ -46,9 +46,27 @@ public sealed class ReasoningDispatcherTests
     [TestCase(Host.LLAMA_CPP, """ "reasoning_budget": 0 """, ReasoningConfigurationState.EXPLICITLY_DISABLED)]
     [TestCase(Host.VLLM, """ "thinking_token_budget": 2048 """, ReasoningConfigurationState.EXPLICITLY_ENABLED)]
     [TestCase(Host.VLLM, """ "chat_template_kwargs": { "thinking": true } """, ReasoningConfigurationState.EXPLICITLY_ENABLED)]
+    [TestCase(Host.LLMMAN, """ "reasoning_budget": 0 """, ReasoningConfigurationState.EXPLICITLY_DISABLED, Description = "llmman serves GGUF models with llama.cpp and hands the budget to it.")]
+    [TestCase(Host.LLMMAN, """ "thinking_token_budget": 2048 """, ReasoningConfigurationState.EXPLICITLY_ENABLED, Description = "llmman serves other models with vLLM and hands the budget to it.")]
     public void EachSelfHostedEngineIsReadInItsOwn(Host host, string parameters, ReasoningConfigurationState wanted)
     {
         Assert.That(ReasoningDispatcher.WhatTheParametersSay(LLMProviders.SELF_HOSTED, host, parameters), Is.EqualTo(wanted));
+    }
+
+    [Test]
+    public void LlmmanIsReadInEverythingItsEnginesAreReadIn()
+    {
+        //
+        // llmman decides by itself whether llama.cpp or vLLM serves a model. A dialect either of
+        // them learns later has to reach llmman as well, or a switch set for llmman goes unseen:
+        //
+        var llmman = ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLMMAN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.LLAMA_CPP)));
+            Assert.That(llmman, Is.SupersetOf(ReasoningDispatcher.DialectsOf(LLMProviders.SELF_HOSTED, Host.VLLM)));
+        });
     }
 
     [Test]

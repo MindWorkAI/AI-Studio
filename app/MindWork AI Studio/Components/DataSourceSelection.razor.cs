@@ -45,10 +45,20 @@ public partial class DataSourceSelection : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// For options somebody else decided on, such as those of a chat template an organization
-    /// rolled out. Seeing which data such a chat will search is the point; changing it here is not.
+    /// rolled out. Seeing which data such a chat will search is the point; changing it here is not.<br/><br/>
+    ///
+    /// Also for options which must not change right now, such as those of a chat while an answer is
+    /// being written for it: the answer reads them, and they are the very options shown here, so a
+    /// change would reach it halfway. Every change is turned down before it touches the options.
     /// </remarks>
     [Parameter]
     public bool ReadOnly { get; set; }
+
+    /// <summary>
+    /// Tells why the options cannot be changed, shown at the top of the popover while they are read-only.
+    /// </summary>
+    [Parameter]
+    public string ReadOnlyMessage { get; set; } = string.Empty;
 
     /// <summary>
     /// Whether the options edited here are the data source defaults of the chat.
@@ -324,6 +334,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task EnabledChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.areDataSourcesEnabled = state;
         this.DataSourceOptions.DisableDataSources = !this.areDataSourcesEnabled;
         
@@ -334,6 +347,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task AutoModeChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.aiBasedSourceSelection = state;
         this.DataSourceOptions.AutomaticDataSourceSelection = this.aiBasedSourceSelection;
 
@@ -343,6 +359,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task SemanticSearchChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.retrievalMode = state ? DataSourceRetrievalMode.SEMANTIC_SEARCH : DataSourceRetrievalMode.EVERY_MESSAGE;
         this.DataSourceOptions.RetrievalMode = this.retrievalMode;
 
@@ -384,6 +403,9 @@ public partial class DataSourceSelection : MSGComponentBase
 
     private async Task ValidationModeChanged(bool state)
     {
+        if (this.ReadOnly)
+            return;
+
         this.aiBasedValidation = state;
         this.DataSourceOptions.AutomaticValidation = this.aiBasedValidation;
 
@@ -393,6 +415,9 @@ public partial class DataSourceSelection : MSGComponentBase
     
     private async Task SelectionChanged(IReadOnlyCollection<IDataSource>? chosenDataSources)
     {
+        if (this.ReadOnly)
+            return;
+
         this.selectedDataSources = chosenDataSources ?? [];
 
         //

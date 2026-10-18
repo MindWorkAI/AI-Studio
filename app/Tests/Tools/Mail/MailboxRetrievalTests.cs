@@ -138,6 +138,21 @@ public sealed class MailboxRetrievalTests
     }
 
     [Test]
+    public async Task AReadingKnowsWhatTheFoldersOfTheMailboxAreFor()
+    {
+        await this.store.Client.UpsertMailFolderAsync(MAILBOX, new MailFolderRecord("Sent", MailFolderSpecialUse.SENT, 1, null, null, 1, 0, null), TOKEN);
+        var sent = await this.store.StoreMailAsync(MAILBOX, "sent", "Re: Re: Question", "Thanks for your comments.", Mail(new DateTimeOffset(2026, 9, 11, 7, 0, 0, TimeSpan.Zero), new MailLocationRecord("Sent", 1, new MailFlags(true, false, false))));
+
+        var reading = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], sent, TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(reading?.Summary.FolderPaths, Is.EqualTo(new[] { "Sent" }));
+            Assert.That(reading?.MailboxFolders.Select(folder => (folder.Path, folder.SpecialUse)), Is.EquivalentTo(new[] { (INBOX, MailFolderSpecialUse.NONE), ("Sent", MailFolderSpecialUse.SENT) }), "So Read Mail can tell a mail the user sent from one the user received.");
+        });
+    }
+
+    [Test]
     public async Task AMailIsReadOnlyFromTheMailboxesGiven()
     {
         var fromAnotherMailbox = await MailboxRetrievalService.ReadMailAsync(this.store.Client, [WORK], this.elsewhere, TOKEN);
