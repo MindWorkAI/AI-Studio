@@ -345,9 +345,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Senden an
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis kopieren"
 
--- The transcription provider returned an empty transcript.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1080540822"] = "Der Anbieter für Transkriptionen hat eine leere Transkription zurückgegeben."
-
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1108876344"] = "Experten-Einstellungen ausblenden"
 
@@ -461,9 +458,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Tools for this batch run
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2247412388"] = "Werkzeuge für diesen Durchlauf"
-
--- No usable transcription provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2282521655"] = "Es ist kein verwendbarer Anbieter für Transkriptionen konfiguriert."
 
 -- Was not able to create the output folder: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2290092642"] = "Der Ausgabeordner konnte nicht erstellt werden: {0}"
@@ -581,9 +575,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- {0} of {1} files processed
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3648144402"] = "{0} von {1} Dateien verarbeitet"
-
--- Was not able to store the transcript next to the media file: {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3691287653"] = "Das Transkript konnte nicht neben der Mediendatei gespeichert werden: {0}"
 
 -- Time
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3756319748"] = "Zeit"
@@ -3960,6 +3951,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2373663376"] = "Gut zu wiss
 -- Data folder
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2422278827"] = "Datenordner"
 
+-- The transcripts of the audio and video files in your local data sources.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T260303721"] = "Die Transkripte der Audio- und Videodateien in Ihren lokalen Datenquellen."
+
 -- Explanation
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T2840582448"] = "Erklärung"
 
@@ -4038,8 +4032,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107
 -- No, I will choose another embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1246976418"] = "Nein, ich wähle eine andere Einbettung aus"
 
+-- No, I will choose other providers or files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1811383874"] = "Nein, ich wähle andere Anbieter oder Dateien aus"
+
+-- Warning: Your transcription provider '{0}' is not self-hosted. Audio and video files this data source selects are sent to it to be transcribed, which can cost money. AI Studio keeps every transcript, so an unchanged recording is sent only once. MindWork AI Studio has no control over what that third party does with the recordings after they are sent.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T200667320"] = "Warnung: Ihr Transkriptionsanbieter „{0}“ ist nicht selbst gehostet. Audio- und Videodateien, die diese Datenquelle auswählt, werden zur Transkription an ihn gesendet, was Geld kosten kann. AI Studio speichert jedes Transkript, sodass eine unveränderte Aufnahme nur einmal gesendet wird. MindWork AI Studio hat keine Kontrolle darüber, was dieser Dritte mit den Aufnahmen nach dem Versand macht."
+
 -- Every mail of this mailbox in the selected folder and period, together with the text of its attachments,
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T2046044636"] = "Jede E-Mail dieses Postfachs im ausgewählten Ordner und Zeitraum, zusammen mit dem Text ihrer Anhänge,"
+
+-- Yes, please send my data to the external providers
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T2239851837"] = "Ja, bitte senden Sie meine Daten an die externen Anbieter"
 
 -- The data source '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T2503488371"] = "Die Datenquelle „{0}“"
@@ -6777,6 +6780,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T286958948"]
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2961294165"] = "Token-Limit"
 
+-- Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3017942214"] = "Audio- und Videodateien, die diese Datenquelle auswählt, werden übersprungen, weil Ihr Transkriptionsanbieter das Vertrauensniveau nicht erfüllt, das diese Datenquelle erfordert."
+
+-- Audio and video files which this data source selects are skipped until you choose a transcription provider in the settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3119708878"] = "Audio- und Videodateien, die diese Datenquelle auswählt, werden übersprungen, bis Sie in den Einstellungen einen Transkriptionsanbieter auswählen."
+
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3242265813"] = "Bitte geben Sie 0 oder eine positive Überlappungslänge ein."
 
@@ -6801,11 +6810,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T529871858"]
 -- Select the base directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T562479068"] = "Wählen Sie das Stammverzeichnis aus"
 
+-- Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T599406584"] = "Welche Dateien sollen indexiert werden? Trennen Sie mehrere Muster durch ein Semikolon, z. B. *.txt;*.pdf;*.docx;.gitignore. Verwenden Sie :documents: für alle Dokumente und lesbaren Textdateien, :text: nur für lesbare Textdateien oder * für alle Dateien. Audio- und Videodateien, z. B. *.mp3 oder *.mp4, werden von Ihrem Transkriptionsanbieter transkribiert."
+
 -- Yes, index hidden files and folders as well
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T607153623"] = "Ja, auch versteckte Dateien und Ordner indexieren"
-
--- Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T761052435"] = "Welche Dateien sollen indexiert werden? Trennen Sie mehrere Muster durch ein Semikolon, z. B. *.txt;*.pdf;*.docx;.gitignore. Verwenden Sie :documents: für alle Dokumente und lesbaren Textdateien, :text: nur für lesbare Textdateien oder * für alle Dateien."
 
 -- The data source token limit must not be larger than the embedding provider token limit ({0}).
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T787118522"] = "Das Token-Limit der Datenquelle darf nicht größer sein als das Token-Limit des Einbettungsanbieters ({0})."
@@ -6942,9 +6951,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1108876344"] = "
 -- Optional expert settings for how this data source is split before embedding.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1133561850"] = "Optionale Experteneinstellungen für die Aufteilung dieser Datenquelle vor dem Einbetten."
 
--- Select a file for this data source. The content of this file will be processed for the data source.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1190880267"] = "Wählen Sie eine Datei für diese Datenquelle aus. Der Inhalt dieser Datei wird für die Datenquelle verarbeitet."
-
 -- Default tokenizer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1220918127"] = "Standard-Tokenizer"
 
@@ -6978,6 +6984,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T236253137"] = "E
 -- Please enter a token limit of at least 1.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2406580478"] = "Bitte geben Sie ein Token-Limit von mindestens 1 ein."
 
+-- This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2468760910"] = "Diese Audio- oder Videodatei wird übersprungen, weil Ihr Transkriptionsanbieter das Vertrauensniveau nicht erfüllt, das diese Datenquelle erfordert."
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Hinzufügen"
 
@@ -7005,6 +7014,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Datei auswählen"
 
+-- This audio or video file is skipped until you choose a transcription provider in the settings.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4026150982"] = "Diese Audio- oder Videodatei wird übersprungen, bis Sie in den Einstellungen einen Transkriptionsanbieter auswählen."
+
 -- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T529871858"] = "Damit die KI jederzeit die passenden Daten ermitteln kann, müssen Sie einen Einbettungsanbieter auswählen."
 
@@ -7022,6 +7034,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T900713019"] = "A
 
 -- Selected file path for this data source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T939749563"] = "Ausgewählter Dateipfad für diese Datenquelle"
+
+-- Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T966073786"] = "Wählen Sie eine Datei für diese Datenquelle aus. Der Inhalt dieser Datei wird für die Datenquelle verarbeitet. Eine Audio- oder Videodatei wird zunächst von Ihrem Transkriptionsanbieter transkribiert."
 
 -- Token overlap
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T981382809"] = "Token-Überlappung"
@@ -10155,14 +10170,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1143368054"] = "Andere Ursache"
 -- Current file: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1166856644"] = "Aktuelle Datei: {0}"
 
+-- Transcription provider not allowed
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1283933457"] = "Transkriptionsanbieter nicht zulässig"
+
 -- Mailboxes are synced every 16 minutes while the automatic refresh is on. Each mail is embedded only once: when it moves to another folder, AI Studio merely notes where it lies now.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1297391911"] = "Postfächer werden alle 16 Minuten synchronisiert, solange die automatische Aktualisierung aktiviert ist. Jede E-Mail wird nur einmal eingebettet: Wird sie in einen anderen Ordner verschoben, merkt sich AI Studio lediglich, wo sie sich jetzt befindet."
 
 -- File {0} of {1} is being indexed: block {2}, page {3}.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1298290372"] = "Datei {0} von {1} wird indexiert: Block {2}, Seite {3}."
-
--- These image, audio, or video files match the data source patterns, but they cannot currently be added to the index.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1302021733"] = "Diese Bild-, Audio- oder Videodateien entsprechen den Mustern der Datenquelle, können derzeit jedoch nicht zum Index hinzugefügt werden."
 
 -- Mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1399880782"] = "E-Mail"
@@ -10193,6 +10208,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1616414701"] = "Datei {0} von {1}
 
 -- Skipped: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1775451753"] = "Übersprungen: {0}"
+
+-- These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1811387825"] = "Diese Audio- oder Videodateien entsprechen den Mustern der Datenquelle, aber Ihr Transkriptionsanbieter erfüllt nicht das Vertrauensniveau, das die Datenquelle erfordert. Wählen Sie einen anderen Transkriptionsanbieter oder ändern Sie das Vertrauensniveau der Datenquelle."
 
 -- Tried again during the next run
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1946414905"] = "Beim nächsten Durchlauf erneut versucht"
@@ -10266,6 +10284,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3628102488"] = "{0} Dateien ({1})
 -- No local data source has been queued for embedding yet.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3774205531"] = "Es wurde noch keine lokale Datenquelle für die Einbettung in die Warteschlange aufgenommen."
 
+-- These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3775894071"] = "Diese Audio- oder Videodateien entsprechen den Mustern der Datenquelle, aber es ist kein Transkriptionsanbieter konfiguriert, den AI Studio verwenden darf. Sobald Sie in den Einstellungen einen Anbieter auswählen, transkribiert AI Studio die Dateien und fügt ihren Text zum Index hinzu."
+
 -- Change the settings of the mailbox
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3788376715"] = "Einstellungen des Postfachs ändern"
 
@@ -10284,8 +10305,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T419343388"] = "Aus dem Index entf
 -- Not synced completely yet. AI Studio works through the mailbox piece by piece, the newest mails first, and older mails are still missing.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4205079539"] = "Noch nicht vollständig synchronisiert. AI Studio synchronisiert das Postfach nach und nach, beginnend mit den neuesten E-Mails. Ältere E-Mails fehlen noch."
 
+-- These image files match the data source patterns, but images cannot currently be added to the index.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T422032787"] = "Diese Bilddateien entsprechen den Mustern der Datenquelle, können derzeit jedoch nicht zum Index hinzugefügt werden."
+
 -- Current mail: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4242653147"] = "Aktuelle E-Mail: {0}"
+
+-- No transcription provider
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4253595107"] = "Kein Transkriptionsanbieter"
 
 -- Skipped files: {0}. Open a group below to see why and what you can do.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T4287145754"] = "Übersprungene Dateien: {0}. Öffnen Sie unten eine Gruppe, um zu sehen, warum und was Sie tun können."
@@ -10304,6 +10331,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T819555436"] = "Fehlgeschlagene E-
 
 -- Skipped
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T852993367"] = "Übersprungen"
+
+-- Open the transcription settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T905182399"] = "Transkriptionseinstellungen öffnen"
 
 -- Indexed: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T933775466"] = "Indexiert: {0}"
@@ -12330,6 +12360,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T677355172"] = "Un
 -- Not a readable spreadsheet
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1175970425"] = "Keine lesbare Tabellenkalkulation"
 
+-- The media file '{0}' could not be processed, so it was not indexed. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1193172614"] = "Die Mediendatei „{0}“ konnte nicht verarbeitet und daher nicht indexiert werden. AI Studio liest sie erneut ein, sobald sich die Datei ändert."
+
+-- Media file could not be processed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1302965532"] = "Mediendatei konnte nicht verarbeitet werden"
+
 -- Not a text file
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1465212038"] = "Keine Textdatei"
 
@@ -12563,6 +12599,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAIL::MAILBOXPROVIDERTEMPLATEEXTENSIONS::T4026
 
 -- Edit Mailbox
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::MAILBOXEDITING::T3250445637"] = "Postfach bearbeiten"
+
+-- The transcription provider returned an empty transcript.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T1080540822"] = "Der Transkriptionsanbieter hat ein leeres Transkript zurückgegeben."
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T2282521655"] = "Es ist kein nutzbarer Transkriptionsanbieter konfiguriert."
+
+-- Was not able to read the existing transcript: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T2397111152"] = "Das vorhandene Transkript konnte nicht gelesen werden: {0}"
+
+-- The media file changed while it was being transcribed, so its transcript was not kept.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T2455890169"] = "Die Mediendatei wurde während der Transkription geändert, daher wurde das Transkript verworfen."
+
+-- The media file could not be read.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T3826117761"] = "Die Mediendatei konnte nicht gelesen werden."
+
+-- Was not able to store the transcript: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MEDIA::PERSISTENTMEDIATRANSCRIPT::T920159834"] = "Das Transkript konnte nicht gespeichert werden: {0}"
 
 -- AI Studio couldn't install Pandoc because the archive was not found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio konnte Pandoc nicht installieren, da das Archiv nicht gefunden wurde."
@@ -13635,6 +13689,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T1225
 -- Some mails could not be indexed. The list below says which ones and why.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T2360744026"] = "Einige E-Mails konnten nicht indexiert werden. In der folgenden Liste steht, welche E-Mails betroffen sind und warum."
 
+-- The media file '{0}' could not be processed, so it was not indexed. Reason: {1} AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T2967004571"] = "Die Mediendatei „{0}“ konnte nicht verarbeitet und daher nicht indexiert werden. Grund: {1} AI Studio liest sie erneut ein, sobald sich die Datei ändert."
+
 -- The mail '{0}' could not be indexed. AI Studio tries again during the next sync.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T804280374"] = "Die E-Mail „{0}“ konnte nicht indexiert werden. AI Studio versucht es bei der nächsten Synchronisierung erneut."
 
@@ -14445,8 +14502,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2222598306"
 -- Please select your security policy.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2250909198"] = "Bitte wählen Sie Ihre Sicherheitsrichtlinie aus."
 
--- The selected file is not a supported document or readable text file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2728355006"] = "Die ausgewählte Datei ist weder ein unterstütztes Dokument noch eine lesbare Textdatei."
+-- Please acknowledge that you are aware of the cloud transcription implications.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T2818048408"] = "Bitte bestätigen Sie, dass Ihnen die Auswirkungen der Cloud-Transkription bewusst sind."
 
 -- Please test the connection before saving.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T285470497"] = "Bitte testen Sie die Verbindung, bevor Sie speichern."
@@ -14492,6 +14549,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T490875633"]
 
 -- The file path must not be empty. Please select a file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T878007824"] = "Der Dateipfad darf nicht leer sein. Bitte wählen Sie eine Datei aus."
+
+-- The selected file is not a supported document, readable text file, audio file, or video file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T90753429"] = "Die ausgewählte Datei ist kein unterstütztes Dokument, keine lesbare Textdatei und keine Audio- oder Videodatei."
 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Bitte geben Sie das für die Authentifizierung benötigte Geheimnis ein."
