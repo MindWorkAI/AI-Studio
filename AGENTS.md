@@ -17,6 +17,12 @@ a time. After each item:
 In a cloud session, steps 1, 4, and 5 work differently: there, you build in the shell, and you commit
 and push each item yourself before you stop. See "Cloud sessions" below.
 
+Developers may change steps 3 and 4 for themselves in their personal instructions outside this repository,
+such as `~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex, or an instruction file in a
+parent folder. If those instructions tell you to commit each item yourself, do so and continue with the
+next item without stopping; the developer then reviews the whole branch at the end. Step 5 applies all the
+same: never push.
+
 ## Area guides
 
 Some areas of the code have instructions of their own, in an `AGENTS.md` next to the code. Claude Code
