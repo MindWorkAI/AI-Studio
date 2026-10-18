@@ -43,7 +43,7 @@
             />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("Select a file for this data source. The content of this file will be processed for the data source.")
+                @T("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
             {
@@ -90,18 +90,15 @@
                 }
             </MudSelect>
             
-            @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
+            @if (this.CurrentCloudProcessing is not CloudProcessing.NONE)
             {
-                if (this.SelectedCloudEmbedding)
-                {
-                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_FILE" SourcePath="@this.dataFilePath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
-                }
-                else
-                {
-                    <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
-                        @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
-                    </MudJustifiedText>
-                }
+                <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_FILE" SourcePath="@this.dataFilePath" SendsEmbeddingsToCloud="@this.SelectedCloudEmbedding" CloudTranscriptionProvider="@this.CloudTranscriptionProviderName" @bind-UserAcknowledged="@this.UserAcknowledgedCloudProcessing" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+            }
+            else if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
+            {
+                <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                    @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
+                </MudJustifiedText>
             }
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
@@ -114,6 +111,13 @@
                     </MudSelectItem>
                 }
             </MudSelect>
+
+            @if (this.MediaTranscriptionHint is { } mediaTranscriptionHint)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+                    @mediaTranscriptionHint
+                </MudAlert>
+            }
 
             <MudStack Class="mb-3">
                 <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">

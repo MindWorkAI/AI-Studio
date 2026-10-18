@@ -80,6 +80,33 @@ internal static class FileNamePatterns
                                           && FileSystemName.MatchesSimpleExpression(pattern, fileName, ignoreCase: true));
     }
 
+    /// <summary>
+    /// Whether the patterns may select audio or video files, which a data source sends to the transcription provider.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately cautious, since it answers without looking at a single file: a pattern which
+    /// may match any extension, such as * or meeting*, counts. The selectors never select media.
+    /// </remarks>
+    /// <param name="patterns">The parsed patterns.</param>
+    /// <returns>True when audio or video files may match.</returns>
+    public static bool MaySelectMedia(IReadOnlyList<string> patterns) => patterns.Any(MaySelectMedia);
+
+    private static bool MaySelectMedia(string pattern)
+    {
+        if (pattern.StartsWith(SELECTOR_DELIMITER) && pattern.EndsWith(SELECTOR_DELIMITER))
+            return false;
+
+        var extensionStart = pattern.LastIndexOf('.');
+        if (extensionStart < 0)
+            return pattern.IndexOfAny(['*', '?']) >= 0;
+
+        var extension = pattern[(extensionStart + 1)..];
+        if (extension.IndexOfAny(['*', '?']) >= 0)
+            return true;
+
+        return FileTypes.IsAllowedPath($"media.{extension}", FileTypes.AUDIO, FileTypes.VIDEO);
+    }
+
     public static bool AreEquivalent(IReadOnlyCollection<string>? left, IReadOnlyCollection<string>? right)
     {
         if (left is null || right is null)

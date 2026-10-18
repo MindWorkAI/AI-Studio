@@ -758,6 +758,19 @@ public sealed class MediaTranscriptionService(
             : null;
     }
 
+    /// <summary>
+    /// The configured provider, when it may also hear the audio and video files of the given data source.
+    /// </summary>
+    /// <param name="dataSource">The data source, with the confidence level it asks for.</param>
+    /// <returns>The provider, or null when none is configured or it falls short of the global minimum or of the data source.</returns>
+    public TranscriptionProvider? GetUsableProvider(IIndexedDataSource dataSource)
+    {
+        var provider = this.GetUsableProvider();
+        return provider is not null && DataSourceEmbeddingService.AllowsTranscription(dataSource, provider.GetConfidenceLevel(settingsManager))
+            ? provider
+            : null;
+    }
+
     /// <summary>Creates and registers operation-owned cancellation state.</summary>
     /// <param name="target">Optional visible media import target.</param>
     /// <param name="token">Caller token linked to the operation.</param>
