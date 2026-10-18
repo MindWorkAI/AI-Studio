@@ -142,11 +142,7 @@ public sealed class PersistentMediaTranscriptTests
     public async Task ATranscriptWhichArrivesAfterACancellationIsStillStored()
     {
         using var cancellation = new CancellationTokenSource();
-        var transcriber = new CountingTranscriber(() =>
-        {
-            cancellation.Cancel();
-            return MediaTranscriptionResult.Succeeded("Paid transcript");
-        });
+        var transcriber = new CountingTranscriber(() => MediaTranscriptionResult.Succeeded("Paid transcript"), cancellation.Cancel);
 
         var result = await PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, this.mediaPath, this.provider, transcriber.TranscribeAsync, NullLogger.Instance, cancellation.Token);
 
@@ -217,15 +213,21 @@ public sealed class PersistentMediaTranscriptTests
         });
     }
 
-    private Task<PersistentMediaTranscriptResult> ReadOrCreateAsync(CountingTranscriber transcriber, TranscriptionProvider? provider) => PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, this.mediaPath, provider, transcriber.TranscribeAsync, NullLogger.Instance, CancellationToken.None);
+    private Task<PersistentMediaTranscriptResult> ReadOrCreateAsync(CountingTranscriber transcriber, TranscriptionProvider? transcriptionProvider) => PersistentMediaTranscript.ReadOrCreateAsync(MediaSidecarTranscripts.INSTANCE, this.mediaPath, transcriptionProvider, transcriber.TranscribeAsync, NullLogger.Instance, CancellationToken.None);
 
-    private sealed class CountingTranscriber(Func<MediaTranscriptionResult> answer)
+    /// <summary>
+    /// Stands in for the provider and counts how often it was asked.
+    /// </summary>
+    /// <param name="answer">Creates the answer of the provider.</param>
+    /// <param name="whileAnswering">Runs while the provider is answering, e.g., to cancel the run in the middle of an upload.</param>
+    private sealed class CountingTranscriber(Func<MediaTranscriptionResult> answer, Action? whileAnswering = null)
     {
         public int Calls { get; private set; }
 
         public Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, TranscriptionProvider provider, CancellationToken token)
         {
             this.Calls++;
+            whileAnswering?.Invoke();
             return Task.FromResult(answer());
         }
     }

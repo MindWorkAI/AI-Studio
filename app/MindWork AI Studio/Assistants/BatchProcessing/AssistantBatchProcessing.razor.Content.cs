@@ -1,5 +1,4 @@
 using AIStudio.Tools.Media;
-using AIStudio.Tools.Rust;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
