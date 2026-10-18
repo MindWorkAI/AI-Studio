@@ -226,7 +226,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         var embeddedAtUtc = DateTimeOffset.UtcNow;
         var state = document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = embeddedAtUtc };
         await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
-        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount);
+        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount, state.TranscriptKey);
         await context.ForgetPermanentFailureAsync(document.Key, token);
         context.Pass.Forget(document.Key);
 
@@ -300,7 +300,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 //
                 this.PermanentlySkippedDocuments++;
                 var occurredAtUtc = DateTimeOffset.UtcNow;
-                var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document);
+                var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document, extractionFailure.Message);
                 this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
                 context.Pass.Forget(document.Key);
@@ -533,10 +533,37 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// </remarks>
     /// <param name="code">Why reading the document failed, NONE when it was not about reading it.</param>
     /// <param name="document">The document.</param>
+    /// <param name="details">A localized explanation supplied by a specialized reader, when available.</param>
     /// <returns>The message, ready to show.</returns>
-    private string GetFailureMessage(FileExtractionErrorCode code, EmbeddingDocument document) => context.DataSource is DataSourceMailbox
-        ? string.Format(TB("The mail '{0}' could not be indexed. AI Studio tries again during the next sync."), document.DisplayName)
-        : code.ToIndexingUserMessage(document.DisplayName);
+    private string GetFailureMessage(FileExtractionErrorCode code, EmbeddingDocument document, string? details = null)
+    {
+        if (context.DataSource is DataSourceMailbox)
+            return string.Format(TB("The mail '{0}' could not be indexed. AI Studio tries again during the next sync."), document.DisplayName);
+
+        if (code is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED && !string.IsNullOrWhiteSpace(details))
+        {
+            return string.Format(
+                TB("The media file '{0}' could not be processed, so it was not indexed. Reason: {1} AI Studio reads it again as soon as the file changes."),
+                document.DisplayName,
+                AsSentence(details));
+        }
+
+        return code.ToIndexingUserMessage(document.DisplayName);
+    }
+
+    /// <summary>
+    /// Ends a reason with a full stop, so the sentence after it does not run into it.
+    /// </summary>
+    /// <remarks>
+    /// Providers write their error messages as they like, often without a full stop at the end.
+    /// </remarks>
+    /// <param name="reason">The reason.</param>
+    /// <returns>The reason, ending with a punctuation mark.</returns>
+    internal static string AsSentence(string reason)
+    {
+        var sentence = reason.TrimEnd();
+        return sentence.Length is 0 || sentence[^1] is '.' or '!' or '?' or '…' ? sentence : $"{sentence}.";
+    }
 
     private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null) => new(
         context.DataSource.Id,

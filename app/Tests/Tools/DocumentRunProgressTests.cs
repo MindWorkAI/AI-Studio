@@ -65,6 +65,27 @@ public sealed class DocumentRunProgressTests
     }
 
     [Test]
+    public async Task APermanentMediaFailureKeepsItsExplanation()
+    {
+        var (progress, statuses, manifest) = CreateProgress(totalDocuments: 1);
+        var document = Document(Path.Combine(Path.GetTempPath(), "test-data", "recording.webm"));
+
+        await progress.RecordDocumentFailureAsync(
+            document,
+            new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, "The media file is damaged or its format could not be identified."),
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(statuses[^1].Failures, Has.Count.EqualTo(1));
+            Assert.That(statuses[^1].Failures[0].ExtractionCode, Is.EqualTo(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED));
+            Assert.That(statuses[^1].Failures[0].Reason, Does.Contain("The media file is damaged or its format could not be identified."));
+            Assert.That(manifest.PermanentFailures[document.State.AbsolutePath].Code, Is.EqualTo(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED));
+            Assert.That(manifest.PermanentFailures[document.State.AbsolutePath].Message, Is.EqualTo(statuses[^1].Failures[0].Reason));
+        });
+    }
+
+    [Test]
     public async Task ARunWhichOnlySkippedDocumentsForGoodIsCompleted()
     {
         var (progress, statuses, _) = CreateProgress(totalDocuments: 3);
@@ -379,8 +400,8 @@ public sealed class DocumentRunProgressTests
         var testDataPath = Path.Combine(Path.GetTempPath(), "test-data");
         var ignoredFiles = new[]
         {
-            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "recording.mp3"), DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
-            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "diagram.png"), DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED),
+            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "recording.mp3"), DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING),
+            new DataSourceEmbeddingIgnoredFile(Path.Combine(testDataPath, "diagram.png"), DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED),
         };
         var filePatternExclusions = new[] { new DataSourceEmbeddingFilePatternGroup(".pdf", 42) };
         var excludedFolders = new[] { new DataSourceEmbeddingExcludedFolderGroup("node_modules", 3) };
@@ -430,6 +451,15 @@ public sealed class DocumentRunProgressTests
         await progress.RecordDocumentFailureAsync(Document("/tmp/test-data/report.pdf"), new IOException("The file changed."), CancellationToken.None);
 
         Assert.That(statuses[^1].Failures[0].DisplayName, Is.EqualTo("report.pdf"));
+    }
+
+    [TestCase("Audio file might be corrupted or unsupported", "Audio file might be corrupted or unsupported.")]
+    [TestCase("The container is damaged. ", "The container is damaged.")]
+    [TestCase("Is it damaged?", "Is it damaged?")]
+    [TestCase("", "")]
+    public void AReasonEndsAsASentence(string reason, string sentence)
+    {
+        Assert.That(DocumentRunProgress.AsSentence(reason), Is.EqualTo(sentence));
     }
 
     private static IndexingPass NewPass() => new(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty));

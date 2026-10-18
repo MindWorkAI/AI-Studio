@@ -148,7 +148,8 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                 file.FileSize,
                 file.LastWriteUtc,
                 file.EmbeddedAtUtc,
-                file.ChunkCount);
+                file.ChunkCount,
+                file.TranscriptKey);
         }
 
         var permanentFailures = await context.PermanentIndexingFailures
@@ -690,6 +691,7 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         fileEntity.LastWriteUtc = file.LastWriteUtc;
         fileEntity.EmbeddedAtUtc = file.EmbeddedAtUtc;
         fileEntity.ChunkCount = file.ChunkCount;
+        fileEntity.TranscriptKey = file.TranscriptKey;
     }
 
     private static void ApplyPermanentFailure(IndexingFailureEntity failureEntity, string dataSourceId, PermanentIndexingFailure failure)

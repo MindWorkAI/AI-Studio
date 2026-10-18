@@ -2,6 +2,7 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -42,6 +43,9 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     [Inject]
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
     private readonly DataSourceValidation dataSourceValidation;
@@ -59,7 +63,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private string dataId = Guid.NewGuid().ToString();
     private string dataName = string.Empty;
     private string dataDescription = string.Empty;
-    private bool dataUserAcknowledgedCloudEmbedding;
+    private CloudProcessing acknowledgedCloudProcessing;
     private string dataEmbeddingId = string.Empty;
     private string dataFilePath = string.Empty;
     private int dataMaxChunkTokenLength;
@@ -83,6 +87,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         this.dataSourceValidation = new()
         {
             GetSelectedCloudEmbedding = () => this.SelectedCloudEmbedding,
+            GetSelectedCloudTranscription = () => this.SelectedCloudTranscription,
             GetSelectedEmbeddingProvider = () => this.SelectedEmbedding,
             GetConfidenceLevel = () => this.dataConfidenceLevel,
             GetSettingsManager = () => this.SettingsManager,
@@ -151,6 +156,42 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
+
+    /// <summary>
+    /// Whether the selected file is an audio or video file, which the data source transcribes.
+    /// </summary>
+    private bool SelectsMedia => PersistentMediaTranscript.IsMediaPath(this.dataFilePath);
+
+    /// <summary>
+    /// The transcription provider which may hear the audio and video files of this data source, or null.
+    /// </summary>
+    private TranscriptionProvider? AllowedTranscriptionProvider => this.MediaTranscriptionService.GetUsableProvider(this.CreateDataSource());
+
+    private bool SelectedCloudTranscription => this.SelectsMedia && this.AllowedTranscriptionProvider is { IsSelfHosted: false };
+
+    private string CloudTranscriptionProviderName => this.SelectedCloudTranscription ? this.AllowedTranscriptionProvider?.Name ?? string.Empty : string.Empty;
+
+    private CloudProcessing CurrentCloudProcessing => (this.SelectedCloudEmbedding ? CloudProcessing.EMBEDDING : CloudProcessing.NONE) | (this.SelectedCloudTranscription ? CloudProcessing.TRANSCRIPTION : CloudProcessing.NONE);
+
+    /// <remarks>
+    /// The acknowledgment holds for the providers it was given for, cf. CloudProcessingExtensions.Covers.
+    /// </remarks>
+    private bool UserAcknowledgedCloudProcessing
+    {
+        get => this.acknowledgedCloudProcessing.Covers(this.CurrentCloudProcessing);
+        set => this.acknowledgedCloudProcessing = value ? this.CurrentCloudProcessing : CloudProcessing.NONE;
+    }
+
+    /// <summary>
+    /// Why the selected audio or video file would not be indexed, or null when it would.
+    /// </summary>
+    private string? MediaTranscriptionHint => !this.SelectsMedia
+        ? null
+        : this.MediaTranscriptionService.GetUsableProvider() is null
+            ? T("This audio or video file is skipped until you choose a transcription provider in the settings.")
+            : this.AllowedTranscriptionProvider is null
+                ? T("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
+                : null;
 
     private bool CanChangeSource => !this.IsEditing || !this.LockSource;
 

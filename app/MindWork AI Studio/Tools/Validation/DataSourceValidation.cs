@@ -31,6 +31,8 @@ public sealed class DataSourceValidation
 
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
 
+    public Func<bool> GetSelectedCloudTranscription { get; init; } = () => false;
+
     public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
 
     public Func<ConfidenceLevel> GetConfidenceLevel { get; init; } = () => ConfidenceLevel.NONE;
@@ -158,8 +160,8 @@ public sealed class DataSourceValidation
         if(!File.Exists(filePath))
             return TB("The file does not exist. Please select a valid file.");
 
-        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
-            return TB("The selected file is not a supported document or readable text file.");
+        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO))
+            return TB("The selected file is not a supported document, readable text file, audio file, or video file.");
         
         return null;
     }
@@ -250,6 +252,9 @@ public sealed class DataSourceValidation
 
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
+        if(this.GetSelectedCloudTranscription() && !value)
+            return TB("Please acknowledge that you are aware of the cloud transcription implications.");
+
         if(this.GetSelectedCloudEmbedding() && !value)
             return TB("Please acknowledge that you are aware of the cloud embedding implications.");
         

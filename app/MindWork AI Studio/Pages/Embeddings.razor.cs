@@ -276,7 +276,7 @@ public partial class Embeddings : MSGComponentBase
 
     private sealed record FailureGroup(FailureCause Cause, string EmbeddingProviderName, IReadOnlyList<DataSourceEmbeddingFailure> Failures);
 
-    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsDataSourceSettings);
+    private sealed record IgnoredFileCause(int Priority, string Title, string Description, string Icon, Color Color, bool NeedsDataSourceSettings, bool NeedsTranscriptionSettings);
 
     private sealed record IgnoredFileGroup(IgnoredFileCause Cause, IReadOnlyList<DataSourceEmbeddingIgnoredFile> Files);
 
@@ -315,8 +315,9 @@ public partial class Embeddings : MSGComponentBase
         var hasCauseName = !string.IsNullOrWhiteSpace(causeName);
         var title = hasCauseName ? causeName : T("Other cause");
 
+        var showsMessagePerFile = !hasCauseName || failure.ExtractionCode is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED;
         return failure.IsPermanent
-            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, !hasCauseName)
+            ? new FailureCause(3, title, Icons.Material.Filled.SkipNext, Color.Default, true, false, showsMessagePerFile)
             : new FailureCause(2, title, Icons.Material.Filled.ReportProblem, Color.Warning, false, false, !hasCauseName);
     }
 
@@ -342,13 +343,31 @@ public partial class Embeddings : MSGComponentBase
             string.Format(T("These files match the data source patterns, but they are larger than its limit of {0}. You can raise the limit in the expert settings of the data source."), this.GetMaxFileSizeText(status)),
             Icons.Material.Filled.Straighten,
             Color.Warning,
+            true,
+            false),
+        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING => new IgnoredFileCause(
+            0,
+            T("No transcription provider"),
+            T("These audio or video files match the data source patterns, but no transcription provider is configured that AI Studio may use. Once you choose one in the settings, AI Studio transcribes the files and adds their text to the index."),
+            Icons.Material.Filled.MicOff,
+            Color.Warning,
+            false,
             true),
-        DataSourceEmbeddingIgnoreReason.MEDIA_NOT_SUPPORTED => new IgnoredFileCause(
+        DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED => new IgnoredFileCause(
+            0,
+            T("Transcription provider not allowed"),
+            T("These audio or video files match the data source patterns, but your transcription provider does not meet the confidence level this data source requires. Choose another transcription provider, or change the confidence level of the data source."),
+            Icons.Material.Filled.GppBad,
+            Color.Warning,
+            true,
+            true),
+        DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED => new IgnoredFileCause(
             1,
-            FileTypes.MEDIA.FilterName,
-            T("These image, audio, or video files match the data source patterns, but they cannot currently be added to the index."),
-            Icons.Material.Filled.PermMedia,
+            FileTypes.IMAGE.FilterName,
+            T("These image files match the data source patterns, but images cannot currently be added to the index."),
+            Icons.Material.Filled.ImageNotSupported,
             Color.Default,
+            false,
             false),
         _ => throw new ArgumentOutOfRangeException(nameof(file.Reason), file.Reason, null),
     };
@@ -445,7 +464,9 @@ public partial class Embeddings : MSGComponentBase
     {
         return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
                status is { VectorStoreUnreadable: false, State: not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED } &&
-               (status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0);
+               (status.State is DataSourceEmbeddingState.FAILED
+                || status.FailedDocuments > 0
+                || status.NeedsTranscriptionProvider);
     }
 
     /// <remarks>
@@ -460,13 +481,13 @@ public partial class Embeddings : MSGComponentBase
     }
 
     /// <summary>
-    /// Takes the user to the settings, where the embedding providers are configured.
+    /// Takes the user to the settings, where embedding and transcription providers are configured.
     /// </summary>
     /// <remarks>
-    /// Offered only for the failures a setting fixes, such as a rejected API key. Reading what
-    /// went wrong and then having to find the right page is where people give up.
+    /// Offered only for a problem a provider setting fixes. Reading what went wrong and then
+    /// having to find the right page is where people give up.
     /// </remarks>
-    private void OpenEmbeddingProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
+    private void OpenProviderSettings() => this.NavigationManager.NavigateTo(Routes.SETTINGS);
 
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {

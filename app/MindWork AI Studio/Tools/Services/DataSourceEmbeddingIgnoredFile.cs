@@ -6,7 +6,8 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 /// <remarks>
 /// Files below folders the user chose not to scan never reach enumeration and therefore do not
-/// appear here. Temporary and system files are implementation details and stay hidden as well.
+/// appear here. Generated transcript artifacts and temporary/system files are implementation
+/// details and stay hidden as well.
 /// </remarks>
 /// <param name="FilePath">The absolute path of the ignored file.</param>
 /// <param name="Reason">Why the file was ignored.</param>

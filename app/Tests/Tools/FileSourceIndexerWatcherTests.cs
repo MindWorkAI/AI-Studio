@@ -1,4 +1,5 @@
 using AIStudio.Tools;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services.Indexing;
 
 namespace AIStudio.Tests.Tools;
@@ -259,6 +260,78 @@ public sealed class FileSourceIndexerWatcherTests
         var after = before with { ExcludePatterns = FileExclusions.Parse("bin/") };
 
         Assert.That(FileSourceIndexer.IsSameWatchConfiguration(before, after), Is.False);
+    }
+
+    [Test]
+    public async Task DirectoryWatcherIgnoresTheBatchTranscriptWhenTheMediaIsSelected()
+    {
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-watcher-{Guid.NewGuid():N}");
+        var mediaPath = Path.Combine(directoryPath, "recording.mp3");
+        Directory.CreateDirectory(directoryPath);
+
+        try
+        {
+            await File.WriteAllBytesAsync(mediaPath, [1, 2, 3]);
+            var transcriptPath = MediaSidecarTranscripts.GetFilePath(mediaPath);
+            var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(
+                directoryPath,
+                true,
+                FilePatterns: FileNamePatterns.Parse("*"));
+            var unrelatedPatterns = configuration with { FilePatterns = FileNamePatterns.Parse("*.tf") };
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, mediaPath, WatcherChangeTypes.Changed), Is.True);
+                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(configuration, transcriptPath, WatcherChangeTypes.Created), Is.False);
+                Assert.That(FileSourceIndexer.IsRelevantWatcherPath(unrelatedPatterns, transcriptPath, WatcherChangeTypes.Created), Is.False);
+            });
+        }
+        finally
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
+    [Test]
+    public async Task DirectoryWatcherKeepsTranscriptAsADocumentWhenTheMediaIsNotSelected()
+    {
+        var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-document-{Guid.NewGuid():N}");
+        var mediaPath = Path.Combine(directoryPath, "recording.mp3");
+        Directory.CreateDirectory(directoryPath);
+
+        try
+        {
+            await File.WriteAllBytesAsync(mediaPath, [1, 2, 3]);
+            var configuration = new FileSourceIndexer.DataSourceWatcherConfiguration(
+                directoryPath,
+                true,
+                FilePatterns: FileNamePatterns.Parse("*.md"));
+
+            Assert.That(
+                FileSourceIndexer.IsRelevantWatcherPath(configuration, MediaSidecarTranscripts.GetFilePath(mediaPath), WatcherChangeTypes.Changed),
+                Is.True);
+        }
+        finally
+        {
+            Directory.Delete(directoryPath, true);
+        }
+    }
+
+    [TestCase("recording.mp3")]
+    [TestCase("meeting.mp4")]
+    [TestCase("voice.webm")]
+    public void MediaStartsARunOnlyWhenAPatternSelectsIt(string fileName)
+    {
+        var rootPath = Path.Combine(Path.GetTempPath(), $"ai-studio-media-watcher-{Guid.NewGuid():N}");
+        var path = Path.Combine(rootPath, fileName);
+        var documents = DefaultConfiguration(rootPath);
+        var everything = documents with { FilePatterns = FileNamePatterns.Parse("*") };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileSourceIndexer.IsRelevantWatcherPath(documents, path, WatcherChangeTypes.Created), Is.False, "The documents selector never selects audio or video.");
+            Assert.That(FileSourceIndexer.IsRelevantWatcherPath(everything, path, WatcherChangeTypes.Created), Is.True);
+        });
     }
 
     private static FileSourceIndexer.DataSourceWatcherConfiguration DefaultConfiguration(string rootPath) => new(

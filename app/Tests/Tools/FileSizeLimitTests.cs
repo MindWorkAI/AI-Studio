@@ -140,5 +140,5 @@ public sealed class FileSizeLimitTests
     }
 
     // Finding the files reads none of them, so it needs neither the runtime nor the chunker:
-    private static FileSourceIndexer CreateIndexer() => new(null!, null!, null!, NullLogger.Instance);
+    private static FileSourceIndexer CreateIndexer() => new(null!, null!, null!, null!, NullLogger.Instance);
 }

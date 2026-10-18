@@ -7,6 +7,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services.Indexing;
@@ -16,7 +17,7 @@ using static AIStudio.Tools.Services.Indexing.IndexingLogFormat;
 namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
-    PromptInjectionGuardService guardService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
+    PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ILogger<DataSourceEmbeddingService> logger) : BackgroundService, IMessageBusReceiver
 {
     /// <summary>
     /// How long the re-index check waits for the index database before it gives up.
@@ -40,7 +41,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// One indexer per kind of data source this service indexes.
     /// </summary>
-    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, logger);
+    private readonly IReadOnlyList<IIndexedSourceIndexer> indexers = CreateIndexers(settingsManager, rustService, guardService, mediaTranscriptionService, logger);
 
     private readonly DataSourceRunQueue runQueue = new();
 
@@ -93,12 +94,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// <summary>
     /// Creates one indexer per kind of data source, all of them cutting their text with the same chunker.
     /// </summary>
-    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, ILogger logger)
+    private static IReadOnlyList<IIndexedSourceIndexer> CreateIndexers(SettingsManager settingsManager, RustService rustService, PromptInjectionGuardService guardService, MediaTranscriptionService mediaTranscriptionService, ILogger logger)
     {
         var textChunker = new TextChunker(rustService, logger);
         return
         [
-            new FileSourceIndexer(settingsManager, rustService, textChunker, logger),
+            new FileSourceIndexer(settingsManager, rustService, mediaTranscriptionService, textChunker, logger),
             new MailboxIndexer(settingsManager, rustService, guardService, textChunker, logger),
         ];
     }
@@ -518,8 +519,33 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
+        this.DeleteMediaTranscripts(dataSource);
         this.statuses.TryRemove(dataSource.Id, out _);
         PublishStatusChanged();
+    }
+
+    /// <summary>
+    /// Deletes the transcripts of the audio and video files of a data source which the user removed.
+    /// </summary>
+    /// <remarks>
+    /// Only the removal of a data source does this. A reset for new embedding settings keeps them,
+    /// cf. ResetPersistedStateAsync: they are still valid, and the new index would otherwise pay
+    /// for every recording once more.
+    /// </remarks>
+    /// <param name="dataSource">The removed data source.</param>
+    private void DeleteMediaTranscripts(IDataSourceBase dataSource)
+    {
+        if (dataSource is not (DataSourceLocalDirectory or DataSourceLocalFile))
+            return;
+
+        try
+        {
+            DataSourceTranscriptStore.TryForDataSource(dataSource.Id)?.DeleteAll();
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcripts of the deleted data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -1085,6 +1111,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     internal static bool AllowsEmbedding(IIndexedDataSource dataSource, ConfidenceLevel embeddingProviderConfidence) => dataSource is DataSourceMailbox
         ? embeddingProviderConfidence.AllowsMailboxConfidenceLevel(dataSource.ConfidenceLevel)
         : embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(dataSource.ConfidenceLevel);
+
+    /// <summary>
+    /// Whether a transcription provider of the given confidence level may hear the audio and video files of a data source.
+    /// </summary>
+    /// <remarks>
+    /// The transcription provider receives the content of the data source just like the embedding
+    /// provider does, so the same rule applies to both, cf. AllowsEmbedding.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="transcriptionProviderConfidence">The confidence level of the transcription provider.</param>
+    /// <returns>True when the provider may transcribe the media files of the data source.</returns>
+    internal static bool AllowsTranscription(IIndexedDataSource dataSource, ConfidenceLevel transcriptionProviderConfidence) => AllowsEmbedding(dataSource, transcriptionProviderConfidence);
 
     /// <summary>
     /// The configured data sources this service indexes, from every list which holds some.

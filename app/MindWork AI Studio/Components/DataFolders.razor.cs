@@ -83,6 +83,7 @@ public partial class DataFolders : MSGComponentBase
         DataBackupEntryKind.VISUAL_BRIEFINGS => T("Your projects in the Visual Briefing Assistant."),
         DataBackupEntryKind.DATA_SOURCE_INDEX => T("The index of your local data sources: which files AI Studio embedded, and their text."),
         DataBackupEntryKind.VECTOR_STORES => T("The embeddings of your local data sources."),
+        DataBackupEntryKind.MEDIA_TRANSCRIPTS => T("The transcripts of the audio and video files in your local data sources."),
 
         DataBackupEntryKind.SETTINGS_OF_OTHER_VERSIONS => T("Copies of your settings, which every version of AI Studio keeps for itself. Your current settings are all a backup needs."),
         DataBackupEntryKind.BUILT_IN_PLUGINS => T("Plugins which come with AI Studio, such as the language packs. AI Studio brings them back by itself."),

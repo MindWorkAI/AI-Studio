@@ -40,6 +40,27 @@ public sealed class IndexStoreManifestTests
         });
     }
 
+    [Test]
+    public async Task TheManifestKnowsWhichTranscriptBelongsToAMediaFile()
+    {
+        await using var store = await TemporaryIndexStore.CreateAsync();
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "b0a4c4d2-1f3e-4f0a-8c9d-5a6b7c8d9e01", "signature", string.Empty, 3, TOKEN);
+
+        var recording = Path.Combine(Path.GetTempPath(), "test-data", "meeting.mp3");
+        var document = Path.Combine(Path.GetTempPath(), "test-data", "report.pdf");
+        var transcriptKey = new string('f', 64);
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(recording, 2) with { TranscriptKey = transcriptKey }, TOKEN);
+        await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(document, 4), TOKEN);
+
+        var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.Files[recording].TranscriptKey, Is.EqualTo(transcriptKey), "Without the key, AI Studio cannot remove the transcript once the recording is gone.");
+            Assert.That(manifest.Files[document].TranscriptKey, Is.Null);
+        });
+    }
+
     private static EmbeddingStateFile Row(string filePath, int chunkCount)
     {
         var now = DateTimeOffset.UtcNow;

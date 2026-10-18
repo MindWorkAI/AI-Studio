@@ -46,6 +46,11 @@ public enum DataBackupEntryKind
     VECTOR_STORES,
 
     /// <summary>
+    /// The transcripts of the audio and video files of the data sources. Making them again costs money.
+    /// </summary>
+    MEDIA_TRANSCRIPTS,
+
+    /// <summary>
     /// The copies of the settings which every version of AI Studio keeps for itself.
     /// </summary>
     SETTINGS_OF_OTHER_VERSIONS,

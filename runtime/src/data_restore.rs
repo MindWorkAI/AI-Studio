@@ -52,7 +52,7 @@ const SETTINGS_FILE_NAME: &str = "settings.json";
 /// (`DataBackupContents`) includes. The runtime refuses a plan which names anything else, so that
 /// whatever goes wrong in the app, a restore never replaces the logs, the downloaded tools, or the
 /// data folder as a whole.
-const REPLACEABLE_ELEMENTS: [(Location, &str); 8] = [
+const REPLACEABLE_ELEMENTS: [(Location, &str); 9] = [
     (Location::ConfigDirectory, SETTINGS_FILE_NAME),
     (Location::DataDirectory, "workspaces/"),
     (Location::DataDirectory, "tempChats/"),
@@ -61,6 +61,7 @@ const REPLACEABLE_ELEMENTS: [(Location, &str); 8] = [
     (Location::DataDirectory, "visualBriefings/"),
     (Location::DataDirectory, "databases/sqlite/"),
     (Location::DataDirectory, "databases/vector_database/stores/"),
+    (Location::DataDirectory, "mediaTranscripts/"),
 ];
 
 /// Paths which a restore always keeps, whatever the plan says: the plugins which come with AI Studio
@@ -792,6 +793,21 @@ mod tests {
 
         assert_eq!(outcome, None);
         assert_current_data_untouched(&test);
+    }
+
+    #[test]
+    fn a_restore_replaces_the_media_transcripts_of_the_data_sources() {
+        let test = TestFolders::new();
+        test.write_current_data();
+        test.write(Location::DataDirectory, "mediaTranscripts/current/transcript.md", "current transcript");
+        test.prepare_restore(r#"{ "location": "DATA_DIRECTORY", "relative_path": "mediaTranscripts/", "keep": [] }"#);
+        test.write(Location::DataDirectory, ".restore-pending/mediaTranscripts/restored/transcript.md", "restored transcript");
+
+        let outcome = apply_pending_restore_in(&test.folders(), &[]);
+
+        assert_eq!(outcome, Some(RestoreOutcome::Applied));
+        assert_eq!(test.read(Location::DataDirectory, "mediaTranscripts/restored/transcript.md").as_deref(), Some("restored transcript"));
+        assert!(!test.exists(Location::DataDirectory, "mediaTranscripts/current"));
     }
 
     #[test]
