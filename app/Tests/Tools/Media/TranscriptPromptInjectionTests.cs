@@ -14,9 +14,10 @@ namespace AIStudio.Tests.Tools.Media;
 /// AI sees them.
 /// </summary>
 /// <remarks>
-/// The Batch Processing assistant used to read a stored transcript straight from its file, so the
-/// transcript reached the AI unchecked, while every document of the same run passed the filter of
-/// the runtime.<br/><br/>
+/// The Batch Processing assistant used to read a stored transcript straight from its file, and the
+/// import into the field of an assistant handed a transcript on as the provider returned it. Both
+/// reached the AI unchecked, while every document next to them passed the filter of the
+/// runtime.<br/><br/>
 /// FakeRuntime plays the runtime. Reading a file reports through the guard of the application's
 /// service provider, so these tests replace it while they run and must not run in parallel.
 /// </remarks>
@@ -30,6 +31,7 @@ public sealed class TranscriptPromptInjectionTests
     private string mediaPath = string.Empty;
     private FakeRuntime runtime = null!;
     private RustService rustService = null!;
+    private SettingsManager settingsManager = null!;
     private PromptInjectionGuardService guardService = null!;
     private PromptInjectionAlertCollector collector = null!;
     private ServiceProvider serviceProvider = null!;
@@ -45,7 +47,8 @@ public sealed class TranscriptPromptInjectionTests
 
         this.runtime = new FakeRuntime(SUSPICIOUS_PASSAGE);
         this.rustService = new RustService(this.runtime);
-        this.guardService = new PromptInjectionGuardService(this.rustService, new SettingsManager(NullLogger<SettingsManager>.Instance, this.rustService), NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
+        this.settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, this.rustService);
+        this.guardService = new PromptInjectionGuardService(this.rustService, this.settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
 
         this.previousServiceProvider = Program.SERVICE_PROVIDER;
         this.serviceProvider = new ServiceCollection().AddSingleton(this.guardService).BuildServiceProvider();
@@ -100,6 +103,37 @@ public sealed class TranscriptPromptInjectionTests
 
         Assert.ThrowsAsync<ArgumentException>(() => PersistentMediaTranscript.ReadTranscriptAsync(this.rustService, transcript, this.mediaPath, reportingScope: null, CancellationToken.None));
     }
+
+    [Test]
+    public async Task ATranscriptForTheFieldOfAnAssistantArrivesFiltered()
+    {
+        using var service = this.CreateMediaTranscriptionService();
+        var target = NewFieldTarget();
+
+        await service.AddCompletedTextAsync(target, this.mediaPath, $"Welcome to the meeting. {SUSPICIOUS_PASSAGE} Let us begin.");
+        var delivered = service.GetPendingDelivery(target)?.Text;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.runtime.FilteredTexts, Has.Count.EqualTo(1), "The transcript did not go through the filter.");
+            Assert.That(delivered, Does.Not.Contain(SUSPICIOUS_PASSAGE), "The suspicious passage reached the field, and with it the AI.");
+            Assert.That(delivered, Does.Contain("Welcome to the meeting.").And.Contain(FakeRuntime.REDACTION_MARKER), "The rest of the transcript got lost.");
+        });
+    }
+
+    [Test]
+    public async Task WhatTheFilterRemovedFromATranscriptForAFieldIsReportedAsItsRecording()
+    {
+        using var service = this.CreateMediaTranscriptionService();
+
+        await service.AddCompletedTextAsync(NewFieldTarget(), this.mediaPath, SUSPICIOUS_PASSAGE);
+
+        Assert.That(this.collector.Alerts, Is.EqualTo(new[] { new[] { this.mediaPath } }), "The user heard nothing about the recording whose transcript was filtered.");
+    }
+
+    private MediaTranscriptionService CreateMediaTranscriptionService() => new(this.rustService, this.settingsManager, this.guardService, [], NullLogger<MediaTranscriptionService>.Instance);
+
+    private static MediaImportTarget NewFieldTarget() => new(new(MediaImportOwnerKind.ASSISTANT, $"test-{Guid.NewGuid():N}"), "primary");
 
     /// <summary>
     /// Stores a transcript next to the recording and looks it up, both as the Batch Processing assistant does.

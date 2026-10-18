@@ -5,6 +5,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services;
 
@@ -14,6 +15,7 @@ namespace AIStudio.Tools.Services;
 public sealed class MediaTranscriptionService(
     RustService rustService,
     SettingsManager settingsManager,
+    PromptInjectionGuardService promptInjectionGuardService,
     IEnumerable<IMediaTranscriptStorage> transcriptStorages,
     ILogger<MediaTranscriptionService> logger) : IDisposable
 {
@@ -210,7 +212,7 @@ public sealed class MediaTranscriptionService(
         {
             var result = await this.TranscribeImportAsync(mediaPath, target, cancellation.Token);
             if (result.Status is MediaTranscriptionResultStatus.SUCCEEDED)
-                this.AddCompletedText(target, result.Text);
+                await this.AddCompletedTextAsync(target, mediaPath, result.Text);
             else if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
                 status = MediaImportStatus.CANCELLED;
             else if (result.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
@@ -248,8 +250,18 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Stores a completed field transcript for reattachment after navigation.</summary>
-    private void AddCompletedText(MediaImportTarget target, string text)
+    /// <remarks>
+    /// The field hands the transcript on to the AI, so it passes the filter for prompt injections
+    /// first, like every document loaded into such a field, and is reported right away like one.
+    /// It is filtered here rather than where the field takes it: only here is the recording known,
+    /// which is what the user hears about, and the field may look for its transcript more than once.
+    /// </remarks>
+    /// <param name="target">The field which receives the transcript.</param>
+    /// <param name="mediaPath">The recording the transcript belongs to.</param>
+    /// <param name="transcript">The transcript as the provider returned it.</param>
+    internal async Task AddCompletedTextAsync(MediaImportTarget target, string mediaPath, string transcript)
     {
+        var text = await promptInjectionGuardService.SanitizeAsync(transcript, PromptInjectionSource.FileContent(mediaPath), reportingScope: null);
         lock (this.stateLock)
         {
             if (!this.pendingDeliveries.TryGetValue(target, out var pending))
