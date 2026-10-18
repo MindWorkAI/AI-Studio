@@ -16,8 +16,8 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// <remarks>
 /// Once internal content enters a chat, it is no longer offered the web search. A model which does
 /// not know that reads its mails or the wiki first and finds the search gone when it needs it. The
-/// instructions therefore tell it to search the web first when a task needs both, and they tell it
-/// what is left once a chat is restricted.
+/// instructions of the tools which bring such content in therefore tell it to search the web first
+/// when a task needs both, and they tell it what is left once a chat is restricted.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -26,26 +26,36 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
     private static readonly Uri WIKI = new("https://wiki.example.org/confluence/");
 
     [Test]
-    public void TheWebSearchNamesEveryToolWhichEndsIt()
+    public void TheWebSearchLeavesTheOrderToTheToolsWhichEndIt()
     {
         var instructions = new WebSearchTool([], null!, null!, NullLogger<WebSearchTool>.Instance).GetDefinition().SystemPromptInstructions;
 
         Assert.Multiple(() =>
         {
-            foreach (var toolId in new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID, ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.READ_WEB_PAGE_TOOL_ID })
-                Assert.That(instructions, Does.Contain($"`{toolId}`"));
-
-            Assert.That(instructions, Does.Contain("search the web first"));
+            foreach (var toolId in new[] { ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.READ_MAIL_TOOL_ID, ToolSelectionRules.COUNT_MAILS_TOOL_ID, ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID })
+                Assert.That(instructions, Does.Not.Contain($"`{toolId}`"), "The web search would name tools the request may not offer, and each of these words the rule itself.");
         });
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task TheMailSearchSaysSoWhenTheRequestOffersTheWebSearch(bool offersWebSearch)
+    {
+        var tool = new SearchMailsTool(null!, null!, null!, null!, NullLogger<SearchMailsTool>.Instance);
+        string[] candidates = offersWebSearch ? [ToolSelectionRules.SEARCH_MAILS_TOOL_ID, ToolSelectionRules.WEB_SEARCH_TOOL_ID] : [ToolSelectionRules.SEARCH_MAILS_TOOL_ID];
+
+        var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread(), candidates));
+
+        Assert.That(instructions.Contains("search the web before you use the mail tools", StringComparison.Ordinal), Is.EqualTo(offersWebSearch));
+    }
+
     [Test]
-    public void TheMailToolsSayThatTheyMayEndTheWebSearch()
+    public void TheMailSearchSpeaksForTheWholeMailboxCollection()
     {
         Assert.Multiple(() =>
         {
-            Assert.That(new SearchMailsTool(null!, null!, null!, null!, NullLogger<SearchMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Contain("search the web before you use the mail tools"));
-            Assert.That(new CountMailsTool(null!, null!, null!, null!, NullLogger<CountMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Contain("search the web before you use the mail tools"));
+            Assert.That(new SearchMailsTool(null!, null!, null!, null!, NullLogger<SearchMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Contain("search the web before you use the mail tools"), "The token count assumes a request which offers the web search.");
+            Assert.That(new CountMailsTool(null!, null!, null!, null!, NullLogger<CountMailsTool>.Instance).GetDefinition().SystemPromptInstructions, Does.Not.Contain("web_search"), "The collection is always offered together, so the rule would stand twice in the same request.");
         });
     }
 

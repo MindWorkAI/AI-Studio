@@ -232,7 +232,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             allowedPrivateHosts,
             InternalPageEndsWebSearch(
                 ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
-                context.MayOffer(ToolSelectionRules.WEB_SEARCH_TOOL_ID),
+                WebSearchFirstRule.AppliesTo(context),
                 wiki,
                 allowedPrivateHosts));
     }
@@ -247,7 +247,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// chat which may no longer search the web has no web search among the candidates either.
     /// </remarks>
     /// <param name="internalPageRestriction">The level an internal page restricts the chat to, see ReadInternalPageOutboundDataRestriction.</param>
-    /// <param name="offersWebSearch">Whether the request may offer web search, see ToolResolutionContext.MayOffer.</param>
+    /// <param name="offersWebSearch">Whether the request may offer web search, see WebSearchFirstRule.AppliesTo.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
     /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
     /// <returns>True when the rules have to warn of it.</returns>
@@ -284,7 +284,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// not spend its calls on addresses which are refused anyway.<br/><br/>
     /// A chat without a restriction learns that an internal page would bring one, and that web
     /// search would then be gone, so it searches the web first when a task needs both. It learns
-    /// so only when that can happen, see InternalPageEndsWebSearch.
+    /// so only when that can happen, see InternalPageEndsWebSearch and WebSearchFirstRule.
     /// </remarks>
     /// <param name="freeAddressChoice">The free address choice of the tool.</param>
     /// <param name="outboundDataRestriction">Where the chat may still send data.</param>
@@ -330,10 +330,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var restrictionRules = outboundDataRestriction switch
         {
             OutboundDataRestriction.UNRESTRICTED when !internalPageEndsWebSearch => string.Empty,
-            OutboundDataRestriction.UNRESTRICTED => """
-
-                                                    - Reading an internal page, such as one in the intranet or the wiki, makes `web_search` unavailable for the rest of this chat. When a task also needs `web_search`, search the web before you read such a page.
-                                                    """,
+            OutboundDataRestriction.UNRESTRICTED => WebSearchFirstRule.Build("Reading an internal page, such as one in the intranet or the wiki, makes", "read such a page"),
 
             OutboundDataRestriction.ONLY_LINKS_FROM_CHAT => $"""
 

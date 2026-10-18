@@ -71,7 +71,7 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     {
         // A chat which may no longer search the web has no web search among the candidates either:
         var internalPageRestriction = await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService);
-        return BuildSystemPromptInstructions(endsWebSearch: internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED && context.MayOffer(ToolSelectionRules.WEB_SEARCH_TOOL_ID));
+        return BuildSystemPromptInstructions(endsWebSearch: internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED && WebSearchFirstRule.AppliesTo(context));
     }
 
     /// <summary>
@@ -81,18 +81,12 @@ public sealed class ConfluenceSearchTool(WebPageRetrievalService webPageRetrieva
     /// When a search ends web search for the chat, the model learns so beforehand, so it searches
     /// the web first when a task needs both, instead of finding the web search gone. Whether it
     /// does depends on the level of internal pages, see GetOutboundDataRequirement, and on whether
-    /// the request offers web search at all.
+    /// the request offers web search at all, see WebSearchFirstRule.
     /// </remarks>
     /// <param name="endsWebSearch">Whether a search takes away a web search which the request offers.</param>
     internal static string BuildSystemPromptInstructions(bool endsWebSearch)
     {
-        var webSearchRule = endsWebSearch
-            ? """
-
-              - A search makes `web_search` unavailable for the rest of this chat. When a task needs `web_search` as well, search the web before you search the wiki. When the user asks for a web search afterwards, tell them that a new chat can search the web again.
-              """
-            : string.Empty;
-
+        var webSearchRule = endsWebSearch ? WebSearchFirstRule.Build("A search makes", "search the wiki") : string.Empty;
         return $"""
                 Use `search_confluence` for the internal knowledge of the user's organization, such as processes, projects, guidelines, or documentation, which its wiki holds and public sources do not.
                 - Search with a few distinctive keywords. When nothing useful turns up, try synonyms, fewer words, or the terms in another language the wiki may use before you give up.
