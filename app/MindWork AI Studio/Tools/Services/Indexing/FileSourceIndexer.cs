@@ -145,6 +145,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 progress.RecordStillUnreadable(filePath, permanentFailure);
 
             await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source finished after removing missing files", token);
+            this.CleanUpTranscripts(context, progress);
             return IndexedRunOutcome.DONE;
         }
 
@@ -223,6 +224,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
 
                 await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
+
+                // The recording changed, so its old transcript is no longer what it says:
+                if (existingRecord?.TranscriptKey is { } previousTranscriptKey && !string.Equals(previousTranscriptKey, document.State.TranscriptKey, StringComparison.Ordinal))
+                    ForgetTranscript(DataSourceTranscriptStore.TryForDataSource(dataSource.Id), manifest, previousTranscriptKey, logger);
+
                 logger.LogInformation(
                     "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
                     file.FullName,
@@ -266,6 +272,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
+        this.CleanUpTranscripts(context, progress);
         logger.LogInformation(
             "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
             dataSource.Name,
@@ -375,6 +382,79 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return IndexedRunOutcome.DONE;
     }
 
+    /// <summary>
+    /// Deletes the transcripts which no file of the data source uses anymore, once a run got through all of it.
+    /// </summary>
+    /// <remarks>
+    /// Only a run without a failure knows every transcript which is still needed: a file which
+    /// failed may have its transcript already, and its next attempt must not pay for it again.
+    /// The transcript of a recording which is gone has to go as well, since it holds what was said.
+    /// </remarks>
+    /// <param name="context">The run.</param>
+    /// <param name="progress">How the run went.</param>
+    private void CleanUpTranscripts(IndexedRunContext context, DocumentRunProgress progress)
+    {
+        if (progress.FailedDocuments > 0)
+            return;
+
+        DeleteUnusedTranscripts(DataSourceTranscriptStore.TryForDataSource(context.DataSource.Id), context.Manifest, logger);
+    }
+
+    /// <summary>
+    /// Deletes every transcript of a data source which no indexed file uses, and the temporary files of interrupted writes.
+    /// </summary>
+    /// <param name="store">The transcripts of the data source, or null when there are none to clean up.</param>
+    /// <param name="manifest">What the index stores about the data source.</param>
+    /// <param name="logger">The logger.</param>
+    internal static void DeleteUnusedTranscripts(DataSourceTranscriptStore? store, DataSourceEmbeddingManifest manifest, ILogger logger)
+    {
+        if (store is null)
+            return;
+
+        try
+        {
+            var usedKeys = manifest.Files.Values
+                .Select(record => record.TranscriptKey)
+                .OfType<string>()
+                .ToHashSet(StringComparer.Ordinal);
+
+            var deleted = store.ListKeys().Count(key => !usedKeys.Contains(key) && store.Delete(key));
+            deleted += store.DeleteTemporaryFiles();
+            if (deleted > 0)
+                logger.LogInformation("Removed {DeletedTranscripts} transcript file(s) which no file of the data source uses anymore.", deleted);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcripts which no file of the data source uses anymore. The next complete run tries again.");
+        }
+    }
+
+    /// <summary>
+    /// Deletes the transcript with the given key, unless another file of the data source still uses it.
+    /// </summary>
+    /// <remarks>
+    /// Two recordings with the same content share one transcript, cf. DataSourceTranscriptStore.
+    /// </remarks>
+    /// <param name="store">The transcripts of the data source, or null when there are none to clean up.</param>
+    /// <param name="manifest">What the index stores about the data source, without the file the transcript belonged to.</param>
+    /// <param name="key">The key of the transcript, or null when the file had none.</param>
+    /// <param name="logger">The logger.</param>
+    internal static void ForgetTranscript(DataSourceTranscriptStore? store, DataSourceEmbeddingManifest manifest, string? key, ILogger logger)
+    {
+        if (store is null || string.IsNullOrWhiteSpace(key) || manifest.Files.Values.Any(record => string.Equals(record.TranscriptKey, key, StringComparison.Ordinal)))
+            return;
+
+        try
+        {
+            if (store.Delete(key))
+                logger.LogInformation("Removed the transcript '{TranscriptKey}', since no file of the data source uses it anymore.", key);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcript '{TranscriptKey}'. The next complete run tries again.", key);
+        }
+    }
+
     private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, FileEnumerationResult inputFiles, CancellationToken token)
     {
         var manifest = context.Manifest;
@@ -383,7 +463,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         {
             await context.DeleteDocumentPointsAsync(removedFilePath, token);
             await context.IndexStore.DeleteFileAsync(context.DataSource.Id, removedFilePath, token);
+            var removedTranscriptKey = manifest.Files.GetValueOrDefault(removedFilePath)?.TranscriptKey;
             manifest.Files.Remove(removedFilePath);
+            ForgetTranscript(DataSourceTranscriptStore.TryForDataSource(context.DataSource.Id), manifest, removedTranscriptKey, logger);
             removedFiles++;
             logger.LogInformation(
                 "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",

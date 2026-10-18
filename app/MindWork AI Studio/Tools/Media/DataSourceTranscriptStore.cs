@@ -35,6 +35,15 @@ internal sealed partial class DataSourceTranscriptStore(string dataDirectory, st
     /// <returns>The store.</returns>
     public static DataSourceTranscriptStore ForDataSource(string dataSourceId) => new(SettingsManager.DataDirectory ?? throw new InvalidOperationException("The data directory is not known yet."), dataSourceId);
 
+    /// <summary>
+    /// The store of a data source in the data directory of the running app, or null when there is none to clean up.
+    /// </summary>
+    /// <param name="dataSourceId">The id of the data source.</param>
+    /// <returns>The store, or null while the data directory is not known or for an id which is no GUID.</returns>
+    public static DataSourceTranscriptStore? TryForDataSource(string dataSourceId) => string.IsNullOrWhiteSpace(SettingsManager.DataDirectory) || !Guid.TryParse(dataSourceId, out _)
+        ? null
+        : new(SettingsManager.DataDirectory, dataSourceId);
+
     /// <inheritdoc />
     /// <remarks>
     /// Reads the whole media file to hash it, in pieces. Callers ask only for files which are about
@@ -93,6 +102,25 @@ internal sealed partial class DataSourceTranscriptStore(string dataDirectory, st
 
         file.Delete();
         return true;
+    }
+
+    /// <summary>
+    /// Deletes the temporary files which an interrupted write left behind.
+    /// </summary>
+    /// <remarks>
+    /// Call it only while nothing writes a transcript of this data source, e.g. at the end of a run.
+    /// </remarks>
+    /// <returns>The number of deleted files.</returns>
+    public int DeleteTemporaryFiles()
+    {
+        var deleted = 0;
+        foreach (var file in this.EnumerateOwnFiles().Where(file => TemporaryFileNamePattern().IsMatch(file.Name)))
+        {
+            file.Delete();
+            deleted++;
+        }
+
+        return deleted;
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services.Indexing;
@@ -518,8 +519,33 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
+        this.DeleteMediaTranscripts(dataSource);
         this.statuses.TryRemove(dataSource.Id, out _);
         PublishStatusChanged();
+    }
+
+    /// <summary>
+    /// Deletes the transcripts of the audio and video files of a data source which the user removed.
+    /// </summary>
+    /// <remarks>
+    /// Only the removal of a data source does this. A reset for new embedding settings keeps them,
+    /// cf. ResetPersistedStateAsync: they are still valid, and the new index would otherwise pay
+    /// for every recording once more.
+    /// </remarks>
+    /// <param name="dataSource">The removed data source.</param>
+    private void DeleteMediaTranscripts(IDataSourceBase dataSource)
+    {
+        if (dataSource is not (DataSourceLocalDirectory or DataSourceLocalFile))
+            return;
+
+        try
+        {
+            DataSourceTranscriptStore.TryForDataSource(dataSource.Id)?.DeleteAll();
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcripts of the deleted data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
