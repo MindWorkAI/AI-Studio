@@ -147,15 +147,16 @@ public static class DataRestorePreparer
     /// </summary>
     /// <remarks>
     /// An element the backup holds nothing for stays as it is, since nothing tells whether it was empty
-    /// or whether the version of AI Studio which made the backup knew it at all. The indexes are
-    /// replaced only when the backup holds both of them, cf. DataBackupManifest.IncludesDataSourceIndexes.
+    /// or whether the version of AI Studio which made the backup knew it at all. The indexes and the
+    /// media transcripts are replaced only when the backup holds the indexes, cf.
+    /// DataBackupManifest.IncludesDataSourceIndexes and DataBackupEntry.ComesFromIndexCopies.
     /// </remarks>
     private static List<DataRestoreElement> DetermineElements(DataBackupManifest manifest, DataRestoreTarget target)
     {
         var elements = new List<DataRestoreElement>();
         foreach (var entry in DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded))
         {
-            if (entry.Kind is DataBackupEntryKind.DATA_SOURCE_INDEX or DataBackupEntryKind.VECTOR_STORES && !manifest.IncludesDataSourceIndexes)
+            if (entry.ComesFromIndexCopies && !manifest.IncludesDataSourceIndexes)
                 continue;
 
             var entryName = DataBackupFormat.EntryName(entry.Location, entry.RelativePath);

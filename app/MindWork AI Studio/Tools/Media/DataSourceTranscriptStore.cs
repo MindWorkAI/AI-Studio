@@ -112,6 +112,46 @@ internal sealed partial class DataSourceTranscriptStore(string dataDirectory, st
     }
 
     /// <summary>
+    /// Copies the transcripts of all data sources, e.g. for a backup.
+    /// </summary>
+    /// <remarks>
+    /// Copies only transcripts, file by file and in pieces. Temporary files of an interrupted write,
+    /// links, and anything else in the folders stay behind.
+    /// </remarks>
+    /// <param name="dataDirectory">The data directory to copy from.</param>
+    /// <param name="targetDirectory">The folder which receives the transcripts below 'mediaTranscripts/', in the same layout.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The number of copied transcripts.</returns>
+    public static async Task<int> CopyAllAsync(string dataDirectory, string targetDirectory, CancellationToken token)
+    {
+        var root = new DirectoryInfo(Path.Join(dataDirectory, FOLDER_NAME));
+        if (!root.Exists || root.Attributes.HasFlag(FileAttributes.ReparsePoint))
+            return 0;
+
+        var copied = 0;
+        foreach (var dataSourceFolder in root.EnumerateDirectories("*", new EnumerationOptions { RecurseSubdirectories = false, AttributesToSkip = FileAttributes.ReparsePoint, IgnoreInaccessible = false }))
+        {
+            if (!Guid.TryParse(dataSourceFolder.Name, out _))
+                continue;
+
+            var store = new DataSourceTranscriptStore(dataDirectory, dataSourceFolder.Name);
+            foreach (var file in store.EnumerateOwnFiles().Where(file => TranscriptFileNamePattern().IsMatch(file.Name)))
+            {
+                token.ThrowIfCancellationRequested();
+                var targetPath = Path.Join(targetDirectory, FOLDER_NAME, dataSourceFolder.Name, file.Name);
+                Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+
+                await using var source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 65_536, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                await using var target = new FileStream(targetPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65_536, FileOptions.Asynchronous);
+                await source.CopyToAsync(target, token);
+                copied++;
+            }
+        }
+
+        return copied;
+    }
+
+    /// <summary>
     /// The files this store wrote: transcripts and the temporary files of interrupted writes. Links are left out.
     /// </summary>
     private IEnumerable<FileInfo> EnumerateOwnFiles()

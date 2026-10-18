@@ -25,6 +25,8 @@ public sealed class DataBackupWriterTests
 
     private static readonly Guid CHAT_ID = Guid.Parse("8a1c4e7f-2b5d-4f9a-b3c6-0e2d4f6a8b1c");
 
+    private const string MEDIA_TRANSCRIPT = "mediaTranscripts/5c9e2a7b-1d3f-4b6e-8a0c-2e4f6b8d0a1c/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef.md";
+
     private string testDirectory = string.Empty;
 
     private string DataDirectory => Path.Combine(this.testDirectory, "data");
@@ -53,10 +55,12 @@ public sealed class DataBackupWriterTests
         this.WriteDataFile("media-staging/operation/transcript.md", "temporary");
         this.WriteDataFile("databases/sqlite/rag-index.sqlite3", "the index while AI Studio writes to it");
         this.WriteDataFile("databases/vector_database/stores/store_1/segments/segment", "the store while AI Studio writes to it");
+        this.WriteDataFile(MEDIA_TRANSCRIPT, "the transcript while AI Studio writes it");
 
         WriteFile(Path.Combine(this.ConfigDirectory, "settings.json"), "the settings on the disk, with the objects of the organization");
         WriteFile(Path.Combine(this.IndexCopiesDirectory, "databases", "sqlite", "rag-index.sqlite3"), "the copy of the index");
         WriteFile(Path.Combine(this.IndexCopiesDirectory, "databases", "vector_database", "stores", "store_1", "segments", "segment"), "the copy of the store");
+        WriteFile(Path.Combine(this.IndexCopiesDirectory, MEDIA_TRANSCRIPT), "the copy of the transcript");
     }
 
     [TearDown]
@@ -84,6 +88,7 @@ public sealed class DataBackupWriterTests
             "data/visualBriefings/briefing/manifest.json",
             "data/databases/sqlite/rag-index.sqlite3",
             "data/databases/vector_database/stores/store_1/segments/segment",
+            $"data/{MEDIA_TRANSCRIPT}",
             DataBackupFormat.MANIFEST_ENTRY_NAME,
         }));
 
@@ -92,6 +97,7 @@ public sealed class DataBackupWriterTests
             Assert.That(archive["config/settings.json"], Is.EqualTo(SETTINGS_JSON), "The settings come from memory, without the objects of configuration plugins.");
             Assert.That(archive["data/databases/sqlite/rag-index.sqlite3"], Is.EqualTo("the copy of the index"));
             Assert.That(archive["data/databases/vector_database/stores/store_1/segments/segment"], Is.EqualTo("the copy of the store"));
+            Assert.That(archive[$"data/{MEDIA_TRANSCRIPT}"], Is.EqualTo("the copy of the transcript"), "The transcripts are copied together with the index they belong to.");
         });
     }
 
@@ -101,6 +107,7 @@ public sealed class DataBackupWriterTests
         var archive = await this.WriteBackupAsync(string.Empty);
 
         Assert.That(archive.Keys.Where(name => name.StartsWith("data/databases/", StringComparison.Ordinal)), Is.Empty, "The indexes in the data folder change while AI Studio runs.");
+        Assert.That(archive.Keys.Where(name => name.StartsWith("data/mediaTranscripts/", StringComparison.Ordinal)), Is.Empty, "The transcripts belong to the indexes and come only together with them.");
     }
 
     [Test]

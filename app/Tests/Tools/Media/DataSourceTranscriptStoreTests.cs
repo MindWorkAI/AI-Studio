@@ -170,6 +170,41 @@ public sealed class DataSourceTranscriptStoreTests
         });
     }
 
+    [Test]
+    public async Task ABackupCopiesOnlyTheTranscriptsOfAllDataSources()
+    {
+        var secondId = Guid.NewGuid().ToString();
+        var firstPath = this.Store().GetPath(new string('d', 64));
+        var secondPath = new DataSourceTranscriptStore(this.dataDirectory, secondId).GetPath(new string('e', 64));
+        foreach (var path in new[] { firstPath, secondPath })
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            await File.WriteAllTextAsync(path, "Transcript");
+        }
+
+        await File.WriteAllTextAsync($"{firstPath}.{Guid.NewGuid():N}.tmp", "Interrupted");
+        var targetDirectory = Path.Combine(this.rootPath, "copies");
+
+        var copied = await DataSourceTranscriptStore.CopyAllAsync(this.dataDirectory, targetDirectory, CancellationToken.None);
+
+        var copiedFiles = Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories).Select(path => Path.GetRelativePath(targetDirectory, path).Replace('\\', '/'));
+        Assert.Multiple(() =>
+        {
+            Assert.That(copied, Is.EqualTo(2));
+            Assert.That(copiedFiles, Is.EquivalentTo(new[]
+            {
+                $"{DataSourceTranscriptStore.FOLDER_NAME}/{DATA_SOURCE_ID}/{new string('d', 64)}.md",
+                $"{DataSourceTranscriptStore.FOLDER_NAME}/{secondId}/{new string('e', 64)}.md",
+            }));
+        });
+    }
+
+    [Test]
+    public async Task ABackupWithoutTranscriptsCopiesNothing()
+    {
+        Assert.That(await DataSourceTranscriptStore.CopyAllAsync(this.dataDirectory, Path.Combine(this.rootPath, "copies"), CancellationToken.None), Is.Zero);
+    }
+
     [TestCase("")]
     [TestCase("ABCDEF")]
     [TestCase("../outside")]
