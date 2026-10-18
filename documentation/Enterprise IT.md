@@ -619,7 +619,39 @@ The button copies the fragment to your clipboard. Paste it into your [configurat
 
 Some exports ask a question first: a provider with an API key offers to include it encrypted (see [Encrypted API Keys](#encrypted-api-keys)), an ERI data source does the same for its token or its credentials, a chat template with file attachments asks whether to keep their paths or copy them into your plugin, and a tool opens a dialog for the areas and the kind of management you want (see [Exporting tool configurations](#exporting-tool-configurations)).
 
+**A tokenizer travels as a path, not as a file.** When an LLM or embedding provider uses a tokenizer of its own, the fragment names the copy AI Studio keeps of it, relative to the [data directory](#the-data-and-configuration-directories), e.g., `tokenizers/chat_<ID>/tokenizer.json` for an LLM provider and `tokenizers/embedding_<ID>/tokenizer.json` for an embedding provider. A configuration plugin reads this path relative to its own folder. Copy the file from your data directory to the same place in your plugin, or change the path to wherever you put it. A comment in the fragment says the same. The ID in the folder name is the one the provider has on your computer; it does not have to match anything else. Without the file, AI Studio counts tokens with its default tokenizer.
+
 Handing a whole plugin to a colleague is a different thing: that is the **Share** function on the plugins page, which writes a `.mwplugin` archive and is governed by its own organization setting rather than by the administration settings.
+
+### Importing an exported item
+
+Not everything worth sharing calls for a configuration plugin. Say somebody built a good chat template and wants to hand it to three colleagues: they export it as above, and each colleague imports it as a template of their own. Every item in the table above except tools has an **Import** button next to its **Add** button, e.g., **Import Chat Template** or **Import Provider**. It opens a dialog to paste the exported fragment into.
+
+- **Data only.** AI Studio reads the fragment with the same rules as a configuration plugin, but it never runs it. A fragment which contains anything other than values, such as a function call, a variable, or an expression, is refused.
+- **An item of the user's own.** The imported item gets an ID of its own and belongs to no configuration plugin, even when the fragment came from one. Importing the same fragment twice gives two items.
+- **Reviewed before it is saved.** Providers, profiles, chat templates, and data sources open in their usual form, filled in, so the user checks everything before saving. A document analysis policy is added right away and selected, and the user edits it in the assistant like any other.
+- **Hints first.** Before that, the dialog lists what the user should know: a preselected provider, profile, data source, or tool which does not exist on this computer, a tokenizer which is not on this computer and is therefore left out, an API key which cannot be decrypted, and every local file which a chat template would attach to each of its chats. Attachments which are not on this computer are relinked or removed in the form. An exported provider names the copy of its tokenizer on the computer it came from, so the tokenizer comes along only when the fragment is imported there.
+- **Secrets.** An API key, token, or password which the export included in encrypted form is decrypted only where the encryption secret of your organization is configured, see [Encrypted API Keys](#encrypted-api-keys). Without it, a provider is imported without its key, and an ERI data source with a token or password cannot be imported at all. Data sources which sign in with Kerberos cannot be imported either.
+- **No connection on its own.** Importing contacts no server. The user loads the models of a provider, or tests the connection of a data source, in the form.
+
+Exporting needs **Show administration settings**; importing does not.
+
+#### Allowing or locking imports
+
+Each of these settings is `true` by default:
+
+| Setting | Allows importing |
+|---|---|
+| `DataApp.AllowUserToImportConfigurationSnippets` | anything at all |
+| `DataApp.AllowUserToImportProfile` | profiles |
+| `DataApp.AllowUserToImportLLMProvider` | LLM providers |
+| `DataApp.AllowUserToImportEmbeddingProvider` | embedding providers |
+| `DataApp.AllowUserToImportTranscriptionProvider` | transcription providers |
+| `DataApp.AllowUserToImportChatTemplate` | chat templates |
+| `DataApp.AllowUserToImportERIDataSource` | ERI data sources |
+| `DataApp.AllowUserToImportDocumentAnalysisPolicy` | document analysis policies |
+
+An import needs both the first setting and the one of its type. A provider also needs what adding one by hand needs: `DataApp.AllowUserToAddProvider` and the setting of its kind, such as `DataApp.AllowUserToAddLLMProvider`. A locked **Import** button stays visible with a lock. The permission is checked once more when the user saves, so locking imports while somebody fills in a form still holds. Importing plugin archives has a setting of its own, `DataApp.AllowUserToImportPlugins`.
 
 ## Encrypted API Keys
 
@@ -644,7 +676,7 @@ You can include encrypted API keys in your configuration plugins for cloud provi
    You must also deploy the same secret on the machine where you will export the encrypted API keys (step 3).
 
 3. **Export encrypted API keys from AI Studio:**
-   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v1:<base64-encoded data>`.
+   Once the encryption secret is deployed on your machine, configure the provider with its API key and [export it](#exporting-configurations-from-the-app). AI Studio asks whether to include the key; the exported Lua code then contains it in the format `ENC:v2:<base64-encoded data>` or `ENC:v1:<base64-encoded data>`, see [Formats of encrypted values](#formats-of-encrypted-values).
 
 4. **Add encrypted keys to your configuration:**
    Copy the exported configuration (including the encrypted API key) into your configuration plugin.
@@ -658,7 +690,7 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
     ["UsedLLMProvider"] = "OPEN_AI",
     ["Host"] = "NONE",
     ["Hostname"] = "",
-    ["APIKey"] = "ENC:v1:MTIzNDU2Nzg5MDEyMzQ1NkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFla...",
+    ["APIKey"] = "ENC:v2:MTIzNDU2Nzg5MDEyMzQ1NkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFla...",
     ["AdditionalJsonApiParameters"] = "",
     ["Model"] = {
         ["Id"] = "gpt-4",
@@ -668,6 +700,29 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+### Formats of encrypted values
+
+AI Studio encrypts API keys, tokens, and passwords in one of two formats. Both use the same encryption secret, so you neither generate nor deploy a new one.
+
+| Format | Starts with | Read by | A value encrypted with another secret |
+|---|---|---|---|
+| Protected | `ENC:v2:` | AI Studio v26.10.1 or newer | is always refused |
+| Compatible | `ENC:v1:` | every version of AI Studio | is usually refused, but in rare cases decrypted into a wrong key |
+
+AI Studio reads both formats, and it keeps reading `ENC:v1:` for good: the configuration plugins you have already deployed keep working.
+
+**Which format your exports write** is set by **Format for encrypted secrets in exports** in the **Enterprise Administration** section of the app settings. New installations start with the protected format. Installations which existed before v26.10.1 keep the compatible format until you switch, because a version of AI Studio before v26.10.1 takes an `ENC:v2:` value for plaintext and leaves the key out.
+
+**When you roll out updates yourself**, your administrators run a new version weeks before everybody else. Keep the compatible format until every computer in your organization runs v26.10.1 or newer, then switch to the protected one. You can also set the format centrally:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat"] = "V1"
+```
+
+Change the value to `"V2"` once the update has arrived everywhere. While a configuration sets the format, the choice in the app settings is locked; with `DataApp.EnterpriseEncryptionExportFormat.AllowUserOverride` set to `true`, the configured format becomes a default instead.
+
+Switching the format leaves the values in your configuration plugins as they are. To protect a value you have already deployed, export it again and replace it in your plugin.
 
 ## Exporting tool configurations
 
@@ -706,7 +761,7 @@ For **Web Search**, select only Tavily, choose **Editable defaults**, enable enc
 
 ```lua
 CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
-CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>"
 
 CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] or {}
 CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"]["web_search.tavily.searchDepth"] = "basic"
@@ -1013,6 +1068,54 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Labeling AI-generated content
+
+Rules on transparency, such as the EU AI Act, may require that a text says when AI generated it, for
+example, when your colleagues publish it. AI Studio can add such a notice: the AI answers which users
+copy or export then end with a paragraph of its own, in bold, which says that the content was
+generated using artificial intelligence (AI). The notice is written in the language of the app. This
+is off by default.
+
+### What gets the notice
+
+- **Copied answers:** the copy button of an answer in the chat or in an assistant, and the "Copy
+  result" button of the assistants.
+- **Exported answers:** every format of the export menu, i.e., Word, OpenDocument, LaTeX, web page,
+  and Markdown.
+- **Files of the batch processing,** when it writes one file per document.
+
+Content which one more sentence would break, or which goes on to a program or another model instead
+of a reader, stays unchanged:
+
+- code blocks copied on their own, and single files or tables exported out of an answer,
+- the CSV table of the batch processing,
+- the Lua code of the assistant builder and the prompt of the prompt optimizer,
+- visual briefings, which AI Studio exports as the very version it checked, byte for byte,
+- messages of the users, transcripts, IDs, and paths.
+
+The notice covers what AI Studio copies and exports itself. Text which somebody selects and copies
+by hand carries no notice, so the setting supports the rules of your organization, but it cannot
+enforce them.
+
+### Switching on the notice
+
+Switch it on for everybody, without a way to opt out:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+```
+
+Add `AllowUserOverride` to make it the default of your organization, which users may still change
+in the app settings:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
+```
+
+Set it to `false` without `AllowUserOverride` to keep everybody from switching it on. Either way,
+users find the setting in the app settings; when you lock it, they see your value there.
 
 ## Feature usage statistics (telemetry)
 

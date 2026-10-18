@@ -170,7 +170,7 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
             var settingsJson = JsonSerializer.Serialize(settings, SettingsManager.JSON_OPTIONS);
             var organizationPluginFolders = DataBackupContents.FindOrganizationPluginsAmongUserPlugins(PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>(), dataDirectory);
 
-            indexCopiesDirectory = await this.CopyIndexesAsync(token);
+            indexCopiesDirectory = await this.CopyIndexesAsync(dataDirectory, token);
 
             var sources = new DataBackupSources(dataDirectory, configDirectory, settingsJson, indexCopiesDirectory, organizationPluginFolders);
             var manifest = new DataBackupManifest(
@@ -207,7 +207,7 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     }
 
     /// <summary>
-    /// Copies both indexes of the data sources, while the indexing pauses.
+    /// Copies both indexes of the data sources and the transcripts of their media files, while the indexing pauses.
     /// </summary>
     /// <remarks>
     /// Both copies are made during one pause: the vector stores have to fit to the index, or a
@@ -217,8 +217,10 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
     ///
     /// Without either database, the backup leaves both indexes out, and its manifest says so.
     /// </remarks>
+    /// <param name="dataDirectory">The data folder, which holds the transcripts.</param>
+    /// <param name="token">The cancellation token.</param>
     /// <returns>The directory of the copies, in the layout of the data folder, or an empty string when the backup leaves the indexes out.</returns>
-    private async Task<string> CopyIndexesAsync(CancellationToken token)
+    private async Task<string> CopyIndexesAsync(string dataDirectory, CancellationToken token)
     {
         var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
         var vectorStore = await databaseClientProvider.GetVectorStoreAsync(token);
@@ -240,6 +242,12 @@ public sealed class DataBackupService(ILogger<DataBackupService> logger, Setting
                 this.ReportProgress(new(DataBackupPhase.COPYING_INDEXES, index, preparation.Stores.Count));
                 await vectorStore.CopyStoreForBackupAsync(preparation.BackupId, preparation.Stores[index].StoreName, token);
             }
+
+            //
+            // The index knows which transcript belongs to which media file, so the transcripts are
+            // copied while the indexing pauses as well, and the backup holds both as they fit together:
+            //
+            await DataSourceTranscriptStore.CopyAllAsync(dataDirectory, preparation.StagingPath, token);
 
             return preparation.StagingPath;
         }

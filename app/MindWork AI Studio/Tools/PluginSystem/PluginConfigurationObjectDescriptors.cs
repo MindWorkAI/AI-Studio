@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -42,6 +44,26 @@ public static class PluginConfigurationObjectDescriptors
         PROFILE,
         DOCUMENT_ANALYSIS_POLICY,
     ];
+
+    /// <summary>
+    /// The descriptor of a type of configuration object.
+    /// </summary>
+    /// <param name="type">The type, which must not be NONE or UNKNOWN.</param>
+    /// <returns>The descriptor of the type.</returns>
+    public static PluginConfigurationObjectDescriptor Get(PluginConfigurationObjectType type) =>
+        ALL.FirstOrDefault(descriptor => descriptor.Type == type) ?? throw new ArgumentOutOfRangeException(nameof(type), type, "This type of configuration object has no descriptor.");
+
+    /// <summary>
+    /// Finds the descriptor of the configuration objects which a Lua table holds.
+    /// </summary>
+    /// <param name="luaTableName">The name of the Lua table, e.g., LLM_PROVIDERS.</param>
+    /// <param name="descriptor">The descriptor, when one uses this table.</param>
+    /// <returns>True when a descriptor uses this table.</returns>
+    public static bool TryGet(string luaTableName, [NotNullWhen(true)] out PluginConfigurationObjectDescriptor? descriptor)
+    {
+        descriptor = ALL.FirstOrDefault(candidate => candidate.LuaTableName == luaTableName);
+        return descriptor is not null;
+    }
 
     private static bool ParseLLMProvider(int index, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject configObject) =>
         Settings.Provider.TryParseProviderTable(index, table, configPluginId, pluginPath, dryRun, out configObject) && configObject != Settings.Provider.NONE;

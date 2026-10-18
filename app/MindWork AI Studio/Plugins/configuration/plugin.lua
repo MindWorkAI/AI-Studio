@@ -154,12 +154,15 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
 --     -- The API key must be encrypted using the enterprise encryption secret.
---     -- Format: "ENC:v1:<base64-encoded encrypted data>"
+--     -- Format: "ENC:v2:<base64-encoded encrypted data>", which AI Studio v26.10.1 or newer reads,
+--     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
+--     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
+--     -- one your exports write.
 --     -- The encryption secret must be configured via:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked provider,
 --     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
@@ -193,7 +196,7 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked transcription
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
@@ -230,7 +233,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: tokenizer path for this provider relative to the plugin directory.
 --     -- ["TokenizerPath"] = "",
@@ -269,7 +272,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Hostname"] = "<https address of the ERI server>",
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "TOKEN",
---     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
+--     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -285,7 +288,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "SHARED_USERNAME_AND_PASSWORD",
 --     ["Username"] = "<shared username>",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -300,7 +303,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -403,6 +406,13 @@ CONFIG["SETTINGS"] = {}
 -- but users can still choose another start page in the app settings.
 -- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
 
+-- Configure whether AI Studio saves energy while the AI writes its answers.
+-- Allowed values are: true, false
+-- When set to true, streamed answers are updated once every third second instead of as soon
+-- as new text arrives. This helps on battery-powered devices and on virtual desktops, where
+-- every redraw of the screen is costly.
+-- CONFIG["SETTINGS"]["DataApp.IsSavingEnergy"] = true
+
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
@@ -436,6 +446,21 @@ CONFIG["SETTINGS"] = {}
 -- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
 
+-- Configure the permission to import an item which somebody exported from AI Studio, such as
+-- a chat template a colleague shares. The first setting allows or locks every import, the
+-- others one type each; an import needs both. Importing a provider also needs the permission
+-- to add it by hand: DataApp.AllowUserToAddProvider and the setting for its kind, see above.
+-- When set to false, the import button stays visible but is locked. Importing plugin archives
+-- has a setting of its own, see below.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationSnippets"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportProfile"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportTranscriptionProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
@@ -466,6 +491,37 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
+
+-- Configure the format in which exports encrypt API keys, tokens, and passwords with the
+-- enterprise encryption secret. Both formats use the same secret.
+-- Allowed values are: V1, V2
+-- V2 is protected: AI Studio refuses every value which was encrypted with another secret. It
+-- needs AI Studio v26.10.1 or newer on every computer which reads it. V1 is read by every
+-- version of AI Studio, and AI Studio keeps reading it for good. New installations start with
+-- V2, installations which existed before v26.10.1 keep V1. Keep V1 until every computer in
+-- your organization runs v26.10.1 or newer, then switch to V2.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat"] = "V1"
+--
+-- Allow users to change the export format locally.
+-- Allowed values are: true, false
+-- When set to true, the configured format becomes the organization default,
+-- but users can still choose another format in the enterprise administration settings.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat.AllowUserOverride"] = true
+
+-- Configure whether AI answers which users copy or export end with a notice that they were
+-- generated using artificial intelligence (AI). The notice is written in the language of the app.
+-- It also ends the files of the batch processing. Code blocks, single files or tables taken from
+-- an answer, visual briefings, and the results of the prompt optimizer and the assistant builder
+-- stay unchanged. The default is false: AI Studio then adds no notice. The Enterprise IT
+-- documentation describes what gets the notice.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
 
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
@@ -578,10 +634,21 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory"] = ""
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory"] = ""
 --
--- Configure the default file patterns and whether subfolders are included.
+-- Configure the default file patterns and whether subfolders as well as hidden files and folders are included.
 -- Separate multiple patterns with semicolons.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders"] = false
+--
+-- Configure the files and folders which are left out, even when a file pattern selects them.
+-- Separate entries with semicolons or line breaks. An entry which ends with a slash excludes every
+-- folder of that name; every other entry is a file name pattern. An empty string excludes nothing
+-- beyond the metadata of operating systems, which is always left out. The default is:
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns"] = "node_modules/; bower_components/; Pods/; venv/; env/; __pycache__/; bin/; obj/; Debug/; Release/; target/; build/; dist/; DerivedData/; cmake-build-*/; TestResults/; htmlcov/; *.vmwarevm/; *.pvm/; *.utm/; package-lock.json; yarn.lock; pnpm-lock.yaml; packages.lock.json; Cargo.lock; poetry.lock; Pipfile.lock; composer.lock; Gemfile.lock; go.sum; *.min.js; *.min.css; *.js.map; *.css.map; *tokenizer.json; *.exe; *.dll; *.so; *.dylib; *.pdb; *.db; *.db3; *.db-*; *.sqlite; *.sqlite3; *.sqlite-*; *.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img"
+--
+-- Configure the size limit in megabytes. Larger files are left out of a batch run. The value must
+-- be at least 1; the default is 1024, i.e., 1 GB.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes"] = 1024
 --
 -- Configure the default instruction source.
 -- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
@@ -627,6 +694,9 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
@@ -852,10 +922,10 @@ CONFIG["SETTINGS"] = {}
 --   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
 --
 -- A tool field marked as secret, such as an API key, can be rolled out as well — but only
--- encrypted with the enterprise encryption secret, in the same "ENC:v1:<base64>" form the
--- providers above use, and only through LockedToolSettings. A locked secret leaves whatever
--- the user entered untouched, so their own key returns when you stop deploying yours. A
--- plaintext secret is refused with a warning in the log rather than used.
+-- encrypted with the enterprise encryption secret, in the same "ENC:v2:<base64>" or
+-- "ENC:v1:<base64>" form the providers above use, and only through LockedToolSettings. A locked
+-- secret leaves whatever the user entered untouched, so their own key returns when you stop
+-- deploying yours. A plaintext secret is refused with a warning in the log rather than used.
 --
 -- Field names of the Web Search tool. At least one of its search services has to be configured
 -- before the tool can be used; which one you pick is up to you, since all three can be rolled
@@ -959,7 +1029,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
---     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",

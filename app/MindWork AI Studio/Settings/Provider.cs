@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -202,7 +203,7 @@ public sealed record Provider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -279,14 +280,15 @@ public sealed record Provider(
         }
 
         var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForProvider(this), "    ");
 
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+
+                    {{tokenizerPathLine}}
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

@@ -233,6 +233,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: what should be the start page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
 
+        // Config: save energy while the AI streams its answers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.IsSavingEnergy, this.Id, settingsTable, dryRun);
+
         // Config: show prompt-injection alert dialogs?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowPromptInjectionAlert, this.Id, settingsTable, dryRun);
 
@@ -263,6 +266,30 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to add mailboxes?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddMailbox, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to import configurations which others exported?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportConfigurationSnippets, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import profiles?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportProfile, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import LLM providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportLLMProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import embedding providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportEmbeddingProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import transcription providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportTranscriptionProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import chat templates?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportChatTemplate, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import external data sources (ERI servers)?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportERIDataSource, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import document analysis policies?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportDocumentAnalysisPolicy, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
 
@@ -280,6 +307,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: show administration settings?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
+
+        // Config: in which format do exports encrypt secrets?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.EnterpriseEncryptionExportFormat, this.Id, settingsTable, dryRun);
+
+        // Config: add a disclosure to copied and exported AI-generated content?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AddAIGeneratedContentDisclosure, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
@@ -392,6 +425,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputDirectory, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FilePatterns, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeSubdirectories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeHiddenFilesAndFolders, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ExcludePatterns, this.Id, settingsTable, dryRun);
+
+        var maxFileSizeIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MaxFileSizeMegabytes, this.Id, settingsTable, dryRun, validator: value => value >= FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+        if (!maxFileSizeIsValid && settingsTable.TryGetValue("DataBatchProcessing.MaxFileSizeMegabytes", out _))
+            LOG.LogWarning("The Batch Processing size limit configured by plugin {ConfigPluginId} must be at least {SmallestMaxFileSizeMegabytes} MB.", this.Id, FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptSource, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FreePrompt, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
@@ -409,6 +449,19 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        // Config: Visual Briefing Assistant defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceProfile, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceAgeGroup, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceOrganizationalLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceExpertise, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.ShowSourceReferences, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);

@@ -19,7 +19,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public Action<string> TextUpdate { get; set; } = _ => { };
 
     /// <summary>
-    /// The icon to display next to the textfield.
+    /// The icon to display next to the textfield, when it has a single line.
     /// </summary>
     [Parameter]
     public string Icon { get; set; } = Icons.Material.Filled.Info;
@@ -92,6 +92,12 @@ public partial class ConfigurationText : ConfigurationBaseCore
     private bool AutoGrow => this.NumLines > 1;
     
     private int GetMaxLines => this.AutoGrow ? this.MaxLines : 1;
+
+    //
+    // MudBlazor centers the icon vertically, so in a field of several lines it floats in the middle
+    // of the text. Such a field goes without:
+    //
+    private Adornment IconAdornment => this.NumLines == 1 ? Adornment.Start : Adornment.None;
 
     private void InternalUpdate(string text)
     {

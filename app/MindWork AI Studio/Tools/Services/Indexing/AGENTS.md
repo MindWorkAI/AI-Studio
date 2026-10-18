@@ -75,5 +75,6 @@ Rules which are easy to break:
   `IsIndexingPaused` first and tells the user instead of waiting.
 - **A pass lives only while the last step left more to do.** The service drops the pass of a data source after
   every other outcome and every exception, and when the stored index is reset. A retry the user asks for, and a
-  step with other embedding settings, begin a new pass (`IndexingPass.ContinueOrBegin`). A pass kept beyond that
+  step with other embedding settings or another selection of documents, begin a new pass
+  (`IndexingPass.ContinueOrBegin`). A pass kept beyond that
   leaves out documents which would work by now, for example once the embedding provider is reachable again.

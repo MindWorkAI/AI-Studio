@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Settings.DataModel;
 
 using Lua;
@@ -23,6 +25,11 @@ public abstract class PluginConfigurationObjectDescriptor
     public abstract PluginConfigurationObjectType Type { get; }
 
     /// <summary>
+    /// The Lua table in which a configuration plugin defines these objects, e.g., LLM_PROVIDERS.
+    /// </summary>
+    public abstract string LuaTableName { get; }
+
+    /// <summary>
     /// Reads the configuration objects of this type which a configuration plugin defines, and stores
     /// them in the settings unless the plugin is only checked.
     /// </summary>
@@ -33,6 +40,19 @@ public abstract class PluginConfigurationObjectDescriptor
     /// <param name="pluginPath">The directory of the plugin, which paths in the objects are relative to.</param>
     /// <returns>True when the plugin defines a table for this type.</returns>
     public abstract bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath);
+
+    /// <summary>
+    /// Reads the configuration object of a configuration snippet, which belongs to no configuration
+    /// plugin. It is read as a dry run, so neither the object nor its secret is stored.
+    /// </summary>
+    /// <remarks>
+    /// Without the directory of a plugin, a path relative to it cannot be resolved, so the parsers
+    /// leave out what such a path points to, e.g., a custom icon.
+    /// </remarks>
+    /// <param name="table">The table which the snippet assigns.</param>
+    /// <param name="configObject">The configuration object read from the table.</param>
+    /// <returns>True when the table defines a valid configuration object.</returns>
+    public abstract bool TryParseSnippet(LuaTable table, [NotNullWhen(true)] out IConfigurationObject? configObject);
 
     /// <summary>
     /// Removes the configuration objects of this type which belong to a configuration plugin that is

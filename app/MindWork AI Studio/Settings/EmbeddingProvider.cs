@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -181,7 +182,7 @@ public sealed record EmbeddingProvider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -257,13 +258,15 @@ public sealed record EmbeddingProvider(
                           """;
         }
 
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForEmbeddingProvider(this), "    ");
+
         return $$"""
                 CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    {{tokenizerPathLine}}
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 

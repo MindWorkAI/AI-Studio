@@ -37,8 +37,13 @@ public sealed partial class RustService
     /// attachment: nothing leaves the app on that path, so there is nothing to warn about, and
     /// reporting it there would warn a second time when the file is actually sent.
     /// </param>
+    /// <param name="reportAs">
+    /// The source the user is told about when passages were filtered out, or null for the file
+    /// itself. A file which only holds what AI Studio made of another one, e.g. the transcript of a
+    /// recording, names the file the user knows instead.
+    /// </param>
     /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
@@ -250,7 +255,7 @@ public sealed partial class RustService
         // where the content never leaves the app.
         //
         if (reportPromptInjections)
-            await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount), reportingScope);
+            await guardService.ReportAsync(new(reportAs ?? PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount), reportingScope);
 
         //
         // Filtering does not change the outcome: the passages were removed and the document

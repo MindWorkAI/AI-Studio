@@ -1,5 +1,6 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -53,12 +54,36 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         {
             { x => x.IsEditing, false },
         };
-        
+
+        await this.AddTranscriptionProvider(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportTranscriptionProvider()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, T("Import transcription provider"));
+        if (import?.ConfigurationObject is not TranscriptionProvider transcriptionProvider)
+            return;
+
+        var dialogParameters = CreateDialogParameters(transcriptionProvider, isEditing: false);
+        dialogParameters.Add(x => x.ImportedAPIKey, import.Secret);
+        await this.AddTranscriptionProvider(dialogParameters, isImport: true);
+    }
+
+    private async Task AddTranscriptionProvider(DialogParameters<TranscriptionProviderDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Add Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported transcription provider is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))
+            return;
+
         var addedTranscription = (TranscriptionProvider)dialogResult.Data!;
         addedTranscription = addedTranscription with { Num = this.SettingsManager.ConfigurationData.NextTranscriptionNum++ };
         
@@ -74,23 +99,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         if (transcriptionProvider.IsEnterpriseConfiguration && !transcriptionProvider.AllowUserProvidedAPIKey)
             return;
 
-        var dialogParameters = new DialogParameters<TranscriptionProviderDialog>
-        {
-            { x => x.DataNum, transcriptionProvider.Num },
-            { x => x.DataId, transcriptionProvider.Id },
-            { x => x.DataName, transcriptionProvider.Name },
-            { x => x.DataLLMProvider, transcriptionProvider.UsedLLMProvider },
-            { x => x.DataCustomIconDataUrl, transcriptionProvider.CustomIconDataUrl },
-            { x => x.DataModel, transcriptionProvider.Model },
-            { x => x.DataHostname, transcriptionProvider.Hostname },
-            { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, transcriptionProvider.Host },
-            { x => x.HFInferenceProviderId, transcriptionProvider.HFInferenceProvider },
-            { x => x.IsEnterpriseConfiguration, transcriptionProvider.IsEnterpriseConfiguration },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Edit Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Edit Transcription Provider"), CreateDialogParameters(transcriptionProvider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -118,6 +127,22 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    private static DialogParameters<TranscriptionProviderDialog> CreateDialogParameters(TranscriptionProvider transcriptionProvider, bool isEditing) => new()
+    {
+        { x => x.DataNum, transcriptionProvider.Num },
+        { x => x.DataId, transcriptionProvider.Id },
+        { x => x.DataName, transcriptionProvider.Name },
+        { x => x.DataLLMProvider, transcriptionProvider.UsedLLMProvider },
+        { x => x.DataCustomIconDataUrl, transcriptionProvider.CustomIconDataUrl },
+        { x => x.DataModel, transcriptionProvider.Model },
+        { x => x.DataHostname, transcriptionProvider.Hostname },
+        { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },
+        { x => x.IsEditing, isEditing },
+        { x => x.DataHost, transcriptionProvider.Host },
+        { x => x.HFInferenceProviderId, transcriptionProvider.HFInferenceProvider },
+        { x => x.IsEnterpriseConfiguration, transcriptionProvider.IsEnterpriseConfiguration },
+    };
 
     private async Task DeleteTranscriptionProvider(TranscriptionProvider provider)
     {

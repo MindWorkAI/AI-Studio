@@ -34,6 +34,12 @@ public partial class MudCopyClipboardButton : ComponentBase
     public string TooltipMessage { get; set; } = TB("Copies the content to the clipboard");
 
     /// <summary>
+    /// Whether AI generated the content. It then ends with a notice saying so, when that is switched on.
+    /// </summary>
+    [Parameter]
+    public bool IsAIGenerated { get; set; }
+
+    /// <summary>
     /// The size of the button. The default size is small.
     /// </summary>
     [Parameter]
@@ -41,6 +47,9 @@ public partial class MudCopyClipboardButton : ComponentBase
 
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
     
     private async Task HandleCopyClick()
     {
@@ -55,7 +64,8 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     private async Task CopyToClipboard(string textContent)
     {
-        await this.RustService.CopyText2Clipboard(textContent);
+        var text = this.IsAIGenerated ? this.DisclosureService.AddDisclosureToMarkdown(textContent) : textContent;
+        await this.RustService.CopyText2Clipboard(text);
     }
     
     /// <summary>
@@ -74,7 +84,7 @@ public partial class MudCopyClipboardButton : ComponentBase
         switch (this.Type)
         {
             case ContentType.TEXT when contentToCopy.TryGetExportMarkdown(out var markdown):
-                await this.RustService.CopyText2Clipboard(markdown);
+                await this.CopyToClipboard(markdown);
                 break;
             
             default:
