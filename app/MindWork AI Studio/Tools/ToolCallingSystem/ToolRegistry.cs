@@ -671,7 +671,7 @@ public sealed class ToolRegistry
             .ToList();
 
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
-        var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
+        var candidates = new List<(ToolDefinition Definition, IToolImplementation Implementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
             var check = await this.CheckToolAsync(definition, providerConfidence, outboundDataRestriction);
@@ -681,9 +681,7 @@ public sealed class ToolRegistry
             switch (check)
             {
                 case { BlockReason: ToolOfferBlockReason.NONE, Implementation: { } implementation }:
-                    if (await this.ResolveAsync(definition, implementation, context, token) is { } offeredDefinition)
-                        result.Add((offeredDefinition, implementation));
-
+                    candidates.Add((definition, implementation));
                     break;
 
                 case { BlockReason: ToolOfferBlockReason.TOOL_SWITCHED_OFF }:
@@ -699,7 +697,7 @@ public sealed class ToolRegistry
                     break;
 
                 case { BlockReason: ToolOfferBlockReason.OUTBOUND_DATA_RESTRICTED }:
-                    this.logger.LogInformation("Skipping tool '{ToolId}' because the chat read from a mailbox which restricts outbound data to '{OutboundDataRestriction}'.", definition.Id, outboundDataRestriction);
+                    this.logger.LogInformation("Skipping tool '{ToolId}' because the chat holds internal content which restricts outbound data to '{OutboundDataRestriction}'. Origin={Origin}", definition.Id, outboundDataRestriction, context.ChatThread.RequiredOutboundDataRestriction.Origin);
                     break;
 
                 case { BlockReason: ToolOfferBlockReason.NOT_AVAILABLE_HERE }:
@@ -710,6 +708,20 @@ public sealed class ToolRegistry
 
         foreach (var selectedToolId in selectedToolIdSet.Where(selectedToolId => definitions.All(definition => !definition.Id.Equals(selectedToolId, StringComparison.Ordinal))))
             this.logger.LogDebug("Skipping tool '{ToolId}' because it is not selected in this component or not available in this context.", selectedToolId);
+
+        //
+        // Every tool is checked before the first one is asked what it offers, so each one learns
+        // which others the request may offer, and its instructions name no tool the model does
+        // not get:
+        //
+        var resolutionContext = context with { CandidateToolIds = candidates.Select(candidate => candidate.Definition.Id).ToHashSet(StringComparer.Ordinal) };
+
+        var result = new List<(ToolDefinition, IToolImplementation)>(candidates.Count);
+        foreach (var (definition, implementation) in candidates)
+        {
+            if (await this.ResolveAsync(definition, implementation, resolutionContext, token) is { } offeredDefinition)
+                result.Add((offeredDefinition, implementation));
+        }
 
         return result;
     }
@@ -726,8 +738,8 @@ public sealed class ToolRegistry
     /// Three questions stay out. Whether the tool is selected is the caller's business, and whether
     /// the tool has anything to offer right now depends on the chat, so only the preparation of a
     /// request can answer it. Where the chat may still send data belongs to the chat as well, see
-    /// ChatThread.RequiredOutboundDataRestriction, so the tool is judged as for a chat which read
-    /// no mailbox. Semantic Search, which the RAG process asks about, only reaches services
+    /// ChatThread.RequiredOutboundDataRestriction, so the tool is judged as for a chat which holds
+    /// no internal content. Semantic Search, which the RAG process asks about, only reaches services
     /// configured in AI Studio, and no restriction ever keeps it back.
     /// </remarks>
     /// <param name="toolId">The tool to check.</param>

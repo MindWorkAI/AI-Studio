@@ -1,12 +1,13 @@
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
-/// Where a chat may still send data, once it has read from a mailbox.
+/// Where a chat may still send data, once internal content entered it: mails, a search of the
+/// wiki, or an internal web page.
 /// </summary>
 /// <remarks>
 /// The members run from the strictest to the most permissive, so the stricter of two levels is the
-/// smaller one. Services which are configured in AI Studio, such as Confluence or the mailbox itself,
-/// stay allowed on every level.
+/// smaller one. Services which are configured in AI Studio, such as Confluence, the allowed private
+/// hosts, or the mailbox itself, stay allowed on every level.
 /// </remarks>
 public enum OutboundDataRestriction
 {
