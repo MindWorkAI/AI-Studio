@@ -14,7 +14,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="LayoutPartUri">Where the layout of the slide is stored; null when the slide names none.</param>
 /// <param name="FamilyId">The ID of the layout family the slide is based on; null when its layout belongs to none, e.g., because it has no room for content.</param>
 /// <param name="Title">The title of the slide on a single line; empty when it has none.</param>
-/// <param name="Contents">What the slots of the slide hold, in the reading order of its layout. Slots left empty are missing.</param>
+/// <param name="Contents">What the slots of the slide hold, in the reading order of its layout, a table which is no placeholder included. Slots left empty are missing.</param>
 /// <param name="IsHidden">Whether the slide is hidden in the slide show.</param>
 /// <param name="IsImprint">Whether the slide is an imprint, which takes the place of the one every presentation gets otherwise.</param>
 internal sealed record TemplateSlide(

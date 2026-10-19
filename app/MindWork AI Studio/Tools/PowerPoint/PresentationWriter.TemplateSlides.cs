@@ -74,8 +74,9 @@ internal static partial class PresentationWriter
     /// Only slots with content change; every other one keeps what the template slide holds. A text
     /// takes the formatting the slide gave the old one. A picture or a table replaces the old one
     /// as a whole, since nothing of its old shape fits the new content, and a picture nobody shows
-    /// any more leaves the file. A slot the slide does not carry gets its placeholder from the
-    /// layout, as on a slide written anew.
+    /// any more leaves the file. This holds for a table which is no placeholder as well, so that no
+    /// row of the old table shows below a shorter new one. A slot the slide does not carry gets its
+    /// placeholder from the layout, as on a slide written anew.
     /// </remarks>
     /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
     /// <param name="content">What goes on the slide.</param>
@@ -85,12 +86,7 @@ internal static partial class PresentationWriter
             return;
 
         // Which shape fills which slot, by the same reading as the template's:
-        var shapesBySlot = new Dictionary<TemplateSlot, OpenXmlElement>();
-        foreach (var element in shapeTree.Elements())
-        {
-            if (PlaceholderOf(element) is { } placeholder && content.Layout.SlotOf(placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value) is { } slot)
-                shapesBySlot.TryAdd(slot, element);
-        }
+        var shapesBySlot = TemplateSlideShapes.SlotShapesOf(shapeTree, content.Layout);
 
         var layoutPlaceholders = LayoutPlaceholders.Of(content.LayoutElement);
         var slide = content.Slide;
@@ -98,7 +94,7 @@ internal static partial class PresentationWriter
         {
             var index = slot.Ordinal - 1;
             var existing = shapesBySlot.GetValueOrDefault(slot);
-            var placeholder = existing is not null && PlaceholderOf(existing) is { } existingPlaceholder
+            var placeholder = existing is not null && TemplateSlideShapes.PlaceholderOf(existing) is { } existingPlaceholder
                 ? (P.PlaceholderShape)existingPlaceholder.CloneNode(true)
                 : layoutPlaceholders.For(slot);
 
@@ -156,6 +152,16 @@ internal static partial class PresentationWriter
             // In the place of the old one, so that what lay above it still does:
             existing.InsertAfterSelf(replacement);
             RemoveShape(slidePart, existing);
+
+            //
+            // A free table may stand in for an empty placeholder of its slot. The new table fills
+            // that placeholder now, so the empty one would only fill the slot a second time:
+            //
+            if (TemplateSlideShapes.PlaceholderOf(existing) is null)
+            {
+                foreach (var emptyPlaceholder in shapeTree.Elements().Where(element => element != replacement && TemplateSlideShapes.PlaceholderOf(element) is { } other && content.Layout.SlotOf(other.Type?.InnerText ?? "obj", other.Index?.Value) == slot).ToList())
+                    RemoveShape(slidePart, emptyPlaceholder);
+            }
         }
     }
 
@@ -264,7 +270,7 @@ internal static partial class PresentationWriter
         if (slide.CommonSlideData?.ShapeTree is not { } shapeTree)
             return;
 
-        var footers = shapeTree.Elements<P.Shape>().Where(shape => PlaceholderOf(shape)?.Type?.InnerText == "ftr").ToList();
+        var footers = shapeTree.Elements<P.Shape>().Where(shape => TemplateSlideShapes.PlaceholderOf(shape)?.Type?.InnerText == "ftr").ToList();
         foreach (var footer in footers)
             ReplaceParagraphs(footer, ParagraphsOf(footerText));
 
@@ -329,18 +335,6 @@ internal static partial class PresentationWriter
         converted.SetAttributes(endProperties.GetAttributes());
         return converted;
     }
-
-    /// <summary>
-    /// The placeholder a shape, a picture or a table of a slide fills; null for anything else.
-    /// </summary>
-    private static P.PlaceholderShape? PlaceholderOf(OpenXmlElement element) => element switch
-    {
-        P.Shape shape => shape.NonVisualShapeProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
-        P.Picture picture => picture.NonVisualPictureProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
-        P.GraphicFrame frame => frame.NonVisualGraphicFrameProperties?.ApplicationNonVisualDrawingProperties?.PlaceholderShape,
-
-        _ => null,
-    };
 
     /// <summary>
     /// The next free shape ID of a slide.

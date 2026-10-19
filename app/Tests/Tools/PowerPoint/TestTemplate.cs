@@ -177,8 +177,14 @@ internal static class TestTemplate
                 var relationshipId = $"rId{200 + index}";
                 var slidePart = presentationPart.AddNewPart<SlidePart>(relationshipId);
                 slidePart.AddPart(layoutParts[slides[index].Layout]);
+
+                // The elements lie in front of the placeholders, with the IDs after theirs:
+                var shapeTree = ShapeTreeOf(slides[index].Texts.Select(text => text.Placeholder).ToList(), slides[index].Texts.Select(text => text.Text).ToList());
+                for (var elementIndex = 0; elementIndex < slides[index].Elements.Count; elementIndex++)
+                    shapeTree.Append(slides[index].Elements[elementIndex].Create((uint)(slides[index].Texts.Length + 2 + elementIndex), slidePart));
+
                 slidePart.Slide = new P.Slide(
-                    new P.CommonSlideData(ShapeTreeOf(slides[index].Texts.Select(text => text.Placeholder).ToList(), slides[index].Texts.Select(text => text.Text).ToList())),
+                    new P.CommonSlideData(shapeTree),
                     new P.ColorMapOverride(new A.MasterColorMapping()));
 
                 if (slides[index].IsHidden)
@@ -293,6 +299,77 @@ internal sealed record TestSlide(int Layout, params (TestPlaceholder Placeholder
     /// Whether the slide is hidden in the slide show.
     /// </summary>
     public bool IsHidden { get; init; }
+
+    /// <summary>
+    /// The shapes of the slide which are no placeholders, in front of the placeholders.
+    /// </summary>
+    public IReadOnlyList<TestElement> Elements { get; init; } = [];
+}
+
+/// <summary>
+/// A shape of a test slide which is no placeholder, e.g., a table an author pasted onto the slide.
+/// </summary>
+/// <param name="Create">Writes the shape with the given ID for the given slide.</param>
+internal sealed record TestElement(Func<uint, SlidePart, OpenXmlElement> Create)
+{
+    private const long ROW_HEIGHT = 370_840;
+
+    /// <summary>
+    /// A table which is no placeholder, in equally wide columns; its first row is the header.
+    /// </summary>
+    public static TestElement Table(SlotBounds bounds, params string[][] rows) => new((id, _) => TableOf(id, null, bounds, rows));
+
+    /// <summary>
+    /// A table which fills the table placeholder of the given index, as PowerPoint writes one.
+    /// </summary>
+    public static TestElement TablePlaceholder(uint index, SlotBounds bounds, params string[][] rows) => new((id, _) => TableOf(id, index, bounds, rows));
+
+    private static P.GraphicFrame TableOf(uint id, uint? placeholderIndex, SlotBounds bounds, string[][] rows)
+    {
+        var columns = rows[0].Length;
+        var grid = new A.TableGrid();
+        for (var column = 0; column < columns; column++)
+            grid.Append(new A.GridColumn { Width = bounds.Width / columns });
+
+        var table = new A.Table(new A.TableProperties { FirstRow = true, BandRow = true }, grid);
+        foreach (var row in rows)
+        {
+            var tableRow = new A.TableRow { Height = ROW_HEIGHT };
+            foreach (var cell in row)
+                tableRow.Append(new A.TableCell(new A.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(cell)))), new A.TableCellProperties()));
+
+            table.Append(tableRow);
+        }
+
+        var applicationProperties = new P.ApplicationNonVisualDrawingProperties();
+        if (placeholderIndex is { } index)
+            applicationProperties.PlaceholderShape = new P.PlaceholderShape { Type = P.PlaceholderValues.Table, Index = index };
+
+        return new P.GraphicFrame(
+            new P.NonVisualGraphicFrameProperties(
+                new P.NonVisualDrawingProperties { Id = id, Name = $"Table {id}" },
+                new P.NonVisualGraphicFrameDrawingProperties(new A.GraphicFrameLocks { NoGrouping = true }),
+                applicationProperties),
+            new P.Transform(
+                new A.Offset { X = bounds.X, Y = bounds.Y },
+                new A.Extents { Cx = bounds.Width, Cy = ROW_HEIGHT * rows.Length }),
+            new A.Graphic(new A.GraphicData(table) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/table" }));
+    }
+
+    /// <summary>
+    /// A text box: a shape with text which is no placeholder.
+    /// </summary>
+    public static TestElement TextBox(SlotBounds bounds, string text) => new((id, _) => new P.Shape(
+        new P.NonVisualShapeProperties(
+            new P.NonVisualDrawingProperties { Id = id, Name = $"Text box {id}" },
+            new P.NonVisualShapeDrawingProperties { TextBox = true },
+            new P.ApplicationNonVisualDrawingProperties()),
+        new P.ShapeProperties(
+            new A.Transform2D(
+                new A.Offset { X = bounds.X, Y = bounds.Y },
+                new A.Extents { Cx = bounds.Width, Cy = bounds.Height }),
+            new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
+        new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(text))))));
 }
 
 /// <summary>

@@ -86,22 +86,24 @@ internal sealed partial class PresentationTemplate
     /// </summary>
     /// <remarks>
     /// Placeholders which fill no slot, such as the footer, and slots left empty are left out. A
-    /// picture counts as content even though it has no text.
+    /// picture counts as content even though it has no text, and a table which is no placeholder
+    /// as the content of the table slot, see <see cref="TemplateSlideShapes.SlotShapesOf"/>.
     /// </remarks>
     private static List<TemplateSlideContent> ContentsOf(P.Slide slide, TemplateLayout layout)
     {
-        var textsBySlot = new Dictionary<TemplateSlot, string>();
-        foreach (var placeholder in PlaceholdersOf(slide.CommonSlideData))
+        var shapesBySlot = TemplateSlideShapes.SlotShapesOf(slide.CommonSlideData?.ShapeTree, layout);
+        var contents = new List<TemplateSlideContent>();
+        foreach (var slot in layout.Slots)
         {
-            if (layout.SlotOf(placeholder.Type, placeholder.Index) is not { } slot)
+            if (!shapesBySlot.TryGetValue(slot, out var shape))
                 continue;
 
-            var text = TextOf(placeholder.Element);
-            if (text.Length > 0 || placeholder.Element is P.Picture)
-                textsBySlot.TryAdd(slot, text);
+            var text = TextOf(shape);
+            if (text.Length > 0 || shape is P.Picture)
+                contents.Add(new TemplateSlideContent(slot, text));
         }
 
-        return layout.Slots.Where(textsBySlot.ContainsKey).Select(slot => new TemplateSlideContent(slot, textsBySlot[slot])).ToList();
+        return contents;
     }
 
     /// <summary>

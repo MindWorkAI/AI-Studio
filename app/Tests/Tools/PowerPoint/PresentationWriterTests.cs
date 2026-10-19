@@ -475,6 +475,49 @@ public sealed class PresentationWriterTests
         });
     }
 
+    [Test]
+    public async Task ATableOfAnEditedSlideReplacesTheFreeTableOfTheTemplate()
+    {
+        var deck = new SlideDeckSpec("Mars",
+        [
+            Edit(1, table: new SlideTableSpec(["Item", "Cost"], [["Fuel", "10"], ["Food", "5"]])),
+            Edit(2, table: new SlideTableSpec(["Step", "Date"], [["Launch", "2030"]])),
+        ]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_FREE_TABLES);
+        using var document = PresentationDocument.Open(file, false);
+        var slides = SlidesOf(document);
+        var shapeTree = slides[0].Slide!.CommonSlideData!.ShapeTree!;
+        var table = shapeTree.Elements<P.GraphicFrame>().Single();
+        var note = shapeTree.Elements<P.Shape>().Single(shape => shape.TextBody?.InnerText == "Source: last year");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(RowsOf(table), Is.EqualTo(new[] { "Item | Cost", "Fuel | 10", "Food | 5" }), "No row of the old table is left below the shorter new one.");
+            Assert.That(table.Descendants<P.PlaceholderShape>().Select(placeholder => (placeholder.Type?.InnerText, placeholder.Index?.Value)), Is.EqualTo(new (string?, uint?)[] { ("tbl", 11) }));
+            Assert.That(shapeTree.Elements().ToList().IndexOf(table), Is.LessThan(shapeTree.Elements().ToList().IndexOf(note)), "The new table lies where the old one did, behind what lay in front of it.");
+            Assert.That(RowsOf(slides[1].Slide!.Descendants<P.GraphicFrame>().Single()), Is.EqualTo(new[] { "Step | Date", "Launch | 2030" }));
+            Assert.That(slides[1].Slide!.Descendants<P.PlaceholderShape>().Count(placeholder => placeholder.Type?.InnerText == "tbl"), Is.EqualTo(1), "The empty placeholder the free table stood in for is gone.");
+        });
+    }
+
+    [Test]
+    public async Task WhatAnEditedSlideLeavesEmptyKeepsTheFreeTable()
+    {
+        var deck = new SlideDeckSpec("Mars", [Edit(1, "New costs")]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_FREE_TABLES);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(TitleOf(slide), Is.EqualTo("New costs"));
+            Assert.That(RowsOf(slide.Slide!.Descendants<P.GraphicFrame>().Single()), Has.Count.EqualTo(6));
+        });
+    }
+
     /// <summary>
     /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
     /// and one the imprint, and a hint nobody keeps.
@@ -488,9 +531,36 @@ public sealed class PresentationWriterTests
         new TestSlide(0, (TestPlaceholder.Title(), "A hint to delete")),
     ]);
 
+    /// <summary>
+    /// Slides of <see cref="Layouts"/> on the table layout whose tables are no placeholders: one
+    /// pasted onto the slide, with a note in front of it, and one standing in for an empty placeholder.
+    /// </summary>
+    private static readonly TestTemplateOptions TEMPLATE_WITH_FREE_TABLES = new(Slides:
+    [
+        new TestSlide(6, (TestPlaceholder.Title(), "Costs"))
+        {
+            Elements =
+            [
+                TestElement.Table(TestTemplate.MASTER_BODY_BOUNDS, ["Item", "Cost"], ["A", "1"], ["B", "2"], ["C", "3"], ["D", "4"], ["E", "5"]),
+                TestElement.TextBox(new SlotBounds(838_200, 6_000_000, 4_000_000, 300_000), "Source: last year"),
+            ],
+        },
+        new TestSlide(6, (TestPlaceholder.Title(), "Plan"), (new TestPlaceholder(P.PlaceholderValues.Table, 11), string.Empty))
+        {
+            Elements = [TestElement.Table(TestTemplate.MASTER_BODY_BOUNDS, ["Step", "Date"], ["Test", "2029"])],
+        },
+    ]);
+
     private static SlideSpec Keep(int templateSlide, bool startsChapter = false) => new(string.Empty, startsChapter, string.Empty, string.Empty, [], [], [], null, templateSlide);
 
-    private static SlideSpec Edit(int templateSlide, string title = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null, IReadOnlyList<int>? pictures = null) => new(string.Empty, false, title, string.Empty, texts ?? [], labels ?? [], pictures ?? [], null, templateSlide);
+    private static SlideSpec Edit(int templateSlide, string title = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null, IReadOnlyList<int>? pictures = null, SlideTableSpec? table = null) => new(string.Empty, false, title, string.Empty, texts ?? [], labels ?? [], pictures ?? [], table, templateSlide);
+
+    /// <summary>
+    /// The rows of a table, with " | " between their cells.
+    /// </summary>
+    private static List<string> RowsOf(P.GraphicFrame table) => table.Descendants<A.TableRow>()
+        .Select(row => string.Join(" | ", row.Elements<A.TableCell>().Select(cell => cell.InnerText)))
+        .ToList();
 
     /// <summary>
     /// The shape of a slide which fills the placeholder of the given type and index.

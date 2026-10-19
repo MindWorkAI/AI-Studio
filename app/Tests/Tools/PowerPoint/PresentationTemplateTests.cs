@@ -237,6 +237,44 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void AFreeTableIsTheContentOfTheTableSlot()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs")) { Elements = [TestElement.Table(FULL_TEXT, ["Item", "Cost"], ["Fuel", "10"])] },
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs"), (new TestPlaceholder(P.PlaceholderValues.Table, 11), string.Empty)) { Elements = [TestElement.Table(FULL_TEXT, ["Item", "Cost"], ["Food", "5"])] },
+            ]),
+            new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Costs"), (PlaceholderRole.TABLE, "Item | Cost\nFuel | 10") }), "A table pasted onto the slide is the table of the slide.");
+            Assert.That(template.Slides[1].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Costs"), (PlaceholderRole.TABLE, "Item | Cost\nFood | 5") }), "An empty table placeholder makes way for the table the slide shows.");
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT, TemplateSlideUse.KEEP]), Is.EqualTo(
+                """
+                - Template slide 1, to edit, with the slots of layout L1: title "Costs"; table 1 "Item | Cost / Fuel | 10"
+                - Template slide 2, to keep unchanged: title "Costs"; table 1 "Item | Cost / Food | 5"
+                """.ReplaceLineEndings("\n")), "The model learns that the slide has a table.");
+        });
+    }
+
+    [Test]
+    public void ATablePlaceholderWinsOverAFreeTable()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs")) { Elements = [TestElement.Table(FULL_TEXT, ["Free"], ["Table"]), TestElement.TablePlaceholder(11, FULL_TEXT, ["Placeholder"], ["Table"])] },
+            ]),
+            new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Costs"), (PlaceholderRole.TABLE, "Placeholder\nTable") }));
+    }
+
+    [Test]
     public void ASlideOnALayoutWithoutRoomForContentBelongsToNoFamily()
     {
         using var file = TestTemplate.Create(
