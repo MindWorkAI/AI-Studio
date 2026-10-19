@@ -172,9 +172,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- if this configuration is later withdrawn.
 --     -- ["AllowUserProvidedAPIKey"] = true,
 --
---     -- Optional: ask the user for their API key on the home page, as long as this provider
---     -- has none. All providers of this plugin which set this option share one prompt and
---     -- receive the same key, so the user enters it once. Implies "AllowUserProvidedAPIKey".
+--     -- Optional: ask the user for their API key in a panel on the home page, as long as this
+--     -- provider has none. All providers of this plugin which set this option share one panel
+--     -- and receive the same key, so the user enters it once. Implies "AllowUserProvidedAPIKey".
 --     -- Explain how to obtain the key in CONFIG["USER_API_KEY_PROMPT"], see below.
 --     -- ["PromptForUserAPIKey"] = true,
 --
@@ -1383,10 +1383,12 @@ CONFIG["INTRODUCTIONS"] = {}
 --                         ]===]
 -- }
 
--- What AI Studio tells users while it asks for their API key on the home page. It asks as long
--- as a provider of this plugin which sets "PromptForUserAPIKey" has no API key. The key the
--- user enters is checked against one of these providers and then stored for all of them.
--- Title is optional. Without this table, AI Studio shows a generic request.
+-- What AI Studio tells users in the panel on the home page which asks for their API key. It asks
+-- as long as a provider of this plugin which sets "PromptForUserAPIKey" has no API key. AI Studio
+-- checks the key the user enters with the first of these providers which can list its models,
+-- and then stores it for all of them. A key the provider refuses is not stored. When no provider
+-- can check the key, or the provider is out of reach, AI Studio stores the key with a warning.
+-- Markdown is required, Title is optional. Without this table, AI Studio shows a generic request.
 -- CONFIG["USER_API_KEY_PROMPT"] = {
 --     ["Title"] = "Please add your API key",
 --     ["Markdown"] = [===[

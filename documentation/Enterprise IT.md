@@ -967,22 +967,27 @@ provider comes back later. See [Withdrawing a configuration](#withdrawing-a-conf
 
 With `AllowUserProvidedAPIKey` alone, users have to find the provider in the settings and enter
 their key there. Set `PromptForUserAPIKey` instead, and AI Studio asks for the key itself: as long
-as such a provider has no API key, the home page shows a box at its top with an input field for
-the key. AI Studio also stays on the home page after starting, even when another start page is
+as such a provider has no API key, the home page shows a panel with an input field for the key.
+The panel comes first and is open, even when your configuration hides the other panels of the
+home page. AI Studio also stays on the home page after starting, even when another start page is
 configured, until the key is there. `PromptForUserAPIKey` implies `AllowUserProvidedAPIKey`, and
-it works for LLM, embedding, and transcription providers alike.
+it works for LLM, embedding, and transcription providers alike. Other API keys, such as the one of
+a web search, are not covered: they belong to the tool settings.
 
-All providers of one configuration which set the option share one box and one key: the user enters
-the key once, and AI Studio stores it for every one of them. Therefore, mark only providers which
-accept the same key, for example several models behind one Open WebUI server. Providers which need
-another key belong in a configuration of their own.
+All providers of one configuration which set the option share one panel and one key: the user
+enters the key once, and AI Studio stores it for every one of them. Therefore, mark only providers
+which accept the same key, for example several models behind one Open WebUI server. Providers
+which need another key belong in a configuration of their own.
 
-Before storing the key, AI Studio asks one of the providers for its models. A key the provider
-rejects is not stored, and the user is told so. When the provider cannot be reached, the key is
-stored with a warning, so that an outage does not keep anyone from finishing the setup.
+Before storing the key, AI Studio loads the models of the first of these providers which can list
+them. A key the provider rejects is not stored, and the user is told so. When the
+provider cannot be reached, or none of the providers can list its models, the key is stored with
+a warning, so that an outage does not keep anyone from finishing the setup. A few providers, such
+as Perplexity, answer with a fixed list of models whatever the key; AI Studio cannot tell a wrong
+key there.
 
 Explain how users obtain their key with `CONFIG["USER_API_KEY_PROMPT"]`. Its Markdown is shown
-above the input field; the title is optional:
+above the input field and is required; the title is optional:
 
 ```lua
 CONFIG["USER_API_KEY_PROMPT"] = {
