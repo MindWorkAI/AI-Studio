@@ -105,12 +105,7 @@
             </MudJustifiedText>
             @foreach (var templateSlide in loadedTemplate.Slides)
             {
-                @if (this.TemplateSlidePreviewOf(templateSlide) is { Length: > 0 } preview)
-                {
-                    <MudText Typo="Typo.caption" Class="d-block mb-1">@preview</MudText>
-                }
-
-                <EnumSelection T="TemplateSlideUse" NameFunc="@(use => use.Name())" Value="@this.TemplateSlideUseOf(templateSlide.Number)" ValueChanged="@(use => this.SetTemplateSlideUse(templateSlide.Number, use))" ValidateSelection="@(use => this.ValidateTemplateSlideUse(templateSlide, use))" Icon="@(templateSlide.IsImprint ? Icons.Material.Filled.Info : Icons.Material.Filled.Slideshow)" Label="@this.TemplateSlideLabelOf(templateSlide)"/>
+                <EnumSelection T="TemplateSlideUse" NameFunc="@(use => use.Name())" Value="@this.TemplateSlideUseOf(templateSlide.Number)" ValueChanged="@(use => this.SetTemplateSlideUse(templateSlide.Number, use))" ValidateSelection="@(use => this.ValidateTemplateSlideUse(templateSlide, use))" Icon="@Icons.Material.Filled.Slideshow" Label="@this.TemplateSlideLabelOf(templateSlide)"/>
             }
         }
     </CompactExpansionPanel>

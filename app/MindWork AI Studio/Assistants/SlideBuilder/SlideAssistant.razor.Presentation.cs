@@ -192,14 +192,11 @@ public partial class SlideAssistant
     }
 
     /// <summary>
-    /// How the form names a slide of the template: by its number and title, and what is special about it.
+    /// How the form names a slide of the template: by its number, and what is special about it.
     /// </summary>
     private string TemplateSlideLabelOf(TemplateSlide slide)
     {
-        var label = slide.Title.Length > 0
-            ? string.Format(T("Slide {0}: {1}"), slide.Number, slide.Title)
-            : string.Format(T("Slide {0}"), slide.Number);
-
+        var label = string.Format(T("Slide {0}"), slide.Number);
         if (slide.IsImprint)
             label = $"{label} ({T("imprint")})";
 
@@ -207,20 +204,6 @@ public partial class SlideAssistant
             label = $"{label} ({T("hidden")})";
 
         return label;
-    }
-
-    /// <summary>
-    /// What a slide of the template holds besides its title, on a single line, for the user to recognize it.
-    /// </summary>
-    private string TemplateSlidePreviewOf(TemplateSlide slide)
-    {
-        const int MAX_LENGTH = 160;
-        var parts = slide.Contents
-            .Where(content => content.Slot.Role is not PlaceholderRole.TITLE)
-            .Select(content => content.Slot.Role is PlaceholderRole.PICTURE ? T("Picture") : content.Text.ReplaceLineEndings(" · "));
-
-        var preview = string.Join(" · ", parts);
-        return preview.Length > MAX_LENGTH ? $"{preview[..MAX_LENGTH].TrimEnd()}…" : preview;
     }
 
     private async Task UseNoTemplate() => await this.OnTemplateChanged(string.Empty);
