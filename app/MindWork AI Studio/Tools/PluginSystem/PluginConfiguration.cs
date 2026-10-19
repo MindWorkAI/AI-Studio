@@ -370,6 +370,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Handle configured document analysis policies:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
 
+        // Handle configured glossaries:
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.GLOSSARY, x => x.Glossaries, x => x.NextGlossaryNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
+
         // Handle configured mandatory infos:
         this.TryReadMandatoryInfos(mainTable);
 

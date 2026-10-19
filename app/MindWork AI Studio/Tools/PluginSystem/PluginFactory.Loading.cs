@@ -331,6 +331,10 @@ public static partial class PluginFactory
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
+        // Check glossaries:
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.GLOSSARY, x => x.Glossaries, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
+            wasConfigurationChanged = true;
+
         //
         // Check left-over mandatory info acceptances. The mandatory infos come from the running
         // configuration plugins only, so we skip this while one of them did not start: the user
