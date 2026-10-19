@@ -101,6 +101,17 @@ public static class FileTypes
         "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic", "avif");
 
     /// <summary>
+    /// The image formats we hand to a model as they are.
+    /// </summary>
+    /// <remarks>
+    /// The providers accept these, while other formats, such as TIFF or HEIC, would end in an
+    /// error of the provider which tells the user nothing. The default file patterns of the batch
+    /// processing assistant list the same formats, see DataBatchProcessing.DEFAULT_FILE_PATTERNS.
+    /// </remarks>
+    public static readonly FileTypeFilter MODEL_IMAGE = FileTypeFilter.Leaf(TB("Image for AI models"),
+        "jpg", "jpeg", "png", "webp", "gif");
+
+    /// <summary>
     /// Gets the prototype visual-asset image formats.
     /// </summary>
     public static readonly FileTypeFilter VISUAL_BRIEFING_IMAGE = FileTypeFilter.Leaf(TB("Visual briefing image"),

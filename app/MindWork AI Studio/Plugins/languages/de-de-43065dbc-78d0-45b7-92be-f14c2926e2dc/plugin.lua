@@ -538,7 +538,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Die Ergebnisdatei konnte nicht geschrieben werden: {0}"
 
 -- Images in JPG, PNG, WebP, or GIF format are given directly to the model, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3000909441"] = "Bilder im JPG-, PNG-, WebP- oder GIF-Format werden direkt an das Modell übergeben, daher benötigst du ein Modell, das Bilder versteht. Falls das ausgewählte Modell keine Bilder verarbeiten kann, entferne die Bildmuster wie z. B. *.jpg oder *.png, bevor du startest."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3000909441"] = "Bilder im JPG-, PNG-, WebP- oder GIF-Format werden direkt an das Modell übergeben, daher benötigen Sie ein Modell, das Bilder versteht. Falls das ausgewählte Modell keine Bilder verarbeiten kann, entfernen Sie die Bildmuster wie z. B. *.jpg oder *.png, bevor Sie starten."
 
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "Die Stapelverarbeitung ist abgeschlossen, aber eine Datei konnte nicht verarbeitet werden. Weitere Informationen finden Sie in der Fortschrittstabelle und im Protokoll."

@@ -1,4 +1,6 @@
 using AIStudio.Chat;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 
@@ -6,12 +8,6 @@ namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
 {
-    /// <summary>
-    /// The image formats we hand to the model. The providers accept these, while other formats,
-    /// such as TIFF or HEIC, would end in an error of the provider which tells the user nothing.
-    /// </summary>
-    private static readonly HashSet<string> SENDABLE_IMAGE_EXTENSIONS = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
-
     /// <summary>
     /// What one file of the batch gives to the model: either text or an image.
     /// </summary>
@@ -40,11 +36,18 @@ public partial class AssistantBatchProcessing
     /// <remarks>
     /// The request itself would only skip an image it cannot send, with a message, and ask the model
     /// anyway. The model would then answer about nothing, and the file would count as done, so that
-    /// continuing the run would skip it as well.
+    /// continuing the run would skip it as well. A failed image is processed again when the run is
+    /// continued, e.g., with a model that can read images.
     /// </remarks>
     private FileAttachmentImage? LoadImage(BatchProcessingFileResult fileResult)
     {
-        if (!SENDABLE_IMAGE_EXTENSIONS.Contains(Path.GetExtension(fileResult.FilePath)))
+        if (!this.ProviderSettings.SupportsImageInput())
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The selected model cannot read images. Select a model with image support to process this image."));
+            return null;
+        }
+
+        if (!FileTypes.IsAllowedPath(fileResult.FilePath, FileTypes.MODEL_IMAGE))
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("This image format cannot be given to the model. Please convert the image to JPG, PNG, WebP, or GIF."));
             return null;
@@ -61,9 +64,10 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        if (fileSize > IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES)
+        var maxImageSizeBytes = this.ProviderSettings.UsedLLMProvider.GetMaxImageSizeBytes();
+        if (fileSize > maxImageSizeBytes)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The image is larger than 10 MB and cannot be given to the model."));
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, the most the selected provider accepts for one image, so it cannot be given to the model."), (maxImageSizeBytes / 1_000_000d).ToString("0.#")));
             return null;
         }
 

@@ -41,6 +41,7 @@ public partial class AssistantBatchProcessing
             (previousLog, previousResults) = previousRun.Value;
         }
 
+        await this.WarnAboutUnreadableImagesAsync(files);
         this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
         await this.CheckpointAssistantSession();
         await this.RunBatchAsync(resolvedOutputDirectory);
@@ -214,6 +215,17 @@ public partial class AssistantBatchProcessing
         if (token.IsCancellationRequested)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
+            return;
+        }
+
+        //
+        // The request reads the image anew in every round with the model, e.g., after each tool
+        // call, and quietly leaves out an image which is gone by then. The answer would be about
+        // nothing and must not count as a result, so that continuing the run processes the image again:
+        //
+        if (input.Value.Image is { Exists: false })
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The image was no longer available while the model was asked about it."));
             return;
         }
 

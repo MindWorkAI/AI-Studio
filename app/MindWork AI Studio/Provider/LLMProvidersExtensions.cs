@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Provider.AlibabaCloud;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.DeepSeek;
@@ -286,6 +287,25 @@ public static class LLMProvidersExtensions
         LLMProviders.SELF_HOSTED => true,
 
         _ => false,
+    };
+
+    /// <summary>
+    /// The largest image file, in bytes, which the provider accepts in a request.
+    /// </summary>
+    /// <param name="llmProvider">The provider to check.</param>
+    /// <returns>The size limit of one image file.</returns>
+    public static long GetMaxImageSizeBytes(this LLMProviders llmProvider) => llmProvider switch
+    {
+        //
+        // Anthropic accepts at most 5 MB of base64 per image. Base64 needs four characters for
+        // every three bytes, which leaves about 3.9 MB for the image file itself:
+        //
+        LLMProviders.ANTHROPIC => 3_932_160,
+
+        //
+        // Everybody else gets the limit we apply anyway when we read an image:
+        //
+        _ => IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES,
     };
 
     /// <summary>
