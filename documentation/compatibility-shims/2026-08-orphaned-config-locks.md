@@ -23,7 +23,7 @@ At the end of `PluginFactory.LoadAll`, AI Studio checks a fixed list of settings
 
 Repairing means restoring the default value. Each repair is logged as a warning.
 
-Nothing is repaired at all while a configuration plugin is deployed but could not be loaded, e.g. because of invalid Lua code. In that situation, we cannot tell whether a value comes from that plugin or from a removed one, so the repair is postponed to the next start.
+Nothing is repaired at all while a configuration plugin is deployed but could not be loaded, e.g. because of invalid Lua code, or was loaded but did not start, e.g. because it ran out of time. In that situation, we cannot tell whether a value comes from that plugin or from a removed one, so the repair is postponed to the next start.
 
 The check runs on every start, not once. This is safe because none of these settings has a user interface that writes to it, so a non-default value can only originate from a configuration plugin. This is the load-bearing assumption of the whole shim: as soon as one of these settings gets a user interface, the shim would overwrite the user's choice on every start. In that case, remove the setting from `RepairLegacyConfigOnlySettings` and from the list above.
 

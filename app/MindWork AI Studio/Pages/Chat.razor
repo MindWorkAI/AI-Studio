@@ -32,7 +32,7 @@
     </MudStack>
 
     <CascadingValue Value="Components.CHAT">
-        <ProviderSelection @bind-ProviderSettings="@this.providerSettings"/>
+        <ProviderSelection @bind-ProviderSettings="@this.providerSettings" Disabled="@this.isAnswerBeingWritten"/>
     </CascadingValue>
     @if (this.AreWorkspacesVisible)
     {
@@ -97,6 +97,7 @@
                 <ChatComponent
                     @bind-ChatThread="@this.chatThread"
                     @bind-Provider="@this.providerSettings"
+                    IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
                     ComposerState="@this.composerState"
                     Workspaces="@this.workspaces"
                     WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
@@ -124,6 +125,7 @@
             <ChatComponent
                 @bind-ChatThread="@this.chatThread"
                 @bind-Provider="@this.providerSettings"
+                IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
                 ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
                 WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
@@ -135,6 +137,7 @@
         <ChatComponent
             @bind-ChatThread="@this.chatThread"
             @bind-Provider="@this.providerSettings"
+            IsAnswerBeingWrittenChanged="@(isBeingWritten => this.isAnswerBeingWritten = isBeingWritten)"
             ComposerState="@this.composerState"
             Workspaces="@this.workspaces"
             WorkspaceName="name => this.UpdateWorkspaceName(name)"/>

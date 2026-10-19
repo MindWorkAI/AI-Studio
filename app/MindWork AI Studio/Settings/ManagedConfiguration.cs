@@ -15,6 +15,15 @@ public static partial class ManagedConfiguration
     private static ILogger Log => Program.LOGGER_FACTORY.CreateLogger(nameof(ManagedConfiguration));
 
     /// <summary>
+    /// All registered settings, in no particular order.
+    /// </summary>
+    /// <remarks>
+    /// The data classes register their settings when the settings data is created. Once it exists,
+    /// this covers every managed setting, whatever its type.
+    /// </remarks>
+    internal static IEnumerable<ConfigMetaBase> RegisteredSettings => METADATA.Values.OfType<ConfigMetaBase>();
+
+    /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and
     /// property expression (enum-based).
     /// </summary>
@@ -325,11 +334,8 @@ public static partial class ManagedConfiguration
         var wasChanged = false;
         var registeredSettingNames = new HashSet<string>(StringComparer.Ordinal);
 
-        foreach (var config in METADATA.Values)
+        foreach (var configMeta in RegisteredSettings)
         {
-            if (config is not ConfigMetaBase configMeta)
-                continue;
-
             registeredSettingNames.Add(configMeta.SettingName);
 
             //

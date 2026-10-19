@@ -83,6 +83,25 @@ public static class Markdown
         return $"{markdownText}{Environment.NewLine}{new string(openFence.FencedChar, openFence.OpeningFencedCharCount)}";
     }
 
+    /// <summary>Puts a block of Markdown below a Markdown text, such as its sources or a notice.</summary>
+    /// <param name="markdownText">The Markdown text.</param>
+    /// <param name="block">The block to put below the text, or an empty string when there is none.</param>
+    /// <returns>The text followed by the block.</returns>
+    public static string AppendBlock(string markdownText, string block)
+    {
+        if (block.Length == 0)
+            return markdownText;
+
+        if (markdownText.Length == 0)
+            return block;
+
+        //
+        // The blank line is not cosmetic: it ends a paragraph, a list, a table, or a block quote, so
+        // that the block stands on its own instead of being pulled into the last block of the text.
+        //
+        return $"{CloseOpenCodeFence(markdownText)}{Environment.NewLine}{Environment.NewLine}{block}";
+    }
+
     public static string RemoveSharedIndentation(string value)
     {
         if (string.IsNullOrWhiteSpace(value))

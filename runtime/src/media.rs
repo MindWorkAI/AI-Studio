@@ -36,8 +36,6 @@ use tokio_stream::StreamExt;
 use webm_iterable::matroska_spec::{Master, MatroskaSpec, SimpleBlock};
 use webm_iterable::{WebmIterator, WebmWriter, WriteOptions};
 
-use crate::api_token::APIToken;
-
 /// Sample rate required by the normalized WebM/Opus output contract.
 const OUTPUT_SAMPLE_RATE: u32 = 48_000;
 
@@ -333,7 +331,6 @@ impl MediaJob {
 
 /// Registers and immediately schedules a media normalization job.
 pub async fn create_job(
-    _token: APIToken,
     Json(request): Json<CreateMediaJobRequest>,
 ) -> Result<Json<CreateMediaJobResponse>, (StatusCode, Json<MediaError>)> {
     let input_path = PathBuf::from(&request.input_path);
@@ -415,7 +412,6 @@ async fn retain_terminal_job(job_id: String) {
 
 /// Streams the current snapshot followed by live media job events.
 pub async fn get_job_events(
-    _token: APIToken,
     Path(job_id): Path<String>,
 ) -> Result<Sse<impl Stream<Item = Result<Event, Infallible>>>, StatusCode> {
     let job = JOBS.read().unwrap().get(&job_id).cloned().ok_or(StatusCode::NOT_FOUND)?;
@@ -431,7 +427,7 @@ pub async fn get_job_events(
 }
 
 /// Requests cooperative cancellation of a running media job.
-pub async fn cancel_job(_token: APIToken, Path(job_id): Path<String>) -> impl IntoResponse {
+pub async fn cancel_job(Path(job_id): Path<String>) -> impl IntoResponse {
     match JOBS.read().unwrap().get(&job_id) {
         Some(job) => {
             job.cancelled.store(true, Ordering::Relaxed);

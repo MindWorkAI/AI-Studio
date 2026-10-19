@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -22,7 +23,7 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    string TokenizerPath = "",
+    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     string TokenizerFingerprint = "",
     int EmbeddingBatchSize = 0,
     int TokenLimit = 0,
@@ -62,7 +63,7 @@ public sealed record EmbeddingProvider(
 
     #endregion
 
-    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
+    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -191,7 +192,7 @@ public sealed record EmbeddingProvider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -199,13 +200,20 @@ public sealed record EmbeddingProvider(
                 {
                     if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
                     {
-                        // Queue the API key for storage in the OS keyring:
-                        PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
-                            name,
-                            decryptedApiKey,
-                            SecretStoreType.EMBEDDING_PROVIDER));
-                        LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        //
+                        // Queue the API key for storage in the OS keyring. A dry run only checks the
+                        // configuration, so it queues nothing: the start which follows it would
+                        // otherwise store the key once more for every dry run before it:
+                        //
+                        if (!dryRun)
+                        {
+                            PendingEnterpriseApiKeys.Add(new(
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
+                                name,
+                                decryptedApiKey,
+                                SecretStoreType.EMBEDDING_PROVIDER));
+                            LOGGER.LogDebug($"Successfully decrypted API key for embedding provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for embedding provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
@@ -260,13 +268,15 @@ public sealed record EmbeddingProvider(
                           """;
         }
 
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForEmbeddingProvider(this), "    ");
+
         return $$"""
                 CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
 
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    {{tokenizerPathLine}}
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
 

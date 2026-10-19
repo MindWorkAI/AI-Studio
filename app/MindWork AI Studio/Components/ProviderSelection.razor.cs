@@ -34,6 +34,10 @@ public partial class ProviderSelection : MSGComponentBase
     /// <summary>
     /// Gets or sets whether provider selection is disabled.
     /// </summary>
+    /// <remarks>
+    /// A choice which reaches a disabled selection anyway is turned down. Keeping the selected provider
+    /// up to date after its settings changed is no choice, so that goes on.
+    /// </remarks>
     [Parameter]
     public bool Disabled { get; set; }
 
@@ -55,6 +59,9 @@ public partial class ProviderSelection : MSGComponentBase
     
     private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {
+        if (this.Disabled)
+            return;
+
         this.ProviderSettings = provider;
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }

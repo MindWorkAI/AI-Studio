@@ -34,10 +34,27 @@ public sealed record ChatThread
     public ulong LastMediaTranscriptNumber { get; set; }
 
     /// <summary>
-    /// Managed transcript attachments prepared for the composer but not sent yet.
-    /// Empty by default so older serialized threads require no migration.
+    /// The message the user is writing in this chat and has not sent yet.
     /// </summary>
-    public List<ManagedTranscriptAttachment> PendingMediaTranscripts { get; set; } = [];
+    /// <remarks>
+    /// Every copy of this thread made with a with expression shares the draft, because such a copy is
+    /// still the same chat. A copy which becomes another chat needs a draft of its own.
+    /// </remarks>
+    public ChatDraft Draft { get; init; } = new();
+
+    // Compatibility shim: until v26.9.1, a chat stored only the transcripts of its draft, in a list of their own. See documentation/compatibility-shims/2026-10-chat-pending-media-transcripts.md; remove after 2027-04-11.
+    [JsonInclude]
+    [JsonPropertyName("pending_media_transcripts")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    private List<ManagedTranscriptAttachment>? LegacyPendingMediaTranscripts
+    {
+        get => null;
+        init
+        {
+            if (value is not null)
+                this.Draft.AddAttachments(value);
+        }
+    }
 
     /// <summary>
     /// Specifies the provider selected for the chat thread.
@@ -128,14 +145,16 @@ public sealed record ChatThread
     };
 
     /// <summary>
-    /// Where this chat may still send data, because of the mailboxes it read from.
+    /// Where this chat may still send data, because of the internal content it holds: mails, a
+    /// search of the wiki, or an internal web page.
     /// </summary>
     /// <remarks>
     /// The third thing the thread ratchets, next to the data security and the required provider
-    /// confidence: once mail content is in the thread, every tool which runs afterwards could carry
-    /// it out, in a search query or in the address of a web page. It only ever gets stricter, and a
-    /// later change of the mailbox settings does not loosen it either, because the content was
-    /// read under the old one. A chat which read no mailbox demands nothing.
+    /// confidence: once internal content is in the thread, every tool which runs afterwards could
+    /// carry it out, in a search query or in the address of a web page. It only ever gets stricter,
+    /// and a later change of the settings of a mailbox or of Read Web Page does not loosen it
+    /// either, because the content was read under the old one. A chat which holds no internal
+    /// content demands nothing.
     /// </remarks>
     [JsonInclude]
     public OutboundDataRequirement RequiredOutboundDataRestriction { get; private set; } = OutboundDataRequirement.NONE;
@@ -470,6 +489,33 @@ public sealed record ChatThread
     }
 
     /// <summary>
+    /// Removes a user message whose text and attachments went back into the composer for editing.
+    /// </summary>
+    /// <remarks>
+    /// Unlike Remove, this keeps the files of the managed transcripts. The composer still carries
+    /// them, so deleting the files would leave the edited message pointing at nothing, and the user
+    /// would have to transcribe the media all over again.<br/><br/>
+    ///
+    /// A transcript always belongs to exactly one owner: to a sent message, or to the draft in the
+    /// composer, which this thread keeps in Draft. Sending hands the attachments of the draft to the
+    /// new message; editing is the way back, so the message becomes the draft again. From then on, the
+    /// rules of the draft apply: removing the attachment from the composer deletes its file, and
+    /// opening the chat again brings it back into the composer.
+    /// </remarks>
+    /// <param name="content">The content of the user message to edit.</param>
+    public void RemoveForEditing(IContent content)
+    {
+        var block = this.Blocks.FirstOrDefault(x => x.Content == content);
+        if (block is null)
+            return;
+
+        if (block.Content is ContentText textContent)
+            this.Draft.RestoreFromMessage(textContent);
+
+        this.Blocks.Remove(block);
+    }
+
+    /// <summary>
     /// Rolls this chat thread back, so that the given content becomes the last block of the conversation.
     /// </summary>
     /// <remarks>
@@ -509,6 +555,53 @@ public sealed record ChatThread
         this.AugmentedData = string.Empty;
         this.AISelectedDataSources = [];
         return true;
+    }
+
+    /// <summary>
+    /// Replaces every attachment of the chat, in its messages as well as in its draft, with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// The one place which knows where a chat keeps attachments. Moving a chat, copying it, and
+    /// writing it into a backup or reading it back from one all go through here, so none of them
+    /// forgets the draft or a kind of message.
+    /// </remarks>
+    /// <param name="replace">Gives the attachment to keep in place of the given one, or the given one itself when nothing changes.</param>
+    public void ReplaceAttachments(Func<FileAttachment, FileAttachment> replace)
+    {
+        foreach (var content in this.Blocks.Select(block => block.Content).OfType<IContent>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+                content.FileAttachments[index] = replace(content.FileAttachments[index]);
+        }
+
+        this.Draft.ReplaceAttachments(replace);
+    }
+
+    /// <summary>
+    /// Replaces every file path the chat stores with what the given function makes of it.
+    /// </summary>
+    /// <remarks>
+    /// Covers the attachments, cf. ReplaceAttachments, and the images of the messages which are held
+    /// by a local path. An attachment whose path the function returns unchanged stays as it is, and
+    /// so does one without a path.
+    /// </remarks>
+    /// <param name="rewrite">Maps a path to its replacement, or returns it unchanged.</param>
+    public void RewriteFilePaths(Func<string, string> rewrite)
+    {
+        this.ReplaceAttachments(attachment =>
+        {
+            if (string.IsNullOrWhiteSpace(attachment.FilePath))
+                return attachment;
+
+            var rewrittenPath = rewrite(attachment.FilePath);
+            return rewrittenPath == attachment.FilePath ? attachment : attachment.WithFilePath(rewrittenPath);
+        });
+
+        foreach (var image in this.Blocks.Select(block => block.Content).OfType<ContentImage>())
+        {
+            if (image.SourceType is ContentImageSource.LOCAL_PATH && !string.IsNullOrWhiteSpace(image.Source))
+                image.Source = rewrite(image.Source);
+        }
     }
 
     /// <summary>

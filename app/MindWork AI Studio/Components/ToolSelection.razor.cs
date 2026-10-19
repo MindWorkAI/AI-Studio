@@ -172,7 +172,7 @@ public partial class ToolSelection : MSGComponentBase
             warnings.Add(providerConfidenceHint);
 
         if (this.IsBlockedByOutboundDataRestriction(item))
-            warnings.Add(this.RequiredOutboundDataRestriction.GetToolBlockedMessage(this.SettingsManager.ConfigurationData.Mailboxes));
+            warnings.Add(this.RequiredOutboundDataRestriction.GetToolBlockedMessage(this.SettingsManager.ConfigurationData));
 
         return string.Join(' ', warnings);
     }

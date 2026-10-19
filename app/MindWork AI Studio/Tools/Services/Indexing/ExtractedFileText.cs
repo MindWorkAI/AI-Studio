@@ -18,13 +18,14 @@ internal static class ExtractedFileText
     /// <param name="filePath">The path of the file.</param>
     /// <param name="embeddingProvider">The embedding provider whose tokenizer counts the pieces.</param>
     /// <param name="reportAs">The source the user is told about when passages were filtered out, or null for the file itself.</param>
+    /// <param name="reportingScope">The action the file is read for, which tells the user about filtered passages together with the rest of it.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The text, empty when the file has none.</returns>
-    public static async Task<SegmentedText> ReadAsync(RustService rustService, string filePath, EmbeddingProvider embeddingProvider, PromptInjectionSource? reportAs, CancellationToken token)
+    public static async Task<SegmentedText> ReadAsync(RustService rustService, string filePath, EmbeddingProvider embeddingProvider, PromptInjectionSource? reportAs, PromptInjectionReportingScope reportingScope, CancellationToken token)
     {
         var segments = new List<TextSegment>();
 
-        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider, reportAs, token))
+        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider, reportAs, reportingScope, token))
         {
             var normalized = TextChunker.NormalizeSegment(segment.Content);
             if (!string.IsNullOrWhiteSpace(normalized))

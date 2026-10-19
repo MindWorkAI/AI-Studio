@@ -1,5 +1,6 @@
 using System.Globalization;
 
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Mail;
@@ -94,6 +95,12 @@ public sealed partial class DataSourceEmbeddingService
     /// made that a different signature, so opening the expert settings of a data source — which
     /// fills an empty limit with the provider's — threw the whole index away for nothing.
     ///
+    /// The file patterns and the exclusion list of a directory, and whether it includes subfolders
+    /// and hidden files and folders, are omitted as well. They change which documents belong to the
+    /// source, not how retained documents are embedded; the file indexer adds and removes the
+    /// affected document rows and vectors during its ordinary hash-check run. A run which still works
+    /// with the old selection stops all the same, cf. BuildSelectionSignature.
+    ///
     /// The confidence level a data source asks of a provider is deliberately not among them. It
     /// changes no vector, and it is enforced live on every request anyway: DataSourceService checks
     /// it against the participating chat providers and against the embedding provider, and this
@@ -140,4 +147,60 @@ public sealed partial class DataSourceEmbeddingService
     /// <returns>The signature of this pairing.</returns>
     internal static string BuildEmbeddingSignature(IDataSourceBase dataSource, EmbeddingProvider embeddingProvider) =>
         BuildEmbeddingSignature(dataSource, embeddingProvider, GetChunkingOptions(dataSource, embeddingProvider));
+
+    /// <summary>
+    /// Describes which documents of a data source an indexing run works with.
+    /// </summary>
+    /// <remarks>
+    /// Kept out of the embedding signature on purpose, cf. BuildEmbeddingSignature: another selection
+    /// adds and removes documents, while every vector stored so far stays valid. A run which started
+    /// with another selection, however, goes on with it until it ends, perhaps after hours: it embeds
+    /// files which no longer belong to the data source, and the ones which now do have to wait for
+    /// the next run.
+    ///
+    /// Only a local folder chooses its documents by file patterns, exclusions, switches, and a size
+    /// limit. For every other kind of data source, this is empty.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <returns>The description of its selection, or an empty string.</returns>
+    internal static string BuildSelectionSignature(IIndexedDataSource dataSource) => dataSource is DataSourceLocalDirectory directory
+        ? FolderFileSelection.Of(directory).Describe()
+        : string.Empty;
+
+    /// <summary>
+    /// Describes the indexing run a data source would get with a given embedding provider.
+    /// </summary>
+    /// <remarks>
+    /// The embedding signature and the selection signature, as long as the provider may read the
+    /// data source at all. Comparing what a run started with against what it would start with now
+    /// tells whether the run is outdated: it embeds for an index the next run throws away, it works
+    /// with documents the data source no longer selects, or it sends documents to a provider which
+    /// may no longer read them.
+    /// </remarks>
+    /// <param name="dataSource">The data source to index.</param>
+    /// <param name="embeddingProvider">The embedding provider the data source names.</param>
+    /// <param name="embeddingProviderConfidence">The confidence level of that embedding provider.</param>
+    /// <returns>The signature of the run, or NONE when the provider may not read the data source and no run would start.</returns>
+    internal static DataSourceRunSignature GetRunSignature(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, ConfidenceLevel embeddingProviderConfidence) =>
+        AllowsEmbedding(dataSource, embeddingProviderConfidence)
+            ? new(BuildEmbeddingSignature(dataSource, embeddingProvider), BuildSelectionSignature(dataSource))
+            : DataSourceRunSignature.NONE;
+
+    /// <summary>
+    /// Whether an indexing run works for embedding settings or a selection of documents which no longer apply.
+    /// </summary>
+    /// <param name="runSignature">The signature the run started with, or null while the run has not resolved its embedding provider yet.</param>
+    /// <param name="currentRunSignature">The signature a run would start with now, or NONE when no run would start anymore.</param>
+    /// <returns>True when the run should stop.</returns>
+    internal static bool IsRunOutdated(DataSourceRunSignature? runSignature, DataSourceRunSignature currentRunSignature)
+    {
+        //
+        // Still preparing, so nothing was embedded or sent anywhere yet. The run checks for itself
+        // once it records its signature.
+        //
+        if (runSignature is null)
+            return false;
+
+        return currentRunSignature == DataSourceRunSignature.NONE || runSignature != currentRunSignature;
+    }
 }

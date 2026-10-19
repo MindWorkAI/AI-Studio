@@ -421,11 +421,7 @@ public record ChatTemplate(
         }
 
         var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? pluginRoot
-            : pluginRoot + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!combinedPath.StartsWith(pluginRootWithSeparator, comparison))
+        if (!PathTools.IsInsideDirectory(pluginRoot, combinedPath))
         {
             LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} points outside of the plugin folder and will be ignored.", attachmentNum, idx);
             return false;

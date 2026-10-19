@@ -119,6 +119,10 @@ partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("relative_path");
 
+            entity.Property<string>("TranscriptKey")
+                .HasColumnType("TEXT")
+                .HasColumnName("transcript_key");
+
             entity.HasKey("ParentFileId");
 
             entity.HasIndex("AbsolutePath")

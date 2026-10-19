@@ -89,8 +89,15 @@ public partial class ContentBlockComponent : MSGComponentBase
     [Parameter]
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
 
+    /// <summary>
+    /// Whether the user may change the messages of the chat right now, i.e., remove, edit, regenerate, or roll back.
+    /// </summary>
+    /// <remarks>
+    /// The chat answers false while an answer is being written for it, since every change to a message
+    /// would collide with the answer. Whoever passes none of these actions needs no answer here.
+    /// </remarks>
     [Parameter]
-    public Func<bool> RollbackEnabled { get; set; } = () => false;
+    public Func<bool> BlockActionsEnabled { get; set; } = () => false;
 
     /// <summary>
     /// What the export offers, used both as the label of the export button and as the title of
@@ -116,12 +123,26 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </remarks>
     [Parameter]
     public string? ExportFileName { get; set; }
-    
+
+    /// <summary>
+    /// Whether copying or exporting an AI answer of this block ends it with the notice that AI
+    /// generated it, when that is switched on.
+    /// </summary>
+    /// <remarks>
+    /// An assistant whose answer is meant for another model rather than for a reader, such as the
+    /// prompt optimizer, turns this off, the same way as for its "Copy result" button.
+    /// </remarks>
+    [Parameter]
+    public bool AddsAIGeneratedContentDisclosure { get; set; } = true;
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
 
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
@@ -157,6 +178,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// can be completely exported; an image, for example, has no representation our formats could write.
     /// </remarks>
     private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
+
+    /// <summary>
+    /// Whether this block leaves AI Studio with the notice that AI generated it, when that is switched on.
+    /// </summary>
+    private bool GetsAIGeneratedContentDisclosure => this.Role is ChatRole.AI && this.AddsAIGeneratedContentDisclosure;
 
     /// <summary>
     /// The files this block holds, tables and code blocks, so that the export menu can offer each of them.
@@ -321,6 +347,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         hash.Add(this.HideContent);
         hash.Add(this.SettingsManager.IsDarkMode);
         hash.Add(this.RegenerateEnabled());
+        hash.Add(this.BlockActionsEnabled());
         hash.Add(this.Content.InitialRemoteWait);
         hash.Add(this.Content.IsStreaming);
         hash.Add(this.Content.FileAttachments.Count);
@@ -733,7 +760,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task RemoveBlock()
     {
-        if (this.RemoveBlockFunc is null)
+        if (this.RemoveBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         var remove = await this.DialogService.ShowMessageBox(
@@ -747,7 +774,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     }
     
     /// <summary>
-    /// Exports the entire message.
+    /// Exports the entire message, ending with the notice that AI generated it when that is switched on.
     /// </summary>
     private async Task ExportDocument(FileExportFormat format)
     {
@@ -757,10 +784,11 @@ public partial class ContentBlockComponent : MSGComponentBase
             // The format itself knows who writes it, so we do not have to keep a list of formats
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
+            var disclosureService = this.GetsAIGeneratedContentDisclosure ? this.DisclosureService : null;
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, disclosureService, this.EffectiveExportTitle, format, this.Content, this.ExportFileName);
             else if (this.Content.TryGetExportMarkdown(out var markdown))
-                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown, this.ExportFileName);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, disclosureService?.AddDisclosureToMarkdown(markdown) ?? markdown, this.ExportFileName);
         }
         catch (ArgumentOutOfRangeException e)
         {
@@ -772,6 +800,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// Exports one file out of the message, along with the sources the answer rests on wherever its
     /// format has room for them.
     /// </summary>
+    /// <remarks>
+    /// Unlike the entire message, the file never gets the notice that AI generated it. It is meant for
+    /// a program as often as for a reader, a table or a web page for instance, and one sentence more
+    /// would break most of them.
+    /// </remarks>
     private async Task ExportFile(MessageFile file)
     {
         try
@@ -793,7 +826,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task RegenerateBlock()
     {
-        if (this.RegenerateFunc is null)
+        if (this.RegenerateFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.AI)
@@ -811,7 +844,7 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private async Task RollbackBlock()
     {
-        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.RollbackEnabled())
+        if (this.RollbackFunc is null || this.Role is not ChatRole.AI || !this.BlockActionsEnabled())
             return;
 
         var rollback = await this.DialogService.ShowMessageBox(
@@ -826,7 +859,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task EditLastBlock()
     {
-        if (this.EditLastBlockFunc is null)
+        if (this.EditLastBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)
@@ -837,7 +870,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     
     private async Task EditLastUserBlock()
     {
-        if (this.EditLastUserBlockFunc is null)
+        if (this.EditLastUserBlockFunc is null || !this.BlockActionsEnabled())
             return;
         
         if(this.Role is not ChatRole.USER)

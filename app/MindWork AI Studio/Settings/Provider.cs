@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using SharedTools;
 
@@ -37,7 +38,7 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
-    string TokenizerPath = "",
+    [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
@@ -90,7 +91,7 @@ public sealed record Provider(
 
     #endregion
     
-    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
+    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, bool dryRun, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -213,7 +214,7 @@ public sealed record Provider(
         else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
-                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+                LOGGER.LogWarning($"The configured provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             else
             {
                 var encryption = PluginFactory.EnterpriseEncryption;
@@ -221,13 +222,20 @@ public sealed record Provider(
                 {
                     if (encryption.TryDecrypt(apiKeyText, out var decryptedApiKey))
                     {
-                        // Queue the API key for storage in the OS keyring:
-                        PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
-                            instanceName,
-                            decryptedApiKey,
-                            SecretStoreType.LLM_PROVIDER));
-                        LOGGER.LogDebug($"Successfully decrypted API key for provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        //
+                        // Queue the API key for storage in the OS keyring. A dry run only checks the
+                        // configuration, so it queues nothing: the start which follows it would
+                        // otherwise store the key once more for every dry run before it:
+                        //
+                        if (!dryRun)
+                        {
+                            PendingEnterpriseApiKeys.Add(new(
+                                $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
+                                instanceName,
+                                decryptedApiKey,
+                                SecretStoreType.LLM_PROVIDER));
+                            LOGGER.LogDebug($"Successfully decrypted API key for provider {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
+                        }
                     }
                     else
                         LOGGER.LogWarning($"Failed to decrypt API key for provider {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
@@ -283,14 +291,15 @@ public sealed record Provider(
         }
 
         var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+        var tokenizerPathLine = ExportedTokenizerPath.BuildLuaField(this.TokenizerPath, TokenizerModelId.ForProvider(this), "    ");
 
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+
+                    {{tokenizerPathLine}}
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

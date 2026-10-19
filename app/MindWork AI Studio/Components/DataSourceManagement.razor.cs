@@ -30,8 +30,6 @@ public partial class DataSourceManagement : MSGComponentBase
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
 
-    private readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
-
     /// <summary>
     /// The data sources and then the mailboxes, which the table shows together.
     /// </summary>
@@ -42,13 +40,26 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private bool MayAddMailbox => this.SettingsManager.ConfigurationData.App.AllowUserToAddMailbox;
 
+    /// <summary>
+    /// Whether an embedding provider exists, which every local data source needs.
+    /// </summary>
+    private bool HasEmbeddingProvider => !EmbeddingProviderSetup.IsMissing(this.SettingsManager);
+
+    /// <remarks>
+    /// The rule of the organization comes first: an embedding provider would not make the mailbox possible.
+    /// </remarks>
+    private string MailboxMenuText => !this.MayAddMailbox
+        ? T("Mailbox (IMAP), not allowed by your organization")
+        : this.HasEmbeddingProvider
+            ? T("Mailbox (IMAP)")
+            : T("Mailbox (IMAP), requires an embedding provider");
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED ]);
-        this.UpdateEmbeddingProviders();
     }
 
     #endregion
@@ -61,10 +72,6 @@ public partial class DataSourceManagement : MSGComponentBase
         {
             case Event.CONFIGURATION_CHANGED:
             case Event.PLUGINS_RELOADED:
-                this.UpdateEmbeddingProviders();
-                this.StateHasChanged();
-                break;
-
             case Event.RAG_EMBEDDING_STATUS_CHANGED:
                 this.StateHasChanged();
                 break;
@@ -75,25 +82,22 @@ public partial class DataSourceManagement : MSGComponentBase
 
     #endregion
 
-    private void UpdateEmbeddingProviders()
-    {
-        this.availableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
-            this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
-    }
-
     /// <remarks>
-    /// Files which were skipped for good are none of the failed ones, so a data source made of
-    /// scanned documents stays green: there is nothing here for the user to fix.
+    /// Files which were skipped for good are none of the failed ones, so an otherwise usable data
+    /// source stays green. The shared health policy warns when none of the selected documents could
+    /// be indexed.
     /// </remarks>
     private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
     {
         if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
             return Color.Warning;
 
-        return status.State is DataSourceEmbeddingState.FAILED || status.FailedDocuments > 0
-            ? Color.Error
-            : Color.Success;
+        return status.Health switch
+        {
+            DataSourceEmbeddingHealth.ERROR => Color.Error,
+            DataSourceEmbeddingHealth.WARNING => Color.Warning,
+            _ => Color.Success,
+        };
     }
 
     /// <summary>
@@ -109,11 +113,11 @@ public partial class DataSourceManagement : MSGComponentBase
         if (status is null)
             return T("Waiting for indexing status");
 
-        // Only files are skipped for want of readable text. A mail is read from the server, never from a file:
-        if (status.PermanentlySkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
+        // Only files have enumeration exclusions. A mail is read from the server, never from a file:
+        if (status.SkippedDocuments == 0 || status.DataSourceType is DataSourceType.MAILBOX)
             return status.StateLabel;
 
-        return $"{status.StateLabel} — {string.Format(T("{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."), status.PermanentlySkippedDocuments)}";
+        return $"{status.StateLabel} — {string.Format(T("Skipped files: {0}. Open Background embeddings to see why and what you can do."), status.SkippedDocuments)}";
     }
 
     private string GetEmbeddingName(IDataSourceBase dataSource)
@@ -185,8 +189,43 @@ public partial class DataSourceManagement : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    private async Task ImportERIDataSource()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DATA_SOURCE, T("Import Data Source"));
+        if (import?.ConfigurationObject is not DataSourceERI_V1 dataSource)
+            return;
+
+        var eriDialogParameters = new DialogParameters<DataSourceERI_V1Dialog>
+        {
+            { x => x.IsEditing, false },
+            { x => x.IsImport, true },
+            { x => x.DataSource, dataSource },
+            { x => x.ImportedSecret, import.Secret },
+        };
+
+        var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Add ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
+        var eriDialogResult = await eriDialogReference.Result;
+        if (eriDialogResult is null || eriDialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported data source is stored:
+        //
+        if (!this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))
+            return;
+
+        var eriDataSource = (DataSourceERI_V1)eriDialogResult.Data!;
+        await this.StoreAddedDataSource(eriDataSource with { Num = this.SettingsManager.ConfigurationData.NextDataSourceNum++ });
+    }
+
     private async Task AddDataSource(DataSourceType type)
     {
+        // The menu offers no local data source without an embedding provider, but the last one may have gone since it was drawn:
+        if (type is DataSourceType.LOCAL_FILE or DataSourceType.LOCAL_DIRECTORY && !this.HasEmbeddingProvider)
+            return;
+
         IDataSource? addedDataSource = null;
         switch (type)
         {
@@ -194,7 +233,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Add Local File as Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -211,7 +249,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Add Local Directory as Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -244,6 +281,11 @@ public partial class DataSourceManagement : MSGComponentBase
         if(addedDataSource is null)
             return;
 
+        await this.StoreAddedDataSource(addedDataSource);
+    }
+
+    private async Task StoreAddedDataSource(IDataSource addedDataSource)
+    {
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
         await this.DataSourceEmbeddingService.QueueDataSourceAsync(addedDataSource);
@@ -326,7 +368,7 @@ public partial class DataSourceManagement : MSGComponentBase
         }
 
         var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
-        if (!encryption.TryEncrypt(decryptedSecret, out var encryptedSecret))
+        if (!encryption.TryEncrypt(decryptedSecret, this.SettingsManager.ConfigurationData.App.EnterpriseEncryptionExportFormat, out var encryptedSecret))
         {
             await this.DialogService.ShowMessageBox(
                 T("Export ERI Data Source"),
@@ -360,7 +402,6 @@ public partial class DataSourceManagement : MSGComponentBase
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
                     { x => x.LockSource, lockDataSourceOrigin },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -377,7 +418,6 @@ public partial class DataSourceManagement : MSGComponentBase
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
                     { x => x.LockSource, lockDataSourceOrigin },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
                 };
 
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -419,6 +459,9 @@ public partial class DataSourceManagement : MSGComponentBase
         if (dataSource.IsEnterpriseConfiguration)
             return;
 
+        if (await this.RefuseWhileIndexingPaused(T("Delete Data Source")))
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
@@ -458,6 +501,21 @@ public partial class DataSourceManagement : MSGComponentBase
     }
 
     /// <summary>
+    /// Tells the user to wait while a backup copies the indexes or a restore waits for the restart:
+    /// deleting a data source discards its index, which waits for the end of the pause.
+    /// </summary>
+    /// <param name="title">The title of the action which waits.</param>
+    /// <returns>True when the action has to wait.</returns>
+    private async Task<bool> RefuseWhileIndexingPaused(string title)
+    {
+        if (!this.DataSourceEmbeddingService.IsIndexingPaused)
+            return false;
+
+        await this.DialogService.ShowMessageBox(title, T("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), T("Close"));
+        return true;
+    }
+
+    /// <summary>
     /// Edits a row of the table, which is either a data source or a mailbox.
     /// </summary>
     private Task EditEntry(IDataSourceBase entry) => entry switch
@@ -481,13 +539,12 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task AddMailbox()
     {
-        if (!this.MayAddMailbox)
+        if (!this.MayAddMailbox || !this.HasEmbeddingProvider)
             return;
 
         var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
         {
             { x => x.IsEditing, false },
-            { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
         };
 
         var dialogReference = await this.DialogService.ShowAsync<DataSourceMailboxDialog>(T("Add Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -531,6 +588,9 @@ public partial class DataSourceManagement : MSGComponentBase
     private async Task DeleteMailbox(DataSourceMailbox mailbox)
     {
         if (mailbox.IsEnterpriseConfiguration)
+            return;
+
+        if (await this.RefuseWhileIndexingPaused(T("Delete Mailbox")))
             return;
 
         var dialogParameters = new DialogParameters<ConfirmDialog>

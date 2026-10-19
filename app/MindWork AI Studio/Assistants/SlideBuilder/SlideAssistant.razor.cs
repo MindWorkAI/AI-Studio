@@ -390,7 +390,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 continue;
             }
 
-            var extraction = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var extraction = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: promptInjectionScope);
             if (!extraction.HasUsableContent)
             {
                 this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be used: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);

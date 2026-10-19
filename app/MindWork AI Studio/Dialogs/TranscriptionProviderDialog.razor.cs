@@ -89,6 +89,12 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     [Parameter]
     public bool IsEnterpriseConfiguration { get; set; }
 
+    /// <summary>
+    /// The API key an imported transcription provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -196,6 +202,14 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
             }
 
             await this.ReloadModels();
+        }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
         }
     }
 

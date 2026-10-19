@@ -46,9 +46,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     [Parameter]
     public bool LockSource { get; set; }
 
-    [Parameter]
-    public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -92,6 +89,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string dataUsername = string.Empty;
     private string dataPassword = string.Empty;
     private string dataRootFolder = string.Empty;
+    private bool dataIncludeSentAndDrafts = true;
     private MailboxMaxAge dataMaxAge = MailboxMaxAge.LAST_12_MONTHS;
     private bool dataIndexAttachments = true;
     private int dataMaxAttachmentSizeMegabytes = 10;
@@ -169,6 +167,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
             this.dataTransportSecurity = this.DataSource.TransportSecurity;
             this.dataUsername = this.DataSource.Username;
             this.dataRootFolder = this.DataSource.RootFolder;
+            this.dataIncludeSentAndDrafts = this.DataSource.IncludeSentAndDrafts;
             this.dataMaxAge = this.DataSource.MaxAge;
             this.dataIndexAttachments = this.DataSource.IndexAttachments;
             this.dataMaxAttachmentSizeMegabytes = this.DataSource.MaxAttachmentSizeMegabytes;
@@ -337,6 +336,9 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
     private string RootFolderText => string.IsNullOrEmpty(this.dataRootFolder) ? T("Whole mailbox") : this.dataRootFolder;
 
+    // Without a root folder, the sent mails and the drafts belong to the whole mailbox anyway:
+    private bool HasRootFolder => !string.IsNullOrEmpty(this.dataRootFolder);
+
     private string ConfidenceLevelText => this.dataConfidenceLevel is ConfidenceLevel.NONE ? string.Empty : this.dataConfidenceLevel.GetName();
 
     private OutboundDataRestriction MinimumOutboundDataRestriction => this.SettingsManager.ConfigurationData.MailboxSettings.MinimumOutboundDataRestriction;
@@ -364,12 +366,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string TestResultIcon => this.testedSettings != this.CurrentSettings
         ? Icons.Material.Outlined.HourglassEmpty
         : this.testFailure is null ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
-
-    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
-    {
-        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
-        return provider == EmbeddingProvider.NONE ? null : provider;
-    }
 
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
@@ -403,6 +399,7 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
         Username = this.CanChangeSource ? this.dataUsername.Trim() : this.DataSource.Username,
         RootFolder = this.CanChangeSource ? this.dataRootFolder : this.DataSource.RootFolder,
 
+        IncludeSentAndDrafts = this.dataIncludeSentAndDrafts,
         Port = this.dataPort,
         TransportSecurity = this.dataTransportSecurity,
         AuthMethod = MailboxAuthMethod.PASSWORD,
@@ -736,6 +733,23 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
         // The token limits are only checked while they are shown. The field learns the limit set
         // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
+    }
+
+    /// <summary>
+    /// Selects the embedding provider the user just added from within this dialog, so that what they
+    /// entered so far, the password and the tested connection included, can be saved right away.
+    /// </summary>
+    /// <remarks>
+    /// Only when no existing provider is selected, which includes the provider of a mailbox that was
+    /// deleted since. Like the token limit in ToggleExpertSettings, the field learns its new value only
+    /// with the next render, so it is checked after that.
+    /// </remarks>
+    private void SelectAddedEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (this.SelectedEmbedding is null)
+            this.dataEmbeddingId = provider.Id;
+
         this.revalidateAfterRender = true;
     }
 

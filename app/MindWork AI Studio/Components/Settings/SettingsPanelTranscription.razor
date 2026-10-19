@@ -1,6 +1,7 @@
 @using AIStudio.Provider
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsPanelProviderBase
 
 @if (PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager))
@@ -83,6 +84,9 @@
             </MudText>
         }
 
-        <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="mt-3" />
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <LockableButton Text="@T("Add transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.AllowUserToAddProvider || !this.SettingsManager.ConfigurationData.App.AllowUserToAddTranscriptionProvider)" Icon="@Icons.Material.Filled.AddRoad" OnClickAsync="@this.AddTranscriptionProvider" Class="flex-grow-0" NoMargin="true" />
+            <LockableButton Text="@T("Import transcription provider")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportTranscriptionProvider" ButtonVariant="Variant.Outlined" Class="flex-grow-0" NoMargin="true" />
+        </MudStack>
     </ExpansionPanel>
 }

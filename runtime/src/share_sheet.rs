@@ -2,7 +2,6 @@ use axum::Json;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use crate::api_token::APIToken;
 
 /// The directory the app creates its shareable plugin archives in. Keep in sync with
 /// PluginShareService.TEMPORARY_ARCHIVE_DIRECTORY on the .NET side.
@@ -23,7 +22,7 @@ pub struct ShareFileResponse {
     issue: String,
 }
 
-pub async fn share_file(_token: APIToken, Json(request): Json<ShareFileRequest>) -> Json<ShareFileResponse> {
+pub async fn share_file(Json(request): Json<ShareFileRequest>) -> Json<ShareFileResponse> {
     let path = PathBuf::from(request.file_path.trim());
     if path.as_os_str().is_empty() {
         return failure("The file path is empty.");
