@@ -162,6 +162,7 @@ public sealed record PluginConfigurationObject
             PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => "TRANSCRIPTION_PROVIDERS",
             PluginConfigurationObjectType.PROFILE => "PROFILES",
             PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => "DOCUMENT_ANALYSIS_POLICIES",
+            PluginConfigurationObjectType.GLOSSARY => "GLOSSARIES",
 
             _ => null,
         };
@@ -199,6 +200,7 @@ public sealed record PluginConfigurationObject
                 PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, dryRun, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
+                PluginConfigurationObjectType.GLOSSARY => (Glossary.TryParseGlossaryTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Glossary.NO_GLOSSARY, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
             };
