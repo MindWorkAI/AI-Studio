@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Components.Sections
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -10,10 +9,11 @@
         </MudText>
     </TitleContent>
     <DialogContent>
-        <DataSourceManagement AddMenuSectionId="@this.addMenuSectionId"/>
+        <DataSourceManagement/>
     </DialogContent>
     <DialogActions>
-        <SectionOutlet SectionId="@this.addMenuSectionId"/>
+        @* In the footer, adding and importing stay in reach however long the table grows: *@
+        <DataSourceAddButtons/>
         <MudSpacer/>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
             @T("Close")
