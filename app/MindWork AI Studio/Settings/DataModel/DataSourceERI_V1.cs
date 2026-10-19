@@ -187,10 +187,17 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 return genericRetrievalContexts;
             }
 
+            //
+            // The ERI client answers a cancellation like any other failure, since other callers
+            // pass their own timeout and expect an answer. Whoever cancelled the search, though,
+            // waits for it to stop; reporting the data source as not searched would carry on:
+            //
+            token.ThrowIfCancellationRequested();
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
             return null;
         }
 
+        token.ThrowIfCancellationRequested();
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
         return null;
     }
