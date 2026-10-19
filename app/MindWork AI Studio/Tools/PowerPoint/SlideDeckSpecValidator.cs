@@ -88,6 +88,9 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
+        if (slide.Removals.Count > 0)
+            issues.Add($"Slide {number} is a new slide, which has nothing to remove. Leave out \"remove\".");
+
         var family = template.FindFamily(slide.Layout);
         if (family is null)
         {
@@ -125,7 +128,7 @@ internal static class SlideDeckSpecValidator
 
         if (!slide.HasContent)
         {
-            issues.Add($"Slide {number} is to edit template slide {templateSlideNumber}, but writes no content. Write the new content of the slide.");
+            issues.Add($"Slide {number} is to edit template slide {templateSlideNumber}, but writes no content. Write the new content of the slide, or what it removes.");
             return;
         }
 
@@ -136,6 +139,35 @@ internal static class SlideDeckSpecValidator
         }
 
         ValidateContent(slide, number, family.Id, family.Slots.Select(templateSlide.OnSlide).ToList(), pictureCount, issues);
+        ValidateRemovals(slide, number, templateSlide, family, issues);
+    }
+
+    /// <summary>
+    /// Checks what an edited slide removes from its template slide: slots and elements the slide
+    /// has, and neither the title nor a slot the slide fills anew.
+    /// </summary>
+    /// <remarks>
+    /// The title stays, since it names the slide in the outline and in the sections of the
+    /// presentation; an edited slide changes it by writing a new one.
+    /// </remarks>
+    private static void ValidateRemovals(SlideSpec slide, int number, TemplateSlide templateSlide, LayoutFamily family, List<string> issues)
+    {
+        foreach (var name in slide.Removals)
+        {
+            if (templateSlide.FindElement(name) is not null)
+                continue;
+
+            if (!PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) || SlotOf(family.Slots, role, ordinal) is null)
+            {
+                issues.Add($"Slide {number} removes \"{name}\", which template slide {templateSlide.Number} does not have. Remove only the slots and elements its entry in TEMPLATE_SLIDES names, e.g., \"element 1\" or \"label 1\".");
+                continue;
+            }
+
+            if (role is PlaceholderRole.TITLE)
+                issues.Add($"Slide {number} removes the title of template slide {templateSlide.Number}. Write a new title instead, or keep the old one.");
+            else if (slide.Fills(role, ordinal))
+                issues.Add($"Slide {number} fills {name} and removes it as well. Either fill it or remove it.");
+        }
     }
 
     /// <summary>

@@ -25,6 +25,16 @@ internal readonly record struct SlotBounds(long X, long Y, long Width, long Heig
     public bool OverlapsHorizontally(SlotBounds other) => this.X < other.Right && other.X < this.Right;
 
     /// <summary>
+    /// The area both share; 0 when they do not overlap.
+    /// </summary>
+    public double IntersectionArea(SlotBounds other)
+    {
+        var width = Math.Min(this.Right, other.Right) - Math.Max(this.X, other.X);
+        var height = Math.Min(this.Bottom, other.Bottom) - Math.Max(this.Y, other.Y);
+        return width > 0 && height > 0 ? (double)width * height : 0;
+    }
+
+    /// <summary>
     /// Whether the other area lies within this one, give or take the given tolerance on each edge.
     /// </summary>
     public bool Contains(SlotBounds other, long horizontalTolerance, long verticalTolerance) =>

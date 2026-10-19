@@ -11,7 +11,8 @@ namespace AIStudio.Tools.PowerPoint;
 ///
 /// A slide may refer to a slide of the template instead of a layout. Without content, it keeps that
 /// slide as it is. With content, the content replaces what the slots of that slide hold, and every
-/// slot it leaves empty keeps the content of the template.
+/// slot it leaves empty keeps the content of the template, unless the slide removes it. What the
+/// template slide carries besides its slots stays as well, unless the slide removes it.
 /// </remarks>
 /// <param name="Layout">The ID of the layout family, e.g., "L3"; not used when the slide refers to a template slide, which keeps its own layout.</param>
 /// <param name="StartsChapter">Whether a new chapter starts with this slide, which opens a section of the presentation.</param>
@@ -34,13 +35,46 @@ internal sealed record SlideSpec(
     int? TemplateSlide = null)
 {
     /// <summary>
+    /// What the slide removes from the template slide it edits, by the names the model read: slots,
+    /// e.g., "label 1", and elements, e.g., "element 2". Empty for every other slide.
+    /// </summary>
+    public IReadOnlyList<string> Removals { get; init; } = [];
+
+    /// <summary>
     /// Whether the slide brings content of its own, rather than keeping a template slide as it is.
     /// </summary>
+    /// <remarks>
+    /// Removing something changes a template slide as well.
+    /// </remarks>
     public bool HasContent =>
         this.Title.Length > 0 ||
         this.Subtitle.Length > 0 ||
         this.Texts.Any(text => text.Paragraphs.Count > 0) ||
         this.Labels.Any(label => label.Length > 0) ||
         this.Pictures.Count > 0 ||
-        this.Table is not null;
+        this.Table is not null ||
+        this.Removals.Count > 0;
+
+    /// <summary>
+    /// Whether the slide has content for a slot.
+    /// </summary>
+    /// <param name="role">The role of the slot.</param>
+    /// <param name="ordinal">The number of the slot among the slots of its role, starting at 1.</param>
+    public bool Fills(PlaceholderRole role, int ordinal) => role switch
+    {
+        PlaceholderRole.TITLE => this.Title.Length > 0,
+        PlaceholderRole.SUBTITLE => this.Subtitle.Length > 0,
+        PlaceholderRole.TEXT => ordinal >= 1 && ordinal <= this.Texts.Count && this.Texts[ordinal - 1].Paragraphs.Count > 0,
+        PlaceholderRole.LABEL => ordinal >= 1 && ordinal <= this.Labels.Count && this.Labels[ordinal - 1].Length > 0,
+        PlaceholderRole.PICTURE => ordinal >= 1 && ordinal <= this.Pictures.Count,
+        PlaceholderRole.TABLE => ordinal == 1 && this.Table is { Headers.Count: > 0 },
+
+        _ => false,
+    };
+
+    /// <summary>
+    /// Whether the slide removes the content a slot of its template slide holds.
+    /// </summary>
+    /// <param name="slot">The slot.</param>
+    public bool Removes(TemplateSlot slot) => this.Removals.Any(name => PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) && role == slot.Role && ordinal == slot.Ordinal);
 }

@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
 using A = DocumentFormat.OpenXml.Drawing;
+using C = DocumentFormat.OpenXml.Drawing.Charts;
 using P = DocumentFormat.OpenXml.Presentation;
 using P14 = DocumentFormat.OpenXml.Office2010.PowerPoint;
 
@@ -357,19 +358,137 @@ internal sealed record TestElement(Func<uint, SlidePart, OpenXmlElement> Create)
     }
 
     /// <summary>
-    /// A text box: a shape with text which is no placeholder.
+    /// A text box: a shape with text which is no placeholder. Without text, it shows nothing.
     /// </summary>
     public static TestElement TextBox(SlotBounds bounds, string text) => new((id, _) => new P.Shape(
         new P.NonVisualShapeProperties(
             new P.NonVisualDrawingProperties { Id = id, Name = $"Text box {id}" },
             new P.NonVisualShapeDrawingProperties { TextBox = true },
             new P.ApplicationNonVisualDrawingProperties()),
+        new P.ShapeProperties(TransformOf(bounds), new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
+        new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(text))))));
+
+    /// <summary>
+    /// A filled rectangle without text, e.g., a colored area behind a chart.
+    /// </summary>
+    public static TestElement Rectangle(SlotBounds bounds) => new((id, _) => new P.Shape(
+        new P.NonVisualShapeProperties(
+            new P.NonVisualDrawingProperties { Id = id, Name = $"Rectangle {id}" },
+            new P.NonVisualShapeDrawingProperties(),
+            new P.ApplicationNonVisualDrawingProperties()),
         new P.ShapeProperties(
-            new A.Transform2D(
+            TransformOf(bounds),
+            new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle },
+            new A.SolidFill(new A.RgbColorModelHex { Val = "4472C4" })),
+        new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph())));
+
+    /// <summary>
+    /// A straight line.
+    /// </summary>
+    public static TestElement Line(SlotBounds bounds) => new((id, _) => new P.ConnectionShape(
+        new P.NonVisualConnectionShapeProperties(
+            new P.NonVisualDrawingProperties { Id = id, Name = $"Line {id}" },
+            new P.NonVisualConnectorShapeDrawingProperties(),
+            new P.ApplicationNonVisualDrawingProperties()),
+        new P.ShapeProperties(
+            TransformOf(bounds),
+            new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Line },
+            new A.Outline(new A.SolidFill(new A.RgbColorModelHex { Val = "000000" })))));
+
+    /// <summary>
+    /// A picture which is no placeholder, with an image part of its own.
+    /// </summary>
+    public static TestElement Picture(SlotBounds bounds, params byte[] data) => new((id, slidePart) =>
+    {
+        var imagePart = slidePart.AddImagePart("image/png");
+        using (var stream = new MemoryStream(data))
+            imagePart.FeedData(stream);
+
+        return new P.Picture(
+            new P.NonVisualPictureProperties(
+                new P.NonVisualDrawingProperties { Id = id, Name = $"Picture {id}" },
+                new P.NonVisualPictureDrawingProperties(new A.PictureLocks { NoChangeAspect = true }),
+                new P.ApplicationNonVisualDrawingProperties()),
+            new P.BlipFill(new A.Blip { Embed = slidePart.GetIdOfPart(imagePart) }, new A.Stretch(new A.FillRectangle())),
+            new P.ShapeProperties(TransformOf(bounds), new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }));
+    });
+
+    /// <summary>
+    /// A bar chart without data, with a chart part of its own.
+    /// </summary>
+    public static TestElement Chart(SlotBounds bounds) => new((id, slidePart) =>
+    {
+        var chartPart = slidePart.AddNewPart<ChartPart>();
+        using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(CHART_XML)))
+            chartPart.FeedData(stream);
+
+        return new P.GraphicFrame(
+            new P.NonVisualGraphicFrameProperties(
+                new P.NonVisualDrawingProperties { Id = id, Name = $"Chart {id}" },
+                new P.NonVisualGraphicFrameDrawingProperties(),
+                new P.ApplicationNonVisualDrawingProperties()),
+            new P.Transform(
                 new A.Offset { X = bounds.X, Y = bounds.Y },
                 new A.Extents { Cx = bounds.Width, Cy = bounds.Height }),
-            new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
-        new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(text))))));
+            new A.Graphic(new A.GraphicData(new C.ChartReference { Id = slidePart.GetIdOfPart(chartPart) }) { Uri = "http://schemas.openxmlformats.org/drawingml/2006/chart" }));
+    });
+
+    /// <summary>
+    /// Elements grouped into one, which keep their own places within the group.
+    /// </summary>
+    public static TestElement Group(SlotBounds bounds, params TestElement[] children) => new((id, slidePart) =>
+    {
+        var group = new P.GroupShape(
+            new P.NonVisualGroupShapeProperties(
+                new P.NonVisualDrawingProperties { Id = id, Name = $"Group {id}" },
+                new P.NonVisualGroupShapeDrawingProperties(),
+                new P.ApplicationNonVisualDrawingProperties()),
+            new P.GroupShapeProperties(new A.TransformGroup(
+                new A.Offset { X = bounds.X, Y = bounds.Y },
+                new A.Extents { Cx = bounds.Width, Cy = bounds.Height },
+                new A.ChildOffset { X = bounds.X, Y = bounds.Y },
+                new A.ChildExtents { Cx = bounds.Width, Cy = bounds.Height })));
+
+        // The children take IDs of their own, apart from those of the slide's top-level shapes:
+        for (var index = 0; index < children.Length; index++)
+            group.Append(children[index].Create(id * 100 + (uint)index, slidePart));
+
+        return group;
+    });
+
+    private const string CHART_XML = """
+        <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+          <c:chart>
+            <c:plotArea>
+              <c:layout/>
+              <c:barChart>
+                <c:barDir val="col"/>
+                <c:grouping val="clustered"/>
+                <c:axId val="1"/>
+                <c:axId val="2"/>
+              </c:barChart>
+              <c:catAx>
+                <c:axId val="1"/>
+                <c:scaling><c:orientation val="minMax"/></c:scaling>
+                <c:delete val="0"/>
+                <c:axPos val="b"/>
+                <c:crossAx val="2"/>
+              </c:catAx>
+              <c:valAx>
+                <c:axId val="2"/>
+                <c:scaling><c:orientation val="minMax"/></c:scaling>
+                <c:delete val="0"/>
+                <c:axPos val="l"/>
+                <c:crossAx val="1"/>
+              </c:valAx>
+            </c:plotArea>
+          </c:chart>
+        </c:chartSpace>
+        """;
+
+    private static A.Transform2D TransformOf(SlotBounds bounds) => new(
+        new A.Offset { X = bounds.X, Y = bounds.Y },
+        new A.Extents { Cx = bounds.Width, Cy = bounds.Height });
 }
 
 /// <summary>

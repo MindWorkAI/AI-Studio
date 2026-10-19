@@ -200,6 +200,27 @@ public sealed class SlideDeckSpecTests
     }
 
     [Test]
+    public void WhatAnEditedSlideRemovesIsRead()
+    {
+        const string ANSWER = """
+            { "title": "Weekly", "slides": [
+              { "template_slide": 1, "remove": ["element 2", " label 1 ", 3, "Element 2", ""] },
+              { "template_slide": 2, "title": "News", "remove": "element 1" },
+              { "template_slide": 3 }
+            ] }
+            """;
+
+        Assert.That(SlideDeckSpec.TryParse(ANSWER, out var spec, out var issue), Is.True, issue);
+        Assert.Multiple(() =>
+        {
+            Assert.That(spec.Slides[0].Removals, Is.EqualTo(new[] { "element 2", "label 1", "3" }), "Every name counts once, whatever its case.");
+            Assert.That(spec.Slides[1].Removals, Is.EqualTo(new[] { "element 1" }), "A single name is as good as a list.");
+            Assert.That(spec.Slides[2].Removals, Is.Empty);
+            Assert.That(spec.Slides.Select(slide => slide.HasContent), Is.EqualTo(new[] { true, true, false }), "Removing something changes a template slide as well.");
+        });
+    }
+
+    [Test]
     public void TheOutlineShowsWhatTheTemplateSlidesKeep()
     {
         using var file = TestTemplate.Create(
@@ -245,6 +266,28 @@ public sealed class SlideDeckSpecTests
             *Slide 3 of the template, edited*
 
             - Ask us
+            """;
+
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
+    }
+
+    [Test]
+    public void TheOutlineLeavesOutWhatAnEditedSlideRemoves()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides: [new TestSlide(0, (TestPlaceholder.Title(), "Questions"), (new TestPlaceholder(null, 1), "Lorem ipsum"))]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)));
+
+        var deck = new SlideDeckSpec("Weekly", [new SlideSpec(string.Empty, false, "Your questions", string.Empty, [], [], [], null, 1) { Removals = ["text 1"] }]);
+
+        const string EXPECTED = """
+            # Weekly
+
+            ***
+
+            ### Your questions
+
+            *Slide 1 of the template, edited*
             """;
 
         Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));

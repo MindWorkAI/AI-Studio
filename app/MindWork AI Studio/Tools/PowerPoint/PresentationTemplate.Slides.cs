@@ -67,11 +67,13 @@ internal sealed partial class PresentationTemplate
                 continue;
 
             var layoutUri = slidePart.SlideLayoutPart?.Uri;
+            var shapeTree = slide.CommonSlideData?.ShapeTree;
+            var shapesBySlot = new Dictionary<TemplateSlot, OpenXmlElement>();
             List<TemplateSlideContent> contents = [];
             List<TemplateSlot> movedSlots = [];
             if (layoutUri is not null && layoutsByUri.TryGetValue(layoutUri, out var slideLayout))
             {
-                var shapesBySlot = TemplateSlideShapes.SlotShapesOf(slide.CommonSlideData?.ShapeTree, slideLayout);
+                shapesBySlot = TemplateSlideShapes.SlotShapesOf(shapeTree, slideLayout);
                 contents = ContentsOf(shapesBySlot, slideLayout);
                 movedSlots = MovedSlotsOf(shapesBySlot, slideLayout, slideWidth, slideHeight);
             }
@@ -85,6 +87,7 @@ internal sealed partial class PresentationTemplate
                 title.ReplaceLineEndings(" "),
                 contents,
                 movedSlots,
+                ElementsOf(shapeTree, shapesBySlot),
                 slide.Show?.Value == false,
                 IsImprint(title, contents)));
         }
@@ -163,6 +166,118 @@ internal sealed partial class PresentationTemplate
             : null,
 
         _ => null,
+    };
+
+    /// <summary>
+    /// What a slide carries besides the shapes filling the slots of its layout, from back to front.
+    /// </summary>
+    /// <remarks>
+    /// Only what shows counts: footer, slide number and date belong to the presentation, a
+    /// placeholder without text shows nothing, and neither does a shape without text, fill or line.
+    /// The writer finds an element again by its ID, so an element whose ID another one shares on the
+    /// slide is left out rather than risking the wrong one. PowerPoint itself never writes such IDs.
+    /// </remarks>
+    /// <param name="shapeTree">The shape tree of the slide.</param>
+    /// <param name="shapesBySlot">The shapes filling the slots of its layout.</param>
+    private static List<TemplateSlideElement> ElementsOf(P.ShapeTree? shapeTree, IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot)
+    {
+        var slotShapes = shapesBySlot.Values.ToHashSet();
+        var topLevel = shapeTree?.Elements().ToList() ?? [];
+        var idCounts = topLevel.Select(TemplateSlideShapes.ShapeIdOf).OfType<uint>().CountBy(id => id).ToDictionary();
+        var elements = new List<TemplateSlideElement>();
+        foreach (var element in topLevel)
+        {
+            if (slotShapes.Contains(element) || TemplateSlideShapes.ShapeIdOf(element) is not { } id || idCounts[id] > 1 || KindOf(element) is not { } kind)
+                continue;
+
+            elements.Add(new TemplateSlideElement(elements.Count + 1, id, kind, ElementBoundsOf(element), ElementTextOf(element)));
+        }
+
+        return elements;
+    }
+
+    /// <summary>
+    /// What kind of element a top-level element of a slide is.
+    /// </summary>
+    /// <returns>The kind; null when the element shows nothing worth naming, or belongs to the presentation as a whole.</returns>
+    private static TemplateSlideElementKind? KindOf(OpenXmlElement element)
+    {
+        switch (element)
+        {
+            case P.Shape shape:
+                var hasText = TextOf(shape).Length > 0;
+                if (TemplateSlideShapes.PlaceholderOf(shape) is { } placeholder)
+                    return hasText && placeholder.Type?.InnerText is not ("ftr" or "sldNum" or "dt" or "hdr") ? TemplateSlideElementKind.TEXT_BOX : null;
+
+                return hasText ? TemplateSlideElementKind.TEXT_BOX : IsVisible(shape) ? TemplateSlideElementKind.SHAPE : null;
+
+            case P.Picture:
+                return TemplateSlideElementKind.PICTURE;
+
+            case P.GraphicFrame frame:
+                var uri = frame.Graphic?.GraphicData?.Uri?.Value ?? string.Empty;
+                if (uri.EndsWith("/table", StringComparison.Ordinal))
+                    return TemplateSlideElementKind.TABLE;
+
+                if (uri.Contains("chart", StringComparison.OrdinalIgnoreCase))
+                    return TemplateSlideElementKind.CHART;
+
+                return uri.EndsWith("/diagram", StringComparison.Ordinal) ? TemplateSlideElementKind.DIAGRAM : TemplateSlideElementKind.OBJECT;
+
+            case P.GroupShape:
+                return TemplateSlideElementKind.GROUP;
+
+            case P.ConnectionShape:
+                return TemplateSlideElementKind.LINE;
+
+            case AlternateContent:
+                return TemplateSlideElementKind.OBJECT;
+
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
+    /// Whether a shape without text shows anything: a fill or a line, of its own or from its style.
+    /// </summary>
+    private static bool IsVisible(P.Shape shape)
+    {
+        var properties = shape.ShapeProperties;
+        var hasFill = properties?.GetFirstChild<A.NoFill>() is null &&
+                      (properties?.Elements().Any(child => child is A.SolidFill or A.GradientFill or A.BlipFill or A.PatternFill or A.GroupFill) is true || shape.ShapeStyle?.FillReference?.Index?.Value > 0);
+
+        var hasLine = properties?.GetFirstChild<A.Outline>() is { } outline
+            ? outline.GetFirstChild<A.NoFill>() is null
+            : shape.ShapeStyle?.LineReference?.Index?.Value > 0;
+
+        return hasFill || hasLine;
+    }
+
+    /// <summary>
+    /// Where a top-level element of a slide sits.
+    /// </summary>
+    private static SlotBounds? ElementBoundsOf(OpenXmlElement element) => element switch
+    {
+        P.GraphicFrame frame => BoundsOf(frame.Transform?.Offset, frame.Transform?.Extents),
+        P.GroupShape group => BoundsOf(group.GroupShapeProperties?.TransformGroup?.Offset, group.GroupShapeProperties?.TransformGroup?.Extents),
+
+        _ => element.Descendants<A.Transform2D>().FirstOrDefault() is { } transform ? BoundsOf(transform.Offset, transform.Extents) : null,
+    };
+
+    /// <summary>
+    /// The text of a top-level element of a slide: the rows of a table, or every paragraph it holds, those of a group included.
+    /// </summary>
+    /// <remarks>
+    /// Something wrapped for newer versions of PowerPoint comes with a fallback for older ones, which
+    /// would repeat the text; only the first choice counts.
+    /// </remarks>
+    private static string ElementTextOf(OpenXmlElement element) => element switch
+    {
+        P.GraphicFrame => TextOf(element),
+        AlternateContent { FirstChild: { } choice } => ElementTextOf(choice),
+
+        _ => string.Join('\n', element.Descendants<A.Paragraph>().Select(TextOfParagraph).Where(text => text.Trim().Length > 0)).Trim(),
     };
 
     /// <summary>

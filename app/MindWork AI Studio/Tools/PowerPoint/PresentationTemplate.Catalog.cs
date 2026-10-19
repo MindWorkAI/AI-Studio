@@ -15,6 +15,25 @@ internal sealed partial class PresentationTemplate
     private const double LABEL_DISTANCE_SHARE = 0.05;
 
     /// <summary>
+    /// An element overlaps a slot when they share at least this share of the smaller one's area.
+    /// </summary>
+    /// <remarks>
+    /// Edges which merely touch, or a text box reaching a little into a slot, do not count: what the
+    /// model should hear about is an element which a filled slot would cover, or which would cover it.
+    /// </remarks>
+    private const double OVERLAP_AREA_SHARE = 0.2;
+
+    /// <summary>
+    /// An element covering at least this share of the slide is described as a background.
+    /// </summary>
+    private const double BACKGROUND_AREA_SHARE = 0.5;
+
+    /// <summary>
+    /// How much of the text of an element the model reads, which is enough to tell what it is.
+    /// </summary>
+    private const int MAX_EXCERPT_CHARACTERS = 80;
+
+    /// <summary>
     /// Describes the layout families for the model, one line per family.
     /// </summary>
     /// <remarks>
@@ -49,12 +68,13 @@ internal sealed partial class PresentationTemplate
     /// The model learns what each slide says, so that a new slide does not repeat a kept one, and
     /// which slots an edited slide offers, by the layout it shares with the catalog. Where an edited
     /// slide moved or resized a slot, the entry gives its place and capacity on the slide, since
-    /// those of the layout would make the model write too much. Slides the user leaves out are not
+    /// those of the layout would make the model write too much. An edited slide also lists what it
+    /// carries besides its slots, which the model may remove. Slides the user leaves out are not
     /// mentioned at all. The texts come from the template file, so the caller passes them through
     /// the prompt injection filter.
     /// </remarks>
     /// <param name="uses">What the user chose for each slide of the template, by its number.</param>
-    /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 (left, middle, up to 6 lines of about 40 characters, on this slide) "AI Studio: / EINSTEIN:"</c>; empty when the user chose no slide.</returns>
+    /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 (left, middle, up to 6 lines of about 40 characters, on this slide) "AI Studio: / EINSTEIN:"; element 1 (picture, right, middle)</c>; empty when the user chose no slide.</returns>
     public string ToTemplateSlidesPrompt(IReadOnlyList<TemplateSlideUse> uses)
     {
         var list = new StringBuilder();
@@ -77,7 +97,7 @@ internal sealed partial class PresentationTemplate
 
             var slots = family?.Slots ?? slide.Contents.Select(content => content.Slot).ToList();
             var entries = use is TemplateSlideUse.EDIT && family is not null
-                ? this.DescribeSlotsToEdit(slide, slots)
+                ? this.DescribeSlideToEdit(slide, slots)
                 : slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}").ToList();
 
             list.Append(": ");
@@ -91,13 +111,13 @@ internal sealed partial class PresentationTemplate
     }
 
     /// <summary>
-    /// Describes the slots of a slide to edit: what each one holds, and where the slide moved one,
-    /// its place and capacity on the slide.
+    /// Describes a slide to edit: what each slot holds, and where the slide moved one, its place and
+    /// capacity on the slide; then every element the slide carries besides its slots.
     /// </summary>
     /// <param name="slide">The slide.</param>
     /// <param name="slots">The slots of its layout family.</param>
-    /// <returns>One entry per slot which holds content or which the slide moved, in reading order.</returns>
-    private List<string> DescribeSlotsToEdit(TemplateSlide slide, IReadOnlyList<TemplateSlot> slots)
+    /// <returns>One entry per slot which holds content or which the slide moved, in reading order, and one per element.</returns>
+    private List<string> DescribeSlideToEdit(TemplateSlide slide, IReadOnlyList<TemplateSlot> slots)
     {
         var slotsOnSlide = slots.Select(slide.OnSlide).ToList();
         var entries = new List<string>();
@@ -117,7 +137,57 @@ internal sealed partial class PresentationTemplate
                 : $"{this.DescribeSlot(slot, slotsOnSlide, "on this slide")} {DescribeContent(content)}");
         }
 
+        entries.AddRange(slide.Elements.Select(element => this.DescribeElement(element, slotsOnSlide)));
         return entries;
+    }
+
+    /// <summary>
+    /// Describes an element of a slide to edit: its kind, its place, the slots it overlaps, and the
+    /// beginning of its text.
+    /// </summary>
+    /// <remarks>
+    /// The slots include those the slide leaves out, at the place of the layout: filling one of them
+    /// puts a new shape there, on top of whatever the slide shows in its place.
+    /// </remarks>
+    /// <param name="element">The element.</param>
+    /// <param name="slotsOnSlide">The slots of the slide, where the slide puts them.</param>
+    /// <returns>The entry, e.g., <c>element 2 (text box, right, middle, overlaps picture 1) "Image source"</c>.</returns>
+    private string DescribeElement(TemplateSlideElement element, IReadOnlyList<TemplateSlot> slotsOnSlide)
+    {
+        var details = new List<string> { element.Kind.CatalogName() };
+        if (element.Bounds is { } bounds)
+        {
+            if (bounds.Area >= (double)this.SlideWidth * this.SlideHeight * BACKGROUND_AREA_SHARE)
+                details.Add("covering most of the slide");
+            else
+            {
+                details.Add(this.DescribePlace(bounds));
+                var overlapped = slotsOnSlide.Where(slot => Overlaps(bounds, slot.Bounds)).Select(slot => NameOf(slot, slotsOnSlide)).ToList();
+                if (overlapped.Count > 0)
+                    details.Add($"overlaps {string.Join(" and ", overlapped)}");
+            }
+        }
+
+        var description = $"{element.Name} ({string.Join(", ", details)})";
+        if (element.Text.Length == 0)
+            return description;
+
+        var text = element.Text.ReplaceLineEndings(" / ");
+        if (text.Length > MAX_EXCERPT_CHARACTERS)
+            text = $"{text[..MAX_EXCERPT_CHARACTERS].TrimEnd()}…";
+
+        return $"{description} \"{text}\"";
+    }
+
+    /// <summary>
+    /// Whether an element and a slot share enough of their areas to be in each other's way.
+    /// </summary>
+    private static bool Overlaps(SlotBounds element, SlotBounds slot)
+    {
+        // A straight line has no area, so it counts as one EMU thick:
+        var thick = element with { Width = Math.Max(1, element.Width), Height = Math.Max(1, element.Height) };
+        var shared = thick.IntersectionArea(slot);
+        return shared > 0 && shared >= OVERLAP_AREA_SHARE * Math.Min(thick.Area, slot.Area);
     }
 
     private static string DescribeContent(TemplateSlideContent content) => content.Slot.Role is PlaceholderRole.PICTURE

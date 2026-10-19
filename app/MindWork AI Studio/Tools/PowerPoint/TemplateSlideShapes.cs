@@ -52,6 +52,18 @@ internal static class TemplateSlideShapes
     private static bool HoldsTable(OpenXmlElement element) => element is P.GraphicFrame frame && frame.Graphic?.GraphicData?.GetFirstChild<A.Table>() is not null;
 
     /// <summary>
+    /// The ID of a top-level element of a slide: a shape, a picture, a graphic frame, a group, a
+    /// connector, or something wrapped for newer versions of PowerPoint.
+    /// </summary>
+    /// <returns>The ID, or null for anything else, e.g., the properties of the shape tree itself.</returns>
+    public static uint? ShapeIdOf(OpenXmlElement element) => element switch
+    {
+        P.Shape or P.Picture or P.GraphicFrame or P.GroupShape or P.ConnectionShape or AlternateContent => element.Descendants<P.NonVisualDrawingProperties>().FirstOrDefault()?.Id?.Value,
+
+        _ => null,
+    };
+
+    /// <summary>
     /// The placeholder a shape, a picture or a table of a slide fills; null for anything else.
     /// </summary>
     public static P.PlaceholderShape? PlaceholderOf(OpenXmlElement element) => element switch

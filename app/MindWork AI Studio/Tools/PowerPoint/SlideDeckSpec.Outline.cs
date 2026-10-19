@@ -14,7 +14,7 @@ internal sealed partial record SlideDeckSpec
     /// a heading above a text comes before that text, and the source of a picture after the picture.
     ///
     /// A slide taken from the template says so, and shows what it keeps of the template: all of it
-    /// when kept unchanged, and every slot the model left empty when edited.
+    /// when kept unchanged, and every slot the model neither filled nor removed when edited.
     /// </remarks>
     /// <param name="template">The template the deck was written for, which gives the reading order and the template slides.</param>
     /// <param name="pictureNames">The names of the attached pictures, in the order the model numbered them.</param>
@@ -48,7 +48,7 @@ internal sealed partial record SlideDeckSpec
                 if (AppendSlot(outline, slide, slot, pictureNames))
                     continue;
 
-                if (templateSlide.Contents.FirstOrDefault(content => content.Slot.Role == slot.Role && content.Slot.Ordinal == slot.Ordinal) is { } templateContent)
+                if (!slide.Removes(slot) && templateSlide.Contents.FirstOrDefault(content => content.Slot.Role == slot.Role && content.Slot.Ordinal == slot.Ordinal) is { } templateContent)
                     AppendTemplateContent(outline, templateContent);
             }
         }

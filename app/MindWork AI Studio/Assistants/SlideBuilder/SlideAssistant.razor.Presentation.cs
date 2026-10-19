@@ -290,7 +290,7 @@ public partial class SlideAssistant
         if (this.ChosenTemplateImprint is { } imprint)
         {
             imprintRule = this.TemplateSlideUseOf(imprint.Number) is TemplateSlideUse.EDIT
-                ? $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation. Change only its topic to the title of the presentation and its date to {DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, in the format the slide uses; keep every other line exactly as it is, in its language."
+                ? $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation. Change only its topic to the title of the presentation and its date to {DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, in the format the slide uses; keep every other line exactly as it is, in its language, and remove nothing."
                 : $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation.";
         }
 
@@ -299,13 +299,25 @@ public partial class SlideAssistant
                  # Template slides
                  The user chose slides of the template to use in the presentation. TEMPLATE_SLIDES lists them in their order, each one either to keep unchanged or to edit.
                      - Write a slide to keep as { "template_slide": <its number> } and nothing else. Add "starts_chapter": true where it opens a chapter.
-                     - Write a slide to edit with "template_slide": <its number> and its new content in the usual fields, which fill the slots its entry names. Leave out "layout": the slide keeps its own. A slot you leave out keeps the content of the template slide.
+                     - Write a slide to edit with "template_slide": <its number> and its new content in the usual fields, which fill the slots its entry names. Leave out "layout": the slide keeps its own. A slot you neither fill nor remove keeps the content of the template slide, and so does every element you do not remove.
                      - Where an entry gives a slot its place and size "on this slide", the slide moved or resized it, e.g., to make room for a picture of its own. Stay within the lines and characters stated there rather than those of the layout.
+                     - An entry to edit also lists the elements the slide carries besides its slots, e.g., pictures, text boxes, charts, or tables of its own, with their place and the slots they overlap. List what the slide no longer shows in "remove", by the names the entry uses, e.g., "remove": ["element 2", "label 1"].
+                     - Remove what does not fit the new content: samples and hints of the template, e.g., placeholder pictures, sample texts such as "Lorem ipsum", or a request to name the source of a picture; old content of a slot which no longer fits; and every element which overlaps a slot you fill, unless it covers most of the slide as a background. Keep what still belongs to the slide, e.g., a logo or a decoration. Never fill and remove the same slot, and never remove the title.
                      - Use every listed slide exactly once, in the listed order. Add new slides before, between, and after them, wherever the content calls for it.
                      - Do not repeat on a new slide what a kept slide says already.{{imprintRule}}
-                     - Example: "slides": [{ "template_slide": 1 }, { "layout": "L3", "title": "..." }, { "template_slide": 3, "title": "...", "texts": [["..."]] }]
+                     - Example: "slides": [{ "template_slide": 1 }, { "layout": "L3", "title": "..." }, { "template_slide": 3, "title": "...", "texts": [["..."]], "remove": ["element 1"] }]
                  """;
     }
+
+    /// <summary>
+    /// The rule for the field listing what an edited template slide removes; empty when the user
+    /// edits no template slide, so that the model does not hear of the field at all.
+    /// </summary>
+    private string PromptRemoveRule() => this.template is not null && this.templateSlideUses.Any(use => use is TemplateSlideUse.EDIT)
+        ? """
+               - "remove" lists the slots and elements a template slide to edit no longer shows, by the names TEMPLATE_SLIDES uses. Leave it out on every other slide.
+           """
+        : string.Empty;
 
     /// <summary>
     /// The slides of the template the user chose, with what they hold, for the user's request.

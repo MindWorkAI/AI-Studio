@@ -109,7 +109,27 @@ internal sealed partial record SlideDeckSpec
         (slide.Labels ?? []).Select(TextOf).ToList(),
         slide.Pictures ?? [],
         slide.Table is null ? null : ToTable(slide.Table),
-        slide.TemplateSlide);
+        slide.TemplateSlide)
+    {
+        Removals = ToRemovals(slide.Remove),
+    };
+
+    /// <summary>
+    /// The names of what a slide removes from its template slide: a list of names, or a single one,
+    /// each named once.
+    /// </summary>
+    private static List<string> ToRemovals(JsonElement? remove)
+    {
+        List<JsonElement> names = remove switch
+        {
+            { ValueKind: JsonValueKind.Array } list => list.EnumerateArray().ToList(),
+            { } single => [single],
+
+            _ => [],
+        };
+
+        return names.Select(TextOf).Where(name => name.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+    }
 
     private static SlideTextBlock ToTextBlock(JsonElement element) => element.ValueKind switch
     {
@@ -218,6 +238,8 @@ internal sealed partial record SlideDeckSpec
         public List<int>? Pictures { get; set; }
 
         public TableDto? Table { get; set; }
+
+        public JsonElement? Remove { get; set; }
     }
 
     private sealed class TableDto

@@ -329,6 +329,81 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void TheElementsOfASlideAreReadFromBackToFront()
+    {
+        var line = new SlotBounds(838_200, 6_000_000, 5_000_000, 0);
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs"), (new TestPlaceholder(P.PlaceholderValues.Footer, 12), "Team"))
+                {
+                    Elements =
+                    [
+                        TestElement.Table(FULL_TEXT, ["Item"], ["Fuel"]),
+                        TestElement.Picture(RIGHT_PICTURE, 1, 2, 3),
+                        TestElement.TextBox(LABEL_BELOW_RIGHT_PICTURE, "Image by somebody"),
+                        TestElement.TextBox(LABEL_ABOVE_FULL_TEXT, string.Empty),
+                        TestElement.Rectangle(RIGHT_TEXT),
+                        TestElement.Line(line),
+                        TestElement.Group(LEFT_TEXT, TestElement.TextBox(LEFT_TEXT, "A"), TestElement.TextBox(LEFT_TEXT, "B")),
+                        TestElement.Table(RIGHT_TEXT, ["Second"], ["Table"]),
+                        TestElement.Chart(LEFT_TEXT),
+                    ],
+                },
+            ]),
+            new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
+
+        var elements = PresentationTemplate.Read(file).Slides[0].Elements;
+        Assert.Multiple(() =>
+        {
+            Assert.That(elements.Select(element => (element.Number, element.ShapeId, element.Kind, element.Text)), Is.EqualTo(new[]
+            {
+                (1, 5U, TemplateSlideElementKind.PICTURE, string.Empty),
+                (2, 6U, TemplateSlideElementKind.TEXT_BOX, "Image by somebody"),
+                (3, 8U, TemplateSlideElementKind.SHAPE, string.Empty),
+                (4, 9U, TemplateSlideElementKind.LINE, string.Empty),
+                (5, 10U, TemplateSlideElementKind.GROUP, "A\nB"),
+                (6, 11U, TemplateSlideElementKind.TABLE, "Second\nTable"),
+                (7, 12U, TemplateSlideElementKind.CHART, string.Empty),
+            }), "The footer belongs to the presentation, the empty text box shows nothing, and the first table is the content of the table slot.");
+            Assert.That(elements.Select(element => element.Bounds), Is.EqualTo(new SlotBounds?[] { RIGHT_PICTURE, LABEL_BELOW_RIGHT_PICTURE, RIGHT_TEXT, line, LEFT_TEXT, RIGHT_TEXT with { Height = 2 * 370_840 }, LEFT_TEXT }));
+            Assert.That(elements.Select(element => element.Name), Has.Exactly(1).EqualTo("element 3"));
+        });
+    }
+
+    [Test]
+    public void AnEntryToEditListsTheElementsOfTheSlide()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Rocket"), (new TestPlaceholder(null, 1), "Reusable"))
+                {
+                    Elements =
+                    [
+                        TestElement.Picture(RIGHT_PICTURE, 1, 2, 3),
+                        TestElement.TextBox(LABEL_BELOW_RIGHT_PICTURE, "Bildquelle hier angeben"),
+                        TestElement.TextBox(new SlotBounds(1_000_000, 3_000_000, 3_000_000, 500_000), "Old note"),
+                        TestElement.Rectangle(new SlotBounds(0, 0, TestTemplate.SLIDE_WIDTH, TestTemplate.SLIDE_HEIGHT)),
+                    ],
+                },
+                new TestSlide(0, (TestPlaceholder.Title(), "Chart")) { Elements = [TestElement.Chart(LEFT_TEXT)] },
+            ]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, LEFT_TEXT)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT, TemplateSlideUse.EDIT]), Is.EqualTo(
+                """
+                - Template slide 1, to edit, with the slots of layout L1: title "Rocket"; text 1 "Reusable"; element 1 (picture, right, middle); element 2 (text box, right, bottom) "Bildquelle hier angeben"; element 3 (text box, left, middle, overlaps text 1) "Old note"; element 4 (shape, covering most of the slide)
+                - Template slide 2, to edit, with the slots of layout L1: title "Chart"; element 1 (chart, left, middle, overlaps text 1)
+                """.ReplaceLineEndings("\n")), "A slot the slide leaves out takes the place of the layout, where filling it would cover the chart.");
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Rocket\"; text 1 \"Reusable\""), "A slide to keep has nothing to remove.");
+        });
+    }
+
+    [Test]
     public void ASlideOnALayoutWithoutRoomForContentBelongsToNoFamily()
     {
         using var file = TestTemplate.Create(

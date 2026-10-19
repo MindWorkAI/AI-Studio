@@ -539,6 +539,70 @@ public sealed class PresentationWriterTests
         });
     }
 
+    [Test]
+    public async Task AnEditedSlideLosesWhatTheModelRemoves()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Edit(1, texts: [Text(new SlideParagraph("A new release", 0))]) with { Removals = ["element 1", "element 2", "label 1"] }]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_ELEMENTS);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "A new release" }));
+            Assert.That(slide.Slide!.Descendants<P.Picture>(), Is.Empty);
+            Assert.That(slide.ImageParts, Is.Empty, "The picture leaves the file along with its shape.");
+            Assert.That(slide.Slide.Descendants<P.Shape>().Select(shape => shape.TextBody?.InnerText), Has.None.EqualTo("Bildquelle hier angeben"));
+            Assert.That(slide.Slide.Descendants<P.PlaceholderShape>().Where(placeholder => placeholder.Index?.Value == 17), Is.Empty, "The label of the template is gone, with its sample text.");
+            Assert.That(slide.Slide.Descendants<A.SolidFill>().Count(), Is.EqualTo(1), "What the model does not remove stays.");
+            Assert.That(slide.ChartParts.Count(), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task RemovingAChartRemovesItsPart()
+    {
+        var deck = new SlideDeckSpec("Weekly", [Edit(1) with { Removals = ["element 4"] }]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_ELEMENTS);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slide.Slide!.Descendants<P.GraphicFrame>(), Is.Empty);
+            Assert.That(slide.ChartParts, Is.Empty);
+            Assert.That(slide.ImageParts.Count(), Is.EqualTo(1), "The picture nobody removed keeps its part.");
+        });
+    }
+
+    [Test]
+    public async Task RemovingAnAnimatedShapeDropsTheAnimationsOfItsSlide()
+    {
+        using var templateFile = TestTemplate.Create(TEMPLATE_WITH_ELEMENTS with { Slides = [TEMPLATE_WITH_ELEMENTS.Slides![0], TEMPLATE_WITH_ELEMENTS.Slides[0]] }, Layouts());
+        using (var templateDocument = PresentationDocument.Open(templateFile, true))
+        {
+            // The text box naming the source of the picture fades in on both slides:
+            foreach (var templateSlide in SlidesOf(templateDocument))
+                templateSlide.Slide!.Timing = new P.Timing(new P.BuildList(new P.BuildParagraph { ShapeId = "6", GroupId = 0U }));
+        }
+
+        var deck = new SlideDeckSpec("Weekly", [Edit(1) with { Removals = ["element 2"] }, Edit(2) with { Removals = ["element 3"] }]);
+        var (file, _) = await WriteFromAsync(templateFile, deck, OPTIONS);
+        using var document = PresentationDocument.Open(file, false);
+        var slides = SlidesOf(document);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slides[0].Slide!.Timing, Is.Null, "An animation of a shape which is gone would break the slide.");
+            Assert.That(slides[1].Slide!.Timing, Is.Not.Null, "The animated shape is still there.");
+        });
+    }
+
     /// <summary>
     /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
     /// and one the imprint, and a hint nobody keeps.
@@ -569,6 +633,25 @@ public sealed class PresentationWriterTests
         new TestSlide(6, (TestPlaceholder.Title(), "Plan"), (new TestPlaceholder(P.PlaceholderValues.Table, 11), string.Empty))
         {
             Elements = [TestElement.Table(TestTemplate.MASTER_BODY_BOUNDS, ["Step", "Date"], ["Test", "2029"])],
+        },
+    ]);
+
+    /// <summary>
+    /// A slide of <see cref="Layouts"/> on the content layout with a sample label, and with
+    /// elements of its own: a picture (element 1), a text box naming its source (element 2), a
+    /// colored rectangle (element 3), and a chart (element 4).
+    /// </summary>
+    private static readonly TestTemplateOptions TEMPLATE_WITH_ELEMENTS = new(Slides:
+    [
+        new TestSlide(2, (TestPlaceholder.Title(), "News"), (new TestPlaceholder(P.PlaceholderValues.Body, 17), "Lorem ipsum"), (new TestPlaceholder(null, 1), "AI Studio:\nEINSTEIN:"))
+        {
+            Elements =
+            [
+                TestElement.Picture(RIGHT_PICTURE, 7, 8, 9),
+                TestElement.TextBox(new SlotBounds(6_200_000, 5_400_000, 5_150_000, 300_000), "Bildquelle hier angeben"),
+                TestElement.Rectangle(new SlotBounds(0, 6_000_000, TestTemplate.SLIDE_WIDTH, 300_000)),
+                TestElement.Chart(LEFT_TEXT),
+            ],
         },
     ]);
 

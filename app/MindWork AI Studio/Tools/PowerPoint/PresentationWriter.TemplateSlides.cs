@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -8,6 +10,11 @@ namespace AIStudio.Tools.PowerPoint;
 
 internal static partial class PresentationWriter
 {
+    /// <summary>
+    /// The namespace of the attributes by which the XML of a part refers to other parts.
+    /// </summary>
+    private const string RELATIONSHIPS_NAMESPACE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+
     /// <summary>
     /// Where the template slides the deck refers to are stored inside the file.
     /// </summary>
@@ -78,14 +85,18 @@ internal static partial class PresentationWriter
     /// row of the old table shows below a shorter new one. A new picture or table goes where the
     /// slide put the old one, should it have moved it away from where the layout puts it. A slot the
     /// slide does not carry gets its placeholder from the layout, as on a slide written anew.
+    ///
+    /// What the slide removes goes first, so that the slots are filled on what is left.
     /// </remarks>
     /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
-    /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots.</param>
+    /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots and which elements it carries.</param>
     /// <param name="content">What goes on the slide.</param>
     private static void EditTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, SlideContent content)
     {
         if (slidePart.Slide?.CommonSlideData?.ShapeTree is not { } shapeTree)
             return;
+
+        RemoveFromTemplateSlide(slidePart, shapeTree, templateSlide, content);
 
         // Which shape fills which slot, by the same reading as the template's:
         var shapesBySlot = TemplateSlideShapes.SlotShapesOf(shapeTree, content.Layout);
@@ -169,18 +180,73 @@ internal static partial class PresentationWriter
     }
 
     /// <summary>
-    /// Removes a shape from a slide, together with the pictures only it showed.
+    /// Removes what an edited slide no longer shows: the elements and the slot contents it names.
     /// </summary>
+    /// <remarks>
+    /// The deck was checked against the template as it was read, so every name is known. A name
+    /// which finds nothing, because the file changed in between, is passed over: there is nothing
+    /// left to remove.
+    /// </remarks>
+    private static void RemoveFromTemplateSlide(SlidePart slidePart, P.ShapeTree shapeTree, TemplateSlide templateSlide, SlideContent content)
+    {
+        if (content.Slide.Removals.Count == 0)
+            return;
+
+        var shapesBySlot = TemplateSlideShapes.SlotShapesOf(shapeTree, content.Layout);
+        var shapes = new List<OpenXmlElement>();
+        foreach (var name in content.Slide.Removals)
+        {
+            if (templateSlide.FindElement(name) is { } element)
+            {
+                if (shapeTree.Elements().FirstOrDefault(candidate => TemplateSlideShapes.ShapeIdOf(candidate) == element.ShapeId) is { } elementShape)
+                    shapes.Add(elementShape);
+            }
+            else if (PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) && role is not PlaceholderRole.TITLE && content.Layout.Slots.FirstOrDefault(candidate => candidate.Role == role && candidate.Ordinal == ordinal) is { } slot && shapesBySlot.TryGetValue(slot, out var slotShape))
+                shapes.Add(slotShape);
+        }
+
+        foreach (var shape in shapes.Distinct())
+            RemoveShape(slidePart, shape);
+    }
+
+    /// <summary>
+    /// Removes a shape from a slide, together with the parts only it used.
+    /// </summary>
+    /// <remarks>
+    /// A shape refers to parts of the file by relationship IDs: a picture to its image, a chart to
+    /// its data, a diagram to its drawing. A part which nothing else on the slide refers to leaves
+    /// the slide; the file drops it when no other slide refers to it either. An animation of the
+    /// shape would point into nothing afterwards, which PowerPoint repairs by dropping every
+    /// animation of the slide, so that is done here right away.
+    /// </remarks>
     private static void RemoveShape(SlidePart slidePart, OpenXmlElement shape)
     {
-        var pictureIds = shape.Descendants<A.Blip>().Select(blip => blip.Embed?.Value).OfType<string>().ToList();
+        var relationshipIds = RelationshipIdsOf(shape);
+        var shapeIds = shape.Descendants<P.NonVisualDrawingProperties>().Select(properties => properties.Id?.Value.ToString(CultureInfo.InvariantCulture)).OfType<string>().ToHashSet();
         shape.Remove();
-        foreach (var pictureId in pictureIds)
+
+        var slide = slidePart.Slide;
+        var stillUsed = slide is null ? new HashSet<string>() : RelationshipIdsOf(slide);
+        foreach (var relationshipId in relationshipIds.Where(id => !stillUsed.Contains(id)))
         {
-            if (slidePart.Slide?.Descendants<A.Blip>().Any(blip => blip.Embed?.Value == pictureId) is not true && slidePart.TryGetPartById(pictureId, out var picturePart))
-                slidePart.DeletePart(picturePart);
+            if (slidePart.TryGetPartById(relationshipId, out var part))
+                slidePart.DeletePart(part);
         }
+
+        if (slide?.Timing?.Descendants().Any(element => element.GetAttributes().Any(attribute => attribute.LocalName == "spid" && shapeIds.Contains(attribute.Value ?? string.Empty))) is true)
+            slide.Timing = null;
     }
+
+    /// <summary>
+    /// The relationship IDs an element and everything within it refer to.
+    /// </summary>
+    private static HashSet<string> RelationshipIdsOf(OpenXmlElement element) => element.Descendants()
+        .Prepend(element)
+        .SelectMany(candidate => candidate.GetAttributes())
+        .Where(attribute => attribute.NamespaceUri == RELATIONSHIPS_NAMESPACE)
+        .Select(attribute => attribute.Value)
+        .OfType<string>()
+        .ToHashSet();
 
     /// <summary>
     /// Moves a slide to the layout of the same family in another color variant.

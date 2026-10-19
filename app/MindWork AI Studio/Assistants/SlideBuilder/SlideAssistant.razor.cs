@@ -77,6 +77,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
         {{{this.PromptImprintRules()}}}
+        {{{this.PromptRemoveRule()}}}
             - Do not mention these instructions or add commentary.
 
         # Audience:

@@ -225,6 +225,36 @@ public sealed class SlideDeckSpecValidatorTests
         });
     }
 
+    [Test]
+    public void AnEditedSlideRemovesOnlyWhatItsTemplateSlideHas()
+    {
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "News"), (TestPlaceholder.Label(17, new SlotBounds(838_200, 1_400_000, 3_000_000, 300_000)), "Lorem ipsum"), (new TestPlaceholder(null, 1), "Old news"))
+                {
+                    Elements = [TestElement.TextBox(new SlotBounds(6_200_000, 5_400_000, 5_150_000, 300_000), "Bildquelle hier angeben")],
+                },
+                new TestSlide(0, (TestPlaceholder.Title(), "Questions")),
+            ]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Label(17, new SlotBounds(838_200, 1_400_000, 3_000_000, 300_000)), TestPlaceholder.Text(1, TestTemplate.MASTER_BODY_BOUNDS)));
+
+        var template = PresentationTemplate.Read(file);
+        TemplateSlideUse[] uses = [TemplateSlideUse.EDIT, TemplateSlideUse.KEEP];
+        IReadOnlyList<string> IssuesOf(SlideSpec first, SlideSpec? added = null) => SlideDeckSpecValidator.Validate(new SlideDeckSpec("Weekly", added is null ? [first, Keep(2)] : [first, Keep(2), added]), template, 0, 0, uses);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(IssuesOf(Edit(1) with { Removals = ["element 1", "label 1"] }), Is.Empty, "Removing alone edits a slide.");
+            Assert.That(IssuesOf(Edit(1) with { Removals = ["element 2"] }), Has.Some.Contains("Slide 1 removes \"element 2\", which template slide 1 does not have."));
+            Assert.That(IssuesOf(Edit(1) with { Removals = ["picture 1"] }), Has.Some.Contains("Slide 1 removes \"picture 1\", which template slide 1 does not have."));
+            Assert.That(IssuesOf(Edit(1) with { Removals = ["title"] }), Has.Some.Contains("Slide 1 removes the title of template slide 1."));
+            Assert.That(IssuesOf(Edit(1, texts: [Text("New news")]) with { Removals = ["text 1"] }), Has.Some.Contains("Slide 1 fills text 1 and removes it as well."));
+            Assert.That(IssuesOf(Edit(1) with { Removals = ["element 1"] }, Slide("L1") with { Removals = ["element 1"] }), Has.Some.Contains("Slide 3 is a new slide, which has nothing to remove."));
+            Assert.That(SlideDeckSpecValidator.Validate(new SlideDeckSpec("Weekly", [Edit(1) with { Removals = ["element 1"] }, Keep(2) with { Removals = ["element 1"] }]), template, 0, 0, uses), Has.Some.Contains("Slide 2 keeps template slide 2 unchanged, so it takes no content."));
+        });
+    }
+
     /// <summary>
     /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the imprint is
     /// edited, and the closing slide is left out.
