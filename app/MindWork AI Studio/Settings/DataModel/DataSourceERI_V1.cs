@@ -96,7 +96,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
     {
-        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        var window = RetrievalPaging.GetExactWindowSize(page, this.MaxMatches);
         if (this.MaxMatches == 0)
             return RetrievalPage.EMPTY;
 
@@ -107,11 +107,15 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         // are only as stable as the order in which the server returns its matches. A server which
         // returns fewer matches than asked for ends the paging early, which errs on the safe side.
         //
+        // The window holds no match beyond the page: a server may refuse to return more matches than
+        // its retrieval process allows, and the first page must not ask for more than the classic
+        // RAG process does. Every further page still asks for more, as ERI v1 knows no offset.
+        //
         var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
         if (contexts is null)
             return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
 
-        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
+        var (pageContexts, hasMore) = RetrievalPaging.CutExact(contexts, page, this.MaxMatches);
         return new RetrievalPage(pageContexts, hasMore);
     }
 

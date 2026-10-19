@@ -142,10 +142,70 @@ public sealed class RetrievalPagingTests
         });
     }
 
+    [TestCase(1)]
+    [TestCase(10)]
+    [TestCase(500)]
+    public void AnERIServerIsAskedForNoMoreThanTheConfiguredMatchesOnTheFirstPage(int pageSize)
+    {
+        Assert.That(RetrievalPaging.GetExactWindowSize(1, pageSize), Is.EqualTo(pageSize), "A server may refuse more matches than its retrieval process allows; the classic RAG process asks for exactly this many.");
+    }
+
+    [Test]
+    public void AnERIServerIsAskedForThePageAndAllPagesBeforeIt()
+    {
+        Assert.That(RetrievalPaging.GetExactWindowSize(3, PAGE_SIZE), Is.EqualTo(3 * PAGE_SIZE), "ERI v1 knows no offset, but the window needs no match beyond the page.");
+    }
+
+    [Test]
+    public void AFullExactWindowMeansThereMayBeMore()
+    {
+        var (matches, hasMore) = CutExact(["a", "b", "c", "d", "e"], page: 1);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(matches, Is.EqualTo(new[] { "a", "b" }));
+            Assert.That(hasMore, Is.True, "Without the match beyond the page, a full window is the only hint that there is more.");
+        });
+    }
+
+    [Test]
+    public void AnExactWindowWhichIsNotFullEndsThePaging()
+    {
+        var (matches, hasMore) = CutExact(["a", "b", "c"], page: 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(matches, Is.EqualTo(new[] { "c" }));
+            Assert.That(hasMore, Is.False, "The server found fewer than asked for, so it has nothing more.");
+        });
+    }
+
+    [Test]
+    public void TheLastPageOfAnExactWindowHasNothingAfterIt()
+    {
+        var lastPage = RetrievalPaging.GetLastPage(PAGE_SIZE);
+        var everything = Enumerable.Range(0, RetrievalPaging.MAX_RESULT_WINDOW).Select(number => $"chunk-{number}").ToArray();
+
+        Assert.That(CutExact(everything, lastPage).HasMore, Is.False, "No page beyond this one can be retrieved, however much the server found.");
+    }
+
+    [Test]
+    public void AnExactWindowOfNoMatchesPerPageHasNothingMore()
+    {
+        Assert.That(RetrievalPaging.CutExact(Array.Empty<string>(), 1, 0).HasMore, Is.False);
+    }
+
     private static (IReadOnlyList<string> Matches, bool HasMore) Merge(string[] first, string[] second, int page)
     {
         // A channel never returns more than it is asked for:
         var window = RetrievalPaging.GetWindowSize(page, PAGE_SIZE);
         return RetrievalPaging.Merge(first.Take(window).ToList(), second.Take(window).ToList(), match => match, page, PAGE_SIZE);
+    }
+
+    private static (IReadOnlyList<string> Matches, bool HasMore) CutExact(string[] matches, int page)
+    {
+        // An ERI server never returns more than it is asked for:
+        var window = RetrievalPaging.GetExactWindowSize(page, PAGE_SIZE);
+        return RetrievalPaging.CutExact(matches.Take(window).ToList(), page, PAGE_SIZE);
     }
 }

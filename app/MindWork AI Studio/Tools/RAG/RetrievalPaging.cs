@@ -8,7 +8,8 @@ namespace AIStudio.Tools.RAG;
 /// Neither the vector store nor the keyword index knows an offset, and neither needs one: page p
 /// of size k is cut from the first p·k + 1 matches of every channel. The one match beyond the
 /// page tells whether a next page is worth asking for. The first page is therefore exactly what a
-/// search for k matches always returned.
+/// search for k matches always returned. An ERI server gets no such match beyond the page, see
+/// <see cref="GetExactWindowSize"/>.
 /// </para>
 /// <para>
 /// Staying without state is not a shortcut but a requirement: tool results do not travel into
@@ -44,6 +45,21 @@ public static class RetrievalPaging
     public static int GetWindowSize(int page, int pageSize) => GetPageEnd(page, pageSize) + 1;
 
     /// <summary>
+    /// How many matches a channel has to deliver for the given page, without the one match beyond it.
+    /// </summary>
+    /// <remarks>
+    /// An ERI server is such a channel: it may refuse to return more matches than its retrieval
+    /// process allows, which often is the very number configured here. Hence, its first page asks
+    /// for exactly what the classic RAG process asks for. Whether there is more can only be told
+    /// from a full window then, which <see cref="CutExact{T}"/> does.
+    /// </remarks>
+    /// <param name="page">The page, starting at 1.</param>
+    /// <param name="pageSize">The number of matches per page.</param>
+    /// <returns>The size of the window, i.e., the page and all pages before it.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
+    public static int GetExactWindowSize(int page, int pageSize) => GetPageEnd(page, pageSize);
+
+    /// <summary>
     /// Cuts one page out of what a single channel found.
     /// </summary>
     /// <param name="matches">What the channel found, the most relevant first, fetched with the window of this page.</param>
@@ -58,6 +74,27 @@ public static class RetrievalPaging
         var pageMatches = matches.Skip(start).Take(pageSize).ToList();
 
         return (pageMatches, HasMore(page, pageSize, matches.Count));
+    }
+
+    /// <summary>
+    /// Cuts one page out of what a single channel found, fetched with <see cref="GetExactWindowSize"/>.
+    /// </summary>
+    /// <remarks>
+    /// Without the match beyond the page, a full window is the only hint that there is more. It
+    /// may turn out wrong and cost one empty page, which is the safe side: assuming nothing more
+    /// would hide matches.
+    /// </remarks>
+    /// <param name="matches">What the channel found, the most relevant first, fetched with the exact window of this page.</param>
+    /// <param name="page">The page, starting at 1.</param>
+    /// <param name="pageSize">The number of matches per page.</param>
+    /// <returns>The matches of this page, and whether the next page is worth asking for.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
+    public static (IReadOnlyList<T> Matches, bool HasMore) CutExact<T>(IReadOnlyList<T> matches, int page, int pageSize)
+    {
+        var (pageMatches, _) = Cut(matches, page, pageSize);
+        var isWindowFull = pageSize > 0 && matches.Count >= GetPageEnd(page, pageSize);
+
+        return (pageMatches, page < GetLastPage(pageSize) && isWindowFull);
     }
 
     /// <summary>
