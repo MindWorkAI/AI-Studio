@@ -46,6 +46,7 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, "visualBriefings/", DataBackupEntryKind.VISUAL_BRIEFINGS),
         new(DataBackupLocation.DATA_DIRECTORY, "databases/sqlite/", DataBackupEntryKind.DATA_SOURCE_INDEX),
         new(DataBackupLocation.DATA_DIRECTORY, "databases/vector_database/stores/", DataBackupEntryKind.VECTOR_STORES),
+        new(DataBackupLocation.DATA_DIRECTORY, "mediaTranscripts/", DataBackupEntryKind.MEDIA_TRANSCRIPTS),
 
         new(DataBackupLocation.CONFIG_DIRECTORY, "settings.v*.json", DataBackupEntryKind.SETTINGS_OF_OTHER_VERSIONS),
         new(DataBackupLocation.DATA_DIRECTORY, "plugins/.internal/", DataBackupEntryKind.BUILT_IN_PLUGINS),

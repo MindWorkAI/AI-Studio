@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using AIStudio.Settings.DataModel;
 
 using Lua;
@@ -18,7 +20,18 @@ public sealed class DataSourceConfigurationObjectDescriptor : PluginConfiguratio
     public override PluginConfigurationObjectType Type => PluginConfigurationObjectType.DATA_SOURCE;
 
     /// <inheritdoc />
-    public override bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) => PluginConfigurationObject.TryParseDataSources(mainTable, configPluginId, configObjects, dryRun);
+    public override string LuaTableName => "DATA_SOURCES";
+
+    /// <inheritdoc />
+    public override bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) => PluginConfigurationObject.TryParseDataSources(this, mainTable, configPluginId, configObjects, dryRun);
+
+    /// <inheritdoc />
+    public override bool TryParseSnippet(LuaTable table, [NotNullWhen(true)] out IConfigurationObject? configObject)
+    {
+        var isValid = DataSourceERI_V1.TryParseConfiguration(1, table, Guid.Empty, dryRun: true, out var dataSource);
+        configObject = isValid ? dataSource : null;
+        return isValid;
+    }
 
     /// <inheritdoc />
     /// <remarks>

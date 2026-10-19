@@ -53,6 +53,14 @@ public static class DataSourceSecurityTrustExtensions
         return provider.UsedLLMProvider.GetConfidence(settingsManager).Level;
     }
 
+    public static ConfidenceLevel GetConfidenceLevel(this TranscriptionProvider provider, SettingsManager settingsManager)
+    {
+        if (provider == TranscriptionProvider.NONE)
+            return ConfidenceLevel.NONE;
+
+        return provider.UsedLLMProvider.GetConfidence(settingsManager).Level;
+    }
+
     public static ConfidenceLevel GetConfidenceLevel(this IProvider provider, SettingsManager settingsManager)
     {
         if (provider is NoProvider)

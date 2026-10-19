@@ -154,12 +154,15 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
 --     -- The API key must be encrypted using the enterprise encryption secret.
---     -- Format: "ENC:v1:<base64-encoded encrypted data>"
+--     -- Format: "ENC:v2:<base64-encoded encrypted data>", which AI Studio v26.10.1 or newer reads,
+--     -- or "ENC:v1:<base64-encoded encrypted data>", which every version of AI Studio reads. Both
+--     -- formats use the same secret. DataApp.EnterpriseEncryptionExportFormat below decides which
+--     -- one your exports write.
 --     -- The encryption secret must be configured via:
 --     --   Windows Registry: HKEY_CURRENT_USER\Software\github\MindWork AI Studio\Enterprise IT\config_encryption_secret
 --     --   Environment variable: MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked provider,
 --     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
@@ -168,6 +171,12 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- ignored and a warning is logged. The user's key is preserved in the OS keyring even
 --     -- if this configuration is later withdrawn.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key in a panel on the home page, as long as this
+--     -- provider has none. All providers of this plugin which set this option share one panel
+--     -- and receive the same key, so the user enters it once. Implies "AllowUserProvidedAPIKey".
+--     -- Explain how to obtain the key in CONFIG["USER_API_KEY_PROMPT"], see below.
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
@@ -193,12 +202,16 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: let each user set their own API key for this otherwise locked transcription
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face transcribes audio through some of its inference providers only, so the choice
@@ -230,7 +243,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
---     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     -- ["APIKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --
 --     -- Optional: tokenizer path for this provider relative to the plugin directory.
 --     -- ["TokenizerPath"] = "",
@@ -245,6 +258,10 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face serves embeddings through some of its inference providers only, so the choice
@@ -269,7 +286,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Hostname"] = "<https address of the ERI server>",
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "TOKEN",
---     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
+--     ["Token"] = "ENC:v2:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -285,7 +302,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "SHARED_USERNAME_AND_PASSWORD",
 --     ["Username"] = "<shared username>",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -300,7 +317,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Port"] = 443,
 --     ["AuthMethod"] = "USERNAME_PASSWORD",
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
---     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["Password"] = "ENC:v2:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
@@ -403,6 +420,13 @@ CONFIG["SETTINGS"] = {}
 -- but users can still choose another start page in the app settings.
 -- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
 
+-- Configure whether AI Studio saves energy while the AI writes its answers.
+-- Allowed values are: true, false
+-- When set to true, streamed answers are updated once every third second instead of as soon
+-- as new text arrives. This helps on battery-powered devices and on virtual desktops, where
+-- every redraw of the screen is costly.
+-- CONFIG["SETTINGS"]["DataApp.IsSavingEnergy"] = true
+
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
@@ -436,6 +460,21 @@ CONFIG["SETTINGS"] = {}
 -- the AI from reading them, switch off the tool collection mailboxes in DataTools.DisabledToolIds.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddMailbox"] = false
 
+-- Configure the permission to import an item which somebody exported from AI Studio, such as
+-- a chat template a colleague shares. The first setting allows or locks every import, the
+-- others one type each; an import needs both. Importing a provider also needs the permission
+-- to add it by hand: DataApp.AllowUserToAddProvider and the setting for its kind, see above.
+-- When set to false, the import button stays visible but is locked. Importing plugin archives
+-- has a setting of its own, see below.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationSnippets"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportProfile"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportLLMProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportEmbeddingProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportTranscriptionProvider"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
@@ -466,6 +505,37 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
+
+-- Configure the format in which exports encrypt API keys, tokens, and passwords with the
+-- enterprise encryption secret. Both formats use the same secret.
+-- Allowed values are: V1, V2
+-- V2 is protected: AI Studio refuses every value which was encrypted with another secret. It
+-- needs AI Studio v26.10.1 or newer on every computer which reads it. V1 is read by every
+-- version of AI Studio, and AI Studio keeps reading it for good. New installations start with
+-- V2, installations which existed before v26.10.1 keep V1. Keep V1 until every computer in
+-- your organization runs v26.10.1 or newer, then switch to V2.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat"] = "V1"
+--
+-- Allow users to change the export format locally.
+-- Allowed values are: true, false
+-- When set to true, the configured format becomes the organization default,
+-- but users can still choose another format in the enterprise administration settings.
+-- CONFIG["SETTINGS"]["DataApp.EnterpriseEncryptionExportFormat.AllowUserOverride"] = true
+
+-- Configure whether AI answers which users copy or export end with a notice that they were
+-- generated using artificial intelligence (AI). The notice is written in the language of the app.
+-- It also ends the files of the batch processing. Code blocks, single files or tables taken from
+-- an answer, visual briefings, and the results of the prompt optimizer and the assistant builder
+-- stay unchanged. The default is false: AI Studio then adds no notice. The Enterprise IT
+-- documentation describes what gets the notice.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+--
+-- Allow users to change this setting locally.
+-- Allowed values are: true, false
+-- When set to true, the configured value becomes the organization default,
+-- but users can still switch it on or off in the app settings.
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = true
 
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
@@ -578,10 +648,21 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory"] = ""
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory"] = ""
 --
--- Configure the default file patterns and whether subfolders are included.
+-- Configure the default file patterns and whether subfolders as well as hidden files and folders are included.
 -- Separate multiple patterns with semicolons.
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders"] = false
+--
+-- Configure the files and folders which are left out, even when a file pattern selects them.
+-- Separate entries with semicolons or line breaks. An entry which ends with a slash excludes every
+-- folder of that name; every other entry is a file name pattern. An empty string excludes nothing
+-- beyond the metadata of operating systems, which is always left out. The default is:
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns"] = "node_modules/; bower_components/; Pods/; venv/; env/; __pycache__/; bin/; obj/; Debug/; Release/; target/; build/; dist/; DerivedData/; cmake-build-*/; TestResults/; htmlcov/; *.vmwarevm/; *.pvm/; *.utm/; package-lock.json; yarn.lock; pnpm-lock.yaml; packages.lock.json; Cargo.lock; poetry.lock; Pipfile.lock; composer.lock; Gemfile.lock; go.sum; *.min.js; *.min.css; *.js.map; *.css.map; *tokenizer.json; *.exe; *.dll; *.so; *.dylib; *.pdb; *.db; *.db3; *.db-*; *.sqlite; *.sqlite3; *.sqlite-*; *.vmdk; *.vdi; *.vhd; *.vhdx; *.qcow2; *.hdd; *.hds; *.iso; *.dmg; *.img"
+--
+-- Configure the size limit in megabytes. Larger files are left out of a batch run. The value must
+-- be at least 1; the default is 1024, i.e., 1 GB.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes"] = 1024
 --
 -- Configure the default instruction source.
 -- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
@@ -627,6 +708,9 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ExcludePatterns.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MaxFileSizeMegabytes.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
@@ -852,10 +936,10 @@ CONFIG["SETTINGS"] = {}
 --   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
 --
 -- A tool field marked as secret, such as an API key, can be rolled out as well — but only
--- encrypted with the enterprise encryption secret, in the same "ENC:v1:<base64>" form the
--- providers above use, and only through LockedToolSettings. A locked secret leaves whatever
--- the user entered untouched, so their own key returns when you stop deploying yours. A
--- plaintext secret is refused with a warning in the log rather than used.
+-- encrypted with the enterprise encryption secret, in the same "ENC:v2:<base64>" or
+-- "ENC:v1:<base64>" form the providers above use, and only through LockedToolSettings. A locked
+-- secret leaves whatever the user entered untouched, so their own key returns when you stop
+-- deploying yours. A plaintext secret is refused with a warning in the log rather than used.
 --
 -- Field names of the Web Search tool. At least one of its search services has to be configured
 -- before the tool can be used; which one you pick is up to you, since all three can be rolled
@@ -917,7 +1001,30 @@ CONFIG["SETTINGS"] = {}
 --                         separately. Allowed private hosts require a provider with HIGH
 --                         confidence. AI Studio only tries the current user's operating-system
 --                         sign-in for explicitly allowed HTTPS targets when that provider
---                         requirement is met, and it never reuses browser cookies.
+--                         requirement is met, and it never reuses browser cookies. Allowed
+--                         private hosts count as services configured in AI Studio: a chat which
+--                         read internal content may still read them, see below.
+--   internalPageOutboundDataRestriction
+--                         Where a chat may send data once it read internal content: a page with
+--                         a private or VPN address, a page of the Confluence wiki configured for
+--                         search_confluence, whatever its address, or a search of that wiki. Only
+--                         the page reached after all redirects counts. A web search or an address
+--                         the AI writes could otherwise carry internal content to third parties.
+--                         The same level applies to the search_confluence tool. A chat keeps the
+--                         level it had when it read the content. Allowed values are:
+--                           ONLY_CONFIGURED_SERVICES -> the chat reads only pages of the wiki and of
+--                                                       the allowed private hosts, and no web
+--                                                       search runs.
+--                           ONLY_LINKS_FROM_CHAT     -> the chat also reads pages whose addresses
+--                                                       stand in the chat, written by the user or
+--                                                       returned by a tool, exactly as they stand
+--                                                       there. No web search runs, and the AI
+--                                                       cannot choose addresses outside the wiki
+--                                                       and the allowed private hosts. This is the
+--                                                       default.
+--                           UNRESTRICTED             -> no restriction beyond the ones of each tool.
+--                         Lock it to ONLY_CONFIGURED_SERVICES when the AI must not even choose which
+--                         of the given links to follow.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -930,14 +1037,16 @@ CONFIG["SETTINGS"] = {}
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
+-- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["web_search.backendStrategy"] = "FAILOVER",
---     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--     ["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
+--     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
@@ -1271,6 +1380,23 @@ CONFIG["INTRODUCTIONS"] = {}
 --                         AI usage guidelines.
 --
 --                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
+-- }
+
+-- What AI Studio tells users in the panel on the home page which asks for their API key. It asks
+-- as long as a provider of this plugin which sets "PromptForUserAPIKey" has no API key. AI Studio
+-- checks the key the user enters with the first of these providers which can list its models,
+-- and then stores it for all of them. A key the provider refuses is not stored. When no provider
+-- can check the key, or the provider is out of reach, AI Studio stores the key with a warning.
+-- Markdown is required, Title is optional. Without this table, AI Studio shows a generic request.
+-- CONFIG["USER_API_KEY_PROMPT"] = {
+--     ["Title"] = "Please add your API key",
+--     ["Markdown"] = [===[
+--                         To use the AI models of your organization, you need a personal API key:
+--
+--                         1. Open [Open WebUI](https://example.org) and sign in.
+--                         2. Click your profile picture, then "Settings" and "Account".
+--                         3. Create an API key, copy it, and paste it below.
 --                         ]===]
 -- }
 

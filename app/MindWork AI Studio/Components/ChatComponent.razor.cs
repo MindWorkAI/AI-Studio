@@ -2072,8 +2072,8 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// Filtered for the provider and the chat the same way they are before sending, so that a tool
-    /// the provider is not trusted enough to receive does not count, and neither does one which a
-    /// mailbox the chat read from keeps back. A new chat read no mailbox, so nothing is kept back.
+    /// the provider is not trusted enough to receive does not count, and neither does one which the
+    /// internal content of the chat keeps back. A new chat holds none, so nothing is kept back.
     ///
     /// Asked for once and used twice: their policy goes into the system prompt, and their schemas
     /// travel next to it in the request body. Both cost tokens, and both change the moment somebody
@@ -2083,12 +2083,13 @@ public partial class ChatComponent : MSGComponentBase
     /// its static definition: the one a request offers lists the data sources as well, which only
     /// the request asks for.
     ///
-    /// Read Web Page likewise counts with its registered instructions, those of its default free
-    /// address choice in a chat which read no mailbox. With the choice switched on, a request
-    /// carries a shorter instruction, and in a chat which read a mailbox a longer one, so the count
-    /// comes out a few tokens off. One case it gets wrong as a whole: a mailbox which allows the
-    /// configured services only, with no wiki configured, leaves Read Web Page nothing to offer, and
-    /// only the request finds that out, see ReadWebPageTool.ResolveFunctionAsync.
+    /// Read Web Page, Search Confluence, and Search Mails likewise count with their registered
+    /// instructions, which assume the default settings and a chat which holds no internal content,
+    /// and warn that internal content ends web search. A request words them after the actual settings, the chat,
+    /// and the tools it offers, so the count comes out a few tokens off. One case it gets wrong as a
+    /// whole: a chat restricted to the configured services only, with neither a wiki nor allowed
+    /// private hosts configured, leaves Read Web Page nothing to offer, and only the request finds
+    /// that out, see ReadWebPageTool.ResolveFunctionAsync.
     /// </remarks>
     /// <param name="offersSemanticSearch">Whether the next request offers Semantic Search, see OffersSemanticSearchAsync.</param>
     /// <returns>The definitions of the selected tools, and of Semantic Search when it is offered.</returns>

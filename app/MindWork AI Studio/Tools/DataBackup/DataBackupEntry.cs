@@ -18,7 +18,20 @@ public sealed record DataBackupEntry(DataBackupLocation Location, string Relativ
         or DataBackupEntryKind.TOKENIZERS
         or DataBackupEntryKind.VISUAL_BRIEFINGS
         or DataBackupEntryKind.DATA_SOURCE_INDEX
-        or DataBackupEntryKind.VECTOR_STORES;
+        or DataBackupEntryKind.VECTOR_STORES
+        or DataBackupEntryKind.MEDIA_TRANSCRIPTS;
+
+    /// <summary>
+    /// Whether a backup takes the entry from the copies it makes while the indexing pauses, rather than from the data folder.
+    /// </summary>
+    /// <remarks>
+    /// The indexing writes to these entries, and they refer to each other: the index knows which
+    /// transcript belongs to which file. A backup therefore copies them together while nothing
+    /// writes, cf. DataBackupService.CopyIndexesAsync, and a restore replaces them only together.
+    /// </remarks>
+    public bool ComesFromIndexCopies => this.Kind is DataBackupEntryKind.DATA_SOURCE_INDEX
+        or DataBackupEntryKind.VECTOR_STORES
+        or DataBackupEntryKind.MEDIA_TRANSCRIPTS;
 
     /// <summary>
     /// Whether the entry is a folder rather than a single file.

@@ -9,7 +9,7 @@ namespace AIStudio.Tools.DataBackup;
 /// <param name="CreatedAtUtc">When the backup was written.</param>
 /// <param name="SourceDataDirectory">The data folder the backup was made from, for whoever wonders where it came from.</param>
 /// <param name="SourceConfigDirectory">The configuration folder the backup was made from.</param>
-/// <param name="IncludesDataSourceIndexes">Whether the backup holds the indexes of the data sources. Without them, a restore keeps the indexes there are.</param>
+/// <param name="IncludesDataSourceIndexes">Whether the backup holds the indexes of the data sources and the transcripts of their media files. Without them, a restore keeps the indexes and transcripts there are.</param>
 /// <param name="Entries">Every file of the backup, the manifest aside.</param>
 public sealed record DataBackupManifest(
     int FormatVersion,

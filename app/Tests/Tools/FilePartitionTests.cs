@@ -40,7 +40,7 @@ public sealed class FilePartitionTests
         manifest.PermanentFailures[SCANNED.FullName] = Unreadable($"NOW:{SCANNED.Name}");
         manifest.PermanentFailures[SCANNED_AND_RECOGNIZED.FullName] = Unreadable("BEFORE-OCR");
 
-        var pass = new IndexingPass(new DataSourceRunSignature("EMBEDDING-SIGNATURE"));
+        var pass = new IndexingPass(new DataSourceRunSignature("EMBEDDING-SIGNATURE", string.Empty));
         pass.RecordFailure(FAILED_EARLIER.FullName, $"NOW:{FAILED_EARLIER.Name}", EARLIER_FAILURE);
         pass.RecordFailure(CHANGED_SINCE_IT_FAILED.FullName, "BEFORE", EARLIER_FAILURE with { DocumentKey = CHANGED_SINCE_IT_FAILED.FullName });
 

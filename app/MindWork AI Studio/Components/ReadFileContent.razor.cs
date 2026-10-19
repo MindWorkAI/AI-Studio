@@ -164,6 +164,7 @@ public partial class ReadFileContent : MSGComponentBase
     }
 
     /// <summary>Applies a completed target transcript after progress or navigation.</summary>
+    /// <remarks>The transcript arrives filtered for prompt injections, cf. MediaTranscriptionService.</remarks>
     private async Task SyncCompletedMediaTextAsync()
     {
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);

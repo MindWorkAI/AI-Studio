@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using AIStudio.Settings.DataModel;
@@ -21,10 +22,8 @@ public sealed class ConfigurationBaseObjectDescriptor<TClass>(PluginConfiguratio
     /// <inheritdoc />
     public override PluginConfigurationObjectType Type => type;
 
-    /// <summary>
-    /// The Lua table in which a configuration plugin defines these objects.
-    /// </summary>
-    public string LuaTableName => luaTableName;
+    /// <inheritdoc />
+    public override string LuaTableName => luaTableName;
 
     /// <summary>
     /// Where the settings keep these objects.
@@ -43,6 +42,14 @@ public sealed class ConfigurationBaseObjectDescriptor<TClass>(PluginConfiguratio
 
     /// <inheritdoc />
     public override bool TryParse(LuaTable mainTable, Guid configPluginId, List<PluginConfigurationObject> configObjects, bool dryRun, string pluginPath) => PluginConfigurationObject.TryParse(this, mainTable, configPluginId, configObjects, dryRun, pluginPath);
+
+    /// <inheritdoc />
+    public override bool TryParseSnippet(LuaTable table, [NotNullWhen(true)] out IConfigurationObject? configObject)
+    {
+        var isValid = parser(1, table, Guid.Empty, string.Empty, dryRun: true, out var parsedObject);
+        configObject = isValid ? parsedObject : null;
+        return isValid;
+    }
 
     /// <inheritdoc />
     public override Task<bool> CleanLeftOverAsync(IList<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds, IReadOnlySet<Guid> notStartedConfigPluginIds, IList<PluginConfigurationObject> configObjectList) => PluginConfigurationObject.CleanLeftOverConfigurationObjects(type, selection, availablePlugins, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, secretStoreType);

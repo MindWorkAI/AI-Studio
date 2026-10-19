@@ -26,6 +26,8 @@ internal sealed class EmbeddingStateFileEntity
 
     public int ChunkCount { get; set; }
 
+    public string? TranscriptKey { get; set; }
+
     public EmbeddingStateDataSourceEntity? DataSource { get; set; }
 
     public List<EmbeddingStateChunkEntity> Chunks { get; set; } = [];

@@ -23,7 +23,10 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="lastInputError">Why the last of those could not be looked at, or an empty string.</param>
 /// <param name="inputFailures">The failures of those which could not be looked at.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDocuments, int failedInputs, string lastInputError, IEnumerable<DataSourceEmbeddingFailure> inputFailures, ILogger logger)
+/// <param name="inputIgnoredFiles">Files found during enumeration but intentionally not selected for indexing.</param>
+/// <param name="filePatternExclusions">Files intentionally excluded by the configured patterns or the exclusion list, summarized by file type.</param>
+/// <param name="excludedFolders">Folders intentionally left out by the exclusion list, summarized by name.</param>
+internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDocuments, int failedInputs, string lastInputError, IEnumerable<DataSourceEmbeddingFailure> inputFailures, ILogger logger, IEnumerable<DataSourceEmbeddingIgnoredFile>? inputIgnoredFiles = null, IEnumerable<DataSourceEmbeddingFilePatternGroup>? filePatternExclusions = null, IEnumerable<DataSourceEmbeddingExcludedFolderGroup>? excludedFolders = null)
 {
     /// <summary>
     /// How often the block progress within one document is reported to the user interface at most.
@@ -31,6 +34,12 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     private static readonly TimeSpan BLOCK_PROGRESS_INTERVAL = TimeSpan.FromSeconds(3);
 
     private readonly List<DataSourceEmbeddingFailure> failures = inputFailures.ToList();
+
+    private readonly IReadOnlyList<DataSourceEmbeddingIgnoredFile> ignoredFiles = inputIgnoredFiles?.ToList() ?? [];
+
+    private readonly IReadOnlyList<DataSourceEmbeddingFilePatternGroup> filePatternExclusions = filePatternExclusions?.ToList() ?? [];
+
+    private readonly IReadOnlyList<DataSourceEmbeddingExcludedFolderGroup> excludedFolders = excludedFolders?.ToList() ?? [];
 
     /// <summary>
     /// The documents this run read, whether indexing them worked or not, cf. HasDoneItsShare.
@@ -217,7 +226,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         var embeddedAtUtc = DateTimeOffset.UtcNow;
         var state = document.State with { ChunkCount = chunkCount, EmbeddedAtUtc = embeddedAtUtc };
         await context.IndexStore.UpsertFileAsync(context.DataSource.Id, state, token);
-        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount);
+        context.Manifest.Files[document.Key] = new EmbeddedFileRecord(state.Fingerprint, state.FileSize, state.LastWriteUtc, embeddedAtUtc, chunkCount, state.TranscriptKey);
         await context.ForgetPermanentFailureAsync(document.Key, token);
         context.Pass.Forget(document.Key);
 
@@ -291,7 +300,7 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
                 //
                 this.PermanentlySkippedDocuments++;
                 var occurredAtUtc = DateTimeOffset.UtcNow;
-                var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document);
+                var indexingMessage = this.GetFailureMessage(extractionFailure.Code, document, extractionFailure.Message);
                 this.failures.Add(new DataSourceEmbeddingFailure(document.Key, indexingMessage, occurredAtUtc, ExtractionCode: extractionFailure.Code, IsPermanent: true, DisplayName: document.DisplayName));
                 context.Manifest.Files.Remove(document.Key);
                 context.Pass.Forget(document.Key);
@@ -524,10 +533,37 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
     /// </remarks>
     /// <param name="code">Why reading the document failed, NONE when it was not about reading it.</param>
     /// <param name="document">The document.</param>
+    /// <param name="details">A localized explanation supplied by a specialized reader, when available.</param>
     /// <returns>The message, ready to show.</returns>
-    private string GetFailureMessage(FileExtractionErrorCode code, EmbeddingDocument document) => context.DataSource is DataSourceMailbox
-        ? string.Format(TB("The mail '{0}' could not be indexed. AI Studio tries again during the next sync."), document.DisplayName)
-        : code.ToIndexingUserMessage(document.DisplayName);
+    private string GetFailureMessage(FileExtractionErrorCode code, EmbeddingDocument document, string? details = null)
+    {
+        if (context.DataSource is DataSourceMailbox)
+            return string.Format(TB("The mail '{0}' could not be indexed. AI Studio tries again during the next sync."), document.DisplayName);
+
+        if (code is FileExtractionErrorCode.MEDIA_PROCESSING_FAILED && !string.IsNullOrWhiteSpace(details))
+        {
+            return string.Format(
+                TB("The media file '{0}' could not be processed, so it was not indexed. Reason: {1} AI Studio reads it again as soon as the file changes."),
+                document.DisplayName,
+                AsSentence(details));
+        }
+
+        return code.ToIndexingUserMessage(document.DisplayName);
+    }
+
+    /// <summary>
+    /// Ends a reason with a full stop, so the sentence after it does not run into it.
+    /// </summary>
+    /// <remarks>
+    /// Providers write their error messages as they like, often without a full stop at the end.
+    /// </remarks>
+    /// <param name="reason">The reason.</param>
+    /// <returns>The reason, ending with a punctuation mark.</returns>
+    internal static string AsSentence(string reason)
+    {
+        var sentence = reason.TrimEnd();
+        return sentence.Length is 0 || sentence[^1] is '.' or '!' or '?' or '…' ? sentence : $"{sentence}.";
+    }
 
     private DataSourceEmbeddingStatus CreateStatus(DataSourceEmbeddingState state, string currentDocument, string lastError, int? currentBlock, int? currentPage, DataSourceAttention attention = DataSourceAttention.NONE, int? pendingRemovalCount = null) => new(
         context.DataSource.Id,
@@ -545,5 +581,10 @@ internal sealed class DocumentRunProgress(IndexedRunContext context, int totalDo
         currentPage,
         Attention: attention,
         PendingRemovalCount: pendingRemovalCount,
-        LastSyncUtc: this.LastSyncUtc);
+        LastSyncUtc: this.LastSyncUtc)
+    {
+        IgnoredFiles = this.ignoredFiles,
+        FilePatternExclusions = this.filePatternExclusions,
+        ExcludedFolders = this.excludedFolders,
+    };
 }

@@ -1,10 +1,6 @@
-using System.Collections.Concurrent;
-
 using AIStudio.Settings;
-using AIStudio.Tools;
 using AIStudio.Tools.Security;
 
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AIStudio.Tests.Tools.Security;
@@ -25,22 +21,21 @@ namespace AIStudio.Tests.Tools.Security;
 public sealed class PromptInjectionGuardServiceTests
 {
     private string labelPrefix = string.Empty;
-    private AlertCollector collector = null!;
+    private PromptInjectionAlertCollector collector = null!;
     private PromptInjectionGuardService guardService = null!;
 
     [SetUp]
     public void RegisterCollector()
     {
         this.labelPrefix = $"test-{Guid.NewGuid()}";
-        this.collector = new AlertCollector(this.labelPrefix);
-        MessageBus.INSTANCE.RegisterComponent(this.collector);
-        MessageBus.INSTANCE.ApplyFilters(this.collector, [], [Event.SHOW_PROMPT_INJECTION_ALERT]);
+        this.collector = new PromptInjectionAlertCollector(this.labelPrefix);
+        this.collector.Register();
 
         this.guardService = new PromptInjectionGuardService(null!, new SettingsManager(NullLogger<SettingsManager>.Instance, null!), NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance);
     }
 
     [TearDown]
-    public void UnregisterCollector() => MessageBus.INSTANCE.Unregister(this.collector);
+    public void UnregisterCollector() => this.collector.Unregister();
 
     [Test]
     public async Task AResultOutsideOfAnyActionIsReportedRightAway()
@@ -251,35 +246,5 @@ public sealed class PromptInjectionGuardServiceTests
 
     private PromptInjectionScanResult Filtered(string name, params string[] snippets) => new(PromptInjectionSource.FileContent(this.Label(name)), snippets.Select(snippet => new PromptInjectionFinding { RuleId = "instruction_override", Snippet = snippet }).ToList(), Math.Max(1, snippets.Length));
 
-    private string Describe(string name, int redactedCount, params string[] snippets) => AlertCollector.Describe(this.Label(name), redactedCount, snippets);
-
-    /// <summary>
-    /// Collects the alerts about the sources of one test, out of whatever other tests send meanwhile.
-    /// </summary>
-    private sealed class AlertCollector(string labelPrefix) : IMessageBusReceiver
-    {
-        private readonly ConcurrentQueue<IReadOnlyList<PromptInjectionScanResult>> alerts = new();
-
-        /// <summary>
-        /// The labels of the sources in each alert, in the order the alerts arrived.
-        /// </summary>
-        public IReadOnlyList<IReadOnlyList<string>> Alerts => this.alerts.Select(results => results.Select(result => result.Source.Label).ToList()).ToList();
-
-        /// <summary>
-        /// Each alert as what it tells the user per source, in the order the alerts arrived.
-        /// </summary>
-        public IReadOnlyList<IReadOnlyList<string>> Reports => this.alerts.Select(results => results.Select(result => Describe(result.Source.Label, result.RedactedCount, result.Findings.Select(finding => finding.Snippet))).ToList()).ToList();
-
-        public static string Describe(string label, int redactedCount, IEnumerable<string> snippets) => $"{label}: {redactedCount} passage(s), {string.Join(" | ", snippets)}";
-
-        public Task ProcessMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data)
-        {
-            if (triggeredEvent is Event.SHOW_PROMPT_INJECTION_ALERT && data is PromptInjectionAlertMessage alert && alert.Results.Any(result => result.Source.Label.StartsWith(labelPrefix, StringComparison.Ordinal)))
-                this.alerts.Enqueue(alert.Results);
-
-            return Task.CompletedTask;
-        }
-
-        public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data) => Task.FromResult(MessageBusAnswer<TResult>.NONE);
-    }
+    private string Describe(string name, int redactedCount, params string[] snippets) => PromptInjectionAlertCollector.Describe(this.Label(name), redactedCount, snippets);
 }

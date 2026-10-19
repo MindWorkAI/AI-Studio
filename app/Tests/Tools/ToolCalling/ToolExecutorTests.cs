@@ -30,7 +30,7 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public async Task WhatAResultDemandsReachesTheLoop()
     {
-        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, MAILBOX_ID);
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
         {
             TextContent = "A passage from the handbook.",
@@ -96,7 +96,7 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public async Task WhatAResultDemandsTightensTheChat()
     {
-        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, MAILBOX_ID);
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
         {
             TextContent = "A mail about the budget.",

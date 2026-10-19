@@ -42,12 +42,68 @@ public sealed record DataSourceEmbeddingStatus(
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingStatus).Namespace, nameof(DataSourceEmbeddingStatus));
 
+    /// <summary>
+    /// Files which were found in the scanned part of a local data source but intentionally not
+    /// indexed.
+    /// </summary>
+    public IReadOnlyList<DataSourceEmbeddingIgnoredFile> IgnoredFiles { get; init; } = [];
+
+    /// <summary>
+    /// Files outside the configured file patterns or named by the exclusion list, summarized by file
+    /// type. They are intentional exclusions rather than skipped documents and therefore do not
+    /// affect progress or status.
+    /// </summary>
+    public IReadOnlyList<DataSourceEmbeddingFilePatternGroup> FilePatternExclusions { get; init; } = [];
+
+    /// <summary>
+    /// Folders which the exclusion list left out, summarized by name. Like the files outside the
+    /// patterns, they are intentional and do not affect progress or status.
+    /// </summary>
+    public IReadOnlyList<DataSourceEmbeddingExcludedFolderGroup> ExcludedFolders { get; init; } = [];
+
+    /// <summary>
+    /// Every selected document the run skipped, whether it may become readable after changing or
+    /// was excluded before extraction. Files outside the configured patterns are not selected and
+    /// therefore do not count here.
+    /// </summary>
+    public int SkippedDocuments => this.PermanentlySkippedDocuments + this.IgnoredFiles.Count;
+
+    /// <summary>
+    /// Whether selected audio or video files wait for a transcription provider which this data
+    /// source allows, so they cannot be indexed until the settings change.
+    /// </summary>
+    public bool NeedsTranscriptionProvider => this.IgnoredFiles.Any(file =>
+        file.Reason is DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING or DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED);
+
+    /// <summary>
+    /// The settled health of this data source. Activity is represented by State
+    /// instead, so queued and running sources can keep their activity indicator.
+    /// </summary>
     /// <remarks>
-    /// Documents which were skipped for good are done, even though nothing was indexed of them.
-    /// Leaving them out would keep the bar short of the end for a data source which has nothing
-    /// left to do.
+    /// A few permanently unreadable files do not make an otherwise usable data source unhealthy.
+    /// They become a warning only when none of the selected documents could be indexed. Files
+    /// outside the configured patterns never take part in this decision.
     /// </remarks>
-    public int ProgressPercent => this.TotalDocuments <= 0 ? 0 : Math.Clamp((int)Math.Round((this.IndexedDocuments + this.PermanentlySkippedDocuments) * 100d / this.TotalDocuments), 0, 100);
+    public DataSourceEmbeddingHealth Health
+    {
+        get
+        {
+            if (this.State is DataSourceEmbeddingState.FAILED || this.FailedDocuments > 0)
+                return DataSourceEmbeddingHealth.ERROR;
+
+            if (this.NeedsTranscriptionProvider ||
+                this.State is DataSourceEmbeddingState.COMPLETED && this.IndexedDocuments == 0 && this.SkippedDocuments > 0)
+                return DataSourceEmbeddingHealth.WARNING;
+
+            return DataSourceEmbeddingHealth.HEALTHY;
+        }
+    }
+
+    /// <remarks>
+    /// Skipped documents are done for this run, even though nothing was indexed of them. Leaving
+    /// them out would keep the bar short of the end for a data source which has nothing left to do.
+    /// </remarks>
+    public int ProgressPercent => this.TotalDocuments <= 0 ? 0 : Math.Clamp((int)Math.Round((this.IndexedDocuments + this.SkippedDocuments) * 100d / this.TotalDocuments), 0, 100);
 
     public string StateLabel => this.State switch
     {

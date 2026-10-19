@@ -46,9 +46,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     [Parameter]
     public bool LockSource { get; set; }
 
-    [Parameter]
-    public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -369,12 +366,6 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
     private string TestResultIcon => this.testedSettings != this.CurrentSettings
         ? Icons.Material.Outlined.HourglassEmpty
         : this.testFailure is null ? Icons.Material.Outlined.CheckCircle : Icons.Material.Outlined.Error;
-
-    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
-    {
-        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
-        return provider == EmbeddingProvider.NONE ? null : provider;
-    }
 
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
@@ -742,6 +733,23 @@ public partial class DataSourceMailboxDialog : MSGComponentBase
 
         // The token limits are only checked while they are shown. The field learns the limit set
         // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
+    }
+
+    /// <summary>
+    /// Selects the embedding provider the user just added from within this dialog, so that what they
+    /// entered so far, the password and the tested connection included, can be saved right away.
+    /// </summary>
+    /// <remarks>
+    /// Only when no existing provider is selected, which includes the provider of a mailbox that was
+    /// deleted since. Like the token limit in ToggleExpertSettings, the field learns its new value only
+    /// with the next render, so it is checked after that.
+    /// </remarks>
+    private void SelectAddedEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (this.SelectedEmbedding is null)
+            this.dataEmbeddingId = provider.Id;
+
         this.revalidateAfterRender = true;
     }
 

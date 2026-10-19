@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Validation;
 
@@ -29,6 +30,8 @@ public sealed class DataSourceValidation
     public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
 
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
+
+    public Func<bool> GetSelectedCloudTranscription { get; init; } = () => false;
 
     public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
 
@@ -156,9 +159,16 @@ public sealed class DataSourceValidation
         
         if(!File.Exists(filePath))
             return TB("The file does not exist. Please select a valid file.");
+
+        if(!FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.AUDIO, FileTypes.VIDEO))
+            return TB("The selected file is not a supported document, readable text file, audio file, or video file.");
         
         return null;
     }
+
+    public string? ValidateFilePatterns(string patterns) => FileNamePatterns.Validate(patterns);
+
+    public string? ValidateExcludePatterns(string patterns) => FileExclusions.Validate(patterns);
 
     public string? ValidateEmbeddingId(string embeddingId)
     {
@@ -171,7 +181,17 @@ public sealed class DataSourceValidation
     public string? ValidateEmbeddingProviderAccess(string embeddingId)
     {
         var embeddingIssue = this.ValidateEmbeddingId(embeddingId);
-        return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
+        if(embeddingIssue is not null)
+            return embeddingIssue;
+
+        //
+        // An id which matches no provider belongs to one which was deleted since. Saved like this, the
+        // data source keeps pointing at a provider nobody can reach, and nothing of it is embedded:
+        //
+        if(this.GetSelectedEmbeddingProvider() is null)
+            return TB("The embedding provider of this data source no longer exists. Please select another one.");
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
     }
 
     public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
@@ -242,6 +262,9 @@ public sealed class DataSourceValidation
 
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
+        if(this.GetSelectedCloudTranscription() && !value)
+            return TB("Please acknowledge that you are aware of the cloud transcription implications.");
+
         if(this.GetSelectedCloudEmbedding() && !value)
             return TB("Please acknowledge that you are aware of the cloud embedding implications.");
         
