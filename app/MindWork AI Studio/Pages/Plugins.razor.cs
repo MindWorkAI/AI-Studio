@@ -376,7 +376,7 @@ public partial class Plugins : MSGComponentBase
             var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
             if (shareResult.Outcome is PluginShareOutcome.SHARE_SHEET_UNAVAILABLE)
             {
-                LOG.LogWarning($"The share sheet did not open for the plugin '{shareResult.PluginName}': '{shareResult.Issue}'. Offering the export instead.");
+                // The runtime and NativeShareService already logged why the share sheet did not open:
                 if (!await this.ConfirmExportInsteadOfSharingAsync(shareResult.Issue))
                     return;
 
