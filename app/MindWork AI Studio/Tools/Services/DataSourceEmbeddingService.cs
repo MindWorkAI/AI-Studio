@@ -190,17 +190,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     /// <summary>
-    /// Whether the file or folder a data source reads must stay as it is.
+    /// Whether a mailbox's origin must stay as it is.
     /// </summary>
     /// <remarks>
-    /// Locked as soon as the index holds anything, because where a data source reads from is what it
-    /// is: another folder is another data source, and the path reaches no signature, so swapping it
-    /// would leave the stored index describing documents nobody points at any more.
-    ///
-    /// The embedding provider used to be locked along with it and no longer is. It does reach the
-    /// signature, so changing it rebuilds the index cleanly -- and DataSourceReindexWarning asks
-    /// before it does. Locking it as well left a data source whose provider was deleted stuck on
-    /// keyword search for good, with no way back.
+    /// Mailbox origins stay locked once indexed. Local files and folders can be relocated by the
+    /// file indexer, so their edit dialogs do not use this lock. Changing an embedding provider
+    /// still asks before rebuilding through DataSourceReindexWarning.
     ///
     /// Unclear counts as locked: an unavailable index database says nothing about what is stored.
     /// </remarks>

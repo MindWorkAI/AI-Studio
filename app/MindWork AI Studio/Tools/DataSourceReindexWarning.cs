@@ -2,6 +2,7 @@ using System.Text;
 
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -19,6 +20,8 @@ namespace AIStudio.Tools;
 /// Nothing is asked when nothing is lost. A data source only reaches the question when the edit
 /// really changes its embedding signature and when the index already holds something for it, so
 /// renaming an embedding provider or editing a data source nobody has indexed yet stays silent.
+/// A path change has a separate confirmation: files absent from the new location can be removed
+/// from the index, and new or changed files can need embedding even when the signature stays valid.
 /// </remarks>
 public static class DataSourceReindexWarning
 {
@@ -71,6 +74,9 @@ public static class DataSourceReindexWarning
     public static async Task<bool> ConfirmDataSourceChangeAsync(IDialogService dialogService, SettingsManager settingsManager, DataSourceEmbeddingService embeddingService,
         IIndexedDataSource before, IIndexedDataSource after, CancellationToken token = default)
     {
+        if (HasPathChanged(before, after) && !await ConfirmPathChangeAsync(dialogService))
+            return false;
+
         // Without a provider nothing is embedded at all, so nothing can be lost:
         if (!DataSourceEmbeddingProviders.TryResolve(settingsManager, after, out var afterProvider))
             return true;
@@ -89,6 +95,24 @@ public static class DataSourceReindexWarning
 
         var affected = await embeddingService.GetDataSourcesWithStoredIndexAsync([after], token);
         return await ConfirmAsync(dialogService, affected, !afterProvider.IsSelfHosted);
+    }
+
+    private static bool HasPathChanged(IIndexedDataSource before, IIndexedDataSource after) => (before, after) switch
+    {
+        (DataSourceLocalDirectory oldFolder, DataSourceLocalDirectory newFolder) => !string.Equals(oldFolder.Path, newFolder.Path, StringComparison.Ordinal),
+        (DataSourceLocalFile oldFile, DataSourceLocalFile newFile) => !string.Equals(oldFile.FilePath, newFile.FilePath, StringComparison.Ordinal),
+        _ => false,
+    };
+
+    private static async Task<bool> ConfirmPathChangeAsync(IDialogService dialogService)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.MarkdownBody, TB("Changing this location can remove indexed files that are absent from the new location. New or changed files in the selected location will be indexed. Unchanged files keep their prepared documents when their relative paths, sizes, and modification times match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?") },
+        };
+        var reference = await dialogService.ShowAsync<ConfirmDialog>(TB("Change Data Source Location?"), parameters, Dialogs.DialogOptions.FULLSCREEN);
+        var result = await reference.Result;
+        return result is not null && !result.Canceled;
     }
 
     /// <summary>

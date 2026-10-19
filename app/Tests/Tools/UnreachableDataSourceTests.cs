@@ -63,6 +63,15 @@ public sealed class UnreachableDataSourceTests
     }
 
     [Test]
+    public async Task AMissingRelocationTargetKeepsTheOriginalIndex()
+    {
+        var folder = Path.Combine(this.testRoot, "moved-but-unavailable");
+        var (outcome, statuses, manifest) = await RunAsync(Folder(folder), Path.Combine(this.testRoot, "original", "report.pdf"));
+
+        AssertTheIndexWasKept(outcome, statuses, manifest, 1, folder);
+    }
+
+    [Test]
     public async Task AMissingFileKeepsItsIndex()
     {
         var file = Path.Combine(this.testRoot, "report.pdf");
@@ -181,7 +190,8 @@ public sealed class UnreachableDataSourceTests
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest { SourceHash = STORED_SOURCE_HASH };
         foreach (var file in indexedFiles)
-            manifest.Files[file] = new EmbeddedFileRecord("FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 4);
+            manifest.Files[file] = new EmbeddedFileRecord("FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 4,
+                RelativePath: Path.GetFileName(file), ParentFileId: IndexedDocumentIds.CreateParentId(dataSource.Id, file));
 
         manifest.UnfinishedFiles.UnionWith(unfinishedFiles);
 

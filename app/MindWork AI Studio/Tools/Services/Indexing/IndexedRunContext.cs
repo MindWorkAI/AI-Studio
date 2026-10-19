@@ -41,6 +41,9 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     private long storedChunksSinceLastOptimization;
     private bool hasPendingChanges;
 
+    private Dictionary<string, string>? fileParentIds;
+    private HashSet<string>? reservedFileParentIds;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
 
     /// <summary>
@@ -65,6 +68,31 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public RunShare Share => share;
 
     public IndexingPass Pass => pass;
+
+    /// <summary>
+    /// Retains a relocated file's identity. A new file may now occupy the path from which another
+    /// file got that identity, so reserve stored ids before assigning one to a new document.
+    /// </summary>
+    public string GetFileParentId(string documentKey)
+    {
+        if (this.fileParentIds is null)
+        {
+            this.fileParentIds = manifest.Files
+                .Where(file => !string.IsNullOrEmpty(file.Value.ParentFileId))
+                .ToDictionary(file => file.Key, file => file.Value.ParentFileId, StringComparer.OrdinalIgnoreCase);
+            this.reservedFileParentIds = this.fileParentIds.Values.ToHashSet(StringComparer.Ordinal);
+        }
+
+        if (this.fileParentIds.TryGetValue(documentKey, out var storedId))
+            return storedId;
+
+        var parentId = IndexedDocumentIds.CreateParentId(dataSource.Id, documentKey);
+        while (!this.reservedFileParentIds!.Add(parentId))
+            parentId = Guid.NewGuid().ToString();
+
+        this.fileParentIds[documentKey] = parentId;
+        return parentId;
+    }
 
     /// <summary>
     /// The run as one action of the prompt injection filter.
@@ -163,7 +191,10 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <param name="token">The cancellation token.</param>
     public async Task DeleteDocumentPointsAsync(string documentKey, CancellationToken token)
     {
-        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, token);
+        // A relocated document keeps its original parent id. Delete by that identity as well as
+        // by path, including when a previous relocation stopped between its two database writes.
+        var parentId = manifest.Files.GetValueOrDefault(documentKey)?.ParentFileId ?? string.Empty;
+        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, parentId, token);
         this.hasPendingChanges = true;
     }
 

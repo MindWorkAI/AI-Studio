@@ -77,6 +77,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var manifest = context.Manifest;
 
+        if (!await this.RelocateStoredFilesAsync(context, dataSource, token))
+            return await DocumentRunProgress.FromStoredState(context, manifest.Files.Count, logger).PauseRunAsync(null, "file relocation paused", token);
+
         var enumerationStartedUtc = DateTimeOffset.UtcNow;
         var inputFiles = this.GetInputFiles(dataSource, manifest);
         var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
@@ -732,11 +735,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
+                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."), localDirectory.Path);
+                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source."), localDirectory.Path);
                 break;
         }
 
@@ -1036,7 +1039,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <returns>The document.</returns>
     private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript) => new(
         file.FullName,
-        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { TranscriptKey = transcript?.Key },
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key },
         file.Name,
         token => this.StreamEmbeddingChunksAsync(file.FullName, transcript, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 

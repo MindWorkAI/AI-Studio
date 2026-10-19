@@ -27,7 +27,12 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
     /// <returns>The matches, best first, all of them inside the filter.</returns>
     public abstract Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token);
 
-    public abstract Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token);
+    public abstract Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token);
+
+    /// <summary>
+    /// Updates the location of a document's points without changing their ids or vectors.
+    /// </summary>
+    public abstract Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token);
 
     public abstract Task OptimizeVectorStore(string storeName, CancellationToken token);
 

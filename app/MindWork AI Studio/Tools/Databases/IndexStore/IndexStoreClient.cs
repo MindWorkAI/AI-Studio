@@ -29,6 +29,11 @@ public abstract partial class IndexStoreClient(string name, string path) : Datab
 
     public abstract Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token);
 
+    /// <summary>
+    /// Updates the location and fingerprint of a document, preserving its chunks and their ids.
+    /// </summary>
+    public abstract Task RelocateFileAsync(string dataSourceId, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token);
+
     public abstract Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token);
 
     public abstract Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token);

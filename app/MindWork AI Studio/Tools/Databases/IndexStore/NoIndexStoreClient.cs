@@ -52,6 +52,9 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
 
     public override Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token) => Task.CompletedTask;
 
+    public override Task RelocateFileAsync(string dataSourceId, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
+        Task.FromException(new InvalidOperationException(unavailableReason ?? "The index of the data sources is not available."));
+
     public override Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token) => Task.CompletedTask;
 
     public override Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token) => Task.CompletedTask;

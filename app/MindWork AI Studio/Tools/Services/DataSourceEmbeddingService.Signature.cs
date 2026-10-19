@@ -158,14 +158,18 @@ public sealed partial class DataSourceEmbeddingService
     /// files which no longer belong to the data source, and the ones which now do have to wait for
     /// the next run.
     ///
-    /// Only a local folder chooses its documents by file patterns, exclusions, switches, and a size
-    /// limit. For every other kind of data source, this is empty.
+    /// Local files and folders include their configured paths, so relocating one stops a run which
+    /// still reads the old location. Folders also include their file selection. Neither changes the
+    /// embedding signature: unchanged documents keep their vectors.
     /// </remarks>
     /// <param name="dataSource">The data source to index.</param>
     /// <returns>The description of its selection, or an empty string.</returns>
-    internal static string BuildSelectionSignature(IIndexedDataSource dataSource) => dataSource is DataSourceLocalDirectory directory
-        ? FolderFileSelection.Of(directory).Describe()
-        : string.Empty;
+    internal static string BuildSelectionSignature(IIndexedDataSource dataSource) => dataSource switch
+    {
+        DataSourceLocalDirectory directory => $"{directory.Path.Length}:{directory.Path}|{FolderFileSelection.Of(directory).Describe()}",
+        DataSourceLocalFile file => $"{file.FilePath.Length}:{file.FilePath}",
+        _ => string.Empty,
+    };
 
     /// <summary>
     /// Describes the indexing run a data source would get with a given embedding provider.

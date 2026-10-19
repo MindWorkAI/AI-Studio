@@ -392,8 +392,6 @@ public partial class DataSourceManagement : MSGComponentBase
             return;
 
         IDataSource? editedDataSource = null;
-        var lockDataSourceOrigin = dataSource is IInternalDataSource
-            && await this.DataSourceEmbeddingService.ShouldLockDataSourceOriginAsync(dataSource.Id);
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
@@ -401,7 +399,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
-                    { x => x.LockSource, lockDataSourceOrigin },
                 };
 
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -417,7 +414,6 @@ public partial class DataSourceManagement : MSGComponentBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
-                    { x => x.LockSource, lockDataSourceOrigin },
                 };
 
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);

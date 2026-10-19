@@ -47,31 +47,13 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source.")
             </MudJustifiedText>
-            @if (!this.CanChangeSource)
+            @if (this.IsEditing && !string.Equals(this.dataPath, this.DataSource.Path, StringComparison.Ordinal))
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding provider below can be changed.")
+                    @T("If this folder was moved or renamed, select its new location. Prepared documents are reused when their relative paths, file sizes, and modification times are unchanged.")
                 </MudAlert>
             }
-            @if (this.CanChangeSource)
-            {
-                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
-            }
-            else
-            {
-                <MudTextField
-                    T="string"
-                    Text="@this.dataPath"
-                    Label="@T("Selected base directory for this data source")"
-                    Class="mb-3"
-                    ReadOnly="@true"
-                    Validation="@this.dataSourceValidation.ValidatePath"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Folder"
-                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                    Variant="Variant.Outlined"
-                />
-            }
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudTextSwitch
                 Label="@T("Include subfolders?")"
