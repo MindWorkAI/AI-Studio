@@ -27,5 +27,5 @@ namespace AIStudio.Tools;
 /// <param name="SelectedDataSources">The selected data sources, which are a subset of the allowed data sources.</param>
 /// <param name="DataSourcesAwaitingReindex">The data sources which passed every check but cannot be searched until their index has been rebuilt.</param>
 /// <param name="DataSourcesNeedingRepair">The data sources which passed every check but whose index cannot be read anymore, so that only the user can get them back.</param>
-/// <param name="UnreachableDataSources">The ERI data sources whose server could not be reached right now, and whose configured security policy allows them for this provider. Selected or not.</param>
+/// <param name="UnreachableDataSources">The ERI data sources whose server could not be reached or signed in to right now, and whose configured security policy allows them for this provider. Selected or not.</param>
 public readonly record struct AllowedSelectedDataSources(IReadOnlyList<IDataSource> AllowedDataSources, IReadOnlyList<IDataSource> SelectedDataSources, IReadOnlyList<IDataSource> DataSourcesAwaitingReindex, IReadOnlyList<IDataSource> DataSourcesNeedingRepair, IReadOnlyList<IDataSource> UnreachableDataSources);

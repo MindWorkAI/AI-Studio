@@ -176,7 +176,17 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
             .OfType<IDataSource>()
             .ToList();
 
-        var dataSources = await checkDataSources(options, preselectedDataSources);
+        return SelectOffered(options, await checkDataSources(options, preselectedDataSources));
+    }
+
+    /// <summary>
+    /// Picks the data sources to offer out of those which passed the checks.
+    /// </summary>
+    /// <param name="options">The data source options of the chat.</param>
+    /// <param name="dataSources">What the checks of the data source service found.</param>
+    /// <returns>The data sources the model may search, and those of the chat whose server could not be reached, each in the order they are offered.</returns>
+    internal static OfferedDataSources SelectOffered(DataSourceOptions options, AllowedSelectedDataSources dataSources)
+    {
         var offeredDataSources = options.AutomaticDataSourceSelection ? dataSources.AllowedDataSources : dataSources.SelectedDataSources;
 
         // Of the unreachable ones, only those the model would have been offered count:
@@ -230,7 +240,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
-            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={RetrievalPaging.GetLastPage(dataSource.MaxMatches)}");
+            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={RetrievalPaging.GetLastPage(dataSource)}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
                 description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
@@ -240,7 +250,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (unreachableDataSources is { Count: > 0 })
         {
             description.AppendLine();
-            description.AppendLine("These data sources of this chat could not be reached right now, so they cannot be searched. Their content is missing rather than empty; tell the user so when a question concerns them:");
+            description.AppendLine("These data sources of this chat could not be reached or signed in to right now, so they cannot be searched. Their content is missing rather than empty; tell the user so when a question concerns them:");
             foreach (var dataSource in unreachableDataSources)
                 description.AppendLine($"- name='{dataSource.Name}', type={GetKind(dataSource)}");
         }
@@ -301,13 +311,8 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         var request = ReadRequest(arguments, offered.Searchable);
 
-        //
-        // A search of all data sources reports the unreachable ones as not searched, so that the
-        // model does not take their silence for finding nothing. They were never searched, so they
-        // raise none of the chat's requirements below:
-        //
-        var searchesAll = request.Page == 1 && request.DataSources.Count == offered.Searchable.Count;
-        IReadOnlyList<IDataSource> unreachableDataSources = searchesAll ? offered.Unreachable : [];
+        // They were never searched, so they raise none of the chat's requirements below:
+        var unreachableDataSources = GetUnreachableToReport(request, offered);
 
         //
         // The chat ends in the answer being written, which has no content yet. An ERI server reads
@@ -367,7 +372,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
             dataSourceResults.Add(DescribeResult(request.DataSources[index], pages[index], resultCounts[index], leftOutCounts[index]));
 
         foreach (var dataSource in unreachableDataSources)
-            dataSourceResults.Add(DescribeResult(dataSource, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0));
+            dataSourceResults.Add(DescribeUnreachableResult(dataSource));
 
         var leftOutCount = leftOutCounts.Sum();
         logger.LogInformation("Semantic search finished. ToolCallId={ToolCallId}, DataSourceCount={DataSourceCount}, UnreachableCount={UnreachableCount}, Page={Page}, PassageCount={PassageCount}, LeftOutCount={LeftOutCount}", context.ToolCallId, request.DataSources.Count, unreachableDataSources.Count, request.Page, passageCount, leftOutCount);
@@ -387,6 +392,37 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
             RequiredProviderConfidence = requirements.Confidence,
             RequiredDataSecurity = requirements.Security,
         };
+    }
+
+    /// <summary>
+    /// Which data sources whose server could not be reached a search reports as not searched.
+    /// </summary>
+    /// <remarks>
+    /// A search of all data sources reports them, so that the model does not take their silence
+    /// for finding nothing. A search of some data sources, or of a further page, was not meant for
+    /// them, and repeating them there would only cost tokens.
+    /// </remarks>
+    /// <param name="request">The search to run.</param>
+    /// <param name="offered">The data sources offered for this search.</param>
+    /// <returns>The unreachable data sources to report, in the order they are offered.</returns>
+    internal static IReadOnlyList<IDataSource> GetUnreachableToReport(SemanticSearchRequest request, OfferedDataSources offered)
+    {
+        var searchesAll = request.Page == 1 && request.DataSources.Count == offered.Searchable.Count;
+        return searchesAll ? offered.Unreachable : [];
+    }
+
+    /// <summary>
+    /// What the model learns about a data source whose server could not be reached, in the result of a search.
+    /// </summary>
+    /// <remarks>
+    /// Like the description of the tool, the result names such a data source without its ID: the
+    /// model cannot search it, so it has no use for an ID to pass.
+    /// </remarks>
+    internal static JsonObject DescribeUnreachableResult(IDataSource dataSource)
+    {
+        var result = DescribeResult(dataSource, RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] }, 0, 0);
+        result.Remove("id");
+        return result;
     }
 
     /// <summary>
@@ -448,7 +484,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (dataSources.Count != 1)
             throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' may be above 1 only for exactly one data source in '{DATA_SOURCE_IDS_ARGUMENT}', but was {page} for {dataSources.Count}. Name the one data source to page through, or leave '{PAGE_ARGUMENT}' out to get the first page of each.");
 
-        var lastPage = RetrievalPaging.GetLastPage(dataSources[0].MaxMatches);
+        var lastPage = RetrievalPaging.GetLastPage(dataSources[0]);
         if (page > lastPage)
             throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' must be at most {lastPage} for the data source '{dataSources[0].Id}', but was {page}. Rephrase the query to find other passages.");
 

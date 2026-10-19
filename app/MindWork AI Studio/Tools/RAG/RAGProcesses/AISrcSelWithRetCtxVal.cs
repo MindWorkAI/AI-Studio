@@ -189,6 +189,11 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     {
                         dataContexts.AddRange(await retrievalTask);
                     }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
+                    {
+                        // The user stopped the answer, which is no error of the data source:
+                        LOGGER.LogInformation("The retrieval process was cancelled.");
+                    }
                     catch (Exception e)
                     {
                         LOGGER.LogError(e, "An error occurred during the retrieval process.");

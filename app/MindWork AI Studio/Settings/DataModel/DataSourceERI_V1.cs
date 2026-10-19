@@ -96,27 +96,24 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// <inheritdoc />
     public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
     {
-        var window = RetrievalPaging.GetExactWindowSize(page, this.MaxMatches);
+        var lastPage = RetrievalPaging.GetLastPage(this);
+        if (page < 1 || page > lastPage)
+            throw new ArgumentOutOfRangeException(nameof(page), page, $"An ERI data source has pages from 1 to {lastPage}.");
+
         if (this.MaxMatches == 0)
             return RetrievalPage.EMPTY;
 
         //
         // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
-        // thread still tells the server what the conversation is about. Nor does it know an offset:
-        // the server returns the whole window, and the page is cut from it here. Hence, the pages
-        // are only as stable as the order in which the server returns its matches. A server which
-        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        // thread still tells the server what the conversation is about. Nor does it know an offset,
+        // so the data source has a single page, asking for exactly what the classic RAG process asks
+        // for, see RetrievalPaging.GetLastPage:
         //
-        // The window holds no match beyond the page: a server may refuse to return more matches than
-        // its retrieval process allows, and the first page must not ask for more than the classic
-        // RAG process does. Every further page still asks for more, as ERI v1 knows no offset.
-        //
-        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, this.MaxMatches, token);
         if (contexts is null)
             return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
 
-        var (pageContexts, hasMore) = RetrievalPaging.CutExact(contexts, page, this.MaxMatches);
-        return new RetrievalPage(pageContexts, hasMore);
+        return new RetrievalPage(contexts.Take(this.MaxMatches).ToList(), false);
     }
 
     /// <returns>What the ERI server found, or null when it could not be searched.</returns>

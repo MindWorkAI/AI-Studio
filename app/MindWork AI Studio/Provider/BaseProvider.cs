@@ -1450,7 +1450,11 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// trust a provider by them: Semantic Search decides with these settings which data sources
     /// it offers, while the classic RAG process asks this provider itself. Without them, a
     /// self-hosted provider, or one the organization trusts, could search a data source which asks
-    /// for such a provider in one process but not in the other.
+    /// for such a provider in one process but not in the other.<br/><br/>
+    /// With the ID, the settings also know what the provider's own model list reported, e.g., the
+    /// context window of a self-hosted model, see ProviderExtensions.GetAutomaticModelProfile. So
+    /// the tools of a request and the way images are passed on see the model as the configured
+    /// provider does.
     /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {

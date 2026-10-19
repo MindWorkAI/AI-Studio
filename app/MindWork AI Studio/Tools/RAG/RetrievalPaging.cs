@@ -8,8 +8,8 @@ namespace AIStudio.Tools.RAG;
 /// Neither the vector store nor the keyword index knows an offset, and neither needs one: page p
 /// of size k is cut from the first p·k + 1 matches of every channel. The one match beyond the
 /// page tells whether a next page is worth asking for. The first page is therefore exactly what a
-/// search for k matches always returned. An ERI server gets no such match beyond the page, see
-/// <see cref="GetExactWindowSize"/>.
+/// search for k matches always returned. An ERI data source has a single page, see
+/// <see cref="GetLastPage(AIStudio.Settings.IDataSource)"/>.
 /// </para>
 /// <para>
 /// Staying without state is not a shortcut but a requirement: tool results do not travel into
@@ -22,8 +22,8 @@ public static class RetrievalPaging
     /// How many matches a page beyond the first may fetch at most, per channel.
     /// </summary>
     /// <remarks>
-    /// Every page fetches its whole window again, from the vector store and the keyword index, or
-    /// from the ERI server. The first page is exempt: its size is what the user or the organization
+    /// Every page fetches its whole window again, from the vector store and the keyword index. The
+    /// first page is exempt: its size is what the user or the organization
     /// configured, and fetching it is what the retrieval always did.
     /// </remarks>
     public const int MAX_RESULT_WINDOW = 100;
@@ -36,6 +36,20 @@ public static class RetrievalPaging
     public static int GetLastPage(int pageSize) => pageSize < 1 ? 1 : Math.Max(1, (MAX_RESULT_WINDOW - 1) / pageSize);
 
     /// <summary>
+    /// The last page which can be retrieved from the given data source.
+    /// </summary>
+    /// <remarks>
+    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
+    /// to ask the server for all pages before it as well. A server may refuse more matches than its
+    /// retrieval process allows, which often is the very number configured here: it would refuse
+    /// every further page, and the model would hear that the data source could not be searched
+    /// rather than that there is nothing more.
+    /// </remarks>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>The number of the last page, which is at least 1.</returns>
+    public static int GetLastPage(AIStudio.Settings.IDataSource dataSource) => dataSource is AIStudio.Settings.IERIDataSource ? 1 : GetLastPage(dataSource.MaxMatches);
+
+    /// <summary>
     /// How many matches every channel has to deliver for the given page.
     /// </summary>
     /// <param name="page">The page, starting at 1.</param>
@@ -43,21 +57,6 @@ public static class RetrievalPaging
     /// <returns>The size of the window, i.e., the page, all pages before it, and one match more.</returns>
     /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
     public static int GetWindowSize(int page, int pageSize) => GetPageEnd(page, pageSize) + 1;
-
-    /// <summary>
-    /// How many matches a channel has to deliver for the given page, without the one match beyond it.
-    /// </summary>
-    /// <remarks>
-    /// An ERI server is such a channel: it may refuse to return more matches than its retrieval
-    /// process allows, which often is the very number configured here. Hence, its first page asks
-    /// for exactly what the classic RAG process asks for. Whether there is more can only be told
-    /// from a full window then, which <see cref="CutExact{T}"/> does.
-    /// </remarks>
-    /// <param name="page">The page, starting at 1.</param>
-    /// <param name="pageSize">The number of matches per page.</param>
-    /// <returns>The size of the window, i.e., the page and all pages before it.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
-    public static int GetExactWindowSize(int page, int pageSize) => GetPageEnd(page, pageSize);
 
     /// <summary>
     /// Cuts one page out of what a single channel found.
@@ -74,27 +73,6 @@ public static class RetrievalPaging
         var pageMatches = matches.Skip(start).Take(pageSize).ToList();
 
         return (pageMatches, HasMore(page, pageSize, matches.Count));
-    }
-
-    /// <summary>
-    /// Cuts one page out of what a single channel found, fetched with <see cref="GetExactWindowSize"/>.
-    /// </summary>
-    /// <remarks>
-    /// Without the match beyond the page, a full window is the only hint that there is more. It
-    /// may turn out wrong and cost one empty page, which is the safe side: assuming nothing more
-    /// would hide matches.
-    /// </remarks>
-    /// <param name="matches">What the channel found, the most relevant first, fetched with the exact window of this page.</param>
-    /// <param name="page">The page, starting at 1.</param>
-    /// <param name="pageSize">The number of matches per page.</param>
-    /// <returns>The matches of this page, and whether the next page is worth asking for.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">The page is below 1 or beyond the last page.</exception>
-    public static (IReadOnlyList<T> Matches, bool HasMore) CutExact<T>(IReadOnlyList<T> matches, int page, int pageSize)
-    {
-        var (pageMatches, _) = Cut(matches, page, pageSize);
-        var isWindowFull = pageSize > 0 && matches.Count >= GetPageEnd(page, pageSize);
-
-        return (pageMatches, page < GetLastPage(pageSize) && isWindowFull);
     }
 
     /// <summary>
