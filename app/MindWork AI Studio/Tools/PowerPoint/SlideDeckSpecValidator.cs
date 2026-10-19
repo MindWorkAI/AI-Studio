@@ -95,17 +95,17 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
-        ValidateContent(slide, number, family, pictureCount, issues);
+        ValidateContent(slide, number, family.Id, family.Slots, pictureCount, issues);
     }
 
     /// <summary>
     /// Checks a slide which refers to a template slide: a kept one takes no content, an edited one
-    /// needs some, and it has to fit the slots of the template slide.
+    /// needs some, and it has to fit the slots of the template slide where the slide puts them.
     /// </summary>
     private static void ValidateTemplateSlideEntry(SlideSpec slide, int number, int templateSlideNumber, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
     {
         var use = UseOf(uses, templateSlideNumber);
-        if (use is TemplateSlideUse.OMIT || template.FindSlide(templateSlideNumber) is null)
+        if (use is TemplateSlideUse.OMIT || template.FindSlide(templateSlideNumber) is not { } templateSlide)
         {
             var offered = OfferedNumbersOf(uses, template);
             issues.Add(offered.Count > 0
@@ -135,7 +135,7 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
-        ValidateContent(slide, number, family, pictureCount, issues);
+        ValidateContent(slide, number, family.Id, family.Slots.Select(templateSlide.OnSlide).ToList(), pictureCount, issues);
     }
 
     /// <summary>
@@ -187,10 +187,19 @@ internal static class SlideDeckSpecValidator
 
     private static TemplateSlideUse UseOf(IReadOnlyList<TemplateSlideUse> uses, int number) => number >= 1 && number <= uses.Count ? uses[number - 1] : TemplateSlideUse.OMIT;
 
-    private static void ValidateContent(SlideSpec slide, int number, LayoutFamily family, int pictureCount, List<string> issues)
+    /// <summary>
+    /// Checks that the content of a slide fits the slots it goes into.
+    /// </summary>
+    /// <param name="slide">The slide.</param>
+    /// <param name="number">The number of the slide in the deck.</param>
+    /// <param name="layoutId">The ID of the layout family, which the issues name.</param>
+    /// <param name="slots">The slots, as the layout offers them or as a template slide moved them.</param>
+    /// <param name="pictureCount">How many pictures are attached.</param>
+    /// <param name="issues">The issues found so far; new ones are added.</param>
+    private static void ValidateContent(SlideSpec slide, int number, string layoutId, IReadOnlyList<TemplateSlot> slots, int pictureCount, List<string> issues)
     {
-        ValidateSingleText(slide.Title, PlaceholderRole.TITLE, number, family, issues);
-        ValidateSingleText(slide.Subtitle, PlaceholderRole.SUBTITLE, number, family, issues);
+        ValidateSingleText(slide.Title, PlaceholderRole.TITLE, number, layoutId, slots, issues);
+        ValidateSingleText(slide.Subtitle, PlaceholderRole.SUBTITLE, number, layoutId, slots, issues);
 
         //
         // The n-th text goes into "text n", and an empty entry keeps its slot empty: a model may
@@ -198,26 +207,26 @@ internal static class SlideDeckSpecValidator
         // entries at the end take no slot:
         //
         var textCount = CountUpToLastFilled(slide.Texts, text => text.Paragraphs.Count > 0);
-        if (ValidateCount(textCount, PlaceholderRole.TEXT, number, family, issues))
+        if (ValidateCount(textCount, PlaceholderRole.TEXT, number, layoutId, slots, issues))
         {
             for (var index = 0; index < textCount; index++)
             {
-                if (SlotOf(family, PlaceholderRole.TEXT, index + 1)?.Capacity is { } capacity)
+                if (SlotOf(slots, PlaceholderRole.TEXT, index + 1)?.Capacity is { } capacity)
                     ValidateCapacity(slide.Texts[index].Paragraphs, capacity, $"Slide {number}: text {index + 1}", issues);
             }
         }
 
         var labelCount = CountUpToLastFilled(slide.Labels, label => label.Length > 0);
-        if (ValidateCount(labelCount, PlaceholderRole.LABEL, number, family, issues))
+        if (ValidateCount(labelCount, PlaceholderRole.LABEL, number, layoutId, slots, issues))
         {
             for (var index = 0; index < labelCount; index++)
             {
-                if (slide.Labels[index].Length > 0 && SlotOf(family, PlaceholderRole.LABEL, index + 1)?.Capacity is { } capacity)
+                if (slide.Labels[index].Length > 0 && SlotOf(slots, PlaceholderRole.LABEL, index + 1)?.Capacity is { } capacity)
                     ValidateCapacity([new SlideParagraph(slide.Labels[index], 0)], capacity, $"Slide {number}: label {index + 1}", issues);
             }
         }
 
-        if (ValidateCount(slide.Pictures.Count, PlaceholderRole.PICTURE, number, family, issues))
+        if (ValidateCount(slide.Pictures.Count, PlaceholderRole.PICTURE, number, layoutId, slots, issues))
         {
             foreach (var picture in slide.Pictures.Where(candidate => candidate < 1 || candidate > pictureCount))
             {
@@ -228,18 +237,18 @@ internal static class SlideDeckSpecValidator
         }
 
         if (slide.Table is { } table)
-            ValidateTable(table, number, family, issues);
+            ValidateTable(table, number, layoutId, slots, issues);
     }
 
-    private static void ValidateSingleText(string text, PlaceholderRole role, int number, LayoutFamily family, List<string> issues)
+    private static void ValidateSingleText(string text, PlaceholderRole role, int number, string layoutId, IReadOnlyList<TemplateSlot> slots, List<string> issues)
     {
         if (text.Length == 0)
             return;
 
-        var slot = SlotOf(family, role, 1);
+        var slot = SlotOf(slots, role, 1);
         if (slot is null)
         {
-            issues.Add($"Slide {number} has a {role.CatalogName()}, but layout {family.Id} has none. Choose a layout with a {role.CatalogName()}, or leave it empty.");
+            issues.Add($"Slide {number} has a {role.CatalogName()}, but layout {layoutId} has none. Choose a layout with a {role.CatalogName()}, or leave it empty.");
             return;
         }
 
@@ -251,15 +260,15 @@ internal static class SlideDeckSpecValidator
     /// Checks that the layout has a slot for every piece of content of one role.
     /// </summary>
     /// <returns>Whether the content fits, so that its slots can be checked one by one.</returns>
-    private static bool ValidateCount(int count, PlaceholderRole role, int number, LayoutFamily family, List<string> issues)
+    private static bool ValidateCount(int count, PlaceholderRole role, int number, string layoutId, IReadOnlyList<TemplateSlot> slots, List<string> issues)
     {
-        var slots = family.Slots.Count(slot => slot.Role == role);
-        if (count <= slots)
+        var slotCount = slots.Count(slot => slot.Role == role);
+        if (count <= slotCount)
             return true;
 
-        issues.Add(slots == 0
-            ? $"Slide {number} has {count} {PluralOf(role, count)}, but layout {family.Id} has no {role.CatalogName()}. Choose a layout which has one."
-            : $"Slide {number} has {count} {PluralOf(role, count)}, but layout {family.Id} has only {slots}. Merge them, or choose a layout with more.");
+        issues.Add(slotCount == 0
+            ? $"Slide {number} has {count} {PluralOf(role, count)}, but layout {layoutId} has no {role.CatalogName()}. Choose a layout which has one."
+            : $"Slide {number} has {count} {PluralOf(role, count)}, but layout {layoutId} has only {slotCount}. Merge them, or choose a layout with more.");
 
         return false;
     }
@@ -271,11 +280,11 @@ internal static class SlideDeckSpecValidator
             issues.Add($"{what} needs about {lines} lines, but only about {capacity.Lines} fit. Shorten it, or spread the content over more slides.");
     }
 
-    private static void ValidateTable(SlideTableSpec table, int number, LayoutFamily family, List<string> issues)
+    private static void ValidateTable(SlideTableSpec table, int number, string layoutId, IReadOnlyList<TemplateSlot> slots, List<string> issues)
     {
-        if (SlotOf(family, PlaceholderRole.TABLE, 1) is not { } slot)
+        if (SlotOf(slots, PlaceholderRole.TABLE, 1) is not { } slot)
         {
-            issues.Add($"Slide {number} has a table, but layout {family.Id} has none. Choose a layout with a table.");
+            issues.Add($"Slide {number} has a table, but layout {layoutId} has none. Choose a layout with a table.");
             return;
         }
 
@@ -303,7 +312,7 @@ internal static class SlideDeckSpecValidator
             issues.Add($"Slide {number}: the table has {rows} rows including the header, but only about {capacity.Lines} fit. Split it across slides.");
     }
 
-    private static TemplateSlot? SlotOf(LayoutFamily family, PlaceholderRole role, int ordinal) => family.Slots.FirstOrDefault(slot => slot.Role == role && slot.Ordinal == ordinal);
+    private static TemplateSlot? SlotOf(IReadOnlyList<TemplateSlot> slots, PlaceholderRole role, int ordinal) => slots.FirstOrDefault(slot => slot.Role == role && slot.Ordinal == ordinal);
 
     /// <summary>
     /// How many slots the entries take: all of them up to the last one with content.

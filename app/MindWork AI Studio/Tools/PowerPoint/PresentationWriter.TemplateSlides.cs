@@ -75,12 +75,14 @@ internal static partial class PresentationWriter
     /// takes the formatting the slide gave the old one. A picture or a table replaces the old one
     /// as a whole, since nothing of its old shape fits the new content, and a picture nobody shows
     /// any more leaves the file. This holds for a table which is no placeholder as well, so that no
-    /// row of the old table shows below a shorter new one. A slot the slide does not carry gets its
-    /// placeholder from the layout, as on a slide written anew.
+    /// row of the old table shows below a shorter new one. A new picture or table goes where the
+    /// slide put the old one, should it have moved it away from where the layout puts it. A slot the
+    /// slide does not carry gets its placeholder from the layout, as on a slide written anew.
     /// </remarks>
     /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
+    /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots.</param>
     /// <param name="content">What goes on the slide.</param>
-    private static void EditTemplateSlide(SlidePart slidePart, SlideContent content)
+    private static void EditTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, SlideContent content)
     {
         if (slidePart.Slide?.CommonSlideData?.ShapeTree is not { } shapeTree)
             return;
@@ -131,10 +133,11 @@ internal static partial class PresentationWriter
             }
             else
             {
+                var bounds = templateSlide.OnSlide(slot).Bounds;
                 replacement = slot.Role switch
                 {
-                    PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(NextShapeIdOf(shapeTree), placeholder, slidePart, picture, slot.Bounds, slot.Bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
-                    PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(NextShapeIdOf(shapeTree), placeholder, table, slot.Bounds, content.TableStyleId),
+                    PlaceholderRole.PICTURE when index < slide.Pictures.Count && content.Pictures.TryGetValue(slide.Pictures[index], out var picture) => PictureShape(NextShapeIdOf(shapeTree), placeholder, slidePart, picture, bounds, bounds.Area >= content.SlideArea * BACKDROP_AREA_SHARE),
+                    PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table => TableShape(NextShapeIdOf(shapeTree), placeholder, table, bounds, content.TableStyleId),
 
                     _ => null,
                 };

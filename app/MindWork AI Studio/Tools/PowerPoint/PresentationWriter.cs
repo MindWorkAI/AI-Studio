@@ -105,7 +105,7 @@ internal static partial class PresentationWriter
                         if (layout is null)
                             throw new InvalidOperationException($"The slide deck writes content into template slide {number}, whose layout has no slots for it. Check the deck before writing it.");
 
-                        EditTemplateSlide(slidePart, new SlideContent(slide, layout, slidePart.SlideLayoutPart?.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea));
+                        EditTemplateSlide(slidePart, templateSlide, new SlideContent(slide, layout, slidePart.SlideLayoutPart?.SlideLayout, loadedPictures, tableStyleId, options.FooterText, slideArea));
                     }
                 }
                 else

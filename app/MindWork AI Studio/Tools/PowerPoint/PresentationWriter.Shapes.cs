@@ -136,7 +136,11 @@ internal static partial class PresentationWriter
         var blipFill = new P.BlipFill(new A.Blip { Embed = slidePart.GetIdOfPart(imagePart) });
         var shapeProperties = new P.ShapeProperties();
         if (isBackdrop)
+        {
+            // The picture is cropped for these bounds, which a slide of the template may have moved away from the layout's:
             blipFill.Append(CropToFill(picture, bounds));
+            shapeProperties.Transform2D = new A.Transform2D(new A.Offset { X = bounds.X, Y = bounds.Y }, new A.Extents { Cx = bounds.Width, Cy = bounds.Height });
+        }
         else
             shapeProperties.Transform2D = FitInside(picture, bounds);
 

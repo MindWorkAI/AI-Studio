@@ -25,6 +25,15 @@ internal readonly record struct SlotBounds(long X, long Y, long Width, long Heig
     public bool OverlapsHorizontally(SlotBounds other) => this.X < other.Right && other.X < this.Right;
 
     /// <summary>
+    /// Whether the other area lies within this one, give or take the given tolerance on each edge.
+    /// </summary>
+    public bool Contains(SlotBounds other, long horizontalTolerance, long verticalTolerance) =>
+        other.X >= this.X - horizontalTolerance &&
+        other.Right <= this.Right + horizontalTolerance &&
+        other.Y >= this.Y - verticalTolerance &&
+        other.Bottom <= this.Bottom + verticalTolerance;
+
+    /// <summary>
     /// Whether both areas are the same, give or take the given tolerance on each edge.
     /// </summary>
     public bool IsCloseTo(SlotBounds other, long horizontalTolerance, long verticalTolerance) =>

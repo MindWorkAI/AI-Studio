@@ -47,12 +47,14 @@ internal sealed partial class PresentationTemplate
     /// </summary>
     /// <remarks>
     /// The model learns what each slide says, so that a new slide does not repeat a kept one, and
-    /// which slots an edited slide offers, by the layout it shares with the catalog. Slides the user
-    /// leaves out are not mentioned at all. The texts come from the template file, so the caller
-    /// passes them through the prompt injection filter.
+    /// which slots an edited slide offers, by the layout it shares with the catalog. Where an edited
+    /// slide moved or resized a slot, the entry gives its place and capacity on the slide, since
+    /// those of the layout would make the model write too much. Slides the user leaves out are not
+    /// mentioned at all. The texts come from the template file, so the caller passes them through
+    /// the prompt injection filter.
     /// </remarks>
     /// <param name="uses">What the user chose for each slide of the template, by its number.</param>
-    /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 "AI Studio: / EINSTEIN:"</c>; empty when the user chose no slide.</returns>
+    /// <returns>The list, e.g., <c>- Template slide 3, to edit, with the slots of layout L3: title "News"; text 1 (left, middle, up to 6 lines of about 40 characters, on this slide) "AI Studio: / EINSTEIN:"</c>; empty when the user chose no slide.</returns>
     public string ToTemplateSlidesPrompt(IReadOnlyList<TemplateSlideUse> uses)
     {
         var list = new StringBuilder();
@@ -69,18 +71,53 @@ internal sealed partial class PresentationTemplate
             if (slide.IsImprint)
                 list.Append(", the imprint");
 
-            if (use is TemplateSlideUse.EDIT && slide.FamilyId is { } familyId)
-                list.Append(", with the slots of layout ").Append(familyId);
+            var family = this.FindFamily(slide.FamilyId ?? string.Empty);
+            if (use is TemplateSlideUse.EDIT && family is not null)
+                list.Append(", with the slots of layout ").Append(family.Id);
 
-            var slots = this.FindFamily(slide.FamilyId ?? string.Empty)?.Slots ?? slide.Contents.Select(content => content.Slot).ToList();
+            var slots = family?.Slots ?? slide.Contents.Select(content => content.Slot).ToList();
+            var entries = use is TemplateSlideUse.EDIT && family is not null
+                ? this.DescribeSlotsToEdit(slide, slots)
+                : slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}").ToList();
+
             list.Append(": ");
-            if (slide.Contents.Count == 0)
+            if (entries.Count == 0)
                 list.Append("no content");
             else
-                list.AppendJoin("; ", slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}"));
+                list.AppendJoin("; ", entries);
         }
 
         return list.ToString();
+    }
+
+    /// <summary>
+    /// Describes the slots of a slide to edit: what each one holds, and where the slide moved one,
+    /// its place and capacity on the slide.
+    /// </summary>
+    /// <param name="slide">The slide.</param>
+    /// <param name="slots">The slots of its layout family.</param>
+    /// <returns>One entry per slot which holds content or which the slide moved, in reading order.</returns>
+    private List<string> DescribeSlotsToEdit(TemplateSlide slide, IReadOnlyList<TemplateSlot> slots)
+    {
+        var slotsOnSlide = slots.Select(slide.OnSlide).ToList();
+        var entries = new List<string>();
+        foreach (var slot in slotsOnSlide)
+        {
+            var content = slide.Contents.FirstOrDefault(candidate => candidate.Slot.Role == slot.Role && candidate.Slot.Ordinal == slot.Ordinal);
+            if (!slide.Moves(slot))
+            {
+                if (content is not null)
+                    entries.Add($"{NameOf(slot, slots)} {DescribeContent(content)}");
+
+                continue;
+            }
+
+            entries.Add(content is null
+                ? this.DescribeSlot(slot, slotsOnSlide, "on this slide, empty")
+                : $"{this.DescribeSlot(slot, slotsOnSlide, "on this slide")} {DescribeContent(content)}");
+        }
+
+        return entries;
     }
 
     private static string DescribeContent(TemplateSlideContent content) => content.Slot.Role is PlaceholderRole.PICTURE
@@ -98,7 +135,13 @@ internal sealed partial class PresentationTemplate
         _ => null,
     };
 
-    private string DescribeSlot(TemplateSlot slot, IReadOnlyList<TemplateSlot> slots)
+    /// <summary>
+    /// Describes a slot for the model: its place, and how much text fits.
+    /// </summary>
+    /// <param name="slot">The slot.</param>
+    /// <param name="slots">All slots of the layout or the slide, which tell what a label belongs to.</param>
+    /// <param name="note">What the description adds at the end, e.g., "on this slide"; null for nothing.</param>
+    private string DescribeSlot(TemplateSlot slot, IReadOnlyList<TemplateSlot> slots, string? note = null)
     {
         var details = new List<string>();
         switch (slot.Role)
@@ -119,6 +162,9 @@ internal sealed partial class PresentationTemplate
             details.Add(slot.Role is PlaceholderRole.TABLE
                 ? $"up to {capacity.Lines} rows"
                 : $"up to {capacity.Lines} {(capacity.Lines == 1 ? "line" : "lines")} of about {capacity.CharactersPerLine} characters");
+
+        if (note is not null)
+            details.Add(note);
 
         return $"{NameOf(slot, slots)} ({string.Join(", ", details)})";
     }

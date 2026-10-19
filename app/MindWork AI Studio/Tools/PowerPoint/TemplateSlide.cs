@@ -15,6 +15,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="FamilyId">The ID of the layout family the slide is based on; null when its layout belongs to none, e.g., because it has no room for content.</param>
 /// <param name="Title">The title of the slide on a single line; empty when it has none.</param>
 /// <param name="Contents">What the slots of the slide hold, in the reading order of its layout, a table which is no placeholder included. Slots left empty are missing.</param>
+/// <param name="MovedSlots">The slots whose placeholders the slide moved or resized, e.g., to make room for a picture of its own, with their place and capacity on the slide; empty when every placeholder stays where the layout puts it.</param>
 /// <param name="IsHidden">Whether the slide is hidden in the slide show.</param>
 /// <param name="IsImprint">Whether the slide is an imprint, which takes the place of the one every presentation gets otherwise.</param>
 internal sealed record TemplateSlide(
@@ -24,5 +25,23 @@ internal sealed record TemplateSlide(
     string? FamilyId,
     string Title,
     IReadOnlyList<TemplateSlideContent> Contents,
+    IReadOnlyList<TemplateSlot> MovedSlots,
     bool IsHidden,
-    bool IsImprint);
+    bool IsImprint)
+{
+    /// <summary>
+    /// Where a slot of the slide's layout family sits on this slide, and how much fits there.
+    /// </summary>
+    /// <remarks>
+    /// The slot is matched by its role and number, which every variant of a family shares, so this
+    /// works whichever color the slide takes in the presentation.
+    /// </remarks>
+    /// <param name="slot">A slot of the family, or of any of its layouts.</param>
+    /// <returns>The slot as the slide moved it, or the given one when the slide keeps it where the layout puts it.</returns>
+    public TemplateSlot OnSlide(TemplateSlot slot) => this.MovedSlots.FirstOrDefault(moved => moved.Role == slot.Role && moved.Ordinal == slot.Ordinal) ?? slot;
+
+    /// <summary>
+    /// Whether the slide moved or resized the placeholder of a slot.
+    /// </summary>
+    public bool Moves(TemplateSlot slot) => this.MovedSlots.Any(moved => moved.Role == slot.Role && moved.Ordinal == slot.Ordinal);
+}

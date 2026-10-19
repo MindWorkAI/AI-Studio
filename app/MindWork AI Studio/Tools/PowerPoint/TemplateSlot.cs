@@ -15,4 +15,24 @@ internal sealed record TemplateSlot(
     SlotBounds Bounds,
     string PlaceholderType,
     uint? PlaceholderIndex,
-    TextCapacity? Capacity);
+    TextCapacity? Capacity)
+{
+    /// <summary>
+    /// The slot where a slide moved or resized its placeholder.
+    /// </summary>
+    /// <remarks>
+    /// The capacity grows and shrinks with the size, since the slide keeps the font. Insets stay as
+    /// they are on a smaller slot, so the estimate runs a little high there; the check of the
+    /// model's answer accepts a line more anyway.
+    /// </remarks>
+    /// <param name="bounds">Where the slide puts the placeholder.</param>
+    public TemplateSlot MovedTo(SlotBounds bounds) => this with
+    {
+        Bounds = bounds,
+        Capacity = this.Capacity is { } capacity
+            ? new TextCapacity(
+                Math.Max(1, (int)(capacity.Lines * (double)bounds.Height / Math.Max(1, this.Bounds.Height))),
+                Math.Max(1, (int)(capacity.CharactersPerLine * (double)bounds.Width / Math.Max(1, this.Bounds.Width))))
+            : null,
+    };
+}

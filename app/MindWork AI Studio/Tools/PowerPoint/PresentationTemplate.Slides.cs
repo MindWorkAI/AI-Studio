@@ -46,8 +46,10 @@ internal sealed partial class PresentationTemplate
     /// <param name="presentation">The presentation, which lists the slides in their order.</param>
     /// <param name="layouts">Every layout of the template, including those without room for content.</param>
     /// <param name="families">The layout families the model plans with.</param>
+    /// <param name="slideWidth">The width of a slide, in EMU.</param>
+    /// <param name="slideHeight">The height of a slide, in EMU.</param>
     /// <returns>The slides, numbered as PowerPoint counts them.</returns>
-    private static List<TemplateSlide> ReadSlides(PresentationPart presentationPart, P.Presentation presentation, IReadOnlyList<TemplateLayout> layouts, IReadOnlyList<LayoutFamily> families)
+    private static List<TemplateSlide> ReadSlides(PresentationPart presentationPart, P.Presentation presentation, IReadOnlyList<TemplateLayout> layouts, IReadOnlyList<LayoutFamily> families, long slideWidth, long slideHeight)
     {
         var layoutsByUri = new Dictionary<Uri, TemplateLayout>();
         foreach (var layout in layouts)
@@ -65,7 +67,15 @@ internal sealed partial class PresentationTemplate
                 continue;
 
             var layoutUri = slidePart.SlideLayoutPart?.Uri;
-            var contents = layoutUri is not null && layoutsByUri.TryGetValue(layoutUri, out var slideLayout) ? ContentsOf(slide, slideLayout) : [];
+            List<TemplateSlideContent> contents = [];
+            List<TemplateSlot> movedSlots = [];
+            if (layoutUri is not null && layoutsByUri.TryGetValue(layoutUri, out var slideLayout))
+            {
+                var shapesBySlot = TemplateSlideShapes.SlotShapesOf(slide.CommonSlideData?.ShapeTree, slideLayout);
+                contents = ContentsOf(shapesBySlot, slideLayout);
+                movedSlots = MovedSlotsOf(shapesBySlot, slideLayout, slideWidth, slideHeight);
+            }
+
             var title = contents.FirstOrDefault(content => content.Slot.Role is PlaceholderRole.TITLE)?.Text ?? string.Empty;
             slides.Add(new TemplateSlide(
                 slides.Count + 1,
@@ -74,6 +84,7 @@ internal sealed partial class PresentationTemplate
                 layoutUri is null ? null : familyIdsByLayoutUri.GetValueOrDefault(layoutUri),
                 title.ReplaceLineEndings(" "),
                 contents,
+                movedSlots,
                 slide.Show?.Value == false,
                 IsImprint(title, contents)));
         }
@@ -89,9 +100,10 @@ internal sealed partial class PresentationTemplate
     /// picture counts as content even though it has no text, and a table which is no placeholder
     /// as the content of the table slot, see <see cref="TemplateSlideShapes.SlotShapesOf"/>.
     /// </remarks>
-    private static List<TemplateSlideContent> ContentsOf(P.Slide slide, TemplateLayout layout)
+    /// <param name="shapesBySlot">The shapes of the slide which fill the slots of its layout.</param>
+    /// <param name="layout">The layout of the slide.</param>
+    private static List<TemplateSlideContent> ContentsOf(IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout)
     {
-        var shapesBySlot = TemplateSlideShapes.SlotShapesOf(slide.CommonSlideData?.ShapeTree, layout);
         var contents = new List<TemplateSlideContent>();
         foreach (var slot in layout.Slots)
         {
@@ -105,6 +117,53 @@ internal sealed partial class PresentationTemplate
 
         return contents;
     }
+
+    /// <summary>
+    /// The slots whose placeholders a slide moved or resized, with their place and capacity on the slide.
+    /// </summary>
+    /// <remarks>
+    /// Authors shrink a placeholder to make room for something of their own, such as a picture
+    /// beside the text. The model then has to write for the room the slide leaves, not for the one
+    /// the layout offers. Small shifts, as they happen when dragging a placeholder, do not count.
+    /// </remarks>
+    /// <param name="shapesBySlot">The shapes of the slide which fill the slots of its layout.</param>
+    /// <param name="layout">The layout of the slide.</param>
+    /// <param name="slideWidth">The width of a slide, in EMU.</param>
+    /// <param name="slideHeight">The height of a slide, in EMU.</param>
+    private static List<TemplateSlot> MovedSlotsOf(IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout, long slideWidth, long slideHeight)
+    {
+        var horizontalTolerance = (long)(slideWidth * SLOT_TOLERANCE);
+        var verticalTolerance = (long)(slideHeight * SLOT_TOLERANCE);
+        var movedSlots = new List<TemplateSlot>();
+        foreach (var slot in layout.Slots)
+        {
+            if (shapesBySlot.TryGetValue(slot, out var shape) && BoundsOnSlideOf(slot, shape, horizontalTolerance, verticalTolerance) is { } bounds && !bounds.IsCloseTo(slot.Bounds, horizontalTolerance, verticalTolerance))
+                movedSlots.Add(slot.MovedTo(bounds));
+        }
+
+        return movedSlots;
+    }
+
+    /// <summary>
+    /// Where the shape filling a slot puts the slot on the slide.
+    /// </summary>
+    /// <returns>The place; null when the shape says nothing about it, e.g., because it takes the place of the layout.</returns>
+    private static SlotBounds? BoundsOnSlideOf(TemplateSlot slot, OpenXmlElement shape, long horizontalTolerance, long verticalTolerance) => shape switch
+    {
+        P.Shape textShape => BoundsOf(textShape.ShapeProperties?.Transform2D?.Offset, textShape.ShapeProperties?.Transform2D?.Extents),
+
+        // A table grows with its rows, so its frame tells where the slot starts, but not how far down it reaches:
+        P.GraphicFrame frame => BoundsOf(frame.Transform?.Offset, frame.Transform?.Extents) is { } frameBounds
+            ? frameBounds with { Height = Math.Max(frameBounds.Height, slot.Bounds.Bottom - frameBounds.Y) }
+            : null,
+
+        // A picture is fit into its slot, so one within the slot does not say that the slot moved:
+        P.Picture picture => BoundsOf(picture.ShapeProperties?.Transform2D?.Offset, picture.ShapeProperties?.Transform2D?.Extents) is { } pictureBounds && !slot.Bounds.Contains(pictureBounds, horizontalTolerance, verticalTolerance)
+            ? pictureBounds
+            : null,
+
+        _ => null,
+    };
 
     /// <summary>
     /// The text of a placeholder: the paragraphs of a shape, or the rows of a table.

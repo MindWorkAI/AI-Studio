@@ -472,6 +472,27 @@ public sealed class PresentationWriterTests
             Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "Reusable" }));
             Assert.That(slide.Slide!.Descendants<P.Picture>().Count(), Is.EqualTo(1));
             Assert.That(pictureData.ToArray(), Is.EqualTo(new byte[] { 4, 5, 6 }), "The old picture leaves the file along with its shape.");
+            Assert.That(slide.Slide!.Descendants<P.Picture>().Single().ShapeProperties!.Transform2D!.Extents!.Cy!.Value, Is.EqualTo(RIGHT_PICTURE.Height), "The old picture was fit into its slot, which therefore stays as large as the layout makes it.");
+        });
+    }
+
+    [Test]
+    public async Task APictureGoesWhereTheSlideMovedItsSlot()
+    {
+        var moved = new SlotBounds(6_200_000, 4_000_000, 2_000_000, 1_500_000);
+        var templateOptions = new TestTemplateOptions(Slides: [new TestSlide(4, (TestPlaceholder.Title(), "The rocket"), (TestPlaceholder.Picture(20, moved), string.Empty))]);
+        var deck = new SlideDeckSpec("Mars", [Edit(1, pictures: [1])]);
+
+        var (file, _) = await WriteAsync(deck, OPTIONS, templateOptions, new FakePictureSource(WIDE_PICTURE));
+        using var document = PresentationDocument.Open(file, false);
+        var transform = SlidesOf(document)[0].Slide!.Descendants<P.Picture>().Single().ShapeProperties!.Transform2D!;
+        var bounds = new SlotBounds(transform.Offset!.X!.Value, transform.Offset.Y!.Value, transform.Extents!.Cx!.Value, transform.Extents.Cy!.Value);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(moved.Contains(bounds, 0, 0), Is.True, $"The picture fits into the slot where the slide put it, but lies at {bounds}.");
+            Assert.That(bounds.Width, Is.EqualTo(moved.Width), "The wide picture takes the whole width of the moved slot.");
         });
     }
 

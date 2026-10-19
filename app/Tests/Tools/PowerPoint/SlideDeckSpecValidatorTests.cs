@@ -204,6 +204,27 @@ public sealed class SlideDeckSpecValidatorTests
         });
     }
 
+    [Test]
+    public void AnEditedSlideFitsTheSizeOfItsSlotOnTheSlide()
+    {
+        // The layout slot holds 10 lines of 50 characters; the slide halves it to 5 lines of 25:
+        var bounds = new SlotBounds(838_200, 1_825_625, 6_413_500 + 2 * 91_440, 3_200_400 + 2 * 45_720);
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides: [new TestSlide(0, (TestPlaceholder.Title(), "Rocket"), (TestPlaceholder.Text(1, bounds with { Width = bounds.Width / 2, Height = bounds.Height / 2 }), "Reusable"))]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, bounds, 2000)));
+
+        var template = PresentationTemplate.Read(file);
+        var points = Text(Enumerable.Repeat(new string('x', 40), 4).ToArray());
+        var edited = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [Edit(1, texts: [points])]), template, 0, 0, [TemplateSlideUse.EDIT]);
+        var written = SlideDeckSpecValidator.Validate(new SlideDeckSpec("Mars", [Slide("L1", texts: [points])]), template, 0, 0, [TemplateSlideUse.OMIT]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(edited, Has.Some.Contains("Slide 1: text 1 needs about 8 lines, but only about 5 fit."), "Four points of two lines each overfill the half the slide leaves.");
+            Assert.That(written, Is.Empty, "On a slide written anew, the same points fit the whole slot.");
+        });
+    }
+
     /// <summary>
     /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the imprint is
     /// edited, and the closing slide is left out.

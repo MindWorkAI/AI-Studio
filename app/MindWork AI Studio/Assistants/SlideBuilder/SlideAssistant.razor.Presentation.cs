@@ -300,6 +300,7 @@ public partial class SlideAssistant
                  The user chose slides of the template to use in the presentation. TEMPLATE_SLIDES lists them in their order, each one either to keep unchanged or to edit.
                      - Write a slide to keep as { "template_slide": <its number> } and nothing else. Add "starts_chapter": true where it opens a chapter.
                      - Write a slide to edit with "template_slide": <its number> and its new content in the usual fields, which fill the slots its entry names. Leave out "layout": the slide keeps its own. A slot you leave out keeps the content of the template slide.
+                     - Where an entry gives a slot its place and size "on this slide", the slide moved or resized it, e.g., to make room for a picture of its own. Stay within the lines and characters stated there rather than those of the layout.
                      - Use every listed slide exactly once, in the listed order. Add new slides before, between, and after them, wherever the content calls for it.
                      - Do not repeat on a new slide what a kept slide says already.{{imprintRule}}
                      - Example: "slides": [{ "template_slide": 1 }, { "layout": "L3", "title": "..." }, { "template_slide": 3, "title": "...", "texts": [["..."]] }]

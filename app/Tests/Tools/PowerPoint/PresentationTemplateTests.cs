@@ -275,6 +275,60 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void ASlotTheSlideResizesTakesItsSizeOnTheSlide()
+    {
+        // The layout slot holds 10 lines of 50 characters, see TheCapacityFollowsSizeAndFontSize:
+        var bounds = new SlotBounds(838_200, 1_825_625, 6_413_500 + 2 * 91_440, 3_200_400 + 2 * 45_720);
+        var half = bounds with { Width = bounds.Width / 2, Height = bounds.Height / 2 };
+        var nudged = bounds with { X = bounds.X + 50_000 };
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Rocket"), (TestPlaceholder.Text(1, half), "Reusable")),
+                new TestSlide(0, (TestPlaceholder.Title(), "Fuel"), (TestPlaceholder.Text(1, nudged), "Cheap")),
+                new TestSlide(0, (TestPlaceholder.Title(), "Crew"), (TestPlaceholder.Text(1, half), string.Empty)),
+            ]),
+            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, bounds, 2000)));
+
+        var template = PresentationTemplate.Read(file);
+        var slots = template.Families[0].Slots;
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Slides[0].MovedSlots.Select(slot => (slot.Role, slot.Ordinal, slot.Bounds, slot.Capacity)), Is.EqualTo(new[] { (PlaceholderRole.TEXT, 1, half, (TextCapacity?)new TextCapacity(5, 25)) }), "Half the size holds half the lines of half the characters.");
+            Assert.That(template.Slides[0].OnSlide(slots[1]).Capacity, Is.EqualTo(new TextCapacity(5, 25)));
+            Assert.That(template.Slides[0].OnSlide(slots[0]), Is.SameAs(slots[0]), "The title stays where the layout puts it.");
+            Assert.That(template.Slides[1].MovedSlots, Is.Empty, "A placeholder dragged a little does not count as moved.");
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT, TemplateSlideUse.EDIT, TemplateSlideUse.EDIT]), Is.EqualTo(
+                """
+                - Template slide 1, to edit, with the slots of layout L1: title "Rocket"; text 1 (left, middle, up to 5 lines of about 25 characters, on this slide) "Reusable"
+                - Template slide 2, to edit, with the slots of layout L1: title "Fuel"; text 1 "Cheap"
+                - Template slide 3, to edit, with the slots of layout L1: title "Crew"; text 1 (left, middle, up to 5 lines of about 25 characters, on this slide, empty)
+                """.ReplaceLineEndings("\n")));
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Rocket\"; text 1 \"Reusable\""), "A slide to keep needs no sizes.");
+        });
+    }
+
+    [Test]
+    public void AFreeTableTellsWhereItsSlotStarts()
+    {
+        var lower = FULL_TEXT with { Y = FULL_TEXT.Y + 1_000_000 };
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs")) { Elements = [TestElement.Table(FULL_TEXT, ["Item", "Cost"], ["Fuel", "10"])] },
+                new TestSlide(0, (TestPlaceholder.Title(), "Costs")) { Elements = [TestElement.Table(lower, ["Item", "Cost"], ["Fuel", "10"])] },
+            ]),
+            new TestLayout("Table", TestPlaceholder.Title(), TestPlaceholder.Table(11, FULL_TEXT)));
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.Slides[0].MovedSlots, Is.Empty, "A table grows with its rows, so a short one at the place of its slot does not shrink the slot.");
+            Assert.That(template.Slides[1].MovedSlots.Select(slot => slot.Bounds), Is.EqualTo(new[] { lower with { Height = FULL_TEXT.Bottom - lower.Y } }), "A table placed lower leaves less room, down to the bottom of its slot.");
+        });
+    }
+
+    [Test]
     public void ASlideOnALayoutWithoutRoomForContentBelongsToNoFamily()
     {
         using var file = TestTemplate.Create(

@@ -94,7 +94,7 @@ internal sealed partial class PresentationTemplate
         }
 
         var (families, variantLabels) = GroupIntoFamilies(layouts, slideWidth, slideHeight);
-        var slides = ReadSlides(presentationPart, presentation, layouts, families);
+        var slides = ReadSlides(presentationPart, presentation, layouts, families, slideWidth, slideHeight);
         return new PresentationTemplate(slideWidth, slideHeight, families, variantLabels, slides);
     }
 
