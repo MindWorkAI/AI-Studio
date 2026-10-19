@@ -12,6 +12,11 @@
         {
             <MudExpansionPanels @key="@this.expansionPanelsRenderKey" Class="mb-3" MultiExpansion="@false">
 
+                @foreach (var group in this.pendingUserAPIKeyGroups)
+                {
+                    <UserAPIKeyPrompt @key="@group.ConfigPluginId" Group="@group" IsExpanded="@this.IsPanelExpanded(UserAPIKeyPanelId(group))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(UserAPIKeyPanelId(group), isExpanded))"/>
+                }
+
                 @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
                 {
                     <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION, isExpanded))">

@@ -370,4 +370,10 @@ public static class ConfigurationSelectDataFactory
             yield return new(bitrate.GetName(), bitrate);
         }
     }
+
+    public static IEnumerable<ConfigurationSelectData<EnterpriseEncryptionFormat>> GetEnterpriseEncryptionFormatData()
+    {
+        yield return new(TB("Compatible with all versions of AI Studio"), EnterpriseEncryptionFormat.V1);
+        yield return new(TB("Protected against wrong encryption secrets, needs AI Studio v26.10.1 or newer"), EnterpriseEncryptionFormat.V2);
+    }
 }

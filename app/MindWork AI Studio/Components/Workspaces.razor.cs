@@ -382,10 +382,14 @@ public partial class Workspaces : MSGComponentBase
 
     private bool IsChatTreeItemBusy(TreeItemData treeItem)
     {
-        return treeItem.Type is TreeItemType.CHAT
-               && (this.AIJobService.IsChatGenerationActive(treeItem.ChatId)
-                   || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(treeItem.ChatId)));
+        return treeItem.Type is TreeItemType.CHAT && this.IsChatBusy(treeItem.ChatId);
     }
+
+    /// <summary>
+    /// Whether an answer is being written for the given chat, or a transcript is being made for it.
+    /// </summary>
+    /// <param name="chatId">The chat to check.</param>
+    private bool IsChatBusy(Guid chatId) => this.AIJobService.IsChatGenerationActive(chatId) || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(chatId));
 
     private string GetChatTreeItemTextStyle(TreeItemData treeItem)
     {
@@ -922,6 +926,18 @@ public partial class Workspaces : MSGComponentBase
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
         var workspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
         
+        //
+        // Deleting a workspace while one of its chats is being worked on would pull the ground from
+        // under that work. The button cannot tell, since the chats of a workspace may not be loaded
+        // yet, so we check before asking: nobody should confirm something that cannot happen anyway.
+        //
+        var chatIds = this.ReadChatIdsOfWorkspace(workspaceId);
+        if (chatIds.Any(this.IsChatBusy))
+        {
+            await this.WarnAboutBusyWorkspaceAsync(workspaceName);
+            return;
+        }
+
         var chatCount = Directory.EnumerateDirectories(workspacePath).Count();
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
@@ -933,10 +949,43 @@ public partial class Workspaces : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        Directory.Delete(workspacePath, true);
-        await WorkspaceBehaviour.RemoveWorkspaceFromCacheAsync(workspaceId);
+        if (!await WorkspaceBehaviour.DeleteWorkspaceAsync(workspaceId, this.IsChatBusy))
+        {
+            await this.WarnAboutBusyWorkspaceAsync(workspaceName);
+            return;
+        }
+
+        foreach (var chatId in chatIds)
+            this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForChat(chatId));
+
         await this.LoadTreeItemsAsync(startPrefetch: false);
+
+        // The open chat went along with its workspace. Left on the screen, it would be stored again sooner or later:
+        if (this.CurrentChatThread?.WorkspaceId == workspaceId)
+        {
+            this.CurrentChatThread = null;
+            await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
+        }
     }
+
+    /// <summary>
+    /// Reads the chats of the given workspace, together with the open chat when it belongs there.
+    /// </summary>
+    /// <remarks>
+    /// A new chat started in a workspace reaches the disk only with its first message. Until then, it
+    /// is missing from the workspace on the disk, but it may already wait for a transcript.
+    /// </remarks>
+    /// <param name="workspaceId">The workspace to read.</param>
+    private HashSet<Guid> ReadChatIdsOfWorkspace(Guid workspaceId)
+    {
+        var chatIds = WorkspaceBehaviour.ReadChatIdsOfWorkspace(workspaceId).ToHashSet();
+        if (this.CurrentChatThread is { } openChat && openChat.WorkspaceId == workspaceId)
+            chatIds.Add(openChat.ChatId);
+
+        return chatIds;
+    }
+
+    private Task WarnAboutBusyWorkspaceAsync(string workspaceName) => MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.FolderDelete, string.Format(T("The workspace '{0}' cannot be deleted while one of its chats is being answered or transcribed. Please try again once that is finished."), workspaceName)));
     
     /// <summary>
     /// Moves the given chat into another workspace and shows it there in the tree.

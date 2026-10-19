@@ -38,11 +38,7 @@ public static class PluginFilePaths
             return PluginFilePathIssue.PARENT_SEGMENT;
 
         var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? pluginRoot
-            : pluginRoot + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!combinedPath.StartsWith(pluginRootWithSeparator, comparison))
+        if (!PathTools.IsInsideDirectory(pluginRoot, combinedPath))
             return PluginFilePathIssue.OUTSIDE_PLUGIN_FOLDER;
 
         resolvedFilePath = combinedPath;

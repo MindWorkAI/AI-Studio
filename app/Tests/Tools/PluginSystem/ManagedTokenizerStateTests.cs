@@ -162,8 +162,8 @@ public sealed class ManagedTokenizerStateTests
             throw new InvalidOperationException("The configuration of this test is not a Lua table.");
 
         var configObjects = new List<PluginConfigurationObject>();
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, PLUGIN_ID, ref configObjects, dryRun: false, PLUGIN_PATH);
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, x => x.NextEmbeddingNum, mainTable, PLUGIN_ID, ref configObjects, dryRun: false, PLUGIN_PATH);
+        PluginConfigurationObjectDescriptors.LLM_PROVIDER.TryParse(mainTable, PLUGIN_ID, configObjects, dryRun: false, PLUGIN_PATH);
+        PluginConfigurationObjectDescriptors.EMBEDDING_PROVIDER.TryParse(mainTable, PLUGIN_ID, configObjects, dryRun: false, PLUGIN_PATH);
         return configObjects;
     }
 

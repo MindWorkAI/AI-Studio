@@ -14,6 +14,15 @@ a time. After each item:
 4. Stop and wait until the developer has reviewed and committed the changes before continuing.
 5. Never push the changes; the developer performs all pushes.
 
+In a cloud session, steps 1, 4, and 5 work differently: there, you build in the shell, and you commit
+and push each item yourself before you stop. See "Cloud sessions" below.
+
+Developers may change steps 3 and 4 for themselves in their personal instructions outside this repository,
+such as `~/.claude/CLAUDE.md` for Claude Code, `~/.codex/AGENTS.md` for Codex, or an instruction file in a
+parent folder. If those instructions tell you to commit each item yourself, do so and continue with the
+next item without stopping; the developer then reviews the whole branch at the end. Step 5 applies all the
+same: never push.
+
 ## Area guides
 
 Some areas of the code have instructions of their own, in an `AGENTS.md` next to the code. Claude Code
@@ -82,6 +91,9 @@ dotnet run build
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
 ### Running builds from an agent
+This section and "Running Tests" apply to local sessions. A cloud session builds and tests in its shell
+instead; see "Cloud sessions" below.
+
 Agents must not start builds through their own shell: agent shells run sandboxed, and `.NET` builds
 hit a known sandbox issue there, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related
 failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run build`,
@@ -130,6 +142,37 @@ mcp__rider__execute_terminal_command  command: "cd app/Tests && dotnet test"
 ```
 
 The Rust tests run with `cargo test` in `runtime/`, through the `rustrover` MCP server.
+
+## Cloud sessions
+
+A cloud session of Claude Code runs on a virtual machine: Ubuntu 24.04 on x86_64, as root, without a
+display, and with the environment variable `CLAUDE_CODE_REMOTE` set to `true`. Neither the IDEs nor the
+agent sandbox exist there, and the developer has no shell in it: only a pushed branch brings the work back.
+
+**Toolchain.** At every session start, the hook in `.claude/settings.json` runs
+`.claude/hooks/prepare-cloud-session.sh`. It brings the .NET SDK and Rust in line with `metadata.txt` and
+places the stand-ins which Tauri's build script insists on, like the `verify` job of the pipeline. Run it
+again yourself when `metadata.txt` changes during the session, e.g., after a merge from `main`.
+
+**Building and testing** happen in the shell:
+
+- The quality gate, the same as in the pipeline: `cd app/Build && dotnet run verify`. It compiles both
+  the .NET app and the Rust runtime on its way. Narrower checks: `dotnet build "app/MindWork AI Studio.sln"`,
+  `dotnet test` in `app/Tests`, and `cargo test` or `cargo clippy --all-targets -- -D warnings` in `runtime/`.
+- A cold build of the Rust runtime takes several minutes: run the gate and cargo in the background, or
+  give them the longest timeout available.
+- Skip `dotnet run build`: it needs the Tauri CLI, which is not installed, and the app it produces
+  cannot start without a display.
+
+**Committing and pushing** is your job here:
+
+- Commit each finished piece of work as soon as the gate passes, under a short title in US English, and
+  push it right away; in the incremental workflow, do so for each plan item before you stop. A machine
+  idle for long may be reclaimed, and then only the conversation comes back.
+- Push only to the branch of the session: the one Claude Code designated for it, or the one the developer
+  named. Never push to `main` or any other branch, never force-push, and never rewrite a pushed commit;
+  fix it with a new one instead.
+- Open a pull request only when the developer asks for one.
 
 ## Configuration and Metadata
 - `metadata.txt` - Build metadata (version, build time, component versions) read by both Rust and .NET

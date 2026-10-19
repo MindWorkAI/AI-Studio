@@ -112,6 +112,8 @@ public static class ModelCorpus
     private static readonly CorpusEntry[] MISTRAL_ENTRIES =
     [
         new(MISTRAL, "mistral-large-latest", NAMED_BY_A_RULE),
+        new(MISTRAL, "mistral-large-4", NAMED_BY_A_RULE),
+        new(MISTRAL, "mistral-large-4-0", NAMED_BY_NO_RULE),
         new(MISTRAL, "mistral-large-2512", NAMED_BY_A_RULE),
         new(MISTRAL, "mistral-large-2411", NAMED_BY_A_RULE),
         new(MISTRAL, "mistral-medium-latest", NAMED_BY_A_RULE),
@@ -227,6 +229,7 @@ public static class ModelCorpus
         new(OPEN_ROUTER, "google/gemini-3.7-flash", QUOTED_AS_A_NAME_SHAPE),
         new(OPEN_ROUTER, "google/gemma-4-31b-it", NAMED_BY_A_RULE),
         new(OPEN_ROUTER, "mistralai/mistral-large-3", NAMED_BY_A_RULE),
+        new(OPEN_ROUTER, "mistralai/mistral-large-4-0", NAMED_BY_NO_RULE),
         new(OPEN_ROUTER, "perplexity/sonar-reasoning", NAMED_BY_A_RULE),
         new(OPEN_ROUTER, "qwen/qwen3.8-flash-next", QUOTED_AS_A_NAME_SHAPE),
         new(OPEN_ROUTER, "deepseek/deepseek-r1-distill-llama-70b", ON_THE_MANUAL_TEST_LIST),

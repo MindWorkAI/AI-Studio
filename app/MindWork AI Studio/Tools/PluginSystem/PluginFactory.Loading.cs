@@ -14,7 +14,19 @@ public static partial class PluginFactory
 {
     private static readonly List<IAvailablePlugin> AVAILABLE_PLUGINS = [];
     private static readonly SemaphoreSlim PLUGIN_LOAD_SEMAPHORE = new(1, 1);
-    
+    private static readonly TaskCompletionSource FIRST_LOAD_COMPLETED = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>
+    /// Completes once LoadAll got through for the first time, the clean-up of the configuration included.
+    /// </summary>
+    /// <remarks>
+    /// Until then, the settings may lack whatever the configuration of an organization provides, such
+    /// as its embedding providers: on a new computer, or after restoring a backup, which leaves them
+    /// out. Whoever acts on such objects while AI Studio starts waits for this, or takes them for
+    /// objects which are gone. It never completes when loading failed, so wait with a limit.
+    /// </remarks>
+    public static Task FirstLoadCompleted => FIRST_LOAD_COMPLETED.Task;
+
     /// <summary>
     /// How long a single plugin may take to load, and again to start.
     /// </summary>
@@ -303,37 +315,10 @@ public static partial class PluginFactory
 
         var wasConfigurationChanged = hasStartedConfigurationPlugins;
 
-        // Check LLM providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER))
-            wasConfigurationChanged = true;
-
-        // Check transcription providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
-            wasConfigurationChanged = true;
-
-        // Check embedding providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
-            wasConfigurationChanged = true;
-
-        // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
-            wasConfigurationChanged = true;
-
-        // Check chat templates:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
-            wasConfigurationChanged = true;
-
-        // Check profiles:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
-            wasConfigurationChanged = true;
-
-        // Check document analysis policies:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
-            wasConfigurationChanged = true;
-
-        // Check glossaries:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.GLOSSARY, x => x.Glossaries, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
-            wasConfigurationChanged = true;
+        // Check configured objects such as LLM providers, chat templates, or data sources:
+        foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
+            if(await descriptor.CleanLeftOverAsync(AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, notStartedConfigPluginIds, configObjectList))
+                wasConfigurationChanged = true;
 
         //
         // Check left-over mandatory info acceptances. The mandatory infos come from the running
@@ -376,6 +361,8 @@ public static partial class PluginFactory
             await SettingsManagerAccess.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
+
+        FIRST_LOAD_COMPLETED.TrySetResult();
     }
 
     /// <summary>

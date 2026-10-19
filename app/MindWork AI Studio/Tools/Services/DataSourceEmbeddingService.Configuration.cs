@@ -47,7 +47,7 @@ public sealed partial class DataSourceEmbeddingService
     #endregion
 
     /// <summary>
-    /// Stops every active run which works for embedding settings which no longer apply.
+    /// Stops every active run which works for embedding settings or a selection of documents which no longer apply.
     /// </summary>
     /// <remarks>
     /// Reads no database, because it runs on every change of a setting anywhere in the app. A run
@@ -110,6 +110,10 @@ public sealed partial class DataSourceEmbeddingService
             if (!indexStore.IsAvailable)
                 return;
 
+            //
+            // The embedding signature alone: another selection leaves the stored index valid, and
+            // the next ordinary run adds and removes the documents.
+            //
             var indexState = await indexStore.GetDataSourceStateAsync(dataSource.Id, CancellationToken.None);
             if (string.Equals(indexState?.EmbeddingSignature, currentRunSignature.EmbeddingSignature, StringComparison.Ordinal))
                 continue;

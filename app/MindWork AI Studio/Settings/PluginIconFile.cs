@@ -56,7 +56,7 @@ internal static class PluginIconFile
             return false;
         }
 
-        if (!IsInsideDirectory(pluginRoot, resolvedPath))
+        if (!PathTools.IsInsideDirectory(pluginRoot, resolvedPath))
         {
             issue = "The icon path points outside of the configuration plugin directory.";
             return false;
@@ -108,18 +108,10 @@ internal static class PluginIconFile
             currentPath = Path.Combine(currentPath, segment);
             FileSystemInfo pathInfo = Directory.Exists(currentPath) ? new DirectoryInfo(currentPath) : new FileInfo(currentPath);
             var finalTarget = pathInfo.ResolveLinkTarget(true);
-            if (finalTarget is not null && !IsInsideDirectory(rootDirectory, finalTarget.FullName))
+            if (finalTarget is not null && !PathTools.IsInsideDirectory(rootDirectory, finalTarget.FullName))
                 return false;
         }
 
         return true;
-    }
-
-    private static bool IsInsideDirectory(string rootDirectory, string path)
-    {
-        var root = Path.GetFullPath(rootDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        var target = Path.GetFullPath(path);
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return target.StartsWith(root, comparison);
     }
 }

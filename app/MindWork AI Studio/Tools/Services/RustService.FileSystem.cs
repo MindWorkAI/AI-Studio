@@ -58,7 +58,7 @@ public sealed partial class RustService
                 {
                     Title = title,
                     PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/file", payload, this.jsonRustSerializerOptions);
@@ -81,7 +81,7 @@ public sealed partial class RustService
                 {
                     Title = title,
                     PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/files", payload, this.jsonRustSerializerOptions);
@@ -112,7 +112,7 @@ public sealed partial class RustService
                 {
                     Title = title,
                     PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/save/file", payload, this.jsonRustSerializerOptions);

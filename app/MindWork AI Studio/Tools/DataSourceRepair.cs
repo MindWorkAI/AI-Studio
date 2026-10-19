@@ -26,6 +26,13 @@ public static class DataSourceRepair
     /// <returns>True when the rebuild was started.</returns>
     public static async Task<bool> ConfirmAndRepairAsync(IDialogService dialogService, DataSourceEmbeddingService embeddingService, string dataSourceId, string dataSourceName)
     {
+        // A repair discards the index, which waits for the end of a pause:
+        if (embeddingService.IsIndexingPaused)
+        {
+            await dialogService.ShowMessageBox(TB("Repair Data Source"), TB("AI Studio is backing up or restoring the indexes of your data sources right now. Please try again once that is done."), TB("Close"));
+            return false;
+        }
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(TB("The index of the data source '{0}' cannot be read anymore. Repairing it means building the index from scratch: everything indexed so far is thrown away, and every document of this data source is sent to your embedding provider once more. With a cloud provider, this costs money, and with a large data source it takes a while. Do you want to repair this data source now?"), dataSourceName) },

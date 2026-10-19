@@ -1,6 +1,8 @@
 using AIStudio.Components;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.UserAPIKeys;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,13 +17,21 @@ public partial class Home : MSGComponentBase
 
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
     
     private TextItem[] itemsAdvantages = [];
 
     private List<DataIntroduction> introductions = [];
-    
+
+    private IReadOnlyList<PendingUserAPIKeyGroup> pendingUserAPIKeyGroups = [];
+    private Task initialReadOfPendingUserAPIKeys = Task.CompletedTask;
+    private bool hasReadPendingUserAPIKeys;
+    private int pendingUserAPIKeysGeneration;
+
     private string expandedPanelId = string.Empty;
     private int expansionPanelsRenderKey;
 
@@ -43,19 +53,37 @@ public partial class Home : MSGComponentBase
         // Read the last change content asynchronously
         // without blocking the UI thread:
         this.ReadLastChangeAsync().Observe($"{nameof(Home)}: reading the last change");
+
+        // Reading the stored API keys takes a moment, so the page renders the other panels first:
+        this.initialReadOfPendingUserAPIKeys = this.RefreshPendingUserAPIKeysAsync();
+        await this.initialReadOfPendingUserAPIKeys;
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
         if (this.SettingsManager.StartupStartPageRedirectHandled || !this.SettingsManager.HasCompletedInitialSettingsLoad)
-            return base.OnAfterRenderAsync(firstRender);
+            return;
 
         this.SettingsManager.StartupStartPageRedirectHandled = true;
         var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.ToRoute();
-        if (!string.IsNullOrWhiteSpace(startPageRoute))
-            this.NavigationManager.NavigateTo(startPageRoute, replace: true);
+        if (string.IsNullOrWhiteSpace(startPageRoute))
+            return;
 
-        return base.OnAfterRenderAsync(firstRender);
+        //
+        // The home page asks for missing API keys of the organization's providers. Stay here while
+        // one is missing, so the user sees that request no matter the chosen start page. The page
+        // reads the keys while it initializes; when the settings were not loaded by then, it reads
+        // them now:
+        //
+        await this.initialReadOfPendingUserAPIKeys;
+        if (!this.hasReadPendingUserAPIKeys)
+            await this.RefreshPendingUserAPIKeysAsync();
+
+        if (this.pendingUserAPIKeyGroups.Count > 0)
+            return;
+
+        this.NavigationManager.NavigateTo(startPageRoute, replace: true);
     }
 
     private void InitializeAdvantagesItems()
@@ -87,12 +115,14 @@ public partial class Home : MSGComponentBase
             case Event.PLUGINS_RELOADED:
                 this.InitializeAdvantagesItems();
                 this.RefreshIntroductionPanels();
+                await this.RefreshPendingUserAPIKeysAsync();
                 this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
 
             case Event.CONFIGURATION_CHANGED:
                 this.RefreshIntroductionPanels();
+                await this.RefreshPendingUserAPIKeysAsync();
                 this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
@@ -106,7 +136,34 @@ public partial class Home : MSGComponentBase
         this.introductions = PluginFactory.GetIntroductions().ToList();
     }
 
+    /// <summary>
+    /// Reads which providers of the organization wait for the API key of the user. When the configuration
+    /// plugins of these providers change, the page opens the first panel which asks for a key.
+    /// </summary>
+    private async Task RefreshPendingUserAPIKeysAsync()
+    {
+        // Which providers exist is unknown until the settings are loaded:
+        if (!this.SettingsManager.HasCompletedInitialSettingsLoad)
+            return;
+
+        // Several events may ask for a refresh at once; only the latest answer counts:
+        var generation = ++this.pendingUserAPIKeysGeneration;
+        var groups = await PendingUserAPIKeys.FindAsync(this.SettingsManager, this.RustService);
+        if (generation != this.pendingUserAPIKeysGeneration)
+            return;
+
+        var hasChanged = !groups.Select(group => group.ConfigPluginId).SequenceEqual(this.pendingUserAPIKeyGroups.Select(group => group.ConfigPluginId));
+        this.pendingUserAPIKeyGroups = groups;
+        this.hasReadPendingUserAPIKeys = true;
+        if (!hasChanged)
+            return;
+
+        this.EnsureDefaultExpandedPanel();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
     private bool HasVisibleHomePanels =>
+        this.pendingUserAPIKeyGroups.Count > 0 ||
         this.SettingsManager.ConfigurationData.App.ShowIntroduction ||
         this.introductions.Count > 0 ||
         this.SettingsManager.ConfigurationData.App.ShowLastChangelog ||
@@ -115,6 +172,11 @@ public partial class Home : MSGComponentBase
 
     private string GetDefaultExpandedPanelId()
     {
+        // A missing API key keeps the providers of the organization from working, so it comes first:
+        var firstPendingUserAPIKeyGroup = this.pendingUserAPIKeyGroups.FirstOrDefault();
+        if (firstPendingUserAPIKeyGroup is not null)
+            return UserAPIKeyPanelId(firstPendingUserAPIKeyGroup);
+
         if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
             return PANEL_ID_BUILT_IN_INTRODUCTION;
 
@@ -153,6 +215,8 @@ public partial class Home : MSGComponentBase
     }
 
     private static string IntroductionPanelId(DataIntroduction introduction) => $"introduction:{introduction.Id}";
+
+    private static string UserAPIKeyPanelId(PendingUserAPIKeyGroup group) => $"user-api-key:{group.ConfigPluginId}";
 
     private async Task ReadLastChangeAsync()
     {

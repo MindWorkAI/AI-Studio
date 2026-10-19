@@ -21,6 +21,7 @@ use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::clipboard::shutdown_clipboard;
+use crate::data_restore::apply_pending_restore;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
     installation_kind, is_prod, is_dev, is_flatpak, InstallationKind, CONFIG_DIRECTORY,
@@ -193,23 +194,35 @@ pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
             let data_path = data_path.join("data");
 
             // Get and store the data and config directories:
+            let config_path = app.path().app_config_dir().unwrap();
             DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the data directory.")).unwrap();
-            CONFIG_DIRECTORY.set(app.path().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
+            CONFIG_DIRECTORY.set(config_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
+
+            // A restore of a backup, below, writes to the log, so the log goes into the data directory first:
+            info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
+            switch_to_file_logging(data_path.clone()).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
+
+            //
+            // A restore replaces files which the .NET server and the vector database open. It
+            // therefore runs before both start, and after a .NET server which outlived an earlier
+            // run is gone:
+            //
+            if is_prod() {
+                cleanup_dotnet_server();
+            }
+
+            apply_pending_restore(&data_path, &config_path);
 
             if is_dev() {
                 #[cfg(debug_assertions)]
                 create_startup_env_file();
             } else {
-                cleanup_dotnet_server();
                 start_dotnet_server(app.handle().clone());
             }
 
             start_qdrant_edge_database(app.handle().clone());
 
             set_default_tokenizer_path(app.handle().clone());
-
-            info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
-            switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
             set_pdfium_path(app.path());
 
             Ok(())
@@ -819,18 +832,12 @@ pub struct AppExitResponse {
 
 /// Requests a controlled shutdown of the entire desktop application.
 pub async fn exit_app() -> Json<AppExitResponse> {
-    let app_handle = {
-        let main_window_lock = MAIN_WINDOW.lock().unwrap();
-        match main_window_lock.as_ref() {
-            Some(window) => window.app_handle().clone(),
-            None => {
-                error!(Source = "Tauri"; "Cannot exit app: main window not available.");
-                return Json(AppExitResponse {
-                    success: false,
-                    error_message: "Main window not available".to_string(),
-                });
-            }
-        }
+    let Some(app_handle) = main_app_handle() else {
+        error!(Source = "Tauri"; "Cannot exit app: main window not available.");
+        return Json(AppExitResponse {
+            success: false,
+            error_message: "Main window not available".to_string(),
+        });
     };
 
     info!(Source = "Tauri"; "Controlled app exit was requested by the UI.");
@@ -845,10 +852,57 @@ pub async fn exit_app() -> Json<AppExitResponse> {
     })
 }
 
+/// Response for application restart requests.
+#[derive(Serialize)]
+pub struct AppRestartResponse {
+    success: bool,
+    error_message: String,
+}
+
+/// Requests a controlled restart of the entire desktop application, e.g., to apply a prepared restore
+/// of a backup. Before the app starts again, the exit handler stops the .NET server and the vector
+/// database, just as when the app exits.
+///
+/// In the development environment, the runtime did not start the .NET server, so it could not start
+/// it again either. It refuses, and the developer restarts both.
+pub async fn restart_app() -> Json<AppRestartResponse> {
+    if is_dev() {
+        warn!(Source = "Tauri"; "The UI requested a restart, which the development environment does not support.");
+        return Json(AppRestartResponse {
+            success: false,
+            error_message: "The development environment cannot restart the app, since the runtime did not start the .NET server. Restart both yourself.".to_string(),
+        });
+    }
+
+    let Some(app_handle) = main_app_handle() else {
+        error!(Source = "Tauri"; "Cannot restart app: main window not available.");
+        return Json(AppRestartResponse {
+            success: false,
+            error_message: "Main window not available".to_string(),
+        });
+    };
+
+    info!(Source = "Tauri"; "Controlled app restart was requested by the UI.");
+    tauri::async_runtime::spawn(async move {
+        time::sleep(Duration::from_millis(50)).await;
+        app_handle.request_restart();
+    });
+
+    Json(AppRestartResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
+/// The handle of the app, or `None` while the main window does not exist yet.
+fn main_app_handle() -> Option<tauri::AppHandle> {
+    MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone())
+}
+
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 pub async fn register_shortcut(payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
-    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let app_handle = main_app_handle();
     let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
     Json(crate::global_shortcuts::register(app_handle, event_sender, payload.0).await)
 }
@@ -930,7 +984,7 @@ pub async fn suspend_shortcuts() -> Json<ShortcutResponse> {
 
 /// Resumes shortcut processing by re-registering all shortcuts with the OS.
 pub async fn resume_shortcuts() -> Json<ShortcutResponse> {
-    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let app_handle = main_app_handle();
     let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
     Json(crate::global_shortcuts::resume(app_handle, event_sender).await)
 }

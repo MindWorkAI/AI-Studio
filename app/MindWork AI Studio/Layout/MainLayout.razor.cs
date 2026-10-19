@@ -59,6 +59,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
     [Inject]
+    private DataRestoreService DataRestoreService { get; init; } = null!;
+
+    [Inject]
     private CircuitStateService CircuitState { get; init; } = null!;
 
     [Inject]
@@ -82,8 +85,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
     private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim dataRestorePendingDialogSemaphore = new(1, 1);
 
-    private DataSourceEmbeddingOverview embeddingOverview = new(DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
+    private DataSourceEmbeddingOverview embeddingOverview = DataSourceEmbeddingOverview.Create([]);
     private IReadOnlyCollection<NavBarItem> navItems = [];
     private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
     private bool showEmbeddingStatusIcon;
@@ -94,6 +98,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged += this.OnDataRestoreStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -391,7 +396,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
-                    this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after the startup");
+                    this.ShowStartupDialogsAsync().Observe($"{nameof(MainLayout)}: dialogs after the startup");
                     break;
 
                 case Event.RAG_EMBEDDING_STATUS_CHANGED:
@@ -500,9 +505,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
-            DataSourceEmbeddingState.FAILED => (Icons.Material.Filled.Warning, palette.Error.Value, "#d32f2f"),
             DataSourceEmbeddingState.QUEUED => (Icons.Material.Filled.Sync, palette.Info.Value, "#1976d2"),
             DataSourceEmbeddingState.RUNNING => (Icons.Material.Filled.Sync, palette.Warning.Value, "#d29f00"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => (Icons.Material.Filled.Error, palette.Error.Value, "#d32f2f"),
+            _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING => (Icons.Material.Filled.Warning, palette.Warning.Value, "#d29f00"),
 
             // Nothing to do: the entry keeps the colors of its neighbors, so a permanently visible
             // icon does not draw attention while there is nothing to attend to:
@@ -521,9 +527,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             T("Embeddings are running: {0} of {1} are indexed."),
             this.embeddingOverview.IndexedDocuments.CompactCount(),
             this.embeddingOverview.TotalDocuments.CompactCount()),
-        DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedDocuments > 0
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.ERROR => this.embeddingOverview.FailedDocuments > 0
             ? string.Format(T("Some embeddings failed: {0} could not be indexed."), this.embeddingOverview.FailedDocuments.CompactCount())
             : T("Some embeddings failed and need attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING && this.embeddingOverview.AttentionDataSources == 1 =>
+            T("One data source needs attention."),
+        _ when this.embeddingOverview.Health is DataSourceEmbeddingHealth.WARNING =>
+            string.Format(T("{0} data sources need attention."), this.embeddingOverview.AttentionDataSources.CompactCount()),
 
         // The entry is always visible, so its resting state needs words as well. An empty tooltip
         // would leave the user guessing what the icon is there for:
@@ -640,6 +650,70 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.StateHasChanged();
     }
 
+    /// <summary>
+    /// Shows what the user has to see once the plugins started: the mandatory infos first, then how a
+    /// restore of a backup went.
+    /// </summary>
+    private async Task ShowStartupDialogsAsync()
+    {
+        await this.EnsureMandatoryInfosAcceptedAsync();
+        await this.ShowDataRestoreReportAsync();
+        await this.ShowDataRestorePendingDialogAsync();
+    }
+
+    /// <summary>
+    /// Asks for the restart as soon as a restore is prepared.
+    /// </summary>
+    private void OnDataRestoreStateChanged()
+    {
+        if (this.DataRestoreService.IsRestorePending)
+            this.InvokeAsync(this.ShowDataRestorePendingDialogAsync).Observe($"{nameof(MainLayout)}: asking for the restart which applies a restore");
+    }
+
+    /// <summary>
+    /// Blocks AI Studio while a prepared restore waits for the restart, since whatever changes until
+    /// then would be lost.
+    /// </summary>
+    private async Task ShowDataRestorePendingDialogAsync()
+    {
+        if (!await this.dataRestorePendingDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            await this.DataRestoreService.StartupStateLoaded;
+            if (!this.DataRestoreService.IsRestorePending)
+                return;
+
+            var dialogReference = await this.DialogService.ShowAsync<DataRestorePendingDialog>(T("Restore of a Backup"), DialogOptions.BLOCKING_FULLSCREEN);
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.dataRestorePendingDialogSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Tells how the runtime applied a restore at this start, and what remains to do.
+    /// </summary>
+    private async Task ShowDataRestoreReportAsync()
+    {
+        await this.DataRestoreService.StartupStateLoaded;
+        if (this.DataRestoreService.Report is not { } report)
+            return;
+
+        var dialogParameters = new DialogParameters<DataRestoreReportDialog>
+        {
+            { x => x.Report, report },
+            { x => x.OpenPoints, await this.DataRestoreService.CollectOpenPointsAsync() },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataRestoreReportDialog>(T("Restore of a Backup"), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+        this.DataRestoreService.ForgetReport();
+    }
+
     private async Task EnsureMandatoryInfosAcceptedAsync()
     {
         if (!await this.mandatoryInfoDialogSemaphore.WaitAsync(0))
@@ -722,9 +796,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     public void Dispose()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.DataRestoreService.StateChanged -= this.OnDataRestoreStateChanged;
         this.CircuitState.ConnectionRestored -= this.OnConnectionRestored;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
+        this.dataRestorePendingDialogSemaphore.Dispose();
     }
 
     #endregion
