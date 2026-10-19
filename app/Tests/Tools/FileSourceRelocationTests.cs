@@ -91,6 +91,90 @@ public sealed class FileSourceRelocationTests
         return new("old-fingerprint", file.Length, new DateTimeOffset(file.LastWriteTimeUtc), DateTimeOffset.UtcNow, 1, RelativePath: relativePath, ParentFileId: Guid.NewGuid().ToString());
     }
 
+    [TestCase(@"E:\Documents\nested\notes.md", @"nested\notes.md")]
+    [TestCase(@"\\server\share\Documents\nested\notes.md", @"nested\notes.md")]
+    [TestCase(@"\\?\E:\Documents\nested\notes.md", @"nested\notes.md")]
+    [TestCase("E:/Documents/nested/notes.md", "nested/notes.md")]
+    [TestCase("/home/alice/Documents/nested/notes.md", "nested/notes.md")]
+    [TestCase("/Volumes/External drive/Documents/nested/notes.md", "nested/notes.md")]
+    public void ABackupFromAnotherPathSyntaxFindsANestedFile(string oldPath, string relativePath)
+    {
+        var localFile = Path.Combine(this.testRoot, "nested", "notes.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(localFile)!);
+        File.WriteAllText(localFile, "Some indexed text");
+
+        var found = FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, oldPath, Record(localFile, relativePath));
+
+        Assert.That(found?.FullName, Is.EqualTo(localFile));
+    }
+
+    [TestCase(@"C:\a.folder\README")]
+    [TestCase(@"\\server\a.folder\README")]
+    [TestCase("/media/a.folder/README")]
+    public void AForeignDirectoryNameDoesNotBecomeTheExtensionOfAnExtensionlessFile(string oldPath)
+    {
+        var localFile = Path.Combine(this.testRoot, "README");
+        File.WriteAllText(localFile, "Some indexed text");
+
+        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalFile { FilePath = localFile }, oldPath, Record(localFile, "README"))?.FullName, Is.EqualTo(localFile));
+    }
+
+    [TestCase(@"..\notes.md")]
+    [TestCase("../notes.md")]
+    [TestCase(@"nested\..\..\notes.md")]
+    [TestCase(@"C:\notes.md")]
+    [TestCase(@"C:notes.md")]
+    [TestCase(@"\\server\share\notes.md")]
+    [TestCase("/etc/notes.md")]
+    public void AStoredWindowsPathCannotEscapeTheNewRoot(string relativePath)
+    {
+        Assert.That(RelocatedFilePaths.Resolve(this.testRoot, @"E:\Documents\notes.md", relativePath), Is.Null);
+    }
+
+    [Test]
+    public void AnExternalDriveRootIsAValidRelocationDestination()
+    {
+        // No file needs to be written at the drive root: this checks resolving the destination.
+        var root = Path.GetPathRoot(this.testRoot)!;
+
+        Assert.That(RelocatedFilePaths.Resolve(root, @"E:\notes.md", "notes.md"), Is.EqualTo(Path.Combine(root, "notes.md")));
+    }
+
+    [Test]
+    public void AUnixBackslashInAFileNameIsNotReinterpretedAsADirectory()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.That(RelocatedFilePaths.Resolve(this.testRoot, @"/home/alice/notes\draft.md", @"notes\draft.md"), Is.Null, "A Windows filename cannot contain a backslash from a Unix filename.");
+            return;
+        }
+
+        var localFile = Path.Combine(this.testRoot, @"notes\draft.md");
+        File.WriteAllText(localFile, "Some indexed text");
+        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, @"/home/alice/notes\draft.md", Record(localFile, @"notes\draft.md"))?.FullName, Is.EqualTo(localFile));
+    }
+
+    [Test]
+    public void AnOldForeignRootIsNotResolvedRelativeToTheWorkingDirectory()
+    {
+        var foreignRoot = OperatingSystem.IsWindows() ? "/home/alice/Documents" : @"E:\Documents";
+
+        Assert.That(RelocatedFilePaths.Resolve(foreignRoot, @"E:\Documents\notes.md", "notes.md"), Is.Null);
+    }
+
+    [Test]
+    public void ReducedTimestampPrecisionOnAnotherDriveDoesNotSilentlyReuseOldContent()
+    {
+        var localFile = Path.Combine(this.testRoot, "notes.md");
+        File.WriteAllText(localFile, "Some indexed text");
+        var record = Record(localFile, "notes.md");
+        // The old filesystem stored a finer timestamp than the copied file now reports. Without
+        // a stored content hash, equal size alone is not enough to prove that it is unchanged.
+        record = record with { LastWriteUtc = record.LastWriteUtc.AddTicks(1) };
+
+        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, @"E:\Documents\notes.md", record), Is.Null);
+    }
+
     [Test]
     public void ANewFileAtAnOldLocationCannotOverwriteTheRelocatedDocument()
     {
@@ -112,5 +196,21 @@ public sealed class FileSourceRelocationTests
             Assert.That(newId, Is.Not.EqualTo(originalId));
             Assert.That(context.GetFileParentId(originalPath), Is.EqualTo(newId), "A media file may ask for its identity once before and once after transcription.");
         });
+    }
+
+    [Test]
+    public void CaseDistinctFilesKeepSeparateStoredParentIdsOnUnix()
+    {
+        var source = new DataSourceLocalDirectory { Id = Guid.NewGuid().ToString(), Path = this.testRoot };
+        var upper = Path.Combine(this.testRoot, "Report.md");
+        var lower = Path.Combine(this.testRoot, "report.md");
+        var parentId = IndexedDocumentIds.CreateParentId(source.Id, upper);
+        var manifest = new DataSourceEmbeddingManifest();
+        manifest.Files[upper] = new("fingerprint", 100, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 1, RelativePath: "Report.md", ParentFileId: parentId);
+        var context = new IndexedRunContext(source, null!, null!, null!, null!, manifest,
+            new RunShare(RunShare.DEFAULT_DURATION), new IndexingPass(new DataSourceRunSignature("signature", "selection")), null!, null!, _ => { }, NullLogger.Instance);
+
+        Assert.That(context.GetFileParentId(lower) == parentId, Is.EqualTo(OperatingSystem.IsWindows()));
+        Assert.That(context.GetFileParentId(upper), Is.EqualTo(parentId));
     }
 }

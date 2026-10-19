@@ -6786,9 +6786,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1720021383"
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1725856265"] = "Beschreibung"
 
--- If this folder was moved or renamed, select its new location. Prepared documents are reused when their relative paths, file sizes, and modification times are unchanged.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1744159389"] = "Nach dem Speichern des neuen Speicherorts können bereits vorbereitete Inhalte weiterverwendet werden. Dazu müssen die Pfade der Dateien innerhalb des Ordners sowie ihre Dateitypen, Dateigrößen und Änderungszeitpunkte unverändert sein."
-
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"] = "Wie viele Treffer möchten Sie maximal pro Abfrage erhalten?"
 
@@ -6848,6 +6845,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"
 
 -- No, ignore hidden files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"] = "Nein, versteckte Dateien und Ordner ignorieren"
+
+-- When you save this location, files can reuse their prepared content if their paths within the folder, file types, sizes, and modification times are unchanged.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3695879299"] = "Nach dem Speichern des neuen Speicherorts können bereits vorbereitete Inhalte weiterverwendet werden. Dazu müssen die Pfade der Dateien innerhalb des Ordners sowie ihre Dateitypen, Dateigrößen und Änderungszeitpunkte unverändert sein."
 
 -- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "Diese Dateien und Ordner werden auch dann ausgeschlossen, wenn ein Dateimuster auf sie zutrifft. Trennen Sie die Einträge durch ein Semikolon oder einen Zeilenumbruch. Ein Eintrag mit einem Schrägstrich am Ende schließt alle Ordner mit diesem Namen aus, z. B. node_modules/. Alle anderen Einträge beziehen sich auf Dateien, z. B. *.min.js."
@@ -7023,6 +7023,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Aktualisieren"
 
+-- When you save this location, the file can reuse its prepared content if its file type, size, and modification time are unchanged.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2007852010"] = "Nach dem Speichern des neuen Speicherorts kann der bereits vorbereitete Inhalt der Datei weiterverwendet werden, sofern Dateityp, Dateigröße und Änderungszeitpunkt unverändert sind."
+
 -- The overlap must be smaller than the effective token limit.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2101951526"] = "Die Überlappung muss kleiner sein als das effektive Token-Limit."
 
@@ -7061,9 +7064,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "
 
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Datei auswählen"
-
--- If this file was moved or renamed, select its new location. Prepared documents are reused when the file size and modification time are unchanged.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3780399018"] = "Nach dem Speichern des neuen Speicherorts können die bereits vorbereiteten Inhalte der Datei weiterverwendet werden, sofern Dateityp, Dateigröße und Änderungszeitpunkt unverändert sind."
 
 -- This audio or video file is skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4026150982"] = "Diese Audio- oder Videodatei wird übersprungen, bis Sie in den Einstellungen einen Transkriptionsanbieter auswählen."
@@ -12210,9 +12210,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge ist nicht verfügbar."
 
--- Changing this location can remove indexed files that are absent from the new location. New or changed files in the selected location will be indexed. Unchanged files keep their prepared documents when their relative paths, sizes, and modification times match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T1641787452"] = "Wenn Sie den Speicherort ändern, können Dateien aus dem Index entfernt werden, die am neuen Speicherort fehlen. Ihre Dateien auf dem Datenträger werden dabei nicht gelöscht. Neue oder geänderte Dateien am ausgewählten Speicherort müssen möglicherweise indexiert werden. Unveränderte Dateien behalten ihre bereits vorbereiteten Inhalte, wenn Dateityp, Dateigröße und Änderungszeitpunkt übereinstimmen. Bei Ordnern müssen zusätzlich die Pfade der Dateien innerhalb des Ordners übereinstimmen. Die Indexierung kann Zeit in Anspruch nehmen und bei einem Cloud-Anbieter Kosten verursachen. Möchten Sie diese Änderung speichern?"
-
 -- Change Data Source Location?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2267156072"] = "Speicherort der Datenquelle ändern?"
 
@@ -12227,6 +12224,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "Dur
 
 -- Do you want to apply this change anyway?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Möchten Sie diese Änderung trotzdem übernehmen?"
+
+-- Changing this location can remove files from the index if they are absent from the new location. Your files on disk are not deleted. New or changed files in the selected location may need indexing. Unchanged files keep their prepared content when their file types, sizes, and modification times match; for folders, their paths within the folder must also match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3501502675"] = "Wenn Sie den Speicherort ändern, können Dateien aus dem Index entfernt werden, die am neuen Speicherort fehlen. Ihre Dateien auf dem Datenträger werden dabei nicht gelöscht. Neue oder geänderte Dateien am ausgewählten Speicherort müssen möglicherweise indexiert werden. Unveränderte Dateien behalten ihre bereits vorbereiteten Inhalte, wenn Dateityp, Dateigröße und Änderungszeitpunkt übereinstimmen. Bei Ordnern müssen zusätzlich die Pfade der Dateien innerhalb des Ordners übereinstimmen. Die Indexierung kann Zeit in Anspruch nehmen und bei einem Cloud-Anbieter Kosten verursachen. Möchten Sie diese Änderung speichern?"
 
 -- Documents Will Be Prepared Again
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Dokumente werden erneut vorbereitet"

@@ -1,3 +1,4 @@
+using AIStudio.Tools;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Services.Indexing;
 
@@ -58,6 +59,37 @@ public sealed class IndexStoreManifestTests
         {
             Assert.That(manifest.Files[recording].TranscriptKey, Is.EqualTo(transcriptKey), "Without the key, AI Studio cannot remove the transcript once the recording is gone.");
             Assert.That(manifest.Files[document].TranscriptKey, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task CaseDistinctDocumentsAndFailuresStaySeparateOnUnix()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("Windows path comparisons are case-insensitive.");
+
+        await using var store = await TemporaryIndexStore.CreateAsync();
+        await store.Client.UpsertDataSourceAsync(DATA_SOURCE_ID, "LOCAL_DIRECTORY", "provider", "signature", "stored-hash", 3, TOKEN);
+        var root = Path.Combine(Path.GetTempPath(), "test-data");
+        var indexed = new[] { Path.Combine(root, "Report.md"), Path.Combine(root, "report.md") };
+        var unfinished = new[] { Path.Combine(root, "Draft.md"), Path.Combine(root, "draft.md") };
+        var failed = new[] { Path.Combine(root, "Scan.pdf"), Path.Combine(root, "scan.pdf") };
+        foreach (var path in indexed)
+            await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(path, 1), TOKEN);
+        foreach (var path in unfinished)
+            await store.Client.UpsertFileAsync(DATA_SOURCE_ID, Row(path, 0), TOKEN);
+        foreach (var path in failed)
+            await store.Client.UpsertPermanentFailureAsync(DATA_SOURCE_ID, new PermanentIndexingFailure(
+                IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, path), path, "fingerprint", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text.", DateTimeOffset.UtcNow), TOKEN);
+
+        var manifest = await store.Client.GetManifestAsync(DATA_SOURCE_ID, TOKEN);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.Files.Keys, Is.EquivalentTo(indexed));
+            Assert.That(manifest.Files.Values.Select(file => file.ParentFileId), Is.EquivalentTo(indexed.Select(path => IndexedDocumentIds.CreateParentId(DATA_SOURCE_ID, path))));
+            Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo(unfinished));
+            Assert.That(manifest.PermanentFailures.Keys, Is.EquivalentTo(failed));
         });
     }
 

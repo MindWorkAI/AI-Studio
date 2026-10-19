@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 using AIStudio.Components;
 using AIStudio.Dialogs;
@@ -11,6 +12,7 @@ using AIStudio.Tests.Tools.Databases;
 using AIStudio.Tools;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Services.Indexing;
@@ -284,7 +286,273 @@ public sealed class DataSourceRelocationWorkflowTests
 
     private DataSourceRunQueue Queue => Field<DataSourceRunQueue>(this.service, "runQueue");
 
-    private async Task SeedLegacyIndexAsync(bool singleFile)
+    [TestCase(@"E:\Documents", '\\', false)]
+    [TestCase(@"\\server\share\Documents", '\\', false)]
+    [TestCase("/home/alice/Documents", '/', false)]
+    [TestCase(@"E:\Documents", '\\', true)]
+    [TestCase(@"\\server\share\Documents", '\\', true)]
+    [TestCase("/Volumes/External drive/Documents", '/', true)]
+    public async Task ABackupCanReconnectFilesFromAnotherOSWithoutReembedding(string oldRoot, char separator, bool singleFile)
+    {
+        await this.SeedLegacyIndexAsync(singleFile);
+        var originalFolder = Path.Combine(this.testRoot, "original");
+        await this.StoreForeignPathsAsync(oldRoot, separator);
+        var restored = await this.BackupAndRestoreIndexAsync();
+
+        // Opening the restored index while the old drive or network share is unavailable must not
+        // prune anything. No real external volume or network connection is needed by these tests.
+        if (!RelocatedFilePaths.IsLocalAbsolute(oldRoot))
+        {
+            await this.service.QueueDataSourceAsync(this.source);
+            await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            await this.AssertOriginalChunksAsync();
+        }
+
+        // User documents are not in an AI Studio backup. Copy them separately, preserving their
+        // modification times, as when reconnecting an external drive after restoring a computer.
+        var destination = Path.Combine(this.testRoot, "mounted volume", "Übertragene Dokumente");
+        foreach (var original in Directory.EnumerateFiles(originalFolder, "*", SearchOption.AllDirectories))
+        {
+            var localPath = Path.Combine(destination, Path.GetRelativePath(originalFolder, original));
+            Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
+            File.Copy(original, localPath);
+            File.SetLastWriteTimeUtc(localPath, File.GetLastWriteTimeUtc(original));
+        }
+
+        var newPath = singleFile ? Path.Combine(destination, "notes.md") : destination;
+        await this.SaveEditAsync(newPath);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+
+        await this.AssertOriginalChunksAsync();
+        var manifest = await restored.GetManifestAsync(this.source.Id, CancellationToken.None);
+        var hits = await restored.SearchChunksAsync(this.source.Id, "indexed", 10, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
+            Assert.That(this.vectors.DeletedStores, Is.Zero);
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            Assert.That(this.vectors.InsertedBatches, Is.Zero);
+            Assert.That(manifest.Files.Keys, Is.EquivalentTo(this.vectors.Locations.Values));
+            Assert.That(hits.Select(hit => hit.AbsolutePath), Is.EquivalentTo(this.vectors.Locations.Values));
+            Assert.That(hits.All(hit => PathTools.IsInsideDirectory(destination, hit.AbsolutePath)), Is.True);
+        });
+
+        // A restart/hash check after relocation must not relocate or prepare everything a second time.
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
+        await this.AssertOriginalChunksAsync();
+
+        // A disconnected external drive is not an empty folder. Reconnecting it must also keep
+        // the embeddings, rather than paying to prepare the same documents again.
+        var disconnected = destination + "-disconnected";
+        Directory.Move(destination, disconnected);
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
+        await this.AssertOriginalChunksAsync();
+        Directory.Move(disconnected, destination);
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        await this.AssertOriginalChunksAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            Assert.That(this.vectors.InsertedBatches, Is.Zero);
+            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
+        });
+    }
+
+    private async Task StoreForeignPathsAsync(string oldRoot, char separator)
+    {
+        await using var context = this.store.CreateContext();
+        foreach (var file in await context.EmbeddedFiles.ToListAsync())
+        {
+            var relative = file.RelativePath.Replace(Path.DirectorySeparatorChar, separator);
+            var oldPath = oldRoot + separator + relative;
+            file.AbsolutePath = oldPath;
+            file.RelativePath = relative;
+            file.Fingerprint = LegacyFingerprint(oldPath, file.FileName, file.LastWriteUtc.UtcDateTime.Ticks, file.FileSize);
+            this.vectors.Locations[file.ParentFileId] = oldPath;
+        }
+        await context.SaveChangesAsync();
+        this.source = this.source switch
+        {
+            DataSourceLocalDirectory folder => folder with { Path = oldRoot },
+            DataSourceLocalFile file => file with { FilePath = oldRoot + separator + "notes.md" },
+            _ => throw new InvalidOperationException(),
+        };
+        this.settings.ConfigurationData.DataSources[0] = this.source;
+    }
+
+    private async Task<SqliteIndexStoreClientImplementation> BackupAndRestoreIndexAsync()
+    {
+        var dataDirectory = Path.Combine(this.testRoot, "source-data");
+        var configDirectory = Path.Combine(this.testRoot, "source-config");
+        var copies = Path.Combine(this.testRoot, "index-copies");
+        Directory.CreateDirectory(dataDirectory);
+        Directory.CreateDirectory(configDirectory);
+        await this.store.Client.BackupToDirectoryAsync(Path.Combine(copies, "databases", "sqlite"), CancellationToken.None);
+
+        // This fixture's vector client stores metadata only. The runtime tests separately check
+        // backing up, reopening, and relocating actual Qdrant vectors without changing their values.
+        var vectorDirectory = Path.Combine(copies, "databases", "vector_database", "stores", "store_test");
+        Directory.CreateDirectory(vectorDirectory);
+        await File.WriteAllTextAsync(Path.Combine(vectorDirectory, "locations.json"), JsonSerializer.Serialize(this.vectors.Locations));
+        var archivePath = Path.Combine(this.testRoot, "backup.zip");
+        var settingsJson = JsonSerializer.Serialize(this.settings.ConfigurationData, SettingsManager.JSON_OPTIONS);
+        await using (var output = File.Create(archivePath))
+            await DataBackupWriter.WriteAsync(output, new DataBackupSources(dataDirectory, configDirectory, settingsJson, copies, []),
+                new DataBackupManifest(DataBackupFormat.FORMAT_VERSION, "26.10.1", "V6", DateTimeOffset.UtcNow, dataDirectory, configDirectory, true, []), null, CancellationToken.None);
+
+        var target = new DataRestoreTarget(Path.Combine(this.testRoot, "restored-data"), Path.Combine(this.testRoot, "restored-config"), "26.10.1", AIStudio.Settings.Version.V6, []);
+        var result = await DataRestorePreparer.PrepareAsync(archivePath, target, null, CancellationToken.None);
+        Assert.That(result.Success, Is.True);
+
+        // The runtime applies this prepared directory at restart. Open the exact restored bytes
+        // here, so this test exercises the real backup writer and restore preparer, not a rebuilt DB.
+        var pendingData = Path.Combine(target.DataDirectory, DataRestoreFormat.PENDING_DIRECTORY);
+        var restoredPath = Path.Combine(pendingData, "databases", "sqlite", "rag-index.sqlite3");
+        var restored = new SqliteIndexStoreClientImplementation("Restored SQLite", restoredPath, pendingData, string.Empty);
+        Field<Dictionary<DatabaseRole, DatabaseClient>>(this.databases, "clients")[DatabaseRole.INDEX_STORE] = restored;
+        this.vectors.Locations.Clear();
+        foreach (var (id, path) in JsonSerializer.Deserialize<Dictionary<string, string>>(await File.ReadAllTextAsync(Path.Combine(pendingData, "databases", "vector_database", "stores", "store_test", "locations.json")))!)
+            this.vectors.Locations.Add(id, path);
+
+        var restoredSettings = JsonSerializer.Deserialize<Data>(await File.ReadAllTextAsync(Path.Combine(target.ConfigDirectory, DataRestoreFormat.PENDING_DIRECTORY, "settings.json")), SettingsManager.JSON_OPTIONS)!;
+        this.settings.ConfigurationData.DataSources.Clear();
+        this.settings.ConfigurationData.DataSources.AddRange(restoredSettings.DataSources);
+        this.source = (IInternalDataSource)this.settings.ConfigurationData.DataSources.Single();
+        return restored;
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task AnEmptyMountDirectoryKeepsTheIndexAndReconnectingReusesIt(bool relocated)
+    {
+        await this.SeedLegacyIndexAsync(false);
+        var original = ((DataSourceLocalDirectory)this.source).Path;
+        var disconnected = Path.Combine(this.testRoot, "disconnected-drive");
+        Directory.Move(original, disconnected);
+        var mount = relocated ? Path.Combine(this.testRoot, "new-mount") : original;
+        Directory.CreateDirectory(mount);
+        var storedHash = (await this.store.Client.GetDataSourceStateAsync(this.source.Id, CancellationToken.None))!.SourceHash;
+
+        if (relocated)
+            await this.SaveEditAsync(mount);
+        else
+            await this.service.QueueDataSourceAsync(this.source);
+
+        // A second refresh must not accept the empty mount as a new baseline and prune the index.
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+            await this.AssertOriginalChunksAsync();
+            var state = await this.store.Client.GetDataSourceStateAsync(this.source.Id, CancellationToken.None);
+            Assert.Multiple(() =>
+            {
+                Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
+                Assert.That(this.service.GetStatuses().Single().LastError, Does.Contain("appears empty"));
+                Assert.That(state!.SourceHash, Is.EqualTo(storedHash));
+                Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            });
+            if (attempt == 0)
+                await this.service.QueueDataSourceAsync(this.source);
+        }
+
+        Directory.Delete(mount);
+        Directory.Move(disconnected, mount);
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        await this.AssertOriginalChunksAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            Assert.That(this.vectors.InsertedBatches, Is.Zero);
+            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(relocated ? this.chunkIds.Count : 0));
+        });
+    }
+
+    [Test]
+    public async Task RemovingSomeFilesStillCleansUpOnlyTheirIndexEntries()
+    {
+        await this.SeedLegacyIndexAsync(false);
+        var removed = Path.Combine(((DataSourceLocalDirectory)this.source).Path, "notes.md");
+        var removedChunkId = IndexedDocumentIds.CreateChunkId(this.source.Id, LegacyFingerprint(new FileInfo(removed)), 0);
+        File.Delete(removed);
+
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        var chunks = await this.store.Client.SearchChunksAsync(this.source.Id, "indexed", 10, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(chunks.Select(chunk => chunk.ChunkId), Is.EquivalentTo(this.chunkIds.Except([removedChunkId])));
+            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(1));
+            Assert.That(this.vectors.InsertedBatches, Is.Zero);
+        });
+    }
+
+    [Test]
+    public async Task ExplicitlyExcludingEveryFileStillRemovesTheirIndexEntries()
+    {
+        await this.SeedLegacyIndexAsync(false);
+        this.source = ((DataSourceLocalDirectory)this.source) with { FilePatterns = "*.pdf" };
+        this.settings.ConfigurationData.DataSources[0] = this.source;
+
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(manifest.Files, Is.Empty);
+            Assert.That(this.vectors.Locations, Is.Empty);
+            Assert.That(this.vectors.DeletedDocuments, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public async Task CaseDistinctFilesKeepTheirOwnChunksAcrossRefreshAndRelocation()
+    {
+        if (OperatingSystem.IsWindows())
+            Assert.Ignore("Windows path comparisons are case-insensitive.");
+
+        // The default macOS volume may also ignore case. Check the test volume before creating
+        // both files, so one cannot overwrite the other and make this test pass accidentally.
+        await File.WriteAllTextAsync(Path.Combine(this.testRoot, "CaseProbe"), "probe");
+        if (File.Exists(Path.Combine(this.testRoot, "caseprobe")))
+            Assert.Ignore("The test volume does not support case-distinct filenames.");
+
+        await this.SeedLegacyIndexAsync(false, ["Report.md", "report.md"]);
+        var originalIds = this.vectors.Locations.Keys.ToArray();
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        await this.AssertOriginalChunksAsync();
+
+        await this.SaveEditAsync(this.MoveSource("moved"));
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        await this.AssertOriginalChunksAsync();
+        await this.service.QueueDataSourceAsync(this.source);
+        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+        var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(manifest.Files, Has.Count.EqualTo(2));
+            Assert.That(manifest.Files.Values.Select(file => file.ParentFileId), Is.EquivalentTo(originalIds));
+            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(2));
+            Assert.That(this.vectors.DeletedDocuments, Is.Zero);
+            Assert.That(this.vectors.InsertedBatches, Is.Zero);
+        });
+        await this.AssertOriginalChunksAsync();
+    }
+
+    private async Task SeedLegacyIndexAsync(bool singleFile, string[]? relativePaths = null)
     {
         var root = Path.Combine(this.testRoot, "original");
         Directory.CreateDirectory(Path.Combine(root, "nested"));
@@ -303,7 +571,7 @@ public sealed class DataSourceRelocationWorkflowTests
         this.settings.ConfigurationData.DataSources.Add(this.source);
         await this.store.Client.UpsertDataSourceAsync(id, this.source.Type.ToString(), EMBEDDING_ID, LEGACY_SIGNATURE, "legacy-source-hash", 3, CancellationToken.None);
 
-        var paths = singleFile ? new[] { "notes.md" } : new[] { "notes.md", Path.Combine("nested", "report.md") };
+        var paths = relativePaths ?? (singleFile ? new[] { "notes.md" } : new[] { "notes.md", Path.Combine("nested", "report.md") });
         foreach (var relative in paths)
         {
             var path = Path.Combine(root, relative);
@@ -393,8 +661,8 @@ public sealed class DataSourceRelocationWorkflowTests
 
     private async Task AssertOriginalChunksAsync()
     {
-        await using var context = this.store.CreateContext();
-        var chunks = await context.EmbeddingChunks.AsNoTracking().ToListAsync();
+        var index = await this.databases.GetIndexStoreAsync();
+        var chunks = await index.SearchChunksAsync(this.source.Id, "indexed", 100, CancellationToken.None);
         Assert.Multiple(() =>
         {
             Assert.That(chunks.Select(chunk => chunk.ChunkId), Is.EquivalentTo(this.chunkIds));
@@ -405,7 +673,12 @@ public sealed class DataSourceRelocationWorkflowTests
 
     private static string LegacyFingerprint(FileInfo file)
     {
-        var parts = new[] { "file", file.FullName, file.Name, file.LastWriteTimeUtc.Ticks.ToString(), file.Length.ToString() };
+        return LegacyFingerprint(file.FullName, file.Name, file.LastWriteTimeUtc.Ticks, file.Length);
+    }
+
+    private static string LegacyFingerprint(string path, string name, long writeTicks, long size)
+    {
+        var parts = new[] { "file", path, name, writeTicks.ToString(), size.ToString() };
         var serialized = string.Concat(parts.Select(part => $"{part.Length}:{part}|"));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(serialized)));
     }

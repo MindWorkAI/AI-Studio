@@ -1745,6 +1745,53 @@ mod tests {
     }
 
     #[test]
+    fn a_restored_store_can_relocate_foreign_paths_without_replacing_its_vectors() {
+        for old_path in [r"E:\Documents\nested\notes.md", r"\\server\share\nested\notes.md", "/Volumes/External drive/nested/notes.md"] {
+            let data_directory = test_directory("backup-relocation");
+            let base_path = data_directory.join("databases").join("vector_database");
+            let mut database = QdrantEdgeDatabase::new(base_path);
+            let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
+            point.parent_file_id = "original-parent".to_string();
+            point.file_path = old_path.to_string();
+            point.absolute_path = old_path.to_string();
+            point.embedded_at_utc = "2026-10-01T12:00:00Z".to_string();
+            database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
+
+            let preparation = database.prepare_backup(&data_directory).unwrap();
+            database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+            let restored_base = PathBuf::from(&preparation.staging_path).join("databases").join("vector_database");
+            let mut restored = QdrantEdgeDatabase::new(restored_base.clone());
+            let new_path = data_directory.join("mounted drive").join("nested").join("notes.md").to_string_lossy().to_string();
+            restored.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+                store_name: SEARCH_STORE.to_string(),
+                parent_file_id: "original-parent".to_string(),
+                absolute_path: new_path.clone(),
+                file_name: "notes.md".to_string(),
+                relative_path: Path::new("nested").join("notes.md").to_string_lossy().to_string(),
+                fingerprint: "relocated-fingerprint".to_string(),
+            }).unwrap();
+            drop(restored);
+
+            let mut restored = QdrantEdgeDatabase::new(restored_base);
+            let found = restored.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(found.len(), 1);
+            assert_eq!(found[0].point_id, POINT_X);
+            assert_eq!(found[0].parent_file_id, "original-parent");
+            assert_eq!(found[0].file_path, new_path);
+            assert_eq!(found[0].absolute_path, new_path);
+            assert_eq!(found[0].text, "Some text.");
+            assert_eq!(found[0].embedded_at_utc, "2026-10-01T12:00:00Z");
+            assert!((found[0].score - 1.0).abs() < 0.0001);
+
+            let original = database.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(original[0].file_path, old_path, "relocating a restored copy must not change the original store");
+            drop(restored);
+            drop(database);
+            fs::remove_dir_all(data_directory).unwrap();
+        }
+    }
+
+    #[test]
     fn a_backup_id_cannot_name_another_directory() {
         let data_directory = Path::new("/data");
 

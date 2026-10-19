@@ -86,6 +86,16 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         if (inputFiles.UnreachableRootReason is { } unreachableRootReason)
             return this.StopWithoutRoot(context, dataSource, unreachableRootReason);
 
+        // An unmounted volume can leave a readable, empty mount directory. There is no way to
+        // distinguish that from intentionally removing every file, so keep the stored index.
+        // Explicit exclusions still take effect: they are evidence of a nonempty folder.
+        if (dataSource is DataSourceLocalDirectory directory
+            && (manifest.Files.Count > 0 || manifest.UnfinishedFiles.Count > 0 || manifest.PermanentFailures.Count > 0)
+            && inputFiles.Files.Count == 0 && inputFiles.IgnoredFiles.Count == 0
+            && inputFiles.FilePatternExclusionCount == 0 && inputFiles.ExcludedFolderCount == 0
+            && inputFiles.FailedFiles == 0 && inputFiles.UnreadableDirectories.Count == 0)
+            return this.StopWithoutRoot(context, dataSource, string.Format(TB("The folder '{0}' currently appears empty. Its existing index was kept because a disconnected drive can look like an empty folder. Reconnect the drive and refresh this data source. If you intentionally emptied the folder, delete this data source to remove its index."), directory.Path));
+
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
@@ -512,9 +522,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// user may not read that folder. Removing it would throw away its index, and embedding it again
     /// once the folder can be read costs as long as it took the first time.
     /// <br /><br />
-    /// Paths are compared ignoring their case, as everywhere in the manifest. On Linux and macOS, that
-    /// keeps a file whose path differs from an unreadable folder in its case alone, which costs no more
-    /// than a stale entry until the folder can be read again.
+    /// Paths follow the comparison used by the manifest: case-insensitive on Windows, case-sensitive
+    /// on Linux and macOS, where two files or folders can differ in their case alone.
     /// </remarks>
     /// <param name="storedPaths">The paths of the files the index knows about.</param>
     /// <param name="files">The files this run found.</param>
@@ -524,15 +533,16 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         var existingPaths = files
             .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .ToHashSet(PathTools.COMPARER);
 
         var unreadablePrefixes = unreadableDirectories
-            .Select(directory => Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)) + Path.DirectorySeparatorChar)
+            .Select(Path.GetFullPath)
+            .Select(directory => Path.EndsInDirectorySeparator(directory) ? directory : directory + Path.DirectorySeparatorChar)
             .ToList();
 
         return storedPaths
             .Where(path => !existingPaths.Contains(path))
-            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, PathTools.COMPARISON)))
             .ToList();
     }
 
@@ -712,7 +722,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         switch (dataSource)
         {
-            case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
+            case DataSourceLocalFile localFile when RelocatedFilePaths.IsLocalAbsolute(localFile.FilePath) && File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
 
                 // No size limit: the user chose this very file, cf. FolderFileSelection.IsTooLarge.
@@ -721,9 +731,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
                 return result;
 
-            case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
+            case DataSourceLocalDirectory localDirectory when RelocatedFilePaths.IsLocalAbsolute(localDirectory.Path) && Directory.Exists(localDirectory.Path):
                 this.EnumerateAccessibleFiles(localDirectory, manifest, mediaTranscriptionAvailability, result);
-                if (result.UnreadableDirectories.Contains(localDirectory.Path))
+                if (result.UnreadableDirectories.Any(directory => string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
+                        Path.TrimEndingDirectorySeparator(Path.GetFullPath(localDirectory.Path)), PathTools.COMPARISON)))
                     result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
 
                 return result;
@@ -938,8 +949,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
     {
         var fileHashes = indexedFiles
-            .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(file => file.FullName, BuildFileMetadataHash, StringComparer.OrdinalIgnoreCase);
+            .OrderBy(file => file.FullName, PathTools.COMPARER)
+            .ToDictionary(file => file.FullName, BuildFileMetadataHash, PathTools.COMPARER);
 
         var sourceHash = dataSource switch
         {
@@ -983,7 +994,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count.ToString()
         };
 
-        foreach (var file in indexedFiles.OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase))
+        foreach (var file in indexedFiles.OrderBy(file => file.FullName, PathTools.COMPARER))
         {
             parts.Add(this.TryGetRelativePath(dataSource, file));
             parts.Add(fileHashes[file.FullName]);

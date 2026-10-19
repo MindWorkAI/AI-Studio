@@ -68,4 +68,15 @@ public sealed class IndexingPassTests
     [Test]
     public void ARunWithoutAPassBeginsOne() =>
         Assert.That(IndexingPass.ContinueOrBegin(null, DataSourceEmbeddingRefreshMode.CONTINUATION, SIGNATURE).RunSignature, Is.EqualTo(SIGNATURE));
+
+    [Test]
+    public void AFailedFileDoesNotSuppressAnotherCaseDistinctFileOnUnix()
+    {
+        var pass = new IndexingPass(SIGNATURE);
+        var upper = Path.Combine(Path.GetTempPath(), "Report.md");
+        var lower = Path.Combine(Path.GetTempPath(), "report.md");
+        pass.RecordFailure(upper, "fingerprint", new DataSourceEmbeddingFailure(upper, "Could not read the file.", DateTimeOffset.UtcNow));
+
+        Assert.That(pass.TryGetEarlierFailure(lower, "fingerprint", out _), Is.EqualTo(OperatingSystem.IsWindows()));
+    }
 }

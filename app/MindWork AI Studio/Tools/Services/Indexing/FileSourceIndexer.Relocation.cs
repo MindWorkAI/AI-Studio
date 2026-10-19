@@ -16,7 +16,7 @@ internal sealed partial class FileSourceIndexer
         {
             token.ThrowIfCancellationRequested();
             var file = FindRelocatedFile(dataSource, oldPath, record);
-            if (file is null || (!string.Equals(oldPath, file.FullName, StringComparison.OrdinalIgnoreCase) && context.Manifest.Files.ContainsKey(file.FullName)))
+            if (file is null || (!string.Equals(oldPath, file.FullName, PathTools.COMPARISON) && context.Manifest.Files.ContainsKey(file.FullName)))
                 continue;
 
             progress ??= DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger);
@@ -56,15 +56,15 @@ internal sealed partial class FileSourceIndexer
         string targetPath;
         switch (dataSource)
         {
-            case DataSourceLocalFile localFile:
+            case DataSourceLocalFile localFile when RelocatedFilePaths.IsLocalAbsolute(localFile.FilePath):
                 targetPath = Path.GetFullPath(localFile.FilePath);
                 break;
 
-            case DataSourceLocalDirectory localDirectory when !string.IsNullOrWhiteSpace(record.RelativePath) && !Path.IsPathRooted(record.RelativePath):
-                var root = Path.GetFullPath(localDirectory.Path);
-                targetPath = Path.GetFullPath(Path.Combine(root, record.RelativePath));
-                if (!targetPath.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            case DataSourceLocalDirectory localDirectory:
+                var resolvedPath = RelocatedFilePaths.Resolve(localDirectory.Path, oldPath, record.RelativePath);
+                if (resolvedPath is null)
                     return null;
+                targetPath = resolvedPath;
                 break;
 
             default:
@@ -72,7 +72,7 @@ internal sealed partial class FileSourceIndexer
         }
 
         if (string.Equals(oldPath, targetPath, StringComparison.Ordinal)
-            || !string.Equals(Path.GetExtension(oldPath), Path.GetExtension(targetPath), StringComparison.OrdinalIgnoreCase))
+            || !string.Equals(Path.GetExtension(RelocatedFilePaths.GetStoredFileName(oldPath)), Path.GetExtension(targetPath), StringComparison.OrdinalIgnoreCase))
             return null;
 
         var file = new FileInfo(targetPath);

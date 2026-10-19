@@ -34,9 +34,10 @@ internal sealed class TestDataSourceDialog
             if (method.Name != "ShowAsync")
                 throw new NotSupportedException(method.Name);
 
+            ArgumentNullException.ThrowIfNull(arguments);
             this.ShowCount++;
             this.ComponentType = method.GetGenericArguments().Single();
-            this.Title = arguments!.OfType<string>().FirstOrDefault();
+            this.Title = arguments.OfType<string>().FirstOrDefault();
             this.Parameters = arguments.OfType<DialogParameters>().Single();
             return Task.FromResult(reference);
         });

@@ -10,7 +10,7 @@ public sealed class DataSourceEmbeddingManifest
 
     public int VectorSize { get; set; }
 
-    public Dictionary<string, EmbeddedFileRecord> Files { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, EmbeddedFileRecord> Files { get; init; } = new(PathTools.COMPARER);
 
     /// <summary>
     /// The files whose indexing began but never came to an end, by their absolute path.
@@ -21,7 +21,7 @@ public sealed class DataSourceEmbeddingManifest
     /// meanwhile. Indexing such a file again replaces both. A file which is gone, or which the data
     /// source no longer selects, is never indexed again, so the indexer has to remove them itself.
     /// </remarks>
-    public HashSet<string> UnfinishedFiles { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public HashSet<string> UnfinishedFiles { get; init; } = new(PathTools.COMPARER);
 
     /// <summary>
     /// The files whose indexing failed for a reason which lies in the file itself, keyed by their
@@ -32,5 +32,5 @@ public sealed class DataSourceEmbeddingManifest
     /// a folder holding hundreds of scanned documents without a text layer would be read again on
     /// every single run, with the outcome known in advance.
     /// </remarks>
-    public Dictionary<string, PermanentIndexingFailureRecord> PermanentFailures { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, PermanentIndexingFailureRecord> PermanentFailures { get; init; } = new(PathTools.COMPARER);
 }
