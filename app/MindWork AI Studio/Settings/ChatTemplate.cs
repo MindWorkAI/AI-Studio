@@ -393,46 +393,27 @@ public record ChatTemplate(
 
     private static bool TryResolveFileAttachmentPath(int idx, int attachmentNum, string filePath, string pluginPath, out string resolvedFilePath)
     {
-        resolvedFilePath = filePath;
-        if (string.IsNullOrWhiteSpace(filePath))
+        switch (PluginFilePaths.TryResolve(filePath, pluginPath, out resolvedFilePath))
         {
-            LOGGER.LogWarning("The FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} is empty.", attachmentNum, idx);
-            return false;
+            case PluginFilePathIssue.NONE:
+                return true;
+
+            case PluginFilePathIssue.EMPTY:
+                LOGGER.LogWarning("The FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} is empty.", attachmentNum, idx);
+                return false;
+
+            case PluginFilePathIssue.PLUGIN_PATH_UNKNOWN:
+                LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} cannot be resolved because the plugin path is unknown.", attachmentNum, idx);
+                return false;
+
+            case PluginFilePathIssue.PARENT_SEGMENT:
+                LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} contains '..' path segments and will be ignored.", attachmentNum, idx);
+                return false;
+
+            default:
+                LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} points outside of the plugin folder and will be ignored.", attachmentNum, idx);
+                return false;
         }
-
-        if (Path.IsPathFullyQualified(filePath))
-            return true;
-
-        if (string.IsNullOrWhiteSpace(pluginPath))
-        {
-            LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} cannot be resolved because the plugin path is unknown.", attachmentNum, idx);
-            return false;
-        }
-
-        var pluginRoot = Path.GetFullPath(pluginPath);
-        var relativePath = filePath
-            .Replace('/', Path.DirectorySeparatorChar)
-            .Replace('\\', Path.DirectorySeparatorChar);
-        
-        if (relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."))
-        {
-            LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} contains '..' path segments and will be ignored.", attachmentNum, idx);
-            return false;
-        }
-
-        var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? pluginRoot
-            : pluginRoot + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!combinedPath.StartsWith(pluginRootWithSeparator, comparison))
-        {
-            LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} points outside of the plugin folder and will be ignored.", attachmentNum, idx);
-            return false;
-        }
-
-        resolvedFilePath = combinedPath;
-        return true;
     }
 
     public bool TryExportAsConfigurationSection(out string luaCode, out string issue) => this.TryExportAsConfigurationSection(null, Guid.NewGuid().ToString(), out luaCode, out issue);
