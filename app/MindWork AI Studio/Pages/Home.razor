@@ -8,10 +8,14 @@
     </MudText>
 
     <InnerScrolling>
-        <UserAPIKeyPrompt/>
         @if (this.HasVisibleHomePanels)
         {
             <MudExpansionPanels @key="@this.expansionPanelsRenderKey" Class="mb-3" MultiExpansion="@false">
+
+                @foreach (var group in this.pendingUserAPIKeyGroups)
+                {
+                    <UserAPIKeyPrompt @key="@group.ConfigPluginId" Group="@group" IsExpanded="@this.IsPanelExpanded(UserAPIKeyPanelId(group))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(UserAPIKeyPanelId(group), isExpanded))"/>
+                }
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
                 {

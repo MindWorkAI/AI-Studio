@@ -6,19 +6,29 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Asks the user for the API key of the providers which a configuration plugin marked with
-/// "PromptForUserAPIKey", as long as these providers have none. Renders nothing otherwise.
+/// The panel of the home page which asks the user for the API key of the providers that one configuration
+/// plugin marked with "PromptForUserAPIKey". The home page shows one such panel per plugin, as long as one
+/// of its providers has no API key.
 /// </summary>
 public partial class UserAPIKeyPrompt : MSGComponentBase
 {
-    private sealed class GroupState
-    {
-        public string APIKey { get; set; } = string.Empty;
+    /// <summary>
+    /// The providers of the configuration plugin which wait for the API key of the user.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public PendingUserAPIKeyGroup Group { get; set; } = null!;
 
-        public string Issue { get; set; } = string.Empty;
+    /// <summary>
+    /// Whether the panel is expanded.
+    /// </summary>
+    [Parameter]
+    public bool IsExpanded { get; set; }
 
-        public bool IsBusy { get; set; }
-    }
+    /// <summary>
+    /// Called when the user expands or collapses the panel.
+    /// </summary>
+    [Parameter]
+    public Func<bool, Task> ExpandedChanged { get; set; } = _ => Task.CompletedTask;
 
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -26,103 +36,51 @@ public partial class UserAPIKeyPrompt : MSGComponentBase
     [Inject]
     private ILogger<UserAPIKeyPrompt> Logger { get; init; } = null!;
 
-    private readonly Dictionary<Guid, GroupState> states = new();
-    private IReadOnlyList<PendingUserAPIKeyGroup> groups = [];
-    private int refreshGeneration;
+    private string apiKey = string.Empty;
+    private string issue = string.Empty;
+    private bool isBusy;
 
-    #region Overrides of ComponentBase
+    private string Title => string.IsNullOrWhiteSpace(this.Group.Prompt?.Title) ? T("Your API key is missing") : this.Group.Prompt.Title;
 
-    protected override async Task OnInitializedAsync()
+    private async Task StoreAPIKeyAsync()
     {
-        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.STARTUP_COMPLETED ]);
-        await base.OnInitializedAsync();
-        await this.Refresh();
-    }
-
-    #endregion
-
-    #region Overrides of MSGComponentBase
-
-    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
-    {
-        switch (triggeredEvent)
-        {
-            case Event.PLUGINS_RELOADED:
-            case Event.CONFIGURATION_CHANGED:
-            case Event.STARTUP_COMPLETED:
-                await this.Refresh();
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-        }
-    }
-
-    #endregion
-
-    private GroupState GetState(PendingUserAPIKeyGroup group)
-    {
-        if (!this.states.TryGetValue(group.ConfigPluginId, out var state))
-        {
-            state = new();
-            this.states[group.ConfigPluginId] = state;
-        }
-
-        return state;
-    }
-
-    private async Task Refresh()
-    {
-        if (!this.SettingsManager.HasCompletedInitialSettingsLoad)
+        var enteredAPIKey = this.apiKey.Trim();
+        if (this.isBusy || string.IsNullOrWhiteSpace(enteredAPIKey))
             return;
 
-        // Several events may ask for a refresh at once; only the latest answer counts:
-        var generation = ++this.refreshGeneration;
-        var pendingGroups = await PendingUserAPIKeys.FindAsync(this.SettingsManager, this.RustService);
-        if (generation != this.refreshGeneration)
-            return;
-
-        this.groups = pendingGroups;
-        foreach (var obsoleteId in this.states.Keys.Where(id => pendingGroups.All(group => group.ConfigPluginId != id)).ToList())
-            this.states.Remove(obsoleteId);
-    }
-
-    private async Task StoreAPIKey(PendingUserAPIKeyGroup group)
-    {
-        var state = this.GetState(group);
-        var apiKey = state.APIKey.Trim();
-        if (state.IsBusy || string.IsNullOrWhiteSpace(apiKey))
-            return;
-
-        state.IsBusy = true;
-        state.Issue = string.Empty;
+        this.isBusy = true;
+        this.issue = string.Empty;
         try
         {
-            var result = await PendingUserAPIKeys.StoreAsync(group, apiKey, this.RustService, this.Logger);
+            var result = await PendingUserAPIKeys.StoreAsync(this.Group, enteredAPIKey, this.RustService, this.Logger);
             if (result.Check is UserAPIKeyCheckOutcome.REJECTED)
             {
-                state.Issue = T("The API key was not accepted. Please check the key and try again.");
+                this.issue = T("The provider did not accept this API key. Please check the key and try again.");
                 return;
             }
 
+            //
+            // Once the key is stored, the home page builds its panels anew, and this panel loses what it shows.
+            // Hence, a failure to store the key goes into a message of its own instead of into this panel:
+            //
             if (result.FailedProviderNames.Count > 0)
-                state.Issue = string.Format(T("The API key could not be stored for: {0}"), string.Join(", ", result.FailedProviderNames));
+                await this.MessageBus.SendError(new DataErrorMessage(Icons.Material.Filled.Key, string.Format(T("AI Studio could not store the API key for these providers: {0}"), string.Join(", ", result.FailedProviderNames))));
+
+            if (result.FailedProviderNames.Count == this.Group.Targets.Count)
+                return;
+
+            this.apiKey = string.Empty;
+            if (result.Check is UserAPIKeyCheckOutcome.ACCEPTED)
+                await this.MessageBus.SendSuccess(new DataSuccessMessage(Icons.Material.Filled.Key, T("AI Studio checked your API key and stored it. You can now use the AI providers of your organization.")));
             else
-                state.APIKey = string.Empty;
+                await this.MessageBus.SendWarning(new DataWarningMessage(Icons.Material.Filled.Key, T("AI Studio stored your API key but could not check it. If the AI providers of your organization do not work, please correct the key in the settings.")));
 
-            if (result.FailedProviderNames.Count < group.Targets.Count)
-            {
-                if (result.Check is UserAPIKeyCheckOutcome.ACCEPTED)
-                    await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Key, T("The API key was accepted and stored. You can use your AI providers now.")));
-                else
-                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.Key, T("The API key was stored, but could not be checked, because the provider did not answer as expected. If the AI providers do not work, please correct the key in the settings.")));
-            }
-
-            // Tell everyone that the providers are usable now:
+            // Tell everyone that the providers are usable now. The home page removes this panel once no provider waits any longer:
             await this.SendMessage<bool>(Event.CONFIGURATION_CHANGED);
-            await this.Refresh();
         }
         finally
         {
-            state.IsBusy = false;
+            this.isBusy = false;
         }
     }
 }
