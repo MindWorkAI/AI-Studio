@@ -6,5 +6,5 @@ namespace AIStudio.Tools.PluginSystem;
 /// <param name="ConfigurationObject">The configuration object, with an ID of its own and belonging to no configuration plugin.</param>
 /// <param name="Secret">The decrypted API key, token, or password which the snippet brought along, or an empty string.</param>
 /// <param name="Hints">What the user should know before adding the object, each as a sentence of its own.</param>
-/// <param name="AttachmentsToRelink">The file attachments of a chat template which are not on this computer, as the snippet names them.</param>
+/// <param name="AttachmentsToRelink">The files which are not on this computer, as the snippet names them: the attachments of a chat template, or the file of a glossary.</param>
 public sealed record ConfigurationSnippetImportResult(IConfigurationObject ConfigurationObject, string Secret, IReadOnlyList<string> Hints, IReadOnlyList<string> AttachmentsToRelink);

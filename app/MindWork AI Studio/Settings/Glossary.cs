@@ -1,5 +1,7 @@
 using AIStudio.Tools.PluginSystem;
 
+using SharedTools;
+
 using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings;
@@ -92,5 +94,25 @@ public sealed record Glossary(
         };
 
         return true;
+    }
+
+    /// <summary>
+    /// Exports the glossary configuration as a Lua configuration section.
+    /// </summary>
+    /// <remarks>
+    /// The section names the glossary file by its full path, not the terms: whoever imports it needs
+    /// access to the same file, e.g. on a shared drive.
+    /// </remarks>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection()
+    {
+        return $$"""
+                CONFIG["GLOSSARIES"][#CONFIG["GLOSSARIES"]+1] = {
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
+                    ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
+                    ["FilePath"] = "{{LuaTools.EscapeLuaString(this.FilePath)}}",
+                    ["PreselectInTranslation"] = {{this.PreselectInTranslation.ToString().ToLowerInvariant()}},
+                }
+                """;
     }
 }

@@ -474,6 +474,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportChatTemplate"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportERIDataSource"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportDocumentAnalysisPolicy"] = false
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportGlossary"] = false
 
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.

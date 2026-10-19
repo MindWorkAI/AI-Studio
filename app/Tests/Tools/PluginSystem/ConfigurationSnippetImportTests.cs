@@ -42,6 +42,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         PluginConfigurationObjectType.CHAT_TEMPLATE,
         PluginConfigurationObjectType.DATA_SOURCE,
         PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY,
+        PluginConfigurationObjectType.GLOSSARY,
     ];
 
     private string temporaryDirectory = string.Empty;
@@ -316,6 +317,42 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         {
             Assert.That(result.Hints, Is.Empty);
             Assert.That(result.AttachmentsToRelink, Is.Empty);
+        });
+    }
+
+    [Test]
+    public void AGlossaryFileWhichIsNotOnThisComputerIsToBeRelinked()
+    {
+        var missing = Path.Combine(this.temporaryDirectory, "missing.xlsx");
+        var share = OperatingSystem.IsWindows() ? @"\\fileserver\share\glossary.xlsx" : "//fileserver/share/glossary.xlsx";
+
+        Assert.Multiple(() =>
+        {
+            foreach (var path in new[] { missing, share })
+            {
+                var result = Import(GlossaryWith(path).ExportAsConfigurationSection(), PluginConfigurationObjectType.GLOSSARY);
+                var glossary = (Glossary)result.ConfigurationObject;
+
+                Assert.That(glossary.FilePath, Is.Empty, path);
+                Assert.That(result.AttachmentsToRelink, Is.EqualTo(new[] { path }), path);
+                Assert.That(result.Hints, Is.Empty, path);
+            }
+        });
+    }
+
+    [Test]
+    public void AGlossaryFileOnThisComputerIsKeptAndNamedInAHint()
+    {
+        var existing = this.CreateFile("glossary.csv");
+        var result = Import(GlossaryWith(existing).ExportAsConfigurationSection(), PluginConfigurationObjectType.GLOSSARY);
+        var glossary = (Glossary)result.ConfigurationObject;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(glossary.FilePath, Is.EqualTo(existing));
+            Assert.That(glossary.PreselectInTranslation, Is.True);
+            Assert.That(result.AttachmentsToRelink, Is.Empty);
+            Assert.That(result.Hints, Has.Exactly(1).Contains(existing), "A snippet can name any file of this computer, so the user has to see which one the translations would use.");
         });
     }
 
@@ -600,6 +637,10 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
                 var policy = PolicyWith(Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), ["web_search", "read_web_page"]);
                 return (policy, policy.ExportAsConfigurationSection());
 
+            case PluginConfigurationObjectType.GLOSSARY:
+                var glossary = GlossaryWith(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx"));
+                return (glossary, glossary.ExportAsConfigurationSection());
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, "This test knows no export for this type.");
         }
@@ -677,7 +718,9 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         return (dataSource, dataSource.ExportAsConfigurationSection(encryptedSecret, usernamePasswordMode));
     }
 
-    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null)
+    private static Glossary GlossaryWith(string filePath) => new(1, Guid.NewGuid().ToString(), "Company terms", filePath, true);
+
+    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths,IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null)
     {
         var template = ChatTemplateWith(attachmentPaths, toolIds, dataSourceIds);
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
