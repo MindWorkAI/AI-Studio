@@ -64,15 +64,16 @@
                 @T("No profiles configured yet.")
             </MudText>
         }
-
-        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+    </DialogContent>
+    <DialogActions>
+        @* In the footer, adding and importing stay in reach however long the table grows: *@
+        <MudStack Row="true" Wrap="Wrap.Wrap">
             <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddProfile">
                 @T("Add Profile")
             </MudButton>
             <LockableButton Text="@T("Import Profile")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.PROFILE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportProfile" ButtonVariant="Variant.Outlined" NoMargin="true" />
         </MudStack>
-    </DialogContent>
-    <DialogActions>
+        <MudSpacer/>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
             @T("Close")
         </MudButton>
