@@ -23,13 +23,21 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     private const int FILE_NAME_PREFIX_MAX_LEN = 80;
 
     /// <summary>
+    /// Whether sharing a plugin exports its archive to a location of the user's choice instead of
+    /// handing it to the share sheet of the operating system.
+    /// </summary>
+    public bool UsesExport => !nativeShareService.IsAvailable;
+
+    /// <summary>
     /// Creates a shareable plugin archive from a local plugin and hands it over to the user.
     /// The archive contains the plugin root contents, so <c>plugin.lua</c> is located at the archive root.
     /// </summary>
     /// <remarks>
     /// On Windows and macOS, the archive is created in a temporary directory and handed over to the
     /// native share sheet. Linux has no such share sheet, since the XDG desktop portals do not provide
-    /// a share interface. Thus, the archive is exported to a location of the user's choice there.
+    /// a share interface. Thus, the archive is exported to a location of the user's choice there. The
+    /// same happens on Windows and macOS once the share sheet failed or did not respond, until AI
+    /// Studio restarts.
     /// </remarks>
     /// <param name="plugin">The local plugin to archive and share.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
@@ -48,7 +56,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
         if (!TryGetPluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);
 
-        if (OperatingSystem.IsLinux())
+        if (this.UsesExport)
             return await this.ExportAsync(plugin, pluginRoot, token);
 
         return await this.ShareViaNativeSheetAsync(plugin, pluginRoot, token);
@@ -128,10 +136,24 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
             }, token);
 
             token.ThrowIfCancellationRequested();
-            if (!await nativeShareService.Share(archivePath))
+            var shareResponse = await nativeShareService.Share(archivePath);
+            switch (shareResponse.Outcome)
             {
-                this.TryDeleteArchive(archivePath);
-                return ShareError(plugin, TB("The native share dialog could not be opened."));
+                case ShareSheetOutcome.OPENED:
+                    break;
+
+                //
+                // A share sheet which did not respond may still appear later and ask for the archive.
+                // We keep it for that case; the clean-up removes it once it expired:
+                //
+                case ShareSheetOutcome.UNRESPONSIVE:
+                    return ShareError(plugin, TB("The share dialog of your operating system did not respond."));
+
+                case ShareSheetOutcome.FAILED:
+                case ShareSheetOutcome.UNKNOWN:
+                default:
+                    this.TryDeleteArchive(archivePath);
+                    return ShareError(plugin, TB("The native share dialog could not be opened."));
             }
 
             logger.LogInformation("Created plugin archive '{ArchivePath}' for plugin '{PluginName}' ({PluginId}).", archivePath, plugin.Name, plugin.Id);
