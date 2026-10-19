@@ -108,7 +108,7 @@ public static class DataSourceReindexWarning
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.MarkdownBody, TB("Changing this location can remove indexed files that are absent from the new location. New or changed files in the selected location will be indexed. Unchanged files keep their prepared documents when their relative paths, sizes, and modification times match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?") },
+            { x => x.MarkdownBody, TB("Changing this location can remove files from the index if they are absent from the new location. Your files on disk are not deleted. New or changed files in the selected location may need indexing. Unchanged files keep their prepared content when their file types, sizes, and modification times match; for folders, their paths within the folder must also match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?") },
         };
         var reference = await dialogService.ShowAsync<ConfirmDialog>(TB("Change Data Source Location?"), parameters, Dialogs.DialogOptions.FULLSCREEN);
         var result = await reference.Result;

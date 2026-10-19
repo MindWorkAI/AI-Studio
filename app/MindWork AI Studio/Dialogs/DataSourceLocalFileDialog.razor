@@ -50,7 +50,7 @@
             @if (this.IsEditing && !string.Equals(this.dataFilePath, this.DataSource.FilePath, StringComparison.Ordinal))
             {
                 <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("If this file was moved or renamed, select its new location. Prepared documents are reused when the file size and modification time are unchanged.")
+                    @T("When you save this location, the file can reuse its prepared content if its file type, size, and modification time are unchanged.")
                 </MudAlert>
             }
             <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />

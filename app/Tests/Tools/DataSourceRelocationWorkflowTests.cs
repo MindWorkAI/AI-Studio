@@ -345,7 +345,7 @@ public sealed class DataSourceRelocationWorkflowTests
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1));
             Assert.That(edit.Warning.ComponentType, Is.EqualTo(typeof(ConfirmDialog)));
-            Assert.That(edit.Warning.Parameters!.Get<string>(nameof(ConfirmDialog.MarkdownBody)), Does.Contain("remove indexed files").And.Contain("will be indexed").And.Contain("Unchanged files keep"));
+            Assert.That(edit.Warning.Parameters!.Get<string>(nameof(ConfirmDialog.MarkdownBody)), Does.Contain("from the index").And.Contain("files on disk are not deleted").And.Contain("may need indexing").And.Contain("Unchanged files keep"));
         });
         this.source = (IInternalDataSource)this.settings.ConfigurationData.DataSources.Single();
     }

@@ -6784,9 +6784,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1720021383"
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1725856265"] = "Description"
 
--- If this folder was moved or renamed, select its new location. Prepared documents are reused when their relative paths, file sizes, and modification times are unchanged.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1744159389"] = "If this folder was moved or renamed, select its new location. Prepared documents are reused when their relative paths, file sizes, and modification times are unchanged."
-
 -- How many matches do you want at most per query?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"] = "How many matches do you want at most per query?"
 
@@ -6846,6 +6843,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"
 
 -- No, ignore hidden files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"] = "No, ignore hidden files and folders"
+
+-- When you save this location, files can reuse their prepared content if their paths within the folder, file types, sizes, and modification times are unchanged.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3695879299"] = "When you save this location, files can reuse their prepared content if their paths within the folder, file types, sizes, and modification times are unchanged."
 
 -- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js."
@@ -7021,6 +7021,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Update"
 
+-- When you save this location, the file can reuse its prepared content if its file type, size, and modification time are unchanged.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2007852010"] = "When you save this location, the file can reuse its prepared content if its file type, size, and modification time are unchanged."
+
 -- The overlap must be smaller than the effective token limit.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2101951526"] = "The overlap must be smaller than the effective token limit."
 
@@ -7059,9 +7062,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "
 
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Select the file"
-
--- If this file was moved or renamed, select its new location. Prepared documents are reused when the file size and modification time are unchanged.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3780399018"] = "If this file was moved or renamed, select its new location. Prepared documents are reused when the file size and modification time are unchanged."
 
 -- This audio or video file is skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4026150982"] = "This audio or video file is skipped until you choose a transcription provider in the settings."
@@ -12208,9 +12208,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge is not available."
 
--- Changing this location can remove indexed files that are absent from the new location. New or changed files in the selected location will be indexed. Unchanged files keep their prepared documents when their relative paths, sizes, and modification times match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T1641787452"] = "Changing this location can remove indexed files that are absent from the new location. New or changed files in the selected location will be indexed. Unchanged files keep their prepared documents when their relative paths, sizes, and modification times match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?"
-
 -- Change Data Source Location?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2267156072"] = "Change Data Source Location?"
 
@@ -12225,6 +12222,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "Thi
 
 -- Do you want to apply this change anyway?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Do you want to apply this change anyway?"
+
+-- Changing this location can remove files from the index if they are absent from the new location. Your files on disk are not deleted. New or changed files in the selected location may need indexing. Unchanged files keep their prepared content when their file types, sizes, and modification times match; for folders, their paths within the folder must also match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3501502675"] = "Changing this location can remove files from the index if they are absent from the new location. Your files on disk are not deleted. New or changed files in the selected location may need indexing. Unchanged files keep their prepared content when their file types, sizes, and modification times match; for folders, their paths within the folder must also match. Indexing can take time and may cost money with a cloud provider. Do you want to save this change?"
 
 -- Documents Will Be Prepared Again
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Documents Will Be Prepared Again"
