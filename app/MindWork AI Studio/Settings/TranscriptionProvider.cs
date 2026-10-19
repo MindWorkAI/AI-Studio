@@ -24,7 +24,8 @@ public sealed record TranscriptionProvider(
     Host Host = Host.NONE,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<TranscriptionProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<TranscriptionProvider>();
 
@@ -101,9 +102,7 @@ public sealed record TranscriptionProvider(
             return false;
         }
 
-        var allowUserProvidedApiKey = false;
-        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
-            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+        var apiKeyOptions = UserProvidedAPIKeyOptions.Read(table);
 
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
@@ -136,7 +135,8 @@ public sealed record TranscriptionProvider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
-            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            AllowUserProvidedAPIKey = apiKeyOptions.AllowUserProvidedAPIKey,
+            PromptForUserAPIKey = apiKeyOptions.PromptForUserAPIKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
         };
@@ -144,7 +144,7 @@ public sealed record TranscriptionProvider(
         // Handle an encrypted API key if present. When the user manages their own key for this
         // transcription provider, we must never enqueue an embedded key: doing so would overwrite
         // the user's key in the OS keyring on every configuration reload.
-        if (allowUserProvidedApiKey)
+        if (apiKeyOptions.AllowUserProvidedAPIKey)
         {
             if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
                 LOGGER.LogWarning($"The configured transcription provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");

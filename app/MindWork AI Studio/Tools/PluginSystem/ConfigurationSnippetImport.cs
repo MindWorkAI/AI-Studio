@@ -76,19 +76,20 @@ public static class ConfigurationSnippetImport
                 return true;
 
             //
-            // A user-provided API key is what an organization grants for a provider it manages. A
-            // provider of the user's own has nothing else, so the flag carries no meaning here:
+            // A user-provided API key, and asking the user for it, is what an organization grants for a
+            // provider it manages. A provider of the user's own has nothing else, so neither option carries
+            // any meaning here:
             //
             case Settings.Provider provider:
-                result = new(MakeLocal(provider) with { TokenizerPath = KeepLocalTokenizer(provider.TokenizerPath, hints), AllowUserProvidedAPIKey = false }, ReadAPIKey(table, hints), hints, []);
+                result = new(MakeLocal(provider) with { TokenizerPath = KeepLocalTokenizer(provider.TokenizerPath, hints), AllowUserProvidedAPIKey = false, PromptForUserAPIKey = false }, ReadAPIKey(table, hints), hints, []);
                 return true;
 
             case EmbeddingProvider provider:
-                result = new(MakeLocal(provider) with { TokenizerPath = KeepLocalTokenizer(provider.TokenizerPath, hints), AllowUserProvidedAPIKey = false }, ReadAPIKey(table, hints), hints, []);
+                result = new(MakeLocal(provider) with { TokenizerPath = KeepLocalTokenizer(provider.TokenizerPath, hints), AllowUserProvidedAPIKey = false, PromptForUserAPIKey = false }, ReadAPIKey(table, hints), hints, []);
                 return true;
 
             case TranscriptionProvider provider:
-                result = new(MakeLocal(provider) with { AllowUserProvidedAPIKey = false }, ReadAPIKey(table, hints), hints, []);
+                result = new(MakeLocal(provider) with { AllowUserProvidedAPIKey = false, PromptForUserAPIKey = false }, ReadAPIKey(table, hints), hints, []);
                 return true;
 
             //

@@ -172,6 +172,12 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- if this configuration is later withdrawn.
 --     -- ["AllowUserProvidedAPIKey"] = true,
 --
+--     -- Optional: ask the user for their API key in a panel on the home page, as long as this
+--     -- provider has none. All providers of this plugin which set this option share one panel
+--     -- and receive the same key, so the user enters it once. Implies "AllowUserProvidedAPIKey".
+--     -- Explain how to obtain the key in CONFIG["USER_API_KEY_PROMPT"], see below.
+--     -- ["PromptForUserAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -202,6 +208,10 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face transcribes audio through some of its inference providers only, so the choice
@@ -248,6 +258,10 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face serves embeddings through some of its inference providers only, so the choice
@@ -1366,6 +1380,23 @@ CONFIG["INTRODUCTIONS"] = {}
 --                         AI usage guidelines.
 --
 --                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
+-- }
+
+-- What AI Studio tells users in the panel on the home page which asks for their API key. It asks
+-- as long as a provider of this plugin which sets "PromptForUserAPIKey" has no API key. AI Studio
+-- checks the key the user enters with the first of these providers which can list its models,
+-- and then stores it for all of them. A key the provider refuses is not stored. When no provider
+-- can check the key, or the provider is out of reach, AI Studio stores the key with a warning.
+-- Markdown is required, Title is optional. Without this table, AI Studio shows a generic request.
+-- CONFIG["USER_API_KEY_PROMPT"] = {
+--     ["Title"] = "Please add your API key",
+--     ["Markdown"] = [===[
+--                         To use the AI models of your organization, you need a personal API key:
+--
+--                         1. Open [Open WebUI](https://example.org) and sign in.
+--                         2. Click your profile picture, then "Settings" and "Account".
+--                         3. Create an API key, copy it, and paste it below.
 --                         ]===]
 -- }
 

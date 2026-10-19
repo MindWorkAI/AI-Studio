@@ -206,6 +206,30 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     [TestCase(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER)]
     public void AnUnencryptedAPIKeyIsLeftOut(PluginConfigurationObjectType type) => AssertAPIKeyLeftOut(Import(ExportProvider(type, API_KEY).Snippet, type));
 
+    [TestCase(PluginConfigurationObjectType.LLM_PROVIDER)]
+    [TestCase(PluginConfigurationObjectType.EMBEDDING_PROVIDER)]
+    [TestCase(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER)]
+    public void AnImportedProviderNeverAsksForTheAPIKeyOfTheUser(PluginConfigurationObjectType type)
+    {
+        //
+        // An export never writes the option, but a snippet may come from a configuration plugin of an
+        // organization. The option implies the user-provided key, so both have to go:
+        //
+        var snippet = ExportProvider(type, null).Snippet;
+        var tableStart = snippet.IndexOf("= {", StringComparison.Ordinal) + "= {".Length;
+        var snippetWithPrompt = snippet.Insert(tableStart, """
+
+                                                              ["PromptForUserAPIKey"] = true,
+                                                          """);
+
+        var imported = (IUserProvidedAPIKey)Import(snippetWithPrompt, type).ConfigurationObject;
+        Assert.Multiple(() =>
+        {
+            Assert.That(imported.PromptForUserAPIKey, Is.False);
+            Assert.That(imported.AllowUserProvidedAPIKey, Is.False);
+        });
+    }
+
     [Test]
     public void TheTokenOfADataSourceIsDecrypted() => Assert.That(Import(ExportDataSource(AuthMethod.TOKEN).Snippet, PluginConfigurationObjectType.DATA_SOURCE).Secret, Is.EqualTo(TOKEN));
 
