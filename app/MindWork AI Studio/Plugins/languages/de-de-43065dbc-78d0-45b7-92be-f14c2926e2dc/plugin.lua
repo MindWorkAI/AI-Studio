@@ -6396,6 +6396,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745
 -- {0} profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} Profil"
 
+-- {0} glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2396010207"] = "{0}-Glossar"
+
 -- {0} introduction on the welcome page
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2426110502"] = "{0} Einführung auf der Willkommensseite"
 
@@ -6404,6 +6407,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2438407498
 
 -- Yes, delete it
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2466176832"] = "Ja, löschen"
+
+-- {0} glossaries
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2509714007"] = "{0} Glossare"
 
 -- This also removes everything the configuration plugin had set up:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T264970454"] = "Dadurch wird auch alles entfernt, was das Konfigurations-Plugin eingerichtet hat:"
@@ -7712,6 +7718,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3167853804"] = "Name des Gl
 
 -- Please enter a glossary name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3280779301"] = "Bitte geben Sie einen Namen für das Glossar ein."
+
+-- The glossary file '{0}' is not on this computer. Please choose the glossary file before you add the glossary.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T341069209"] = "Die Glossardatei „{0}“ befindet sich nicht auf diesem Computer. Bitte wählen Sie die Glossardatei aus, bevor Sie das Glossar hinzufügen."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::GLOSSARYDIALOG::T3448155331"] = "Schließen"
@@ -9104,6 +9113,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T4236124
 
 -- File
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T723007075"] = "Datei"
+
+-- Import Glossary
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGLOSSARIES::T99577620"] = "Glossar importieren"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGGRAMMARSPELLING::T1417990312"] = "Zielsprache vorauswählen"
@@ -13137,6 +13149,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T384
 -- The pasted configuration is not a valid configuration of the type '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T4231596123"] = "Die eingefügte Konfiguration ist keine gültige Konfiguration vom Typ „{0}“."
 
+-- The glossary uses this file from this computer: {0}. Please check that you want to use it for your translations.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T57015778"] = "Das Glossar verwendet diese Datei von diesem Computer: {0}. Bitte prüfen Sie, ob Sie sie für Ihre Übersetzungen verwenden möchten."
+
 -- The policy permits tools which are not available on this computer: {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T582643438"] = "Das Regelwerk erlaubt Werkzeuge, die auf diesem Computer nicht verfügbar sind: {0}."
 
@@ -13358,6 +13373,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T1148682011
 
 -- The CONFIG table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATION::T3331620576"] = "Die Tabelle CONFIG existiert nicht oder ist keine gültige Tabelle."
+
+-- Glossary
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T1350120821"] = "Glossar"
 
 -- Document Analysis Policy
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINCONFIGURATIONOBJECTTYPEEXTENSIONS::T16338172"] = "Regelwerk für die Dokumentenanalyse"
