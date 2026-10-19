@@ -21,7 +21,7 @@
 </MudJustifiedText>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("Images in JPG, PNG, WebP, or GIF format are given directly to the model, so you need a model that understands images. To include them, add patterns such as *.jpg;*.png.")
+    @T("Images in JPG, PNG, WebP, or GIF format are given directly to the model, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.")
 </MudJustifiedText>
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
