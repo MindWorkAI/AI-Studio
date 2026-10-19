@@ -94,12 +94,68 @@ async fn share_file_on_platform(_path: PathBuf) -> Result<(), String> {
 #[cfg(windows)]
 async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
     use std::cell::RefCell;
-    use windows::ApplicationModel::DataTransfer::{DataRequestedEventArgs, DataTransferManager};
+    use std::time::{Duration, Instant};
+    use log::{debug, warn};
+    use windows::ApplicationModel::DataTransfer::{DataPackage, DataRequestedEventArgs, DataTransferManager, ShareCompletedEventArgs};
     use windows::Foundation::TypedEventHandler;
     use windows::Storage::{IStorageItem, StorageFile};
     use windows::Win32::UI::Shell::IDataTransferManagerInterop;
-    use windows::core::{factory, HSTRING, Interface};
+    use windows::core::{factory, IInspectable, HSTRING, Interface};
     use windows_collections::IIterable;
+
+    /// How long Windows waits for the shared data. The documentation of DataRequest.GetDeferral
+    /// names 200 ms, after which the share operation times out.
+    const DATA_PACKAGE_DEADLINE: Duration = Duration::from_millis(200);
+
+    /// Hands the shared file to Windows, once its share UI asks for it.
+    fn provide_shared_file(arguments: &DataRequestedEventArgs, path: &str) -> windows::core::Result<()> {
+        let request = arguments.Request()?;
+        let lookup_started = Instant::now();
+        let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(path))?.get()?;
+        let lookup_duration = lookup_started.elapsed();
+        if lookup_duration > DATA_PACKAGE_DEADLINE {
+            warn!(Source = "Share sheet"; "Looking up the shared file took {} ms, but Windows allows only {} ms to provide the data.", lookup_duration.as_millis(), DATA_PACKAGE_DEADLINE.as_millis());
+        }
+
+        let file: IStorageItem = file.cast()?;
+        let items = IIterable::<IStorageItem>::from(vec![Some(file)]);
+        let data = request.Data()?;
+        data.Properties()?.SetTitle(&HSTRING::from("MindWork AI Studio"))?;
+        data.SetStorageItemsReadOnly(&items)?;
+        observe_share_outcome(&data);
+        Ok(())
+    }
+
+    /// Logs how the share ends. Windows reports this for each data package, and each share gets a
+    /// package of its own, so these handlers never stack up. Nothing depends on these events: they
+    /// only tell us in the log what the user saw.
+    fn observe_share_outcome(data: &DataPackage) {
+        let completed = TypedEventHandler::<DataPackage, ShareCompletedEventArgs>::new(|_, arguments| {
+            let target_app = arguments.as_ref()
+                .and_then(|arguments| arguments.ShareTarget().ok())
+                .and_then(|target| target.AppUserModelId().ok())
+                .map(|app_id| app_id.to_string())
+                .unwrap_or_default();
+
+            info!(Source = "Share sheet"; "The Windows share sheet shared the file with '{target_app}'.");
+            Ok(())
+        });
+
+        // Windows offers this event since version 1703:
+        if let Err(error) = data.ShareCompleted(&completed) {
+            debug!(Source = "Share sheet"; "Cannot observe whether the share completes: {error}");
+        }
+
+        let canceled = TypedEventHandler::<DataPackage, IInspectable>::new(|_, _| {
+            info!(Source = "Share sheet"; "The Windows share sheet closed without sharing the file.");
+            Ok(())
+        });
+
+        // Windows offers this event since version 2004:
+        if let Err(error) = data.ShareCanceled(&canceled) {
+            debug!(Source = "Share sheet"; "Cannot observe whether the share gets canceled: {error}");
+        }
+    }
 
     // The DataTransferManager belongs to the window, not to a single share. Registering a handler
     // for every share would stack them up, and each stale handler keeps pointing at the archive of
@@ -123,18 +179,31 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
                 .map_err(|error| format!("Failed to access the Windows share service: {error}"))?;
             let manager: DataTransferManager = unsafe { interop.GetForWindow(hwnd) }
                 .map_err(|error| format!("Failed to create the Windows share request: {error}"))?;
+
+            //
+            // When its share UI really opens, Windows first asks for the data and lists the targets
+            // only afterward. How long that takes shows in the log whether the share UI responded at
+            // all. Registering the handler below takes no measurable time, so we start measuring here.
+            //
+            // The handler runs on the main thread. Like the window events in start_tauri, it must
+            // therefore never lock MAIN_WINDOW: it would deadlock as soon as anybody else holds
+            // that lock.
+            //
+            let share_started = Instant::now();
             let handler = TypedEventHandler::<DataTransferManager, DataRequestedEventArgs>::new(move |_, arguments| {
                 let Some(arguments) = arguments.as_ref() else {
                     return Ok(());
                 };
 
-                let request = arguments.Request()?;
-                let file = StorageFile::GetFileFromPathAsync(&HSTRING::from(&path))?.get()?;
-                let file: IStorageItem = file.cast()?;
-                let items = IIterable::<IStorageItem>::from(vec![Some(file)]);
-                request.Data()?.Properties()?.SetTitle(&HSTRING::from("MindWork AI Studio"))?;
-                request.Data()?.SetStorageItemsReadOnly(&items)?;
-                Ok(())
+                info!(Source = "Share sheet"; "Windows requested the shared file {} ms after AI Studio opened its share UI.", share_started.elapsed().as_millis());
+                let result = provide_shared_file(arguments, &path);
+
+                // Windows shows the failure in its share UI, but would not log it anywhere:
+                if let Err(error) = &result {
+                    error!(Source = "Share sheet"; "Failed to provide the shared file to Windows: {error}");
+                }
+
+                result
             });
             if let Some(previous_token) = DATA_REQUESTED_TOKEN.with(|token| token.borrow_mut().take()) {
                 let _ = manager.RemoveDataRequested(previous_token);
