@@ -13776,6 +13776,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T226899
 -- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2692299965"] = "Der Ordner „{0}“ ist nicht erreichbar. Möglicherweise ist das Laufwerk, auf dem er sich befindet, nicht verbunden, oder der Ordner wurde verschoben oder umbenannt. Aus dem Index wurde nichts entfernt. Wenn der Ordner verschoben oder umbenannt wurde, bearbeiten Sie diese Datenquelle und wählen Sie den neuen Speicherort des Ordners aus. Sobald der Ordner wieder verfügbar ist, aktualisieren Sie diese Datenquelle."
 
+-- The folder '{0}' currently appears empty. Its existing index was kept because a disconnected drive can look like an empty folder. Reconnect the drive and refresh this data source. If you intentionally emptied the folder, delete this data source to remove its index.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3173407128"] = "Der Ordner „{0}“ scheint derzeit leer zu sein. Sein vorhandener Index wurde beibehalten, da ein getrenntes Laufwerk wie ein leerer Ordner aussehen kann. Verbinden Sie das Laufwerk erneut und aktualisieren Sie diese Datenquelle. Wenn Sie den Ordner absichtlich geleert haben, löschen Sie diese Datenquelle, um den Index zu entfernen."
+
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3230000698"] = "Der Ordner „{0}“ konnte nicht geöffnet werden. Bitte prüfen Sie, ob Sie ihn lesen dürfen."
 
