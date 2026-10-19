@@ -1445,9 +1445,18 @@ public abstract class BaseProvider : IProvider, ISecretId
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The ID and whether the provider is self-hosted come along, because the data source checks
+    /// trust a provider by them: Semantic Search decides with these settings which data sources
+    /// it offers, while the classic RAG process asks this provider itself. Without them, a
+    /// self-hosted provider, or one the organization trusts, could search a data source which asks
+    /// for such a provider in one process but not in the other.
+    /// </remarks>
     public AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
+        Id = this.ConfiguredProviderId,
         UsedLLMProvider = this.Provider,
+        IsSelfHosted = this.Provider is LLMProviders.SELF_HOSTED,
         Model = chatModel,
         InstanceName = this.InstanceName,
         CapabilityOverrides = this.CapabilityOverrides,
