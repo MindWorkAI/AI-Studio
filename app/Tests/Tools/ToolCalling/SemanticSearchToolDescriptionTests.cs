@@ -86,11 +86,49 @@ public sealed class SemanticSearchToolDescriptionTests
         Assert.That(function.DescriptionForLLM, Does.Contain($"description='{new string('x', 499)}...'"));
     }
 
-    private static ToolFunctionDefinition Describe(params (IDataSource DataSource, string Description)[] dataSources)
+    [Test]
+    public void AnUnreachableDataSourceIsNamedButCannotBeSearched()
+    {
+        var function = DescribeWithUnreachable([(HANDBOOK, "Our processes.")], [INTRANET]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(function.DescriptionForLLM, Does.Contain("could not be reached right now"));
+            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet', type=external data source"), "The model has to know what is missing, so that it can tell the user.");
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain(INTRANET.Id), "A data source which cannot be searched gets no ID to pass.");
+            Assert.That(OfferedIds(function), Is.EqualTo(new[] { HANDBOOK.Id }), "The schema still lets the model name only what it may search.");
+        });
+    }
+
+    [Test]
+    public void OnlyUnreachableDataSourcesStillMakeAFunction()
+    {
+        var function = DescribeWithUnreachable([], [INTRANET]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(function.DescriptionForLLM, Does.Contain("None of the data sources of this chat can be searched right now."));
+            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet', type=external data source"));
+            Assert.That(function.DescriptionForLLM, Does.Not.Contain("The data sources you may search"));
+        });
+    }
+
+    [Test]
+    public void WithoutUnreachableDataSourcesTheDescriptionStaysAsBefore()
+    {
+        var withoutList = Describe((HANDBOOK, "Our processes."));
+        var withEmptyList = DescribeWithUnreachable([(HANDBOOK, "Our processes.")], []);
+
+        Assert.That(withEmptyList.DescriptionForLLM, Is.EqualTo(withoutList.DescriptionForLLM), "The providers cache a request from its beginning, so nothing may change while every server answers.");
+    }
+
+    private static ToolFunctionDefinition Describe(params (IDataSource DataSource, string Description)[] dataSources) => DescribeWithUnreachable(dataSources, []);
+
+    private static ToolFunctionDefinition DescribeWithUnreachable((IDataSource DataSource, string Description)[] dataSources, IDataSource[] unreachableDataSources)
     {
         // Stating its definition needs none of the services the tool searches with:
         var registered = new SemanticSearchTool(null!, null!, null!, null!, null!).GetDefinition().Function;
-        return SemanticSearchTool.DescribeDataSources(registered, dataSources);
+        return SemanticSearchTool.DescribeDataSources(registered, dataSources, unreachableDataSources);
     }
 
     private static IReadOnlyList<string?> OfferedIds(ToolFunctionDefinition function) => function.Parameters

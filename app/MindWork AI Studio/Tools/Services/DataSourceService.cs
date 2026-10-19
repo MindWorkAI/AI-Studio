@@ -52,7 +52,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
             this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
-            return new([], [], [], []);
+            return new([], [], [], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -82,7 +82,7 @@ public sealed class DataSourceService
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
         var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions, retrievalMode,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
-        var allowedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+        var (allowedDataSources, _) = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
 
         //
         // Whoever asks this way has no list to show, so a data source which cannot be searched is
@@ -113,7 +113,7 @@ public sealed class DataSourceService
         if (selectedLLMProvider is NoProvider)
         {
             this.logger.LogWarning("The selected LLM provider is the default provider. We cannot filter the data sources by any means.");
-            return new([], [], [], []);
+            return new([], [], [], [], []);
         }
         
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
@@ -180,7 +180,7 @@ public sealed class DataSourceService
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
-        var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
+        var (filteredDataSources, unreachableDataSources) = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
 
         //
         // Which of the sources that passed every check cannot answer a search right now. They are
@@ -202,7 +202,7 @@ public sealed class DataSourceService
         var usableDataSources = filteredDataSources.Where(source => !blockedIds.Contains(source.Id)).ToList();
         var filteredSelectedDataSources = usableDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
 
-        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair);
+        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair, unreachableDataSources);
     }
 
     /// <summary>
@@ -257,10 +257,11 @@ public sealed class DataSourceService
         return needingRepair;
     }
 
-    private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
+    private async Task<(IReadOnlyList<IDataSource> Allowed, IReadOnlyList<IDataSource> Unreachable)> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
     {
         var filteredDataSources = new List<IDataSource>(requestedDataSources.Count);
-        var tasks = new List<Task<IDataSource?>>(requestedDataSources.Count);
+        var unreachableDataSources = new List<IDataSource>();
+        var tasks = new List<Task<DataSourceCheck>>(requestedDataSources.Count);
 
         // Start all checks in parallel:
         foreach (var source in requestedDataSources)
@@ -270,15 +271,104 @@ public sealed class DataSourceService
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
         {
-            var source = await task;
-            if (source is not null)
-                filteredDataSources.Add(source);
+            var check = await task;
+            if (check.AllowedSource is not null)
+                filteredDataSources.Add(check.AllowedSource);
+            else if (check.UnreachableSource is not null)
+                unreachableDataSources.Add(check.UnreachableSource);
         }
 
-        return filteredDataSources;
+        return (filteredDataSources, unreachableDataSources);
     }
-    
-    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders)
+
+    /// <summary>
+    /// What the check of one data source found: it may be used, its ERI server could not be reached, or neither.
+    /// </summary>
+    private readonly record struct DataSourceCheck(IDataSource? AllowedSource, IDataSource? UnreachableSource);
+
+    private async Task<DataSourceCheck> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders)
+    {
+        //
+        // Unfortunately, we have to live-check any ERI source for its security requirements.
+        // Because the ERI server operator might change the security requirements at any time.
+        //
+        SecurityRequirements? eriSourceRequirements = null;
+        if (source is DataSourceERI_V1 eriSource)
+        {
+            var (isReachable, requirements) = await this.GetSecurityRequirementsAsync(eriSource);
+            if (!isReachable)
+            {
+                //
+                // The source cannot be used, but whoever asks may still tell the model or the user
+                // about it, so that its silence is not taken for finding nothing. Only a source
+                // which its own configured policy allows for this provider counts: whatever the
+                // server would demand on top of that is unknown, and it is never searched anyway.
+                //
+                return new(null, MayBeNamedWhileUnreachable(eriSource, usingTrustedProvider) ? source : null);
+            }
+
+            eriSourceRequirements = requirements;
+        }
+
+        return new(this.CheckPolicies(source, usingTrustedProvider, participatingProviders, eriSourceRequirements), null);
+    }
+
+    /// <summary>
+    /// Whether an ERI data source whose server could not be reached may still be named to a provider.
+    /// </summary>
+    /// <param name="source">The ERI data source.</param>
+    /// <param name="usingTrustedProvider">Whether the chat provider is trusted for data source security checks.</param>
+    /// <returns>True when the configured security policy of the data source allows it for this provider.</returns>
+    internal static bool MayBeNamedWhileUnreachable(IExternalDataSource source, bool usingTrustedProvider) => source.SecurityPolicy switch
+    {
+        DataSourceSecurity.ALLOW_ANY => true,
+        DataSourceSecurity.SELF_HOSTED => usingTrustedProvider,
+        _ => false,
+    };
+
+    /// <summary>
+    /// Signs in to the server of an ERI data source and asks for its security requirements.
+    /// </summary>
+    /// <returns>Whether the server answered, and its requirements when it did.</returns>
+    private async Task<(bool IsReachable, SecurityRequirements? Requirements)> GetSecurityRequirementsAsync(DataSourceERI_V1 source)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+        using var client = ERIClientFactory.Get(ERIVersion.V1, source);
+        if(client is null)
+        {
+            this.logger.LogError($"Could not create ERI client for source '{source.Name}' (id={source.Id}). We skip this source.");
+            return (false, null);
+        }
+
+        this.logger.LogInformation($"Authenticating with ERI source '{source.Name}' (id={source.Id})...");
+        var loginResult = await client.AuthenticateAsync(this.rustService, cancellationToken: cancellationTokenSource.Token);
+        if (!loginResult.Successful)
+        {
+            this.logger.LogWarning($"Authentication with ERI source '{source.Name}' (id={source.Id}) failed. We skip this source. Reason: {loginResult.Message}");
+            return (false, null);
+        }
+
+        this.logger.LogInformation($"Checking security requirements for ERI source '{source.Name}' (id={source.Id})...");
+        var securityRequest = await client.GetSecurityRequirementsAsync(cancellationTokenSource.Token);
+        if (!securityRequest.Successful)
+        {
+            this.logger.LogWarning($"Could not retrieve security requirements for ERI source '{source.Name}' (id={source.Id}). We skip this source. Reason: {securityRequest.Message}");
+            return (false, null);
+        }
+
+        this.logger.LogInformation($"Security requirements for ERI source '{source.Name}' (id={source.Id}) retrieved successfully.");
+        return (true, securityRequest.Data);
+    }
+
+    /// <summary>
+    /// Checks a data source against the trust it asks for.
+    /// </summary>
+    /// <param name="source">The data source.</param>
+    /// <param name="usingTrustedProvider">Whether the chat provider is trusted for data source security checks.</param>
+    /// <param name="participatingProviders">Every provider which gets to see the data.</param>
+    /// <param name="eriSourceRequirements">What the server of an ERI data source requires, or null for any other data source.</param>
+    /// <returns>The data source when it may be used, otherwise null.</returns>
+    private IDataSource? CheckPolicies(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, SecurityRequirements? eriSourceRequirements)
     {
         if (source is IInternalDataSource internalSource)
         {
@@ -305,41 +395,6 @@ public sealed class DataSourceService
             }
 
             return source;
-        }
-
-        //
-        // Unfortunately, we have to live-check any ERI source for its security requirements.
-        // Because the ERI server operator might change the security requirements at any time.
-        //
-        SecurityRequirements? eriSourceRequirements = null;
-        if (source is DataSourceERI_V1 eriSource)
-        {
-            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-            using var client = ERIClientFactory.Get(ERIVersion.V1, eriSource);
-            if(client is null)
-            {
-                this.logger.LogError($"Could not create ERI client for source '{source.Name}' (id={source.Id}). We skip this source.");
-                return null;
-            }
-
-            this.logger.LogInformation($"Authenticating with ERI source '{source.Name}' (id={source.Id})...");
-            var loginResult = await client.AuthenticateAsync(this.rustService, cancellationToken: cancellationTokenSource.Token);
-            if (!loginResult.Successful)
-            {
-                this.logger.LogWarning($"Authentication with ERI source '{source.Name}' (id={source.Id}) failed. We skip this source. Reason: {loginResult.Message}");
-                return null;
-            }
-
-            this.logger.LogInformation($"Checking security requirements for ERI source '{source.Name}' (id={source.Id})...");
-            var securityRequest = await client.GetSecurityRequirementsAsync(cancellationTokenSource.Token);
-            if (!securityRequest.Successful)
-            {
-                this.logger.LogWarning($"Could not retrieve security requirements for ERI source '{source.Name}' (id={source.Id}). We skip this source. Reason: {loginResult.Message}");
-                return null;
-            }
-
-            eriSourceRequirements = securityRequest.Data;
-            this.logger.LogInformation($"Security requirements for ERI source '{source.Name}' (id={source.Id}) retrieved successfully.");
         }
 
         if (source is not IExternalDataSource externalSource)
