@@ -1,0 +1,75 @@
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Class="mr-2" />
+            @T("Your Glossaries")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("A glossary makes the translation assistant always translate certain terms the same way, for example the names of your departments or the terms of your contracts. Each glossary is a spreadsheet or a CSV file, which you can keep maintaining as usual.")
+        </MudJustifiedText>
+
+        <MudTable Items="@this.SettingsManager.ConfigurationData.Glossaries" Hover="@true" Class="border-dashed border rounded-lg">
+            <ColGroup>
+                <col style="width: 3em;"/>
+                <col/>
+                <col/>
+                <col style="width: 16em;"/>
+            </ColGroup>
+            <HeaderContent>
+                <MudTh>#</MudTh>
+                <MudTh>@T("Glossary Name")</MudTh>
+                <MudTh>@T("File")</MudTh>
+                <MudTh>@T("Actions")</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Num</MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@Path.GetFileName(context.FilePath)</MudTd>
+                <MudTd>
+                    @if (context.IsEnterpriseConfiguration)
+                    {
+                        <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                            <MudTooltip Text="@T("This glossary is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("View")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewGlossary(context))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                            <MudTooltip Text="@T("Edit")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditGlossary(context))"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteGlossary(context))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        @if(this.SettingsManager.ConfigurationData.Glossaries.Count == 0)
+        {
+            <MudText Typo="Typo.h6" Class="mt-3">
+                @T("No glossaries configured yet.")
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddGlossary">
+            @T("Add Glossary")
+        </MudButton>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
