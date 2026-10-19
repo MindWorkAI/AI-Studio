@@ -2,6 +2,7 @@ using AIStudio.Components;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.UserAPIKeys;
 
 using Microsoft.AspNetCore.Components;
 
