@@ -374,25 +374,59 @@ public partial class Plugins : MSGComponentBase
             // A failed share sheet switches to the export, so we remember what this click does:
             var isExport = this.PluginShareService.UsesExport;
             var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
-            if (shareResult.Cancelled)
-                return;
-
-            if (!shareResult.Success)
+            if (shareResult.Outcome is PluginShareOutcome.SHARE_SHEET_UNAVAILABLE)
             {
-                LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
-                return;
+                LOG.LogWarning($"The share sheet did not open for the plugin '{shareResult.PluginName}': '{shareResult.Issue}'. Offering the export instead.");
+                if (!await this.ConfirmExportInsteadOfSharingAsync(shareResult.Issue))
+                    return;
+
+                isExport = true;
+                shareResult = await this.PluginShareService.ExportAsync(plugin, CancellationToken.None);
             }
 
-            // On export, the user chose the target location, so we confirm where the archive was stored:
-            if (isExport)
-                await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+            switch (shareResult.Outcome)
+            {
+                // On export, the user chose the target location, so we confirm where the archive was stored:
+                case PluginShareOutcome.EXPORTED:
+                    await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+                    break;
+
+                case PluginShareOutcome.FAILED:
+                    LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
+                    break;
+
+                // The share sheet takes it from here, and a canceled export needs no message. The
+                // export never reports an unavailable share sheet:
+                case PluginShareOutcome.SHARED:
+                case PluginShareOutcome.CANCELLED:
+                case PluginShareOutcome.SHARE_SHEET_UNAVAILABLE:
+                    break;
+            }
         }
         finally
         {
             this.isSharingPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
+    }
+
+    /// <summary>
+    /// Offers to export the plugin archive after the share sheet of the operating system failed or
+    /// did not respond.
+    /// </summary>
+    /// <param name="issue">Why the share sheet did not open.</param>
+    /// <returns>True when the user wants to export the archive instead.</returns>
+    private async Task<bool> ConfirmExportInsteadOfSharingAsync(string issue)
+    {
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(this.T("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Share dialog not available"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is not null && !dialogResult.Canceled;
     }
 
     private async Task ImportAssistantPluginAsync()

@@ -7,8 +7,10 @@ namespace AIStudio.Tools.Services;
 
 public sealed class PluginShareService(NativeShareService nativeShareService, RustService rustService, SettingsManager settingsManager, ILogger<PluginShareService> logger)
 {
-    private static PluginShareResult ShareError(IAvailablePlugin plugin, string issue) => new(false, plugin.Name, string.Empty, issue);
-    
+    private static PluginShareResult ShareError(IAvailablePlugin plugin, string issue) => new(PluginShareOutcome.FAILED, plugin.Name, string.Empty, issue);
+
+    private static PluginShareResult ShareSheetUnavailable(IAvailablePlugin plugin, string issue) => new(PluginShareOutcome.SHARE_SHEET_UNAVAILABLE, plugin.Name, string.Empty, issue);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
     private const string PLUGIN_FILE_NAME = "plugin.lua";
@@ -41,25 +43,65 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// </remarks>
     /// <param name="plugin">The local plugin to archive and share.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
-    /// <returns>The share result, including the archive path when successful.</returns>
+    /// <returns>The share result, including the archive path when successful. When the share sheet
+    /// failed or did not respond, the outcome is SHARE_SHEET_UNAVAILABLE, and ExportAsync can still
+    /// export the plugin.</returns>
     public async Task<PluginShareResult> ShareAsync(IAvailablePlugin plugin, CancellationToken token)
     {
-        if (plugin.IsInternal)
-            return ShareError(plugin, TB("Internal plugins cannot be shared."));
-
-        if (plugin.IsManagedByConfigServer)
-            return ShareError(plugin, TB("Config Server managed plugins cannot be shared."));
-
-        if (!settingsManager.ConfigurationData.App.AllowUserToSharePlugins)
-            return ShareError(plugin, TB("Your organization has disabled sharing plugins."));
-
-        if (!TryGetPluginRoot(plugin, out var pluginRoot, out var issue))
+        if (!this.TryGetShareablePluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);
 
         if (this.UsesExport)
-            return await this.ExportAsync(plugin, pluginRoot, token);
+            return await this.ExportArchiveAsync(plugin, pluginRoot, token);
 
         return await this.ShareViaNativeSheetAsync(plugin, pluginRoot, token);
+    }
+
+    /// <summary>
+    /// Exports a plugin archive to a location of the user's choice, even where a share sheet would
+    /// be available. This is the way out after the share sheet failed or did not respond.
+    /// </summary>
+    /// <param name="plugin">The local plugin to archive and export.</param>
+    /// <param name="token">Cancellation token for archive creation.</param>
+    /// <returns>The export result, including the chosen archive path when successful.</returns>
+    public async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, CancellationToken token)
+    {
+        if (!this.TryGetShareablePluginRoot(plugin, out var pluginRoot, out var issue))
+            return ShareError(plugin, issue);
+
+        return await this.ExportArchiveAsync(plugin, pluginRoot, token);
+    }
+
+    /// <summary>
+    /// Checks whether a plugin may leave AI Studio as an archive at all, no matter whether it is
+    /// shared or exported.
+    /// </summary>
+    /// <param name="plugin">The local plugin to check.</param>
+    /// <param name="pluginRoot">The validated plugin root directory, when the plugin may leave.</param>
+    /// <param name="issue">Why the plugin may not leave; empty otherwise.</param>
+    /// <returns>True when the plugin may be shared or exported.</returns>
+    private bool TryGetShareablePluginRoot(IAvailablePlugin plugin, out string pluginRoot, out string issue)
+    {
+        pluginRoot = string.Empty;
+        if (plugin.IsInternal)
+        {
+            issue = TB("Internal plugins cannot be shared.");
+            return false;
+        }
+
+        if (plugin.IsManagedByConfigServer)
+        {
+            issue = TB("Config Server managed plugins cannot be shared.");
+            return false;
+        }
+
+        if (!settingsManager.ConfigurationData.App.AllowUserToSharePlugins)
+        {
+            issue = TB("Your organization has disabled sharing plugins.");
+            return false;
+        }
+
+        return TryGetPluginRoot(plugin, out pluginRoot, out issue);
     }
 
     /// <summary>
@@ -69,12 +111,12 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// <param name="pluginRoot">The validated plugin root directory.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
     /// <returns>The share result, including the chosen archive path when successful.</returns>
-    private async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
+    private async Task<PluginShareResult> ExportArchiveAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
     {
         var suggestedFileName = $"{CreateSafeFileNamePrefix(plugin.Name)}{PluginArchive.PLUGIN_FILE_EXTENSION}";
         var saveResponse = await rustService.SaveFile(TB("Export plugin archive"), [FileTypes.PLUGIN_ARCHIVE], suggestedFileName);
         if (saveResponse.UserCancelled)
-            return new(false, plugin.Name, string.Empty, string.Empty, true);
+            return new(PluginShareOutcome.CANCELLED, plugin.Name, string.Empty, string.Empty);
 
         var archivePath = saveResponse.SaveFilePath;
         try
@@ -96,7 +138,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
             }, token);
 
             logger.LogInformation("Exported plugin '{PluginName}' ({PluginId}) to the archive '{ArchivePath}'.", plugin.Name, plugin.Id, archivePath);
-            return new(true, plugin.Name, archivePath, string.Empty);
+            return new(PluginShareOutcome.EXPORTED, plugin.Name, archivePath, string.Empty);
         }
         catch (OperationCanceledException)
         {
@@ -147,17 +189,17 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
                 // We keep it for that case; the clean-up removes it once it expired:
                 //
                 case ShareSheetOutcome.UNRESPONSIVE:
-                    return ShareError(plugin, TB("The share dialog of your operating system did not respond."));
+                    return ShareSheetUnavailable(plugin, TB("The share dialog of your operating system did not respond."));
 
                 case ShareSheetOutcome.FAILED:
                 case ShareSheetOutcome.UNKNOWN:
                 default:
                     this.TryDeleteArchive(archivePath);
-                    return ShareError(plugin, TB("The native share dialog could not be opened."));
+                    return ShareSheetUnavailable(plugin, TB("The native share dialog could not be opened."));
             }
 
             logger.LogInformation("Created plugin archive '{ArchivePath}' for plugin '{PluginName}' ({PluginId}).", archivePath, plugin.Name, plugin.Id);
-            return new(true, plugin.Name, archivePath, string.Empty);
+            return new(PluginShareOutcome.SHARED, plugin.Name, archivePath, string.Empty);
         }
         catch (OperationCanceledException)
         {
