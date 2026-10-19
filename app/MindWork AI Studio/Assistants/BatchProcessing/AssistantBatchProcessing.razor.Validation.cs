@@ -1,5 +1,7 @@
 using System.IO.Enumeration;
 
+using AIStudio.Settings;
+
 namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
@@ -244,6 +246,16 @@ public partial class AssistantBatchProcessing
         if (requiresTranscription && !this.MediaTranscriptionService.HasUsableTranscriptionProvider)
         {
             this.AddInputIssue(T("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
+            return null;
+        }
+
+        //
+        // A model that cannot read images would get the text of the request alone, without the
+        // image, and answer about nothing. So we stop before the first file instead:
+        //
+        if (files.Any(IsImage) && !this.ProviderSettings.SupportsImageInput())
+        {
+            this.AddInputIssue(T("The selected files include images, but the selected model cannot read images. Select a model with image support or remove the image patterns."));
             return null;
         }
 
