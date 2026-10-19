@@ -18,6 +18,23 @@ public sealed class DataSourceService
     // ReSharper disable once NotAccessedPositionalProperty.Local
     private readonly record struct ParticipatingProvider(string Role, bool IsTrusted, ConfidenceLevel ConfidenceLevel);
 
+    /// <summary>
+    /// How long the answer of an ERI server to the check of its security requirements is used.
+    /// </summary>
+    private static readonly TimeSpan SECURITY_CHECK_LIFETIME = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// How long an ERI server which did not answer the check is not asked again, counted from the start of the check.
+    /// </summary>
+    private static readonly TimeSpan FAILED_SECURITY_CHECK_LIFETIME = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// A check of an ERI server, which may still be running, together with the configuration it was started with.
+    /// </summary>
+    private readonly record struct SecurityCheck(DataSourceERI_V1 DataSource, Task<(bool IsReachable, SecurityRequirements? Requirements)> Result, DateTimeOffset StartedAt);
+
+    private readonly Dictionary<string, SecurityCheck> securityChecks = new(StringComparer.Ordinal);
+
     private readonly DataSourceEmbeddingService embeddingService;
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
@@ -291,6 +308,7 @@ public sealed class DataSourceService
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
         // Because the ERI server operator might change the security requirements at any time.
+        // The answer is kept for a minute, see GetSecurityRequirementsAsync.
         //
         SecurityRequirements? eriSourceRequirements = null;
         if (source is DataSourceERI_V1 eriSource)
@@ -327,11 +345,63 @@ public sealed class DataSourceService
     };
 
     /// <summary>
+    /// What the server of an ERI data source requires, asked anew only once the last answer expired.
+    /// </summary>
+    /// <remarks>
+    /// One message asks this several times: Semantic Search checks the data sources when it is
+    /// offered and again before every search, and the classic RAG process checks them with every
+    /// message. Each check signs in, and a server which limits sign-ins or sessions would start
+    /// refusing. A check which is still running is joined rather than started a second time.<br/><br/>
+    /// The server's operator may change the requirements at any time, so an answer is kept for one
+    /// minute only. That covers the rounds of one answer, while a change still takes effect soon. A
+    /// server which did not answer is asked again sooner: it may well be back, and until then, its
+    /// data source is not searched anyway. A changed configuration, e.g., another server or another
+    /// account, asks anew right away.
+    /// </remarks>
+    /// <returns>Whether the server answered, and its requirements when it did.</returns>
+    private Task<(bool IsReachable, SecurityRequirements? Requirements)> GetSecurityRequirementsAsync(DataSourceERI_V1 source)
+    {
+        lock (this.securityChecks)
+        {
+            var now = DateTimeOffset.UtcNow;
+            if (this.securityChecks.TryGetValue(source.Id, out var known) && known.DataSource.Equals(source) && IsSecurityCheckValid(known.Result, now - known.StartedAt))
+                return known.Result;
+
+            var check = new SecurityCheck(source, this.FetchSecurityRequirementsAsync(source), now);
+            this.securityChecks[source.Id] = check;
+            return check.Result;
+        }
+    }
+
+    /// <summary>
+    /// Whether a check of an ERI server may still be used instead of asking the server again.
+    /// </summary>
+    /// <param name="result">The check, which may still be running.</param>
+    /// <param name="age">How long ago the check was started.</param>
+    /// <returns>True when the check is still running or its answer has not expired yet.</returns>
+    internal static bool IsSecurityCheckValid(Task<(bool IsReachable, SecurityRequirements? Requirements)> result, TimeSpan age)
+    {
+        if (!result.IsCompleted)
+            return true;
+
+        if (!result.IsCompletedSuccessfully)
+            return false;
+
+        return age < (result.Result.IsReachable ? SECURITY_CHECK_LIFETIME : FAILED_SECURITY_CHECK_LIFETIME);
+    }
+
+    /// <summary>
     /// Signs in to the server of an ERI data source and asks for its security requirements.
     /// </summary>
     /// <returns>Whether the server answered, and its requirements when it did.</returns>
-    private async Task<(bool IsReachable, SecurityRequirements? Requirements)> GetSecurityRequirementsAsync(DataSourceERI_V1 source)
+    private async Task<(bool IsReachable, SecurityRequirements? Requirements)> FetchSecurityRequirementsAsync(DataSourceERI_V1 source)
     {
+        //
+        // Leave the caller first: this starts while the cache is locked, and signing in should
+        // not happen while holding the lock:
+        //
+        await Task.Yield();
+
         using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(6));
         using var client = ERIClientFactory.Get(ERIVersion.V1, source);
         if(client is null)
