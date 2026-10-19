@@ -6,7 +6,12 @@ namespace AIStudio.Chat;
 public static class IImageSourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IImageSourceExtensions).Namespace, nameof(IImageSourceExtensions));
-    
+
+    /// <summary>
+    /// The largest image we send to a model. A larger image is skipped by TryAsBase64.
+    /// </summary>
+    public const long MAX_IMAGE_SIZE_BYTES = 10_000_000;
+
     public static MIMEType DetermineMimeType(this IImageSource image)
     {
         switch (image.SourceType)
@@ -97,7 +102,7 @@ public static class IImageSourceExtensions
                 {
                     // Read the length of the content:
                     var lengthBytes = response.Content.Headers.ContentLength;
-                    if(lengthBytes > 10_000_000)
+                    if(lengthBytes > MAX_IMAGE_SIZE_BYTES)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The image at the URL is too large (>10 MB). Skipping the image.")));
                         return (success: false, string.Empty);
@@ -116,7 +121,7 @@ public static class IImageSourceExtensions
                 {
                     // Read the content length:
                     var length = new FileInfo(image.Source).Length;
-                    if(length > 10_000_000)
+                    if(length > MAX_IMAGE_SIZE_BYTES)
                     {
                         await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ImageNotSupported, TB("The local image file is too large (>10 MB). Skipping the image.")));
                         return (success: false, string.Empty);

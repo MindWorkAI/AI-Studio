@@ -1,5 +1,6 @@
 using System.Text;
 
+using AIStudio.Chat;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 
@@ -8,14 +9,67 @@ namespace AIStudio.Assistants.BatchProcessing;
 public partial class AssistantBatchProcessing
 {
     /// <summary>
-    /// Loads a document through the Rust content stream or resolves a persistent
-    /// transcript for an audio or video file.
+    /// The image formats we hand to the model. The providers accept these, while other formats,
+    /// such as TIFF or HEIC, would end in an error of the provider which tells the user nothing.
     /// </summary>
-    private Task<string?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
+    private static readonly HashSet<string> SENDABLE_IMAGE_EXTENSIONS = new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+
+    /// <summary>
+    /// What one file of the batch gives to the model: either text or an image.
+    /// </summary>
+    private readonly record struct BatchInput(string Text, FileAttachmentImage? Image);
+
+    /// <summary>
+    /// Loads a document through the Rust content stream, resolves a persistent
+    /// transcript for an audio or video file, or prepares an image for the model.
+    /// </summary>
+    /// <returns>The input for the model, or <c>null</c> when the file already got its final status.</returns>
+    private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
-        return IsTranscribableMedia(fileResult.FilePath)
-            ? this.LoadMediaTranscriptAsync(fileResult, token)
-            : this.LoadDocumentContentAsync(fileResult, token);
+        if (IsImage(fileResult.FilePath))
+            return this.LoadImage(fileResult) is { } image ? new BatchInput(string.Empty, image) : null;
+
+        var text = IsTranscribableMedia(fileResult.FilePath)
+            ? await this.LoadMediaTranscriptAsync(fileResult, token)
+            : await this.LoadDocumentContentAsync(fileResult, token);
+
+        return text is null ? null : new BatchInput(text, null);
+    }
+
+    /// <summary>
+    /// Checks an image before it goes to the model.
+    /// </summary>
+    /// <remarks>
+    /// The request itself would only skip an image it cannot send, with a message, and ask the model
+    /// anyway. The model would then answer about nothing, and the file would count as done, so that
+    /// continuing the run would skip it as well.
+    /// </remarks>
+    private FileAttachmentImage? LoadImage(BatchProcessingFileResult fileResult)
+    {
+        if (!SENDABLE_IMAGE_EXTENSIONS.Contains(Path.GetExtension(fileResult.FilePath)))
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("This image format cannot be given to the model. Please convert the image to JPG, PNG, WebP, or GIF."));
+            return null;
+        }
+
+        long fileSize;
+        try
+        {
+            fileSize = new FileInfo(fileResult.FilePath).Length;
+        }
+        catch (Exception e)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message), e);
+            return null;
+        }
+
+        if (fileSize > IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The image is larger than 10 MB and cannot be given to the model."));
+            return null;
+        }
+
+        return new FileAttachmentImage(fileResult.FileName, fileResult.FilePath, fileSize);
     }
 
     private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
@@ -156,6 +210,8 @@ public partial class AssistantBatchProcessing
     }
 
     private static bool IsTranscribableMedia(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO, FileTypes.VIDEO);
+
+    private static bool IsImage(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
 
     private static string GetTranscriptFilePath(string mediaFilePath) => mediaFilePath + TRANSCRIPT_FILE_SUFFIX;
 

@@ -188,14 +188,14 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private async Task ProcessOneFileAsync(BatchProcessingFileResult fileResult, string resolvedOutputDirectory, CancellationToken token)
     {
-        var fileContent = await this.LoadInputContentAsync(fileResult, token);
-        if (fileContent is null)
+        var input = await this.LoadInputContentAsync(fileResult, token);
+        if (input is null)
             return;
 
         string aiAnswer;
         try
         {
-            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, fileContent, token);
+            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, input.Value, token);
         }
         catch (OperationCanceledException)
         {
