@@ -67,6 +67,15 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
 
     public override Task<long?> GetTotalChunkCountAsync(CancellationToken token) => Task.FromResult<long?>(null);
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Unlike the other methods, this one does not pretend success. A backup without the index would
+    /// still take the vector stores along, and after a restore, they would belong to nothing the index
+    /// knows. Whoever makes the backup decides what to do instead.
+    /// </remarks>
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) =>
+        Task.FromException<string>(new InvalidOperationException(unavailableReason ?? "The index of the data sources is not available."));
+
     public override void Dispose()
     {
     }

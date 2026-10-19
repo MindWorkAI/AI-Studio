@@ -117,5 +117,5 @@ public sealed class MailDraftSyncTests : ToolRegistryTestBase
     }
 
     // Queueing a run needs none of the services which carry it out:
-    private DataSourceEmbeddingService CreateService() => new(this.SettingsManager, null!, null!, null!, NullLogger<DataSourceEmbeddingService>.Instance);
+    private DataSourceEmbeddingService CreateService() => new(this.SettingsManager, null!, null!, null!, null!, NullLogger<DataSourceEmbeddingService>.Instance);
 }

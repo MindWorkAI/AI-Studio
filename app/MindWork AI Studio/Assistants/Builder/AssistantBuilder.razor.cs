@@ -79,6 +79,9 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     
     protected override bool ShowCopyResult => this.step is BuilderStep.DONE;
 
+    // The result is the Lua code of a plugin, and a notice below it would make that code invalid:
+    protected override bool AddsAIGeneratedContentDisclosure => false;
+
     protected override bool HasSettingsPanel => false;
     
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;

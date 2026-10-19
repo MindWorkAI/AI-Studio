@@ -15,6 +15,12 @@
 //! still intact by the time it is scanned and can still be redacted, because nothing
 //! containing it has left the sanitizer yet.
 //!
+//! A chunk boundary is a line break, though. The app puts every chunk on a line of its own, and
+//! a text file arrives one line per chunk, so a model reads the document with a line break
+//! between every two chunks. The scan puts one there as well. Without it, a sentence broken over
+//! two lines would merge into words no rule knows, and a rule that ends at a line break would
+//! run on into the next line.
+//!
 //! The rules are not only matched against the text as it stands. An injection can be spelled
 //! in a way a model reads fluently but a pattern does not: written one letter at a time, base64
 //! encoded, hidden behind the character escapes of JSON and XML, or broken up by characters
@@ -38,6 +44,14 @@ use std::time::{Duration, Instant};
 /// document, and words like "injection" or "ignore" would make the marker itself look like
 /// an attack to the next scan.
 const REDACTION_MARKER: &str = "[AI Studio removed suspicious content here]";
+
+/// What the scan puts between two chunks.
+///
+/// The app puts every chunk on a line of its own, in a chat as well as in an index, so this is
+/// what a model reads between them. The separator exists only in the scan: no chunk is released
+/// with it, because the app adds the line break itself and counts the tokens of the chunk as it
+/// was released.
+const CHUNK_SEPARATOR: &str = "\n";
 
 /// How much text is held back to catch patterns that straddle a chunk boundary.
 ///
@@ -174,6 +188,8 @@ impl Sanitizer {
     /// Takes the next chunk under the caller's `id` and returns the chunks that are now safe
     /// to release, in order.
     ///
+    /// The chunk is scanned as a line of its own, see `CHUNK_SEPARATOR`.
+    ///
     /// Usually returns nothing: chunks are held until enough text has arrived to scan across
     /// their boundaries. Call `flush` to release what is left.
     pub fn push(&mut self, id: u64, text: &str) -> Vec<(u64, String)> {
@@ -224,11 +240,15 @@ impl Sanitizer {
             return Vec::new();
         }
 
-        // The scan runs across chunk boundaries, so the chunks are joined for it and the
-        // result is taken apart again afterwards.
-        let mut buffer = String::with_capacity(self.pending_bytes);
+        // The scan runs across chunk boundaries, so the chunks are joined for it, each on a
+        // line of its own, and the result is taken apart again afterwards.
+        let mut buffer = String::with_capacity(self.pending_bytes + self.pending.len() * CHUNK_SEPARATOR.len());
         let mut spans = Vec::with_capacity(self.pending.len());
-        for part in &self.pending {
+        for (index, part) in self.pending.iter().enumerate() {
+            if index > 0 {
+                buffer.push_str(CHUNK_SEPARATOR);
+            }
+
             let start = buffer.len();
             buffer.push_str(&part.text);
             spans.push((part.id, start, buffer.len()));
@@ -494,7 +514,8 @@ impl Sanitizer {
 /// `spans` says which byte range of `buffer` belongs to which chunk. A redaction may cross
 /// a chunk boundary — that is the whole reason the chunks were joined — so the text it
 /// removes is taken out of every chunk it touches, while the marker replacing it goes into
-/// the chunk where the match began.
+/// the chunk where the match began. The separators between the chunks belong to none of
+/// them, so they are never handed back.
 fn apply_to_parts(
     buffer: &str,
     spans: &[(u64, usize, usize)],
@@ -522,11 +543,13 @@ fn apply_to_parts(
         }
     };
 
-    // Which chunk a position belongs to, for placing the marker.
+    // Which chunk a position belongs to, for placing the marker. A match may begin on the
+    // separator in front of a chunk, as one does that is anchored at the start of a line, and
+    // its marker then belongs to the chunk whose line it starts.
     let chunk_of = |position: usize| {
         spans
             .iter()
-            .position(|(_, start, end)| position >= *start && position < *end)
+            .position(|(_, _, end)| position < *end)
             .unwrap_or(spans.len().saturating_sub(1))
     };
 

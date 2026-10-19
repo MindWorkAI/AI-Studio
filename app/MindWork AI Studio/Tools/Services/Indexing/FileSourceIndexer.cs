@@ -5,6 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
@@ -32,11 +33,11 @@ namespace AIStudio.Tools.Services.Indexing;
 /// </remarks>
 /// <param name="settingsManager">The settings, read for whether local data sources refresh on their own.</param>
 /// <param name="rustService">The runtime, which extracts the text of the files.</param>
+/// <param name="mediaTranscriptionService">Transcribes selected audio and video files.</param>
 /// <param name="textChunker">Cuts the text of a file into chunks.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
+internal sealed partial class FileSourceIndexer(SettingsManager settingsManager, RustService rustService, MediaTranscriptionService mediaTranscriptionService, TextChunker textChunker, ILogger logger) : IIndexedSourceIndexer
 {
-    private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const bool IMAGE_EMBEDDING_ENABLED = false;
     private const int MAX_LOGGED_EXCLUDED_FILE_EXAMPLES = 3;
 
@@ -46,10 +47,21 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         INDEXABLE,
         EXCLUDED,
-        UNSUPPORTED,
+        IMAGE_NOT_SUPPORTED,
+        TRANSCRIPTION_PROVIDER_MISSING,
+        TRANSCRIPTION_PROVIDER_NOT_ALLOWED,
+        TOO_LARGE,
     }
 
     private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
+
+    /// <summary>
+    /// What decides about the files of a data source while they are listed.
+    /// </summary>
+    /// <param name="Selection">The files of a folder data source, or null for a single file, which has no size limit.</param>
+    /// <param name="Manifest">What the index stores about the data source, or null when it does not matter.</param>
+    /// <param name="MediaTranscription">Which transcription provider may hear audio and video files, asked for only once such a file turns up.</param>
+    private sealed record InputFileRules(FolderFileSelection? Selection, DataSourceEmbeddingManifest? Manifest, Lazy<MediaTranscriptionAvailability> MediaTranscription);
 
     /// <inheritdoc />
     public bool Supports(IDataSourceBase dataSource) => dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
@@ -66,10 +78,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         var manifest = context.Manifest;
 
         var enumerationStartedUtc = DateTimeOffset.UtcNow;
-        var inputFiles = this.GetInputFiles(dataSource);
+        var inputFiles = this.GetInputFiles(dataSource, manifest);
         var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
+        if (inputFiles.UnreachableRootReason is { } unreachableRootReason)
+            return this.StopWithoutRoot(context, dataSource, unreachableRootReason);
+
         var indexedFiles = inputFiles.Files;
-        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
+        var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
 
         foreach (var failure in inputFiles.Failures)
         {
@@ -86,16 +101,19 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         // hence the time it took:
         //
         logger.LogInformation(
-            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
+            "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, SkippedBeforeExtraction={SkippedBeforeExtraction}, ExcludedByFilePattern={ExcludedByFilePattern}, ExcludedFolders={ExcludedFolders}, FailedFiles={FailedFiles}, EnumerationMs={EnumerationMs:F0}, Collection='{CollectionName}'.",
             dataSource.Name,
             dataSource.Id,
             indexedFiles.Count,
+            inputFiles.IgnoredFiles.Count,
+            inputFiles.FilePatternExclusionCount,
+            inputFiles.ExcludedFolderCount,
             inputFiles.FailedFiles,
             enumerationDuration.TotalMilliseconds,
             context.CollectionName);
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
-        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, indexedFiles, token);
+        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(context, inputFiles, token);
         token.ThrowIfCancellationRequested();
 
         logger.LogInformation(
@@ -108,7 +126,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count,
             removedMissingFiles);
 
-        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger);
+        var progress = new DocumentRunProgress(context, totalFiles, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures, logger, inputFiles.IgnoredFiles, inputFiles.FilePatternExclusions, inputFiles.ExcludedFolders);
         if (CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
         {
             logger.LogInformation(
@@ -127,6 +145,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 progress.RecordStillUnreadable(filePath, permanentFailure);
 
             await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source finished after removing missing files", token);
+            this.CleanUpTranscripts(context, progress);
             return IndexedRunOutcome.DONE;
         }
 
@@ -175,7 +194,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             var fingerprint = metadataSnapshot.FileHashes[file.FullName];
             var existingRecord = manifest.Files.GetValueOrDefault(file.FullName);
 
-            var document = this.CreateFileDocument(context, dataSource, file, fingerprint);
+            var document = this.CreateFileDocument(context, dataSource, file, fingerprint, null);
             var reportBlockProgress = progress.BeginDocument(document);
             var startedAtUtc = DateTimeOffset.UtcNow;
 
@@ -190,6 +209,14 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     ShortHash(fingerprint),
                     progress.DoneDocuments + 1,
                     totalFiles);
+
+                //
+                // Audio and video hold no text until they are transcribed. The document then reads
+                // its transcript instead, and its row knows which transcript that is:
+                //
+                if (PersistentMediaTranscript.IsMediaPath(file.FullName))
+                    document = this.CreateFileDocument(context, dataSource, file, fingerprint, await this.ReadOrCreateTranscriptAsync(dataSource, file.FullName, token));
+
                 var chunkCount = await context.IndexDocumentAsync(document, reportBlockProgress, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
@@ -197,6 +224,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                     throw new IOException(string.Format(TB("The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run."), file.FullName));
 
                 await progress.RecordDocumentIndexedAsync(document, chunkCount, existingRecord is null, token);
+
+                // The recording changed, so its old transcript is no longer what it says:
+                if (existingRecord?.TranscriptKey is { } previousTranscriptKey && !string.Equals(previousTranscriptKey, document.State.TranscriptKey, StringComparison.Ordinal))
+                    ForgetTranscript(DataSourceTranscriptStore.TryForDataSource(dataSource.Id), manifest, previousTranscriptKey, logger);
+
                 logger.LogInformation(
                     "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
                     file.FullName,
@@ -240,6 +272,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         await progress.CompleteRunAsync(metadataSnapshot.SourceHash, "data source embedding run finished", token);
+        this.CleanUpTranscripts(context, progress);
         logger.LogInformation(
             "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, PermanentlySkipped={PermanentlySkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
             dataSource.Name,
@@ -324,39 +357,115 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     }
 
     /// <summary>
-    /// Whether a file name marks a file which is never indexed, whatever its type.
+    /// Ends a run which cannot reach the file or the folder of its data source, and keeps the index as it is.
     /// </summary>
-    /// <param name="fileName">The name of the file.</param>
-    /// <returns>True for shortcuts and the lock files of office suites.</returns>
-    private static bool IsSkippedRagFileName(string fileName)
+    /// <remarks>
+    /// A folder out of reach is never the same as an empty one. Read that way, a drive which is not
+    /// connected, or a network share while the VPN is down, would remove every embedding of the
+    /// data source, and embedding it all again once the folder is back costs as long as it took the
+    /// first time. Nothing is written: the stored hash still tells which state of the data source
+    /// the index holds, so the next run picks up from there.
+    /// </remarks>
+    /// <param name="context">The run.</param>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="reason">Why the file or the folder cannot be reached, and what the user can do about it.</param>
+    /// <returns>DONE, since nothing can be done until the file or the folder is back.</returns>
+    private IndexedRunOutcome StopWithoutRoot(IndexedRunContext context, IDataSource dataSource, string reason)
     {
-        return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
-               || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
+        logger.LogWarning(
+            "Cannot reach the file or folder of data source '{DataSourceName}' ({DataSourceId}). The run stops, and nothing is removed from the index. StoredFiles={StoredFiles}.",
+            dataSource.Name,
+            dataSource.Id,
+            context.Manifest.Files.Count);
+
+        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason);
+        return IndexedRunOutcome.DONE;
     }
 
     /// <summary>
-    /// Whether a file has a type whose text can be indexed.
+    /// Deletes the transcripts which no file of the data source uses anymore, once a run got through all of it.
     /// </summary>
-    /// <param name="filePath">The path of the file.</param>
-    /// <returns>True for every document type the runtime can read.</returns>
-    private static bool IsSupportedRagFilePath(string filePath)
+    /// <remarks>
+    /// Only a run without a failure knows every transcript which is still needed: a file which
+    /// failed may have its transcript already, and its next attempt must not pay for it again.
+    /// The transcript of a recording which is gone has to go as well, since it holds what was said.
+    /// </remarks>
+    /// <param name="context">The run.</param>
+    /// <param name="progress">How the run went.</param>
+    private void CleanUpTranscripts(IndexedRunContext context, DocumentRunProgress progress)
     {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
+        if (progress.FailedDocuments > 0)
+            return;
+
+        DeleteUnusedTranscripts(DataSourceTranscriptStore.TryForDataSource(context.DataSource.Id), context.Manifest, logger);
     }
 
-    private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, IReadOnlyCollection<FileInfo> indexedFiles, CancellationToken token)
+    /// <summary>
+    /// Deletes every transcript of a data source which no indexed file uses, and the temporary files of interrupted writes.
+    /// </summary>
+    /// <param name="store">The transcripts of the data source, or null when there are none to clean up.</param>
+    /// <param name="manifest">What the index stores about the data source.</param>
+    /// <param name="logger">The logger.</param>
+    internal static void DeleteUnusedTranscripts(DataSourceTranscriptStore? store, DataSourceEmbeddingManifest manifest, ILogger logger)
+    {
+        if (store is null)
+            return;
+
+        try
+        {
+            var usedKeys = manifest.Files.Values
+                .Select(record => record.TranscriptKey)
+                .OfType<string>()
+                .ToHashSet(StringComparer.Ordinal);
+
+            var deleted = store.ListKeys().Count(key => !usedKeys.Contains(key) && store.Delete(key));
+            deleted += store.DeleteTemporaryFiles();
+            if (deleted > 0)
+                logger.LogInformation("Removed {DeletedTranscripts} transcript file(s) which no file of the data source uses anymore.", deleted);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcripts which no file of the data source uses anymore. The next complete run tries again.");
+        }
+    }
+
+    /// <summary>
+    /// Deletes the transcript with the given key, unless another file of the data source still uses it.
+    /// </summary>
+    /// <remarks>
+    /// Two recordings with the same content share one transcript, cf. DataSourceTranscriptStore.
+    /// </remarks>
+    /// <param name="store">The transcripts of the data source, or null when there are none to clean up.</param>
+    /// <param name="manifest">What the index stores about the data source, without the file the transcript belonged to.</param>
+    /// <param name="key">The key of the transcript, or null when the file had none.</param>
+    /// <param name="logger">The logger.</param>
+    internal static void ForgetTranscript(DataSourceTranscriptStore? store, DataSourceEmbeddingManifest manifest, string? key, ILogger logger)
+    {
+        if (store is null || string.IsNullOrWhiteSpace(key) || manifest.Files.Values.Any(record => string.Equals(record.TranscriptKey, key, StringComparison.Ordinal)))
+            return;
+
+        try
+        {
+            if (store.Delete(key))
+                logger.LogInformation("Removed the transcript '{TranscriptKey}', since no file of the data source uses it anymore.", key);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Could not remove the transcript '{TranscriptKey}'. The next complete run tries again.", key);
+        }
+    }
+
+    private async Task<int> RemoveMissingFileEmbeddingsAsync(IndexedRunContext context, FileEnumerationResult inputFiles, CancellationToken token)
     {
         var manifest = context.Manifest;
-        var existingPaths = indexedFiles
-            .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         var removedFiles = 0;
-        foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
+        foreach (var removedFilePath in GetGoneFiles(manifest.Files.Keys, inputFiles.Files, inputFiles.UnreadableDirectories))
         {
             await context.DeleteDocumentPointsAsync(removedFilePath, token);
             await context.IndexStore.DeleteFileAsync(context.DataSource.Id, removedFilePath, token);
+            var removedTranscriptKey = manifest.Files.GetValueOrDefault(removedFilePath)?.TranscriptKey;
             manifest.Files.Remove(removedFilePath);
+            ForgetTranscript(DataSourceTranscriptStore.TryForDataSource(context.DataSource.Id), manifest, removedTranscriptKey, logger);
             removedFiles++;
             logger.LogInformation(
                 "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
@@ -366,13 +475,62 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         }
 
         //
+        // A file whose indexing never came to an end, e.g., since its run was canceled or the app
+        // was closed meanwhile, left a row without chunks and perhaps some vectors. Indexing it again
+        // would replace both, but a file which is gone or no longer selected is never indexed again:
+        //
+        foreach (var unfinishedFilePath in GetGoneFiles(manifest.UnfinishedFiles, inputFiles.Files, inputFiles.UnreadableDirectories))
+        {
+            await context.DeleteDocumentPointsAsync(unfinishedFilePath, token);
+            await context.IndexStore.DeleteFileAsync(context.DataSource.Id, unfinishedFilePath, token);
+            manifest.UnfinishedFiles.Remove(unfinishedFilePath);
+            logger.LogInformation(
+                "Removed what the unfinished indexing of file '{FilePath}' left behind in data source '{DataSourceName}' ({DataSourceId}), since the file is gone or no longer selected.",
+                unfinishedFilePath,
+                context.DataSource.Name,
+                context.DataSource.Id);
+        }
+
+        //
         // A file which is gone needs no mark keeping it out of the index. Without this, the table
         // would grow with every document the user ever deleted:
         //
-        foreach (var removedFilePath in manifest.PermanentFailures.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
+        foreach (var removedFilePath in GetGoneFiles(manifest.PermanentFailures.Keys, inputFiles.Files, inputFiles.UnreadableDirectories))
             await context.ForgetPermanentFailureAsync(removedFilePath, token);
 
         return removedFiles;
+    }
+
+    /// <summary>
+    /// Picks the files which are gone from the data source, out of those the index knows about.
+    /// </summary>
+    /// <remarks>
+    /// A file below a folder which could not be listed is not gone, only out of reach, e.g. while the
+    /// user may not read that folder. Removing it would throw away its index, and embedding it again
+    /// once the folder can be read costs as long as it took the first time.
+    /// <br /><br />
+    /// Paths are compared ignoring their case, as everywhere in the manifest. On Linux and macOS, that
+    /// keeps a file whose path differs from an unreadable folder in its case alone, which costs no more
+    /// than a stale entry until the folder can be read again.
+    /// </remarks>
+    /// <param name="storedPaths">The paths of the files the index knows about.</param>
+    /// <param name="files">The files this run found.</param>
+    /// <param name="unreadableDirectories">The folders this run could not list.</param>
+    /// <returns>The paths of the files which are gone.</returns>
+    internal static List<string> GetGoneFiles(IEnumerable<string> storedPaths, IEnumerable<FileInfo> files, IEnumerable<string> unreadableDirectories)
+    {
+        var existingPaths = files
+            .Select(file => file.FullName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var unreadablePrefixes = unreadableDirectories
+            .Select(directory => Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)) + Path.DirectorySeparatorChar)
+            .ToList();
+
+        return storedPaths
+            .Where(path => !existingPaths.Contains(path))
+            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
     }
 
     /// <remarks>
@@ -431,131 +589,259 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             : string.Join("; ", reasons);
     }
 
-    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, PromptInjectionReportingScope reportingScope, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<EmbeddingChunk> StreamEmbeddingChunksAsync(string filePath, MediaTranscriptSlot? transcript, IDataSource dataSource, EmbeddingProvider embeddingProvider, PromptInjectionReportingScope reportingScope, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = DataSourceEmbeddingService.GetChunkingOptions(dataSource, embeddingProvider);
-        var strategy = TextChunker.GetStrategyForFile(filePath);
-        var content = await ExtractedFileText.ReadAsync(rustService, filePath, embeddingProvider, null, reportingScope, token);
+
+        //
+        // An audio or video file is read through its transcript. The runtime reads the transcript
+        // like every other document, so it passes the same prompt injection filter, and a notice
+        // names the media file rather than the transcript below the data directory:
+        //
+        var contentPath = transcript?.Path ?? filePath;
+        PromptInjectionSource? reportAs = transcript is null ? null : PromptInjectionSource.FileContent(filePath);
+        var strategy = TextChunker.GetStrategyForFile(contentPath);
+        var content = await ExtractedFileText.ReadAsync(rustService, contentPath, embeddingProvider, reportAs, reportingScope, token);
 
         await foreach (var chunk in textChunker.SplitAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
     }
 
-    private FileEnumerationResult GetInputFiles(IDataSource dataSource)
+    /// <summary>
+    /// Returns the transcript of an audio or video file, transcribing the file only when the data source holds no transcript of its content yet.
+    /// </summary>
+    /// <remarks>
+    /// The provider is checked against the data source once more, right before the upload: the
+    /// settings may have changed since the files were listed. A transcript which exists is used
+    /// without any provider, since nothing leaves the computer for it.<br/><br/>
+    ///
+    /// A transcription which cannot succeed for this file, such as one without text, is recorded
+    /// for good, so the file is not paid for again until it changes.
+    /// </remarks>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="mediaPath">The audio or video file.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Where the transcript is.</returns>
+    private async Task<MediaTranscriptSlot> ReadOrCreateTranscriptAsync(IDataSource dataSource, string mediaPath, CancellationToken token)
+    {
+        var provider = this.GetMediaTranscriptionAvailability(dataSource).Provider;
+        var transcript = await PersistentMediaTranscript.ReadOrCreateAsync(DataSourceTranscriptStore.ForDataSource(dataSource.Id), mediaPath, provider, mediaTranscriptionService.TranscribeAsync, logger, token);
+        return GetTranscriptOrThrow(transcript, token);
+    }
+
+    /// <summary>
+    /// Returns the transcript, or throws what tells the run how to treat the media file without one.
+    /// </summary>
+    /// <remarks>
+    /// A FileExtractionException records the file for good, until it changes; any other exception
+    /// lets the next pass try again. A transcription without text, a file which the media pipeline
+    /// cannot read, and a file which the transcription provider refused would fail the same way
+    /// every time, and every attempt would cost money or another upload.
+    /// </remarks>
+    /// <param name="transcript">The outcome of the request for the transcript.</param>
+    /// <param name="token">The cancellation token of the run.</param>
+    /// <returns>Where the transcript is.</returns>
+    internal static MediaTranscriptSlot GetTranscriptOrThrow(PersistentMediaTranscriptResult transcript, CancellationToken token) => transcript.Status switch
+    {
+        PersistentMediaTranscriptStatus.READY => new(transcript.TranscriptPath, transcript.Key),
+        PersistentMediaTranscriptStatus.CANCELLED => throw new OperationCanceledException(token),
+        PersistentMediaTranscriptStatus.EMPTY or PersistentMediaTranscriptStatus.NO_AUDIBLE_SIGNAL => throw new FileExtractionException(FileExtractionErrorCode.NO_CONTENT, transcript.UserMessage),
+        PersistentMediaTranscriptStatus.TRANSCRIPTION_FAILED when IsPermanentMediaFailure(transcript.ErrorCode) => throw new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, transcript.UserMessage),
+        PersistentMediaTranscriptStatus.REJECTED => throw new FileExtractionException(FileExtractionErrorCode.MEDIA_PROCESSING_FAILED, transcript.UserMessage),
+        _ => throw new IOException(transcript.UserMessage),
+    };
+
+    /// <summary>
+    /// Which transcription provider may hear the audio and video files of a data source right now.
+    /// </summary>
+    /// <remarks>
+    /// The transcription provider receives the content of the data source just like the embedding
+    /// provider, so it has to meet the confidence level of the data source as well, cf.
+    /// DataSourceEmbeddingService.AllowsTranscription. A data source without a confidence level
+    /// of its own is never sent anywhere.
+    /// </remarks>
+    /// <param name="dataSource">The data source.</param>
+    /// <returns>The provider, or why there is none.</returns>
+    private MediaTranscriptionAvailability GetMediaTranscriptionAvailability(IDataSource dataSource)
+    {
+        var provider = mediaTranscriptionService.GetUsableProvider();
+        if (provider is null)
+            return MediaTranscriptionAvailability.MISSING;
+
+        var providerConfidence = provider.GetConfidenceLevel(settingsManager);
+        if (dataSource is IIndexedDataSource indexedDataSource && DataSourceEmbeddingService.AllowsTranscription(indexedDataSource, providerConfidence))
+            return MediaTranscriptionAvailability.Allowed(provider);
+
+        logger.LogInformation(
+            "The transcription provider '{ProviderName}' may not hear the audio and video files of data source '{DataSourceName}' ({DataSourceId}): the data source asks for the confidence level {RequiredConfidence}, while the provider has {ProviderConfidence}.",
+            provider.Name,
+            dataSource.Name,
+            dataSource.Id,
+            (dataSource as IIndexedDataSource)?.ConfidenceLevel,
+            providerConfidence);
+
+        return MediaTranscriptionAvailability.NOT_ALLOWED;
+    }
+
+    private static bool IsPermanentMediaFailure(MediaJobErrorCode? code) => code is
+        MediaJobErrorCode.UNKNOWN_FORMAT
+        or MediaJobErrorCode.UNSAFE_FILE
+        or MediaJobErrorCode.NOT_MEDIA
+        or MediaJobErrorCode.UNSUPPORTED_CONTAINER
+        or MediaJobErrorCode.NO_AUDIO_TRACK
+        or MediaJobErrorCode.UNSUPPORTED_CODEC
+        or MediaJobErrorCode.INVALID_AUDIO_PARAMETERS
+        or MediaJobErrorCode.INVALID_OPUS_HEADER
+        or MediaJobErrorCode.UNSUPPORTED_OPUS_MAPPING
+        or MediaJobErrorCode.DAMAGED_CONTAINER;
+
+    /// <summary>
+    /// Lists the files of a data source and decides what a run does with each of them.
+    /// </summary>
+    /// <param name="dataSource">The data source.</param>
+    /// <param name="manifest">What the index stores about the data source, or null when it does not matter.</param>
+    /// <param name="mediaTranscription">Which transcription provider may hear its audio and video files, or null to ask the settings once a media file turns up.</param>
+    /// <returns>The files, and those which were left out.</returns>
+    internal FileEnumerationResult GetInputFiles(IDataSource dataSource, DataSourceEmbeddingManifest? manifest = null, MediaTranscriptionAvailability? mediaTranscription = null)
     {
         var result = new FileEnumerationResult();
+        var mediaTranscriptionAvailability = new Lazy<MediaTranscriptionAvailability>(() => mediaTranscription ?? this.GetMediaTranscriptionAvailability(dataSource));
 
         switch (dataSource)
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
-                switch (this.GetRagFileIndexingDecision(file))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(file);
-                        break;
 
-                    case RagFileIndexingDecision.EXCLUDED:
-                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
-                        break;
-
-                    default:
-                        result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' has a type AI Studio cannot index."), localFile.FilePath));
-                        break;
-                }
+                // No size limit: the user chose this very file, cf. FolderFileSelection.IsTooLarge.
+                if (this.AddInputFile(file, new InputFileRules(null, manifest, mediaTranscriptionAvailability), result) is RagFileIndexingDecision.EXCLUDED)
+                    logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
 
                 return result;
 
             case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
-                this.EnumerateAccessibleFiles(localDirectory.Path, result);
+                this.EnumerateAccessibleFiles(localDirectory, manifest, mediaTranscriptionAvailability, result);
+                if (result.UnreadableDirectories.Contains(localDirectory.Path))
+                    result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
+
                 return result;
         }
 
+        //
+        // Missing is not the same as empty, cf. StopWithoutRoot:
+        //
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.AddFailure(localFile.FilePath, string.Format(TB("The file '{0}' does not exist."), localFile.FilePath));
+                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.AddFailure(localDirectory.Path, string.Format(TB("The folder '{0}' does not exist."), localDirectory.Path));
+                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."), localDirectory.Path);
                 break;
         }
 
         return result;
     }
 
-    private void EnumerateAccessibleFiles(string rootPath, FileEnumerationResult result)
+    private void EnumerateAccessibleFiles(DataSourceLocalDirectory dataSource, DataSourceEmbeddingManifest? manifest, Lazy<MediaTranscriptionAvailability> mediaTranscription, FileEnumerationResult result)
     {
-        var pendingDirectories = new Stack<string>();
-        pendingDirectories.Push(rootPath);
+        var selection = FolderFileSelection.Of(dataSource);
+        var rules = new InputFileRules(selection, manifest, mediaTranscription);
 
         //
-        // Every log line travels to the runtime as a request of its own. A folder full of icons
-        // would flood the log with one line per file, so the excluded files get one line in total:
+        // Every log line travels to the runtime as a request of its own. A folder holding many
+        // temporary or system files gets one line in total rather than one per file:
         //
         var excludedFiles = 0;
         var excludedFileExamples = new List<string>(MAX_LOGGED_EXCLUDED_FILE_EXAMPLES);
 
-        while (pendingDirectories.Count > 0)
+        foreach (var filePath in selection.EnumerateCandidates(
+                     dataSource.Path,
+                     reportExcludedFolder: result.AddExcludedFolder,
+                     reportInaccessibleDirectory: (directoryPath, exception) =>
+                     {
+                         logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", directoryPath);
+                         result.AddUnreadableDirectory(directoryPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), directoryPath));
+                     }))
         {
-            var currentPath = pendingDirectories.Pop();
-            IEnumerable<string> subDirectories;
-            IEnumerable<string> files;
-
-            try
+            if (!selection.Selects(filePath))
             {
-                subDirectories = Directory.EnumerateDirectories(currentPath);
-                files = Directory.EnumerateFiles(currentPath);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
-                result.AddFailure(currentPath, string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it."), currentPath));
+                // Everything in a folder the user chose to scan is useful transparency when a
+                // pattern was mistyped or was narrower than intended, or when the exclusion list
+                // caught a file somebody wanted:
+                result.AddFilePatternExclusion(filePath);
                 continue;
             }
 
-            foreach (var filePath in files)
+            FileInfo fileInfo;
+            try
             {
-                FileInfo fileInfo;
-                try
-                {
-                    fileInfo = new FileInfo(filePath);
-                    if (!fileInfo.Exists)
-                        continue;
-                }
-                catch (Exception exception)
-                {
-                    logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                    result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
+                fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists)
                     continue;
-                }
-
-                switch (this.GetRagFileIndexingDecision(fileInfo))
-                {
-                    case RagFileIndexingDecision.INDEXABLE:
-                        result.Files.Add(fileInfo);
-                        break;
-
-                    case RagFileIndexingDecision.EXCLUDED:
-                        excludedFiles++;
-                        if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
-                            excludedFileExamples.Add(Path.GetRelativePath(rootPath, fileInfo.FullName));
-                        break;
-                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
+                result.AddFailure(filePath, string.Format(TB("The file '{0}' could not be read. Please check whether you are allowed to read it."), filePath));
+                continue;
             }
 
-            foreach (var subDirectory in subDirectories)
+            //
+            // The transcript which the Batch Processing assistant wrote next to a selected media
+            // file holds the text the data source gets from the media file itself:
+            //
+            if (MediaSidecarTranscripts.IsCoveredArtifact(fileInfo.FullName, selection))
             {
-                if (this.IsSkippedRagDirectory(subDirectory))
-                    continue;
-
-                pendingDirectories.Push(subDirectory);
+                logger.LogDebug("Skipping the transcript '{FilePath}', because its media file is indexed as the document.", fileInfo.FullName);
+                continue;
             }
+
+            if (this.AddInputFile(fileInfo, rules, result) is not RagFileIndexingDecision.EXCLUDED)
+                continue;
+
+            excludedFiles++;
+            if (excludedFileExamples.Count < MAX_LOGGED_EXCLUDED_FILE_EXAMPLES)
+                excludedFileExamples.Add(Path.GetRelativePath(dataSource.Path, fileInfo.FullName));
         }
 
         if (excludedFiles > 0)
-            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, rootPath, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
+            logger.LogDebug("Skipped {ExcludedFiles} excluded file(s) in '{RootPath}' while indexing, for example: {ExampleFiles}.", excludedFiles, dataSource.Path, string.Join(", ", excludedFileExamples.Select(path => $"'{path}'")));
+    }
+
+    /// <param name="file">The file.</param>
+    /// <param name="rules">What decides about the files of the data source.</param>
+    /// <param name="result">Where the file goes, if anywhere.</param>
+    private RagFileIndexingDecision AddInputFile(FileInfo file, InputFileRules rules, FileEnumerationResult result)
+    {
+        var decision = this.GetRagFileIndexingDecision(file, rules);
+        switch (decision)
+        {
+            case RagFileIndexingDecision.INDEXABLE:
+                result.Files.Add(file);
+                break;
+
+            case RagFileIndexingDecision.EXCLUDED:
+                break;
+
+            case RagFileIndexingDecision.IMAGE_NOT_SUPPORTED:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.IMAGE_NOT_SUPPORTED);
+                break;
+
+            case RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_MISSING);
+                break;
+
+            case RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_NOT_ALLOWED:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED);
+                break;
+
+            case RagFileIndexingDecision.TOO_LARGE:
+                result.AddIgnoredFile(file.FullName, DataSourceEmbeddingIgnoreReason.TOO_LARGE);
+                break;
+        }
+
+        return decision;
     }
 
     private string TryGetRelativePath(IDataSource dataSource, FileInfo file) => dataSource switch
@@ -569,22 +855,67 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
     }
 
-    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
+    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file, InputFileRules rules)
     {
         if (this.IsSkippedRagFile(file))
             return RagFileIndexingDecision.EXCLUDED;
 
         if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
-            return RagFileIndexingDecision.EXCLUDED;
+            return RagFileIndexingDecision.IMAGE_NOT_SUPPORTED;
 
-        return IsSupportedRagFilePath(file.FullName)
-            ? RagFileIndexingDecision.INDEXABLE
-            : RagFileIndexingDecision.UNSUPPORTED;
+        //
+        // Before any transcription: a video of several gigabytes is left out like every other
+        // file above the limit, rather than sent to the transcription provider.
+        //
+        if (rules.Selection?.IsTooLarge(file) is true)
+            return RagFileIndexingDecision.TOO_LARGE;
+
+        if (PersistentMediaTranscript.IsMediaPath(file.FullName))
+            return GetMediaIndexingDecision(file, rules);
+
+        // A directory source reaches this point only after its user-configured pattern selected
+        // the file. A single-file source was validated before it was stored. Extraction is the
+        // authoritative capability check and records an unreadable selected file through the
+        // ordinary per-document failure path instead of silently overriding the user's selection.
+        return RagFileIndexingDecision.INDEXABLE;
+    }
+
+    /// <summary>
+    /// Decides about an audio or video file, which holds no text until it is transcribed.
+    /// </summary>
+    /// <remarks>
+    /// A media file which the index holds unchanged needs no transcript in this run, nor does one
+    /// which failed for good before: neither is read. A missing transcription provider, or one which
+    /// the data source no longer allows, therefore takes nothing out of the index. Every other media
+    /// file needs a provider which may hear it, unless the data source has its transcript already;
+    /// that is only known once the file is read, so such a file waits for the provider as well.
+    /// </remarks>
+    /// <param name="file">The audio or video file.</param>
+    /// <param name="rules">What decides about the files of the data source.</param>
+    /// <returns>INDEXABLE, or why the file is left out.</returns>
+    private static RagFileIndexingDecision GetMediaIndexingDecision(FileInfo file, InputFileRules rules)
+    {
+        if (rules.Manifest is { } manifest)
+        {
+            var fingerprint = BuildFileMetadataHash(file);
+            if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) && string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
+                return RagFileIndexingDecision.INDEXABLE;
+
+            if (manifest.PermanentFailures.TryGetValue(file.FullName, out var permanentFailure) && string.Equals(permanentFailure.Fingerprint, fingerprint, StringComparison.Ordinal))
+                return RagFileIndexingDecision.INDEXABLE;
+        }
+
+        return rules.MediaTranscription.Value.IgnoreReason switch
+        {
+            null => RagFileIndexingDecision.INDEXABLE,
+            DataSourceEmbeddingIgnoreReason.TRANSCRIPTION_PROVIDER_NOT_ALLOWED => RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_NOT_ALLOWED,
+            _ => RagFileIndexingDecision.TRANSCRIPTION_PROVIDER_MISSING,
+        };
     }
 
     private bool IsSkippedRagFile(FileInfo file)
     {
-        if (IsSkippedRagFileName(file.Name))
+        if (FileExclusions.IsAlwaysExcludedFile(file.Name))
             return true;
 
         try
@@ -597,22 +928,6 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
-            return true;
-        }
-    }
-
-    private bool IsSkippedRagDirectory(string path)
-    {
-        try
-        {
-            var directory = new DirectoryInfo(path);
-            return directory.Attributes.HasFlag(FileAttributes.ReparsePoint)
-                   || directory.Attributes.HasFlag(FileAttributes.Offline)
-                   || directory.Attributes.HasFlag(FileAttributes.System);
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
             return true;
         }
     }
@@ -674,7 +989,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         return BuildMetadataHash(parts);
     }
 
-    private static string BuildFileMetadataHash(FileInfo file)
+    internal static string BuildFileMetadataHash(FileInfo file)
     {
         file.Refresh();
         if (!file.Exists)
@@ -717,12 +1032,13 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <param name="dataSource">The data source the file belongs to.</param>
     /// <param name="file">The file.</param>
     /// <param name="fingerprint">The fingerprint of the file as it is about to be read.</param>
+    /// <param name="transcript">The transcript an audio or video file is read through, or null for every other file.</param>
     /// <returns>The document.</returns>
-    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint) => new(
+    private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript) => new(
         file.FullName,
-        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow),
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { TranscriptKey = transcript?.Key },
         file.Name,
-        token => this.StreamEmbeddingChunksAsync(file.FullName, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
+        token => this.StreamEmbeddingChunksAsync(file.FullName, transcript, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 
     private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {

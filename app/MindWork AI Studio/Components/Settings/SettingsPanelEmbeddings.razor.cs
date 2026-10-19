@@ -55,53 +55,28 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task AddEmbeddingProvider()
     {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.IsEditing, false },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (await EmbeddingProviderSetup.AddAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
             return;
 
-        var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
-        addedEmbedding = addedEmbedding with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
-        
-        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(addedEmbedding);
         await this.UpdateEmbeddingProviders();
-        
-        await this.SettingsManager.StoreSettings();
-        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
+
+    private async Task ImportEmbeddingProvider()
+    {
+        if (await EmbeddingProviderSetup.ImportAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
+            return;
+
+        await this.UpdateEmbeddingProviders();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
     {
         if (embeddingProvider.IsEnterpriseConfiguration && !embeddingProvider.AllowUserProvidedAPIKey)
             return;
 
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.DataNum, embeddingProvider.Num },
-            { x => x.DataId, embeddingProvider.Id },
-            { x => x.DataName, embeddingProvider.Name },
-            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
-            { x => x.DataCustomIconDataUrl, embeddingProvider.CustomIconDataUrl },
-            { x => x.DataModel, embeddingProvider.Model },
-            { x => x.DataHostname, embeddingProvider.Hostname },
-            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, embeddingProvider.Host },
-            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
-            { x => x.DataTokenizerFingerprint, embeddingProvider.TokenizerFingerprint },
-            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
-            { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
-            { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
-            { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), EmbeddingProviderSetup.CreateDialogParameters(embeddingProvider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;

@@ -10,7 +10,7 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
-public static class WorkspaceBehaviour
+public static partial class WorkspaceBehaviour
 {
     public readonly record struct TryCreateWorkspaceResult(bool Success, WorkspaceTreeWorkspace Workspace);
 
@@ -872,7 +872,7 @@ public static class WorkspaceBehaviour
 
             Directory.CreateDirectory(chatDirectory);
 
-            await FinalizeStagedTranscriptsAsync(chat, chatDirectory);
+            FinalizeStagedTranscripts(chat, chatDirectory);
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
@@ -970,25 +970,15 @@ public static class WorkspaceBehaviour
 
     private static void CopyManagedTranscriptAttachments(ChatThread chat, string targetChatDirectory)
     {
-        var targetTranscriptDirectory = Path.Combine(targetChatDirectory, "attachments", "transcripts");
-        var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(pathComparer);
+        var targetTranscriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(targetChatDirectory);
+        var copiedPaths = new Dictionary<string, ManagedTranscriptAttachment>(PathTools.COMPARER);
 
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                if (content.FileAttachments[index] is ManagedTranscriptAttachment transcript)
-                    content.FileAttachments[index] = CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths);
-            }
-        }
-
-        chat.Draft.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
+        chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment transcript
             ? CopyManagedTranscriptAttachment(chat, transcript, targetTranscriptDirectory, copiedPaths)
             : attachment);
     }
 
-    private static ManagedTranscriptAttachment CopyManagedTranscriptAttachment(
+    internal static ManagedTranscriptAttachment CopyManagedTranscriptAttachment(
         ChatThread chat,
         ManagedTranscriptAttachment source,
         string targetTranscriptDirectory,
@@ -1045,7 +1035,7 @@ public static class WorkspaceBehaviour
             if (!Directory.Exists(chatDirectory))
                 throw new DirectoryNotFoundException($"The owning chat directory does not exist: '{chatDirectory}'.");
             
-            var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+            var transcriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory);
             Directory.CreateDirectory(transcriptDirectory);
             ReconcileTranscriptCounter(chat, transcriptDirectory);
             
@@ -1096,7 +1086,7 @@ public static class WorkspaceBehaviour
             UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
             chat.WorkspaceId = targetWorkspaceId;
             
-            await FinalizeStagedTranscriptsAsync(chat, targetDirectory);
+            FinalizeStagedTranscripts(chat, targetDirectory);
             await StoreMovedChatFilesAsync(chat, targetDirectory);
 
             var lastEditTime = File.GetLastWriteTimeUtc(Path.Join(targetDirectory, "thread.json"));
@@ -1153,22 +1143,14 @@ public static class WorkspaceBehaviour
         }
     }
 
-    /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
-    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
-    {
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-                content.FileAttachments[index] = RelocateAttachment(content.FileAttachments[index], sourceDirectory, targetDirectory);
-        }
-
-        //
-        // The transcripts of the message not sent yet live in the chat directory as well. Left with
-        // their old paths, the draft points at a directory which is gone after the move, and the
-        // transcripts would never reach the message.
-        //
-        chat.Draft.ReplaceAttachments(attachment => RelocateAttachment(attachment, sourceDirectory, targetDirectory));
-    }
+    /// <summary>Rewrites absolute file paths after moving the complete chat directory.</summary>
+    /// <remarks>
+    /// The transcripts of the message not sent yet live in the chat directory as well. Left with
+    /// their old paths, the draft points at a directory which is gone after the move, and the
+    /// transcripts would never reach the message. ChatThread.RewriteFilePaths takes the draft along.
+    /// </remarks>
+    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory) =>
+        chat.RewriteFilePaths(path => RelocatePath(path, sourceDirectory, targetDirectory));
 
     /// <summary>
     /// Gives an attachment the path it has after its chat moved into another workspace.
@@ -1191,55 +1173,54 @@ public static class WorkspaceBehaviour
     /// <summary>Gives an attachment inside a moved directory its path in the target directory.</summary>
     private static FileAttachment RelocateAttachment(FileAttachment attachment, string sourceDirectory, string targetDirectory)
     {
-        var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
-            ? sourceDirectory
-            : sourceDirectory + Path.DirectorySeparatorChar;
-
-        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
-            return attachment;
-
-        var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
-        var movedPath = Path.Combine(targetDirectory, relativePath);
-
-        return attachment switch
-        {
-            ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
-            FileAttachmentImage image => image with { FilePath = movedPath },
-            _ => attachment with { FilePath = movedPath },
-        };
+        var movedPath = RelocatePath(attachment.FilePath, sourceDirectory, targetDirectory);
+        return movedPath == attachment.FilePath ? attachment : attachment.WithFilePath(movedPath);
     }
 
-    private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)
+    /// <summary>Gives a path inside a moved directory its place in the target directory, and leaves every other path as it is.</summary>
+    private static string RelocatePath(string path, string sourceDirectory, string targetDirectory)
     {
-        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        if (!PathTools.IsInsideDirectory(sourceDirectory, path))
+            return path;
+
+        return Path.Combine(targetDirectory, Path.GetRelativePath(sourceDirectory, path));
+    }
+
+    /// <summary>
+    /// Moves the transcripts of a chat which still wait in the staging area into the chat directory.
+    /// </summary>
+    /// <remarks>
+    /// A transcript waits there when its chat was not stored yet when the transcript was made. The draft
+    /// counts as well: leaving a new chat stores it along with the message the user started in it, and
+    /// the next start of AI Studio empties the staging area. A transcript of the draft left behind there
+    /// would be gone, while the stored draft still pointed at it.
+    /// </remarks>
+    private static void FinalizeStagedTranscripts(ChatThread chat, string chatDirectory)
+    {
+        var transcriptDirectory = ManagedTranscriptAttachment.GetTranscriptDirectory(chatDirectory);
         ReconcileTranscriptCounter(chat, transcriptDirectory);
-        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
-        {
-            for (var index = 0; index < content.FileAttachments.Count; index++)
-            {
-                if (content.FileAttachments[index] is not ManagedTranscriptAttachment { IsStaged: true } staged
-                    || !File.Exists(staged.FilePath))
-                    continue;
+        chat.ReplaceAttachments(attachment => attachment is ManagedTranscriptAttachment { IsStaged: true } staged && File.Exists(staged.FilePath)
+            ? FinalizeStagedTranscript(chat, staged, transcriptDirectory)
+            : attachment);
+    }
 
-                Directory.CreateDirectory(transcriptDirectory);
-                var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
+    /// <summary>Moves one staged transcript into the transcript directory of its chat.</summary>
+    private static ManagedTranscriptAttachment FinalizeStagedTranscript(ChatThread chat, ManagedTranscriptAttachment staged, string transcriptDirectory)
+    {
+        Directory.CreateDirectory(transcriptDirectory);
+        var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
 
-                File.Move(staged.FilePath, targetPath);
-                var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
-                if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
-                    Directory.Delete(sourceDirectory);
+        File.Move(staged.FilePath, targetPath);
+        var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
+        if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
+            Directory.Delete(sourceDirectory);
 
-                content.FileAttachments[index] = new ManagedTranscriptAttachment(
-                    Path.GetFileName(targetPath),
-                    targetPath,
-                    new FileInfo(targetPath).Length,
-                    staged.OriginalFileName,
-                    false);
-            }
-        }
-
-        await Task.CompletedTask;
+        return new ManagedTranscriptAttachment(
+            Path.GetFileName(targetPath),
+            targetPath,
+            new FileInfo(targetPath).Length,
+            staged.OriginalFileName,
+            false);
     }
 
     /// <summary>Raises the persisted counter to the highest transcript suffix found chat-wide.</summary>
@@ -1276,7 +1257,7 @@ public static class WorkspaceBehaviour
     }
 
     /// <summary>Returns the canonical storage directory for a chat identity.</summary>
-    private static string GetChatDirectory(Guid workspaceId, Guid chatId) => workspaceId == Guid.Empty
+    public static string GetChatDirectory(Guid workspaceId, Guid chatId) => workspaceId == Guid.Empty
         ? Path.Join(SettingsManager.DataDirectory, "tempChats", chatId.ToString())
         : Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
 
@@ -1458,7 +1439,11 @@ public static class WorkspaceBehaviour
         return true;
     }
 
-    private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
+    /// <summary>
+    /// Ensures that a workspace with the given identity exists on disk and in the cache.
+    /// An existing workspace keeps its current name.
+    /// </summary>
+    public static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
     {
         var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");

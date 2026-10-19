@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
-using AIStudio.Tools.Metadata;
 using AIStudio.Tools.Services;
 
 using SharedTools;
@@ -15,12 +13,8 @@ public static partial class Pandoc
 {
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(Pandoc).Namespace, nameof(Pandoc));
 
-    private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
-    private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
-
-    // Use runtime detection instead of metadata to ensure correct RID on dev machines:
+    // Pandoc is a program of its own, so it has to fit the machine, not the build of AI Studio:
     private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
-    private static readonly RID METADATA_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
 
     private const string DOWNLOAD_URL = "https://github.com/jgm/pandoc/releases/download";
     private const string LATEST_URL = "https://github.com/jgm/pandoc/releases/latest";
@@ -66,19 +60,6 @@ public static partial class Pandoc
     {
         try
         {
-            //
-            // Log a warning if the runtime-detected RID differs from the metadata RID.
-            // This can happen on dev machines where the metadata.txt contains stale values.
-            // We always use the runtime-detected RID for correct behavior.
-            //
-            if (!HAS_LOGGED_EXECUTABLE_ONCE && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
-            {
-                LOG.LogWarning(
-                    "Runtime-detected RID '{RuntimeRID}' differs from metadata RID '{MetadataRID}'. Using runtime-detected RID. This is expected on dev machines where metadata.txt may be outdated.",
-                    CPU_ARCHITECTURE.ToUserFriendlyName(),
-                    METADATA_ARCHITECTURE.ToUserFriendlyName());
-            }
-
             var preparedProcess = await PreparePandocProcess().AddArgument("--version").BuildAsync(rustService);
             if (!HAS_LOGGED_EXECUTABLE_ONCE)
             {

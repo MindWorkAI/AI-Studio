@@ -9,13 +9,13 @@ namespace AIStudio.Chat;
 /// </summary>
 /// <param name="Type">The type of the file attachment.</param>
 /// <param name="FileName">The name of the file, including extension.</param>
-/// <param name="FilePath">The full path to the file, including the filename and extension.</param>
+/// <param name="FilePath">The full path to the file, including the filename and extension. A file below the data directory, such as a transcript, is stored with a path relative to it.</param>
 /// <param name="FileSizeBytes">The size of the file in bytes.</param>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
 [JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
 [JsonDerivedType(typeof(ManagedTranscriptAttachment), typeDiscriminator: "managed_transcript")]
-public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
+public record FileAttachment(FileAttachmentType Type, string FileName, [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string FilePath, long FileSizeBytes)
 {
     /// <summary>
     /// Gets a value indicating whether the file type is forbidden and should not be attached.
@@ -64,6 +64,17 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     public virtual FileAttachment Normalize() => FromPath(this.FilePath);
 
     /// <summary>
+    /// Makes the same attachment for its file at another place, e.g. after the chat holding the file moved.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately no with expression: that one keeps whatever was derived from the old path when
+    /// the attachment was made, such as FilePathAsUrl, and the source of an image.
+    /// </remarks>
+    /// <param name="filePath">The path of the file now.</param>
+    /// <returns>An attachment of the same kind, with the new path.</returns>
+    public virtual FileAttachment WithFilePath(string filePath) => new(this.Type, this.FileName, filePath, this.FileSizeBytes);
+
+    /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,
     /// extracting the filename, and reading the file size.
     /// </summary>
@@ -85,8 +96,8 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     }
 
     /// <summary>
-    /// Determines the file attachment type based on the file extension.
-    /// Uses centrally defined file type filters from <see cref="FileTypes"/>.
+    /// Determines the file attachment type based on the file extension or, for readable text, on
+    /// the content. Uses the centrally defined file type filters from FileTypes.
     /// </summary>
     /// <param name="filePath">The file path to analyze.</param>
     /// <returns>The corresponding FileAttachmentType.</returns>
@@ -104,7 +115,11 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
-        // Check if it's an allowed document file (PDF, Text, LaTeX, or Office):
+        //
+        // Check if it's an allowed document file (PDF, Text, LaTeX, or Office). Text includes
+        // READABLE_TEXT, so any readable text file is accepted, whatever its name, e.g., main.tf.
+        // For a file of an unknown type, this reads up to the first 8 KB:
+        //
         if (FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
             return FileAttachmentType.DOCUMENT;
 

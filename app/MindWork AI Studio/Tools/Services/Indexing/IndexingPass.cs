@@ -15,13 +15,13 @@ namespace AIStudio.Tools.Services.Indexing;
 ///
 /// The embedding service keeps a pass only while the last step of its data source left more to do.
 /// Any other end of a run ends the pass, and so does a reset of the stored index. A manual retry
-/// begins a new pass, as does a run for other embedding settings.
+/// begins a new pass, as does a run for other embedding settings or another selection of documents.
 ///
 /// Documents which failed for a reason of their own are none of its business: the index remembers
 /// them for good, cf. PermanentIndexingFailure. Only the steps of one data source use a pass, one
 /// after the other, so it needs no lock.
 /// </remarks>
-/// <param name="runSignature">The embedding settings the pass works for.</param>
+/// <param name="runSignature">The embedding settings and the selection of documents the pass works for.</param>
 internal sealed class IndexingPass(DataSourceRunSignature runSignature)
 {
     /// <summary>
@@ -66,14 +66,15 @@ internal sealed class IndexingPass(DataSourceRunSignature runSignature)
     /// </summary>
     /// <param name="current">The pass the last step of the data source left, or null when there is none.</param>
     /// <param name="refreshMode">Why the run was asked for.</param>
-    /// <param name="runSignature">The embedding settings the run works for.</param>
+    /// <param name="runSignature">The embedding settings and the selection of documents the run works for.</param>
     /// <returns>The pass of the run.</returns>
     public static IndexingPass ContinueOrBegin(IndexingPass? current, DataSourceEmbeddingRefreshMode refreshMode, DataSourceRunSignature runSignature)
     {
         //
         // A manual retry is the user asking for every failed document to be tried again, so it
         // never carries on with what a pass knows. Neither does a run for other embedding settings:
-        // what failed with the old ones may well work with the new.
+        // what failed with the old ones may well work with the new. A run for another selection
+        // goes through the data source anew as well, since it works with other documents:
         //
         if (current is not null && refreshMode is not DataSourceEmbeddingRefreshMode.MANUAL_RETRY && current.RunSignature == runSignature)
             return current;

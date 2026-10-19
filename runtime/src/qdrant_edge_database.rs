@@ -34,6 +34,11 @@ const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 const WAL_DIRECTORY: &str = "wal";
 const CLOSED_WAL_SEGMENT_PREFIX: &str = "closed-";
 
+/// The directory below the data directory in which a backup collects its copies, one directory per
+/// backup. The app removes a backup's directory once the backup is written.
+const BACKUP_STAGING_DIRECTORY: &str = ".backup-staging";
+const MAX_BACKUP_ID_LENGTH: usize = 64;
+
 /// Marks a response whose store exists on disk but cannot be opened. The .NET side keys its repair
 /// offer off this value instead of parsing `issue`, so rewording the message stays harmless.
 const ISSUE_CODE_STORE_UNREADABLE: &str = "store-unreadable";
@@ -101,6 +106,11 @@ pub struct EnsureQdrantEdgeStoreRequest {
 }
 
 #[derive(Deserialize)]
+pub struct CheckQdrantEdgeStoreRequest {
+    pub store_name: String,
+}
+
+#[derive(Deserialize)]
 pub struct InsertQdrantEdgeEmbeddingRequest {
     pub store_name: String,
     pub points: Vec<QdrantEdgeStoragePoint>,
@@ -131,6 +141,39 @@ pub struct OptimizeQdrantEdgeStoreRequest {
 #[derive(Deserialize)]
 pub struct DeleteQdrantEdgeStoreRequest {
     pub store_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct CopyQdrantEdgeStoreForBackupRequest {
+    pub backup_id: String,
+    pub store_name: String,
+}
+
+/// A store which a backup takes along.
+#[derive(Serialize)]
+pub struct QdrantEdgeBackupStore {
+    pub store_name: String,
+    pub bytes: u64,
+}
+
+/// What a backup needs to copy the stores, one request per store.
+#[derive(Serialize)]
+pub struct QdrantEdgeBackupPreparation {
+    /// Names the backup in the requests which copy its stores.
+    pub backup_id: String,
+
+    /// The directory of the backup's copies. Below it, every copy has the place it has below the
+    /// data directory, so the backup can take the copies along under the same paths.
+    pub staging_path: String,
+
+    /// Every store which was created completely, in the order of their names.
+    pub stores: Vec<QdrantEdgeBackupStore>,
+}
+
+/// How much space is free on one disk.
+struct DiskSpace {
+    mount_point: PathBuf,
+    available_bytes: u64,
 }
 
 #[derive(Serialize)]
@@ -344,6 +387,17 @@ impl QdrantEdgeDatabase {
         })
     }
 
+    /// Whether a store was created completely, without creating or loading it.
+    ///
+    /// The app asks this when its index database knows about a store. Should the store be gone,
+    /// the user decides whether to rebuild it, since that sends every document to the embedding
+    /// provider once more. Creating an empty store on the way, as `ensure_store_exists` does,
+    /// would hide that the vectors are missing.
+    fn store_exists(&self, store_name: &str) -> QdrantEdgeResult<bool> {
+        let path = self.store_path(store_name)?;
+        store_is_initialized(&path, store_name)
+    }
+
     fn insert_embedding(&mut self, store_name: &str, points: Vec<QdrantEdgeStoragePoint>) -> QdrantEdgeResult<()> {
         let Some(first_point) = points.first() else {
             return Ok(());
@@ -440,6 +494,92 @@ impl QdrantEdgeDatabase {
         Ok(())
     }
 
+    /// Prepares a backup of the stores: lists them, checks that their copies fit on the disk, and
+    /// creates the directory of the backup's copies below the data directory.
+    ///
+    /// Only stores which were created completely count. One whose creation broke off holds nothing
+    /// the app could use, and the next request against it removes it anyway.
+    fn prepare_backup(&self, data_directory: &Path) -> QdrantEdgeResult<QdrantEdgeBackupPreparation> {
+        let stores = self.backup_stores()?;
+        let required_bytes = stores.iter().map(|store| store.bytes).sum();
+        ensure_enough_space(required_bytes, available_space(data_directory))?;
+
+        let backup_id = format!("{:016x}", rand::random::<u64>());
+        let staging_path = backup_staging_path(data_directory, &backup_id)?;
+        fs::create_dir_all(&staging_path).map_err(|error| {
+            format!("Failed to create the directory '{}' for the copies of the vector stores: {error}", staging_path.display())
+        })?;
+
+        info!(Source = "Qdrant Edge"; "Prepared the backup '{backup_id}' of {} vector store(s) with {:.1} MiB.", stores.len(), required_bytes as f64 / (1024.0 * 1024.0));
+        Ok(QdrantEdgeBackupPreparation {
+            backup_id,
+            staging_path: staging_path.to_string_lossy().to_string(),
+            stores,
+        })
+    }
+
+    fn backup_stores(&self) -> QdrantEdgeResult<Vec<QdrantEdgeBackupStore>> {
+        let stores_path = self.base_path.join("stores");
+        if !stores_path.is_dir() {
+            return Ok(Vec::new());
+        }
+
+        let mut stores = Vec::new();
+        for entry in fs::read_dir(&stores_path)? {
+            let path = entry?.path();
+            let Ok(store_name) = fs::read_to_string(path.join(STORE_INITIALIZATION_MARKER)) else {
+                continue;
+            };
+
+            let belongs_to_its_directory = self.store_path(&store_name).is_ok_and(|store_path| store_path == path);
+            if !belongs_to_its_directory || !store_is_initialized(&path, &store_name).unwrap_or(false) {
+                continue;
+            }
+
+            stores.push(QdrantEdgeBackupStore {
+                bytes: directory_size(&path)?,
+                store_name,
+            });
+        }
+
+        stores.sort_by(|left, right| left.store_name.cmp(&right.store_name));
+        Ok(stores)
+    }
+
+    /// Copies one store into the directory of a backup's copies, and returns how many bytes it copied.
+    ///
+    /// A loaded store is flushed and unloaded first: everything it holds is on the disk then, and
+    /// nothing changes its files while they are copied, since the lock of the database is held all
+    /// the while. The next request loads the store again. A store which was not created completely
+    /// is not copied.
+    fn copy_store_for_backup(&mut self, store_name: &str, data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<u64> {
+        let staging_path = backup_staging_path(data_directory, backup_id)?;
+        if !staging_path.is_dir() {
+            return Err(format!("The backup '{backup_id}' was not prepared.").into());
+        }
+
+        let path = self.store_path(store_name)?;
+        if !store_is_initialized(&path, store_name)? {
+            return Ok(0);
+        }
+
+        if let Some(shard) = self.shards.get(store_name) {
+            shard.flush()?;
+        }
+
+        drop(self.shards.remove(store_name));
+        let relative_path = path.strip_prefix(data_directory).map_err(|_| {
+            format!("The vector store '{store_name}' at '{}' does not lie below the data directory '{}'.", path.display(), data_directory.display())
+        })?;
+
+        let target_path = staging_path.join(relative_path);
+        let copied_bytes = copy_directory(&path, &target_path).map_err(|error| {
+            format!("Failed to copy the vector store '{store_name}' to '{}': {error}", target_path.display())
+        })?;
+
+        Ok(copied_bytes)
+    }
+
     fn delete_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
         self.shards.remove(store_name);
 
@@ -461,14 +601,112 @@ fn store_directory_name(store_name: &str) -> String {
     format!("store_{stable_id}")
 }
 
-fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
+fn data_directory() -> QdrantEdgeResult<PathBuf> {
     let data_directory = DATA_DIRECTORY
         .get()
         .ok_or("The data directory has not been initialized.")?;
 
-    Ok(Path::new(data_directory)
+    Ok(PathBuf::from(data_directory))
+}
+
+fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
+    Ok(data_directory()?
         .join("databases")
         .join("vector_database"))
+}
+
+/// The directory of one backup's copies. The backup ID must not be able to name any other path.
+fn backup_staging_path(data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<PathBuf> {
+    if backup_id.is_empty() || backup_id.len() > MAX_BACKUP_ID_LENGTH || !backup_id.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(format!("'{backup_id}' is not a valid backup ID.").into());
+    }
+
+    Ok(data_directory.join(BACKUP_STAGING_DIRECTORY).join(backup_id))
+}
+
+/// Refuses a backup whose copies would not fit on the disk. When the free space cannot be told, the
+/// backup goes ahead: running out of space then fails the copy, which removes nothing.
+fn ensure_enough_space(required_bytes: u64, available_bytes: Option<u64>) -> QdrantEdgeResult<()> {
+    match available_bytes {
+        Some(available_bytes) if available_bytes < required_bytes => Err(format!(
+            "The copies of the vector stores need {:.1} MiB, but only {:.1} MiB are free on the disk.",
+            required_bytes as f64 / (1024.0 * 1024.0),
+            available_bytes as f64 / (1024.0 * 1024.0)
+        ).into()),
+
+        Some(_) => Ok(()),
+
+        None => {
+            warn!(Source = "Qdrant Edge"; "Could not tell the free space on the disk of the data directory. Copying the vector stores anyway.");
+            Ok(())
+        },
+    }
+}
+
+/// The free space on the disk which holds the given path, or None when it cannot be told.
+///
+/// The canonical path comes first, since the path the app knows may lead through a symbolic link
+/// onto another disk. On Windows, the canonical path carries a prefix no mount point has, so the
+/// path as it is serves as the fallback.
+fn available_space(path: &Path) -> Option<u64> {
+    let disks = sysinfo::Disks::new_with_refreshed_list()
+        .list()
+        .iter()
+        .map(|disk| DiskSpace {
+            mount_point: disk.mount_point().to_path_buf(),
+            available_bytes: disk.available_space(),
+        })
+        .collect::<Vec<_>>();
+
+    fs::canonicalize(path)
+        .ok()
+        .and_then(|canonical_path| available_space_on(&canonical_path, &disks))
+        .or_else(|| available_space_on(path, &disks))
+}
+
+/// The free space of the disk with the most specific mount point which holds the given path.
+fn available_space_on(path: &Path, disks: &[DiskSpace]) -> Option<u64> {
+    disks
+        .iter()
+        .filter(|disk| path.starts_with(&disk.mount_point))
+        .max_by_key(|disk| disk.mount_point.components().count())
+        .map(|disk| disk.available_bytes)
+}
+
+/// The size of all files below a directory. Symbolic links are not followed.
+fn directory_size(path: &Path) -> std::io::Result<u64> {
+    let mut size = 0;
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            size += directory_size(&entry.path())?;
+        } else if file_type.is_file() {
+            size += entry.metadata()?.len();
+        }
+    }
+
+    Ok(size)
+}
+
+/// Copies a directory with all its files, and returns how many bytes it copied. Symbolic links are
+/// not copied.
+fn copy_directory(source: &Path, target: &Path) -> std::io::Result<u64> {
+    fs::create_dir_all(target)?;
+
+    let mut copied_bytes = 0;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let target_path = target.join(entry.file_name());
+        if file_type.is_dir() {
+            copied_bytes += copy_directory(&entry.path(), &target_path)?;
+        } else if file_type.is_file() {
+            copied_bytes += fs::copy(entry.path(), &target_path)?;
+        }
+    }
+
+    Ok(copied_bytes)
 }
 
 pub async fn qdrant_edge_info() -> Json<QdrantEdgeServiceInfo> {
@@ -518,6 +756,12 @@ pub async fn ensure_qdrant_edge_store(Json(request): Json<EnsureQdrantEdgeStoreR
     }).await
 }
 
+pub async fn check_qdrant_edge_store(Json(request): Json<CheckQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<bool>> {
+    run_qdrant_edge_request(move |database| {
+        database.store_exists(&request.store_name)
+    }).await
+}
+
 pub async fn insert_qdrant_edge_embedding(Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.insert_embedding(&request.store_name, request.points)
@@ -545,6 +789,18 @@ pub async fn optimize_qdrant_edge_store(Json(request): Json<OptimizeQdrantEdgeSt
 pub async fn delete_qdrant_edge_store(Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
         database.delete_store(&request.store_name)
+    }).await
+}
+
+pub async fn prepare_qdrant_edge_backup() -> Json<QdrantEdgeResponse<QdrantEdgeBackupPreparation>> {
+    run_qdrant_edge_request(move |database| {
+        database.prepare_backup(&data_directory()?)
+    }).await
+}
+
+pub async fn copy_qdrant_edge_store_for_backup(Json(request): Json<CopyQdrantEdgeStoreForBackupRequest>) -> Json<QdrantEdgeResponse<u64>> {
+    run_qdrant_edge_request(move |database| {
+        database.copy_store_for_backup(&request.store_name, &data_directory()?, &request.backup_id)
     }).await
 }
 
@@ -1132,6 +1388,26 @@ mod tests {
     }
 
     #[test]
+    fn asking_whether_a_store_exists_never_creates_it() {
+        let test_directory = test_directory("exists");
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+
+        assert!(!database.store_exists(store_name).unwrap());
+        assert!(!database.store_exists(store_name).unwrap(), "Asking once must not create the store for the next question.");
+        assert!(!database.store_path(store_name).unwrap().exists());
+
+        database.ensure_store_exists(store_name, "Some source", 3).unwrap();
+        assert!(database.store_exists(store_name).unwrap());
+
+        database.delete_store(store_name).unwrap();
+        assert!(!database.store_exists(store_name).unwrap());
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
     fn an_unreadable_store_is_reported_but_never_deleted() {
         let test_directory = test_directory("unreadable");
         let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
@@ -1316,6 +1592,96 @@ mod tests {
 
         let info = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
         assert!(!info.is_available);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn copying_a_store_for_a_backup_leaves_the_runtime_free() {
+        let request = copy_qdrant_edge_store_for_backup(Json(CopyQdrantEdgeStoreForBackupRequest {
+            backup_id: "0123abcd".to_string(),
+            store_name: SEARCH_STORE.to_string(),
+        }));
+
+        let response = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
+
+        // No database runs in the tests, so the request ends as soon as it gets the lock.
+        assert!(!response.success);
+    }
+
+    #[test]
+    fn a_backup_copies_every_complete_store_and_the_copy_loads_on_its_own() {
+        let data_directory = test_directory("backup");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+
+        // A store whose creation broke off: its directory exists, but it holds no store.
+        fs::create_dir_all(base_path.join("stores").join("store_broken")).unwrap();
+
+        let preparation = database.prepare_backup(&data_directory).unwrap();
+        assert_eq!(preparation.stores.iter().map(|store| store.store_name.as_str()).collect::<Vec<_>>(), vec![SEARCH_STORE]);
+        assert!(preparation.stores[0].bytes > 0);
+
+        let copied_bytes = database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+        assert!(copied_bytes > 0);
+
+        // The copy lies where the store lies below the data directory, and it is a complete store:
+        let staging_path = PathBuf::from(&preparation.staging_path);
+        let mut copy = QdrantEdgeDatabase::new(staging_path.join("databases").join("vector_database"));
+        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        // The copy unloaded the store, and the next request loads it again:
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(copy);
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_store_is_copied_only_into_a_prepared_backup() {
+        let data_directory = test_directory("backup-unprepared");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+
+        let error = database.copy_store_for_backup(SEARCH_STORE, &data_directory, "0123456789abcdef").unwrap_err();
+        assert!(error.to_string().contains("was not prepared"));
+
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_backup_id_cannot_name_another_directory() {
+        let data_directory = Path::new("/data");
+
+        assert!(backup_staging_path(data_directory, "").is_err());
+        assert!(backup_staging_path(data_directory, "../settings").is_err());
+        assert!(backup_staging_path(data_directory, "/etc").is_err());
+        assert!(backup_staging_path(data_directory, &"a".repeat(MAX_BACKUP_ID_LENGTH + 1)).is_err());
+        assert_eq!(
+            backup_staging_path(data_directory, "0123abcd").unwrap(),
+            data_directory.join(BACKUP_STAGING_DIRECTORY).join("0123abcd")
+        );
+    }
+
+    #[test]
+    fn a_backup_which_does_not_fit_on_the_disk_is_refused() {
+        assert!(ensure_enough_space(2_000, Some(1_000)).is_err());
+        assert!(ensure_enough_space(1_000, Some(1_000)).is_ok());
+        assert!(ensure_enough_space(2_000, None).is_ok(), "Without knowing the free space, the copy itself fails when the disk is full.");
+    }
+
+    #[test]
+    fn the_free_space_comes_from_the_disk_with_the_most_specific_mount_point() {
+        let disks = vec![
+            DiskSpace { mount_point: PathBuf::from("/"), available_bytes: 10 },
+            DiskSpace { mount_point: PathBuf::from("/home"), available_bytes: 20 },
+        ];
+
+        assert_eq!(available_space_on(Path::new("/home/user/data"), &disks), Some(20));
+        assert_eq!(available_space_on(Path::new("/var/data"), &disks), Some(10));
+        assert_eq!(available_space_on(Path::new("relative/data"), &disks), None);
     }
 
     const SEARCH_STORE: &str = "rag_6cc665a82b1e4d42bc748015b7b391ec";

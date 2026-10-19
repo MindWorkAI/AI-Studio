@@ -3,7 +3,8 @@ using AIStudio.Tools;
 namespace AIStudio.Tests.Tools;
 
 /// <summary>
-/// Checks that an answer which opens a code fence without closing it ends where it ends.
+/// Checks that an answer which opens a code fence without closing it ends where it ends, and that
+/// whatever AI Studio puts below an answer stands on its own.
 /// </summary>
 /// <remarks>
 /// A fence without its counterpart runs to the end of the document, so whatever is appended below an
@@ -60,6 +61,36 @@ public sealed class MarkdownTests
     public void AnEmptyTextIsLeftAlone()
     {
         Assert.That(Markdown.CloseOpenCodeFence(string.Empty), Is.Empty);
+    }
+
+    [Test]
+    public void AnAppendedBlockFollowsABlankLine()
+    {
+        var answer = Lines("- first point", "- second point");
+
+        Assert.That(Markdown.AppendBlock(answer, "**Notice**"), Is.EqualTo(Lines(answer, string.Empty, "**Notice**")), "Without the blank line, the block would continue the last item of the list.");
+    }
+
+    [Test]
+    public void AnAppendedBlockStaysOutsideOfAnOpenFence()
+    {
+        var answer = Lines("```csharp", "var answer = 42;");
+
+        Assert.That(Markdown.AppendBlock(answer, "**Notice**"), Is.EqualTo(Lines(answer, "```", string.Empty, "**Notice**")));
+    }
+
+    [Test]
+    public void AnEmptyBlockLeavesTheTextAlone()
+    {
+        const string ANSWER = "Nothing goes below this answer.";
+
+        Assert.That(Markdown.AppendBlock(ANSWER, string.Empty), Is.EqualTo(ANSWER));
+    }
+
+    [Test]
+    public void AnEmptyTextGivesTheBlockAlone()
+    {
+        Assert.That(Markdown.AppendBlock(string.Empty, "**Notice**"), Is.EqualTo("**Notice**"), "With nothing above it, a blank line would only start the text with an empty line.");
     }
 
     private static string Lines(params string[] lines) => string.Join(Environment.NewLine, lines);

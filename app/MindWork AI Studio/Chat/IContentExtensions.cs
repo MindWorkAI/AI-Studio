@@ -113,19 +113,5 @@ public static class IContentExtensions
     /// <param name="sources">The source list as SourceExtensions.ToExportMarkdown writes it, or an
     /// empty string when there are no sources.</param>
     /// <returns>The text followed by its sources.</returns>
-    private static string AppendSources(string markdown, string sources)
-    {
-        if (sources.Length == 0)
-            return markdown;
-
-        if (markdown.Length == 0)
-            return sources;
-
-        //
-        // The blank line is not cosmetic: it ends a paragraph, a list, a table, or a block quote, so
-        // that the heading of the source list stands on its own instead of being pulled into the
-        // last block of the answer.
-        //
-        return $"{Markdown.CloseOpenCodeFence(markdown)}{Environment.NewLine}{Environment.NewLine}{sources}";
-    }
+    private static string AppendSources(string markdown, string sources) => Markdown.AppendBlock(markdown, sources);
 }

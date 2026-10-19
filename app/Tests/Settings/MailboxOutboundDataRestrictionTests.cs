@@ -37,7 +37,7 @@ public sealed class MailboxOutboundDataRestrictionTests
     {
         var (_, outboundData) = MailToolResults.GetRequirements([OPEN], OutboundDataRestriction.ONLY_LINKS_FROM_CHAT);
 
-        Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OPEN.Id)), "The chat names the mailbox whose mails it read, even though the level comes from the organization.");
+        Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, OPEN.Id)), "The chat names the mailbox whose mails it read, even though the level comes from the organization.");
     }
 
     [Test]

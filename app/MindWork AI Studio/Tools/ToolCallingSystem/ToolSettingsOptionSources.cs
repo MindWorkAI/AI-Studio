@@ -1,3 +1,4 @@
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
@@ -66,7 +67,17 @@ public static class ToolSettingsOptionSources
     /// </remarks>
     public const string FREE_ADDRESS_CHOICE = "free_address_choice";
 
-    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE;
+    /// <summary>
+    /// Where a chat may still send data once a tool brought internal content into it.
+    /// </summary>
+    /// <remarks>
+    /// The values are the names of the enum members, which is also how an organization's
+    /// configuration addresses a level. The names are the ones the mailbox dialog shows, so the
+    /// user meets one wording for the levels wherever they are set.
+    /// </remarks>
+    public const string OUTBOUND_DATA_RESTRICTION = "outbound_data_restriction";
+
+    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE or OUTBOUND_DATA_RESTRICTION;
 
     /// <summary>
     /// Resolves one option source to its current values and names.
@@ -102,6 +113,8 @@ public static class ToolSettingsOptionSources
             new(nameof(FreeAddressChoice.OFF), TB("Off: only web addresses from the chat or tools")),
             new(nameof(FreeAddressChoice.ON), TB("On: the AI may also choose web addresses itself")),
         ],
+
+        OUTBOUND_DATA_RESTRICTION => Enum.GetValues<OutboundDataRestriction>().Select(restriction => new ToolSettingsOption(restriction.ToString(), restriction.GetName())).ToList(),
 
         _ => [],
     };

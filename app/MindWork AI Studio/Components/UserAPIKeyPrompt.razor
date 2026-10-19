@@ -1,0 +1,33 @@
+@inherits MSGComponentBase
+
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Key" IconColor="Color.Warning" HeaderText="@this.Title" IsExpanded="@this.IsExpanded" ExpandedChanged="@this.ExpandedChanged">
+    @if (this.Group.Prompt is not null)
+    {
+        <MudJustifiedMarkdown Value="@this.Group.Prompt.Markdown"/>
+    }
+    else
+    {
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @T("Your organization has set up AI providers for you. To use them, AI Studio needs your personal API key. Please enter it below.")
+        </MudText>
+    }
+
+    <SecretInputField Secret="@this.apiKey" SecretChanged="@(value => this.apiKey = value)" Label="@T("API key")"/>
+
+    @if (!string.IsNullOrWhiteSpace(this.issue))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+            @this.issue
+        </MudAlert>
+    }
+
+    <MudStack Row="@true" AlignItems="AlignItems.Center">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" Disabled="@(this.isBusy || string.IsNullOrWhiteSpace(this.apiKey))" OnClick="@this.StoreAPIKeyAsync">
+            @T("Check and save API key")
+        </MudButton>
+        @if (this.isBusy)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
+        }
+    </MudStack>
+</ExpansionPanel>

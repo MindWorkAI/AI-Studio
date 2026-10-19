@@ -29,6 +29,42 @@ public sealed class EmbeddingSignatureTests
     }
 
     [Test]
+    public void ChangingDirectoryFilePatternsKeepsTheStoredEmbeddingsOfRetainedFiles()
+    {
+        var allFiles = DataSource(ConfidenceLevel.LOW);
+        var textFiles = allFiles with { FilePatterns = "*.txt" };
+
+        Assert.That(
+            Signature(textFiles),
+            Is.EqualTo(Signature(allFiles)),
+            "Patterns change which files belong to the source, not how retained files are embedded; the indexing run removes and adds only the affected files.");
+    }
+
+    [Test]
+    public void ChangingDirectoryRecursionKeepsTheStoredEmbeddingsOfRetainedFiles()
+    {
+        var recursive = DataSource(ConfidenceLevel.LOW);
+        var topDirectoryOnly = recursive with { IncludeSubdirectories = false };
+
+        Assert.That(
+            Signature(topDirectoryOnly),
+            Is.EqualTo(Signature(recursive)),
+            "The subfolder choice changes which files belong to the source, not how retained files are embedded; the indexing run removes and adds only the affected files.");
+    }
+
+    [Test]
+    public void ChangingHiddenDirectoryInclusionKeepsTheStoredEmbeddingsOfRetainedFiles()
+    {
+        var visibleDirectoriesOnly = DataSource(ConfidenceLevel.LOW);
+        var includingHiddenDirectories = visibleDirectoriesOnly with { IncludeHiddenFilesAndFolders = true };
+
+        Assert.That(
+            Signature(includingHiddenDirectories),
+            Is.EqualTo(Signature(visibleDirectoriesOnly)),
+            "The hidden-folder choice changes which files belong to the source, not how retained files are embedded; the indexing run removes and adds only the affected files.");
+    }
+
+    [Test]
     public void ChangingTheChunkSizeDropsTheStoredEmbeddings()
     {
         var small = DataSource(ConfidenceLevel.LOW) with { MaxChunkTokenLength = 512 };

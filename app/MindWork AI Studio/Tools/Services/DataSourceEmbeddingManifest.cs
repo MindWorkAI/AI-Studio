@@ -13,6 +13,17 @@ public sealed class DataSourceEmbeddingManifest
     public Dictionary<string, EmbeddedFileRecord> Files { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// The files whose indexing began but never came to an end, by their absolute path.
+    /// </summary>
+    /// <remarks>
+    /// Their row in the index store has no chunks, and some of their vectors may have reached the
+    /// collection: the run was canceled while it indexed the file, or the app was closed or crashed
+    /// meanwhile. Indexing such a file again replaces both. A file which is gone, or which the data
+    /// source no longer selects, is never indexed again, so the indexer has to remove them itself.
+    /// </remarks>
+    public HashSet<string> UnfinishedFiles { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// The files whose indexing failed for a reason which lies in the file itself, keyed by their
     /// absolute path.
     /// </summary>

@@ -173,6 +173,7 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
@@ -210,6 +211,8 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DataSourceDescriptionService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
+        builder.Services.AddSingleton<DataBackupService>();
+        builder.Services.AddSingleton<DataRestoreService>();
         builder.Services.AddSingleton<LocalIndexSearchService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddSingleton<MailboxRetrievalService>();
@@ -226,12 +229,17 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
+        builder.Services.AddHostedService<DataRestoreFollowUpService>();
+
+        // Compatibility shim, see documentation/compatibility-shims/2026-10-relative-data-paths.md. Remove after 2027-04-14:
+        builder.Services.AddHostedService<RelativeDataPathsMigrationService>();
+
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
-        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddSingleton<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
 
         //
