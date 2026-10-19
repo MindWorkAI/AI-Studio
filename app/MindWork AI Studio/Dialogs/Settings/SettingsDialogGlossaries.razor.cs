@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Dialogs.Settings;
 
@@ -11,9 +12,41 @@ public partial class SettingsDialogGlossaries : SettingsDialogBase
             { x => x.IsEditing, false },
         };
 
+        await this.AddGlossary(dialogParameters, isImport: false);
+    }
+
+    private async Task ImportGlossary()
+    {
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.GLOSSARY, T("Import Glossary"));
+        if (import?.ConfigurationObject is not Glossary glossary)
+            return;
+
+        var dialogParameters = new DialogParameters<GlossaryDialog>
+        {
+            { x => x.DataId, glossary.Id },
+            { x => x.DataName, glossary.Name },
+            { x => x.DataFilePath, glossary.FilePath },
+            { x => x.DataPreselectInTranslation, glossary.PreselectInTranslation },
+            { x => x.FileToRelink, import.AttachmentsToRelink.FirstOrDefault() ?? string.Empty },
+            { x => x.IsEditing, false },
+        };
+
+        await this.AddGlossary(dialogParameters, isImport: true);
+    }
+
+    private async Task AddGlossary(DialogParameters<GlossaryDialog> dialogParameters, bool isImport)
+    {
         var dialogReference = await this.DialogService.ShowAsync<GlossaryDialog>(T("Add Glossary"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        //
+        // An organization can lock the import while the user is still filling in the form, e.g.,
+        // with a new version of its configuration plugin. Hence, the permission is checked once
+        // more before the imported glossary is stored:
+        //
+        if (isImport && !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.GLOSSARY))
             return;
 
         var addedGlossary = (Glossary)dialogResult.Data!;
@@ -63,6 +96,19 @@ public partial class SettingsDialogGlossaries : SettingsDialogBase
         };
 
         await this.DialogService.ShowAsync<GlossaryDialog>(T("View Glossary"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+
+    private async Task ExportGlossary(Glossary glossary)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (glossary == Glossary.NO_GLOSSARY || glossary.IsEnterpriseConfiguration)
+            return;
+
+        var luaCode = glossary.ExportAsConfigurationSection();
+        if (!string.IsNullOrWhiteSpace(luaCode))
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private async Task DeleteGlossary(Glossary glossary)

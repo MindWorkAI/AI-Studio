@@ -44,6 +44,12 @@ public partial class GlossaryDialog : MSGComponentBase
     public bool DataPreselectInTranslation { get; set; }
 
     /// <summary>
+    /// The glossary file an imported glossary names, when it is not on this computer.
+    /// </summary>
+    [Parameter]
+    public string FileToRelink { get; init; } = string.Empty;
+
+    /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]

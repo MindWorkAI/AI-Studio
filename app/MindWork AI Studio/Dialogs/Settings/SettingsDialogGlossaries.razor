@@ -1,3 +1,4 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -50,6 +51,7 @@
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteGlossary(context))"/>
                             </MudTooltip>
+                            <AdminExportButton OnClick="@(() => this.ExportGlossary(context))" />
                         </MudStack>
                     }
                 </MudTd>
@@ -63,9 +65,12 @@
             </MudText>
         }
 
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddGlossary">
-            @T("Add Glossary")
-        </MudButton>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
+            <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddGlossary">
+                @T("Add Glossary")
+            </MudButton>
+            <LockableButton Text="@T("Import Glossary")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.GLOSSARY))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportGlossary" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">

@@ -9,6 +9,13 @@
             @T("AI Studio reads the file whenever you translate, so you can keep maintaining your glossary in the spreadsheet. Only the terms which occur in your text are sent to the AI.")
         </MudJustifiedText>
 
+        @if (!this.IsEditing && !this.IsReadOnly && !string.IsNullOrWhiteSpace(this.FileToRelink) && string.IsNullOrWhiteSpace(this.DataFilePath))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.WarningAmber" Class="mb-3">
+                @string.Format(T("The glossary file '{0}' is not on this computer. Please choose the glossary file before you add the glossary."), this.FileToRelink)
+            </MudAlert>
+        }
+
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
