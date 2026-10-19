@@ -1,0 +1,91 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("A glossary makes the translation assistant always translate certain terms the same way. Choose a spreadsheet or a CSV file: its first row names the languages, for example German and English, and every further row holds one term in all of these languages. The glossary therefore works in both directions.")
+        </MudJustifiedText>
+
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("AI Studio reads the file whenever you translate, so you can keep maintaining your glossary in the spreadsheet. Only the terms which occur in your text are sent to the AI.")
+        </MudJustifiedText>
+
+        <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
+            @* ReSharper disable once CSharpWarnings::CS8974 *@
+            <MudTextField
+                T="string"
+                @bind-Text="@this.DataName"
+                Label="@T("Glossary Name")"
+                Class="mb-3"
+                Immediate="@true"
+                MaxLength="40"
+                Counter="40"
+                Adornment="Adornment.Start"
+                AdornmentIcon="@Icons.Material.Filled.Badge"
+                AdornmentColor="Color.Info"
+                Validation="@this.ValidateName"
+                Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
+                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            />
+
+            <SelectFile File="@this.DataFilePath" FileChanged="@this.FilePathChanged" Label="@T("Glossary file")" FileDialogTitle="@T("Select the glossary file")" Filter="@FILE_FILTER" Validation="@this.ValidateFilePath" Disabled="@this.IsReadOnly" EnableDragDrop="@(!this.IsReadOnly)" CatchAllDocuments="true"/>
+
+            <MudTextSwitch @bind-Value="@this.DataPreselectInTranslation" Color="Color.Primary" Label="@T("Use this glossary in the translation assistant right away?")" LabelOn="@T("Yes, the glossary is preselected; you can still deselect it for a translation")" LabelOff="@T("No, you select the glossary when you need it")" Disabled="@this.IsReadOnly"/>
+        </MudForm>
+
+        <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mt-3 mb-3">
+            <MudButton StartIcon="@Icons.Material.Filled.FactCheck" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(string.IsNullOrWhiteSpace(this.DataFilePath) || this.isCheckingFile)" OnClick="@this.CheckFile">
+                @T("Check the file")
+            </MudButton>
+            @if (this.isCheckingFile)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
+            }
+        </MudStack>
+
+        @if (this.checkResult is { } result)
+        {
+            @if (result.Success)
+            {
+                @foreach (var table in result.Tables)
+                {
+                    <MudAlert Severity="Severity.Success" Dense="@true" Class="mb-2">
+                        @string.Format(T("{0} entries in the languages: {1}"), table.Entries.Count, string.Join(", ", table.Languages))
+                    </MudAlert>
+                }
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true" Class="mb-2">
+                    @this.DescribeIssue(result.Issue)
+                </MudAlert>
+            }
+        }
+
+        <Issues IssuesData="@this.dataIssues"/>
+    </DialogContent>
+    <DialogActions>
+        @if (this.IsReadOnly)
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Close")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Cancel")
+            </MudButton>
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if(this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
