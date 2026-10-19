@@ -1345,3 +1345,29 @@ CONFIG["PROFILES"] = {}
 --     ["NeedToKnow"] = "I like to cook in my free time. My favorite meal is ...",
 --     ["Actions"] = "Please always ensure the portion size is ..."
 -- }
+
+-- Glossaries for this configuration:
+-- A glossary makes the translation assistant always translate certain terms the same way.
+-- It is a spreadsheet (xlsx, xls, ods) or a CSV file. The first row names the languages,
+-- e.g. "German" and "English", and every further row holds one term in all of these languages.
+-- The same glossary therefore serves translations in every direction between its languages.
+-- A spreadsheet may hold several sheets; every sheet is read as a glossary table of its own.
+-- When translating, only the rows whose terms occur in the text are handed to the AI.
+CONFIG["GLOSSARIES"] = {}
+
+-- A glossary template:
+-- CONFIG["GLOSSARIES"][#CONFIG["GLOSSARIES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly name of the glossary>",
+--
+--     -- The path of the glossary file. It can be an absolute path which all users can read,
+--     -- e.g. on a shared drive, or a path relative to this plugin folder, for example
+--     -- "glossaries/Company Glossary.xlsx". A relative path must stay inside the plugin folder.
+--     -- The file is read again whenever it changes, so you can keep maintaining it.
+--     ["FilePath"] = "G:\\Company\\Glossaries\\Company Glossary.xlsx",
+--
+--     -- Optional: whether the translation assistant uses this glossary right away.
+--     -- Users can still deselect it for a translation.
+--     -- Allowed values are: true, false (default: false)
+--     ["PreselectInTranslation"] = true
+-- }
