@@ -426,8 +426,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- The selected folder does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "Der ausgewählte Ordner existiert nicht."
 
--- The image is larger than 10 MB and cannot be given to the model.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1790652910"] = "Das Bild ist größer als 10 MB und kann nicht an das Modell übergeben werden."
+-- The image was no longer available while the model was asked about it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1805791865"] = "Das Bild war nicht mehr verfügbar, während das Modell dazu befragt wurde."
 
 -- Minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Mindestpause zwischen Dateien"
@@ -440,9 +440,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Select the folder containing your documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1926838679"] = "Wählen Sie den Ordner mit den Dokumenten aus"
-
--- The selected files include images, but the selected model cannot read images. Select a model with image support or remove the image patterns.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1996119935"] = "Die ausgewählten Dateien enthalten Bilder, aber das ausgewählte Modell kann keine Bilder lesen. Wählen Sie ein Modell mit Bildunterstützung oder entfernen Sie die Bildmuster."
 
 -- Include subfolders?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2086334687"] = "Unterordner einbeziehen?"
@@ -538,10 +535,13 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Die Ergebnisdatei konnte nicht geschrieben werden: {0}"
 
 -- Images in JPG, PNG, WebP, or GIF format are given directly to the model, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3000909441"] = "Bilder im JPG-, PNG-, WebP- oder GIF-Format werden direkt an das Modell übergeben, daher benötigen Sie ein Modell, das Bilder versteht. Falls das ausgewählte Modell keine Bilder verarbeiten kann, entfernen Sie die Bildmuster wie z. B. *.jpg oder *.png, bevor Sie starten."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3000909441"] = "Bilder im JPG-, PNG-, WebP- oder GIF-Format werden direkt an das Modell übergeben, daher benötigen Sie ein Modell, das Bilder versteht. Falls das ausgewählte Modell keine Bilder lesen kann, entfernen Sie die Dateimuster für Bilder, z. B. *.jpg oder *.png, bevor Sie starten."
 
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "Die Stapelverarbeitung ist abgeschlossen, aber eine Datei konnte nicht verarbeitet werden. Weitere Informationen finden Sie in der Fortschrittstabelle und im Protokoll."
+
+-- The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T324865195"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung der {0} Bilder unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
 
 -- Maximum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximale Pause zwischen Dateien"
@@ -561,6 +561,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3361153305"] = "Experten-Einstellungen anzeigen"
 
+-- All selected files are images, but the selected model cannot read images. Select a model with image support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3365102967"] = "Alle ausgewählten Dateien sind Bilder, aber das ausgewählte Modell kann keine Bilder lesen. Wählen Sie ein Modell mit Bildunterstützung aus."
+
 -- Header of the result column (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Überschrift der Ergebnisspalte (optional)"
 
@@ -572,6 +575,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "Der Dateiname der CSV-Ergebnistabelle. Die Endung .csv wird ergänzt, falls sie fehlt. Wenn Sie das Feld leer lassen, wird 'batch-results.csv' verwendet."
+
+-- The selected model cannot read images. Select a model with image support to process this image.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T346986514"] = "Das ausgewählte Modell kann keine Bilder lesen. Wählen Sie ein Modell mit Bildunterstützung aus, um dieses Bild zu verarbeiten."
 
 -- Document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3510564924"] = "Regelwerk für die Dokumentenanalyse"
@@ -617,6 +623,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Continue the previous batch run?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4037527734"] = "Vorherigen Stapellauf fortsetzen?"
+
+-- The image is larger than {0} MB, the most the selected provider accepts for one image, so it cannot be given to the model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4113460935"] = "Das Bild ist größer als {0} MB, die der ausgewählte Anbieter höchstens für ein Bild akzeptiert, und kann daher nicht an das Modell übergeben werden."
 
 -- Output mode
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4132795631"] = "Ausgabemodus"
@@ -689,6 +698,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T967206794"] = "Die KI kann diese Werkzeuge bei der Arbeit an jedem Dokument verwenden. Jedes Werkzeug muss die Vertrauensanforderungen des ausgewählten Anbieters erfüllen. Daher kann ein Werkzeug trotz Auswahl hier weiterhin nicht verfügbar sein."
+
+-- The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T9738678"] = "Das ausgewählte Modell kann keine Bilder lesen, daher schlägt die Verarbeitung des Bildes unter den ausgewählten Dateien fehl. Alle anderen Dateien werden wie gewohnt verarbeitet."
 
 -- Comma (,)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Komma (,)"
@@ -13415,6 +13427,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code �
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
+
+-- Image for AI models
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Bild für KI-Modelle"
 
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
