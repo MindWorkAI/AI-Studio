@@ -228,6 +228,12 @@ public partial class AssistantBatchProcessing
         {
             try
             {
+                //
+                // Only the file of a document ends with the notice that AI generated it, when that is
+                // switched on. The table of results and a CSV file keep the answer as it is: there,
+                // the notice would repeat in every row and get in the way of whoever processes the table.
+                //
+                var resultText = this.DisclosureService.AddDisclosureToMarkdown(aiAnswer);
                 var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(fileResult.FileName));
                 if (this.resultFileFormat.UsesPandoc())
                 {
@@ -235,14 +241,14 @@ public partial class AssistantBatchProcessing
                     // Pandoc reports a failure instead of throwing, because one document which
                     // cannot be converted must not end a run over hundreds of them:
                     //
-                    if (!await PandocExport.ConvertAsync(this.RustService, aiAnswer, resultFilePath, this.resultFileFormat, token))
+                    if (!await PandocExport.ConvertAsync(this.RustService, resultText, resultFilePath, this.resultFileFormat, token))
                     {
                         this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("Was not able to convert the answer into the chosen file format."));
                         return;
                     }
                 }
                 else
-                    await File.WriteAllTextAsync(resultFilePath, aiAnswer, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
+                    await File.WriteAllTextAsync(resultFilePath, resultText, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
 
                 this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, Path.GetFileName(resultFilePath));
             }

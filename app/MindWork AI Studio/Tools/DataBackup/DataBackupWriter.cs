@@ -101,7 +101,7 @@ public static class DataBackupWriter
         var files = new List<BackupFile>();
         foreach (var entry in DataBackupContents.ENTRIES.Where(entry => entry.IsIncluded && entry.Location is DataBackupLocation.DATA_DIRECTORY))
         {
-            var root = entry.Kind is DataBackupEntryKind.DATA_SOURCE_INDEX or DataBackupEntryKind.VECTOR_STORES
+            var root = entry.ComesFromIndexCopies
                 ? sources.IndexCopiesDirectory
                 : sources.DataDirectory;
 

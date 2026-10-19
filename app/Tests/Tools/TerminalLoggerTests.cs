@@ -45,4 +45,30 @@ public sealed class TerminalLoggerTests
             CultureInfo.CurrentCulture = previousCulture;
         }
     }
+
+    [Test]
+    public void AnExceptionIsDescribedTogetherWithItsCause()
+    {
+        var exception = new HttpRequestException("Error while copying content to a stream.", new IOException("Unable to write data to the transport connection.", new InvalidOperationException("Connection reset by peer.")));
+
+        Assert.That(TerminalLogger.DescribeException(exception), Is.EqualTo("Error while copying content to a stream. ---> Unable to write data to the transport connection. ---> Connection reset by peer."));
+    }
+
+    [Test]
+    public void AnExceptionWithoutCauseKeepsItsMessage()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(TerminalLogger.DescribeException(new InvalidOperationException("Something failed.")), Is.EqualTo("Something failed."));
+            Assert.That(TerminalLogger.DescribeException(null), Is.Null);
+        });
+    }
+
+    [Test]
+    public void TheCausesOfAnAggregateExceptionAreNotRepeated()
+    {
+        var exception = new AggregateException(new InvalidOperationException("First failure."), new InvalidOperationException("Second failure."));
+
+        Assert.That(TerminalLogger.DescribeException(exception), Is.EqualTo(exception.Message));
+    }
 }

@@ -25,4 +25,20 @@ public sealed class RetrievedWebPage
     public required DateTimeOffset RetrievedAtUtc { get; init; }
 
     public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
+
+    /// <summary>
+    /// Whether the page was read from a non-public address, such as one in the intranet or behind
+    /// a VPN.
+    /// </summary>
+    /// <remarks>
+    /// Only the request which returned the page counts, the last one after every redirect: it is
+    /// where the content came from. A public address which redirects into the intranet therefore
+    /// counts, and an intranet address which redirects to a public page, such as a sign-in page,
+    /// does not.<br/><br/>
+    /// The content of such a page is internal, so a caller which hands it to a model has to keep
+    /// it from leaving the organization. Stated here rather than read from
+    /// RequiredProviderConfidence, which answers another question: it counts every request, so the
+    /// address of an intranet page does not reach a less trusted provider either.
+    /// </remarks>
+    public bool ReachedNonPublicAddress { get; init; }
 }

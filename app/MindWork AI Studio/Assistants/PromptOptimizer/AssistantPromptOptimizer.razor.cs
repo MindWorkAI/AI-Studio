@@ -99,6 +99,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override Func<string> Result2Copy => () => this.optimizedPrompt;
 
+    // The optimized prompt goes on to a model instead of a reader, and a notice would become part of the prompt:
+    protected override bool AddsAIGeneratedContentDisclosure => false;
+
     protected override IReadOnlyList<IButtonData> FooterButtons =>
     [
         new ButtonData

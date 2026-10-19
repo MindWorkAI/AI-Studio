@@ -1,0 +1,28 @@
+@inherits MSGComponentBase
+
+@*
+    The condition lives here rather than with the parents: the component stays in place while the
+    alert comes and goes, so it can still report the provider it just added.
+*@
+@if (this.IsMissing)
+{
+    <MudAlert Severity="@(this.MayAdd ? Severity.Warning : Severity.Info)" Variant="Variant.Outlined" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body1">
+            @this.Text
+        </MudJustifiedText>
+        @if (this.MayAdd)
+        {
+            <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AddRoad" Disabled="@this.isAdding" OnClick="@this.AddEmbeddingProvider">
+                    @T("Add Embedding")
+                </MudButton>
+                @if (this.MayImport)
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.FileDownload" Disabled="@this.isAdding" OnClick="@this.ImportEmbeddingProvider">
+                        @T("Import Embedding")
+                    </MudButton>
+                }
+            </MudStack>
+        }
+    </MudAlert>
+}

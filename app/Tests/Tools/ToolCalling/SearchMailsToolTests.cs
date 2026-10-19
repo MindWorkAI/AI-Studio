@@ -210,7 +210,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
         Assert.Multiple(() =>
         {
             Assert.That(confidence, Is.EqualTo(ConfidenceLevel.HIGH), "The private mail is in the chat now, so a provider has to be trusted as much as that mailbox asks.");
-            Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, PRIVATE.Id)));
+            Assert.That(outboundData, Is.EqualTo(new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, PRIVATE.Id)));
         });
     }
 
@@ -219,7 +219,7 @@ public sealed class SearchMailsToolTests : ToolRegistryTestBase
     {
         var (_, outboundData) = MailToolResults.GetRequirements([WORK, WORK with { Id = "1b5e9c3a-7d2f-4e6b-a8c1-0f4d6e2b9a75" }], OutboundDataRestriction.UNRESTRICTED);
 
-        Assert.That(outboundData.DataSourceId, Is.EqualTo(WORK.Id), "Otherwise the chat would name another mailbox with every search.");
+        Assert.That(outboundData.Reference, Is.EqualTo(WORK.Id), "Otherwise the chat would name another mailbox with every search.");
     }
 
     [Test]

@@ -100,15 +100,17 @@ public sealed class UnreachableDataSourceTests
         var folder = Path.Combine(this.testRoot, "documents");
         var subfolder = Path.Combine(folder, "contracts");
         var fileInSubfolder = Path.Combine(subfolder, "contract.pdf");
+        var unfinishedFileInSubfolder = Path.Combine(subfolder, "offer.pdf");
         Directory.CreateDirectory(subfolder);
         this.TakeAwayTheRightToRead(subfolder);
 
-        var (outcome, statuses, manifest) = await RunAsync(Folder(folder), fileInSubfolder);
+        var (outcome, statuses, manifest) = await RunAsync(Folder(folder), [fileInSubfolder], [unfinishedFileInSubfolder]);
 
         Assert.Multiple(() =>
         {
             Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE));
             Assert.That(manifest.Files.Keys, Is.EquivalentTo([fileInSubfolder]), "The file is out of reach, not gone. Once the subfolder can be read again, it is still indexed.");
+            Assert.That(manifest.UnfinishedFiles, Is.EquivalentTo([unfinishedFileInSubfolder]), "A file whose indexing never came to an end is out of reach as well. Once the subfolder can be read again, indexing it replaces its leftovers.");
             Assert.That(statuses[^1].Failures.Select(failure => failure.DocumentKey), Has.Member(subfolder), "The user has to learn which subfolder could not be read.");
         });
     }
@@ -172,12 +174,16 @@ public sealed class UnreachableDataSourceTests
         }
     }
 
-    private static async Task<RunResult> RunAsync<TDataSource>(TDataSource dataSource, params string[] indexedFiles) where TDataSource : IDataSource, IIndexedDataSource
+    private static Task<RunResult> RunAsync<TDataSource>(TDataSource dataSource, params string[] indexedFiles) where TDataSource : IDataSource, IIndexedDataSource => RunAsync(dataSource, indexedFiles, []);
+
+    private static async Task<RunResult> RunAsync<TDataSource>(TDataSource dataSource, string[] indexedFiles, string[] unfinishedFiles) where TDataSource : IDataSource, IIndexedDataSource
     {
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest { SourceHash = STORED_SOURCE_HASH };
         foreach (var file in indexedFiles)
             manifest.Files[file] = new EmbeddedFileRecord("FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 4);
+
+        manifest.UnfinishedFiles.UnionWith(unfinishedFiles);
 
         var scannedFile = Path.Combine(Path.GetDirectoryName(indexedFiles[0])!, "scan.pdf");
         manifest.PermanentFailures[scannedFile] = new PermanentIndexingFailureRecord("FINGERPRINT", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text could be read.", DateTimeOffset.UnixEpoch);
@@ -192,14 +198,14 @@ public sealed class UnreachableDataSourceTests
             new NoIndexStoreClient("Test index store", "Not available in tests."),
             manifest,
             new RunShare(RunShare.DEFAULT_DURATION),
-            new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE")),
+            new IndexingPass(new DataSourceRunSignature("TEST-EMBEDDING-SIGNATURE", string.Empty)),
             new PromptInjectionGuardService(null!, settingsManager, NullLogger<PromptInjectionGuardService>.Instance, NullLoggerFactory.Instance).BeginAction(),
             settingsManager,
             statuses.Add,
             NullLogger.Instance);
 
         // A run which reaches no file reads none, so it needs neither the runtime nor the chunker:
-        var indexer = new FileSourceIndexer(settingsManager, null!, null!, NullLogger.Instance);
+        var indexer = new FileSourceIndexer(settingsManager, null!, null!, null!, NullLogger.Instance);
         var outcome = await indexer.ProcessAsync(context, DataSourceEmbeddingRefreshMode.HASH_CHECK, CancellationToken.None);
 
         return new(outcome, statuses, manifest);

@@ -1,0 +1,32 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("Paste a configuration which was exported from AI Studio, for example by a colleague. AI Studio only reads its values and never runs the pasted text. You can review and change everything afterward.")
+        </MudJustifiedText>
+        <MudTextField T="string" Text="@this.snippet" TextChanged="@this.SnippetChanged" Immediate="true" Label="@T("Exported configuration")" Lines="6" AutoGrow="true" MaxLines="14" Variant="Variant.Outlined" />
+        @if (!string.IsNullOrWhiteSpace(this.issue))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">@this.issue</MudAlert>
+        }
+        @if (this.importWithHints is not null)
+        {
+            @foreach (var hint in this.importWithHints.Hints)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-3">@hint</MudAlert>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel">@T("Cancel")</MudButton>
+        @if (this.importWithHints is null)
+        {
+            <MudButton OnClick="@this.Import" Disabled="@string.IsNullOrWhiteSpace(this.snippet)" Color="Color.Primary" Variant="Variant.Filled">@this.ImportLabel</MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.ContinueAnyway" Color="Color.Warning" Variant="Variant.Filled">@T("Continue anyway")</MudButton>
+        }
+    </DialogActions>
+</MudDialog>

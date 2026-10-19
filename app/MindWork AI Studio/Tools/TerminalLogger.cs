@@ -65,7 +65,7 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
         var transportTimestamp = FormatTransportTimestamp(now);
         var logLevel = logEntry.LogLevel.ToString();
         var category = logEntry.Category;
-        var exceptionMessage = logEntry.Exception?.Message;
+        var exceptionMessage = DescribeException(logEntry.Exception);
         var stackTrace = logEntry.Exception?.StackTrace;
         var colorCode = GetColorForLogLevel(logEntry.LogLevel);
 
@@ -107,6 +107,34 @@ public sealed class TerminalLogger() : ConsoleFormatter(FORMATTER_NAME)
     /// <param name="timestamp">The time of the log event.</param>
     /// <returns>The time in the round-trip format.</returns>
     public static string FormatTransportTimestamp(DateTimeOffset timestamp) => timestamp.ToString("O", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// Describes an exception by its message and the messages of its inner exceptions.
+    /// </summary>
+    /// <remarks>
+    /// The outer message alone often hides the cause. HttpClient, for example, reports a broken
+    /// upload as "Error while copying content to a stream.", and only an inner exception says
+    /// whether the other side closed the connection.
+    /// </remarks>
+    /// <param name="exception">The exception, or null when the log event has none.</param>
+    /// <returns>The messages, from the outer exception inwards, or null without an exception.</returns>
+    public static string? DescribeException(Exception? exception)
+    {
+        if (exception is null)
+            return null;
+
+        var description = exception.Message;
+        for (var innerException = exception.InnerException; innerException is not null; innerException = innerException.InnerException)
+        {
+            // An AggregateException names the messages of its inner exceptions already:
+            if (description.Contains(innerException.Message, StringComparison.Ordinal))
+                continue;
+
+            description = $"{description} ---> {innerException.Message}";
+        }
+
+        return description;
+    }
 
     private static string GetColorForLogLevel(LogLevel logLevel) => logLevel switch
     {

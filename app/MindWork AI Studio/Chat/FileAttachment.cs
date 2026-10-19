@@ -96,8 +96,8 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
     }
 
     /// <summary>
-    /// Determines the file attachment type based on the file extension.
-    /// Uses centrally defined file type filters from <see cref="FileTypes"/>.
+    /// Determines the file attachment type based on the file extension or, for readable text, on
+    /// the content. Uses the centrally defined file type filters from FileTypes.
     /// </summary>
     /// <param name="filePath">The file path to analyze.</param>
     /// <returns>The corresponding FileAttachmentType.</returns>
@@ -115,7 +115,11 @@ public record FileAttachment(FileAttachmentType Type, string FileName, [property
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO))
             return FileAttachmentType.AUDIO;
 
-        // Check if it's an allowed document file (PDF, Text, LaTeX, or Office):
+        //
+        // Check if it's an allowed document file (PDF, Text, LaTeX, or Office). Text includes
+        // READABLE_TEXT, so any readable text file is accepted, whatever its name, e.g., main.tf.
+        // For a file of an unknown type, this reads up to the first 8 KB:
+        //
         if (FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT))
             return FileAttachmentType.DOCUMENT;
 
