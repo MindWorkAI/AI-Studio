@@ -16,6 +16,7 @@ public sealed record ConfigurationPluginDeleteSummary(
     int ChatTemplates,
     int Profiles,
     int DocumentAnalysisPolicies,
+    int Glossaries,
     int LockedSettings,
     int MandatoryInfos,
     int Introductions,
@@ -24,7 +25,7 @@ public sealed record ConfigurationPluginDeleteSummary(
     /// <summary>
     /// An empty summary, used when the configuration plugin is not running and we cannot tell what it configured.
     /// </summary>
-    public static readonly ConfigurationPluginDeleteSummary EMPTY = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    public static readonly ConfigurationPluginDeleteSummary EMPTY = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     /// <summary>
     /// True when the deletion affects anything beyond the plugin directory.
@@ -37,6 +38,7 @@ public sealed record ConfigurationPluginDeleteSummary(
         this.ChatTemplates > 0 ||
         this.Profiles > 0 ||
         this.DocumentAnalysisPolicies > 0 ||
+        this.Glossaries > 0 ||
         this.LockedSettings > 0 ||
         this.MandatoryInfos > 0 ||
         this.Introductions > 0 ||
