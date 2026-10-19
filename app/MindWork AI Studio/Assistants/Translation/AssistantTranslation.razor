@@ -19,4 +19,28 @@ else
 }
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
+
+@if (this.SettingsManager.ConfigurationData.Glossaries.Count > 0)
+{
+    <MudSelect T="string" Label="@T("(Optional) Which glossaries should the translation follow?")" MultiSelection="@true" SelectedValues="@this.selectedGlossaryIds" SelectedValuesChanged="@this.SelectedGlossariesChanged" ToStringFunc="@this.GetGlossaryName" Disabled="@this.isAgentRunning" Variant="Variant.Outlined" Class="mb-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.MenuBook">
+        @foreach (var glossary in this.SettingsManager.ConfigurationData.Glossaries)
+        {
+            <MudSelectItem T="string" Value="@glossary.Id">
+                @glossary.Name
+            </MudSelectItem>
+        }
+    </MudSelect>
+}
+
+<MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+    <AttachDocuments Name="Glossary" @bind-DocumentPaths="@this.additionalGlossaryFiles" OnChange="@this.AdditionalGlossaryFilesChanged" CatchAllDocuments="false" UseSmallForm="true" ValidateMediaFileTypes="false" AllowedFileTypes="@GLOSSARY_FILE_TYPES" Disabled="@this.isAgentRunning" Provider="@this.ProviderSettings"/>
+    <MudText Typo="Typo.body2">
+        @T("Use further glossary files for this translation")
+    </MudText>
+    <MudSpacer/>
+    <MudButton StartIcon="@Icons.Material.Filled.MenuBook" Variant="Variant.Text" Color="Color.Primary" OnClick="@this.OpenGlossarySettings">
+        @T("Manage glossaries")
+    </MudButton>
+</MudStack>
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
