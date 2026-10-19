@@ -28,7 +28,7 @@ Are you new here? [Read here](#what-is-ai-studio) what AI Studio is.
 
 ## What is AI Studio?
 
-![MindWork AI Studio - Home](documentation/AI_Main_2560_small_rand.png)
+![MindWork AI Studio - Home](documentation/AI_Main.png)
 ![MindWork AI Studio - Assistants](documentation/mindworks_assistants_complete_rand.png)
 
 MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of your choice and can then use these AI systems with AI Studio. Whether you want to use Google Gemini, OpenAI GPT-6, or even your own local AI models.
