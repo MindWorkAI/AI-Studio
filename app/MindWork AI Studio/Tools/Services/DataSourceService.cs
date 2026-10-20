@@ -371,6 +371,26 @@ public sealed class DataSourceService
     }
 
     /// <summary>
+    /// Whether the server of an ERI data source allows the provider to see its data.
+    /// </summary>
+    /// <remarks>
+    /// Its operator owns the data, so the rule of the server applies to every provider, a trusted
+    /// one included. A server which allows no provider at all closes its data source this way, as
+    /// the info dialog of the data source tells the user, e.g., to stop all access while the
+    /// operator corrects a mistake. A rule this version of AI Studio does not know closes it, too:
+    /// better safe than sorry.
+    /// </remarks>
+    /// <param name="requirements">What the server requires.</param>
+    /// <param name="usingTrustedProvider">Whether the chat provider is trusted for data source security checks.</param>
+    /// <returns>True when the server allows the provider.</returns>
+    internal static bool ServerAllows(SecurityRequirements requirements, bool usingTrustedProvider) => requirements.AllowedProviderType switch
+    {
+        ProviderType.ANY => true,
+        ProviderType.SELF_HOSTED => usingTrustedProvider,
+        _ => false,
+    };
+
+    /// <summary>
     /// Checks a data source against the trust it asks for.
     /// </summary>
     /// <param name="source">The data source.</param>
@@ -410,47 +430,25 @@ public sealed class DataSourceService
         if (source is not IExternalDataSource externalSource)
             return source;
 
+        //
+        // The server of an ERI data source has the last word, on top of the policy configured
+        // here: its operator owns the data and may tighten the rules at any time. This holds for a
+        // trusted provider as well, see ServerAllows:
+        //
+        if (eriSourceRequirements is { } requirements && !ServerAllows(requirements, usingTrustedProvider))
+        {
+            this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) does not allow this provider by the rules of its server ('{requirements.AllowedProviderType}'). We skip this source.");
+            return null;
+        }
+
         switch (externalSource.SecurityPolicy)
         {
+            //
+            // Case: The data source allows any provider type, and the server of an ERI data source
+            //       agreed above. Accept it.
+            //
             case DataSourceSecurity.ALLOW_ANY:
-                
-                //
-                // Case: The data source allows any provider type. We want to use a trusted provider.
-                //       There is no issue with this source. Accept it.
-                //
-                if(usingTrustedProvider)
-                    return source;
-
-                //
-                // Case: This is a local data source. When the source allows any provider type, we can use it.
-                //       Accept it.
-                //
-                if(eriSourceRequirements is null)
-                    return source;
-
-                //
-                // Case: The ERI source requires a self-hosted or organization-trusted provider. This misconfiguration happens
-                //       when the ERI server operator changes the security requirements. The ERI server
-                //       operator owns the data -- we have to respect their rules. We skip this source.
-                //
-                if (eriSourceRequirements is { AllowedProviderType: ProviderType.SELF_HOSTED })
-                {
-                    this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) requires a self-hosted or organization-trusted provider. We skip this source.");
-                    return null;
-                }    
-                
-                //
-                // Case: The ERI source allows any provider type. The data source configuration is correct.
-                //       Accept it.
-                //
-                if(eriSourceRequirements is { AllowedProviderType: ProviderType.ANY })
-                    return source;
-
-                //
-                // Case: Missing rules. We skip this source. Better safe than sorry.
-                //
-                this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) was filtered out due to missing rules.");
-                return null;
+                return source;
 
             //
             // Case: The data source requires a trusted provider. We want to use a trusted provider.
