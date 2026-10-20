@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.DataBackup;
 
@@ -58,6 +59,7 @@ public static class DataBackupContents
         new(DataBackupLocation.DATA_DIRECTORY, ".plugin-delete-backups/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "media-staging/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "mailAttachments/", DataBackupEntryKind.TEMPORARY_FILES),
+        new(DataBackupLocation.DATA_DIRECTORY, $"{WebDocumentFiles.DIRECTORY_NAME}/", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, "mindwork_ai_studio.pid", DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataBackupFormat.STAGING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
         new(DataBackupLocation.DATA_DIRECTORY, DataRestoreFormat.PENDING_DIRECTORY, DataBackupEntryKind.TEMPORARY_FILES),
