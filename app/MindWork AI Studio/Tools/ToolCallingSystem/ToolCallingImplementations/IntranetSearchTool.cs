@@ -25,8 +25,9 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// That is why selecting this tool also selects that one, see ToolRegistry.NormalizeSelection.<br/><br/>
 /// The reader asks for HTML first and XML second, so SharePoint usually answers in Atom XML; JSON is
 /// understood as well, in both the verbose and the plain form. The model passes nothing but words: the
-/// tool removes the characters of the query language, so a model cannot turn the search into another
-/// query.<br/><br/>
+/// tool removes the characters of property restrictions, phrases, and groups, so a model cannot search
+/// by property, such as path:. Operators such as AND, OR, or a leading minus still combine the words,
+/// which changes nothing of what the user may see.<br/><br/>
 /// Whatever the intranet returns is internal to the organization. The tool is therefore offered to
 /// High-confidence providers only, checks that again before each search, and raises the chat's
 /// required confidence to High. For the same reason, a search with hits restricts where the chat may
@@ -149,7 +150,7 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        BASE_URL_SETTING => TB("The HTTPS address of your SharePoint Server intranet whose search the AI uses, such as https://intranet.example.org/. SharePoint Online is not supported yet. AI Studio signs in with your operating system account when the intranet has a private or VPN address. Pages and documents of the intranet count as internal, and where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page."),
+        BASE_URL_SETTING => TB("The HTTPS address of your SharePoint Server intranet whose search the AI uses, such as https://intranet.example.org/. SharePoint Online is not supported yet. AI Studio signs in with your operating system account when the intranet has a private or VPN address. In that case, also add its host to the allowed private hosts of Read Web Page, which opens further hits. Pages and documents of the intranet count as internal, and where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page."),
         TIMEOUT_SECONDS_SETTING => TB("(Optional) Search request timeout in seconds."),
         MAX_RESULTS_SETTING => string.Format(TB("(Optional) How many hits one search returns, at most {0}."), MAX_RESULTS),
         READ_TOP_HITS_SETTING => string.Format(TB("(Optional) How many of the best hits the search reads right away, pages and documents alike, at most {0}. The AI then needs no further step per hit, and an answer which needs several searches does not run out of tool calls. 0 switches this off."), SearchHitReader.MAX_HITS_TO_READ),
@@ -289,6 +290,7 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
             .Where(content => content.Failure is null && !string.IsNullOrWhiteSpace(content.Markdown))
             .Select(content => new Source(string.IsNullOrWhiteSpace(content.Title) ? content.FinalUrl.AbsoluteUri : content.Title, content.FinalUrl.AbsoluteUri, SourceOrigin.TOOL)));
 
+        var (requiredProviderConfidence, requiredOutboundDataRestriction) = GetRequirements(hits.Count, await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService));
         return new ToolExecutionResult
         {
             JsonContent = new JsonObject
@@ -298,10 +300,20 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
                 ["results"] = BuildResults(hits, contentsByIndex),
             },
             Sources = sources,
-            RequiredProviderConfidence = hasHits ? ConfidenceLevel.HIGH : ConfidenceLevel.NONE,
-            RequiredOutboundDataRestriction = hasHits ? GetOutboundDataRequirement(await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService)) : OutboundDataRequirement.NONE,
+            RequiredProviderConfidence = requiredProviderConfidence,
+            RequiredOutboundDataRestriction = requiredOutboundDataRestriction,
         };
     }
+
+    /// <summary>
+    /// What a search demands of the chat: nothing without hits, since it brought nothing of the
+    /// intranet into the chat, and with hits a High-confidence provider and the level of internal pages.
+    /// </summary>
+    /// <param name="hitCount">How many hits the search returned.</param>
+    /// <param name="internalPageRestriction">The level Read Web Page applies to internal pages.</param>
+    internal static (ConfidenceLevel ProviderConfidence, OutboundDataRequirement OutboundDataRestriction) GetRequirements(int hitCount, OutboundDataRestriction internalPageRestriction) => hitCount > 0
+        ? (ConfidenceLevel.HIGH, GetOutboundDataRequirement(internalPageRestriction))
+        : (ConfidenceLevel.NONE, OutboundDataRequirement.NONE);
 
     /// <summary>
     /// The hits as the model gets them.
@@ -359,7 +371,19 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
 
     private static bool IsIntranetHost(Uri baseUrl, string host) => WebHostHelper.Normalize(host) == WebHostHelper.Normalize(baseUrl.Host);
 
-    internal static bool IsWithinIntranet(Uri baseUrl, Uri url) => ConfluenceSearchTool.IsWithinWiki(baseUrl, url);
+    /// <summary>
+    /// Whether an address lies within the configured intranet.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the wiki, the path is compared without regard to case: SharePoint does not tell
+    /// /sites/HR from /sites/hr, and the addresses of its hits keep the case of the site as it was
+    /// created, whatever the user wrote into the setting.
+    /// </remarks>
+    internal static bool IsWithinIntranet(Uri baseUrl, Uri url) =>
+        url.Scheme == baseUrl.Scheme &&
+        IsIntranetHost(baseUrl, url.Host) &&
+        url.Port == baseUrl.Port &&
+        url.AbsolutePath.StartsWith(baseUrl.AbsolutePath, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Reads the hits of a SharePoint search, in Atom XML or in JSON.

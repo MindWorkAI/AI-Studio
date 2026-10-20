@@ -117,6 +117,21 @@ public sealed class SearchHitReaderTests
     }
 
     [Test]
+    public async Task ARefusedRedirectNamesNoAddress()
+    {
+        const string OUTSIDE = "https://login.example.org/sso";
+        using var server = new LoopbackWebServer(redirectLocation: OUTSIDE);
+
+        var contents = await this.reader.ReadAsync([server.Address("/redirect")], 10_000, (_, documents) => Options(documents, target => target.Host is "127.0.0.1"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(contents[0].Failure, Is.Not.Null);
+            Assert.That(contents[0].Failure, Does.Not.Contain("login.example.org"), "An address in a tool result counts as given in the chat, and the model must not get one the server chose.");
+        });
+    }
+
+    [Test]
     public void AFailedHitTellsTheModelHowToGoOn()
     {
         var target = new System.Text.Json.Nodes.JsonObject();

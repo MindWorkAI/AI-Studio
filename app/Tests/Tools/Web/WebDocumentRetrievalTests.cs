@@ -148,6 +148,25 @@ public sealed class WebDocumentRetrievalTests
         });
     }
 
+    [TestCase("image/png")]
+    [TestCase("audio/mpeg")]
+    [TestCase("video/mp4")]
+    public void AnImageOrARecordingIsRefusedBeforeItIsDownloaded(string mediaType)
+    {
+        using var server = new LoopbackWebServer(document: new(mediaType, Encoding.UTF8.GetBytes(DOCUMENT_TEXT)));
+        var asked = false;
+
+        var exception = Assert.ThrowsAsync<InvalidOperationException>(() => this.service.RetrieveAsync(server.Address("/document"), Options((_, _) => asked = true)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(exception!.Message, Does.Contain("Unsupported content type"), "Such content is no document, so it gets no document's refusal either.");
+            Assert.That(asked, Is.False, "Whether a document may be read is not even asked.");
+            Assert.That(this.runtime.ReadFiles, Is.Empty);
+            Assert.That(this.LeftAFileBehind(), Is.False);
+        });
+    }
+
     [Test]
     public void WithoutDocumentOptionsADocumentIsRefusedAsBefore()
     {

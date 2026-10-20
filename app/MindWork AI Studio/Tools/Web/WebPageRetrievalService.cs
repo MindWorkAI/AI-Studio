@@ -53,8 +53,9 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
         var documentDownload = options.Documents is { } documents && documentReader is not null
             ? new HTMLParserDocumentDownload((mediaType, finalUrl) =>
             {
-                // Pages and text formats are read as before, wherever they come from:
-                if (WebContentTypeClassifier.Classify(mediaType) is not null)
+                // Pages and text formats are read as before, wherever they come from, and images,
+                // audio, or video are refused by the media type check before their body is downloaded:
+                if (WebContentTypeClassifier.Classify(mediaType) is not null || !MayBeDocument(mediaType))
                     return null;
 
                 // The text names no address, so a caller may hand it on without repeating one:
@@ -177,6 +178,18 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser, WebDocumentRe
             HasUnreadableParts = extraction.Outcome is FileExtractionOutcome.PARTIAL,
         };
     }
+
+    /// <summary>
+    /// Whether a response of this media type may hold a document such as a PDF.
+    /// </summary>
+    /// <remarks>
+    /// Documents arrive as application/*, often as application/octet-stream, and sometimes without
+    /// any media type. The runtime decides by the content which of them it reads. An image, a
+    /// recording, or a video is none, and downloading it first would cost up to the size limit of
+    /// documents before the runtime refused it.
+    /// </remarks>
+    private static bool MayBeDocument(string mediaType) =>
+        mediaType.Length is 0 || mediaType.StartsWith("application/", StringComparison.OrdinalIgnoreCase);
 
     private static string GetFileName(Uri url)
     {

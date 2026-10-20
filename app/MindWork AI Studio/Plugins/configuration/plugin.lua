@@ -1029,12 +1029,12 @@ CONFIG["SETTINGS"] = {}
 --   documentAccess        From where the AI reads documents such as PDF, Word, PowerPoint, Excel,
 --                         or OpenDocument files. AI Studio recognizes the format by the content,
 --                         filters the text for prompt injections, and cuts it at
---                         maxContentCharacters. Documents from a private or VPN address or from the
---                         Confluence wiki require a provider with HIGH confidence and raise the
---                         chat to HIGH. Allowed values are:
+--                         maxContentCharacters. Documents from a private or VPN address, from the
+--                         Confluence wiki, or from the intranet of search_intranet require a
+--                         provider with HIGH confidence and raise the chat to HIGH. Allowed values are:
 --                           OFF           -> no documents, only web pages and text formats.
---                           INTERNAL_ONLY -> only documents of the wiki and of the allowed private
---                                            hosts. This is the default.
+--                           INTERNAL_ONLY -> only documents of the wiki, of the intranet, and of the
+--                                            allowed private hosts. This is the default.
 --                           ALL_ADDRESSES -> documents from every address the tool may read.
 --   maxDocumentMegabytes  The largest document the AI may download, in megabytes, as an integer
 --                         string, at most 200. Default: 50. The document lands in a temporary file
@@ -1080,7 +1080,9 @@ CONFIG["SETTINGS"] = {}
 --                    How many characters of content these hits bring together, at most 100000.
 --                    Default: 30000. The hits share them equally.
 -- Selecting search_intranet also selects read_web_page, which opens the pages and documents
--- found. Where a chat may send data after a search is set by
+-- found. If your intranet has a private or VPN address, add its host to
+-- read_web_page.allowedPrivateHosts as well; the hits read right away do not need it.
+-- Where a chat may send data after a search is set by
 -- read_web_page.internalPageOutboundDataRestriction.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {

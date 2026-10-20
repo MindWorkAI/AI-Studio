@@ -151,8 +151,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         MAX_CONTENT_CHARACTERS_SETTING => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
         ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         FREE_ADDRESS_CHOICE_SETTING => TB("(Optional) With free address choice off, the AI reads only web addresses that appear in the chat, such as in your messages, attached documents, or data sources, or that a tool returned. AI Studio refuses every other address. With it on, the AI may also choose addresses itself. Off is the default."),
-        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName(), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()),
-        DOCUMENT_ACCESS_SETTING => TB("(Optional) From where the AI may read documents such as PDF, Word, PowerPoint, or Excel files, for example the forms and guidelines of your intranet. By default, it reads them only from your Confluence wiki and from the allowed private hosts. Such documents are internal: reading them requires a High-confidence provider, and the chat then keeps them away from less trusted providers. Long documents are cut at the maximum content characters."),
+        INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING => string.Format(TB("(Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki and your intranet, whatever their address. Once a chat read one, or searched your wiki or your intranet, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki, your intranet, and the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page."), OutboundDataRestriction.ONLY_LINKS_FROM_CHAT.GetName(), OutboundDataRestriction.ONLY_CONFIGURED_SERVICES.GetName()),
+        DOCUMENT_ACCESS_SETTING => TB("(Optional) From where the AI may read documents such as PDF, Word, PowerPoint, or Excel files, for example the forms and guidelines of your intranet. By default, it reads them only from your Confluence wiki, your intranet, and the allowed private hosts. Such documents are internal: reading them requires a High-confidence provider, and the chat then keeps them away from less trusted providers. Long documents are cut at the maximum content characters."),
         MAX_DOCUMENT_MEGABYTES_SETTING => string.Format(TB("(Optional) The largest document the AI may download, in megabytes, at most {0}. AI Studio writes the document to a temporary file while it reads its text and deletes it right after."), MAX_DOCUMENT_MEGABYTES),
         _ => TB(fieldDefinition.Description),
     };
@@ -316,6 +316,34 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         DocumentAccess.INTERNAL_ONLY => isInternal,
         _ => false,
     };
+
+    /// <summary>
+    /// Whether a request of this tool may read a document from where it came, asked before it is downloaded.
+    /// </summary>
+    /// <remarks>
+    /// A private address needs a High-confidence provider anyway, but a wiki or an intranet may have
+    /// a public one. Their documents are no less internal, so the provider is checked here, before
+    /// anything is downloaded.
+    /// </remarks>
+    /// <param name="documentAccess">From where documents are read.</param>
+    /// <param name="finalUrl">The address which returned the document, after every redirect.</param>
+    /// <param name="reachedNonPublicAddress">Whether that address was a non-public one.</param>
+    /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <param name="intranet">The configured intranet, or null when none is.</param>
+    /// <param name="providerConfidence">The confidence of the provider the document would reach.</param>
+    /// <returns>False when the setting does not allow documents from there.</returns>
+    /// <exception cref="WebPageAccessBlockedException">The document is internal, and the provider is not trusted highly enough.</exception>
+    internal static bool MayReadDocument(DocumentAccess documentAccess, Uri finalUrl, bool reachedNonPublicAddress, Uri? wiki, Uri? intranet, ConfidenceLevel providerConfidence)
+    {
+        var isInternal = IsInternalAddress(finalUrl, reachedNonPublicAddress, wiki, intranet);
+        if (!IsDocumentAllowed(documentAccess, isInternal))
+            return false;
+
+        if (isInternal && providerConfidence < ConfidenceLevel.HIGH)
+            throw new WebPageAccessBlockedException("Internal documents require a High-confidence provider.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
+
+        return true;
+    }
 
     /// <summary>
     /// Whether content read from an address is internal: one read from a non-public address, or one
@@ -564,22 +592,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     // Always passed, even with documents switched off, so a refusal can say why:
                     Documents = new WebDocumentOptions
                     {
-                        IsAllowed = (finalUrl, reachedNonPublicAddress) =>
-                        {
-                            var isInternal = IsInternalAddress(finalUrl, reachedNonPublicAddress, configuredWiki, configuredIntranet);
-                            if (!IsDocumentAllowed(documentAccess, isInternal))
-                                return false;
-
-                            //
-                            // A private address needs a High-confidence provider anyway, but a wiki
-                            // may have a public one. Its documents are no less internal, so the
-                            // provider is checked here, before anything is downloaded:
-                            //
-                            if (isInternal && context.ProviderConfidence < ConfidenceLevel.HIGH)
-                                throw new WebPageAccessBlockedException("Internal documents require a High-confidence provider.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
-
-                            return true;
-                        },
+                        IsAllowed = (finalUrl, reachedNonPublicAddress) => MayReadDocument(documentAccess, finalUrl, reachedNonPublicAddress, configuredWiki, configuredIntranet, context.ProviderConfidence),
                         MaxBytes = maxDocumentMegabytes * 1024L * 1024L,
                         MaxCharacters = maxContentCharacters,
                     },

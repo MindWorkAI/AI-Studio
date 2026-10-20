@@ -288,6 +288,11 @@ public sealed partial class RustService
                 return;
             }
 
+            // The line breaks count toward the limit, so a blank chunk may find no room left, while
+            // nothing of the content is lost without it:
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
             // Never between the two halves of a surrogate pair, which would leave half a character:
             var keep = Math.Max(room, 0);
             if (keep > 0 && char.IsHighSurrogate(text[keep - 1]))

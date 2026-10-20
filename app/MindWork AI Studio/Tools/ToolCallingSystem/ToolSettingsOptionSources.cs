@@ -124,7 +124,7 @@ public static class ToolSettingsOptionSources
         DOCUMENT_ACCESS =>
         [
             new(nameof(DocumentAccess.OFF), TB("Off: only web pages and text formats")),
-            new(nameof(DocumentAccess.INTERNAL_ONLY), TB("Only from the wiki and the allowed private hosts")),
+            new(nameof(DocumentAccess.INTERNAL_ONLY), TB("Only from the wiki, the intranet, and the allowed private hosts")),
             new(nameof(DocumentAccess.ALL_ADDRESSES), TB("From every address the tool may read")),
         ],
 

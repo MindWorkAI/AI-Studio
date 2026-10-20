@@ -1,5 +1,7 @@
 using System.Web;
 
+using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.Web;
 
@@ -172,5 +174,39 @@ public sealed class IntranetSearchToolTests
     public void OnlyTheConfiguredIntranetIsWithinIt(string url, bool expected)
     {
         Assert.That(IntranetSearchTool.IsWithinIntranet(INTRANET, new Uri(url)), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ASearchWithHitsKeepsTheChatWithTrustedProvidersAndRestrictsIt()
+    {
+        var (confidence, restriction) = IntranetSearchTool.GetRequirements(2, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(confidence, Is.EqualTo(ConfidenceLevel.HIGH));
+            Assert.That(restriction.Restriction, Is.EqualTo(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES), "The level is the one of internal pages.");
+            Assert.That(restriction.Origin, Is.EqualTo(OutboundDataOrigin.INTRANET));
+        });
+    }
+
+    [Test]
+    public void ASearchWithoutHitsDemandsNothing()
+    {
+        var (confidence, restriction) = IntranetSearchTool.GetRequirements(0, OutboundDataRestriction.ONLY_CONFIGURED_SERVICES);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(confidence, Is.EqualTo(ConfidenceLevel.NONE));
+            Assert.That(restriction, Is.EqualTo(OutboundDataRequirement.NONE), "Nothing of the intranet reached the chat.");
+        });
+    }
+
+    [TestCase("https://intranet.example.org/sites/HR/Shared%20Documents/form.docx", true)]
+    [TestCase("https://intranet.example.org/sites/hr/Pages/start.aspx", true)]
+    [TestCase("https://intranet.example.org/sites/it/Pages/start.aspx", false)]
+    public void ASitePathIsComparedRegardlessOfCase(string url, bool expected)
+    {
+        var site = new Uri("https://intranet.example.org/Sites/HR/");
+        Assert.That(IntranetSearchTool.IsWithinIntranet(site, new Uri(url)), Is.EqualTo(expected), "SharePoint does not tell the case of a site path apart.");
     }
 }

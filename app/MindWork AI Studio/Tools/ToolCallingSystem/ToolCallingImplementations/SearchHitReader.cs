@@ -11,7 +11,7 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 /// with the search instead of one call of Read Web Page per hit.
 /// </summary>
 /// <remarks>
-/// A chat may call 15 tools per answer. A search followed by four pages costs five of them, and a
+/// A chat may call ToolSelectionRules.MAX_TOOL_CALLS tools per answer. A search followed by four pages costs five of them, and a
 /// question which needs a few searches used them all up before the model could answer. Web search
 /// reads its hits itself for the same reason, see WebSearchResultRetrievalService.<br/><br/>
 /// Only hits within the searched site are read, under the rules of the search itself: the caller
@@ -101,13 +101,28 @@ public sealed class SearchHitReader(WebPageRetrievalService webPageRetrievalServ
         catch (Exception exception) when (exception is WebPageAccessBlockedException or InvalidOperationException or TimeoutException or HttpRequestException or IOException)
         {
             logger.LogInformation("Could not read a search hit. Index={Index}, Reason={Reason}, DurationMs={DurationMs}", index, exception.GetType().Name, stopwatch.ElapsedMilliseconds);
-            return new HitRead(index, hit, hit, null, false, exception.Message);
+            return new HitRead(index, hit, hit, null, false, GetFailure(exception));
         }
         finally
         {
             semaphore.Release();
         }
     }
+
+    /// <summary>
+    /// Why a hit could not be read, as the model learns it.
+    /// </summary>
+    /// <remarks>
+    /// A refused redirect names the address it would have led to. That address reaches the model
+    /// nowhere else, and once it stands in a tool result, it counts as one given in the chat, which
+    /// Read Web Page may open even while the free address choice is off. Its own text therefore
+    /// names none, as Read Web Page words it for the same refusal.
+    /// </remarks>
+    internal static string GetFailure(Exception exception) => exception switch
+    {
+        WebPageAccessBlockedException { Reason: WebPageAccessBlockReason.TARGET_NOT_ALLOWED } => "The site redirected this hit to an address outside of it, which is not followed.",
+        _ => exception.Message,
+    };
 
     /// <summary>
     /// What the model gets of a hit next to its excerpt.
