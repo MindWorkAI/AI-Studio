@@ -77,11 +77,24 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         var manifest = context.Manifest;
 
+        if (!await this.RelocateStoredFilesAsync(context, dataSource, token))
+            return await DocumentRunProgress.FromStoredState(context, manifest.Files.Count, logger).PauseRunAsync(null, "file relocation paused", token);
+
         var enumerationStartedUtc = DateTimeOffset.UtcNow;
         var inputFiles = this.GetInputFiles(dataSource, manifest);
         var enumerationDuration = DateTimeOffset.UtcNow - enumerationStartedUtc;
         if (inputFiles.UnreachableRootReason is { } unreachableRootReason)
             return this.StopWithoutRoot(context, dataSource, unreachableRootReason);
+
+        // An unmounted volume can leave a readable, empty mount directory. There is no way to
+        // distinguish that from intentionally removing every file, so keep the stored index.
+        // Explicit exclusions still take effect: they are evidence of a nonempty folder.
+        if (dataSource is DataSourceLocalDirectory directory
+            && (manifest.Files.Count > 0 || manifest.UnfinishedFiles.Count > 0 || manifest.PermanentFailures.Count > 0)
+            && inputFiles.Files.Count == 0 && inputFiles.IgnoredFiles.Count == 0
+            && inputFiles.FilePatternExclusionCount == 0 && inputFiles.ExcludedFolderCount == 0
+            && inputFiles.FailedFiles == 0 && inputFiles.UnreadableDirectories.Count == 0)
+            return this.StopWithoutRoot(context, dataSource, string.Format(TB("The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source."), directory.Path));
 
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;
@@ -364,7 +377,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// connected, or a network share while the VPN is down, would remove every embedding of the
     /// data source, and embedding it all again once the folder is back costs as long as it took the
     /// first time. Nothing is written: the stored hash still tells which state of the data source
-    /// the index holds, so the next run picks up from there.
+    /// the index holds, so the next run picks up from there. The status asks for attention, so the
+    /// embeddings page offers to edit the data source, e.g. to select the new location of a moved folder.
     /// </remarks>
     /// <param name="context">The run.</param>
     /// <param name="dataSource">The data source.</param>
@@ -378,7 +392,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             dataSource.Id,
             context.Manifest.Files.Count);
 
-        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason);
+        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason, DataSourceAttention.LOCATION_UNREACHABLE);
         return IndexedRunOutcome.DONE;
     }
 
@@ -509,9 +523,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// user may not read that folder. Removing it would throw away its index, and embedding it again
     /// once the folder can be read costs as long as it took the first time.
     /// <br /><br />
-    /// Paths are compared ignoring their case, as everywhere in the manifest. On Linux and macOS, that
-    /// keeps a file whose path differs from an unreadable folder in its case alone, which costs no more
-    /// than a stale entry until the folder can be read again.
+    /// Paths are compared ignoring their case, as everywhere in the index, cf. the remarks on
+    /// DataSourceEmbeddingManifest.PATH_COMPARER. On Linux and macOS, that keeps a file whose path
+    /// differs from an unreadable folder in its case alone, which costs no more than a stale entry
+    /// until the folder can be read again.
     /// </remarks>
     /// <param name="storedPaths">The paths of the files the index knows about.</param>
     /// <param name="files">The files this run found.</param>
@@ -521,15 +536,16 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         var existingPaths = files
             .Select(file => file.FullName)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .ToHashSet(DataSourceEmbeddingManifest.PATH_COMPARER);
 
         var unreadablePrefixes = unreadableDirectories
-            .Select(directory => Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)) + Path.DirectorySeparatorChar)
+            .Select(Path.GetFullPath)
+            .Select(directory => Path.EndsInDirectorySeparator(directory) ? directory : directory + Path.DirectorySeparatorChar)
             .ToList();
 
         return storedPaths
             .Where(path => !existingPaths.Contains(path))
-            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, DataSourceEmbeddingManifest.PATH_COMPARISON)))
             .ToList();
     }
 
@@ -709,7 +725,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         switch (dataSource)
         {
-            case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
+            case DataSourceLocalFile localFile when RelocatedFilePaths.IsLocalAbsolute(localFile.FilePath) && File.Exists(localFile.FilePath):
                 var file = new FileInfo(localFile.FilePath);
 
                 // No size limit: the user chose this very file, cf. FolderFileSelection.IsTooLarge.
@@ -718,9 +734,10 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
                 return result;
 
-            case DataSourceLocalDirectory localDirectory when Directory.Exists(localDirectory.Path):
+            case DataSourceLocalDirectory localDirectory when RelocatedFilePaths.IsLocalAbsolute(localDirectory.Path) && Directory.Exists(localDirectory.Path):
                 this.EnumerateAccessibleFiles(localDirectory, manifest, mediaTranscriptionAvailability, result);
-                if (result.UnreadableDirectories.Contains(localDirectory.Path))
+                if (result.UnreadableDirectories.Any(directory => string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
+                        Path.TrimEndingDirectorySeparator(Path.GetFullPath(localDirectory.Path)), PathTools.COMPARISON)))
                     result.UnreachableRootReason = string.Format(TB("The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index."), localDirectory.Path);
 
                 return result;
@@ -732,11 +749,11 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
+                result.UnreachableRootReason = string.Format(TB("The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source."), localFile.FilePath);
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source."), localDirectory.Path);
+                result.UnreachableRootReason = string.Format(TB("The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source."), localDirectory.Path);
                 break;
         }
 
@@ -935,8 +952,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
     {
         var fileHashes = indexedFiles
-            .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(file => file.FullName, BuildFileMetadataHash, StringComparer.OrdinalIgnoreCase);
+            .OrderBy(file => file.FullName, DataSourceEmbeddingManifest.PATH_COMPARER)
+            .ToDictionary(file => file.FullName, BuildFileMetadataHash, DataSourceEmbeddingManifest.PATH_COMPARER);
 
         var sourceHash = dataSource switch
         {
@@ -980,7 +997,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count.ToString()
         };
 
-        foreach (var file in indexedFiles.OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase))
+        foreach (var file in indexedFiles.OrderBy(file => file.FullName, DataSourceEmbeddingManifest.PATH_COMPARER))
         {
             parts.Add(this.TryGetRelativePath(dataSource, file));
             parts.Add(fileHashes[file.FullName]);
@@ -1002,13 +1019,23 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 "0");
         }
 
-        return BuildMetadataHash(
-            "file",
-            file.FullName,
-            file.Name,
-            file.LastWriteTimeUtc.Ticks.ToString(),
-            file.Length.ToString());
+        return BuildFileMetadataHash(file.FullName, file.Name, file.LastWriteTimeUtc, file.Length);
     }
+
+    /// <summary>
+    /// The fingerprint of a file which exists, from its write time and size as they were read.
+    /// </summary>
+    /// <remarks>
+    /// The one formula for both an indexed file and a relocated one: if the two drifted apart, every
+    /// relocated file would look changed to the next run and be embedded again.
+    /// </remarks>
+    /// <param name="fullName">The absolute path of the file.</param>
+    /// <param name="name">The name of the file.</param>
+    /// <param name="lastWriteUtc">When the file was last written to.</param>
+    /// <param name="length">The size of the file in bytes.</param>
+    /// <returns>The fingerprint.</returns>
+    private static string BuildFileMetadataHash(string fullName, string name, DateTime lastWriteUtc, long length) =>
+        BuildMetadataHash("file", fullName, name, lastWriteUtc.Ticks.ToString(), length.ToString());
 
     private static string BuildMetadataHash(params string[] parts)
     {
@@ -1036,7 +1063,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// <returns>The document.</returns>
     private EmbeddingDocument CreateFileDocument(IndexedRunContext context, IDataSource dataSource, FileInfo file, string fingerprint, MediaTranscriptSlot? transcript) => new(
         file.FullName,
-        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { TranscriptKey = transcript?.Key },
+        this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow) with { ParentFileId = context.GetFileParentId(file.FullName), TranscriptKey = transcript?.Key },
         file.Name,
         token => this.StreamEmbeddingChunksAsync(file.FullName, transcript, dataSource, context.EmbeddingProvider, context.PromptInjectionScope, token));
 

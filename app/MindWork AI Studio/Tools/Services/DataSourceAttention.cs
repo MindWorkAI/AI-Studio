@@ -24,4 +24,9 @@ public enum DataSourceAttention
     /// The organization allows only its own mail servers, and the mailbox is on another one. AI Studio does not connect to it until the organization allows the server.
     /// </summary>
     SERVER_NOT_ALLOWED,
+
+    /// <summary>
+    /// The file or the folder of a local data source cannot be reached, cannot be opened, or appears empty. AI Studio keeps the index until the file or the folder is back, the user selects its new location, or removes the data source.
+    /// </summary>
+    LOCATION_UNREACHABLE,
 }

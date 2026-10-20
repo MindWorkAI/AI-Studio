@@ -11,9 +11,9 @@ use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
     FieldCondition, Filter, HasIdCondition, HnswIndexConfig, Match, MatchValue, NamedQuery,
-    Payload, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
+    Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
     QueryRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants, VectorInternal,
-    Vectors, WithPayloadInterface, WithVector,
+    SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -131,6 +131,17 @@ pub struct SearchQdrantEdgeEmbeddingRequest {
 pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
     pub store_name: String,
     pub file_path: String,
+    pub parent_file_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct RelocateQdrantEdgeEmbeddingFileRequest {
+    pub store_name: String,
+    pub parent_file_id: String,
+    pub absolute_path: String,
+    pub file_name: String,
+    pub relative_path: String,
+    pub fingerprint: String,
 }
 
 #[derive(Deserialize)]
@@ -459,14 +470,47 @@ impl QdrantEdgeDatabase {
             .collect())
     }
 
-    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str) -> QdrantEdgeResult<()> {
+    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str, parent_file_id: &str) -> QdrantEdgeResult<()> {
         let Some(shard) = self.get_existing_store(store_name)? else {
             return Ok(());
         };
 
+        // The location may already have changed if a relocation stopped before SQLite caught up.
+        if !parent_file_id.is_empty() {
+            shard.update(UpdateOperation::PointOperation(
+                PointOperations::DeletePointsByFilter(match_keyword_filter("parent_file_id", parent_file_id)?),
+            ))?;
+        }
         shard.update(UpdateOperation::PointOperation(
             PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
         ))?;
+        shard.flush()?;
+        Ok(())
+    }
+
+    fn relocate_embedding_file(&mut self, request: RelocateQdrantEdgeEmbeddingFileRequest) -> QdrantEdgeResult<()> {
+        if request.parent_file_id.is_empty() {
+            return Err("Relocating a document requires its parent file id.".into());
+        }
+        let Some(shard) = self.get_existing_store(&request.store_name)? else {
+            return Err("The vector store for the relocated document is missing.".into());
+        };
+
+        let payload = json!({
+            "file_path": request.absolute_path,
+            "absolute_path": request.absolute_path,
+            "file_name": request.file_name,
+            "relative_path": request.relative_path,
+            "fingerprint": request.fingerprint,
+        });
+        // Parent and chunk ids are identities, even when they were originally derived from a path.
+        // Keep them and the vectors intact; only the document's location changes.
+        shard.update(UpdateOperation::PayloadOperation(PayloadOps::SetPayload(SetPayloadOp {
+            payload: qdrant_edge::external::serde_json::from_value(payload)?,
+            points: None,
+            filter: Some(match_keyword_filter("parent_file_id", &request.parent_file_id)?),
+            key: None,
+        })))?;
         shard.flush()?;
         Ok(())
     }
@@ -776,7 +820,13 @@ pub async fn search_qdrant_edge_embeddings(Json(request): Json<SearchQdrantEdgeE
 
 pub async fn delete_qdrant_edge_embedding_by_file(Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
     run_qdrant_edge_request(move |database| {
-        database.delete_embedding_by_file(&request.store_name, &request.file_path)
+        database.delete_embedding_by_file(&request.store_name, &request.file_path, &request.parent_file_id)
+    }).await
+}
+
+pub async fn relocate_qdrant_edge_embedding_file(Json(request): Json<RelocateQdrantEdgeEmbeddingFileRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
+        database.relocate_embedding_file(request)
     }).await
 }
 
@@ -1490,6 +1540,49 @@ mod tests {
     }
 
     #[test]
+    fn relocating_a_document_preserves_its_vectors_and_can_be_retried() {
+        let test_directory = test_directory("relocation");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let mut point = test_point(POINT_X, search_vector());
+        point.parent_file_id = "original-parent".to_string();
+        point.page_number = Some(2);
+        database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
+
+        for _ in 0..2 {
+            database.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+                store_name: SEARCH_STORE.to_string(),
+                parent_file_id: "original-parent".to_string(),
+                absolute_path: "/tmp/moved/renamed.md".to_string(),
+                file_name: "renamed.md".to_string(),
+                relative_path: "renamed.md".to_string(),
+                fingerprint: "new-fingerprint".to_string(),
+            }).unwrap();
+        }
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].point_id, POINT_X);
+        assert_eq!(found[0].parent_file_id, "original-parent");
+        assert_eq!(found[0].file_path, "/tmp/moved/renamed.md");
+        assert_eq!(found[0].absolute_path, "/tmp/moved/renamed.md");
+        assert_eq!(found[0].file_name, "renamed.md");
+        assert_eq!(found[0].relative_path, "renamed.md");
+        assert_eq!(found[0].fingerprint, "new-fingerprint");
+        assert_eq!(found[0].text, "Some text.");
+        assert_eq!(found[0].page_number, Some(2));
+        assert!((found[0].score - 1.0).abs() < 0.0001);
+
+        // SQLite may still know the old path when a relocation was interrupted. Its stable parent
+        // id must be enough to remove the vectors if the document changed before the next retry.
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "original-parent").unwrap();
+        assert!(database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap().is_empty());
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
     fn obsolete_wal_segments_keeps_the_newest_closed_segment() {
         let file_names = ["closed-120", "open-7", "closed-0", "tmp-open-8", "closed-40", ".wal", "first-index", "closed-abc"].map(String::from);
 
@@ -1649,6 +1742,53 @@ mod tests {
 
         drop(database);
         fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_restored_store_can_relocate_foreign_paths_without_replacing_its_vectors() {
+        for old_path in [r"E:\Documents\nested\notes.md", r"\\server\share\nested\notes.md", "/Volumes/External drive/nested/notes.md"] {
+            let data_directory = test_directory("backup-relocation");
+            let base_path = data_directory.join("databases").join("vector_database");
+            let mut database = QdrantEdgeDatabase::new(base_path);
+            let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
+            point.parent_file_id = "original-parent".to_string();
+            point.file_path = old_path.to_string();
+            point.absolute_path = old_path.to_string();
+            point.embedded_at_utc = "2026-10-01T12:00:00Z".to_string();
+            database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
+
+            let preparation = database.prepare_backup(&data_directory).unwrap();
+            database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+            let restored_base = PathBuf::from(&preparation.staging_path).join("databases").join("vector_database");
+            let mut restored = QdrantEdgeDatabase::new(restored_base.clone());
+            let new_path = data_directory.join("mounted drive").join("nested").join("notes.md").to_string_lossy().to_string();
+            restored.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+                store_name: SEARCH_STORE.to_string(),
+                parent_file_id: "original-parent".to_string(),
+                absolute_path: new_path.clone(),
+                file_name: "notes.md".to_string(),
+                relative_path: Path::new("nested").join("notes.md").to_string_lossy().to_string(),
+                fingerprint: "relocated-fingerprint".to_string(),
+            }).unwrap();
+            drop(restored);
+
+            let mut restored = QdrantEdgeDatabase::new(restored_base);
+            let found = restored.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(found.len(), 1);
+            assert_eq!(found[0].point_id, POINT_X);
+            assert_eq!(found[0].parent_file_id, "original-parent");
+            assert_eq!(found[0].file_path, new_path);
+            assert_eq!(found[0].absolute_path, new_path);
+            assert_eq!(found[0].text, "Some text.");
+            assert_eq!(found[0].embedded_at_utc, "2026-10-01T12:00:00Z");
+            assert!((found[0].score - 1.0).abs() < 0.0001);
+
+            let original = database.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(original[0].file_path, old_path, "relocating a restored copy must not change the original store");
+            drop(restored);
+            drop(database);
+            fs::remove_dir_all(data_directory).unwrap();
+        }
     }
 
     #[test]

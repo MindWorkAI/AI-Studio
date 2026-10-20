@@ -270,70 +270,8 @@ public partial class DataSourceManagement : MSGComponentBase
 
     private async Task EditDataSource(IDataSource dataSource)
     {
-        if (dataSource.IsEnterpriseConfiguration)
-            return;
-
-        IDataSource? editedDataSource = null;
-        var lockDataSourceOrigin = dataSource is IInternalDataSource
-            && await this.DataSourceEmbeddingService.ShouldLockDataSourceOriginAsync(dataSource.Id);
-        switch (dataSource)
-        {
-            case DataSourceLocalFile localFile:
-                var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
-                {
-                    { x => x.IsEditing, true },
-                    { x => x.DataSource, localFile },
-                    { x => x.LockSource, lockDataSourceOrigin },
-                };
-
-                var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
-                var localFileDialogResult = await localFileDialogReference.Result;
-                if (localFileDialogResult is null || localFileDialogResult.Canceled)
-                    return;
-
-                editedDataSource = (DataSourceLocalFile)localFileDialogResult.Data!;
-                break;
-
-            case DataSourceLocalDirectory localDirectory:
-                var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
-                {
-                    { x => x.IsEditing, true },
-                    { x => x.DataSource, localDirectory },
-                    { x => x.LockSource, lockDataSourceOrigin },
-                };
-
-                var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
-                var localDirectoryDialogResult = await localDirectoryDialogReference.Result;
-                if (localDirectoryDialogResult is null || localDirectoryDialogResult.Canceled)
-                    return;
-
-                editedDataSource = (DataSourceLocalDirectory)localDirectoryDialogResult.Data!;
-                break;
-
-            case DataSourceERI_V1 eriDataSource:
-                var eriDialogParameters = new DialogParameters<DataSourceERI_V1Dialog>
-                {
-                    { x => x.IsEditing, true },
-                    { x => x.DataSource, eriDataSource },
-                };
-
-                var eriDialogReference = await this.DialogService.ShowAsync<DataSourceERI_V1Dialog>(T("Edit ERI v1 Data Source"), eriDialogParameters, DialogOptions.FULLSCREEN);
-                var eriDialogResult = await eriDialogReference.Result;
-                if (eriDialogResult is null || eriDialogResult.Canceled)
-                    return;
-
-                editedDataSource = (DataSourceERI_V1)eriDialogResult.Data!;
-                break;
-        }
-
-        if(editedDataSource is null)
-            return;
-
-        this.SettingsManager.ConfigurationData.DataSources[this.SettingsManager.ConfigurationData.DataSources.IndexOf(dataSource)] = editedDataSource;
-
-        await this.SettingsManager.StoreSettings();
-        await this.DataSourceEmbeddingService.QueueDataSourceAsync(editedDataSource);
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        if (await DataSourceEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, dataSource.Id))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task DeleteDataSource(IDataSource dataSource)

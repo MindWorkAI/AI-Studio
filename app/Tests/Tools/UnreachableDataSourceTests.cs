@@ -63,6 +63,49 @@ public sealed class UnreachableDataSourceTests
     }
 
     [Test]
+    public async Task AMissingRelocationTargetKeepsTheOriginalIndex()
+    {
+        var folder = Path.Combine(this.testRoot, "moved-but-unavailable");
+        var (outcome, statuses, manifest) = await RunAsync(Folder(folder), Path.Combine(this.testRoot, "original", "report.pdf"));
+
+        AssertTheIndexWasKept(outcome, statuses, manifest, 1, folder);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task AReadableEmptyMountDirectoryKeepsItsIndex(bool emptySubfolder)
+    {
+        var folder = Path.Combine(this.testRoot, "mounted-drive");
+        Directory.CreateDirectory(emptySubfolder ? Path.Combine(folder, "documents") : folder);
+        var unfinishedFile = Path.Combine(folder, "unfinished.pdf");
+
+        var (outcome, statuses, manifest) = await RunAsync(Folder(folder), [Path.Combine(folder, "report.pdf")], [unfinishedFile]);
+
+        AssertTheIndexWasKept(outcome, statuses, manifest, 1, folder);
+        Assert.Multiple(() =>
+        {
+            Assert.That(manifest.UnfinishedFiles, Does.Contain(unfinishedFile), "An unmounted drive must not discard interrupted work either.");
+            Assert.That(statuses[^1].LastError, Does.Contain("appears empty").And.Contain("remove this data source"));
+        });
+    }
+
+    [Test]
+    public async Task ANewEmptyFolderCanFinishWithoutAnIndex()
+    {
+        var folder = Path.Combine(this.testRoot, "new-empty-folder");
+        Directory.CreateDirectory(folder);
+
+        var (outcome, statuses, manifest) = await RunAsync(Folder(folder));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome, Is.EqualTo(IndexedRunOutcome.DONE));
+            Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
+            Assert.That(manifest.Files, Is.Empty);
+        });
+    }
+
+    [Test]
     public async Task AMissingFileKeepsItsIndex()
     {
         var file = Path.Combine(this.testRoot, "report.pdf");
@@ -130,6 +173,15 @@ public sealed class UnreachableDataSourceTests
         Assert.That(goneFiles, Is.EquivalentTo([deleted, besideSubfolder]), "A folder whose name only begins like the one which could not be read is no part of it.");
     }
 
+    [Test]
+    public void AnUnreadableDriveRootKeepsItsIndexedFiles()
+    {
+        var root = Path.GetPathRoot(Path.GetFullPath(Path.GetTempPath()))!;
+        var file = Path.Combine(root, "documents", "notes.md");
+
+        Assert.That(FileSourceIndexer.GetGoneFiles([file], [], [root]), Is.Empty, "A drive root already ends in its separator; adding another would fail to protect its files.");
+    }
+
     private static DataSourceLocalDirectory Folder(string path) => new()
     {
         Num = 1,
@@ -152,6 +204,7 @@ public sealed class UnreachableDataSourceTests
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
             Assert.That(statuses[^1].IndexedDocuments, Is.EqualTo(indexedFiles), "The index still holds these files, and the page has to say so.");
             Assert.That(statuses[^1].LastError, Does.Contain(unreachablePath));
+            Assert.That(statuses[^1].Attention, Is.EqualTo(DataSourceAttention.LOCATION_UNREACHABLE), "The embeddings page offers to edit the data source, e.g. to select the new location of a moved folder.");
         });
     }
 
@@ -181,12 +234,16 @@ public sealed class UnreachableDataSourceTests
         var statuses = new List<DataSourceEmbeddingStatus>();
         var manifest = new DataSourceEmbeddingManifest { SourceHash = STORED_SOURCE_HASH };
         foreach (var file in indexedFiles)
-            manifest.Files[file] = new EmbeddedFileRecord("FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 4);
+            manifest.Files[file] = new EmbeddedFileRecord("FINGERPRINT", 1024, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 4,
+                RelativePath: Path.GetFileName(file), ParentFileId: IndexedDocumentIds.CreateParentId(dataSource.Id, file));
 
         manifest.UnfinishedFiles.UnionWith(unfinishedFiles);
 
-        var scannedFile = Path.Combine(Path.GetDirectoryName(indexedFiles[0])!, "scan.pdf");
-        manifest.PermanentFailures[scannedFile] = new PermanentIndexingFailureRecord("FINGERPRINT", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text could be read.", DateTimeOffset.UnixEpoch);
+        if (indexedFiles.Length > 0)
+        {
+            var scannedFile = Path.Combine(Path.GetDirectoryName(indexedFiles[0])!, "scan.pdf");
+            manifest.PermanentFailures[scannedFile] = new PermanentIndexingFailureRecord("FINGERPRINT", FileExtractionErrorCode.NO_TEXT_EXTRACTED, "No text could be read.", DateTimeOffset.UnixEpoch);
+        }
 
         var embeddingProvider = new EmbeddingProvider(1, EMBEDDING_ID, "Test embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-small", "text-embedding-3-small"));
         var settingsManager = new SettingsManager(NullLogger<SettingsManager>.Instance, null!);

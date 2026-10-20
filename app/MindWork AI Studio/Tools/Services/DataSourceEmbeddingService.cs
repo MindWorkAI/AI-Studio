@@ -190,24 +190,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     /// <summary>
-    /// Whether the file or folder a data source reads must stay as it is.
+    /// Whether a mailbox's origin must stay as it is.
     /// </summary>
     /// <remarks>
-    /// Locked as soon as the index holds anything, because where a data source reads from is what it
-    /// is: another folder is another data source, and the path reaches no signature, so swapping it
-    /// would leave the stored index describing documents nobody points at any more.
-    ///
-    /// The embedding provider used to be locked along with it and no longer is. It does reach the
-    /// signature, so changing it rebuilds the index cleanly -- and DataSourceReindexWarning asks
-    /// before it does. Locking it as well left a data source whose provider was deleted stuck on
-    /// keyword search for good, with no way back.
+    /// Locked as soon as the index holds anything: another server, account, or folder holds other
+    /// mails, which makes it another data source. Local files and folders are not locked, since they
+    /// may move, and the file indexer finds their documents again, cf. FileSourceIndexer.RelocateStoredFilesAsync.
+    /// The embedding provider is never locked; DataSourceReindexWarning asks what changing it costs.
     ///
     /// Unclear counts as locked: an unavailable index database says nothing about what is stored.
     /// </remarks>
-    /// <param name="dataSourceId">The data source to ask about.</param>
+    /// <param name="dataSourceId">The mailbox to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the source must not be changed.</returns>
-    public async Task<bool> ShouldLockDataSourceOriginAsync(string dataSourceId, CancellationToken token = default)
+    public async Task<bool> ShouldLockMailboxOriginAsync(string dataSourceId, CancellationToken token = default)
     {
         var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
         if (!indexStore.IsAvailable)

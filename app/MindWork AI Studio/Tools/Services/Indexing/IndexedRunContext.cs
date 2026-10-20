@@ -41,6 +41,9 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     private long storedChunksSinceLastOptimization;
     private bool hasPendingChanges;
 
+    private Dictionary<string, string>? fileParentIds;
+    private HashSet<string>? reservedFileParentIds;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
 
     /// <summary>
@@ -65,6 +68,38 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public RunShare Share => share;
 
     public IndexingPass Pass => pass;
+
+    /// <summary>
+    /// The id a file is stored under: the one it already has, or a new one.
+    /// </summary>
+    /// <remarks>
+    /// A relocated file keeps the id it got when it was indexed first, which came from its path back
+    /// then. A new file may now appear at that very path, so the ids already stored are reserved, and
+    /// a new file whose derived id is taken gets a random one instead. Its chunk ids include that id,
+    /// cf. IndexedDocumentIds.CreateChunkIdSource.
+    /// </remarks>
+    /// <param name="documentKey">The key of the file, which is its absolute path.</param>
+    /// <returns>The parent id of the file.</returns>
+    public string GetFileParentId(string documentKey)
+    {
+        if (this.fileParentIds is null)
+        {
+            this.fileParentIds = manifest.Files
+                .Where(file => file.Value.ParentFileId is not null)
+                .ToDictionary(file => file.Key, file => file.Value.ParentFileId!, DataSourceEmbeddingManifest.PATH_COMPARER);
+            this.reservedFileParentIds = this.fileParentIds.Values.ToHashSet(StringComparer.Ordinal);
+        }
+
+        if (this.fileParentIds.TryGetValue(documentKey, out var storedId))
+            return storedId;
+
+        var parentId = IndexedDocumentIds.CreateParentId(dataSource.Id, documentKey);
+        while (!this.reservedFileParentIds!.Add(parentId))
+            parentId = Guid.NewGuid().ToString();
+
+        this.fileParentIds[documentKey] = parentId;
+        return parentId;
+    }
 
     /// <summary>
     /// The run as one action of the prompt injection filter.
@@ -124,10 +159,11 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
+        var chunkIdSource = IndexedDocumentIds.CreateChunkIdSource(dataSource.Id, document.Key, document.State.ParentFileId, document.State.Fingerprint);
 
         await foreach (var chunk in document.StreamChunks(token))
         {
-            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, document.State.Fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
+            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
@@ -163,7 +199,10 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <param name="token">The cancellation token.</param>
     public async Task DeleteDocumentPointsAsync(string documentKey, CancellationToken token)
     {
-        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, token);
+        // A relocated document keeps its original parent id. Delete by that identity as well as
+        // by path, including when a previous relocation stopped between its two database writes.
+        var parentId = manifest.Files.GetValueOrDefault(documentKey)?.ParentFileId ?? string.Empty;
+        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, parentId, token);
         this.hasPendingChanges = true;
     }
 

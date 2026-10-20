@@ -27,6 +27,7 @@ public sealed class QdrantEdgeClientImplementation(
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string SEARCH_PATH = "/system/qdrant-edge/search";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
+    private const string RELOCATE_FILE_PATH = "/system/qdrant-edge/relocate-file";
     private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
     private const string PREPARE_BACKUP_PATH = "/system/qdrant-edge/backup/prepare";
@@ -156,8 +157,11 @@ public sealed class QdrantEdgeClientImplementation(
             token) ?? [];
     }
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath, parentFileId), token);
+
+    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, RELOCATE_FILE_PATH, new RelocateEmbeddingFileRequest(storeName, parentFileId, absolutePath, Path.GetFileName(absolutePath), relativePath, fingerprint), token);
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, OPTIMIZE_PATH, new OptimizeVectorStoreRequest(storeName), token);
@@ -194,7 +198,9 @@ public sealed class QdrantEdgeClientImplementation(
     /// <param name="PointIds">The only points the search may return, or null for the whole store.</param>
     private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches, IReadOnlyList<string>? PointIds);
 
-    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
+    private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath, string ParentFileId);
+
+    private sealed record RelocateEmbeddingFileRequest(string StoreName, string ParentFileId, string AbsolutePath, string FileName, string RelativePath, string Fingerprint);
 
     private sealed record OptimizeVectorStoreRequest(string StoreName);
     

@@ -92,7 +92,7 @@ public sealed class SemanticSearchToolUnreachableTests
     }
 
     [Test]
-    public void TheResultNamesAnUnreachableDataSourceWithoutItsID()
+    public void TheResultNamesAnUnreachableDataSourceWithoutItsId()
     {
         var result = SemanticSearchTool.DescribeUnreachableResult(INTRANET);
 
