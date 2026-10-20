@@ -83,12 +83,12 @@ public sealed class SemanticSearchToolRequestTests
     [Test]
     public void APageAfterTheFirstComesThroughForOneDataSource()
     {
-        var named = SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{INTRANET.Id}}"],"page":2}"""), OFFERED);
+        var named = SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{HANDBOOK.Id}}"],"page":2}"""), OFFERED);
         var onlyOneOffered = SemanticSearchTool.ReadRequest(Arguments("""{"query":"travel expenses","page":2}"""), [HANDBOOK]);
 
         Assert.Multiple(() =>
         {
-            Assert.That(named.DataSources, Is.EqualTo(new[] { INTRANET }));
+            Assert.That(named.DataSources, Is.EqualTo(new[] { HANDBOOK }));
             Assert.That(named.Page, Is.EqualTo(2));
             Assert.That(onlyOneOffered.Page, Is.EqualTo(2), "With a single data source offered, leaving it unnamed still means that one.");
         });
@@ -99,6 +99,13 @@ public sealed class SemanticSearchToolRequestTests
     {
         var message = Refusal(() => SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{HANDBOOK.Id}}"],"page":10}"""), OFFERED));
         Assert.That(message, Does.Contain("at most 9").And.Contain("but was 10").And.Contain("Rephrase the query"));
+    }
+
+    [Test]
+    public void AnERIDataSourceHasNoFurtherPage()
+    {
+        var message = Refusal(() => SemanticSearchTool.ReadRequest(Arguments($$"""{"query":"travel expenses","data_source_ids":["{{INTRANET.Id}}"],"page":2}"""), OFFERED));
+        Assert.That(message, Does.Contain("at most 1").And.Contain("but was 2").And.Contain("Rephrase the query"), "A server which allows only the configured number of matches would refuse the page, and the data source would count as not searched.");
     }
 
     private static JsonElement Arguments(string json) => JsonSerializer.Deserialize<JsonElement>(json);

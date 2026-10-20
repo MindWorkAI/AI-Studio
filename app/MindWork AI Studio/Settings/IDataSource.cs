@@ -21,6 +21,17 @@ public interface IDataSource : IDataSourceBase
     public ushort MaxMatches { get; init; }
 
     /// <summary>
+    /// The last page which can be retrieved from this data source.
+    /// </summary>
+    /// <remarks>
+    /// By default, as many pages as RetrievalPaging.GetLastPage allows for the page size. A data
+    /// source which cannot page that far says so itself. It is a method rather than a property, so
+    /// that it never ends up in the settings.
+    /// </remarks>
+    /// <returns>The number of the last page, which is at least 1.</returns>
+    public int GetLastPage() => RetrievalPaging.GetLastPage(this.MaxMatches);
+
+    /// <summary>
     /// Perform the data retrieval process.
     /// </summary>
     /// <param name="lastUserPrompt">The last user prompt from the chat.</param>
@@ -43,7 +54,7 @@ public interface IDataSource : IDataSourceBase
     /// from covering the whole data source.
     /// </remarks>
     /// <param name="query">What to search for.</param>
-    /// <param name="page">The page to retrieve, from 1 up to RetrievalPaging.GetLastPage for MaxMatches.</param>
+    /// <param name="page">The page to retrieve, from 1 up to GetLastPage.</param>
     /// <param name="thread">The chat thread.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The retrieved data contexts of this page, whether the next page is worth asking for, and what the search could not cover.</returns>
