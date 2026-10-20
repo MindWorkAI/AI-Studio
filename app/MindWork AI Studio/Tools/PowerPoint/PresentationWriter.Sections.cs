@@ -24,16 +24,15 @@ internal static partial class PresentationWriter
     /// </summary>
     /// <remarks>
     /// The slides before the first chapter, such as the title slide, form a section named after the
-    /// presentation. The imprint forms a section of its own, so that every slide belongs to a
-    /// section, as PowerPoint keeps it; so does the imprint of the template, which closes the
-    /// presentation as well. A deck without chapters gets no sections at all.
+    /// presentation. The imprint of the template, which closes the presentation, forms a section of
+    /// its own. A deck without chapters gets no sections at all.
     /// </remarks>
     /// <param name="presentation">The presentation.</param>
     /// <param name="template">The template, which names the template slides of the deck.</param>
     /// <param name="presentationTitle">The title of the presentation, which names the section before the first chapter.</param>
     /// <param name="slides">The slides of the deck, in the order they were written.</param>
     /// <param name="slideIds">The IDs of these slides, in the same order.</param>
-    /// <param name="imprintSlideIds">The IDs of the imprint, whether of the template or added; empty when the presentation has none.</param>
+    /// <param name="imprintSlideIds">The IDs of the imprint of the template; empty when the presentation has none.</param>
     /// <param name="imprintName">The name of the section of the imprint.</param>
     private static void WriteSections(P.Presentation presentation, PresentationTemplate template, string presentationTitle, IReadOnlyList<SlideSpec> slides, IReadOnlyList<uint> slideIds, IReadOnlyList<uint> imprintSlideIds, string imprintName)
     {

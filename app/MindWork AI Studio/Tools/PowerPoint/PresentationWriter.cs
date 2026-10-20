@@ -20,9 +20,8 @@ namespace AIStudio.Tools.PowerPoint;
 /// variant and the footer of the presentation, so that they look like the slides around them. A
 /// slide the model edited takes its new content into its slots, and keeps the rest.
 ///
-/// Every presentation ends with an imprint, written on a content layout of the template like every
-/// other slide. It is no slide of the deck, so the number of slides the user asked for leaves it out.
-/// A deck which keeps the imprint of the template gets no second one.
+/// The imprint of the template closes the presentation, when the deck keeps or edits it. The
+/// presentation gets no imprint of its own: what an imprint says is up to the template.
 ///
 /// The deck has to pass <see cref="SlideDeckSpecValidator"/> first; what fits the template is not
 /// checked again here.
@@ -88,7 +87,7 @@ internal static partial class PresentationWriter
             var variantLabel = VariantLabelOf(template, options);
             var slideIds = new List<uint>(slides.Count);
             var imprintSlideIds = new List<uint>();
-            var imprintName = ImprintTextsOf(deck).Title;
+            var imprintName = string.Empty;
             var usedTemplateSlides = new HashSet<Uri>();
             var slideArea = (double)template.SlideWidth * template.SlideHeight;
             for (var index = 0; index < slides.Count; index++)
@@ -124,31 +123,13 @@ internal static partial class PresentationWriter
                 var slideId = FIRST_SLIDE_ID + (uint)index;
                 slideIdList.Append(new P.SlideId { Id = slideId, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
                 slideIds.Add(slideId);
-                if (template.IsImprint(slide))
+
+                // The imprint forms a section of its own, named like its slide; one without a title stays in the last section:
+                if (template.IsImprint(slide) && TitleOf(slide, template) is { Length: > 0 } title)
                 {
                     imprintSlideIds.Add(slideId);
-                    if (TitleOf(slide, template) is { Length: > 0 } title)
-                        imprintName = title;
+                    imprintName = title;
                 }
-            }
-
-            //
-            // The imprint closes the presentation. It is no slide of the deck, so the model neither
-            // planned nor counted it. A deck which keeps the imprint of the template needs no other:
-            //
-            if (imprintSlideIds.Count == 0 && ImprintFamilyOf(template) is { } imprintFamily)
-            {
-                var layout = imprintFamily.GetLayout(variantLabel);
-                var layoutPart = LayoutPartOf(layoutParts, layout);
-                var slidePart = presentationPart.AddNewPart<SlidePart>();
-                slidePart.AddPart(layoutPart);
-                slidePart.Slide = new P.Slide(
-                    new P.CommonSlideData(ImprintShapeTreeOf(layout, layoutPart.SlideLayout, deck, options.FooterText)),
-                    new P.ColorMapOverride(new A.MasterColorMapping()));
-
-                var imprintSlideId = FIRST_SLIDE_ID + (uint)slides.Count;
-                slideIdList.Append(new P.SlideId { Id = imprintSlideId, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
-                imprintSlideIds.Add(imprintSlideId);
             }
 
             WriteSections(presentation, template, deck.Title, slides, slideIds, imprintSlideIds, imprintName);

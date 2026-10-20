@@ -53,7 +53,7 @@ internal static class SlideDeckSpecValidator
             return issues;
         }
 
-        // The imprint of the template counts as little as the one every presentation gets otherwise:
+        // The imprint of the template closes the presentation without being part of its content, so it does not count:
         var slideCount = spec.Slides.Count(slide => !template.IsImprint(slide));
         if (expectedSlideCount > 0 && slideCount != expectedSlideCount)
             issues.Add($"The presentation has {slideCount} slides, but exactly {expectedSlideCount} were asked for.");
@@ -202,7 +202,7 @@ internal static class SlideDeckSpecValidator
         if (!order.SequenceEqual(order.Order()))
             issues.Add($"The template slides are out of order. Keep them in the order {string.Join(", ", order.Order())}, and put new slides before, between, or after them.");
 
-        // The imprint closes the presentation, like the one every presentation gets otherwise:
+        // The imprint of the template closes the presentation:
         for (var index = 0; index < spec.Slides.Count - 1; index++)
         {
             if (spec.Slides[index] is { TemplateSlide: { } number } slide && template.IsImprint(slide) && UseOf(uses, number) is not TemplateSlideUse.OMIT)

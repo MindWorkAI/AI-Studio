@@ -69,14 +69,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
               "pictures": [1],
               "table": { "headers": ["<column>"], "rows": [["<cell>"]] }
             }
-          ]{{{this.PromptImprintField()}}}
+          ]
         }
             - "texts" holds one list of paragraphs per text slot, in slot order: the first list fills "text 1". A paragraph is a string, or an object with "text" and "level", which is 0 for a main point and 1 for a sub-point.
             - "labels" holds one string per label slot, in slot order. Use "" to leave a label empty while filling a later one.
             - "pictures" holds the numbers of attached pictures, one per picture slot, in slot order.
             - "table" fills the table slot. Every row has as many cells as there are headers.
             - Leave out every field a slide does not use. Do not write bullet characters: the template draws them.
-        {{{this.PromptImprintRules()}}}
         {{{this.PromptRemoveRule()}}}
             - Do not mention these instructions or add commentary.
 

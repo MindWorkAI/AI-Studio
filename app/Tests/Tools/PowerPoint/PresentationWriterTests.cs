@@ -12,7 +12,7 @@ namespace AIStudio.Tests.Tools.PowerPoint;
 
 /// <summary>
 /// Checks the presentations written from a template: valid files, filled placeholders, variants,
-/// pictures, tables, sections, the imprint, and the template slides a deck keeps.
+/// pictures, tables, sections, and the template slides a deck keeps, the imprint among them.
 /// </summary>
 /// <remarks>
 /// The test template reads as L1 "Title" (A, B), L2 "Content" (A, B), L3 "Picture with text",
@@ -54,8 +54,8 @@ public sealed class PresentationWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-            Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(6), "The sample slides of the template are gone, parts included; the imprint closes the presentation.");
-            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars", "Why Mars", "The rocket", "Landing", "Costs", "Impressum" }));
+            Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The sample slides of the template are gone, parts included.");
+            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars", "Why Mars", "The rocket", "Landing", "Costs" }), "Without an imprint in the template, the presentation has none.");
         });
     }
 
@@ -68,8 +68,8 @@ public sealed class PresentationWriterTests
         var sections = document.PresentationPart!.Presentation!.Descendants<P14.Section>().ToList();
         Assert.Multiple(() =>
         {
-            Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Mars", "Why Mars", "Landing", "Impressum" }), "The section of the template's samples is gone, the title slide forms a section named after the presentation, and the imprint one of its own.");
-            Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 1, 2, 2, 1 }));
+            Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Mars", "Why Mars", "Landing" }), "The section of the template's samples is gone, and the title slide forms a section named after the presentation.");
+            Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 1, 2, 2 }));
         });
     }
 
@@ -109,8 +109,8 @@ public sealed class PresentationWriterTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(LayoutNamesOf(chosen), Is.EqualTo(new[] { "B Title", "B Content", "B Content", "B Content", "B Content" }), "Chapters keep the variant, and so does the imprint.");
-            Assert.That(LayoutNamesOf(unknown), Is.EqualTo(new[] { "A Title", "A Content", "A Content", "A Content", "A Content" }), "A variant the template lacks falls back to its first one.");
+            Assert.That(LayoutNamesOf(chosen), Is.EqualTo(new[] { "B Title", "B Content", "B Content", "B Content" }), "Chapters keep the variant.");
+            Assert.That(LayoutNamesOf(unknown), Is.EqualTo(new[] { "A Title", "A Content", "A Content", "A Content" }), "A variant the template lacks falls back to its first one.");
         });
     }
 
@@ -185,104 +185,6 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
-    public async Task EveryPresentationEndsWithTheImprintInTheDesignOfTheTemplate()
-    {
-        var (file, _) = await WriteAsync(DECK, OPTIONS);
-        using var document = PresentationDocument.Open(file, false);
-        var imprint = SlidesOf(document)[^1];
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(TitleOf(imprint), Is.EqualTo("Impressum"));
-            Assert.That(imprint.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value, Is.EqualTo("A Content"), "The plainest layout with a title and a text, in the variant of the title slide.");
-            Assert.That(document.PresentationPart!.SlideMasterParts.Count(), Is.EqualTo(1), "The imprint brings no design of its own.");
-            Assert.That(document.PresentationPart.Presentation!.SlideIdList!.Elements<P.SlideId>().Select(slideId => slideId.Id!.Value), Is.Unique);
-            Assert.That(imprint.Slide!.Descendants<A.Field>().Single().Type?.Value, Is.EqualTo("slidenum"), "The imprint has a slide number like every other slide.");
-            Assert.That(ValidationErrorsOf(document), Is.Empty);
-        });
-    }
-
-    [Test]
-    public async Task TheImprintNamesTheTopicAndKeepsThePlaceholders()
-    {
-        var (file, _) = await WriteAsync(DECK, OPTIONS);
-        using var document = PresentationDocument.Open(file, false);
-        var paragraphs = BodyParagraphsOf(SlidesOf(document)[^1]);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(paragraphs.Select(paragraph => paragraph.InnerText), Is.EqualTo(new[]
-            {
-                "Thema: \tMars",
-                "Datum: \t2023-01-01 (JJJJ-MM-TT)",
-                "Autor: \tVorname Nachname",
-                "Institut: \tLorem ipsum dolor sit amet",
-                "Bildcredits: \tAlle Bilder „Urheber (Lizenz)“, sofern nicht anders angegeben",
-            }));
-
-            Assert.That(paragraphs.All(paragraph => paragraph.ParagraphProperties?.GetFirstChild<A.NoBullet>() is not null), Is.True, "The lines are facts rather than points.");
-            Assert.That(paragraphs[0].Elements<A.Run>().Last().RunProperties?.Bold?.Value, Is.True, "The topic stands out.");
-            Assert.That(paragraphs[^1].Elements<A.Break>(), Is.Empty, "The picture credits are one sentence, which wraps where the slide needs it.");
-        });
-    }
-
-    [Test]
-    public async Task TheImprintIsWrittenInTheLanguageOfThePresentation()
-    {
-        var english = new ImprintTexts("Imprint", "Topic:", "Date:", "2023-01-01 (YYYY-MM-DD)", "Author:", "First name Last name", "Institute:", "Picture credits:", "All pictures “Creator (license)”,\nunless stated otherwise");
-        var (file, _) = await WriteAsync(DECK with { Imprint = english }, OPTIONS);
-        using var document = PresentationDocument.Open(file, false);
-        var imprint = SlidesOf(document)[^1];
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(TitleOf(imprint), Is.EqualTo("Imprint"));
-            Assert.That(BodyParagraphsOf(imprint).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[]
-            {
-                "Topic: \tMars",
-                "Date: \t2023-01-01 (YYYY-MM-DD)",
-                "Author: \tFirst name Last name",
-                "Institute: \tLorem ipsum dolor sit amet",
-                "Picture credits: \tAll pictures “Creator (license)”,unless stated otherwise",
-            }));
-
-            Assert.That(document.PresentationPart!.Presentation!.Descendants<P14.Section>().Last().Name?.Value, Is.EqualTo("Imprint"), "The section of the imprint is named like its slide.");
-        });
-    }
-
-    [Test]
-    public async Task TheImprintHasTheFooterOfThePresentation()
-    {
-        var (withFooter, _) = await WriteAsync(DECK, OPTIONS);
-        var (withoutFooter, _) = await WriteAsync(DECK, OPTIONS with { FooterText = string.Empty });
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(FootersOfImprint(withFooter), Is.EqualTo(new[] { "Mission team" }));
-            Assert.That(FootersOfImprint(withoutFooter), Is.Empty);
-        });
-    }
-
-    [Test]
-    public async Task ATemplateWithoutALayoutForTitleAndTextGetsNoImprint()
-    {
-        using var templateFile = TestTemplate.Create(
-            new TestLayout("Title", TestPlaceholder.Title(), TestPlaceholder.Subtitle(SUBTITLE)),
-            new TestLayout("Backdrop", TestPlaceholder.Picture(11, WHOLE_SLIDE), TestPlaceholder.Title()));
-
-        var template = PresentationTemplate.Read(templateFile);
-        templateFile.Position = 0;
-
-        var deck = new SlideDeckSpec("Mars", [new SlideSpec("L1", false, "Mars", "A plan", [], [], [], null)]);
-        using var output = new MemoryStream();
-        await PresentationWriter.WriteAsync(templateFile, template, deck, OPTIONS, new FakePictureSource(), output, CancellationToken.None);
-        output.Position = 0;
-
-        using var document = PresentationDocument.Open(output, false);
-        Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars" }));
-    }
-
-    [Test]
     public async Task KeptTemplateSlidesStayInTheOrderOfTheDeck()
     {
         var deck = new SlideDeckSpec("Weekly",
@@ -301,7 +203,7 @@ public sealed class PresentationWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }), "The imprint of the template takes the place of the one added otherwise.");
+            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }), "The imprint of the template closes the presentation.");
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The slide the deck leaves out is gone, part included.");
             Assert.That(BodyParagraphsOf(slides[2]).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
             Assert.That(slides[3].Slide!.Show, Is.Null, "The user chose the slide, so it shows although the template hides it.");
@@ -334,18 +236,17 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
-    public async Task WithoutTheImprintOfTheTemplateTheImprintIsAdded()
+    public async Task WithoutTheImprintOfTheTemplateThePresentationHasNone()
     {
         var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(2)]);
 
         var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
         using var document = PresentationDocument.Open(file, false);
-        var slides = SlidesOf(document);
 
         Assert.Multiple(() =>
         {
-            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "News", "Impressum" }));
-            Assert.That(BodyParagraphsOf(slides[^1])[0].InnerText, Is.EqualTo("Thema: \tWeekly"), "The imprint is the one written for the presentation.");
+            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "News" }), "The user left the imprint of the template out, and no other takes its place.");
+            Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(2));
         });
     }
 
@@ -362,7 +263,7 @@ public sealed class PresentationWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-            Assert.That(slides.Select(slide => slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value), Is.EqualTo(new[] { "B Title", "B Content", "B Content" }));
+            Assert.That(slides.Select(slide => slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value), Is.EqualTo(new[] { "B Title", "B Content" }));
             Assert.That(document.PresentationPart!.SlideMasterParts.Single().SlideLayoutParts.Count(), Is.EqualTo(Layouts().Length), "The layout a slide leaves stays in the template.");
             Assert.That(FootersOf(slides[0]), Is.EqualTo(new[] { "Mission team" }));
             Assert.That(FootersOf(slides[1]), Is.EqualTo(new[] { "Mission team" }));
@@ -716,8 +617,6 @@ public sealed class PresentationWriterTests
         .Single(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => placeholder.Index?.Value == 1))
         .TextBody!.Elements<A.Paragraph>()
         .ToList();
-
-    private static List<string> FootersOfImprint(MemoryStream file) => FootersOfSlide(file, ^1);
 
     private static List<string> FootersOfSlide(MemoryStream file, Index slide)
     {

@@ -11,5 +11,4 @@ namespace AIStudio.Tools.PowerPoint;
 /// </remarks>
 /// <param name="Title">The title of the presentation.</param>
 /// <param name="Slides">The slides, in order.</param>
-/// <param name="Imprint">The texts of the imprint in the language of the presentation; null when the model wrote none, which leaves the German ones.</param>
-internal sealed partial record SlideDeckSpec(string Title, IReadOnlyList<SlideSpec> Slides, ImprintTexts? Imprint = null);
+internal sealed partial record SlideDeckSpec(string Title, IReadOnlyList<SlideSpec> Slides);

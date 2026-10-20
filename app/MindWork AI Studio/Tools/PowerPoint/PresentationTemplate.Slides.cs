@@ -13,22 +13,15 @@ internal sealed partial class PresentationTemplate
     /// <summary>
     /// The titles an imprint goes by.
     /// </summary>
-    private static readonly string[] IMPRINT_TITLES = [ImprintTexts.GERMAN.Title, "Imprint"];
+    private static readonly string[] IMPRINT_TITLES = ["Impressum", "Imprint"];
 
     /// <summary>
-    /// The beginnings of the lines of an imprint, e.g., "Thema" for the line naming the topic.
+    /// The beginnings of the lines of an imprint, as the corporate template states them, e.g., "Thema" for the line naming the topic.
     /// </summary>
     /// <remarks>
-    /// The labels lose their colon, so that "Autor" also finds "Autoren:".
+    /// The labels lack their colon, so that "Autor" also finds "Autoren:".
     /// </remarks>
-    private static readonly string[] IMPRINT_LABEL_STEMS = new[]
-    {
-        ImprintTexts.GERMAN.TopicLabel,
-        ImprintTexts.GERMAN.DateLabel,
-        ImprintTexts.GERMAN.AuthorLabel,
-        ImprintTexts.GERMAN.InstituteLabel,
-        ImprintTexts.GERMAN.PictureCreditsLabel,
-    }.Select(label => label.TrimEnd(':')).ToArray();
+    private static readonly string[] IMPRINT_LABEL_STEMS = ["Thema", "Datum", "Autor", "Institut", "Bildcredits"];
 
     /// <summary>
     /// A slide with lines starting with at least this many labels of an imprint is one, whatever its title.

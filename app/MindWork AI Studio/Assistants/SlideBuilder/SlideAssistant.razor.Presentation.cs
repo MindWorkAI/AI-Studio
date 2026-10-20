@@ -85,7 +85,7 @@ public partial class SlideAssistant
     private bool HasChosenTemplateSlides => this.template is not null && this.templateSlideUses.Any(use => use is not TemplateSlideUse.OMIT);
 
     /// <summary>
-    /// The imprint of the template, when the user keeps or edits it; it takes the place of the one added otherwise.
+    /// The imprint of the template, when the user keeps or edits it; it closes the presentation.
     /// </summary>
     private TemplateSlide? ChosenTemplateImprint => this.template?.Slides.FirstOrDefault(slide => slide.IsImprint && this.TemplateSlideUseOf(slide.Number) is not TemplateSlideUse.OMIT);
 
@@ -167,9 +167,9 @@ public partial class SlideAssistant
     /// </summary>
     /// <remarks>
     /// The LLM edits every slide it can, so that a presentation used as a template becomes the next
-    /// one in its structure, the imprint included: the LLM updates its topic and date, and the
-    /// presentation gets no second one. A slide whose layout has no slots for content is kept as it
-    /// is. Samples and hints of a template are for the user to leave out.
+    /// one in its structure, the imprint included: the LLM updates its topic and date. A slide whose
+    /// layout has no slots for content is kept as it is. Samples and hints of a template are for the
+    /// user to leave out.
     /// </remarks>
     private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => template.Slides
         .Select(slide => slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT)
@@ -249,30 +249,13 @@ public partial class SlideAssistant
         if (expectedSlideCount <= 0)
             return "    - Choose as many slides as the content needs.";
 
-        return this.HasChosenTemplateSlides
-            ? $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included, but not the imprint."
-            : $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included.";
+        if (!this.HasChosenTemplateSlides)
+            return $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included.";
+
+        return this.ChosenTemplateImprint is null
+            ? $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included."
+            : $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included, but not the imprint.";
     }
-
-    /// <summary>
-    /// The texts of the imprint for the model to translate, in German as the corporate template states them.
-    /// </summary>
-    private static string PromptImprint() => ImprintTexts.GERMAN.ToPromptJson();
-
-    /// <summary>
-    /// The field of the answer holding the imprint, which follows the slides; missing when the user
-    /// keeps or edits the imprint of the template, which needs no texts of its own.
-    /// </summary>
-    private string PromptImprintField() => this.ChosenTemplateImprint is null
-        ? $",{Environment.NewLine}  \"imprint\": {PromptImprint()}"
-        : string.Empty;
-
-    private string PromptImprintRules() => this.ChosenTemplateImprint is null
-        ? """
-               - "imprint" holds the texts of the imprint slide, which is added after the last slide automatically. It is no entry of "slides" and does not count as a slide.
-               - The example shows the texts of "imprint" in German. Write them in the language of the presentation: keep them exactly as they are for a German presentation, and translate them otherwise, keeping the date 2023-01-01 and the punctuation.
-           """
-        : string.Empty;
 
     /// <summary>
     /// The rules for the slides of the template the user chose; empty when the user chose none.

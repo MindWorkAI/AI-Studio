@@ -68,36 +68,8 @@ internal sealed partial record SlideDeckSpec
             return false;
         }
 
-        spec = new SlideDeckSpec(Clean(deck.Title), (deck.Slides ?? []).OfType<SlideDto>().Select(ToSlide).ToList(), ToImprint(deck.Imprint));
+        spec = new SlideDeckSpec(Clean(deck.Title), (deck.Slides ?? []).OfType<SlideDto>().Select(ToSlide).ToList());
         return true;
-    }
-
-    /// <summary>
-    /// The texts of the imprint, as far as the model wrote all of them.
-    /// </summary>
-    /// <remarks>
-    /// An imprint partly in the language of the presentation and partly in German would look
-    /// broken, so a single missing text leaves the German imprint as a whole. A missing imprint is
-    /// no reason to ask the model again.
-    /// </remarks>
-    private static ImprintTexts? ToImprint(ImprintDto? imprint)
-    {
-        if (imprint is null)
-            return null;
-
-        var texts = new ImprintTexts(
-            Clean(imprint.Title),
-            Clean(imprint.TopicLabel),
-            Clean(imprint.DateLabel),
-            Clean(imprint.DatePlaceholder),
-            Clean(imprint.AuthorLabel),
-            Clean(imprint.AuthorPlaceholder),
-            Clean(imprint.InstituteLabel),
-            Clean(imprint.PictureCreditsLabel),
-            Clean(imprint.PictureCreditsPlaceholder));
-
-        string[] values = [texts.Title, texts.TopicLabel, texts.DateLabel, texts.DatePlaceholder, texts.AuthorLabel, texts.AuthorPlaceholder, texts.InstituteLabel, texts.PictureCreditsLabel, texts.PictureCreditsPlaceholder];
-        return values.All(value => value.Length > 0) ? texts : null;
     }
 
     private static SlideSpec ToSlide(SlideDto slide) => new(
@@ -194,29 +166,6 @@ internal sealed partial record SlideDeckSpec
         public string? Title { get; set; }
 
         public List<SlideDto?>? Slides { get; set; }
-
-        public ImprintDto? Imprint { get; set; }
-    }
-
-    private sealed class ImprintDto
-    {
-        public string? Title { get; set; }
-
-        public string? TopicLabel { get; set; }
-
-        public string? DateLabel { get; set; }
-
-        public string? DatePlaceholder { get; set; }
-
-        public string? AuthorLabel { get; set; }
-
-        public string? AuthorPlaceholder { get; set; }
-
-        public string? InstituteLabel { get; set; }
-
-        public string? PictureCreditsLabel { get; set; }
-
-        public string? PictureCreditsPlaceholder { get; set; }
     }
 
     private sealed class SlideDto

@@ -20,7 +20,7 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="MovedSlots">The slots whose placeholders the slide moved or resized, e.g., to make room for a picture of its own, with their place and capacity on the slide; empty when every placeholder stays where the layout puts it.</param>
 /// <param name="Elements">What the slide carries besides the slots of its layout, from back to front.</param>
 /// <param name="IsHidden">Whether the slide is hidden in the slide show.</param>
-/// <param name="IsImprint">Whether the slide is an imprint, which takes the place of the one every presentation gets otherwise.</param>
+/// <param name="IsImprint">Whether the slide is an imprint, which closes the presentation when the user keeps or edits it.</param>
 internal sealed record TemplateSlide(
     int Number,
     Uri PartUri,

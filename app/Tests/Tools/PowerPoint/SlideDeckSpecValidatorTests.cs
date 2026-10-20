@@ -131,7 +131,7 @@ public sealed class SlideDeckSpecValidatorTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Is.Empty, "The imprint of the template counts as little as the one added otherwise.");
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Is.Empty, "The imprint of the template closes the presentation without counting as a slide of it.");
             Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 5, USES), Has.Some.Contains("has 4 slides, but exactly 5 were asked for"));
         });
     }

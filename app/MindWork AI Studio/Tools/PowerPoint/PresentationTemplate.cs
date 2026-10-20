@@ -70,7 +70,7 @@ internal sealed partial class PresentationTemplate
         : this.FindFamily(slide.Layout);
 
     /// <summary>
-    /// Whether a slide of a deck is the imprint of the template, which takes the place of the one every presentation gets otherwise.
+    /// Whether a slide of a deck is the imprint of the template, which closes the presentation.
     /// </summary>
     /// <param name="slide">The slide of the deck.</param>
     public bool IsImprint(SlideSpec slide) => slide.TemplateSlide is { } number && this.FindSlide(number) is { IsImprint: true };
