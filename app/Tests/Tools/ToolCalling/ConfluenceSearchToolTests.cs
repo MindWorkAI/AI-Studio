@@ -141,6 +141,20 @@ public sealed class ConfluenceSearchToolTests
         Assert.That(ConfluenceSearchTool.IsLoginPage(searchUrl), Is.False, "Somebody looking up the login page in the wiki gets search results, not a message saying that the sign-in failed.");
     }
 
+    [Test]
+    public void TheInstructionsPointToTheAttachmentsOfTheWiki()
+    {
+        var instructions = ConfluenceSearchTool.BuildSystemPromptInstructions(endsWebSearch: false);
+        Assert.That(instructions, Does.Contain("/download/attachments/").And.Contain("`read_web_page`"), "Guidelines, templates, and slides often lie in attachments, which the model would otherwise leave unread.");
+    }
+
+    [Test]
+    public void AnAttachmentIsWithinTheWiki()
+    {
+        // Which makes it an internal document Read Web Page may open with its default setting:
+        Assert.That(ConfluenceSearchTool.IsWithinWiki(WIKI, new Uri("https://wiki.example.org/confluence/download/attachments/42/Travel%20guideline.pdf?version=1&api=v2")), Is.True);
+    }
+
     private static Uri ParseBaseUrl(string value) => ConfluenceSearchTool.TryParseBaseUrl(value, out var baseUrl)
         ? baseUrl
         : throw new AssertionException($"'{value}' should be a valid base URL.");
