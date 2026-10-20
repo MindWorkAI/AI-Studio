@@ -189,15 +189,10 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
     {
         var offeredDataSources = options.AutomaticDataSourceSelection ? dataSources.AllowedDataSources : dataSources.SelectedDataSources;
 
-        // Of the unreachable ones, only those the model would have been offered count:
-        var unreachableDataSources = options.AutomaticDataSourceSelection
-            ? dataSources.UnreachableDataSources
-            : dataSources.UnreachableDataSources.Where(dataSource => options.PreselectedDataSourceIds.Contains(dataSource.Id)).ToList();
-
         // A data source configured to return no matches would only ever come back empty:
         return new(
             InOfferOrder(offeredDataSources.Where(dataSource => dataSource.MaxMatches > 0)),
-            InOfferOrder(unreachableDataSources.Where(dataSource => dataSource.MaxMatches > 0)));
+            InOfferOrder(dataSources.GetUnreachableOfTheChat(options)));
     }
 
     /// <summary>
@@ -250,9 +245,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (unreachableDataSources is { Count: > 0 })
         {
             description.AppendLine();
-            description.AppendLine("These data sources of this chat could not be reached or signed in to right now, so they cannot be searched. Their content is missing rather than empty; tell the user so when a question concerns them:");
-            foreach (var dataSource in unreachableDataSources)
-                description.AppendLine($"- name='{dataSource.Name}', type={GetKind(dataSource)}");
+            UnreachableDataSources.AppendTo(description, unreachableDataSources);
         }
 
         return function with

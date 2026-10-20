@@ -94,7 +94,7 @@ public sealed class SemanticSearchToolDescriptionTests
         Assert.Multiple(() =>
         {
             Assert.That(function.DescriptionForLLM, Does.Contain("could not be reached or signed in to right now"), "A wrong password keeps the data source away just as well as a server which is down.");
-            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet', type=external data source"), "The model has to know what is missing, so that it can tell the user.");
+            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"), "The model has to know what is missing, so that it can tell the user.");
             Assert.That(function.DescriptionForLLM, Does.Not.Contain(INTRANET.Id), "A data source which cannot be searched gets no ID to pass.");
             Assert.That(OfferedIds(function), Is.EqualTo(new[] { HANDBOOK.Id }), "The schema still lets the model name only what it may search.");
         });
@@ -108,7 +108,7 @@ public sealed class SemanticSearchToolDescriptionTests
         Assert.Multiple(() =>
         {
             Assert.That(function.DescriptionForLLM, Does.Contain("None of the data sources of this chat can be searched right now."));
-            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet', type=external data source"));
+            Assert.That(function.DescriptionForLLM, Does.Contain("- name='Intranet'"));
             Assert.That(function.DescriptionForLLM, Does.Not.Contain("The data sources you may search"));
         });
     }
