@@ -4,6 +4,9 @@ https://github.com/MindWorkAI/AI-Studio/blob/main/CONTRIBUTING.md
 
 Please also enable "Allow edits by maintainers" for this pull request. An automated check verifies
 this option together with the required statements below.
+
+Open this pull request as a draft while you are still working on it, and mark it ready for review
+once it is done: that is our signal to take over. The automated check waits until then.
 -->
 
 ## Summary

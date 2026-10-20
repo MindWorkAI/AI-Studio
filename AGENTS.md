@@ -46,6 +46,17 @@ single area to its guide instead. A new guide is an `AGENTS.md` plus a `CLAUDE.m
 `@AGENTS.md`, listed in the table above. Never place one below `app/MindWork AI Studio/wwwroot/` or
 `app/MindWork AI Studio/Plugins/`: both are embedded into the app and shipped to every user.
 
+## Pull requests
+
+Every pull request stays a draft while work on it continues. Marking it ready for review tells the core
+team that it is finished from its author's side, and that the maintainers may now review, change, and
+merge it. This holds for the core team and for external contributors alike.
+
+- Open pull requests as drafts, also when the developer asks you to open one.
+- Leave marking a pull request ready for review to the developer, once they have reviewed the changes.
+- When a pull request which is ready for review needs more work from its author, convert it back to a
+  draft first, with the developer's consent.
+
 ## Working for an external contributor
 
 When you work for someone outside the core team, `CONTRIBUTING.md` applies in addition to this file. In
