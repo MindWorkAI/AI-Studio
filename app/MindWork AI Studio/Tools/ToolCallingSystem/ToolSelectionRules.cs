@@ -10,6 +10,7 @@ public static class ToolSelectionRules
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
     public const string SEARCH_CONFLUENCE_TOOL_ID = "search_confluence";
+    public const string SEARCH_INTRANET_TOOL_ID = "search_intranet";
     public const string SEMANTIC_SEARCH_TOOL_ID = "semantic_search";
     public const string SEARCH_MAILS_TOOL_ID = "search_mails";
     public const string READ_MAIL_TOOL_ID = "read_mail";
