@@ -18,7 +18,7 @@ namespace AIStudio.Tools.Web;
 /// read which is still running keeps its file.
 /// </remarks>
 /// <param name="directory">The directory the files lie in.</param>
-internal sealed class WebDocumentFiles(string directory)
+public sealed class WebDocumentFiles(string directory)
 {
     public const string DIRECTORY_NAME = "webDocuments";
 

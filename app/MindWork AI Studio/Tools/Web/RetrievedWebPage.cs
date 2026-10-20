@@ -41,4 +41,15 @@ public sealed class RetrievedWebPage
     /// address of an intranet page does not reach a less trusted provider either.
     /// </remarks>
     public bool ReachedNonPublicAddress { get; init; }
+
+    /// <summary>
+    /// For a document: whether its text ends at the character limit of WebDocumentOptions while the
+    /// document goes on.
+    /// </summary>
+    public bool IsCutAtCharacterLimit { get; init; }
+
+    /// <summary>
+    /// For a document: whether parts of it, such as single pages, could not be read.
+    /// </summary>
+    public bool HasUnreadableParts { get; init; }
 }

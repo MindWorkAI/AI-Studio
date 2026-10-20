@@ -176,6 +176,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
         builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebDocumentReader>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, ConfluenceSearchTool>();

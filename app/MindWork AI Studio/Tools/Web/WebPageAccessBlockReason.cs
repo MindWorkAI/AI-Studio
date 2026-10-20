@@ -10,4 +10,9 @@ public enum WebPageAccessBlockReason
     INSUFFICIENT_PROVIDER_CONFIDENCE,
     TARGET_NOT_ALLOWED,
     PUBLIC_TARGET_NOT_ALLOWED,
+
+    /// <summary>
+    /// The address returned a document, such as a PDF, which the request may not read from there.
+    /// </summary>
+    DOCUMENT_NOT_ALLOWED,
 }
