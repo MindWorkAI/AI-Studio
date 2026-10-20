@@ -7,6 +7,7 @@ Thank you for considering a contribution to AI Studio. This document explains ho
 - We build AI Studio with AI coding agents, and we recommend that you do the same. You remain responsible for every line you submit.
 - Before you build a new feature or change something fundamental, ask in a short proposal whether it fits our plans. Small fixes need no proposal.
 - Fill in the pull request template and tick the required boxes yourself.
+- Open your pull request as a draft while you are still working on it, and mark it ready for review once it is done. That is our signal to take over.
 - Allow edits by maintainers. Pull requests without this option are closed.
 - We treat pull requests as proposals: we will change yours to fit the product, and we may close it.
 - You license your contribution under the MIT License. We ship it as part of AI Studio under the project license or under the MIT License.
@@ -65,13 +66,14 @@ Bug fixes, small improvements, and corrections to the documentation need no prop
 
 - **Fill in the pull request template.** Its required checkboxes are statements you make personally, so tick them yourself.
 - **Allow edits by maintainers.** We revise pull requests with our own agents and push the changes directly to your branch, so this option is mandatory. GitHub offers it only for forks owned by a personal account. If your fork belongs to an organization, please open your pull request from a personal fork instead.
-- An automated check verifies both points. When something is missing, it leaves a comment explaining what to fix. Pull requests which still fail the check after seven days are closed.
+- An automated check verifies both points once your pull request is ready for review. When something is missing, it leaves a comment explaining what to fix. Pull requests which still fail the check after seven days are closed.
+- **Mark your pull request ready for review when it is done.** Keep it a draft as long as you are still working on it. Once you click "Ready for review", we consider it finished from your side, and we may review, change, and merge it at any time. If you want to change something afterward, convert it back to a draft first, or tell us in a comment.
 - Keep each pull request to one topic.
 - GitHub limits you to three open pull requests at a time; drafts do not count. When you have more in the pipeline, wait until one of them is merged or closed.
 
 ### What happens after you submit
 
-We understand pull requests as proposals. We review each one against our product vision and our codebase, and we usually change it before merging: sometimes a little, sometimes a lot. We do this with our own agents, directly on your branch. When we merge, all commits are squashed into one, and you remain credited as its author or co-author in the git history.
+We understand pull requests as proposals. Once yours is ready for review, we review it against our product vision and our codebase, and we usually change it before merging: sometimes a little, sometimes a lot. We do this with our own agents, directly on your branch. When we merge, all commits are squashed into one, and you remain credited as its author or co-author in the git history.
 
 Please keep in mind:
 
