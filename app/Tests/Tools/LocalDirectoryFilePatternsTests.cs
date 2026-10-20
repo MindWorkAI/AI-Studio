@@ -39,7 +39,8 @@ public sealed class LocalDirectoryFilePatternsTests
     [TestCase(null)]
     [TestCase("")]
     [TestCase("   ")]
-    [TestCase("*.txt;")]
+    [TestCase(";")]
+    [TestCase(" ; ; ")]
     [TestCase("folder/*.txt")]
     public void InvalidStoredPatternsFallBackWithoutRemovingExistingDocuments(string? storedPatterns)
     {
@@ -49,9 +50,57 @@ public sealed class LocalDirectoryFilePatternsTests
     }
 
     [Test]
+    public void BatchExclusionsSurviveSettingsSerialization()
+    {
+        var written = new DataBatchProcessing { ExcludePatterns = "*.mp3;*.webm;draft-*" };
+        var json = JsonSerializer.Serialize(written, SettingsManager.JSON_OPTIONS);
+        var read = JsonSerializer.Deserialize<DataBatchProcessing>(json, SettingsManager.JSON_OPTIONS);
+
+        Assert.That(read!.ExcludePatterns, Is.EqualTo(written.ExcludePatterns));
+    }
+
+    [Test]
     public void PatternsAreSplitAndTrimmed()
     {
         Assert.That(FileNamePatterns.Parse(" *.txt ; *.tf ; .gitignore "), Is.EqualTo(new[] { "*.txt", "*.tf", ".gitignore" }));
+    }
+
+    [TestCase("*.txt;")]
+    [TestCase(";*.txt")]
+    [TestCase(";; *.txt ; ; ")]
+    public void EmptyEntriesAreIgnoredWithoutBroadeningTheSelection(string patterns)
+    {
+        var parsed = FileNamePatterns.Parse(patterns);
+        var dataSource = new DataSourceLocalDirectory { FilePatterns = patterns };
+        var selection = new FolderFileSelection(parsed, [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
+        var canonical = new FolderFileSelection(["*.txt"], [], false, false, FolderFileSelection.DEFAULT_MAX_FILE_SIZE_MEGABYTES);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileNamePatterns.IsValid(patterns), Is.True);
+            Assert.That(FileNamePatterns.Validate(patterns), Is.Null);
+            Assert.That(parsed, Is.EqualTo(new[] { "*.txt" }));
+            Assert.That(dataSource.EffectiveFilePatterns, Is.EqualTo(patterns), "Empty entries must not trigger the default document selection.");
+            Assert.That(selection.Selects("report.txt"), Is.True);
+            Assert.That(selection.Selects("report.md"), Is.False);
+            Assert.That(selection.Selects("recording.wav"), Is.False);
+            Assert.That(selection.Describe(), Is.EqualTo(canonical.Describe()), "Empty entries must not change the indexing selection signature.");
+        });
+    }
+
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("   ")]
+    [TestCase(";")]
+    [TestCase(" ; ;; ")]
+    public void IncludesStillRequireAtLeastOneNonEmptyPattern(string? patterns)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(FileNamePatterns.Parse(patterns), Is.Empty);
+            Assert.That(FileNamePatterns.IsValid(patterns), Is.False);
+            Assert.That(FileNamePatterns.Validate(patterns), Is.Not.Null);
+        });
     }
 
     [Test]
@@ -75,6 +124,7 @@ public sealed class LocalDirectoryFilePatternsTests
         {
             Type = DataSourceType.LOCAL_DIRECTORY,
             FilePatterns = "*.txt;*.tf;.gitignore",
+            ExcludePatterns = "secret-*;*.backup",
             IncludeSubdirectories = false,
             IncludeHiddenFilesAndFolders = true,
         };
@@ -85,8 +135,10 @@ public sealed class LocalDirectoryFilePatternsTests
         Assert.Multiple(() =>
         {
             Assert.That(json, Does.Not.Contain(nameof(DataSourceLocalDirectory.EffectiveFilePatterns)));
+            Assert.That(json, Does.Not.Contain(nameof(DataSourceLocalDirectory.EffectiveExcludePatterns)));
             Assert.That(read, Is.TypeOf<DataSourceLocalDirectory>());
             Assert.That(((DataSourceLocalDirectory)read!).FilePatterns, Is.EqualTo("*.txt;*.tf;.gitignore"));
+            Assert.That(((DataSourceLocalDirectory)read).ExcludePatterns, Is.EqualTo("secret-*;*.backup"));
             Assert.That(((DataSourceLocalDirectory)read).IncludeSubdirectories, Is.False);
             Assert.That(((DataSourceLocalDirectory)read).IncludeHiddenFilesAndFolders, Is.True);
         });
@@ -419,17 +471,22 @@ public sealed class LocalDirectoryFilePatternsTests
     [TestCase(":documents:")]
     [TestCase(":DOCUMENTS:;*.tf")]
     [TestCase("report-??.md")]
+    [TestCase("*.txt;")]
+    [TestCase(";*.txt;; *.tf ; ;")]
+    [TestCase(":documents:;;")]
     public void DataSourceValidationAcceptsSimplePatterns(string patterns)
     {
         Assert.That(new DataSourceValidation().ValidateFilePatterns(patterns), Is.Null);
     }
 
     [TestCase("")]
-    [TestCase("*.txt;")]
+    [TestCase(" ; ;; ")]
     [TestCase("**/*.txt")]
     [TestCase("folder/*.txt")]
     [TestCase(":document:")]
     [TestCase("*.txt;:docs:")]
+    [TestCase(";*.txt;; :docs: ;")]
+    [TestCase("*.txt;;folder/*.md;")]
     public void DataSourceValidationRejectsInvalidPatterns(string patterns)
     {
         Assert.That(new DataSourceValidation().ValidateFilePatterns(patterns), Is.Not.Null);

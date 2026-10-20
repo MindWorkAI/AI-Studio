@@ -10,12 +10,15 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
             <DataSourceMissingEmbeddingWarning IsInDataSourceDialog="@true" EmbeddingProviderAdded="@this.SelectAddedEmbeddingProvider"/>
 
+            <MudText Typo="Typo.h6" Class="mb-3">
+                @T("Data source")
+            </MudText>
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
                 T="string"
                 @bind-Text="@this.dataName"
                 Label="@T("Data Source Name")"
-                Class="mb-6"
+                Class="mb-3"
                 MaxLength="@DataSourceValidation.MAX_NAME_LENGTH"
                 Counter="@DataSourceValidation.MAX_NAME_LENGTH"
                 Immediate="@true"
@@ -31,7 +34,7 @@
                 T="string"
                 @bind-Text="@this.dataDescription"
                 Label="@T("Description")"
-                Class="mb-6"
+                Class="mb-0"
                 MaxLength="200"
                 Counter="200"
                 Immediate="@true"
@@ -44,7 +47,10 @@
                 Lines="3"
             />
 
-            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("File")
+            </MudText>
+            <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @T("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
             </MudJustifiedText>
             @if (!this.CanChangeSource)
@@ -73,9 +79,12 @@
                 />
             }
 
-            <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.")
-            </MudJustifiedText>
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("Embedding")
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">
+                @T("Choose an embedding provider to make this data source searchable.")
+            </MudText>
             <MudSelect @ref="@this.embeddingSelect" @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
                 @foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
                 {
@@ -91,14 +100,17 @@
             }
             else if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
-                <MudJustifiedText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-3">
+                <MudJustifiedText Typo="Typo.body2" Color="Color.Tertiary" Class="mb-3">
                     @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                 </MudJustifiedText>
             }
             
-            <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
+            <ManagePandocDependency IntroText="@T("MindWork AI Studio uses Pandoc to read HTML files.")"/>
 
-            <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">
+                @T("Provider trust")
+            </MudText>
+            <MudSelect @ref="@this.confidenceLevelSelect" @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" HelperText="@T("Only providers with this confidence level or higher may receive and process data from this data source.")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
                 @foreach (var level in this.ConfidenceLevels)
                 {
                     <MudSelectItem Value="@level.Value">
@@ -120,6 +132,10 @@
                 </MudButton>
                 <MudDivider/>
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">@T("Text chunking")</MudText>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                        @T("Optional expert settings for how this data source is split before embedding.")
+                    </MudJustifiedText>
                     @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
                     {
                         <MudTextField
@@ -133,9 +149,6 @@
                             AdornmentIcon="@Icons.Material.Filled.TextFields"
                             AdornmentColor="Color.Info"/>
                     }
-                    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                        @T("Optional expert settings for how this data source is split before embedding.")
-                    </MudJustifiedText>
                     <MudNumericField
                         @ref="@this.maxChunkTokenLengthField"
                         T="int"
@@ -163,6 +176,7 @@
                         Adornment="Adornment.Start"
                         AdornmentIcon="@Icons.Material.Filled.CompareArrows"
                         AdornmentColor="Color.Info"/>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2 mt-4">@T("Search results")</MudText>
                     <MudNumericField
                         T="ushort"
                         Min="10"

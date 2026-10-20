@@ -263,6 +263,32 @@ public sealed class FileSourceIndexerWatcherTests
     }
 
     [Test]
+    public void ReorderingEquivalentExclusionsDoesNotRecreateTheWatcher()
+    {
+        var before = DefaultConfiguration(Path.GetTempPath()) with
+        {
+            ExcludePatterns = FileExclusions.Parse("*.mp3;draft-*"),
+        };
+        var after = before with { ExcludePatterns = FileExclusions.Parse("DRAFT-*;*.MP3;*.mp3") };
+
+        Assert.That(FileSourceIndexer.IsSameWatchConfiguration(before, after), Is.True);
+    }
+
+    [Test]
+    public void RenamingAnIncludedFileIntoAnExcludedNameStillRefreshesTheIndex()
+    {
+        var rootPath = Path.Combine(Path.GetTempPath(), $"ai-studio-excluded-rename-{Guid.NewGuid():N}");
+        var configuration = DefaultConfiguration(rootPath) with
+        {
+            FilePatterns = FileNamePatterns.Parse("*.md"),
+            ExcludePatterns = FileExclusions.Parse("draft-*"),
+        };
+        var renamed = new RenamedEventArgs(WatcherChangeTypes.Renamed, rootPath, "draft-report.md", "report.md");
+
+        Assert.That(FileSourceIndexer.IsRelevantWatcherEvent(configuration, renamed), Is.True);
+    }
+
+    [Test]
     public async Task DirectoryWatcherIgnoresTheBatchTranscriptWhenTheMediaIsSelected()
     {
         var directoryPath = Path.Combine(Path.GetTempPath(), $"ai-studio-transcript-watcher-{Guid.NewGuid():N}");

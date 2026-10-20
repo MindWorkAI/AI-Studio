@@ -41,6 +41,18 @@ public sealed class EmbeddingSignatureTests
     }
 
     [Test]
+    public void ChangingDirectoryExclusionsKeepsTheStoredEmbeddingsOfRetainedFiles()
+    {
+        var allFiles = DataSource(ConfidenceLevel.LOW);
+        var filteredFiles = allFiles with { ExcludePatterns = "*.mp3;draft-*" };
+
+        Assert.That(
+            Signature(filteredFiles),
+            Is.EqualTo(Signature(allFiles)),
+            "Exclusions change which files belong to the source, not how retained files are embedded.");
+    }
+
+    [Test]
     public void ChangingDirectoryRecursionKeepsTheStoredEmbeddingsOfRetainedFiles()
     {
         var recursive = DataSource(ConfidenceLevel.LOW);

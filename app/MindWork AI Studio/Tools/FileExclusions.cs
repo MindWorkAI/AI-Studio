@@ -112,6 +112,8 @@ internal static class FileExclusions
         PATH,
         RECURSIVE_WILDCARD,
         INVALID_CHARACTER,
+        FILE_IN_FOLDER_LIST,
+        FOLDER_IN_FILE_LIST,
     }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExclusions).Namespace, nameof(FileExclusions));
@@ -126,18 +128,36 @@ internal static class FileExclusions
 
     public static bool IsValid(string? patterns) => GetValidationIssue(patterns) is ValidationIssue.NONE;
 
+    public static bool IsValidFolders(string? patterns) => GetValidationIssue(patterns, folders: true) is ValidationIssue.NONE;
+
+    public static bool IsValidFiles(string? patterns) => GetValidationIssue(patterns, folders: false) is ValidationIssue.NONE;
+
     /// <summary>
     /// Validates a list of excluded files and folders. An empty list is valid: it excludes nothing
     /// beyond what is built in.
     /// </summary>
-    public static string? Validate(string? patterns) => GetValidationIssue(patterns) switch
+    public static string? Validate(string? patterns) => DescribeValidationIssue(GetValidationIssue(patterns));
+
+    /// <summary>
+    /// Validates the folder field without guessing whether an entry without a slash was meant as a folder.
+    /// </summary>
+    public static string? ValidateFolders(string? patterns) => DescribeValidationIssue(GetValidationIssue(patterns, folders: true));
+
+    /// <summary>
+    /// Validates the file field, directing folder rules to their own field.
+    /// </summary>
+    public static string? ValidateFiles(string? patterns) => DescribeValidationIssue(GetValidationIssue(patterns, folders: false));
+
+    private static string? DescribeValidationIssue(ValidationIssue issue) => issue switch
     {
         ValidationIssue.NONE => null,
         ValidationIssue.SELECTOR => TB("Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/."),
         ValidationIssue.PATH => TB("Please write excluded folders as a name without a path, ending with a slash, e.g., node_modules/ or bin/. Such an entry excludes every folder of that name."),
         ValidationIssue.RECURSIVE_WILDCARD => TB("Please use only single asterisks as wildcards, e.g., *.min.js or cmake-build-*/."),
         ValidationIssue.INVALID_CHARACTER => TB("One of the excluded files or folders contains an invalid character."),
-        _ => throw new ArgumentOutOfRangeException(nameof(patterns)),
+        ValidationIssue.FILE_IN_FOLDER_LIST => TB("Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'."),
+        ValidationIssue.FOLDER_IN_FILE_LIST => TB("Enter folder patterns ending with / in 'Folders'. File patterns must not end with /."),
+        _ => throw new ArgumentOutOfRangeException(nameof(issue)),
     };
 
     /// <summary>
@@ -174,7 +194,7 @@ internal static class FileExclusions
 
     private static bool IsFolderEntry(string entry) => entry.EndsWith(FOLDER_SUFFIX);
 
-    private static ValidationIssue GetValidationIssue(string? patterns)
+    private static ValidationIssue GetValidationIssue(string? patterns, bool? folders = null)
     {
         foreach (var entry in Parse(patterns))
         {
@@ -193,6 +213,9 @@ internal static class FileExclusions
 
             if (name.IndexOfAny(FileNamePatterns.INVALID_PATTERN_CHARACTERS) >= 0)
                 return ValidationIssue.INVALID_CHARACTER;
+
+            if (folders is not null && IsFolderEntry(entry) != folders.Value)
+                return folders.Value ? ValidationIssue.FILE_IN_FOLDER_LIST : ValidationIssue.FOLDER_IN_FILE_LIST;
         }
 
         return ValidationIssue.NONE;

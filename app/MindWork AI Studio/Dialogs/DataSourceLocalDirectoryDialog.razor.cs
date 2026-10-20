@@ -288,7 +288,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private string NormalizeFilePatterns() => FileNamePatterns.Normalize(this.dataFilePatterns);
 
-    private void RestoreDefaultExcludePatterns() => this.dataExcludePatterns = FileExclusions.DEFAULT_PATTERNS;
+    private void RestoreDefaultFilePatterns() => this.dataFilePatterns = DataSourceLocalDirectory.DEFAULT_FILE_PATTERNS;
 
     /// <summary>
     /// Gives the fields which are checked against each other a fresh verdict: the embedding provider

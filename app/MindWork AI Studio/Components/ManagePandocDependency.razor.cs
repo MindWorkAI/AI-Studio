@@ -18,7 +18,10 @@ public partial class ManagePandocDependency : MSGComponentBase
     [Inject]
     private RustService RustService { get; init; } = null!;
 
-    private PandocInstallation pandocInstallation;
+    // Null means the silent availability check has not completed yet.
+    private PandocInstallation? pandocInstallation;
+
+    internal static bool ShouldShowInstallationPrompt(PandocInstallation? installation) => installation is { IsAvailable: false };
 
     #region Overrides of MSGComponentBase
 
@@ -32,10 +35,10 @@ public partial class ManagePandocDependency : MSGComponentBase
 
     private Color DetermineButtonColor()
     {
-        if (this.pandocInstallation == default)
+        if (this.pandocInstallation is null)
             return Color.Default;
         
-        switch (this.pandocInstallation)
+        switch (this.pandocInstallation.Value)
         {
             case { CheckWasSuccessful: true, IsAvailable: true }:
                 return Color.Default;
@@ -50,10 +53,10 @@ public partial class ManagePandocDependency : MSGComponentBase
     
     private string DetermineButtonText()
     {
-        if(this.pandocInstallation == default)
+        if(this.pandocInstallation is null)
             return T("Please wait while we check the availability of Pandoc.");
         
-        switch (this.pandocInstallation)
+        switch (this.pandocInstallation.Value)
         {
             case { CheckWasSuccessful: true, IsAvailable: true }:
                 return T("Check your Pandoc installation");
@@ -68,10 +71,10 @@ public partial class ManagePandocDependency : MSGComponentBase
 
     private string DetermineIntroText()
     {
-        if (this.pandocInstallation == default)
+        if (this.pandocInstallation is null)
             return $"{this.IntroText} {T("Please wait while we check the availability of Pandoc.")}";
         
-        switch (this.pandocInstallation)
+        switch (this.pandocInstallation.Value)
         {
             case { CheckWasSuccessful: true, IsAvailable: true }:
                 return $"{this.IntroText} {T("Your Pandoc installation meets the requirements.")}";

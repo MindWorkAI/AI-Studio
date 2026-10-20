@@ -1,0 +1,46 @@
+@inherits MSGComponentBase
+
+<div class="file-exclusion-editor mb-3">
+    @if (this.ShowHeader || this.ShowHelp)
+    {
+        <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+            @if (this.ShowHeader)
+            {
+                <MudText Typo="Typo.subtitle2" Class="flex-grow-1">@this.EditorLabel</MudText>
+            }
+            @if (this.ShowHelp)
+            {
+                <MudTooltip Text="@T("Exclusion help and examples")" RootStyle="display: inline-flex;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Color="@(this.showHelp ? Color.Info : Color.Default)" OnClick="@this.ToggleHelp" aria-label="@T("Exclusion help and examples")" aria-expanded="@(this.showHelp ? "true" : "false")"/>
+                </MudTooltip>
+            }
+        </MudStack>
+    }
+
+    <MudStack Spacing="1">
+        @if (this.ReadOnly)
+        {
+            <TextInfoLines Icon="@Icons.Material.Filled.FolderOff" Label="@T("Excluded folders")" Value="@this.state.FolderText" Lines="1" MaxLines="0" ClipboardTooltipSubject="@T("the excluded folders")"/>
+            <TextInfoLines Icon="@Icons.Material.Filled.FilterAltOff" Label="@T("Excluded files")" Value="@this.state.FileText" Lines="1" MaxLines="0" ClipboardTooltipSubject="@T("the excluded files")"/>
+        }
+        else
+        {
+            <MudTextField T="string" InputId="@this.folderInputId" Text="@this.state.FolderText" TextChanged="@this.ChangeFoldersAsync" Immediate="@true" Disabled="@this.Disabled" Label="@T("Folders")" Lines="1" AutoGrow="@true" MaxLines="0" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@FileExclusions.ValidateFolders" UserAttributes="@INPUT_ATTRIBUTES" Placeholder="node_modules/;bin/;cmake-build-*/" Adornment="@(this.ShowReset ? Adornment.End : Adornment.None)" AdornmentIcon="@Icons.Material.Filled.Restore" OnAdornmentClick="@(() => this.RestoreDefaultsAsync(true))" AdornmentAriaLabel="@this.FolderRestoreLabel"/>
+            <MudTextField T="string" InputId="@this.fileInputId" Text="@this.state.FileText" TextChanged="@this.ChangeFilesAsync" Immediate="@true" Disabled="@this.Disabled" Label="@T("Files")" Lines="1" AutoGrow="@true" MaxLines="0" Class="pattern-text-field" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@FileExclusions.ValidateFiles" UserAttributes="@INPUT_ATTRIBUTES" Placeholder="*.min.js;*.webm;draft-*" Adornment="@(this.ShowReset ? Adornment.End : Adornment.None)" AdornmentIcon="@Icons.Material.Filled.Restore" OnAdornmentClick="@(() => this.RestoreDefaultsAsync(false))" AdornmentAriaLabel="@this.FileRestoreLabel"/>
+        }
+    </MudStack>
+
+    @if (!this.ReadOnly)
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">@T("Separate patterns with semicolons. Folder patterns must end with /. Exclusions take priority.")</MudText>
+    }
+    <MudCollapse Expanded="@(this.ShowHelp && this.showHelp)">
+        <MudSimpleTable Dense="@true" Elevation="0" Class="mt-2" aria-label="@T("Exclusion examples")">
+            <tbody>
+                <tr><td><code>*.pdf</code></td><td>@T("PDF files, regardless of letter case")</td></tr>
+                <tr><td><code>draft-*</code></td><td>@T("File names starting with draft-")</td></tr>
+                <tr><td><code>*build/</code></td><td>@T("Folders ending in build, such as build or app-build")</td></tr>
+            </tbody>
+        </MudSimpleTable>
+    </MudCollapse>
+</div>

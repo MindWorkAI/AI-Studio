@@ -411,9 +411,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Select the output folder
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1598970341"] = "Select the output folder"
 
--- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1624717965"] = "Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway."
-
 -- The configured default policy no longer exists. Please select another document analysis policy.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T169666151"] = "The configured default policy no longer exists. Please select another document analysis policy."
 
@@ -435,8 +432,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Please provide a file name without a path, e.g., my-results.csv
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T189587595"] = "Please provide a file name without a path, e.g., my-results.csv"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1902969218"] = "Hidden files and folders"
+
 -- Select the folder containing your documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1926838679"] = "Select the folder containing your documents"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2000156297"] = "Files to include"
 
 -- Include subfolders?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2086334687"] = "Include subfolders?"
@@ -482,9 +485,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Was not able to read the existing transcript: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2397111152"] = "Was not able to read the existing transcript: {0}"
-
--- File patterns
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2460883298"] = "File patterns"
 
 -- Load prompt from file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2474257795"] = "Load prompt from file"
@@ -534,6 +534,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- The batch run finished, but one file could not be processed. See the progress table and log for details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "The batch run finished, but one file could not be processed. See the progress table and log for details."
 
+-- Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3204694333"] = "Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below."
+
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3225743883"] = "File size limit"
+
 -- Maximum pause between files
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximum pause between files"
 
@@ -557,9 +563,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Processing pace
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3428873429"] = "Processing pace"
-
--- Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3436936162"] = "Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file."
 
 -- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'."
@@ -593,9 +596,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3899869356"] = "Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"
-
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3934601817"] = "These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js."
 
 -- Select the file with your instructions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3943995624"] = "Select the file with your instructions"
@@ -4440,6 +4440,66 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T244391
 -- Change what this tile opens
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
 
+-- Exclusion help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1309128010"] = "Exclusion help and examples"
+
+-- PDF files, regardless of letter case
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T138823545"] = "PDF files, regardless of letter case"
+
+-- Folders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1412427146"] = "Folders"
+
+-- File names starting with draft-
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T1676890987"] = "File names starting with draft-"
+
+-- Folders ending in build, such as build or app-build
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T27471988"] = "Folders ending in build, such as build or app-build"
+
+-- Excluded files and folders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T286958948"] = "Excluded files and folders"
+
+-- Files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T3877444400"] = "Files"
+
+-- Separate patterns with semicolons. Folder patterns must end with /. Exclusions take priority.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T3993888277"] = "Separate patterns with semicolons. Folder patterns must end with /. Exclusions take priority."
+
+-- Exclusion examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T727293714"] = "Exclusion examples"
+
+-- Restore default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEEXCLUSIONEDITOR::T913168756"] = "Restore default"
+
+-- Exclude folders ending in build, such as build or app-build
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1241240542"] = "Exclude folders ending in build, such as build or app-build"
+
+-- Pattern help and examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1369669520"] = "Pattern help and examples"
+
+-- Include readable text files, including files without an extension
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1634513321"] = "Include readable text files, including files without an extension"
+
+-- File names starting with draft-
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T1676890987"] = "File names starting with draft-"
+
+-- Pattern examples
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T2430822600"] = "Pattern examples"
+
+-- Separate patterns with semicolons. Exclusions take priority over included files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T2728429336"] = "Separate patterns with semicolons. Exclusions take priority over included files."
+
+-- PDF and Word files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T3467839719"] = "PDF and Word files"
+
+-- Patterns match file names regardless of letter case. Folder paths are not supported.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T3691425703"] = "Patterns match file names regardless of letter case. Folder paths are not supported."
+
+-- Include all files, including audio and video
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T827447634"] = "Include all files, including audio and video"
+
+-- Include all documents and readable text files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::FILEPATTERNSELECTION::T967949655"] = "Include all documents and readable text files"
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
 
@@ -6744,6 +6804,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG:
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T900713019"] = "Cancel"
 
+-- Folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T104168189"] = "Folder"
+
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1108876344"] = "Hide Expert Settings"
 
@@ -6762,20 +6825,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1311820297"
 -- Selected base directory for this data source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1312296210"] = "Selected base directory for this data source"
 
+-- MindWork AI Studio uses Pandoc to read HTML files.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T133018120"] = "MindWork AI Studio uses Pandoc to read HTML files."
+
 -- No embedding selected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1359179968"] = "No embedding selected"
 
 -- Select a root directory for this data source.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1400580807"] = "Select a root directory for this data source."
 
+-- Provider trust
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T148137342"] = "Provider trust"
+
 -- No, only index files in the selected folder
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1490813458"] = "No, only index files in the selected folder"
 
 -- Number of tokens repeated at the start of the next chunk. The default overlap is {0} tokens.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1588814044"] = "Number of tokens repeated at the start of the next chunk. The default overlap is {0} tokens."
-
--- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1624717965"] = "Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway."
 
 -- Tokenizer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1696723386"] = "Tokenizer"
@@ -6792,6 +6858,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1847791252"] = "Update"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1902969218"] = "Hidden files and folders"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2000156297"] = "Files to include"
+
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2034620186"] = "Data source"
+
 -- Include subfolders?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2086334687"] = "Include subfolders?"
 
@@ -6807,8 +6882,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T236253137"]
 -- Please enter a token limit of at least 1.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2406580478"] = "Please enter a token limit of at least 1."
 
--- File patterns
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2460883298"] = "File patterns"
+-- Search results
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2499087427"] = "Search results"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Add"
@@ -6822,6 +6897,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"] = "Embedding"
 
+-- Choose an embedding provider to make this data source searchable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2861534545"] = "Choose an embedding provider to make this data source searchable."
+
 -- Excluded files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T286958948"] = "Excluded files and folders"
 
@@ -6831,8 +6909,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2961294165"
 -- Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3017942214"] = "Audio and video files which this data source selects are skipped, because your transcription provider does not meet the confidence level this data source requires."
 
+-- Text chunking
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3105524153"] = "Text chunking"
+
 -- Audio and video files which this data source selects are skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3119708878"] = "Audio and video files which this data source selects are skipped until you choose a transcription provider in the settings."
+
+-- Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3204694333"] = "Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below."
+
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3225743883"] = "File size limit"
 
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3242265813"] = "Please enter 0 or a positive overlap length."
@@ -6840,29 +6927,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3242265813"
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3353866230"] = "Ignore files larger than"
 
--- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
-
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3361153305"] = "Show Expert Settings"
 
 -- No, ignore hidden files and folders
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3584816527"] = "No, ignore hidden files and folders"
 
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3934601817"] = "These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js."
-
--- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T529871858"] = "In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider."
+-- Only providers with this confidence level or higher may receive and process data from this data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3755939304"] = "Only providers with this confidence level or higher may receive and process data from this data source."
 
 -- Select the base directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T562479068"] = "Select the base directory"
 
--- Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T599406584"] = "Which files should be indexed? Separate multiple patterns with a semicolon, e.g., *.txt;*.pdf;*.docx;.gitignore. Use :documents: for every document and readable text file, :text: for readable text files only, or * for every file. Audio and video files, e.g., *.mp3 or *.mp4, are transcribed by your transcription provider."
-
 -- Yes, index hidden files and folders as well
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T607153623"] = "Yes, index hidden files and folders as well"
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T7425959"] = "Restore default patterns"
 
 -- The data source token limit must not be larger than the embedding provider token limit ({0}).
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T787118522"] = "The data source token limit must not be larger than the embedding provider token limit ({0})."
@@ -7002,8 +7083,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1133561850"] = "
 -- Default tokenizer
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1220918127"] = "Default tokenizer"
 
+-- MindWork AI Studio uses Pandoc to read HTML files.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T133018120"] = "MindWork AI Studio uses Pandoc to read HTML files."
+
 -- No embedding selected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1359179968"] = "No embedding selected"
+
+-- Provider trust
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T148137342"] = "Provider trust"
 
 -- Number of tokens repeated at the start of the next chunk. The default overlap is {0} tokens.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1588814044"] = "Number of tokens repeated at the start of the next chunk. The default overlap is {0} tokens."
@@ -7023,6 +7110,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Update"
 
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2034620186"] = "Data source"
+
 -- The overlap must be smaller than the effective token limit.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2101951526"] = "The overlap must be smaller than the effective token limit."
 
@@ -7034,6 +7124,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2406580478"] = "
 
 -- This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2468760910"] = "This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires."
+
+-- Search results
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2499087427"] = "Search results"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Add"
@@ -7047,14 +7140,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2838542994"] = "
 -- Describe what data this file contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2859265837"] = "Describe what data this file contains to help the AI select it."
 
+-- Choose an embedding provider to make this data source searchable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2861534545"] = "Choose an embedding provider to make this data source searchable."
+
 -- Token limit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2961294165"] = "Token limit"
 
+-- Text chunking
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3105524153"] = "Text chunking"
+
 -- Please enter 0 or a positive overlap length.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3242265813"] = "Please enter 0 or a positive overlap length."
-
--- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
 
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "Show Expert Settings"
@@ -7062,11 +7158,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3361153305"] = "
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Select the file"
 
+-- Only providers with this confidence level or higher may receive and process data from this data source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3755939304"] = "Only providers with this confidence level or higher may receive and process data from this data source."
+
 -- This audio or video file is skipped until you choose a transcription provider in the settings.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4026150982"] = "This audio or video file is skipped until you choose a transcription provider in the settings."
 
--- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T529871858"] = "In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding provider."
+-- File
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T723007075"] = "File"
 
 -- The data source token limit must not be larger than the embedding provider token limit ({0}).
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T787118522"] = "The data source token limit must not be larger than the embedding provider token limit ({0})."
@@ -8601,9 +8700,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T15
 -- Leave empty to use the ai-results subfolder of the input folder.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1550632323"] = "Leave empty to use the ai-results subfolder of the input folder."
 
--- Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1624717965"] = "Hidden are files and folders whose names start with a dot, such as .git or .env, and those hidden by the operating system. A file pattern which starts with a dot, such as .gitignore, selects such files anyway."
-
 -- seconds
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1723256298"] = "seconds"
 
@@ -8616,8 +8712,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T17
 -- Batch processing options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1893713430"] = "Batch processing options are preselected"
 
+-- Hidden files and folders
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1902969218"] = "Hidden files and folders"
+
 -- Default custom column separator
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T19367494"] = "Default custom column separator"
+
+-- Files to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2000156297"] = "Files to include"
 
 -- Default document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2015391667"] = "Default document analysis policy"
@@ -8643,9 +8745,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T24
 -- When enabled, new batch runs start with the defaults configured below.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2592677194"] = "When enabled, new batch runs start with the defaults configured below."
 
--- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2594325620"] = "Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats."
-
 -- Subfolders are included
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2607092632"] = "Subfolders are included"
 
@@ -8667,9 +8766,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T28
 -- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2908365499"] = "Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators."
 
--- Default file patterns
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2909693903"] = "Default file patterns"
-
 -- Only the selected folder is processed
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Only the selected folder is processed"
 
@@ -8684,6 +8780,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T31
 
 -- These instructions are applied to every document of a new batch run.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3195548336"] = "These instructions are applied to every document of a new batch run."
+
+-- Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3204694333"] = "Files and folders are hidden if their names start with a dot or the operating system marks them as hidden. If you choose 'No', hidden items are skipped. To explicitly include a file such as .gitignore, enter its name under 'Files to include'. Using generic patterns such as *, :text: or :documents: still skips hidden files. Exclusion rules always take priority; you can change them in the fields below."
+
+-- File size limit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3225743883"] = "File size limit"
 
 -- Ignore files larger than
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3353866230"] = "Ignore files larger than"
@@ -8714,9 +8816,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T37
 
 -- Default results table name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3816237687"] = "Default results table name"
-
--- These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3934601817"] = "These files and folders are left out, even when a file pattern selects them. Separate entries with a semicolon or a line break. End an entry with a slash to exclude every folder of that name, e.g., node_modules/. Other entries name files, e.g., *.min.js."
 
 -- Default Markdown instructions file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3967465682"] = "Default Markdown instructions file"
@@ -12384,6 +12483,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "The
 -- policy files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "policy files"
 
+-- Enter folder patterns ending with / in 'Folders'. File patterns must not end with /.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T2019378403"] = "Enter folder patterns ending with / in 'Folders'. File patterns must not end with /."
+
+-- Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T2695719308"] = "Folder patterns must end with /, e.g., build/. Enter file patterns such as *.pdf in 'Files'."
+
 -- Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXCLUSIONS::T405437626"] = "Selectors such as :text: cannot be excluded. Please use file name patterns such as *.min.js or folder names such as bin/."
 
@@ -12608,9 +12713,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T2207479763"] = "One of the 
 
 -- Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T3371062811"] = "Please provide at least one file pattern, e.g., :documents: or *.txt. Separate multiple patterns with a semicolon."
-
--- Please remove empty file patterns. Separate valid patterns with a single semicolon.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T368919579"] = "Please remove empty file patterns. Separate valid patterns with a single semicolon."
 
 -- Please use only single asterisks as wildcards, e.g., *.txt or report-*.md.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILENAMEPATTERNS::T495100949"] = "Please use only single asterisks as wildcards, e.g., *.txt or report-*.md."

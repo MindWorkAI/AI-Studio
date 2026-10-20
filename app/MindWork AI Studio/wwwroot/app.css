@@ -531,3 +531,10 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
 }
+
+/* Pattern lists wrap and grow to their full content without an internal scrollbar. */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: hidden !important;
+}
