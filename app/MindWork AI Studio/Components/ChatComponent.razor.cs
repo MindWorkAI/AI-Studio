@@ -1569,8 +1569,26 @@ public partial class ChatComponent : MSGComponentBase
         ? Task.CompletedTask
         : this.StartNewChat(targetWorkspaceId: workspaceId);
 
+    /// <summary>
+    /// Starts a new chat in place of the open one.
+    /// </summary>
+    /// <remarks>
+    /// Every way to start a new chat leads here: the buttons of the toolbar, a change of the chat
+    /// template, and the workspace tree. So every new chat gets its chat template with the data
+    /// sources, tools, and example conversation, its profile, and its provider in the same way, and
+    /// the user is asked about unsaved changes in the same way.
+    /// </remarks>
+    /// <param name="useSameWorkspace">True starts the new chat with a thread right away, in the workspace of the open chat. False starts it outside any workspace, and its thread comes with the first message.</param>
+    /// <param name="deletePreviousChat">Whether to delete the open chat first.</param>
+    /// <param name="targetWorkspaceId">The workspace for the new chat, when the workspace tree asks for one. When given, the new chat gets a thread in that workspace, whatever useSameWorkspace says.</param>
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null)
     {
+        //
+        // Where the new chat goes is decided right away, when it is asked for. Deleting the open chat
+        // below takes it out of view, and with it the workspace this component remembers for the header:
+        //
+        var workspaceOfNewChat = targetWorkspaceId ?? this.currentWorkspaceId;
+
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
         // about possible data loss:
@@ -1672,19 +1690,12 @@ public partial class ChatComponent : MSGComponentBase
         else
         {
             //
-            // When the user wants to start a new chat in the same workspace, we have to
-            // reset the chat thread only. The workspace id and the workspace name remain
-            // the same. The new chat reaches the disk only once there is something to keep:
+            // When the user wants to start a new chat in a workspace, the same one or the one the
+            // workspace tree asked for, we have to reset the chat thread only. The new chat reaches
+            // the disk only once there is something to keep. The header follows once the parent
+            // hands the new thread back to us:
             //
-            // The workspace tree may ask for another workspace than the one of the chat being left,
-            // though. We switch only now, after the user had the chance to cancel, so that a canceled
-            // request leaves the open chat alone. The header follows once the parent hands the new
-            // thread back to us:
-            //
-            if (targetWorkspaceId is { } workspaceId)
-                this.currentWorkspaceId = workspaceId;
-
-            this.ChatThread = this.NewChatThread(string.Empty);
+            this.ChatThread = this.NewChatThread(string.Empty, workspaceOfNewChat);
             this.unstoredChat = this.ChatThread;
         }
 
@@ -2140,8 +2151,9 @@ public partial class ChatComponent : MSGComponentBase
     /// a workspace replaces them right afterward with those its chat template asks for.
     /// </remarks>
     /// <param name="name">The name of the thread.</param>
+    /// <param name="workspaceId">The workspace of the thread. Without one, the thread goes to the workspace of the open chat.</param>
     /// <returns>The new thread.</returns>
-    private ChatThread NewChatThread(string name) => new()
+    private ChatThread NewChatThread(string name, Guid? workspaceId = null) => new()
     {
         DataSourceOptions = this.earlyDataSourceOptions,
         IncludeDateTime = true,
@@ -2150,7 +2162,7 @@ public partial class ChatComponent : MSGComponentBase
         SelectedChatTemplate = this.currentChatTemplate.Id,
         SelectedToolIds = [..this.selectedToolIds],
         SystemPrompt = SystemPrompts.DEFAULT,
-        WorkspaceId = this.currentWorkspaceId,
+        WorkspaceId = workspaceId ?? this.currentWorkspaceId,
         ChatId = Guid.NewGuid(),
         Name = name,
         Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
