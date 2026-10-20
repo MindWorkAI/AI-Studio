@@ -48,6 +48,12 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// </summary>
     public bool HasFilteredPromptInjections => this.PromptInjectionRedactedCount > 0;
 
+    /// <summary>
+    /// Whether the content ends where the caller's character limit was reached, while the file
+    /// goes on. Not a failure: the caller asked for no more.
+    /// </summary>
+    public bool IsCutAtCharacterLimit { get; init; }
+
     public static FileExtractionResult Success(string content, string? detectedFormat = null) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES, detectedFormat);
 
     public static FileExtractionResult Partial(string content, IReadOnlyList<int> failedPages, string? detectedFormat = null) => new(FileExtractionOutcome.PARTIAL, content, FileExtractionErrorCode.PAGE_EXTRACTION_FAILED, null, failedPages, detectedFormat);
