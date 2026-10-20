@@ -1,6 +1,7 @@
 using System.Web;
 
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tests.Tools.ToolCalling;
 
@@ -73,6 +74,22 @@ public sealed class IntranetSearchToolTests
             Assert.That(hit.Summary, Is.EqualTo("Every business trip needs approval …"), "The marks of the words found and of the gaps are SharePoint's, not text.");
             Assert.That(hit.FileType, Is.EqualTo("pdf"));
             Assert.That(hit.Site, Is.EqualTo("Human Resources"));
+        });
+    }
+
+    [Test]
+    public void AnAddressWithSpacesReachesTheModelWhole()
+    {
+        // SharePoint writes its paths as they are named, spaces included:
+        const string ANSWER = """{"PrimaryQueryResult":{"RelevantResults":{"Table":{"Rows":[{"Cells":[{"Key":"Title","Value":"Jobticket"},{"Key":"Path","Value":"https://intranet.example.org/sites/hr/Shared Documents/Jobticket Antrag.pdf"}]}]}}}}""";
+        Assert.That(IntranetSearchTool.TryParseResults(ANSWER, out var hits), Is.True);
+
+        var url = IntranetSearchTool.BuildResults(hits)[0]!["url"]!.GetValue<string>();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(url, Is.EqualTo("https://intranet.example.org/sites/hr/Shared%20Documents/Jobticket%20Antrag.pdf"));
+            Assert.That(WebAddresses.Find(url), Does.Contain(url), "An address cut at a space would not count as given, and Read Web Page would refuse the hit while the free address choice is off.");
         });
     }
 

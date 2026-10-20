@@ -236,21 +236,6 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
             throw new InvalidOperationException(TB("The intranet did not answer with search results. Either its address is not the one of a SharePoint Server, or it asked for a sign-in, which AI Studio answers with your operating system account only when your intranet has a private or VPN address. Open the intranet in your browser to check your access."));
 
         hits = await SanitizeAsync(promptInjectionGuardService, hits.Take(maxResults).ToList(), searchUrl);
-        var results = new JsonArray();
-        foreach (var hit in hits)
-        {
-            var result = new JsonObject
-            {
-                ["title"] = hit.Title,
-                ["url"] = hit.Url.ToString(),
-            };
-
-            AddIfNotEmpty(result, "excerpt", hit.Summary);
-            AddIfNotEmpty(result, "file_type", hit.FileType);
-            AddIfNotEmpty(result, "last_modified", hit.LastModified);
-            AddIfNotEmpty(result, "site", hit.Site);
-            results.Add(result);
-        }
 
         //
         // A search without hits brought nothing of the intranet into the chat, so it demands
@@ -262,14 +247,45 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
         {
             JsonContent = new JsonObject
             {
-                ["search_url"] = searchUrl.ToString(),
+                ["search_url"] = searchUrl.AbsoluteUri,
                 ["result_count"] = hits.Count,
-                ["results"] = results,
+                ["results"] = BuildResults(hits),
             },
-            Sources = hasHits ? [new Source(string.Format(TB("Intranet search for “{0}”"), query), searchUrl.ToString(), SourceOrigin.TOOL)] : [],
+            Sources = hasHits ? [new Source(string.Format(TB("Intranet search for “{0}”"), query), searchUrl.AbsoluteUri, SourceOrigin.TOOL)] : [],
             RequiredProviderConfidence = hasHits ? ConfidenceLevel.HIGH : ConfidenceLevel.NONE,
             RequiredOutboundDataRestriction = hasHits ? GetOutboundDataRequirement(await ReadWebPageTool.ReadInternalPageOutboundDataRestrictionAsync(toolSettingsService)) : OutboundDataRequirement.NONE,
         };
+    }
+
+    /// <summary>
+    /// The hits as the model gets them.
+    /// </summary>
+    /// <remarks>
+    /// Every address is written escaped, as AbsoluteUri has it. SharePoint names its libraries and
+    /// files with spaces, such as "Shared Documents/Travel guideline.pdf", and Uri.ToString() turns
+    /// %20 back into a space. An address with a space ends at it for whoever finds addresses in a
+    /// result, see WebAddresses.Find: the hit would not count as given to the model, and Read Web
+    /// Page would refuse to open it while the free address choice is off.
+    /// </remarks>
+    internal static JsonArray BuildResults(IEnumerable<IntranetSearchHit> hits)
+    {
+        var results = new JsonArray();
+        foreach (var hit in hits)
+        {
+            var result = new JsonObject
+            {
+                ["title"] = hit.Title,
+                ["url"] = hit.Url.AbsoluteUri,
+            };
+
+            AddIfNotEmpty(result, "excerpt", hit.Summary);
+            AddIfNotEmpty(result, "file_type", hit.FileType);
+            AddIfNotEmpty(result, "last_modified", hit.LastModified);
+            AddIfNotEmpty(result, "site", hit.Site);
+            results.Add(result);
+        }
+
+        return results;
     }
 
     /// <summary>
@@ -415,7 +431,7 @@ public sealed partial class IntranetSearchTool(WebPageRetrievalService webPageRe
         if (hits.Count is 0)
             return hits;
 
-        var source = PromptInjectionSource.WebContent(searchUrl.ToString());
+        var source = PromptInjectionSource.WebContent(searchUrl.AbsoluteUri);
         var texts = hits.SelectMany(hit => new[] { hit.Title, hit.Summary, hit.FileType, hit.LastModified, hit.Site })
             .Select(text => new PromptInjectionText(text, source))
             .ToList();

@@ -35,6 +35,13 @@ public sealed class EmbeddedDocumentLinksTests
     }
 
     [Test]
+    public void AFileNameWithSpacesStaysOneAddress()
+    {
+        var markdown = ExtractMarkdown("""<iframe src="/sites/hr/Shared Documents/Jobticket Antrag.pdf"></iframe>""");
+        Assert.That(markdown, Does.Contain("(https://intranet.example.org/sites/hr/Shared%20Documents/Jobticket%20Antrag.pdf)"), "An address with a space would end at it and not count as given to the model.");
+    }
+
+    [Test]
     public void AnObjectWithADocumentTypeBecomesALinkNamedAfterItsFile()
     {
         var markdown = ExtractMarkdown("""<object data="download.aspx?id=42" type="application/pdf"></object>""");

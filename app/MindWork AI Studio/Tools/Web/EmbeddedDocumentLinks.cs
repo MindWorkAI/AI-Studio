@@ -58,7 +58,8 @@ internal static class EmbeddedDocumentLinks
 
             var link = HtmlNode.CreateNode("<p><a></a></p>");
             var anchor = link.FirstChild;
-            anchor.SetAttributeValue("href", documentUrl.ToString());
+            // Escaped, because ToString() would turn %20 back into a space, which ends an address:
+            anchor.SetAttributeValue("href", documentUrl.AbsoluteUri);
             anchor.InnerHtml = WebUtility.HtmlEncode($"Embedded document: {GetLinkText(node, documentUrl)}");
             parent.ReplaceChild(link, node);
         }
