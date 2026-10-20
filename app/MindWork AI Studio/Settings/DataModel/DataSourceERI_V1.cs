@@ -94,9 +94,19 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
+    /// to ask the server for all pages before it as well. A server may refuse more matches than its
+    /// retrieval process allows, which often is the very number configured here: it would refuse
+    /// every further page, and the model would hear that the data source could not be searched
+    /// rather than that there is nothing more.
+    /// </remarks>
+    public int GetLastPage() => 1;
+
+    /// <inheritdoc />
     public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
     {
-        var lastPage = RetrievalPaging.GetLastPage(this);
+        var lastPage = this.GetLastPage();
         if (page < 1 || page > lastPage)
             throw new ArgumentOutOfRangeException(nameof(page), page, $"An ERI data source has pages from 1 to {lastPage}.");
 
@@ -107,7 +117,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
         // thread still tells the server what the conversation is about. Nor does it know an offset,
         // so the data source has a single page, asking for exactly what the classic RAG process asks
-        // for, see RetrievalPaging.GetLastPage:
+        // for, see GetLastPage:
         //
         var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, this.MaxMatches, token);
         if (contexts is null)

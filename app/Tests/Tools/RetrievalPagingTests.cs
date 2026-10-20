@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.RAG;
 
@@ -148,17 +149,17 @@ public sealed class RetrievalPagingTests
     [TestCase((ushort)500)]
     public void AnERIDataSourceHasASinglePage(ushort maxMatches)
     {
-        var source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = maxMatches };
+        IDataSource source = new DataSourceERI_V1 { Id = "33333333-3333-3333-3333-333333333333", Name = "Intranet", MaxMatches = maxMatches };
 
-        Assert.That(RetrievalPaging.GetLastPage(source), Is.EqualTo(1), "ERI v1 knows no offset, and a server which allows only the configured number of matches would refuse every further page.");
+        Assert.That(source.GetLastPage(), Is.EqualTo(1), "ERI v1 knows no offset, and a server which allows only the configured number of matches would refuse every further page.");
     }
 
     [Test]
     public void ALocalDataSourcePagesAsItsPageSizeAllows()
     {
-        var source = new DataSourceLocalDirectory { Id = "11111111-1111-1111-1111-111111111111", Name = "Handbook", MaxMatches = 10 };
+        IDataSource source = new DataSourceLocalDirectory { Id = "11111111-1111-1111-1111-111111111111", Name = "Handbook", MaxMatches = 10 };
 
-        Assert.That(RetrievalPaging.GetLastPage(source), Is.EqualTo(RetrievalPaging.GetLastPage(10)));
+        Assert.That(source.GetLastPage(), Is.EqualTo(RetrievalPaging.GetLastPage(10)));
     }
 
     [Test]

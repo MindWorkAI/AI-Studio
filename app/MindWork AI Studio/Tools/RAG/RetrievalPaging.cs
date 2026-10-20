@@ -8,8 +8,8 @@ namespace AIStudio.Tools.RAG;
 /// Neither the vector store nor the keyword index knows an offset, and neither needs one: page p
 /// of size k is cut from the first p·k + 1 matches of every channel. The one match beyond the
 /// page tells whether a next page is worth asking for. The first page is therefore exactly what a
-/// search for k matches always returned. An ERI data source has a single page, see
-/// <see cref="GetLastPage(AIStudio.Settings.IDataSource)"/>.
+/// search for k matches always returned. A data source which cannot page that far, such as an ERI
+/// data source, says so through IDataSource.GetLastPage.
 /// </para>
 /// <para>
 /// Staying without state is not a shortcut but a requirement: tool results do not travel into
@@ -23,8 +23,8 @@ public static class RetrievalPaging
     /// </summary>
     /// <remarks>
     /// Every page fetches its whole window again, from the vector store and the keyword index. The
-    /// first page is exempt: its size is what the user or the organization
-    /// configured, and fetching it is what the retrieval always did.
+    /// first page is exempt: its size is what the user or the organization configured, and
+    /// fetching it is what the retrieval always did.
     /// </remarks>
     public const int MAX_RESULT_WINDOW = 100;
 
@@ -34,20 +34,6 @@ public static class RetrievalPaging
     /// <param name="pageSize">The number of matches per page.</param>
     /// <returns>The number of the last page, which is at least 1.</returns>
     public static int GetLastPage(int pageSize) => pageSize < 1 ? 1 : Math.Max(1, (MAX_RESULT_WINDOW - 1) / pageSize);
-
-    /// <summary>
-    /// The last page which can be retrieved from the given data source.
-    /// </summary>
-    /// <remarks>
-    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
-    /// to ask the server for all pages before it as well. A server may refuse more matches than its
-    /// retrieval process allows, which often is the very number configured here: it would refuse
-    /// every further page, and the model would hear that the data source could not be searched
-    /// rather than that there is nothing more.
-    /// </remarks>
-    /// <param name="dataSource">The data source.</param>
-    /// <returns>The number of the last page, which is at least 1.</returns>
-    public static int GetLastPage(AIStudio.Settings.IDataSource dataSource) => dataSource is AIStudio.Settings.IERIDataSource ? 1 : GetLastPage(dataSource.MaxMatches);
 
     /// <summary>
     /// How many matches every channel has to deliver for the given page.

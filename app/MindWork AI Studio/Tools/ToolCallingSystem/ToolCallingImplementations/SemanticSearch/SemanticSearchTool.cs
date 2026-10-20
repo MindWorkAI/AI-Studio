@@ -240,7 +240,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
 
         foreach (var (dataSource, dataSourceDescription) in dataSources)
         {
-            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={RetrievalPaging.GetLastPage(dataSource)}");
+            description.Append($"- id={dataSource.Id}, name='{dataSource.Name}', type={GetKind(dataSource)}, results per page={dataSource.MaxMatches}, last page={dataSource.GetLastPage()}");
             if (!string.IsNullOrWhiteSpace(dataSourceDescription))
                 description.Append($", description='{dataSourceDescription.Trim().Shorten(MAX_DESCRIPTION_CHARACTERS)}'");
 
@@ -484,7 +484,7 @@ public sealed class SemanticSearchTool(SettingsManager settingsManager, DataSour
         if (dataSources.Count != 1)
             throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' may be above 1 only for exactly one data source in '{DATA_SOURCE_IDS_ARGUMENT}', but was {page} for {dataSources.Count}. Name the one data source to page through, or leave '{PAGE_ARGUMENT}' out to get the first page of each.");
 
-        var lastPage = RetrievalPaging.GetLastPage(dataSources[0]);
+        var lastPage = dataSources[0].GetLastPage();
         if (page > lastPage)
             throw new ArgumentException($"Argument '{PAGE_ARGUMENT}' must be at most {lastPage} for the data source '{dataSources[0].Id}', but was {page}. Rephrase the query to find other passages.");
 
