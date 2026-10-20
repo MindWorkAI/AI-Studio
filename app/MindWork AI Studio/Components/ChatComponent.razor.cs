@@ -1677,15 +1677,14 @@ public partial class ChatComponent : MSGComponentBase
         // Reset the chat thread or create a new one. A target workspace always means a new chat in
         // that workspace, no matter what useSameWorkspace says:
         //
-        if (!useSameWorkspace && targetWorkspaceId is null)
+        var startsOutsideWorkspaces = !useSameWorkspace && targetWorkspaceId is null;
+        if (startsOutsideWorkspaces)
         {
             //
-            // When the user wants to start a new chat outside the current workspace,
-            // we have to reset the workspace id and the workspace name. Also, we have
-            // to reset the chat thread:
+            // When the user wants to start a new chat outside the current workspace, we have to
+            // reset the chat thread. The workspace id and the workspace name follow below:
             //
             this.ChatThread = null;
-            this.ClearWorkspaceHeaderState();
         }
         else
         {
@@ -1699,17 +1698,29 @@ public partial class ChatComponent : MSGComponentBase
             this.unstoredChat = this.ChatThread;
         }
 
+        //
+        // The parent hears about the new thread right away, before anything below waits. The thread
+        // is a parameter of this component, and the parent hands over its own whenever it renders,
+        // e.g., after it received the click on the workspace tree, or after it showed another
+        // workspace name. Until the parent knows the new thread, such a render brings back the chat
+        // being left, while the composer already holds what the chat template asks for. Marking the
+        // thread as loaded first keeps the parameter update from taking it for another chat being
+        // opened, which would clear the composer:
+        //
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+
+        // Clearing the workspace name renders the parent as well, so it comes only now:
+        if (startsOutsideWorkspaces)
+            this.ClearWorkspaceHeaderState();
+
         this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         // Now, the chat starts with what its template asks for, and with the chat defaults wherever
         // that template says nothing:
         await this.ApplyChatTemplateToolSelectionAsync();
         this.ApplyAutomaticDataSourceOptions();
-
-        // Notify the parent component about the change:
         await this.SyncForegroundChatAsync();
-        this.MarkCurrentChatAsLoadedParameter();
-        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
 
     private async Task MoveChatToWorkspace()
