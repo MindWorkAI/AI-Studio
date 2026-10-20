@@ -1,5 +1,4 @@
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tests.Tools;
@@ -13,7 +12,7 @@ namespace AIStudio.Tests.Tools;
 /// did not answer is asked again sooner, and a check which is still running is joined.
 /// </remarks>
 [TestFixture]
-public sealed class DataSourceSecurityCheckCacheTests
+public sealed class ERISecurityCheckCacheTests
 {
     private static readonly DataSourceERI_V1 INTRANET = new()
     {
@@ -33,7 +32,7 @@ public sealed class DataSourceSecurityCheckCacheTests
     [Test]
     public void ARunningCheckIsJoined()
     {
-        var running = new TaskCompletionSource<(bool IsReachable, SecurityRequirements? Requirements)>();
+        var running = new TaskCompletionSource<ERISecurityCheckResult>();
 
         Assert.That(ERISecurityCheckCache.IsValid(running.Task, TimeSpan.FromMinutes(5)), Is.True, "Starting a second check would sign in a second time.");
     }
@@ -65,7 +64,7 @@ public sealed class DataSourceSecurityCheckCacheTests
     [Test]
     public void AFailedCheckIsNeverUsed()
     {
-        var failed = Task.FromException<(bool IsReachable, SecurityRequirements? Requirements)>(new InvalidOperationException());
+        var failed = Task.FromException<ERISecurityCheckResult>(new InvalidOperationException());
 
         Assert.That(ERISecurityCheckCache.IsValid(failed, TimeSpan.Zero), Is.False);
     }
@@ -73,7 +72,7 @@ public sealed class DataSourceSecurityCheckCacheTests
     [Test]
     public void ACheckStillRunningIsSharedByEveryoneWhoAsks()
     {
-        var running = new TaskCompletionSource<(bool IsReachable, SecurityRequirements? Requirements)>();
+        var running = new TaskCompletionSource<ERISecurityCheckResult>();
         var fetches = 0;
         var cache = new ERISecurityCheckCache(_ => { fetches++; return running.Task; }, new ManualTime());
 
@@ -142,7 +141,7 @@ public sealed class DataSourceSecurityCheckCacheTests
         Assert.That(cache.Count, Is.EqualTo(1), "A deleted data source must not stay in the cache for as long as the app runs.");
     }
 
-    private static Task<(bool IsReachable, SecurityRequirements? Requirements)> Answer(bool isReachable) => Task.FromResult<(bool IsReachable, SecurityRequirements? Requirements)>((isReachable, null));
+    private static Task<ERISecurityCheckResult> Answer(bool isReachable) => Task.FromResult(isReachable ? new ERISecurityCheckResult(true, null) : ERISecurityCheckResult.UNREACHABLE);
 
     /// <summary>
     /// A clock which only moves when a test moves it.

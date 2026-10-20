@@ -1,5 +1,4 @@
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Tools.Services;
 
@@ -16,12 +15,17 @@ namespace AIStudio.Tools.Services;
 /// server which did not answer is asked again sooner: it may well be back, and until then, its
 /// data source is not searched anyway. A changed configuration, e.g., another server or another
 /// account, asks anew right away.<br/><br/>
+/// The minute holds for an answer which lets the data reach any provider as well, and that is a
+/// deliberate trade-off. When an operator opened a server by mistake and corrects it, every AI
+/// Studio follows within that minute rather than with its next check: until then, a chat with a
+/// cloud provider may still search the server. Nothing outlasts the running app, though, so no
+/// answer, however open, sticks for longer.<br/><br/>
 /// Whenever a check starts, the expired ones are dropped, so that data sources which were deleted
 /// or changed do not pile up.
 /// </remarks>
-/// <param name="fetch">Signs in to the server of a data source and asks for its requirements; true when the server answered.</param>
+/// <param name="fetch">Signs in to the server of a data source and asks for its requirements.</param>
 /// <param name="timeProvider">Tells the time the checks are started at.</param>
-internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<(bool IsReachable, SecurityRequirements? Requirements)>> fetch, TimeProvider timeProvider)
+internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<ERISecurityCheckResult>> fetch, TimeProvider timeProvider)
 {
     /// <summary>
     /// How long the answer of an ERI server to the check of its security requirements is used.
@@ -36,8 +40,9 @@ internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<(bool Is
     /// <summary>
     /// A check of an ERI server, which may still be running, together with the configuration it was started with.
     /// </summary>
-    private readonly record struct SecurityCheck(DataSourceERI_V1 DataSource, Task<(bool IsReachable, SecurityRequirements? Requirements)> Result, DateTimeOffset StartedAt);
+    private readonly record struct SecurityCheck(DataSourceERI_V1 DataSource, Task<ERISecurityCheckResult> Result, DateTimeOffset StartedAt);
 
+    private readonly Lock checksLock = new();
     private readonly Dictionary<string, SecurityCheck> checks = new(StringComparer.Ordinal);
 
     /// <summary>
@@ -45,9 +50,9 @@ internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<(bool Is
     /// </summary>
     /// <param name="source">The ERI data source.</param>
     /// <returns>Whether the server answered, and its requirements when it did.</returns>
-    public Task<(bool IsReachable, SecurityRequirements? Requirements)> GetAsync(DataSourceERI_V1 source)
+    public Task<ERISecurityCheckResult> GetAsync(DataSourceERI_V1 source)
     {
-        lock (this.checks)
+        lock (this.checksLock)
         {
             var now = timeProvider.GetUtcNow();
             if (this.checks.TryGetValue(source.Id, out var known) && known.DataSource.Equals(source) && IsValid(known.Result, now - known.StartedAt))
@@ -67,7 +72,7 @@ internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<(bool Is
     {
         get
         {
-            lock (this.checks)
+            lock (this.checksLock)
                 return this.checks.Count;
         }
     }
@@ -78,7 +83,7 @@ internal sealed class ERISecurityCheckCache(Func<DataSourceERI_V1, Task<(bool Is
     /// <param name="result">The check, which may still be running.</param>
     /// <param name="age">How long ago the check was started.</param>
     /// <returns>True when the check is still running or its answer has not expired yet.</returns>
-    internal static bool IsValid(Task<(bool IsReachable, SecurityRequirements? Requirements)> result, TimeSpan age)
+    internal static bool IsValid(Task<ERISecurityCheckResult> result, TimeSpan age)
     {
         if (!result.IsCompleted)
             return true;

@@ -84,7 +84,7 @@ public sealed class DataSourceService
         var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
         var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions, retrievalMode,
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
-        var (allowedDataSources, _) = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+        var allowedDataSources = (await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources)).Allowed;
 
         //
         // Whoever asks this way has no list to show, so a data source which cannot be searched is
@@ -182,7 +182,8 @@ public sealed class DataSourceService
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
-        var (filteredDataSources, unreachableDataSources) = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
+        var checkedDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
+        var filteredDataSources = checkedDataSources.Allowed;
 
         //
         // Which of the sources that passed every check cannot answer a search right now. They are
@@ -204,7 +205,7 @@ public sealed class DataSourceService
         var usableDataSources = filteredDataSources.Where(source => !blockedIds.Contains(source.Id)).ToList();
         var filteredSelectedDataSources = usableDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
 
-        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair, unreachableDataSources);
+        return new(usableDataSources, filteredSelectedDataSources, awaitingReindex, needingRepair, checkedDataSources.Unreachable);
     }
 
     /// <summary>
@@ -259,7 +260,12 @@ public sealed class DataSourceService
         return needingRepair;
     }
 
-    private async Task<(IReadOnlyList<IDataSource> Allowed, IReadOnlyList<IDataSource> Unreachable)> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
+    /// <summary>
+    /// What the checks of several data sources found: those which may be used, and the ERI data sources whose server could not be reached.
+    /// </summary>
+    private readonly record struct CheckedDataSources(IReadOnlyList<IDataSource> Allowed, IReadOnlyList<IDataSource> Unreachable);
+
+    private async Task<CheckedDataSources> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
     {
         var filteredDataSources = new List<IDataSource>(requestedDataSources.Count);
         var unreachableDataSources = new List<IDataSource>();
@@ -280,7 +286,7 @@ public sealed class DataSourceService
                 unreachableDataSources.Add(check.UnreachableSource);
         }
 
-        return (filteredDataSources, unreachableDataSources);
+        return new(filteredDataSources, unreachableDataSources);
     }
 
     /// <summary>
@@ -293,13 +299,13 @@ public sealed class DataSourceService
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
         // Because the ERI server operator might change the security requirements at any time.
-        // The answer is kept for a minute, see ERISecurityCheckCache.
+        // The answer is kept for a minute, see ERISecurityCheckCache for why that is acceptable.
         //
         SecurityRequirements? eriSourceRequirements = null;
         if (source is DataSourceERI_V1 eriSource)
         {
-            var (isReachable, requirements) = await this.securityChecks.GetAsync(eriSource);
-            if (!isReachable)
+            var securityCheck = await this.securityChecks.GetAsync(eriSource);
+            if (!securityCheck.IsReachable)
             {
                 //
                 // The source cannot be used, but whoever asks may still tell the model or the user
@@ -310,7 +316,7 @@ public sealed class DataSourceService
                 return new(null, MayBeNamedWhileUnreachable(eriSource, usingTrustedProvider) ? source : null);
             }
 
-            eriSourceRequirements = requirements;
+            eriSourceRequirements = securityCheck.Requirements;
         }
 
         return new(this.CheckPolicies(source, usingTrustedProvider, participatingProviders, eriSourceRequirements), null);
@@ -322,18 +328,13 @@ public sealed class DataSourceService
     /// <param name="source">The ERI data source.</param>
     /// <param name="usingTrustedProvider">Whether the chat provider is trusted for data source security checks.</param>
     /// <returns>True when the configured security policy of the data source allows it for this provider.</returns>
-    internal static bool MayBeNamedWhileUnreachable(IExternalDataSource source, bool usingTrustedProvider) => source.SecurityPolicy switch
-    {
-        DataSourceSecurity.ALLOW_ANY => true,
-        DataSourceSecurity.SELF_HOSTED => usingTrustedProvider,
-        _ => false,
-    };
+    internal static bool MayBeNamedWhileUnreachable(IExternalDataSource source, bool usingTrustedProvider) => usingTrustedProvider.AllowsDataSourceSecurity(source.SecurityPolicy);
 
     /// <summary>
     /// Signs in to the server of an ERI data source and asks for its security requirements.
     /// </summary>
     /// <returns>Whether the server answered and the sign-in succeeded, and its requirements when it did.</returns>
-    private async Task<(bool IsReachable, SecurityRequirements? Requirements)> FetchSecurityRequirementsAsync(DataSourceERI_V1 source)
+    private async Task<ERISecurityCheckResult> FetchSecurityRequirementsAsync(DataSourceERI_V1 source)
     {
         //
         // Leave the caller first: this starts while the cache is locked, and signing in should
@@ -346,7 +347,7 @@ public sealed class DataSourceService
         if(client is null)
         {
             this.logger.LogError($"Could not create ERI client for source '{source.Name}' (id={source.Id}). We skip this source.");
-            return (false, null);
+            return ERISecurityCheckResult.UNREACHABLE;
         }
 
         this.logger.LogInformation($"Authenticating with ERI source '{source.Name}' (id={source.Id})...");
@@ -354,7 +355,7 @@ public sealed class DataSourceService
         if (!loginResult.Successful)
         {
             this.logger.LogWarning($"Authentication with ERI source '{source.Name}' (id={source.Id}) failed. We skip this source. Reason: {loginResult.Message}");
-            return (false, null);
+            return ERISecurityCheckResult.UNREACHABLE;
         }
 
         this.logger.LogInformation($"Checking security requirements for ERI source '{source.Name}' (id={source.Id})...");
@@ -362,11 +363,11 @@ public sealed class DataSourceService
         if (!securityRequest.Successful)
         {
             this.logger.LogWarning($"Could not retrieve security requirements for ERI source '{source.Name}' (id={source.Id}). We skip this source. Reason: {securityRequest.Message}");
-            return (false, null);
+            return ERISecurityCheckResult.UNREACHABLE;
         }
 
         this.logger.LogInformation($"Security requirements for ERI source '{source.Name}' (id={source.Id}) retrieved successfully.");
-        return (true, securityRequest.Data);
+        return new(true, securityRequest.Data);
     }
 
     /// <summary>
