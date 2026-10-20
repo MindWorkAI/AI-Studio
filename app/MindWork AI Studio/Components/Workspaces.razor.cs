@@ -33,6 +33,17 @@ public partial class Workspaces : MSGComponentBase
     [Parameter]
     public EventCallback<ChatThread> CurrentChatThreadChanged { get; set; }
 
+    /// <summary>
+    /// Asks the page to start a new chat in the workspace with the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The page hands the request to its chat component. A message on the bus would not do: the bus
+    /// also serves the chat components of windows which were reloaded long ago, and each of them would
+    /// start a chat of its own, storing what it still holds on its way.
+    /// </remarks>
+    [Parameter]
+    public EventCallback<Guid> StartNewChatRequested { get; set; }
+
     [Parameter]
     public bool ExpandRootNodes { get; set; } = true;
 
@@ -1040,36 +1051,20 @@ public partial class Workspaces : MSGComponentBase
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
     }
     
+    /// <summary>
+    /// Asks the chat component to start a new chat in the given workspace.
+    /// </summary>
+    /// <param name="workspacePath">The directory of the workspace.</param>
+    /// <remarks>
+    /// The chat component starts the chat just like its own button for a new chat in the workspace:
+    /// it asks about unsaved changes, applies the chat template with its data sources, tools, and
+    /// example conversation, and stores the chat only once it has content. Until then, the chat is
+    /// missing from the tree.
+    /// </remarks>
     private async Task AddChatAsync(string workspacePath)
     {
-        if (await MessageBus.INSTANCE.SendMessageUseFirstResult<bool, bool>(this, Event.HAS_CHAT_UNSAVED_CHANGES))
-        {
-            var dialogParameters = new DialogParameters<ConfirmDialog>
-            {
-                { x => x.Message, T("Are you sure you want to create a another chat? All unsaved changes will be lost.") },
-            };
-        
-            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Create Chat"), dialogParameters, DialogOptions.FULLSCREEN);
-            var dialogResult = await dialogReference.Result;
-            if (dialogResult is null || dialogResult.Canceled)
-                return;
-        }
-        
         var workspaceId = Guid.Parse(Path.GetFileName(workspacePath));
-        var chat = new ChatThread
-        {
-            WorkspaceId = workspaceId,
-            ChatId = Guid.NewGuid(),
-            Name = string.Empty,
-            SystemPrompt = SystemPrompts.DEFAULT,
-            Blocks = [],
-        };
-        
-        var chatPath = Path.Join(workspacePath, chat.ChatId.ToString());
-        
-        await WorkspaceBehaviour.StoreChatAsync(chat);
-        await this.LoadChatAsync(chatPath, switchToChat: true);
-        await this.LoadTreeItemsAsync(startPrefetch: false);
+        await this.StartNewChatRequested.InvokeAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase
