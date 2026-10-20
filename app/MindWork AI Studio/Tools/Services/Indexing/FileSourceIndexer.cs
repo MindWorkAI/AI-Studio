@@ -94,7 +94,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             && inputFiles.Files.Count == 0 && inputFiles.IgnoredFiles.Count == 0
             && inputFiles.FilePatternExclusionCount == 0 && inputFiles.ExcludedFolderCount == 0
             && inputFiles.FailedFiles == 0 && inputFiles.UnreadableDirectories.Count == 0)
-            return this.StopWithoutRoot(context, dataSource, string.Format(TB("The folder '{0}' currently appears empty. Its existing index was kept because a disconnected drive can look like an empty folder. Reconnect the drive and refresh this data source. If you intentionally emptied the folder, delete this data source to remove its index."), directory.Path));
+            return this.StopWithoutRoot(context, dataSource, string.Format(TB("The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source."), directory.Path));
 
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles + inputFiles.IgnoredFiles.Count;

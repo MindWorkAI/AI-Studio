@@ -47,12 +47,6 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source.")
             </MudJustifiedText>
-            @if (this.IsEditing && !string.Equals(this.dataPath, this.DataSource.Path, StringComparison.Ordinal))
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("When you save this location, files can reuse their prepared content if their paths within the folder, file types, sizes, and modification times are unchanged.")
-                </MudAlert>
-            }
             <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudTextSwitch

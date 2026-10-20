@@ -85,7 +85,7 @@ public sealed class UnreachableDataSourceTests
         Assert.Multiple(() =>
         {
             Assert.That(manifest.UnfinishedFiles, Does.Contain(unfinishedFile), "An unmounted drive must not discard interrupted work either.");
-            Assert.That(statuses[^1].LastError, Does.Contain("appears empty").And.Contain("delete this data source"));
+            Assert.That(statuses[^1].LastError, Does.Contain("appears empty").And.Contain("remove this data source"));
         });
     }
 

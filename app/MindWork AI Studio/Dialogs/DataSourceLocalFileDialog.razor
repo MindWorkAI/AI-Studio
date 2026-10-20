@@ -47,12 +47,6 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a file for this data source. The content of this file will be processed for the data source. An audio or video file is transcribed by your transcription provider first.")
             </MudJustifiedText>
-            @if (this.IsEditing && !string.Equals(this.dataFilePath, this.DataSource.FilePath, StringComparison.Ordinal))
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
-                    @T("When you save this location, the file can reuse its prepared content if its file type, size, and modification time are unchanged.")
-                </MudAlert>
-            }
             <SelectFile @bind-File="@this.dataFilePath" Label="@T("Selected file path for this data source")" FileDialogTitle="@T("Select the file")" Validation="@this.dataSourceValidation.ValidateFilePath" EnableDragDrop="true" CatchAllDocuments="true" />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">

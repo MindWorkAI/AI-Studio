@@ -50,6 +50,8 @@ public sealed class DataSourceRelocationWorkflowTests
     private readonly List<Task> runningTasks = [];
     private CancellationTokenSource lifetime = null!;
 
+    private string OriginalFolder => Path.Combine(this.testRoot, "original");
+
     [SetUp]
     public async Task SetUp()
     {
@@ -221,6 +223,44 @@ public sealed class DataSourceRelocationWorkflowTests
         });
         edit.Dialog.Instance.Cancel();
         await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task ANewLocationOfADataSourceWithoutAnIndexIsSavedWithoutAQuestion(bool singleFile)
+    {
+        await this.AddSourceAsync(singleFile);
+        var newPath = this.MoveSource("moved");
+        var edit = this.OpenEdit(newPath);
+        await InvokeTask(edit.Component, "StoreValidatedDataSourceAsync").WaitAsync(TEST_TIMEOUT);
+        await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
+
+        var saved = this.settings.ConfigurationData.DataSources.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(edit.Warning.ShowCount, Is.Zero, "Nothing was prepared for the data source, so nothing can be lost.");
+            Assert.That(saved is DataSourceLocalDirectory folder ? folder.Path : ((DataSourceLocalFile)saved).FilePath, Is.EqualTo(newPath));
+        });
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public async Task ANewLocationTogetherWithANewEmbeddingAsksOnlyOnce(bool singleFile)
+    {
+        const string OTHER_EMBEDDING_ID = "c1b5d5e3-2a4f-4b1b-9d0e-6b7c8d9e0f12";
+        this.settings.ConfigurationData.EmbeddingProviders.Add(new EmbeddingProvider(2, OTHER_EMBEDDING_ID, "Other embeddings", LLMProviders.OPEN_AI, new("text-embedding-3-large", "text-embedding-3-large")));
+        await this.SeedLegacyIndexAsync(singleFile);
+        var edit = this.OpenEdit(this.MoveSource("moved"));
+        SetField(edit.Component, "dataEmbeddingId", OTHER_EMBEDDING_ID);
+        edit.Warning.Complete(DialogResult.Ok(true));
+        await InvokeTask(edit.Component, "StoreValidatedDataSourceAsync").WaitAsync(TEST_TIMEOUT);
+        await edit.ParentTask.WaitAsync(TEST_TIMEOUT);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(edit.Warning.ShowCount, Is.EqualTo(1), "Everything is prepared again anyway, so the location needs no question of its own.");
+            Assert.That(edit.Warning.Title, Is.EqualTo("Documents Will Be Prepared Again"));
+        });
     }
 
     [TestCase(false)]
@@ -544,7 +584,33 @@ public sealed class DataSourceRelocationWorkflowTests
 
     private async Task SeedLegacyIndexAsync(bool singleFile)
     {
-        var root = Path.Combine(this.testRoot, "original");
+        var paths = await this.AddSourceAsync(singleFile);
+        var id = this.source.Id;
+        await this.store.Client.UpsertDataSourceAsync(id, this.source.Type.ToString(), EMBEDDING_ID, LEGACY_SIGNATURE, "legacy-source-hash", 3, CancellationToken.None);
+
+        foreach (var relative in paths)
+        {
+            var path = Path.Combine(this.OriginalFolder, relative);
+            var file = new FileInfo(path);
+            var fingerprint = LegacyFingerprint(file);
+            var parentId = IndexedDocumentIds.CreateParentId(id, path);
+            var chunkId = IndexedDocumentIds.CreateChunkId(id, fingerprint, 0);
+            var embeddedAt = DateTimeOffset.UtcNow.AddDays(-10);
+            await this.store.Client.UpsertFileAsync(id, new EmbeddingStateFile(parentId, path, file.Name, relative, "md", fingerprint, file.Length,
+                new DateTimeOffset(file.CreationTimeUtc), new DateTimeOffset(file.LastWriteTimeUtc), embeddedAt, 1), CancellationToken.None);
+            await this.store.Client.UpsertChunksAsync(id, [new EmbeddingStateChunk(chunkId, parentId, 1, 0, "Already indexed report", embeddedAt)], CancellationToken.None);
+            this.vectors.Locations.Add(parentId, path);
+            this.chunkIds.Add(chunkId);
+        }
+    }
+
+    /// <summary>
+    /// Writes the documents of a data source and configures it, without anything in the index.
+    /// </summary>
+    /// <returns>The paths of the documents, relative to the folder.</returns>
+    private async Task<string[]> AddSourceAsync(bool singleFile)
+    {
+        var root = this.OriginalFolder;
         Directory.CreateDirectory(Path.Combine(root, "nested"));
         var id = Guid.NewGuid().ToString();
         var folder = new DataSourceLocalDirectory
@@ -559,24 +625,12 @@ public sealed class DataSourceRelocationWorkflowTests
             EmbeddingId = EMBEDDING_ID, ConfidenceLevel = ConfidenceLevel.NONE, MaxChunkTokenLength = 512, ChunkOverlapTokenLength = 100,
         } : folder;
         this.settings.ConfigurationData.DataSources.Add(this.source);
-        await this.store.Client.UpsertDataSourceAsync(id, this.source.Type.ToString(), EMBEDDING_ID, LEGACY_SIGNATURE, "legacy-source-hash", 3, CancellationToken.None);
 
         var paths = singleFile ? new[] { "notes.md" } : new[] { "notes.md", Path.Combine("nested", "report.md") };
         foreach (var relative in paths)
-        {
-            var path = Path.Combine(root, relative);
-            await File.WriteAllTextAsync(path, "Already indexed report");
-            var file = new FileInfo(path);
-            var fingerprint = LegacyFingerprint(file);
-            var parentId = IndexedDocumentIds.CreateParentId(id, path);
-            var chunkId = IndexedDocumentIds.CreateChunkId(id, fingerprint, 0);
-            var embeddedAt = DateTimeOffset.UtcNow.AddDays(-10);
-            await this.store.Client.UpsertFileAsync(id, new EmbeddingStateFile(parentId, path, file.Name, relative, "md", fingerprint, file.Length,
-                new DateTimeOffset(file.CreationTimeUtc), new DateTimeOffset(file.LastWriteTimeUtc), embeddedAt, 1), CancellationToken.None);
-            await this.store.Client.UpsertChunksAsync(id, [new EmbeddingStateChunk(chunkId, parentId, 1, 0, "Already indexed report", embeddedAt)], CancellationToken.None);
-            this.vectors.Locations.Add(parentId, path);
-            this.chunkIds.Add(chunkId);
-        }
+            await File.WriteAllTextAsync(Path.Combine(root, relative), "Already indexed report");
+
+        return paths;
     }
 
     private string MoveSource(string destinationName)
@@ -603,7 +657,8 @@ public sealed class DataSourceRelocationWorkflowTests
         {
             Assert.That(edit.Warning.ShowCount, Is.EqualTo(1));
             Assert.That(edit.Warning.ComponentType, Is.EqualTo(typeof(ConfirmDialog)));
-            Assert.That(edit.Warning.Parameters!.Get<string>(nameof(ConfirmDialog.MarkdownBody)), Does.Contain("from the index").And.Contain("files on disk are not deleted").And.Contain("may need indexing").And.Contain("Unchanged files keep"));
+            Assert.That(edit.Warning.Title, Is.EqualTo("New Location for This Data Source"));
+            Assert.That(edit.Warning.Parameters!.Get<string>(nameof(ConfirmDialog.MarkdownBody)), Does.Contain("unchanged at the new location").And.Contain("removed from the index").And.Contain("files on disk stay as they are").And.Contain("costs money"));
         });
         this.source = (IInternalDataSource)this.settings.ConfigurationData.DataSources.Single();
     }
