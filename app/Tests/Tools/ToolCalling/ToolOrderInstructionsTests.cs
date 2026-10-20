@@ -65,7 +65,7 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
     public async Task TheConfluenceSearchSaysSoWhenItEndsTheWebSearch(OutboundDataRestriction internalPageRestriction, bool expected)
     {
         this.SettingsManager.ConfigurationData.Tools.Settings[ToolSelectionRules.READ_WEB_PAGE_TOOL_ID] = new() { ["internalPageOutboundDataRestriction"] = internalPageRestriction.ToString() };
-        var tool = new ConfluenceSearchTool(null!, null!, this.CreateToolSettingsService());
+        var tool = new ConfluenceSearchTool(null!, null!, this.CreateToolSettingsService(), null!);
 
         var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread()));
 
@@ -75,7 +75,7 @@ public sealed class ToolOrderInstructionsTests : ToolRegistryTestBase
     [Test]
     public async Task TheConfluenceSearchLeavesTheOrderOutWithoutAWebSearch()
     {
-        var tool = new ConfluenceSearchTool(null!, null!, this.CreateToolSettingsService());
+        var tool = new ConfluenceSearchTool(null!, null!, this.CreateToolSettingsService(), null!);
 
         var instructions = await tool.ResolveSystemPromptInstructionsAsync(tool.GetDefinition(), this.ResolutionContext(new ChatThread(), ToolSelectionRules.SEARCH_CONFLUENCE_TOOL_ID, ToolSelectionRules.READ_WEB_PAGE_TOOL_ID));
 
