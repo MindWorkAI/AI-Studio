@@ -16,7 +16,7 @@ internal sealed partial class FileSourceIndexer
         {
             token.ThrowIfCancellationRequested();
             var file = FindRelocatedFile(dataSource, oldPath, record);
-            if (file is null || record.ParentFileId is not { } parentFileId || (!context.Manifest.Files.Comparer.Equals(oldPath, file.FullName) && context.Manifest.Files.ContainsKey(file.FullName)))
+            if (file is null || record.ParentFileId is not { } parentFileId || (!DataSourceEmbeddingManifest.PATH_COMPARER.Equals(oldPath, file.FullName) && context.Manifest.Files.ContainsKey(file.FullName)))
                 continue;
 
             progress ??= DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger);

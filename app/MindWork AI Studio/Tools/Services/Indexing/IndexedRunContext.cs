@@ -86,7 +86,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         {
             this.fileParentIds = manifest.Files
                 .Where(file => file.Value.ParentFileId is not null)
-                .ToDictionary(file => file.Key, file => file.Value.ParentFileId!, manifest.Files.Comparer);
+                .ToDictionary(file => file.Key, file => file.Value.ParentFileId!, DataSourceEmbeddingManifest.PATH_COMPARER);
             this.reservedFileParentIds = this.fileParentIds.Values.ToHashSet(StringComparer.Ordinal);
         }
 
