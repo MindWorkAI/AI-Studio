@@ -1017,13 +1017,23 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
                 "0");
         }
 
-        return BuildMetadataHash(
-            "file",
-            file.FullName,
-            file.Name,
-            file.LastWriteTimeUtc.Ticks.ToString(),
-            file.Length.ToString());
+        return BuildFileMetadataHash(file.FullName, file.Name, file.LastWriteTimeUtc, file.Length);
     }
+
+    /// <summary>
+    /// The fingerprint of a file which exists, from its write time and size as they were read.
+    /// </summary>
+    /// <remarks>
+    /// The one formula for both an indexed file and a relocated one: if the two drifted apart, every
+    /// relocated file would look changed to the next run and be embedded again.
+    /// </remarks>
+    /// <param name="fullName">The absolute path of the file.</param>
+    /// <param name="name">The name of the file.</param>
+    /// <param name="lastWriteUtc">When the file was last written to.</param>
+    /// <param name="length">The size of the file in bytes.</param>
+    /// <returns>The fingerprint.</returns>
+    private static string BuildFileMetadataHash(string fullName, string name, DateTime lastWriteUtc, long length) =>
+        BuildMetadataHash("file", fullName, name, lastWriteUtc.Ticks.ToString(), length.ToString());
 
     private static string BuildMetadataHash(params string[] parts)
     {

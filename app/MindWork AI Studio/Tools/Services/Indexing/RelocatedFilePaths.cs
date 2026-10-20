@@ -48,7 +48,7 @@ internal static class RelocatedFilePaths
     /// Maps a stored relative path below a newly selected root, including drive roots and mounted
     /// volumes. Backslashes are separators only for a Windows index: they are legal Unix file names.
     /// </summary>
-    internal static string? Resolve(string root, string oldAbsolutePath, string relativePath)
+    internal static string? Resolve(string root, string oldAbsolutePath, string? relativePath)
     {
         if (!IsLocalAbsolute(root) || string.IsNullOrWhiteSpace(relativePath))
             return null;

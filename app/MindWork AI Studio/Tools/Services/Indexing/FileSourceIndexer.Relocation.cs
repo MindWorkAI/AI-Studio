@@ -16,7 +16,7 @@ internal sealed partial class FileSourceIndexer
         {
             token.ThrowIfCancellationRequested();
             var file = FindRelocatedFile(dataSource, oldPath, record);
-            if (file is null || (!context.Manifest.Files.Comparer.Equals(oldPath, file.FullName) && context.Manifest.Files.ContainsKey(file.FullName)))
+            if (file is null || record.ParentFileId is not { } parentFileId || (!context.Manifest.Files.Comparer.Equals(oldPath, file.FullName) && context.Manifest.Files.ContainsKey(file.FullName)))
                 continue;
 
             progress ??= DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger);
@@ -27,14 +27,14 @@ internal sealed partial class FileSourceIndexer
             var relativePath = this.TryGetRelativePath(dataSource, file);
             // Use the metadata which passed the reuse check. If the file changes during these
             // writes, enumeration must see a different fingerprint and index its new content.
-            var fingerprint = BuildMetadataHash("file", file.FullName, file.Name, record.LastWriteUtc.UtcDateTime.Ticks.ToString(), record.FileSize.ToString());
+            var fingerprint = BuildFileMetadataHash(file.FullName, file.Name, record.LastWriteUtc.UtcDateTime, record.FileSize);
 
             // Vectors first, then SQLite. Selecting by the unchanged parent id makes this safe to
             // retry if cancellation or a crash falls between the two writes. A failure aborts the
             // run before missing-file cleanup can remove the documents we are reconnecting.
-            await context.VectorStore.RelocateEmbeddingFileAsync(context.CollectionName, record.ParentFileId, file.FullName, relativePath, fingerprint, token);
+            await context.VectorStore.RelocateEmbeddingFileAsync(context.CollectionName, parentFileId, file.FullName, relativePath, fingerprint, token);
             token.ThrowIfCancellationRequested();
-            await context.IndexStore.RelocateFileAsync(dataSource.Id, record.ParentFileId, file.FullName, relativePath, fingerprint, token);
+            await context.IndexStore.RelocateFileAsync(dataSource.Id, parentFileId, file.FullName, relativePath, fingerprint, token);
             context.Manifest.Files.Remove(oldPath);
             context.Manifest.Files[file.FullName] = record with { Fingerprint = fingerprint, RelativePath = relativePath };
 
@@ -57,7 +57,7 @@ internal sealed partial class FileSourceIndexer
     /// </remarks>
     internal static FileInfo? FindRelocatedFile(IDataSource dataSource, string oldPath, EmbeddedFileRecord record)
     {
-        if (string.IsNullOrEmpty(record.ParentFileId))
+        if (record.ParentFileId is null)
             return null;
 
         string targetPath;

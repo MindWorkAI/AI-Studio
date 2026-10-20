@@ -193,16 +193,17 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     /// Whether a mailbox's origin must stay as it is.
     /// </summary>
     /// <remarks>
-    /// Mailbox origins stay locked once indexed. Local files and folders can be relocated by the
-    /// file indexer, so their edit dialogs do not use this lock. Changing an embedding provider
-    /// still asks before rebuilding through DataSourceReindexWarning.
+    /// Locked as soon as the index holds anything: another server, account, or folder holds other
+    /// mails, which makes it another data source. Local files and folders are not locked, since they
+    /// may move, and the file indexer finds their documents again, cf. FileSourceIndexer.RelocateStoredFilesAsync.
+    /// The embedding provider is never locked; DataSourceReindexWarning asks what changing it costs.
     ///
     /// Unclear counts as locked: an unavailable index database says nothing about what is stored.
     /// </remarks>
-    /// <param name="dataSourceId">The data source to ask about.</param>
+    /// <param name="dataSourceId">The mailbox to ask about.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>True when the source must not be changed.</returns>
-    public async Task<bool> ShouldLockDataSourceOriginAsync(string dataSourceId, CancellationToken token = default)
+    public async Task<bool> ShouldLockMailboxOriginAsync(string dataSourceId, CancellationToken token = default)
     {
         var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
         if (!indexStore.IsAvailable)
