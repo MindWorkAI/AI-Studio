@@ -1,6 +1,5 @@
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
-@using AIStudio.Tools.PluginSystem
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -126,29 +125,3 @@
         @T("No data sources configured yet.")
     </MudText>
 }
-
-<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
-    <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
-            @T("External Data (ERI-Server v1)")
-        </MudMenuItem>
-        @*
-            Without an embedding provider, the dialogs of the local data sources could never be saved.
-            They stay listed with the reason, so nobody concludes that AI Studio cannot read local files:
-        *@
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))" Disabled="@(!this.HasEmbeddingProvider)">
-            @(this.HasEmbeddingProvider ? T("Local Directory") : T("Local Directory, requires an embedding provider"))
-        </MudMenuItem>
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))" Disabled="@(!this.HasEmbeddingProvider)">
-            @(this.HasEmbeddingProvider ? T("Local File") : T("Local File, requires an embedding provider"))
-        </MudMenuItem>
-        @if (PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager))
-        {
-            @* Shown with a lock rather than left out, like the locked buttons for adding providers: *@
-            <MudMenuItem OnClick="@this.AddMailbox" Disabled="@(!this.MayAddMailbox || !this.HasEmbeddingProvider)" Icon="@(this.MayAddMailbox ? null : Icons.Material.Filled.Lock)">
-                @this.MailboxMenuText
-            </MudMenuItem>
-        }
-    </MudMenu>
-    <LockableButton Text="@T("Import Data Source")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportERIDataSource" ButtonVariant="Variant.Outlined" NoMargin="true" />
-</MudStack>
