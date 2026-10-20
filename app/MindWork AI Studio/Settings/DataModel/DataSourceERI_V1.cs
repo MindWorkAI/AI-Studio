@@ -94,25 +94,36 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
+    /// to ask the server for all pages before it as well. A server may refuse more matches than its
+    /// retrieval process allows, which often is the very number configured here: it would refuse
+    /// every further page, and the model would hear that the data source could not be searched
+    /// rather than that there is nothing more.
+    /// </remarks>
+    public int GetLastPage() => 1;
+
+    /// <inheritdoc />
     public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
     {
-        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        var lastPage = this.GetLastPage();
+        if (page < 1 || page > lastPage)
+            throw new ArgumentOutOfRangeException(nameof(page), page, $"An ERI data source has pages from 1 to {lastPage}.");
+
         if (this.MaxMatches == 0)
             return RetrievalPage.EMPTY;
 
         //
         // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
-        // thread still tells the server what the conversation is about. Nor does it know an offset:
-        // the server returns the whole window, and the page is cut from it here. Hence, the pages
-        // are only as stable as the order in which the server returns its matches. A server which
-        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        // thread still tells the server what the conversation is about. Nor does it know an offset,
+        // so the data source has a single page, asking for exactly what the classic RAG process asks
+        // for, see GetLastPage:
         //
-        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, this.MaxMatches, token);
         if (contexts is null)
             return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
 
-        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
-        return new RetrievalPage(pageContexts, hasMore);
+        return new RetrievalPage(contexts.Take(this.MaxMatches).ToList(), false);
     }
 
     /// <returns>What the ERI server found, or null when it could not be searched.</returns>
@@ -155,6 +166,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
+                                SourceCategory = eriContext.Category ?? string.Empty,
                                 MatchedText = eriContext.MatchedContent,
                                 DataSourceName = eriContext.Name,
                                 SurroundingContent = eriContext.SurroundingContent,
@@ -169,6 +181,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Links = eriContext.Links,
                                 Source = eriContext.MatchedContent,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
+                                SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
                                 DataSourceName = eriContext.Name,
                             });
@@ -183,10 +196,17 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 return genericRetrievalContexts;
             }
 
+            //
+            // The ERI client answers a cancellation like any other failure, since other callers
+            // pass their own timeout and expect an answer. Whoever cancelled the search, though,
+            // waits for it to stop; reporting the data source as not searched would carry on:
+            //
+            token.ThrowIfCancellationRequested();
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
             return null;
         }
 
+        token.ThrowIfCancellationRequested();
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
         return null;
     }

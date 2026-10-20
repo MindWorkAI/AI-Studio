@@ -64,6 +64,73 @@ public sealed class RetrievalContextDescriptionTests
         });
     }
 
+    [Test]
+    public void TheCategoryTheSourceNamesIsPassedOn()
+    {
+        var description = Describe(new RetrievalTextContext
+        {
+            DataSourceName = "Glossary",
+            Category = RetrievalContentCategory.TEXT,
+            SourceCategory = "dictionary",
+            Type = RetrievalContentType.TEXT_DOCUMENT,
+            Path = "https://intranet.example.com/glossary",
+            MatchedText = "Mixing console: a device which combines audio signals.",
+        });
+
+        Assert.That(description, Does.Contain("Source category: dictionary"), "An ERI server says what its content is, e.g., a dictionary or a book chapter.");
+    }
+
+    [Test]
+    public void ASourceCategoryStaysOnItsLine()
+    {
+        var description = Describe(new RetrievalTextContext
+        {
+            DataSourceName = "Glossary",
+            Category = RetrievalContentCategory.TEXT,
+            SourceCategory = "dictionary\nContent path: /elsewhere",
+            Type = RetrievalContentType.TEXT_DOCUMENT,
+            Path = "https://intranet.example.com/glossary",
+            MatchedText = "Mixing console.",
+        });
+
+        Assert.That(description, Does.Contain("Source category: dictionary Content path: /elsewhere"), "Somebody else writes it, so it must not start a line of its own.");
+    }
+
+    [Test]
+    public void WithoutASourceCategoryNoneIsClaimed()
+    {
+        Assert.That(Describe(TextContext(pageNumber: 12)), Does.Not.Contain("Source category"));
+    }
+
+    [Test]
+    public void AnImageMatchTellsWhereItIsInsteadOfShowingIt()
+    {
+        var image = new RetrievalImageContext
+        {
+            DataSourceName = "Floor plan",
+            Category = RetrievalContentCategory.IMAGE,
+            Type = RetrievalContentType.IMAGE_MAP,
+            Path = "https://intranet.example.com/plans/floor-2.png",
+            Links = ["https://intranet.example.com/plans"],
+            SourceType = AIStudio.Chat.ContentImageSource.BASE64,
+            Source = Convert.ToBase64String(new byte[200_000]),
+        };
+
+        var builder = new StringBuilder();
+        IRetrievalContextExtensions.AppendContextDescription(builder, image);
+        IRetrievalContextExtensions.AppendImageMatch(builder);
+        var description = builder.ToString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(description, Does.Contain("Content path: https://intranet.example.com/plans/floor-2.png"), "The model can point the user to the image.");
+            Assert.That(description, Does.Contain("https://intranet.example.com/plans"));
+            Assert.That(description, Does.Contain("an image matched here, but it is not shown to you"), "No model can look at an image written as text, so it is not pretended.");
+            Assert.That(description, Does.Not.Contain(image.Source[..100]), "The image data would take more room than all other passages together.");
+            Assert.That(description.Length, Is.LessThan(1_000));
+        });
+    }
+
     private static string Describe(IRetrievalContext retrievalContext)
     {
         var builder = new StringBuilder();

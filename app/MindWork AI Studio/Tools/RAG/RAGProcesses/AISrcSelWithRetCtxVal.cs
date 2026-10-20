@@ -1,3 +1,5 @@
+using System.Text;
+
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -137,6 +139,10 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 // belongs into the selection instead, which names the preselected sources it
                 // cannot use.
                 //
+                // An ERI data source whose server is out of reach is another matter: it was not held
+                // back by a filter, it just could not answer this time. The model learns about it
+                // below, after the augmentation.
+                //
                 LOGGER.LogWarning("No data sources are selected. The RAG process is skipped.");
                 proceedWithRAG = false;
             }
@@ -189,6 +195,11 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     {
                         dataContexts.AddRange(await retrievalTask);
                     }
+                    catch (OperationCanceledException) when (token.IsCancellationRequested)
+                    {
+                        // The user stopped the answer, which is no error of the data source:
+                        LOGGER.LogInformation("The retrieval process was cancelled.");
+                    }
                     catch (Exception e)
                     {
                         LOGGER.LogError(e, "An error occurred during the retrieval process.");
@@ -204,7 +215,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 var augmentationProcess = new AugmentationOne();
                 chatThread = await augmentationProcess.ProcessAsync(provider, lastUserPrompt, chatThread, dataContexts, token);
             }
-            
+
+            //
+            // The data sources of the chat whose server could not be reached were never searched.
+            // The model learns about them, so that it does not take their silence for finding
+            // nothing. This holds even when nothing was retrieved, e.g., because every selected data
+            // source is out of reach:
+            //
+            chatThread.AugmentedData = WithUnreachableDataSources(chatThread.AugmentedData, dataSources.GetUnreachableOfTheChat(chatThread.DataSourceOptions));
+
             //
             // Add sources from the selected data
             //
@@ -230,6 +249,25 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
+
+    /// <summary>
+    /// Adds the note on the data sources whose server could not be reached to what the model reads along with the passages.
+    /// </summary>
+    /// <param name="augmentedData">What the augmentation wrote, possibly nothing.</param>
+    /// <param name="unreachableDataSources">The data sources of the chat whose server could not be reached.</param>
+    /// <returns>The augmented data followed by the note, or the augmented data alone when every server answered.</returns>
+    internal static string WithUnreachableDataSources(string augmentedData, IReadOnlyList<IDataSource> unreachableDataSources)
+    {
+        if (unreachableDataSources.Count == 0)
+            return augmentedData;
+
+        var builder = new StringBuilder(augmentedData);
+        if (builder.Length > 0)
+            builder.AppendLine();
+
+        UnreachableDataSources.AppendTo(builder, unreachableDataSources);
+        return builder.ToString();
+    }
 
     /// <summary>
     /// Whether the model searches the data sources of this chat itself, through the tool semantic_search.
