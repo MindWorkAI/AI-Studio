@@ -4026,6 +4026,48 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T813925103"] = "Das Folgende
 -- On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T91194331"] = "Auf diesem Rechner befindet sich der Datenordner im Konfigurationsordner. Bei einer Sicherung des Konfigurationsordners wird daher auch der Datenordner mitgesichert."
 
+-- Local File, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1317002733"] = "Lokale Datei, erfordert einen Einbettungsanbieter"
+
+-- Add Local Directory as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
+
+-- Local File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1687345358"] = "Lokale Datei"
+
+-- Mailbox (IMAP), requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T2363290424"] = "Postfach (IMAP), erfordert einen Einbettungsanbieter"
+
+-- Mailbox (IMAP), not allowed by your organization
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T308474155"] = "Postfach (IMAP), von Ihrer Organisation nicht erlaubt"
+
+-- Add Mailbox
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3173750212"] = "Postfach hinzufügen"
+
+-- Add Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3387511033"] = "Datenquelle hinzufügen"
+
+-- Add Local File as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3500365052"] = "Lokale Datei als Datenquelle hinzufügen"
+
+-- Local Directory, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3698039736"] = "Lokaler Ordner, erfordert einen Einbettungsanbieter"
+
+-- Import Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T381231449"] = "Datenquelle importieren"
+
+-- Mailbox (IMAP)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3859543867"] = "Postfach (IMAP)"
+
+-- Add ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T590005498"] = "ERI v1 Datenquelle hinzufügen"
+
+-- External Data (ERI-Server v1)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T774473996"] = "Externe Daten (ERI-Server v1)"
+
+-- Local Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T926703547"] = "Lokaler Ordner"
+
 -- Yes, please send my data to the external embedding provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107763"] = "Ja, bitte senden Sie meine Daten an den externen Einbettungsanbieter"
 
@@ -4083,14 +4125,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Au
 -- Edit Local Directory Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
 
--- Local File, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1317002733"] = "Lokale Datei, erfordert einen Einbettungsanbieter"
-
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Aktualisieren"
-
--- Add Local Directory as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1469573738"] = "Löschen"
@@ -4107,9 +4143,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Di
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "Extern (ERI)"
 
--- Local File
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1687345358"] = "Lokale Datei"
-
 -- Delete Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Datenquelle löschen"
 
@@ -4121,9 +4154,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "In
 
 -- Edit ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T221059217"] = "ERI v1 Datenquelle bearbeiten"
-
--- Mailbox (IMAP), requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2363290424"] = "Postfach (IMAP), erfordert einen Einbettungsanbieter"
 
 -- Edit Local File Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
@@ -4161,12 +4191,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2940206485"] = "Si
 -- This data source is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "Diese Datenquelle wird von Ihrer Organisation verwaltet."
 
--- Mailbox (IMAP), not allowed by your organization
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T308474155"] = "Postfach (IMAP), von Ihrer Organisation nicht erlaubt"
-
--- Add Mailbox
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3173750212"] = "Postfach hinzufügen"
-
 -- Delete Mailbox
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3264675802"] = "Postfach löschen"
 
@@ -4176,17 +4200,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3267849393"] = "Be
 -- Are you sure you want to delete the data source '{0}' of type '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "Möchten Sie die Datenquelle „{0}“ vom Typ „{1}“ wirklich löschen?"
 
--- Add Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3387511033"] = "Datenquelle hinzufügen"
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unbekannt"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3448155331"] = "Schließen"
-
--- Add Local File as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3500365052"] = "Lokale Datei als Datenquelle hinzufügen"
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3512062061"] = "Typ"
@@ -4203,20 +4221,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zu
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern."
 
--- Local Directory, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3698039736"] = "Lokaler Ordner, erfordert einen Einbettungsanbieter"
-
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Nicht verfügbar"
 
--- Import Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T381231449"] = "Datenquelle importieren"
-
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "ERI-Datenquelle exportieren"
-
--- Mailbox (IMAP)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3859543867"] = "Postfach (IMAP)"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Aktionen"
@@ -4230,14 +4239,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Wa
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
 
--- Add ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T590005498"] = "ERI v1 Datenquelle hinzufügen"
-
 -- Cannot export this ERI data source because no enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung des Unternehmens konfiguriert ist."
-
--- External Data (ERI-Server v1)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T774473996"] = "Externe Daten (ERI-Server v1)"
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T782820095"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Authentifizierung konfiguriert ist. Das Problem war: {0}"
@@ -4250,9 +4253,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T854231603"] = "Lok
 
 -- The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T87980240"] = "Das Passwort für dieses Postfach konnte nicht aus dem Betriebssystem gelöscht werden. Daher wurde das Postfach beibehalten. Das Problem war: {0}"
-
--- Local Directory
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Lokaler Ordner"
 
 -- Import Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1681763001"] = "Einbettung importieren"
@@ -5817,9 +5817,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1874060138"] = "Chat hinzuf�
 -- No chats found
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "Keine Chats gefunden"
 
--- Create Chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1939006681"] = "Chat erstellen"
-
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Bitte benennen Sie Ihren Arbeitsbereich:"
 
@@ -5828,9 +5825,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2133593288"] = "Möchten Sie
 
 -- Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Möchten Sie den Arbeitsbereich „{0}“ wirklich löschen? Dadurch werden auch {1} Chat(s) in diesem Arbeitsbereich gelöscht."
-
--- Are you sure you want to create a another chat? All unsaved changes will be lost.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2237618267"] = "Möchten Sie wirklich einen neuen Chat erstellen? Alle nicht gespeicherten Änderungen gehen verloren."
 
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Bitte geben Sie einen Namen für diesen Chat ein."
@@ -11088,8 +11082,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Plugin aktivieren"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
+-- {0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247"] = "{0} Möchten Sie das Plugin-Archiv stattdessen an einem Ort Ihrer Wahl speichern? Bis zum Neustart von AI Studio bietet die Plugin-Seite diesen Export anstelle des Teilens an."
+
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
+
+-- Share dialog not available
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
 -- Edit Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Plugin für „Assistent bearbeiten“"
@@ -14018,6 +14018,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2221093487"] = 
 
 -- Unexpected error: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2350673880"] = "Unerwarteter Fehler: {0}"
+
+-- The share dialog of your operating system did not respond.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T254952756"] = "Der systemeigene Dialog zum Teilen hat nicht reagiert."
 
 -- The plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = "Das Plugin hat kein lokales Verzeichnis."
