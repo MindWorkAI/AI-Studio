@@ -531,3 +531,25 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
 }
+
+/*
+ * Dialogs whose footer carries buttons on the left as well, such as Add and Import next to Close.
+ * MudBlazor pads the content with 24px to the left and right, but the footer with only 8px, so the
+ * buttons stood out of the column of the table above them. The footer takes over the 24px. On the
+ * right, the content also gives up the room of its scrollbar as soon as the table grows long, and
+ * how wide that is depends on the operating system and its settings, down to nothing for scrollbars
+ * which only show while scrolling. So no fixed padding fits: the content reserves that room for good,
+ * and the footer reserves the very same, which scrollbar-gutter only does for an element that clips
+ * its overflow. The popovers of menus and tooltips live elsewhere, so the footer clips no more than
+ * the outermost blur of a button shadow. A web view without scrollbar-gutter keeps the old offset on
+ * the right only. Both rules name the MudBlazor classes to outweigh their specificity.
+ */
+.mud-dialog .mud-dialog-content.dialog-content-aligned {
+    scrollbar-gutter: stable;
+}
+
+.mud-dialog .mud-dialog-actions.dialog-actions-aligned {
+    padding: 8px 24px;
+    overflow: hidden;
+    scrollbar-gutter: stable;
+}
