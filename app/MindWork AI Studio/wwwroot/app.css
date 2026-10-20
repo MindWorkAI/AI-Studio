@@ -532,6 +532,13 @@ tr:has(> .provider-group-header) .mud-icon-button {
     padding-bottom: 0.5rem;
 }
 
+/* Pattern lists wrap and grow to their full content without an internal scrollbar. */
+.pattern-text-field textarea.mud-input-slot {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: hidden !important;
+}
+
 /*
  * Dialogs whose footer carries buttons on the left as well, such as Add and Import next to Close.
  * MudBlazor pads the content with 24px to the left and right, but the footer with only 8px, so the

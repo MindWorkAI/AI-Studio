@@ -168,8 +168,6 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
 
-    private void RestoreDefaultExcludePatterns() => this.excludePatterns = FileExclusions.DEFAULT_PATTERNS;
-
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
