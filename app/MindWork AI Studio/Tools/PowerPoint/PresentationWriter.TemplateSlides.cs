@@ -84,12 +84,13 @@ internal static partial class PresentationWriter
     /// any more leaves the file. This holds for a table which is no placeholder as well, so that no
     /// row of the old table shows below a shorter new one. A new picture or table goes where the
     /// slide put the old one, should it have moved it away from where the layout puts it. A slot the
-    /// slide does not carry gets its placeholder from the layout, as on a slide written anew.
+    /// slide does not carry gets its placeholder from the layout, as on a slide written anew. A copy
+    /// of a slot takes its new text like a text slot, in the formatting of its old one.
     ///
     /// What the slide removes goes first, so that the slots are filled on what is left.
     /// </remarks>
     /// <param name="slidePart">The slide part of the template slide, already on the layout of <see cref="SlideContent.Layout"/>.</param>
-    /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots and which elements it carries.</param>
+    /// <param name="templateSlide">The template slide, as read from the template, which knows where it moved its slots, which copies of slots and which elements it carries.</param>
     /// <param name="content">What goes on the slide.</param>
     private static void EditTemplateSlide(SlidePart slidePart, TemplateSlide templateSlide, SlideContent content)
     {
@@ -111,16 +112,7 @@ internal static partial class PresentationWriter
                 ? (P.PlaceholderShape)existingPlaceholder.CloneNode(true)
                 : layoutPlaceholders.For(slot);
 
-            List<A.Paragraph>? paragraphs = slot.Role switch
-            {
-                PlaceholderRole.TITLE when slide.Title.Length > 0 => ParagraphsOf(slide.Title),
-                PlaceholderRole.SUBTITLE when slide.Subtitle.Length > 0 => ParagraphsOf(slide.Subtitle),
-                PlaceholderRole.TEXT when index < slide.Texts.Count && slide.Texts[index].Paragraphs.Count > 0 => slide.Texts[index].Paragraphs.Select(ParagraphOf).ToList(),
-                PlaceholderRole.LABEL when index < slide.Labels.Count && slide.Labels[index].Length > 0 => ParagraphsOf(slide.Labels[index]),
-
-                _ => null,
-            };
-
+            var paragraphs = ParagraphsFor(slot, slide);
             OpenXmlElement? replacement;
             if (paragraphs is not null)
             {
@@ -177,10 +169,41 @@ internal static partial class PresentationWriter
                     RemoveShape(slidePart, emptyPlaceholder);
             }
         }
+
+        // A copy of a slot keeps its shape, and with it the look of the slot it repeats:
+        foreach (var copy in templateSlide.SlotCopies)
+        {
+            if (ParagraphsFor(copy.Slot, slide) is { } paragraphs && ShapeWithId(shapeTree, copy.ShapeId) is P.Shape shape)
+                ReplaceParagraphs(shape, paragraphs);
+        }
     }
 
     /// <summary>
-    /// Removes what an edited slide no longer shows: the elements and the slot contents it names.
+    /// The paragraphs the slide writes into a text slot.
+    /// </summary>
+    /// <returns>The paragraphs; null when the slot is no text slot, or the slide leaves it empty.</returns>
+    private static List<A.Paragraph>? ParagraphsFor(TemplateSlot slot, SlideSpec slide)
+    {
+        var index = slot.Ordinal - 1;
+        return slot.Role switch
+        {
+            PlaceholderRole.TITLE when slide.Title.Length > 0 => ParagraphsOf(slide.Title),
+            PlaceholderRole.SUBTITLE when slide.Subtitle.Length > 0 => ParagraphsOf(slide.Subtitle),
+            PlaceholderRole.TEXT when index < slide.Texts.Count && slide.Texts[index].Paragraphs.Count > 0 => slide.Texts[index].Paragraphs.Select(ParagraphOf).ToList(),
+            PlaceholderRole.LABEL when index < slide.Labels.Count && slide.Labels[index].Length > 0 => ParagraphsOf(slide.Labels[index]),
+
+            _ => null,
+        };
+    }
+
+    /// <summary>
+    /// The top-level shape of a slide with the given ID.
+    /// </summary>
+    /// <returns>The shape; null when the slide no longer has it.</returns>
+    private static OpenXmlElement? ShapeWithId(P.ShapeTree shapeTree, uint shapeId) => shapeTree.Elements().FirstOrDefault(candidate => TemplateSlideShapes.ShapeIdOf(candidate) == shapeId);
+
+    /// <summary>
+    /// Removes what an edited slide no longer shows: the elements, the slot contents and the copies of slots it names.
     /// </summary>
     /// <remarks>
     /// The deck was checked against the template as it was read, so every name is known. A name
@@ -198,11 +221,19 @@ internal static partial class PresentationWriter
         {
             if (templateSlide.FindElement(name) is { } element)
             {
-                if (shapeTree.Elements().FirstOrDefault(candidate => TemplateSlideShapes.ShapeIdOf(candidate) == element.ShapeId) is { } elementShape)
+                if (ShapeWithId(shapeTree, element.ShapeId) is { } elementShape)
                     shapes.Add(elementShape);
             }
-            else if (PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) && role is not PlaceholderRole.TITLE && content.Layout.Slots.FirstOrDefault(candidate => candidate.Role == role && candidate.Ordinal == ordinal) is { } slot && shapesBySlot.TryGetValue(slot, out var slotShape))
-                shapes.Add(slotShape);
+            else if (PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) && role is not PlaceholderRole.TITLE)
+            {
+                if (content.Layout.Slots.FirstOrDefault(candidate => candidate.Role == role && candidate.Ordinal == ordinal) is { } slot)
+                {
+                    if (shapesBySlot.TryGetValue(slot, out var slotShape))
+                        shapes.Add(slotShape);
+                }
+                else if (templateSlide.FindCopy(role, ordinal) is { } copy && ShapeWithId(shapeTree, copy.ShapeId) is { } copyShape)
+                    shapes.Add(copyShape);
+            }
         }
 
         foreach (var shape in shapes.Distinct())

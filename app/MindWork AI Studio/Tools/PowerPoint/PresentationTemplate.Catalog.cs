@@ -68,8 +68,10 @@ internal sealed partial class PresentationTemplate
     /// The model learns what each slide says, so that a new slide does not repeat a kept one, and
     /// which slots an edited slide offers, by the layout it shares with the catalog. Where an edited
     /// slide moved or resized a slot, the entry gives its place and capacity on the slide, since
-    /// those of the layout would make the model write too much. An edited slide also lists what it
-    /// carries besides its slots, which the model may remove. Slides the user leaves out are not
+    /// those of the layout would make the model write too much. A copy of a slot, e.g., a second
+    /// heading with its text, is offered as one more slot of its kind, with its place and capacity
+    /// as well. An edited slide also lists what it carries besides its slots, which the model may
+    /// remove. Slides the user leaves out are not
     /// mentioned at all. The texts come from the template file, so the caller passes them through
     /// the prompt injection filter.
     /// </remarks>
@@ -95,9 +97,9 @@ internal sealed partial class PresentationTemplate
             if (use is TemplateSlideUse.EDIT && family is not null)
                 list.Append(", with the slots of layout ").Append(family.Id);
 
-            var slots = family?.Slots ?? slide.Contents.Select(content => content.Slot).ToList();
+            var slots = family is not null ? slide.Slots : slide.Contents.Select(content => content.Slot).ToList();
             var entries = use is TemplateSlideUse.EDIT && family is not null
-                ? this.DescribeSlideToEdit(slide, slots)
+                ? this.DescribeSlideToEdit(slide)
                 : slide.Contents.Select(content => $"{NameOf(content.Slot, slots)} {DescribeContent(content)}").ToList();
 
             list.Append(": ");
@@ -111,23 +113,23 @@ internal sealed partial class PresentationTemplate
     }
 
     /// <summary>
-    /// Describes a slide to edit: what each slot holds, and where the slide moved one, its place and
-    /// capacity on the slide; then every element the slide carries besides its slots.
+    /// Describes a slide to edit: what each slot holds, and where the slide moved one or carries a
+    /// copy of one, its place and capacity on the slide; then every element the slide carries
+    /// besides its slots.
     /// </summary>
     /// <param name="slide">The slide.</param>
-    /// <param name="slots">The slots of its layout family.</param>
-    /// <returns>One entry per slot which holds content or which the slide moved, in reading order, and one per element.</returns>
-    private List<string> DescribeSlideToEdit(TemplateSlide slide, IReadOnlyList<TemplateSlot> slots)
+    /// <returns>One entry per slot which holds content, which the slide moved, or which a copy offers, in reading order, and one per element.</returns>
+    private List<string> DescribeSlideToEdit(TemplateSlide slide)
     {
-        var slotsOnSlide = slots.Select(slide.OnSlide).ToList();
+        var slotsOnSlide = slide.Slots;
         var entries = new List<string>();
         foreach (var slot in slotsOnSlide)
         {
             var content = slide.Contents.FirstOrDefault(candidate => candidate.Slot.Role == slot.Role && candidate.Slot.Ordinal == slot.Ordinal);
-            if (!slide.Moves(slot))
+            if (!slide.Moves(slot) && slide.FindCopy(slot.Role, slot.Ordinal) is null)
             {
                 if (content is not null)
-                    entries.Add($"{NameOf(slot, slots)} {DescribeContent(content)}");
+                    entries.Add($"{NameOf(slot, slotsOnSlide)} {DescribeContent(content)}");
 
                 continue;
             }
@@ -276,31 +278,47 @@ internal sealed partial class PresentationTemplate
     /// </remarks>
     private string DescribeLabelPlace(TemplateSlot label, IReadOnlyList<TemplateSlot> slots)
     {
+        if (this.NeighborOf(label, slots, true) is { } below)
+            return $"above {NameOf(below, slots)}";
+
+        return this.NeighborOf(label, slots, false) is { } above
+            ? $"below {NameOf(above, slots)}"
+            : this.DescribePlace(label.Bounds);
+    }
+
+    /// <summary>
+    /// The text, picture or table right below or right above a label, which the label belongs to.
+    /// </summary>
+    /// <remarks>
+    /// A label right below one text and right above the next one heads the next one: on a slide
+    /// stacking headings with their texts, a heading sits closer to the text before it than to its
+    /// own, yet belongs to the text it introduces. Hence the caller asks for what lies below a label
+    /// first.
+    /// </remarks>
+    /// <param name="label">The label.</param>
+    /// <param name="slots">All slots of the layout or the slide.</param>
+    /// <param name="below">Whether to look below the label rather than above it.</param>
+    /// <returns>The nearest slot on that side; null when there is none close enough.</returns>
+    private TemplateSlot? NeighborOf(TemplateSlot label, IReadOnlyList<TemplateSlot> slots, bool below)
+    {
         var tolerance = this.SlideHeight * SLOT_TOLERANCE;
         var nearDistance = this.SlideHeight * LABEL_DISTANCE_SHARE;
-        string? description = null;
+        TemplateSlot? neighbor = null;
         var smallestGap = double.MaxValue;
         foreach (var target in slots)
         {
             if (target.Role is not (PlaceholderRole.TEXT or PlaceholderRole.PICTURE or PlaceholderRole.TABLE) || !target.Bounds.OverlapsHorizontally(label.Bounds))
                 continue;
 
-            var gapAbove = target.Bounds.Y - label.Bounds.Bottom;
-            if (gapAbove >= -tolerance && gapAbove <= nearDistance && Math.Abs(gapAbove) < smallestGap)
+            var gap = below ? target.Bounds.Y - label.Bounds.Bottom : label.Bounds.Y - target.Bounds.Bottom;
+            if (gap >= -tolerance && gap <= nearDistance && Math.Abs(gap) < smallestGap)
             {
-                smallestGap = Math.Abs(gapAbove);
-                description = $"above {NameOf(target, slots)}";
-            }
-
-            var gapBelow = label.Bounds.Y - target.Bounds.Bottom;
-            if (gapBelow >= -tolerance && gapBelow <= nearDistance && Math.Abs(gapBelow) < smallestGap)
-            {
-                smallestGap = Math.Abs(gapBelow);
-                description = $"below {NameOf(target, slots)}";
+                smallestGap = Math.Abs(gap);
+                neighbor = target;
             }
         }
 
-        return description ?? this.DescribePlace(label.Bounds);
+        return neighbor;
     }
 
     private static string OrientationOf(SlotBounds bounds)

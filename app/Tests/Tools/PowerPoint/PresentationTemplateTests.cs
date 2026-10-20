@@ -404,6 +404,120 @@ public sealed class PresentationTemplateTests
     }
 
     [Test]
+    public void CopiesOfAHeadingAndItsTextBecomeSlotsOfTheSlide()
+    {
+        using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
+
+        var slide = PresentationTemplate.Read(file).Slides[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Role, copy.Slot.Ordinal, copy.Slot.Bounds, copy.ShapeId)), Is.EqualTo(new[]
+            {
+                (PlaceholderRole.LABEL, 2, StackedHeadings.SECOND_HEADING, 5U),
+                (PlaceholderRole.TEXT, 2, StackedHeadings.SECOND_TEXT, 6U),
+                (PlaceholderRole.LABEL, 3, StackedHeadings.THIRD_HEADING, 7U),
+                (PlaceholderRole.TEXT, 3, StackedHeadings.THIRD_TEXT, 8U),
+            }), "The copies are numbered after the slots of the layout, in reading order.");
+            Assert.That(slide.SlotCopies.Select(copy => copy.Slot.Capacity), Is.EqualTo(new TextCapacity?[] { new TextCapacity(1, 14), new TextCapacity(3, 25), new TextCapacity(1, 18), new TextCapacity(3, 25) }), "A copy holds what its size allows, as a moved slot does.");
+            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName()} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 1", "label 2", "text 2", "label 3", "text 3" }));
+            Assert.That(slide.Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[]
+            {
+                (PlaceholderRole.TITLE, "Missions"),
+                (PlaceholderRole.LABEL, "Lorem ipsum"),
+                (PlaceholderRole.TEXT, "Ut wisi enim"),
+                (PlaceholderRole.LABEL, "Lorem"),
+                (PlaceholderRole.TEXT, "Duis autem"),
+                (PlaceholderRole.LABEL, "Nam liber"),
+                (PlaceholderRole.TEXT, "Consectetuer"),
+            }));
+            Assert.That(slide.Elements.Select(element => (element.Kind, element.Text)), Is.EqualTo(new[] { (TemplateSlideElementKind.PICTURE, string.Empty), (TemplateSlideElementKind.TEXT_BOX, "Bildquelle hier angeben") }), "The source of the picture has the height of a heading, yet lines up with none.");
+        });
+    }
+
+    [Test]
+    public void OnlyAShapeOfTheSizeOfASlotInLineWithItIsACopy()
+    {
+        var twin = new SlotBounds(838_200, 4_100_000, 3_400_000, 1_000_000);
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Missions"), (new TestPlaceholder(P.PlaceholderValues.Body, 17), "Lorem ipsum"), (TestPlaceholder.Text(1, StackedHeadings.FIRST_TEXT), "Ut wisi enim"))
+                {
+                    Elements =
+                    [
+                        TestElement.TextBox(new SlotBounds(838_200, 1_900_000, 3_400_000, 1_000_000), "On text 1"),
+                        TestElement.TextBox(new SlotBounds(838_200, 3_000_000, 2_000_000, 1_000_000), "Other width"),
+                        TestElement.TextBox(twin, "Twin"),
+                        TestElement.TextBox(twin, "Twin"),
+                        new TestElement((_, slidePart) => TestElement.TextBox(new SlotBounds(838_200, 5_200_000, 3_400_000, 1_000_000), "Same ID").Create(2, slidePart)),
+                        TestElement.TextBox(new SlotBounds(4_400_000, 1_825_625, 3_400_000, 1_000_000), string.Empty),
+                        TestElement.TextBox(StackedHeadings.PICTURE_SOURCE, "Bildquelle hier angeben"),
+                    ],
+                },
+            ]),
+            StackedHeadings.Layout());
+
+        var slide = PresentationTemplate.Read(file).Slides[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Role, copy.Slot.Ordinal, copy.Slot.Bounds)), Is.EqualTo(new[] { (PlaceholderRole.TEXT, 2, twin) }), "Of two copies in one place, the first counts.");
+            Assert.That(slide.Elements.Select(element => element.Text), Is.EqualTo(new[] { "On text 1", "Other width", "Twin", "Bildquelle hier angeben" }), "A box lying on a slot, a text of another width, the second twin and a box in no line with a slot stay elements; one whose ID the title shares and an empty one are neither.");
+        });
+    }
+
+    [Test]
+    public void CopiesOfCopiesFormAGrid()
+    {
+        // The upper right copy lines up with nothing but the lower right one, which lines up with text 1:
+        var text = new SlotBounds(838_200, 3_500_000, 3_400_000, 1_000_000);
+        var lowerRight = text with { X = 4_400_000 };
+        var upperRight = lowerRight with { Y = 2_300_000 };
+        using var file = TestTemplate.Create(
+            new TestTemplateOptions(Slides:
+            [
+                new TestSlide(0, (TestPlaceholder.Title(), "Missions"), (TestPlaceholder.Text(1, text), "Ut wisi enim"))
+                {
+                    Elements = [TestElement.TextBox(upperRight, "Above"), TestElement.TextBox(lowerRight, "Beside")],
+                },
+            ]),
+            StackedHeadings.Layout());
+
+        var slide = PresentationTemplate.Read(file).Slides[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(slide.SlotCopies.Select(copy => (copy.Slot.Ordinal, copy.Slot.Bounds)), Is.EqualTo(new[] { (2, upperRight), (3, lowerRight) }));
+            Assert.That(slide.Slots.Select(slot => $"{slot.Role.CatalogName()} {slot.Ordinal}"), Is.EqualTo(new[] { "title 1", "label 1", "text 2", "text 1", "text 3" }), "The slots of the layout keep their numbers; a copy goes where a reader comes across it.");
+        });
+    }
+
+    [Test]
+    public void ALabelRightAboveATextIsItsHeadingEvenRightBelowAnother()
+    {
+        var upper = new SlotBounds(838_200, 1_825_625, 5_150_000, 1_500_000);
+        var heading = new SlotBounds(838_200, 3_350_000, 3_000_000, 300_000);
+        var lower = new SlotBounds(838_200, 3_775_625, 5_150_000, 1_500_000);
+        var template = TestTemplate.Read(new TestLayout("Two texts", TestPlaceholder.Title(), TestPlaceholder.Text(1, upper), TestPlaceholder.Label(17, heading), TestPlaceholder.Text(2, lower)));
+
+        Assert.That(template.ToCatalogPrompt(), Does.Contain("label 1 (above text 2,"), "The heading is closer to the text above it, yet introduces the one below it.");
+    }
+
+    [Test]
+    public void AnEntryToEditOffersTheCopiesAsSlots()
+    {
+        using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
+
+        var template = PresentationTemplate.Read(file);
+        Assert.Multiple(() =>
+        {
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.EDIT]), Is.EqualTo(
+                """
+                - Template slide 1, to edit, with the slots of layout L1: title "Missions"; label 1 "Lorem ipsum"; text 1 (left, middle, up to 3 lines of about 25 characters, on this slide) "Ut wisi enim"; label 2 (above text 2, up to 1 line of about 14 characters, on this slide) "Lorem"; text 2 (left, middle, up to 3 lines of about 25 characters, on this slide) "Duis autem"; label 3 (above text 3, up to 1 line of about 18 characters, on this slide) "Nam liber"; text 3 (left, bottom, up to 3 lines of about 25 characters, on this slide) "Consectetuer"; element 1 (picture, right, middle); element 2 (text box, right, bottom) "Bildquelle hier angeben"
+                """));
+            Assert.That(template.ToTemplateSlidesPrompt([TemplateSlideUse.KEEP]), Is.EqualTo("- Template slide 1, to keep unchanged: title \"Missions\"; label 1 \"Lorem ipsum\"; text 1 \"Ut wisi enim\"; label 2 \"Lorem\"; text 2 \"Duis autem\"; label 3 \"Nam liber\"; text 3 \"Consectetuer\""), "A slide to keep says what its copies hold, so that no new slide repeats it.");
+        });
+    }
+
+    [Test]
     public void ASlideOnALayoutWithoutRoomForContentBelongsToNoFamily()
     {
         using var file = TestTemplate.Create(

@@ -60,15 +60,29 @@ internal sealed partial class PresentationTemplate
                 continue;
 
             var layoutUri = slidePart.SlideLayoutPart?.Uri;
-            var shapeTree = slide.CommonSlideData?.ShapeTree;
-            var shapesBySlot = new Dictionary<TemplateSlot, OpenXmlElement>();
+            var topLevel = slide.CommonSlideData?.ShapeTree?.Elements().ToList() ?? [];
+            var idCounts = topLevel.Select(TemplateSlideShapes.ShapeIdOf).OfType<uint>().CountBy(id => id).ToDictionary();
+            var slotShapes = new HashSet<OpenXmlElement>();
             List<TemplateSlideContent> contents = [];
             List<TemplateSlot> movedSlots = [];
+            List<TemplateSlot> slots = [];
+            List<TemplateSlotCopy> slotCopies = [];
             if (layoutUri is not null && layoutsByUri.TryGetValue(layoutUri, out var slideLayout))
             {
-                shapesBySlot = TemplateSlideShapes.SlotShapesOf(shapeTree, slideLayout);
-                contents = ContentsOf(shapesBySlot, slideLayout);
+                var shapesBySlot = TemplateSlideShapes.SlotShapesOf(slide.CommonSlideData?.ShapeTree, slideLayout);
                 movedSlots = MovedSlotsOf(shapesBySlot, slideLayout, slideWidth, slideHeight);
+                var slotsOnSlide = slideLayout.Slots.Select(slot => movedSlots.FirstOrDefault(moved => moved.Role == slot.Role && moved.Ordinal == slot.Ordinal) ?? slot).ToList();
+                var copies = SlotCopiesOf(topLevel, idCounts, shapesBySlot, slideLayout, slotsOnSlide, slideWidth, slideHeight);
+                slotCopies = copies.Select(found => found.Copy).ToList();
+                slots = InReadingOrderWith(slotsOnSlide, slotCopies.Select(copy => copy.Slot), slideHeight);
+
+                // What fills a slot, by the name the model knows it by:
+                var filledSlots = shapesBySlot.ToDictionary(pair => (pair.Key.Role, pair.Key.Ordinal), pair => (Slot: pair.Key, Shape: pair.Value));
+                foreach (var (copy, shape) in copies)
+                    filledSlots[(copy.Slot.Role, copy.Slot.Ordinal)] = (copy.Slot, shape);
+
+                contents = ContentsOf(slots, filledSlots);
+                slotShapes = filledSlots.Values.Select(filled => filled.Shape).ToHashSet();
             }
 
             var title = contents.FirstOrDefault(content => content.Slot.Role is PlaceholderRole.TITLE)?.Text ?? string.Empty;
@@ -80,7 +94,9 @@ internal sealed partial class PresentationTemplate
                 title.ReplaceLineEndings(" "),
                 contents,
                 movedSlots,
-                ElementsOf(shapeTree, shapesBySlot),
+                slots,
+                slotCopies,
+                ElementsOf(topLevel, idCounts, slotShapes),
                 slide.Show?.Value == false,
                 IsImprint(title, contents)));
         }
@@ -89,29 +105,169 @@ internal sealed partial class PresentationTemplate
     }
 
     /// <summary>
-    /// What the slots of a slide hold, in the reading order of its layout.
+    /// What the slots of a slide hold, in reading order.
     /// </summary>
     /// <remarks>
     /// Placeholders which fill no slot, such as the footer, and slots left empty are left out. A
     /// picture counts as content even though it has no text, and a table which is no placeholder
     /// as the content of the table slot, see <see cref="TemplateSlideShapes.SlotShapesOf"/>.
     /// </remarks>
-    /// <param name="shapesBySlot">The shapes of the slide which fill the slots of its layout.</param>
-    /// <param name="layout">The layout of the slide.</param>
-    private static List<TemplateSlideContent> ContentsOf(IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout)
+    /// <param name="slots">The slots the slide offers, in reading order.</param>
+    /// <param name="filledSlots">The shapes filling the slots, by role and number: the slot of the layout, or the copy, and its shape.</param>
+    private static List<TemplateSlideContent> ContentsOf(IReadOnlyList<TemplateSlot> slots, IReadOnlyDictionary<(PlaceholderRole Role, int Ordinal), (TemplateSlot Slot, OpenXmlElement Shape)> filledSlots)
     {
         var contents = new List<TemplateSlideContent>();
-        foreach (var slot in layout.Slots)
+        foreach (var slot in slots)
         {
-            if (!shapesBySlot.TryGetValue(slot, out var shape))
+            if (!filledSlots.TryGetValue((slot.Role, slot.Ordinal), out var filled))
                 continue;
 
-            var text = TextOf(shape);
-            if (text.Length > 0 || shape is P.Picture)
-                contents.Add(new TemplateSlideContent(slot, text));
+            var text = TextOf(filled.Shape);
+            if (text.Length > 0 || filled.Shape is P.Picture)
+                contents.Add(new TemplateSlideContent(filled.Slot, text));
         }
 
         return contents;
+    }
+
+    /// <summary>
+    /// Finds the shapes of a slide which repeat a text or a label slot of its layout, e.g., a second
+    /// heading with its text, which the author copied from the placeholders of the slide.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// PowerPoint turns a copied placeholder into a text box which keeps the look of the placeholder,
+    /// so what tells a copy is its geometry: it has the height of the slot it repeats, a text also
+    /// its width, and it lines up with the slot or with another copy of it, below it in a column or
+    /// beside it in a row. A label may be narrower or wider, since authors fit a heading to its text.
+    /// The name of the shape would tell as well, but it depends on the language of PowerPoint, and
+    /// other programs do not keep it.
+    /// </para>
+    /// <para>
+    /// A copy overlaps no slot and no other copy: a text box lying on a slot is in the way of it, so it
+    /// stays an element, which the model may remove. A second placeholder of a slot whose first one is
+    /// taken may be a copy as well. Size is compared with the slot itself, so that a long row of
+    /// copies does not drift by a tolerance per step.
+    /// </para>
+    /// </remarks>
+    /// <param name="topLevel">The top-level elements of the slide.</param>
+    /// <param name="idCounts">How often each shape ID occurs among them; a copy is found again by its ID, which therefore has to be unique.</param>
+    /// <param name="shapesBySlot">The shapes of the slide which fill the slots of its layout.</param>
+    /// <param name="layout">The layout of the slide.</param>
+    /// <param name="slotsOnSlide">The slots of the layout, where the slide puts them; a slot the slide leaves out at the place of the layout.</param>
+    /// <param name="slideWidth">The width of a slide, in EMU.</param>
+    /// <param name="slideHeight">The height of a slide, in EMU.</param>
+    /// <returns>The copies with their shapes, in reading order, numbered after the slots of the layout.</returns>
+    private static List<(TemplateSlotCopy Copy, P.Shape Shape)> SlotCopiesOf(IReadOnlyList<OpenXmlElement> topLevel, IReadOnlyDictionary<uint, int> idCounts, IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot, TemplateLayout layout, IReadOnlyList<TemplateSlot> slotsOnSlide, long slideWidth, long slideHeight)
+    {
+        var horizontalTolerance = (long)(slideWidth * SLOT_TOLERANCE);
+        var verticalTolerance = (long)(slideHeight * SLOT_TOLERANCE);
+
+        // What a copy may repeat: a text or a label the slide carries, and every copy found so far:
+        var references = slotsOnSlide
+            .Where(slot => slot.Role is (PlaceholderRole.TEXT or PlaceholderRole.LABEL) && shapesBySlot.Keys.Any(filled => filled.Role == slot.Role && filled.Ordinal == slot.Ordinal))
+            .Select(slot => new CopyReference(slot.Bounds, slot))
+            .ToList();
+
+        if (references.Count == 0)
+            return [];
+
+        var slotShapes = shapesBySlot.Values.ToHashSet();
+        var candidates = new List<(P.Shape Shape, uint Id, SlotBounds Bounds)>();
+        foreach (var element in topLevel)
+        {
+            if (element is not P.Shape shape || slotShapes.Contains(shape) || TemplateSlideShapes.ShapeIdOf(shape) is not { } id || idCounts[id] > 1 || TextOf(shape).Length == 0)
+                continue;
+
+            if (TemplateSlideShapes.PlaceholderOf(shape) is { } placeholder && layout.SlotOf(placeholder.Type?.InnerText ?? "obj", placeholder.Index?.Value)?.Role is not (PlaceholderRole.TEXT or PlaceholderRole.LABEL))
+                continue;
+
+            if (BoundsOf(shape.ShapeProperties?.Transform2D?.Offset, shape.ShapeProperties?.Transform2D?.Extents) is { } bounds)
+                candidates.Add((shape, id, bounds));
+        }
+
+        var occupied = slotsOnSlide.Select(slot => slot.Bounds).ToList();
+        var remaining = candidates.OrderBy(candidate => ReadingKeyOf(candidate.Bounds, slideHeight)).ToList();
+        var found = new List<(P.Shape Shape, uint Id, SlotBounds Bounds, TemplateSlot Original)>();
+        bool foundMore;
+        do
+        {
+            foundMore = false;
+            foreach (var candidate in remaining.ToList())
+            {
+                if (occupied.Any(bounds => Overlaps(candidate.Bounds, bounds)))
+                {
+                    remaining.Remove(candidate);
+                    continue;
+                }
+
+                var reference = references
+                    .Where(other => Repeats(candidate.Bounds, other, horizontalTolerance, verticalTolerance))
+                    .MinBy(other => Math.Abs(candidate.Bounds.X - other.Bounds.X) + Math.Abs(candidate.Bounds.Y - other.Bounds.Y));
+
+                if (reference is null)
+                    continue;
+
+                found.Add((candidate.Shape, candidate.Id, candidate.Bounds, reference.Original));
+                references.Add(new CopyReference(candidate.Bounds, reference.Original));
+                occupied.Add(candidate.Bounds);
+                remaining.Remove(candidate);
+                foundMore = true;
+            }
+        } while (foundMore);
+
+        var counters = layout.Slots.CountBy(slot => slot.Role).ToDictionary();
+        var copies = new List<(TemplateSlotCopy Copy, P.Shape Shape)>();
+        foreach (var copy in found.OrderBy(candidate => ReadingKeyOf(candidate.Bounds, slideHeight)))
+        {
+            var ordinal = counters.GetValueOrDefault(copy.Original.Role) + 1;
+            counters[copy.Original.Role] = ordinal;
+            copies.Add((new TemplateSlotCopy(copy.Original.MovedTo(copy.Bounds) with { Ordinal = ordinal }, copy.Id), copy.Shape));
+        }
+
+        return copies;
+    }
+
+    /// <summary>
+    /// Whether a shape at the given place repeats the slot of a reference: with the size of the slot,
+    /// in line with the reference.
+    /// </summary>
+    private static bool Repeats(SlotBounds bounds, CopyReference reference, long horizontalTolerance, long verticalTolerance)
+    {
+        var original = reference.Original.Bounds;
+        var hasItsSize = Math.Abs(bounds.Height - original.Height) <= verticalTolerance && (reference.Original.Role is PlaceholderRole.LABEL || Math.Abs(bounds.Width - original.Width) <= horizontalTolerance);
+        var isInLine = Math.Abs(bounds.X - reference.Bounds.X) <= horizontalTolerance || Math.Abs(bounds.Y - reference.Bounds.Y) <= verticalTolerance;
+        return hasItsSize && isInLine;
+    }
+
+    /// <summary>
+    /// Something a copy of a slot may line up with: the slot itself, or a copy of it found before.
+    /// </summary>
+    /// <param name="Bounds">Where the slot or the copy sits on the slide.</param>
+    /// <param name="Original">The slot of the layout which is repeated, where the slide puts it.</param>
+    private sealed record CopyReference(SlotBounds Bounds, TemplateSlot Original);
+
+    /// <summary>
+    /// Adds the copies of slots to the slots of a slide, each one where a reader comes across it.
+    /// </summary>
+    /// <remarks>
+    /// The slots of the layout keep their order, so that a slide without copies offers its slots
+    /// exactly as the layout does. A copy goes after the last slot a reader takes in before it.
+    /// </remarks>
+    /// <param name="slots">The slots of the layout, where the slide puts them.</param>
+    /// <param name="copies">The slots the copies offer, in reading order.</param>
+    /// <param name="slideHeight">The height of a slide, in EMU.</param>
+    private static List<TemplateSlot> InReadingOrderWith(IReadOnlyList<TemplateSlot> slots, IEnumerable<TemplateSlot> copies, long slideHeight)
+    {
+        var merged = slots.ToList();
+        foreach (var copy in copies)
+        {
+            var key = ReadingKeyOf(copy.Bounds, slideHeight);
+            var position = merged.FindLastIndex(slot => ReadingKeyOf(slot.Bounds, slideHeight).CompareTo(key) <= 0);
+            merged.Insert(position + 1, copy);
+        }
+
+        return merged;
     }
 
     /// <summary>
@@ -162,7 +318,7 @@ internal sealed partial class PresentationTemplate
     };
 
     /// <summary>
-    /// What a slide carries besides the shapes filling the slots of its layout, from back to front.
+    /// What a slide carries besides the shapes filling the slots of its layout and their copies, from back to front.
     /// </summary>
     /// <remarks>
     /// Only what shows counts: footer, slide number and date belong to the presentation, a
@@ -170,13 +326,11 @@ internal sealed partial class PresentationTemplate
     /// The writer finds an element again by its ID, so an element whose ID another one shares on the
     /// slide is left out rather than risking the wrong one. PowerPoint itself never writes such IDs.
     /// </remarks>
-    /// <param name="shapeTree">The shape tree of the slide.</param>
-    /// <param name="shapesBySlot">The shapes filling the slots of its layout.</param>
-    private static List<TemplateSlideElement> ElementsOf(P.ShapeTree? shapeTree, IReadOnlyDictionary<TemplateSlot, OpenXmlElement> shapesBySlot)
+    /// <param name="topLevel">The top-level elements of the slide.</param>
+    /// <param name="idCounts">How often each shape ID occurs among them.</param>
+    /// <param name="slotShapes">The shapes filling the slots of its layout, and the copies of slots.</param>
+    private static List<TemplateSlideElement> ElementsOf(IReadOnlyList<OpenXmlElement> topLevel, IReadOnlyDictionary<uint, int> idCounts, IReadOnlySet<OpenXmlElement> slotShapes)
     {
-        var slotShapes = shapesBySlot.Values.ToHashSet();
-        var topLevel = shapeTree?.Elements().ToList() ?? [];
-        var idCounts = topLevel.Select(TemplateSlideShapes.ShapeIdOf).OfType<uint>().CountBy(id => id).ToDictionary();
         var elements = new List<TemplateSlideElement>();
         foreach (var element in topLevel)
         {

@@ -242,4 +242,32 @@ public sealed class SlideDeckSpecTests
 
         Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")));
     }
+
+    [Test]
+    public void TheOutlineShowsTheCopiesOfSlotsInReadingOrder()
+    {
+        using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
+
+        var deck = new SlideDeckSpec("Missions", [new SlideSpec(string.Empty, false, "Our missions", string.Empty, [new SlideTextBlock([new SlideParagraph("To Mars", 0)])], ["Mars"], [], null, 1) { Removals = ["label 3", "text 3"] }]);
+
+        const string EXPECTED = """
+            # Missions
+
+            ***
+
+            ### Our missions
+
+            *Slide 1 of the template, edited*
+
+            _Mars_
+
+            - To Mars
+
+            _Lorem_
+
+            - Duis autem
+            """;
+
+        Assert.That(deck.ToMarkdownOutline(PresentationTemplate.Read(file), []), Is.EqualTo(EXPECTED.ReplaceLineEndings("\n")), "The second heading and its text keep the content of the template; the third ones are removed.");
+    }
 }

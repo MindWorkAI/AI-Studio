@@ -12,7 +12,9 @@ namespace AIStudio.Tools.PowerPoint;
 /// A slide may refer to a slide of the template instead of a layout. Without content, it keeps that
 /// slide as it is. With content, the content replaces what the slots of that slide hold, and every
 /// slot it leaves empty keeps the content of the template, unless the slide removes it. What the
-/// template slide carries besides its slots stays as well, unless the slide removes it.
+/// template slide carries besides its slots stays as well, unless the slide removes it. Where the
+/// template slide carries copies of a slot, e.g., a second heading with its text, the numbers go on
+/// through them: "label 2" is the first copy of a layout with a single label.
 /// </remarks>
 /// <param name="Layout">The ID of the layout family, e.g., "L3"; not used when the slide refers to a template slide, which keeps its own layout.</param>
 /// <param name="StartsChapter">Whether a new chapter starts with this slide, which opens a section of the presentation.</param>

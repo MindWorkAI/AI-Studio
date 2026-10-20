@@ -138,26 +138,26 @@ internal static class SlideDeckSpecValidator
             return;
         }
 
-        ValidateContent(slide, number, family.Id, family.Slots.Select(templateSlide.OnSlide).ToList(), pictureCount, issues);
-        ValidateRemovals(slide, number, templateSlide, family, issues);
+        ValidateContent(slide, number, family.Id, templateSlide.Slots, pictureCount, issues);
+        ValidateRemovals(slide, number, templateSlide, issues);
     }
 
     /// <summary>
-    /// Checks what an edited slide removes from its template slide: slots and elements the slide
-    /// has, and neither the title nor a slot the slide fills anew.
+    /// Checks what an edited slide removes from its template slide: slots, copies of slots, and
+    /// elements the slide has, and neither the title nor a slot the slide fills anew.
     /// </summary>
     /// <remarks>
     /// The title stays, since it names the slide in the outline and in the sections of the
     /// presentation; an edited slide changes it by writing a new one.
     /// </remarks>
-    private static void ValidateRemovals(SlideSpec slide, int number, TemplateSlide templateSlide, LayoutFamily family, List<string> issues)
+    private static void ValidateRemovals(SlideSpec slide, int number, TemplateSlide templateSlide, List<string> issues)
     {
         foreach (var name in slide.Removals)
         {
             if (templateSlide.FindElement(name) is not null)
                 continue;
 
-            if (!PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) || SlotOf(family.Slots, role, ordinal) is null)
+            if (!PlaceholderRoleExtensions.TryParseSlotName(name, out var role, out var ordinal) || SlotOf(templateSlide.Slots, role, ordinal) is null)
             {
                 issues.Add($"Slide {number} removes \"{name}\", which template slide {templateSlide.Number} does not have. Remove only the slots and elements its entry in TEMPLATE_SLIDES names, e.g., \"element 1\" or \"label 1\".");
                 continue;
@@ -225,7 +225,7 @@ internal static class SlideDeckSpecValidator
     /// <param name="slide">The slide.</param>
     /// <param name="number">The number of the slide in the deck.</param>
     /// <param name="layoutId">The ID of the layout family, which the issues name.</param>
-    /// <param name="slots">The slots, as the layout offers them or as a template slide moved them.</param>
+    /// <param name="slots">The slots, as the layout offers them or as a template slide moved or copied them.</param>
     /// <param name="pictureCount">How many pictures are attached.</param>
     /// <param name="issues">The issues found so far; new ones are added.</param>
     private static void ValidateContent(SlideSpec slide, int number, string layoutId, IReadOnlyList<TemplateSlot> slots, int pictureCount, List<string> issues)

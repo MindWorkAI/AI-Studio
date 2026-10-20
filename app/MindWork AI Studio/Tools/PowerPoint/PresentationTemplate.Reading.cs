@@ -249,8 +249,7 @@ internal sealed partial class PresentationTemplate
     private static List<TemplateSlot> InReadingOrder(IEnumerable<TemplateSlot> slots, long slideHeight)
     {
         var ordered = slots
-            .OrderBy(slot => (int)Math.Round(slot.Bounds.Y * (double)READING_ROWS / slideHeight))
-            .ThenBy(slot => slot.Bounds.X)
+            .OrderBy(slot => ReadingKeyOf(slot.Bounds, slideHeight))
             .ToList();
 
         var counters = new Dictionary<PlaceholderRole, int>();
@@ -263,6 +262,11 @@ internal sealed partial class PresentationTemplate
 
         return ordered;
     }
+
+    /// <summary>
+    /// Where a reader takes something in: by its row first, then from left to right.
+    /// </summary>
+    private static (int Row, long X) ReadingKeyOf(SlotBounds bounds, long slideHeight) => ((int)Math.Round(bounds.Y * (double)READING_ROWS / slideHeight), bounds.X);
 
     private static SlotBounds? BoundsOf(A.Offset? offset, A.Extents? extents)
     {

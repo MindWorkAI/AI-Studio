@@ -360,13 +360,23 @@ internal sealed record TestElement(Func<uint, SlidePart, OpenXmlElement> Create)
     /// <summary>
     /// A text box: a shape with text which is no placeholder. Without text, it shows nothing.
     /// </summary>
-    public static TestElement TextBox(SlotBounds bounds, string text) => new((id, _) => new P.Shape(
-        new P.NonVisualShapeProperties(
-            new P.NonVisualDrawingProperties { Id = id, Name = $"Text box {id}" },
-            new P.NonVisualShapeDrawingProperties { TextBox = true },
-            new P.ApplicationNonVisualDrawingProperties()),
-        new P.ShapeProperties(TransformOf(bounds), new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }),
-        new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(text))))));
+    /// <param name="bounds">Where the text box sits.</param>
+    /// <param name="text">Its text.</param>
+    /// <param name="fill">The color it is filled with, e.g., "4472C4" for a heading copied from a colored placeholder; null for none.</param>
+    public static TestElement TextBox(SlotBounds bounds, string text, string? fill = null) => new((id, _) =>
+    {
+        var properties = new P.ShapeProperties(TransformOf(bounds), new A.PresetGeometry(new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle });
+        if (fill is not null)
+            properties.Append(new A.SolidFill(new A.RgbColorModelHex { Val = fill }));
+
+        return new P.Shape(
+            new P.NonVisualShapeProperties(
+                new P.NonVisualDrawingProperties { Id = id, Name = $"Text box {id}" },
+                new P.NonVisualShapeDrawingProperties { TextBox = true },
+                new P.ApplicationNonVisualDrawingProperties()),
+            properties,
+            new P.TextBody(new A.BodyProperties(), new A.ListStyle(), new A.Paragraph(new A.Run(new A.Text(text)))));
+    });
 
     /// <summary>
     /// A filled rectangle without text, e.g., a colored area behind a chart.

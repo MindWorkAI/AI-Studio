@@ -18,21 +18,34 @@ internal sealed record TemplateSlot(
     TextCapacity? Capacity)
 {
     /// <summary>
+    /// The slot as the layout offers it, which a slot a slide moved or copied is measured against;
+    /// null for a slot of the layout itself.
+    /// </summary>
+    public TemplateSlot? LayoutSlot { get; init; }
+
+    /// <summary>
     /// The slot where a slide moved or resized its placeholder.
     /// </summary>
     /// <remarks>
     /// The capacity grows and shrinks with the size, since the slide keeps the font. Insets stay as
     /// they are on a smaller slot, so the estimate runs a little high there; the check of the
-    /// model's answer accepts a line more anyway.
+    /// model's answer accepts a line more anyway. The capacity is always scaled from the slot of the
+    /// layout, so that a slot moved twice, e.g., resized by its slide and then grown into room the
+    /// slide frees, is not rounded down twice.
     /// </remarks>
     /// <param name="bounds">Where the slide puts the placeholder.</param>
-    public TemplateSlot MovedTo(SlotBounds bounds) => this with
+    public TemplateSlot MovedTo(SlotBounds bounds)
     {
-        Bounds = bounds,
-        Capacity = this.Capacity is { } capacity
-            ? new TextCapacity(
-                Math.Max(1, (int)(capacity.Lines * (double)bounds.Height / Math.Max(1, this.Bounds.Height))),
-                Math.Max(1, (int)(capacity.CharactersPerLine * (double)bounds.Width / Math.Max(1, this.Bounds.Width))))
-            : null,
-    };
+        var layoutSlot = this.LayoutSlot ?? this;
+        return this with
+        {
+            Bounds = bounds,
+            Capacity = layoutSlot.Capacity is { } capacity
+                ? new TextCapacity(
+                    Math.Max(1, (int)(capacity.Lines * (double)bounds.Height / Math.Max(1, layoutSlot.Bounds.Height))),
+                    Math.Max(1, (int)(capacity.CharactersPerLine * (double)bounds.Width / Math.Max(1, layoutSlot.Bounds.Width))))
+                : null,
+            LayoutSlot = layoutSlot,
+        };
+    }
 }

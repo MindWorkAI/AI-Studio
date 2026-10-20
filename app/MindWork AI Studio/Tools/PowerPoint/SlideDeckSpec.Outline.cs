@@ -42,7 +42,7 @@ internal sealed partial record SlideDeckSpec
             outline.Append('\n').Append("*Slide ").Append(templateSlide.Number).Append(slide.HasContent ? " of the template, edited*" : " of the template, unchanged*").Append('\n');
 
             // A slide on a layout without room for content shows what it holds all the same:
-            var slots = template.FamilyOf(slide)?.Slots ?? templateSlide.Contents.Select(content => content.Slot).ToList();
+            var slots = template.FamilyOf(slide) is not null ? templateSlide.Slots : templateSlide.Contents.Select(content => content.Slot).ToList();
             foreach (var slot in slots)
             {
                 if (AppendSlot(outline, slide, slot, pictureNames))

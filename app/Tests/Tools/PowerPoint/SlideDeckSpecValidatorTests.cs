@@ -255,6 +255,25 @@ public sealed class SlideDeckSpecValidatorTests
         });
     }
 
+    [Test]
+    public void AnEditedSlideFillsAndRemovesTheCopiesOfItsSlots()
+    {
+        using var file = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
+
+        var template = PresentationTemplate.Read(file);
+        IReadOnlyList<string> IssuesOf(SlideSpec slide) => SlideDeckSpecValidator.Validate(new SlideDeckSpec("Missions", [slide]), template, 0, 0, [TemplateSlideUse.EDIT]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon"), Text("Venus")], labels: ["Near", "Far", "Farther"])), Is.Empty, "Every copy takes content like a slot.");
+            Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon"), Text("Venus"), Text("Jupiter")])), Has.Some.Contains("Slide 1 has 4 texts, but layout L1 has only 3."));
+            Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text(new string('x', 120))])), Has.Some.Contains("Slide 1: text 2 needs about 5 lines, but only about 3 fit."), "A copy holds what its size allows.");
+            Assert.That(IssuesOf(Edit(1, labels: ["Near", "Far"]) with { Removals = ["label 3", "text 3"] }), Is.Empty);
+            Assert.That(IssuesOf(Edit(1, labels: ["Near"]) with { Removals = ["label 4"] }), Has.Some.Contains("Slide 1 removes \"label 4\", which template slide 1 does not have."));
+            Assert.That(IssuesOf(Edit(1, texts: [Text("Mars"), Text("Moon")]) with { Removals = ["text 2"] }), Has.Some.Contains("Slide 1 fills text 2 and removes it as well."));
+        });
+    }
+
     /// <summary>
     /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the imprint is
     /// edited, and the closing slide is left out.
@@ -285,7 +304,7 @@ public sealed class SlideDeckSpecValidatorTests
 
     private static SlideSpec Keep(int templateSlide) => new(string.Empty, false, string.Empty, string.Empty, [], [], [], null, templateSlide);
 
-    private static SlideSpec Edit(int templateSlide, string title = "", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null) => new(string.Empty, false, title, subtitle, texts ?? [], [], [], null, templateSlide);
+    private static SlideSpec Edit(int templateSlide, string title = "", string subtitle = "", IReadOnlyList<SlideTextBlock>? texts = null, IReadOnlyList<string>? labels = null) => new(string.Empty, false, title, subtitle, texts ?? [], labels ?? [], [], null, templateSlide);
 
     private static SlideSpec Slide(
         string layout,

@@ -16,9 +16,11 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="LayoutPartUri">Where the layout of the slide is stored; null when the slide names none.</param>
 /// <param name="FamilyId">The ID of the layout family the slide is based on; null when its layout belongs to none, e.g., because it has no room for content.</param>
 /// <param name="Title">The title of the slide on a single line; empty when it has none.</param>
-/// <param name="Contents">What the slots of the slide hold, in the reading order of its layout, a table which is no placeholder included. Slots left empty are missing.</param>
+/// <param name="Contents">What the slots of the slide hold, in the order of <paramref name="Slots"/>, a table which is no placeholder and the copies of slots included. Slots left empty are missing.</param>
 /// <param name="MovedSlots">The slots whose placeholders the slide moved or resized, e.g., to make room for a picture of its own, with their place and capacity on the slide; empty when every placeholder stays where the layout puts it.</param>
-/// <param name="Elements">What the slide carries besides the slots of its layout, from back to front.</param>
+/// <param name="Slots">The slots the slide offers, in reading order: those of its layout, where the slide puts them, and the copies the slide carries; empty when the layout of the slide is unknown.</param>
+/// <param name="SlotCopies">The shapes which repeat a slot of the layout, e.g., a second heading with its text, numbered after the slots of the layout; empty when the slide carries none.</param>
+/// <param name="Elements">What the slide carries besides the slots of its layout and their copies, from back to front.</param>
 /// <param name="IsHidden">Whether the slide is hidden in the slide show.</param>
 /// <param name="IsImprint">Whether the slide is an imprint, which closes the presentation when the user keeps or edits it.</param>
 internal sealed record TemplateSlide(
@@ -29,6 +31,8 @@ internal sealed record TemplateSlide(
     string Title,
     IReadOnlyList<TemplateSlideContent> Contents,
     IReadOnlyList<TemplateSlot> MovedSlots,
+    IReadOnlyList<TemplateSlot> Slots,
+    IReadOnlyList<TemplateSlotCopy> SlotCopies,
     IReadOnlyList<TemplateSlideElement> Elements,
     bool IsHidden,
     bool IsImprint)
@@ -68,4 +72,12 @@ internal sealed record TemplateSlide(
     /// Whether the slide moved or resized the placeholder of a slot.
     /// </summary>
     public bool Moves(TemplateSlot slot) => this.MovedSlots.Any(moved => moved.Role == slot.Role && moved.Ordinal == slot.Ordinal);
+
+    /// <summary>
+    /// Finds the copy which offers a slot of the slide.
+    /// </summary>
+    /// <param name="role">The role of the slot.</param>
+    /// <param name="ordinal">The number of the slot among the slots of its role, starting at 1.</param>
+    /// <returns>The copy, or null when the slot is one of the layout, or the slide has none of that number.</returns>
+    public TemplateSlotCopy? FindCopy(PlaceholderRole role, int ordinal) => this.SlotCopies.FirstOrDefault(copy => copy.Slot.Role == role && copy.Slot.Ordinal == ordinal);
 }

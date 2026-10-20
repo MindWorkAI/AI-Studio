@@ -463,6 +463,52 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
+    public async Task AnEditedSlideFillsTheCopiesOfItsSlotsInTheirFormatting()
+    {
+        using var templateFile = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout());
+        var deck = new SlideDeckSpec("Missions", [Edit(1, texts: [Text(new SlideParagraph("To Mars", 0)), Text(new SlideParagraph("To the Moon", 0))], labels: ["Mars", "Moon"]) with { Removals = ["label 3", "text 3"] }]);
+
+        var (file, _) = await WriteFromAsync(templateFile, deck, OPTIONS);
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+        var secondHeading = ShapeWithIdOf(slide, 5);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(PlaceholderShapeOf(slide, "body", 17).TextBody!.InnerText, Is.EqualTo("Mars"));
+            Assert.That(BodyParagraphsOf(slide).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "To Mars" }));
+            Assert.That(secondHeading.TextBody!.InnerText, Is.EqualTo("Moon"), "The second label is the first copy of the heading.");
+            Assert.That(secondHeading.ShapeProperties!.GetFirstChild<A.SolidFill>()?.RgbColorModelHex?.Val?.Value, Is.EqualTo(StackedHeadings.HEADING_FILL), "A copy keeps the look of the heading it repeats.");
+            Assert.That(ShapeWithIdOf(slide, 6).TextBody!.InnerText, Is.EqualTo("To the Moon"));
+            Assert.That(slide.Slide!.Descendants<P.NonVisualDrawingProperties>().Select(properties => properties.Id!.Value), Has.None.EqualTo(7U).And.None.EqualTo(8U), "The third heading and its text are removed.");
+            Assert.That(slide.Slide.Descendants<P.Shape>().Select(shape => shape.TextBody?.InnerText), Has.Some.EqualTo("Bildquelle hier angeben"), "What the model does not remove stays.");
+            Assert.That(slide.Slide.Descendants<P.Picture>().Count(), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task TheCopiesOfSlotsStayFillableOnAnotherVariant()
+    {
+        using var templateFile = TestTemplate.Create(new TestTemplateOptions(Slides: [StackedHeadings.Slide()]), StackedHeadings.Layout("A Content"), StackedHeadings.Layout("B Content"));
+        var deck = new SlideDeckSpec("Missions", [Edit(1, labels: ["Mars", "Moon", "Venus"])]);
+
+        var (file, _) = await WriteFromAsync(templateFile, deck, OPTIONS with { VariantLabel = "B" });
+        using var document = PresentationDocument.Open(file, false);
+        var slide = SlidesOf(document)[0];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ValidationErrorsOf(document), Is.Empty);
+            Assert.That(slide.SlideLayoutPart?.SlideLayout?.CommonSlideData?.Name?.Value, Is.EqualTo("B Content"));
+            Assert.That(PlaceholderShapeOf(slide, "body", 17).TextBody!.InnerText, Is.EqualTo("Mars"));
+            Assert.That(ShapeWithIdOf(slide, 5).TextBody!.InnerText, Is.EqualTo("Moon"));
+            Assert.That(ShapeWithIdOf(slide, 7).TextBody!.InnerText, Is.EqualTo("Venus"));
+            Assert.That(ShapeWithIdOf(slide, 6).TextBody!.InnerText, Is.EqualTo("Duis autem"), "A copy the slide leaves empty keeps the content of the template.");
+        });
+    }
+
+    [Test]
     public async Task RemovingAChartRemovesItsPart()
     {
         var deck = new SlideDeckSpec("Weekly", [Edit(1) with { Removals = ["element 4"] }]);
@@ -572,6 +618,12 @@ public sealed class PresentationWriterTests
     /// </summary>
     private static P.Shape PlaceholderShapeOf(SlidePart slide, string type, uint? index) => slide.Slide!.Descendants<P.Shape>()
         .Single(shape => shape.Descendants<P.PlaceholderShape>().Any(placeholder => (placeholder.Type?.InnerText ?? "obj") == type && placeholder.Index?.Value == index));
+
+    /// <summary>
+    /// The shape of a slide with the given ID, e.g., a text box the template slide carries.
+    /// </summary>
+    private static P.Shape ShapeWithIdOf(SlidePart slide, uint id) => slide.Slide!.Descendants<P.Shape>()
+        .Single(shape => shape.NonVisualShapeProperties?.NonVisualDrawingProperties?.Id?.Value == id);
 
     private static TestLayout[] Layouts() =>
     [

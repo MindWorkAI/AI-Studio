@@ -19,7 +19,8 @@ internal static class TemplateSlideShapes
     /// </summary>
     /// <remarks>
     /// A placeholder fills the slot of its type and index; of two placeholders for one slot, the
-    /// first counts. A table slot whose placeholder holds no table, or which the slide leaves out,
+    /// first counts, while the second may be read as a copy of the slot, as a text box copied from
+    /// the placeholder is. A table slot whose placeholder holds no table, or which the slide leaves out,
     /// takes a table which is no placeholder at all: an author who pastes a table onto the slide,
     /// or whose table lost the link to its placeholder on the way, still means it as the table of
     /// the slide. Such tables fill these table slots in the order of the slide.
