@@ -32,7 +32,7 @@ One command checks that what you are about to build is sound:
 
 It runs the .NET tests, the Rust tests, Clippy (`cargo clippy --all-targets -- -D warnings`), and a report on the pages the model rules were written from. Every check runs, even after one of them has failed, so that a single run tells you everything that is wrong instead of the first thing.
 
-`dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
+`dotnet run build` runs the gate first and stops when it does not pass. For the quick loop while you are working on something, use `dotnet run build --skip-verify`, and let the gate run before you open a pull request. The same command runs in our GitHub workflow as the `verify` job, on every pull request which changes more than the documentation — including those without the `run-pipeline` label, because a gate which is closed exactly while nobody is looking is not a gate.
 
 Two notes:
 - The Rust half of the gate needs the .NET sidecar (see "One-time mandatory steps" above). While that file is missing, the gate skips the Rust tests and Clippy and says so rather than failing, because the command which produces the sidecar is `dotnet run build` itself.
@@ -72,6 +72,8 @@ When a pull request carries the `run-pipeline` label, our GitHub workflow builds
 - **Branches in forks:** GitHub never hands secrets to workflows of forks, so these builds stay unsigned. On macOS, testers have to allow the app once in the system settings under Privacy & Security; Windows shows its SmartScreen warning.
 
 When a maintainer wants signed test builds for their own work, they push the branch to this repository instead of their fork. Pushes to `main` only check that every platform still builds; they are neither signed nor uploaded.
+
+Changes which touch only the documentation, such as the README or the files in `documentation/`, start no build at all: neither in a pull request, not even with the `run-pipeline` label, nor after the merge into `main`. The workflow lists these files under `paths-ignore`. Release tags always build.
 
 ## Create a release
 In order to create a release:
