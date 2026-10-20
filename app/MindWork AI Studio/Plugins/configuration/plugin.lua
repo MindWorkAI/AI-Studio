@@ -1049,6 +1049,13 @@ CONFIG["SETTINGS"] = {}
 --                    wiki has a private or VPN address. Redirects outside this URL are refused. A
 --                    provider must have HIGH confidence to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   readTopHits      How many of the best results the search reads right away, wiki pages and
+--                    attachments alike, as an integer string from 0 to 10. Default: 3. 0 switches
+--                    this off. Only results within the wiki are read, and documents follow
+--                    read_web_page.documentAccess and read_web_page.maxDocumentMegabytes.
+--   maxHitContentCharacters
+--                    How many characters of content these results bring together, at most 100000.
+--                    Default: 30000. The results share them equally.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
@@ -1065,6 +1072,13 @@ CONFIG["SETTINGS"] = {}
 --                    read them.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 --   maxResults       How many hits one search returns, at most 50. Default: 10.
+--   readTopHits      How many of the best hits the search reads right away, pages and documents
+--                    alike, as an integer string from 0 to 10. Default: 3. 0 switches this off.
+--                    Only hits within the intranet are read, and documents follow
+--                    read_web_page.documentAccess and read_web_page.maxDocumentMegabytes.
+--   maxHitContentCharacters
+--                    How many characters of content these hits bring together, at most 100000.
+--                    Default: 30000. The hits share them equally.
 -- Selecting search_intranet also selects read_web_page, which opens the pages and documents
 -- found. Where a chat may send data after a search is set by
 -- read_web_page.internalPageOutboundDataRestriction.
