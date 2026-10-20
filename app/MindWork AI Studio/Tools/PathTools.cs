@@ -1,7 +1,7 @@
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Shared rules for comparing file system paths.
+/// Shared rules for comparing and resolving file system paths.
 /// </summary>
 public static class PathTools
 {
@@ -41,5 +41,31 @@ public static class PathTools
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Finds the place where a file dialog opens for a path which may no longer exist.
+    /// </summary>
+    /// <remarks>
+    /// Given a file or a folder which was moved or renamed, the native dialog cannot open its place
+    /// and falls back to wherever it was used last. The nearest folder which still exists is the
+    /// better start: the file or the folder was moved from there, so its new place is often close by.
+    /// A relative path, or a path of another operating system, e.g. from a backup, has no such folder.
+    /// </remarks>
+    /// <param name="path">The file or the folder the dialog should open at.</param>
+    /// <returns>The path itself when it exists, else its nearest parent folder which exists, or null when there is none.</returns>
+    public static string? FindNearestExistingPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+            return null;
+
+        if (File.Exists(path) || Directory.Exists(path))
+            return path;
+
+        for (var directory = Path.GetDirectoryName(path); !string.IsNullOrEmpty(directory); directory = Path.GetDirectoryName(directory))
+            if (Directory.Exists(directory))
+                return directory;
+
+        return null;
     }
 }
