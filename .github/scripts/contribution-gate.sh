@@ -187,8 +187,9 @@ check_one() {
   local failing_since
   failing_since=$(sed -nE 's/^<!-- failing-since: ([0-9TZ:-]+) -->$/\1/p' <<< "$comment_body" | head -n 1)
 
-  # A pull request which a maintainer reopened gets a new grace period.
-  if [ "$EVENT_ACTION" = "reopened" ]; then
+  # A pull request which a maintainer reopened, or which its author marked ready for review again,
+  # gets a new grace period. Otherwise, the period would run on while the pull request is a draft.
+  if [ "$EVENT_ACTION" = "reopened" ] || [ "$EVENT_ACTION" = "ready_for_review" ]; then
     failing_since=""
   fi
 
