@@ -243,7 +243,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (hasAllowedPrivateHosts)
             return definition.Function;
 
-        return await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) is null ? null : definition.Function;
+        if (await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) is not null)
+            return definition.Function;
+
+        return await IntranetSearchTool.ReadConfiguredIntranetAsync(toolSettingsService) is null ? null : definition.Function;
     }
 
     /// <inheritdoc />
@@ -252,6 +255,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
         var wiki = await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
+        var intranet = await IntranetSearchTool.ReadConfiguredIntranetAsync(toolSettingsService);
         var allowedPrivateHosts = TryReadAllowedPrivateHostPatterns(settingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var patterns, out _)
             ? patterns.Select(pattern => pattern.ToString()).ToList()
             : null;
@@ -265,8 +269,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                 ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
                 WebSearchFirstRule.AppliesTo(context),
                 wiki,
-                allowedPrivateHosts),
-            ReadDocumentAccess(settingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING)));
+                allowedPrivateHosts,
+                intranet),
+            ReadDocumentAccess(settingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING)),
+            intranet);
     }
 
     /// <summary>
@@ -299,13 +305,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     /// <summary>
     /// Whether content read from an address is internal: one read from a non-public address, or one
-    /// within the configured wiki, whatever its address.
+    /// within the configured wiki or the configured intranet, whatever its address.
     /// </summary>
     /// <param name="finalUrl">The address the content was read from, after every redirect.</param>
     /// <param name="reachedNonPublicAddress">Whether that address was a non-public one, see RetrievedWebPage.ReachedNonPublicAddress.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
-    internal static bool IsInternalAddress(Uri finalUrl, bool reachedNonPublicAddress, Uri? wiki) =>
-        reachedNonPublicAddress || (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, finalUrl));
+    /// <param name="intranet">The configured intranet, or null when none is.</param>
+    internal static bool IsInternalAddress(Uri finalUrl, bool reachedNonPublicAddress, Uri? wiki, Uri? intranet = null) =>
+        reachedNonPublicAddress ||
+        (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, finalUrl)) ||
+        (intranet is not null && IntranetSearchTool.IsWithinIntranet(intranet, finalUrl));
 
     /// <summary>
     /// Whether reading an internal page would take away a web search which the request offers.
@@ -320,11 +329,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <param name="offersWebSearch">Whether the request may offer web search, see WebSearchFirstRule.AppliesTo.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
     /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
+    /// <param name="intranet">The configured intranet, or null when none is.</param>
     /// <returns>True when the rules have to warn of it.</returns>
-    internal static bool InternalPageEndsWebSearch(OutboundDataRestriction internalPageRestriction, bool offersWebSearch, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts) =>
+    internal static bool InternalPageEndsWebSearch(OutboundDataRestriction internalPageRestriction, bool offersWebSearch, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts, Uri? intranet = null) =>
         internalPageRestriction is not OutboundDataRestriction.UNRESTRICTED &&
         offersWebSearch &&
-        (wiki is not null || allowedPrivateHosts is { Count: > 0 });
+        (wiki is not null || intranet is not null || allowedPrivateHosts is { Count: > 0 });
 
     /// <summary>
     /// Reads the free address choice from its stored value.
@@ -362,7 +372,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <param name="allowedPrivateHosts">The patterns of the allowed private hosts, or null when there are none.</param>
     /// <param name="internalPageEndsWebSearch">Whether reading an internal page would take away a web search which the request offers, see InternalPageEndsWebSearch. The default is what the registered instructions assume.</param>
     /// <param name="documentAccess">From where documents such as PDFs are read.</param>
-    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts = null, bool internalPageEndsWebSearch = true, DocumentAccess documentAccess = DEFAULT_DOCUMENT_ACCESS)
+    /// <param name="intranet">The configured intranet, or null when none is.</param>
+    internal static string BuildSystemPromptInstructions(FreeAddressChoice freeAddressChoice, OutboundDataRestriction outboundDataRestriction, Uri? wiki, IReadOnlyCollection<string>? allowedPrivateHosts = null, bool internalPageEndsWebSearch = true, DocumentAccess documentAccess = DEFAULT_DOCUMENT_ACCESS, Uri? intranet = null)
     {
         var mayChooseAddresses = freeAddressChoice is FreeAddressChoice.ON;
         var addressRules = mayChooseAddresses
@@ -377,27 +388,30 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         // after "a page", and in the plural after "pages":
         //
         var hosts = allowedPrivateHosts is { Count: > 0 } ? string.Join(", ", allowedPrivateHosts) : null;
-        var configuredPage = (wiki, hosts) switch
-        {
-            (not null, not null) => $"a page of the wiki at {wiki} or on the internal hosts {hosts}",
-            (not null, null) => $"a page of the wiki at {wiki}",
-            (null, not null) => $"a page on the internal hosts {hosts}",
-            _ => null,
-        };
+        List<string> places = [];
+        if (wiki is not null)
+            places.Add($"of the wiki at {wiki}");
 
-        var configuredPages = (wiki, hosts) switch
-        {
-            (not null, not null) => $"pages of the wiki at {wiki} or on the internal hosts {hosts}",
-            (not null, null) => $"pages of the wiki at {wiki}",
-            (null, not null) => $"pages on the internal hosts {hosts}",
-            _ => "no pages",
-        };
+        if (intranet is not null)
+            places.Add($"of the intranet at {intranet}");
+
+        if (hosts is not null)
+            places.Add($"on the internal hosts {hosts}");
+
+        var configuredPage = places.Count > 0 ? $"a page {string.Join(" or ", places)}" : null;
+        var configuredPages = places.Count > 0 ? $"pages {string.Join(" or ", places)}" : "no pages";
 
         const string REASON = "This chat holds internal content, such as e-mails, wiki pages, or internal web pages.";
         var chosenPages = mayChooseAddresses && configuredPage is not null ? $", or {configuredPage}" : string.Empty;
 
-        // Without a wiki, there are no hits of a wiki search to name as an example:
-        var givenPagesExample = wiki is not null ? ", such as the hits of a wiki search" : string.Empty;
+        // Without a wiki or an intranet, there are no hits of their search to name as an example:
+        var givenPagesExample = (wiki, intranet) switch
+        {
+            (not null, not null) => ", such as the hits of a wiki or intranet search",
+            (not null, null) => ", such as the hits of a wiki search",
+            (null, not null) => ", such as the hits of an intranet search",
+            _ => string.Empty,
+        };
         var restrictionRules = outboundDataRestriction switch
         {
             OutboundDataRestriction.UNRESTRICTED when !internalPageEndsWebSearch => string.Empty,
@@ -427,12 +441,21 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         // address choice forbids the model to choose it.
         //
         const string DOCUMENTS = "Documents such as PDF, Word, PowerPoint, or Excel files";
-        var internalSources = (wiki, hosts) switch
+        List<string> sources = [];
+        if (wiki is not null)
+            sources.Add("the wiki");
+
+        if (intranet is not null)
+            sources.Add("the intranet");
+
+        if (hosts is not null)
+            sources.Add("the internal hosts");
+
+        var internalSources = sources.Count switch
         {
-            (not null, not null) => "the wiki and the internal hosts configured in AI Studio",
-            (not null, null) => "the wiki configured in AI Studio",
-            (null, not null) => "the internal hosts configured in AI Studio",
-            _ => null,
+            0 => null,
+            1 => $"{sources[0]} configured in AI Studio",
+            _ => $"{string.Join(", ", sources[..^1])} and {sources[^1]} configured in AI Studio",
         };
 
         var documentRule = documentAccess switch
@@ -468,7 +491,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         var outboundDataRestriction = context.ChatThread.RequiredOutboundDataRestriction.Restriction;
         var wiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService);
-        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, host => IsAllowedPrivateHost(host, allowedPrivateHosts), out var redirectLimit))
+        var intranet = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? null : await IntranetSearchTool.ReadConfiguredIntranetAsync(toolSettingsService);
+        if (!IsAllowedByOutboundDataRestriction(url, outboundDataRestriction, context.ChatThread, wiki, host => IsAllowedPrivateHost(host, allowedPrivateHosts), out var redirectLimit, intranet))
         {
             logger.LogInformation("Refused a web page because the chat holds internal content which restricts outbound data to '{OutboundDataRestriction}'. Origin={Origin}, ToolCallId={ToolCallId}", outboundDataRestriction, context.ChatThread.RequiredOutboundDataRestriction.Origin, context.ToolCallId);
             throw new ToolExecutionBlockedException(IsOnlyForConfiguredServices(outboundDataRestriction)
@@ -492,8 +516,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var maxDocumentMegabytes = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_DOCUMENT_MEGABYTES_SETTING) ?? DEFAULT_MAX_DOCUMENT_MEGABYTES, MAX_DOCUMENT_MEGABYTES);
         var documentAccess = ReadDocumentAccess(context.SettingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING));
 
-        // Whatever the restriction, the wiki decides which content is internal:
+        // Whatever the restriction, the wiki and the intranet decide which content is internal:
         var configuredWiki = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? await ConfluenceSearchTool.ReadConfiguredWikiAsync(toolSettingsService) : wiki;
+        var configuredIntranet = outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED ? await IntranetSearchTool.ReadConfiguredIntranetAsync(toolSettingsService) : intranet;
 
         logger.LogInformation(
             "Starting web page retrieval. ToolCallId={ToolCallId}, Url={Url}, TimeoutSeconds={TimeoutSeconds}, MaxContentCharacters={MaxContentCharacters}",
@@ -514,7 +539,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     UseOsSso = true,
                     IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
                     OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
-                    IsTargetAllowed = redirectLimit is RedirectLimit.WITHIN_WIKI && wiki is not null ? target => ConfluenceSearchTool.IsWithinWiki(wiki, target) : null,
+                    IsTargetAllowed = redirectLimit switch
+                    {
+                        RedirectLimit.WITHIN_WIKI when wiki is not null => target => ConfluenceSearchTool.IsWithinWiki(wiki, target),
+                        RedirectLimit.WITHIN_INTRANET when intranet is not null => target => IntranetSearchTool.IsWithinIntranet(intranet, target),
+                        _ => null,
+                    },
                     NonPublicTargetsOnly = redirectLimit is RedirectLimit.NON_PUBLIC_ONLY,
 
                     // Always passed, even with documents switched off, so a refusal can say why:
@@ -522,7 +552,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     {
                         IsAllowed = (finalUrl, reachedNonPublicAddress) =>
                         {
-                            var isInternal = IsInternalAddress(finalUrl, reachedNonPublicAddress, configuredWiki);
+                            var isInternal = IsInternalAddress(finalUrl, reachedNonPublicAddress, configuredWiki, configuredIntranet);
                             if (!IsDocumentAllowed(documentAccess, isInternal))
                                 return false;
 
@@ -546,7 +576,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         {
             throw new ToolExecutionBlockedException(documentAccess is DocumentAccess.OFF
                 ? TB("This address returned a document, such as a PDF. Reading documents is switched off in the settings of Read Web Page.")
-                : TB("This address returned a document, such as a PDF. Documents are read only from the wiki and from the allowed private hosts configured in AI Studio, and this address is neither."));
+                : TB("This address returned a document, such as a PDF. Documents are read only from the wiki, the intranet, and the allowed private hosts configured in AI Studio, and this address is none of them."));
         }
         catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.PUBLIC_TARGET_NOT_ALLOWED)
         {
@@ -556,7 +586,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         catch (WebPageAccessBlockedException exception) when (exception.Reason is WebPageAccessBlockReason.TARGET_NOT_ALLOWED)
         {
             // Its own text, because the one of the exception names the address the wiki redirected to:
-            throw new ToolExecutionBlockedException(TB("The wiki redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect."));
+            throw new ToolExecutionBlockedException(redirectLimit is RedirectLimit.WITHIN_INTRANET
+                ? TB("The intranet redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect.")
+                : TB("The wiki redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect."));
         }
         catch (WebPageAccessBlockedException exception)
         {
@@ -618,10 +650,11 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             page.FinalUrl,
             retrievedPage.ReachedNonPublicAddress,
             ReadInternalPageOutboundDataRestriction(context.SettingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING)),
-            configuredWiki);
+            configuredWiki,
+            configuredIntranet);
 
         // An internal document keeps the chat with High-confidence providers, also from a wiki on a public address:
-        var requiredProviderConfidence = isDocument && IsInternalAddress(page.FinalUrl, retrievedPage.ReachedNonPublicAddress, configuredWiki)
+        var requiredProviderConfidence = isDocument && IsInternalAddress(page.FinalUrl, retrievedPage.ReachedNonPublicAddress, configuredWiki, configuredIntranet)
             ? ConfidenceLevel.HIGH
             : retrievedPage.RequiredProviderConfidence;
 
@@ -673,9 +706,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <param name="reachedNonPublicAddress">Whether that address was a non-public one, see RetrievedWebPage.ReachedNonPublicAddress.</param>
     /// <param name="internalPageRestriction">The level internal pages restrict a chat to.</param>
     /// <param name="wiki">The configured wiki, or null when none is.</param>
+    /// <param name="intranet">The configured intranet, or null when none is. Its pages are internal whatever their address, as those of the wiki are.</param>
     /// <returns>The requirement the chat takes on with the page.</returns>
-    internal static OutboundDataRequirement GetOutboundDataRequirement(Uri finalUrl, bool reachedNonPublicAddress, OutboundDataRestriction internalPageRestriction, Uri? wiki) =>
-        IsInternalAddress(finalUrl, reachedNonPublicAddress, wiki) ? new(internalPageRestriction, OutboundDataOrigin.INTERNAL_WEB_PAGE, finalUrl.Host) : OutboundDataRequirement.NONE;
+    internal static OutboundDataRequirement GetOutboundDataRequirement(Uri finalUrl, bool reachedNonPublicAddress, OutboundDataRestriction internalPageRestriction, Uri? wiki, Uri? intranet = null) =>
+        IsInternalAddress(finalUrl, reachedNonPublicAddress, wiki, intranet) ? new(internalPageRestriction, OutboundDataOrigin.INTERNAL_WEB_PAGE, finalUrl.Host) : OutboundDataRequirement.NONE;
 
     /// <summary>
     /// Whether the outbound data restriction of the chat allows reading this address.
@@ -698,8 +732,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     /// <param name="wiki">The configured wiki, or null when none is.</param>
     /// <param name="isAllowedPrivateHost">Whether a host matches the allowed private hosts.</param>
     /// <param name="redirectLimit">Where the request and its redirects may lead.</param>
+    /// <param name="intranet">The configured intranet, or null when none is. Allowed like the wiki, and confined to itself the same way.</param>
     /// <returns>True when the address may be read.</returns>
-    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, Func<string, bool> isAllowedPrivateHost, out RedirectLimit redirectLimit)
+    internal static bool IsAllowedByOutboundDataRestriction(Uri url, OutboundDataRestriction outboundDataRestriction, ChatThread chatThread, Uri? wiki, Func<string, bool> isAllowedPrivateHost, out RedirectLimit redirectLimit, Uri? intranet = null)
     {
         redirectLimit = RedirectLimit.NONE;
         if (outboundDataRestriction is OutboundDataRestriction.UNRESTRICTED)
@@ -712,6 +747,12 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (wiki is not null && ConfluenceSearchTool.IsWithinWiki(wiki, url))
         {
             redirectLimit = RedirectLimit.WITHIN_WIKI;
+            return true;
+        }
+
+        if (intranet is not null && IntranetSearchTool.IsWithinIntranet(intranet, url))
+        {
+            redirectLimit = RedirectLimit.WITHIN_INTRANET;
             return true;
         }
 
@@ -736,6 +777,11 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         /// Only within the configured wiki.
         /// </summary>
         WITHIN_WIKI,
+
+        /// <summary>
+        /// Only within the configured intranet.
+        /// </summary>
+        WITHIN_INTRANET,
 
         /// <summary>
         /// Only to non-public addresses.
