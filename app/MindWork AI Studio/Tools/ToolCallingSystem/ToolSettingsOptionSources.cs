@@ -77,7 +77,12 @@ public static class ToolSettingsOptionSources
     /// </remarks>
     public const string OUTBOUND_DATA_RESTRICTION = "outbound_data_restriction";
 
-    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE or OUTBOUND_DATA_RESTRICTION;
+    /// <summary>
+    /// From where Read Web Page reads documents such as PDFs.
+    /// </summary>
+    public const string DOCUMENT_ACCESS = "document_access";
+
+    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY or FREE_ADDRESS_CHOICE or OUTBOUND_DATA_RESTRICTION or DOCUMENT_ACCESS;
 
     /// <summary>
     /// Resolves one option source to its current values and names.
@@ -115,6 +120,13 @@ public static class ToolSettingsOptionSources
         ],
 
         OUTBOUND_DATA_RESTRICTION => Enum.GetValues<OutboundDataRestriction>().Select(restriction => new ToolSettingsOption(restriction.ToString(), restriction.GetName())).ToList(),
+
+        DOCUMENT_ACCESS =>
+        [
+            new(nameof(DocumentAccess.OFF), TB("Off: only web pages and text formats")),
+            new(nameof(DocumentAccess.INTERNAL_ONLY), TB("Only from the wiki and the allowed private hosts")),
+            new(nameof(DocumentAccess.ALL_ADDRESSES), TB("From every address the tool may read")),
+        ],
 
         _ => [],
     };

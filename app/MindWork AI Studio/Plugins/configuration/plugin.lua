@@ -1025,6 +1025,19 @@ CONFIG["SETTINGS"] = {}
 --                           UNRESTRICTED             -> no restriction beyond the ones of each tool.
 --                         Lock it to ONLY_CONFIGURED_SERVICES when the AI must not even choose which
 --                         of the given links to follow.
+--   documentAccess        From where the AI reads documents such as PDF, Word, PowerPoint, Excel,
+--                         or OpenDocument files. AI Studio recognizes the format by the content,
+--                         filters the text for prompt injections, and cuts it at
+--                         maxContentCharacters. Documents from a private or VPN address or from the
+--                         Confluence wiki require a provider with HIGH confidence and raise the
+--                         chat to HIGH. Allowed values are:
+--                           OFF           -> no documents, only web pages and text formats.
+--                           INTERNAL_ONLY -> only documents of the wiki and of the allowed private
+--                                            hosts. This is the default.
+--                           ALL_ADDRESSES -> documents from every address the tool may read.
+--   maxDocumentMegabytes  The largest document the AI may download, in megabytes, as an integer
+--                         string, at most 200. Default: 50. The document lands in a temporary file
+--                         while its text is read and is deleted right after.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -1047,6 +1060,7 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
+--     ["read_web_page.documentAccess"] = "INTERNAL_ONLY",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
@@ -1055,6 +1069,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
 --     ["read_web_page.timeoutSeconds"] = "30",
+--     ["read_web_page.maxDocumentMegabytes"] = "50",
 --     ["search_confluence.timeoutSeconds"] = "30"
 -- }
 
