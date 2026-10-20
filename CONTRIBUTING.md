@@ -69,7 +69,7 @@ Bug fixes, small improvements, and corrections to the documentation need no prop
 - An automated check verifies both points once your pull request is ready for review. When something is missing, it leaves a comment explaining what to fix. Pull requests which still fail the check after seven days are closed.
 - **Mark your pull request ready for review when it is done.** Keep it a draft as long as you are still working on it. Once you click "Ready for review", we consider it finished from your side, and we may review, change, and merge it at any time. If you want to change something afterward, convert it back to a draft first, or tell us in a comment.
 - Keep each pull request to one topic.
-- GitHub limits you to three open pull requests at a time; drafts do not count. When you have more in the pipeline, wait until one of them is merged or closed.
+- GitHub limits you to three open pull requests at a time, drafts included. When you have more in the pipeline, wait until one of them is merged or closed.
 
 ### What happens after you submit
 
