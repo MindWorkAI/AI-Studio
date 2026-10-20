@@ -172,8 +172,9 @@ public partial class Chat : MSGComponentBase
     /// Starts a new chat in a workspace, when the workspace tree asks for one.
     /// </summary>
     /// <remarks>
-    /// The chat component reads the field only now, when the user clicked. Any component which had
-    /// a copy of it would hold the chat component of before the workspaces were shown or hidden.
+    /// The page reads its reference to the chat component only now, when the user clicked. The chat
+    /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
+    /// taken earlier could point to one which is gone.
     /// </remarks>
     /// <param name="workspaceId">The ID of the workspace.</param>
     private async Task StartNewChatInWorkspace(Guid workspaceId)
