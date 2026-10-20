@@ -44,7 +44,7 @@ internal sealed class IndexingPass(DataSourceRunSignature runSignature)
     /// <summary>
     /// The documents which failed during this pass for a reason which may pass, by their keys.
     /// </summary>
-    private readonly Dictionary<string, FailedDocument> failedDocuments = new(PathTools.COMPARER);
+    private readonly Dictionary<string, FailedDocument> failedDocuments = new(StringComparer.OrdinalIgnoreCase);
 
     //
     // Which kinds of provider failure the user was already told about in this pass. A rejected API

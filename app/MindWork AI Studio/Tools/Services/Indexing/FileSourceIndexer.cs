@@ -522,8 +522,9 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// user may not read that folder. Removing it would throw away its index, and embedding it again
     /// once the folder can be read costs as long as it took the first time.
     /// <br /><br />
-    /// Paths follow the comparison used by the manifest: case-insensitive on Windows, case-sensitive
-    /// on Linux and macOS, where two files or folders can differ in their case alone.
+    /// Paths are compared ignoring their case, as everywhere in the manifest. On Linux and macOS, that
+    /// keeps a file whose path differs from an unreadable folder in its case alone, which costs no more
+    /// than a stale entry until the folder can be read again.
     /// </remarks>
     /// <param name="storedPaths">The paths of the files the index knows about.</param>
     /// <param name="files">The files this run found.</param>
@@ -533,7 +534,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     {
         var existingPaths = files
             .Select(file => file.FullName)
-            .ToHashSet(PathTools.COMPARER);
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var unreadablePrefixes = unreadableDirectories
             .Select(Path.GetFullPath)
@@ -542,7 +543,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
 
         return storedPaths
             .Where(path => !existingPaths.Contains(path))
-            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, PathTools.COMPARISON)))
+            .Where(path => !unreadablePrefixes.Any(prefix => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
             .ToList();
     }
 
@@ -949,8 +950,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
     {
         var fileHashes = indexedFiles
-            .OrderBy(file => file.FullName, PathTools.COMPARER)
-            .ToDictionary(file => file.FullName, BuildFileMetadataHash, PathTools.COMPARER);
+            .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(file => file.FullName, BuildFileMetadataHash, StringComparer.OrdinalIgnoreCase);
 
         var sourceHash = dataSource switch
         {
@@ -994,7 +995,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             indexedFiles.Count.ToString()
         };
 
-        foreach (var file in indexedFiles.OrderBy(file => file.FullName, PathTools.COMPARER))
+        foreach (var file in indexedFiles.OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase))
         {
             parts.Add(this.TryGetRelativePath(dataSource, file));
             parts.Add(fileHashes[file.FullName]);

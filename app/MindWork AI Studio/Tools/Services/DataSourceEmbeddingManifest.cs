@@ -1,5 +1,14 @@
 namespace AIStudio.Tools.Services;
 
+/// <summary>
+/// What the index store holds for one data source, read at the start of a run.
+/// </summary>
+/// <remarks>
+/// Paths are compared ignoring their case on every OS, unlike PathTools.COMPARER. The index store keeps
+/// them with the NOCASE collation and allows each path of a data source once, so two files which differ
+/// in their case alone share one row there. A manifest that told them apart would let them replace each
+/// other's row on every run.
+/// </remarks>
 public sealed class DataSourceEmbeddingManifest
 {
     public string EmbeddingProviderId { get; set; } = string.Empty;
@@ -10,7 +19,7 @@ public sealed class DataSourceEmbeddingManifest
 
     public int VectorSize { get; set; }
 
-    public Dictionary<string, EmbeddedFileRecord> Files { get; init; } = new(PathTools.COMPARER);
+    public Dictionary<string, EmbeddedFileRecord> Files { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// The files whose indexing began but never came to an end, by their absolute path.
@@ -21,7 +30,7 @@ public sealed class DataSourceEmbeddingManifest
     /// meanwhile. Indexing such a file again replaces both. A file which is gone, or which the data
     /// source no longer selects, is never indexed again, so the indexer has to remove them itself.
     /// </remarks>
-    public HashSet<string> UnfinishedFiles { get; init; } = new(PathTools.COMPARER);
+    public HashSet<string> UnfinishedFiles { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// The files whose indexing failed for a reason which lies in the file itself, keyed by their
@@ -32,5 +41,5 @@ public sealed class DataSourceEmbeddingManifest
     /// a folder holding hundreds of scanned documents without a text layer would be read again on
     /// every single run, with the outcome known in advance.
     /// </remarks>
-    public Dictionary<string, PermanentIndexingFailureRecord> PermanentFailures { get; init; } = new(PathTools.COMPARER);
+    public Dictionary<string, PermanentIndexingFailureRecord> PermanentFailures { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 }

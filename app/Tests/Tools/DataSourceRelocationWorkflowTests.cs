@@ -517,42 +517,32 @@ public sealed class DataSourceRelocationWorkflowTests
     }
 
     [Test]
-    public async Task CaseDistinctFilesKeepTheirOwnChunksAcrossRefreshAndRelocation()
+    public async Task AFolderWhoseNameChangesOnlyInCaseKeepsItsEmbeddings()
     {
-        if (OperatingSystem.IsWindows())
-            Assert.Ignore("Windows path comparisons are case-insensitive.");
+        await this.SeedLegacyIndexAsync(false);
+        var renamed = Path.Combine(this.testRoot, "Original");
 
-        // The default macOS volume may also ignore case. Check the test volume before creating
-        // both files, so one cannot overwrite the other and make this test pass accidentally.
-        await File.WriteAllTextAsync(Path.Combine(this.testRoot, "CaseProbe"), "probe");
-        if (File.Exists(Path.Combine(this.testRoot, "caseprobe")))
-            Assert.Ignore("The test volume does not support case-distinct filenames.");
+        // Two moves, since a volume which ignores case may refuse to rename a folder to its own name:
+        var detour = Path.Combine(this.testRoot, "renaming");
+        Directory.Move(((DataSourceLocalDirectory)this.source).Path, detour);
+        Directory.Move(detour, renamed);
 
-        await this.SeedLegacyIndexAsync(false, ["Report.md", "report.md"]);
-        var originalIds = this.vectors.Locations.Keys.ToArray();
-        await this.service.QueueDataSourceAsync(this.source);
+        await this.SaveEditAsync(renamed);
         await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
+
         await this.AssertOriginalChunksAsync();
-
-        await this.SaveEditAsync(this.MoveSource("moved"));
-        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
-        await this.AssertOriginalChunksAsync();
-        await this.service.QueueDataSourceAsync(this.source);
-        await this.RunNextAsync().WaitAsync(TEST_TIMEOUT);
         var manifest = await this.store.Client.GetManifestAsync(this.source.Id, CancellationToken.None);
         Assert.Multiple(() =>
         {
             Assert.That(this.service.GetStatuses().Single().State, Is.EqualTo(DataSourceEmbeddingState.COMPLETED));
-            Assert.That(manifest.Files, Has.Count.EqualTo(2));
-            Assert.That(manifest.Files.Values.Select(file => file.ParentFileId), Is.EquivalentTo(originalIds));
-            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(2));
+            Assert.That(this.vectors.RelocatedPaths, Has.Count.EqualTo(this.chunkIds.Count));
             Assert.That(this.vectors.DeletedDocuments, Is.Zero);
             Assert.That(this.vectors.InsertedBatches, Is.Zero);
+            Assert.That(manifest.Files.Keys.All(path => path.StartsWith(renamed + Path.DirectorySeparatorChar, StringComparison.Ordinal)), Is.True, "The index must store the new spelling of the folder.");
         });
-        await this.AssertOriginalChunksAsync();
     }
 
-    private async Task SeedLegacyIndexAsync(bool singleFile, string[]? relativePaths = null)
+    private async Task SeedLegacyIndexAsync(bool singleFile)
     {
         var root = Path.Combine(this.testRoot, "original");
         Directory.CreateDirectory(Path.Combine(root, "nested"));
@@ -571,7 +561,7 @@ public sealed class DataSourceRelocationWorkflowTests
         this.settings.ConfigurationData.DataSources.Add(this.source);
         await this.store.Client.UpsertDataSourceAsync(id, this.source.Type.ToString(), EMBEDDING_ID, LEGACY_SIGNATURE, "legacy-source-hash", 3, CancellationToken.None);
 
-        var paths = relativePaths ?? (singleFile ? new[] { "notes.md" } : new[] { "notes.md", Path.Combine("nested", "report.md") });
+        var paths = singleFile ? new[] { "notes.md" } : new[] { "notes.md", Path.Combine("nested", "report.md") };
         foreach (var relative in paths)
         {
             var path = Path.Combine(root, relative);

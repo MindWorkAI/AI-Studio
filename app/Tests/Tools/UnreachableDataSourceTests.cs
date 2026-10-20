@@ -182,28 +182,6 @@ public sealed class UnreachableDataSourceTests
         Assert.That(FileSourceIndexer.GetGoneFiles([file], [], [root]), Is.Empty, "A drive root already ends in its separator; adding another would fail to protect its files.");
     }
 
-    [Test]
-    public void CleanupDistinguishesPathsByCaseOnUnix()
-    {
-        var upper = Path.Combine(this.testRoot, "Report.md");
-        var lower = Path.Combine(this.testRoot, "report.md");
-        var gone = FileSourceIndexer.GetGoneFiles([upper, lower], [new FileInfo(lower)], []);
-
-        Assert.That(gone, Is.EquivalentTo(OperatingSystem.IsWindows() ? Array.Empty<string>() : new[] { upper }));
-    }
-
-    [Test]
-    public void AnUnreadableFolderDoesNotProtectAnotherFolderWithDifferentCaseOnUnix()
-    {
-        var upperFolder = Path.Combine(this.testRoot, "Documents");
-        var lowerFolder = Path.Combine(this.testRoot, "documents");
-        var upper = Path.Combine(upperFolder, "report.md");
-        var lower = Path.Combine(lowerFolder, "report.md");
-        var gone = FileSourceIndexer.GetGoneFiles([upper, lower], [], [lowerFolder]);
-
-        Assert.That(gone, Is.EquivalentTo(OperatingSystem.IsWindows() ? Array.Empty<string>() : new[] { upper }));
-    }
-
     private static DataSourceLocalDirectory Folder(string path) => new()
     {
         Num = 1,

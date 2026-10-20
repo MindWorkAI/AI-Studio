@@ -197,20 +197,4 @@ public sealed class FileSourceRelocationTests
             Assert.That(context.GetFileParentId(originalPath), Is.EqualTo(newId), "A media file may ask for its identity once before and once after transcription.");
         });
     }
-
-    [Test]
-    public void CaseDistinctFilesKeepSeparateStoredParentIdsOnUnix()
-    {
-        var source = new DataSourceLocalDirectory { Id = Guid.NewGuid().ToString(), Path = this.testRoot };
-        var upper = Path.Combine(this.testRoot, "Report.md");
-        var lower = Path.Combine(this.testRoot, "report.md");
-        var parentId = IndexedDocumentIds.CreateParentId(source.Id, upper);
-        var manifest = new DataSourceEmbeddingManifest();
-        manifest.Files[upper] = new("fingerprint", 100, DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, 1, RelativePath: "Report.md", ParentFileId: parentId);
-        var context = new IndexedRunContext(source, null!, null!, null!, null!, manifest,
-            new RunShare(RunShare.DEFAULT_DURATION), new IndexingPass(new DataSourceRunSignature("signature", "selection")), null!, null!, _ => { }, NullLogger.Instance);
-
-        Assert.That(context.GetFileParentId(lower) == parentId, Is.EqualTo(OperatingSystem.IsWindows()));
-        Assert.That(context.GetFileParentId(upper), Is.EqualTo(parentId));
-    }
 }
