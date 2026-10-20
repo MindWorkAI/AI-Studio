@@ -94,6 +94,21 @@ public sealed class IntranetSearchToolTests
     }
 
     [Test]
+    public void AHitReadAlongCarriesItsContent()
+    {
+        Assert.That(IntranetSearchTool.TryParseResults(PLAIN_JSON_ANSWER, out var hits), Is.True);
+        var content = new SearchHitContent(hits[0].Url, hits[0].Url, "Forms", "All forms of the intranet.", IsPartial: true, Failure: null);
+
+        var result = IntranetSearchTool.BuildResults(hits, new Dictionary<int, SearchHitContent> { [0] = content })[0]!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result["text_content"]!.GetValue<string>(), Is.EqualTo("All forms of the intranet."));
+            Assert.That(result["content_status"]!.GetValue<string>(), Is.EqualTo("partial"), "The model learns that read_web_page has more of it.");
+        });
+    }
+
+    [Test]
     public void AVerboseJsonAnswerTurnsIntoHits()
     {
         Assert.That(IntranetSearchTool.TryParseResults(VERBOSE_JSON_ANSWER, out var hits), Is.True);

@@ -59,6 +59,21 @@ internal sealed class FakeRuntime(string suspiciousPassage) : HttpMessageHandler
                     return Answer(JsonSerializer.Serialize(new { sanitized_text = filtered.Text, findings = filtered.Findings, redacted_count = filtered.Findings.Length }), "application/json");
                 }
 
+            case "/security/prompt-injection/sanitize-batch":
+                using (var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken)))
+                {
+                    var results = body.RootElement.GetProperty("texts").EnumerateArray().Select(element =>
+                    {
+                        var text = element.GetString() ?? string.Empty;
+                        this.filteredTexts.Enqueue(text);
+
+                        var filtered = this.Filter(text);
+                        return new { sanitized_text = filtered.Text, findings = filtered.Findings, redacted_count = filtered.Findings.Length };
+                    }).ToList();
+
+                    return Answer(JsonSerializer.Serialize(new { results }), "application/json");
+                }
+
             default:
                 return new HttpResponseMessage(HttpStatusCode.NotFound);
         }

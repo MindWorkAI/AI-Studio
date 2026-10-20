@@ -68,6 +68,20 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         return ReadInternalPageOutboundDataRestriction(settingsValues.GetValueOrDefault(INTERNAL_PAGE_OUTBOUND_DATA_RESTRICTION_SETTING));
     }
 
+    /// <summary>
+    /// From where documents are read and how large they may be, as the settings of this tool have it.
+    /// </summary>
+    /// <remarks>
+    /// Also what a search applies when it reads its best hits itself, see SearchHitReader: the
+    /// documents it reads are the ones this tool would read, and an organization sets them once.
+    /// </remarks>
+    internal static async Task<(DocumentAccess Access, long MaxBytes)> ReadDocumentSettingsAsync(ToolSettingsService toolSettingsService)
+    {
+        var settingsValues = await toolSettingsService.GetSettingsAsync(CreateDefinition());
+        var maxDocumentMegabytes = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(settingsValues, MAX_DOCUMENT_MEGABYTES_SETTING) ?? DEFAULT_MAX_DOCUMENT_MEGABYTES, MAX_DOCUMENT_MEGABYTES);
+        return (ReadDocumentAccess(settingsValues.GetValueOrDefault(DOCUMENT_ACCESS_SETTING)), maxDocumentMegabytes * 1024L * 1024L);
+    }
+
     private static ToolDefinition CreateDefinition() => new()
     {
         Id = ToolSelectionRules.READ_WEB_PAGE_TOOL_ID,

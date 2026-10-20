@@ -53,6 +53,48 @@ internal static class ToolSettingsValueParser
     }
 
     /// <summary>
+    /// Reads an optional count which may be zero, such as a number of items where zero switches
+    /// something off. Null when it is not set or cannot be read.
+    /// </summary>
+    public static int? ReadOptionalNonNegativeInt(IReadOnlyDictionary<string, string> settingsValues, string key)
+    {
+        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return int.TryParse(value, out var parsedValue) && parsedValue >= 0 ? parsedValue : null;
+    }
+
+    /// <summary>
+    /// Checks an optional count which may be zero and has an upper bound, see ReadOptionalNonNegativeInt.
+    /// </summary>
+    /// <param name="invalidValueErrorFormat">The error for a value which is no whole number of zero or more. Receives the key as {0}.</param>
+    /// <param name="maximumErrorFormat">The error for a value above the maximum. Receives the key as {0} and the maximum as {1}.</param>
+    public static bool TryReadBoundedOptionalNonNegativeInt(
+        IReadOnlyDictionary<string, string> settingsValues,
+        string key,
+        int maximum,
+        string invalidValueErrorFormat,
+        string maximumErrorFormat,
+        out string error)
+    {
+        error = string.Empty;
+        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
+            return true;
+
+        if (!int.TryParse(value, out var parsedValue) || parsedValue < 0)
+        {
+            error = string.Format(invalidValueErrorFormat, key);
+            return false;
+        }
+
+        if (parsedValue <= maximum)
+            return true;
+
+        error = string.Format(maximumErrorFormat, key, maximum);
+        return false;
+    }
+
+    /// <summary>
     /// Checks that a stored value is one the option source still offers.
     /// </summary>
     /// <remarks>
