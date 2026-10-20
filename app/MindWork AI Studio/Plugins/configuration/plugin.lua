@@ -908,13 +908,13 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
--- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
+-- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet, semantic_search
 -- Collection IDs include: mailboxes
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, mailboxes = VERY_LOW
--- search_confluence always searches with a HIGH-confidence provider only, whatever value is
--- set here.
+-- search_intranet = HIGH, semantic_search = NONE, mailboxes = VERY_LOW
+-- search_confluence and search_intranet always search with a HIGH-confidence provider only,
+-- whatever value is set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
 -- so it needs no minimum of its own. A provider below a minimum set here has the data sources
 -- searched with every message instead.
@@ -922,6 +922,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
+--     ["search_intranet"] = "HIGH",
 --     ["semantic_search"] = "NONE",
 --     ["mailboxes"] = "VERY_LOW"
 -- }
@@ -1052,6 +1053,22 @@ CONFIG["SETTINGS"] = {}
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
 --
+-- Field names of the Search Intranet tool, which supports SharePoint Server. SharePoint Online is
+-- not supported yet.
+--   baseUrl          Required HTTPS root URL of the intranet, for example https://intranet.example.org/.
+--                    Search asks the SharePoint search REST API below it, _api/search/query, with the
+--                    same web-page reader as read_web_page, and uses the current user's operating-system
+--                    sign-in when the intranet has a private or VPN address. Redirects outside this URL
+--                    are refused. A provider must have HIGH confidence to receive search results.
+--                    Pages and documents below this URL count as internal for read_web_page, whatever
+--                    the address of the intranet, and a chat which read internal content may still
+--                    read them.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   maxResults       How many hits one search returns, at most 50. Default: 10.
+-- Selecting search_intranet also selects read_web_page, which opens the pages and documents
+-- found. Where a chat may send data after a search is set by
+-- read_web_page.internalPageOutboundDataRestriction.
+--
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
@@ -1061,7 +1078,8 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
 --     ["read_web_page.documentAccess"] = "INTERNAL_ONLY",
---     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
+--     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/",
+--     ["search_intranet.baseUrl"] = "https://intranet.example.org/"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
@@ -1336,9 +1354,9 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- A tool ID unknown to the installation is ignored, and so is a tool your
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
---     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet
 --     -- Collection IDs include: mailboxes
---     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- Selecting search_confluence or search_intranet also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
 --         "read_web_page",
@@ -1470,9 +1488,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
---     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet
 --     -- Collection IDs include: mailboxes
---     -- Allowing search_confluence also allows read_web_page.
+--     -- Allowing search_confluence or search_intranet also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
 --     -- Optional: preselect a provider or profile by ID.
