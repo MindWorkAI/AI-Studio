@@ -58,7 +58,24 @@ public sealed class FileSourceRelocationTests
                 break;
         }
 
-        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, Path.Combine(this.testRoot, "old", "notes.md"), record), Is.Null);
+        // The old place lies outside the selected folder, so only the change can prevent the reuse:
+        var oldPath = Path.Combine(Path.GetDirectoryName(this.testRoot)!, "moved-away", "notes.md");
+        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, oldPath, record), Is.Null);
+    }
+
+    [Test]
+    public void AStoredPathBelowTheSelectedFolderIsNotMappedToACopy()
+    {
+        // The folder grows to its parent, which holds a copy with the same size and time at the
+        // place the old relative path names. The original is still there and stays the document.
+        var original = Path.Combine(this.testRoot, "project", "notes.md");
+        Directory.CreateDirectory(Path.GetDirectoryName(original)!);
+        File.WriteAllText(original, "Some indexed text");
+        var copy = Path.Combine(this.testRoot, "notes.md");
+        File.Copy(original, copy);
+        File.SetLastWriteTimeUtc(copy, File.GetLastWriteTimeUtc(original));
+
+        Assert.That(FileSourceIndexer.FindRelocatedFile(new DataSourceLocalDirectory { Path = this.testRoot }, original, Record(original, "notes.md")), Is.Null);
     }
 
     [Test]

@@ -48,6 +48,13 @@ internal sealed partial class FileSourceIndexer
     /// Uses the same size and modification-time check as ordinary indexing, matching a folder's
     /// documents by relative path. It never searches another folder for a missing document.
     /// </summary>
+    /// <remarks>
+    /// A stored path which still lies below the selected folder stays as it is: it points at its
+    /// file, and a file which is gone from there is gone. Mapping it through its old relative path
+    /// would move it, e.g., when the selected folder grows to its parent. A copy at the mapped place
+    /// would then take over the identity of the document while the original is indexed anew.
+    /// Checking this first also spares every run of an unmoved folder resolving each stored path.
+    /// </remarks>
     internal static FileInfo? FindRelocatedFile(IDataSource dataSource, string oldPath, EmbeddedFileRecord record)
     {
         if (string.IsNullOrEmpty(record.ParentFileId))
@@ -59,6 +66,9 @@ internal sealed partial class FileSourceIndexer
             case DataSourceLocalFile localFile when RelocatedFilePaths.IsLocalAbsolute(localFile.FilePath):
                 targetPath = Path.GetFullPath(localFile.FilePath);
                 break;
+
+            case DataSourceLocalDirectory localDirectory when RelocatedFilePaths.IsBelow(localDirectory.Path, oldPath):
+                return null;
 
             case DataSourceLocalDirectory localDirectory:
                 var resolvedPath = RelocatedFilePaths.Resolve(localDirectory.Path, oldPath, record.RelativePath);

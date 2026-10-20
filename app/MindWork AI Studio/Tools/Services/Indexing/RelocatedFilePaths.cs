@@ -19,6 +19,32 @@ internal static class RelocatedFilePaths
     }
 
     /// <summary>
+    /// Whether a stored path still lies below a root, spelled exactly as the root is now.
+    /// </summary>
+    /// <remarks>
+    /// Compared ordinally, unlike PathTools.IsInsideDirectory: once the name of a folder changed in its
+    /// case alone, its stored paths no longer match the paths a run finds, on Windows as well.
+    /// </remarks>
+    internal static bool IsBelow(string root, string storedPath)
+    {
+        if (!IsLocalAbsolute(root))
+            return false;
+
+        try
+        {
+            var prefix = Path.GetFullPath(root);
+            if (!Path.EndsInDirectorySeparator(prefix))
+                prefix += Path.DirectorySeparatorChar;
+
+            return storedPath.StartsWith(prefix, StringComparison.Ordinal);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Maps a stored relative path below a newly selected root, including drive roots and mounted
     /// volumes. Backslashes are separators only for a Windows index: they are legal Unix file names.
     /// </summary>

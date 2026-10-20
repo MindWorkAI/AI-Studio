@@ -70,9 +70,16 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public IndexingPass Pass => pass;
 
     /// <summary>
-    /// Retains a relocated file's identity. A new file may now occupy the path from which another
-    /// file got that identity, so reserve stored ids before assigning one to a new document.
+    /// The id a file is stored under: the one it already has, or a new one.
     /// </summary>
+    /// <remarks>
+    /// A relocated file keeps the id it got when it was indexed first, which came from its path back
+    /// then. A new file may now appear at that very path, so the ids already stored are reserved, and
+    /// a new file whose derived id is taken gets a random one instead. Its chunk ids include that id,
+    /// cf. IndexedDocumentIds.CreateChunkIdSource.
+    /// </remarks>
+    /// <param name="documentKey">The key of the file, which is its absolute path.</param>
+    /// <returns>The parent id of the file.</returns>
     public string GetFileParentId(string documentKey)
     {
         if (this.fileParentIds is null)
@@ -152,10 +159,11 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
+        var chunkIdSource = IndexedDocumentIds.CreateChunkIdSource(dataSource.Id, document.Key, document.State.ParentFileId, document.State.Fingerprint);
 
         await foreach (var chunk in document.StreamChunks(token))
         {
-            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, document.State.Fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
+            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
