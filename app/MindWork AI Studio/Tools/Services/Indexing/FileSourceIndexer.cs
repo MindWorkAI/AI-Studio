@@ -377,7 +377,8 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
     /// connected, or a network share while the VPN is down, would remove every embedding of the
     /// data source, and embedding it all again once the folder is back costs as long as it took the
     /// first time. Nothing is written: the stored hash still tells which state of the data source
-    /// the index holds, so the next run picks up from there.
+    /// the index holds, so the next run picks up from there. The status asks for attention, so the
+    /// embeddings page offers to edit the data source, e.g. to select the new location of a moved folder.
     /// </remarks>
     /// <param name="context">The run.</param>
     /// <param name="dataSource">The data source.</param>
@@ -391,7 +392,7 @@ internal sealed partial class FileSourceIndexer(SettingsManager settingsManager,
             dataSource.Id,
             context.Manifest.Files.Count);
 
-        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason);
+        DocumentRunProgress.FromStoredState(context, context.Manifest.Files.Count, logger).PublishRunFailure(reason, DataSourceAttention.LOCATION_UNREACHABLE);
         return IndexedRunOutcome.DONE;
     }
 

@@ -204,6 +204,7 @@ public sealed class UnreachableDataSourceTests
             Assert.That(statuses[^1].State, Is.EqualTo(DataSourceEmbeddingState.FAILED));
             Assert.That(statuses[^1].IndexedDocuments, Is.EqualTo(indexedFiles), "The index still holds these files, and the page has to say so.");
             Assert.That(statuses[^1].LastError, Does.Contain(unreachablePath));
+            Assert.That(statuses[^1].Attention, Is.EqualTo(DataSourceAttention.LOCATION_UNREACHABLE), "The embeddings page offers to edit the data source, e.g. to select the new location of a moved folder.");
         });
     }
 
