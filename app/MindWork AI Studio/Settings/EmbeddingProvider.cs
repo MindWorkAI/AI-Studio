@@ -29,7 +29,8 @@ public sealed record EmbeddingProvider(
     int TokenLimit = 0,
     bool AllowUserProvidedAPIKey = false,
     string CustomIconDataUrl = "",
-    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     public const int DEFAULT_TOKEN_LIMIT = 8192;
     public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
@@ -128,9 +129,7 @@ public sealed record EmbeddingProvider(
             embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
         }
 
-        var allowUserProvidedApiKey = false;
-        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
-            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+        var apiKeyOptions = UserProvidedAPIKeyOptions.Read(table);
 
         var hfInferenceProvider = HFInferenceProvider.NONE;
         if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
@@ -166,7 +165,8 @@ public sealed record EmbeddingProvider(
             TokenizerPath = tokenizerPath,
             EmbeddingBatchSize = embeddingBatchSize,
             TokenLimit = tokenLimit,
-            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            AllowUserProvidedAPIKey = apiKeyOptions.AllowUserProvidedAPIKey,
+            PromptForUserAPIKey = apiKeyOptions.PromptForUserAPIKey,
             CustomIconDataUrl = customIconDataUrl,
             HFInferenceProvider = hfInferenceProvider,
         };
@@ -174,7 +174,7 @@ public sealed record EmbeddingProvider(
         // Handle an encrypted API key if present. When the user manages their own key for this
         // embedding provider, we must never enqueue an embedded key: doing so would overwrite the
         // user's key in the OS keyring on every configuration reload.
-        if (allowUserProvidedApiKey)
+        if (apiKeyOptions.AllowUserProvidedAPIKey)
         {
             if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
                 LOGGER.LogWarning($"The configured embedding provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");

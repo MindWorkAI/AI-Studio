@@ -24,6 +24,7 @@ namespace AIStudio.Settings;
 /// <param name="Model">The LLM model to use for chat.</param>
 /// <param name="AllowUserProvidedAPIKey">When set by a configuration plugin, the user may set their own API key for this otherwise locked, enterprise-managed provider.</param>
 /// <param name="CustomIconDataUrl">The validated custom SVG icon supplied by a configuration plugin.</param>
+/// <param name="PromptForUserAPIKey">When set by a configuration plugin, AI Studio asks the user for the API key of this provider on the home page as long as none is stored.</param>
 public sealed record Provider(
     uint Num,
     string Id,
@@ -40,7 +41,8 @@ public sealed record Provider(
     [property: JsonConverter(typeof(DataDirectoryRelativePathConverter))] string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
     bool AllowUserProvidedAPIKey = false,
-    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    string CustomIconDataUrl = "",
+    bool PromptForUserAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -159,9 +161,7 @@ public sealed record Provider(
         }
         var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
 
-        var allowUserProvidedApiKey = false;
-        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
-            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+        var apiKeyOptions = UserProvidedAPIKeyOptions.Read(table);
 
         var customIconDataUrl = string.Empty;
         if (table.TryGetValue("IconPath", out var iconPathValue))
@@ -188,14 +188,15 @@ public sealed record Provider(
             AdditionalJsonApiParameters = additionalJsonApiParameters,
             TokenizerPath = tokenizerPath,
             CapabilityOverrides = capabilityOverrides,
-            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            AllowUserProvidedAPIKey = apiKeyOptions.AllowUserProvidedAPIKey,
+            PromptForUserAPIKey = apiKeyOptions.PromptForUserAPIKey,
             CustomIconDataUrl = customIconDataUrl,
         };
 
         // Handle an encrypted API key if present. When the user manages their own key for this
         // provider, we must never enqueue an embedded key: doing so would overwrite the user's
         // key in the OS keyring on every configuration reload.
-        if (allowUserProvidedApiKey)
+        if (apiKeyOptions.AllowUserProvidedAPIKey)
         {
             if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
                 LOGGER.LogWarning($"The configured provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");

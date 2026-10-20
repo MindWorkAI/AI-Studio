@@ -172,6 +172,12 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- if this configuration is later withdrawn.
 --     -- ["AllowUserProvidedAPIKey"] = true,
 --
+--     -- Optional: ask the user for their API key in a panel on the home page, as long as this
+--     -- provider has none. All providers of this plugin which set this option share one panel
+--     -- and receive the same key, so the user enters it once. Implies "AllowUserProvidedAPIKey".
+--     -- Explain how to obtain the key in CONFIG["USER_API_KEY_PROMPT"], see below.
+--     -- ["PromptForUserAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -202,6 +208,10 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face transcribes audio through some of its inference providers only, so the choice
@@ -248,6 +258,10 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: ask the user for their API key on the home page, as long as this provider
+--     -- has none (see LLM_PROVIDERS example for details). Implies "AllowUserProvidedAPIKey".
+--     -- ["PromptForUserAPIKey"] = true,
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Hugging Face serves embeddings through some of its inference providers only, so the choice
@@ -987,7 +1001,30 @@ CONFIG["SETTINGS"] = {}
 --                         separately. Allowed private hosts require a provider with HIGH
 --                         confidence. AI Studio only tries the current user's operating-system
 --                         sign-in for explicitly allowed HTTPS targets when that provider
---                         requirement is met, and it never reuses browser cookies.
+--                         requirement is met, and it never reuses browser cookies. Allowed
+--                         private hosts count as services configured in AI Studio: a chat which
+--                         read internal content may still read them, see below.
+--   internalPageOutboundDataRestriction
+--                         Where a chat may send data once it read internal content: a page with
+--                         a private or VPN address, a page of the Confluence wiki configured for
+--                         search_confluence, whatever its address, or a search of that wiki. Only
+--                         the page reached after all redirects counts. A web search or an address
+--                         the AI writes could otherwise carry internal content to third parties.
+--                         The same level applies to the search_confluence tool. A chat keeps the
+--                         level it had when it read the content. Allowed values are:
+--                           ONLY_CONFIGURED_SERVICES -> the chat reads only pages of the wiki and of
+--                                                       the allowed private hosts, and no web
+--                                                       search runs.
+--                           ONLY_LINKS_FROM_CHAT     -> the chat also reads pages whose addresses
+--                                                       stand in the chat, written by the user or
+--                                                       returned by a tool, exactly as they stand
+--                                                       there. No web search runs, and the AI
+--                                                       cannot choose addresses outside the wiki
+--                                                       and the allowed private hosts. This is the
+--                                                       default.
+--                           UNRESTRICTED             -> no restriction beyond the ones of each tool.
+--                         Lock it to ONLY_CONFIGURED_SERVICES when the AI must not even choose which
+--                         of the given links to follow.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -1000,6 +1037,7 @@ CONFIG["SETTINGS"] = {}
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
+-- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
@@ -1008,6 +1046,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.tavily.apiKey"] = "ENC:v2:<base64-encoded encrypted data>",
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
+--     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
 --     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
 -- }
 --
@@ -1341,6 +1380,23 @@ CONFIG["INTRODUCTIONS"] = {}
 --                         AI usage guidelines.
 --
 --                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
+-- }
+
+-- What AI Studio tells users in the panel on the home page which asks for their API key. It asks
+-- as long as a provider of this plugin which sets "PromptForUserAPIKey" has no API key. AI Studio
+-- checks the key the user enters with the first of these providers which can list its models,
+-- and then stores it for all of them. A key the provider refuses is not stored. When no provider
+-- can check the key, or the provider is out of reach, AI Studio stores the key with a warning.
+-- Markdown is required, Title is optional. Without this table, AI Studio shows a generic request.
+-- CONFIG["USER_API_KEY_PROMPT"] = {
+--     ["Title"] = "Please add your API key",
+--     ["Markdown"] = [===[
+--                         To use the AI models of your organization, you need a personal API key:
+--
+--                         1. Open [Open WebUI](https://example.org) and sign in.
+--                         2. Click your profile picture, then "Settings" and "Account".
+--                         3. Create an API key, copy it, and paste it below.
 --                         ]===]
 -- }
 

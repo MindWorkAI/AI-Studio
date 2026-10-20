@@ -1,6 +1,5 @@
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
-@using AIStudio.Tools.PluginSystem
 @inherits MSGComponentBase
 
 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -13,6 +12,8 @@
         @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
     }
 </MudJustifiedText>
+
+<DataSourceMissingEmbeddingWarning/>
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
     <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@(this.AreMailboxesEnabled ? T("Local data sources refresh when files change, mailboxes every 16 minutes.") : T("Local data sources refresh when files change."))" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
@@ -124,25 +125,3 @@
         @T("No data sources configured yet.")
     </MudText>
 }
-
-<MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3 mb-6">
-    <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.ERI_V1))">
-            @T("External Data (ERI-Server v1)")
-        </MudMenuItem>
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY))">
-            @T("Local Directory")
-        </MudMenuItem>
-        <MudMenuItem OnClick="@(() => this.AddDataSource(DataSourceType.LOCAL_FILE))">
-            @T("Local File")
-        </MudMenuItem>
-        @if (PreviewFeatures.PRE_MAILBOXES_2026.IsEnabled(this.SettingsManager))
-        {
-            @* Shown with a lock rather than left out, like the locked buttons for adding providers: *@
-            <MudMenuItem OnClick="@this.AddMailbox" Disabled="@(!this.MayAddMailbox)" Icon="@(this.MayAddMailbox ? null : Icons.Material.Filled.Lock)">
-                @(this.MayAddMailbox ? T("Mailbox (IMAP)") : T("Mailbox (IMAP), not allowed by your organization"))
-            </MudMenuItem>
-        }
-    </MudMenu>
-    <LockableButton Text="@T("Import Data Source")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.DATA_SOURCE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportERIDataSource" ButtonVariant="Variant.Outlined" NoMargin="true" />
-</MudStack>

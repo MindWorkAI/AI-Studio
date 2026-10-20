@@ -181,7 +181,17 @@ public sealed class DataSourceValidation
     public string? ValidateEmbeddingProviderAccess(string embeddingId)
     {
         var embeddingIssue = this.ValidateEmbeddingId(embeddingId);
-        return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
+        if(embeddingIssue is not null)
+            return embeddingIssue;
+
+        //
+        // An id which matches no provider belongs to one which was deleted since. Saved like this, the
+        // data source keeps pointing at a provider nobody can reach, and nothing of it is embedded:
+        //
+        if(this.GetSelectedEmbeddingProvider() is null)
+            return TB("The embedding provider of this data source no longer exists. Please select another one.");
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
     }
 
     public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
