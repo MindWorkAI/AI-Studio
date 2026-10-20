@@ -12,14 +12,8 @@
         <TextInfoLine Icon="@Icons.Material.Filled.FolderOpen" Label="@T("Path")" Value="@this.DataSource.Path" ClipboardTooltipSubject="@T("this path")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.AccountTree" Label="@T("Include subfolders")" Value="@(this.DataSource.IncludeSubdirectories ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether subfolders are included")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.VisibilityOff" Label="@T("Include hidden files and folders")" Value="@(this.DataSource.IncludeHiddenFilesAndFolders ? T("Yes") : T("No"))" ClipboardTooltipSubject="@T("whether hidden files and folders are included")"/>
-        <FilePatternSelection>
-            <AllowedContent>
-                <TextInfoLines Icon="@Icons.Material.Filled.FilterAlt" Label="@T("Files to include")" Value="@this.DataSource.EffectiveFilePatterns" Lines="1" MaxLines="0" ClipboardTooltipSubject="@T("the file patterns")"/>
-            </AllowedContent>
-            <ExcludedContent>
-                <FileExclusionEditor Text="@this.DataSource.EffectiveExcludePatterns" ReadOnly="@true" ShowHeader="@false" ShowHelp="@false"/>
-            </ExcludedContent>
-        </FilePatternSelection>
+        <TextInfoLines Icon="@Icons.Material.Filled.FilterAlt" Label="@T("Files to include")" Value="@this.DataSource.EffectiveFilePatterns" Lines="1" MaxLines="0" ClipboardTooltipSubject="@T("the file patterns")"/>
+        <FileExclusionEditor Text="@this.DataSource.EffectiveExcludePatterns" ReadOnly="@true" ShowHeader="@false" ShowHelp="@false"/>
         <TextInfoLine Icon="@Icons.Material.Filled.Straighten" Label="@T("Ignore files larger than")" Value="@($"{this.DataSource.EffectiveMaxFileSizeMegabytes} MB")" ClipboardTooltipSubject="@T("the size limit for files")"/>
         @if (!this.IsDirectoryAvailable)
         {
