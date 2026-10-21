@@ -21,7 +21,7 @@
 
         @if (this.document is null)
         {
-            <ReadFileContent Text="@T("Load file")" FileContent="@this.fileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
+            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.fileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
         }
         else
         {
@@ -70,56 +70,16 @@
         }
         else
         {
-            @if (this.previewCutOffCharacters > 0)
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
-                    @string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."), this.previewCutOffCharacters)
-                </MudAlert>
-            }
-            
-            @* Keyed by the document: a switch from an image to a text file changes which panels
-               exist, and a leftover active panel would point at one that is gone. *@
-            <MudTabs @key="@($"preview-tabs-{this.document?.FilePath}")" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
-                @if (this.document?.IsImage ?? false)
-                {
-                    <MudTabPanel Text="@T("Image View")" Icon="@Icons.Material.Filled.Image">
-                        <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.document.FilePathAsUrl"/>
-                    </MudTabPanel>
-                }
-                else
-                {
-                    <MudTabPanel Text="@T("Markdown View")" Icon="@Icons.Material.Filled.TextSnippet">
-                        <MudField
-                            Variant="Variant.Outlined"
-                            AdornmentIcon="@Icons.Material.Filled.Article"
-                            Adornment="Adornment.Start"
-                            Label="@T("Loaded Content")"
-                            FullWidth="true"
-                            Class="ma-2 pe-4"
-                            HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")">
-                            <div style="max-height: 40vh; overflow-y: auto;">
-                                <MudMarkdown Value="@this.previewContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
-                            </div>
-                        </MudField>
-                    </MudTabPanel>
-                    <MudTabPanel Text="@T("Simple View")" Icon="@Icons.Material.Filled.Terminal">
-                        <MudTextField
-                            T="string"
-                            Text="@this.previewContent"
-                            AdornmentIcon="@Icons.Material.Filled.Article"
-                            Adornment="Adornment.Start"
-                            Immediate="@true"
-                            Label="@T("Loaded Content")"
-                            Variant="Variant.Outlined"
-                            Lines="6"
-                            AutoGrow="@true"
-                            MaxLines="25"
-                            ReadOnly="true"
-                            Class="ma-2"
-                            HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"/>
-                    </MudTabPanel>
-                }
-            </MudTabs>
+            @* Keyed by the document: every document starts on the first panel of its own. *@
+            <ContentViewer
+                @key="@($"preview-tabs-{this.document?.FilePath}")"
+                Kind="@this.ViewerKind"
+                Text="@this.fileContent"
+                MediaUrl="@(this.document?.FilePathAsUrl ?? string.Empty)"
+                Label="@T("Loaded Content")"
+                HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
+                CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
+                CutOffNotice="@this.CutOffNotice"/>
         }
         </div>
         </PathDropZone>

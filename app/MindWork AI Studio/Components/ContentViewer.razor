@@ -1,0 +1,69 @@
+@inherits MSGComponentBase
+
+@if (this.cutOffCharacters > 0 && this.CutOffNotice is not null)
+{
+    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+        @this.CutOffNotice(this.cutOffCharacters)
+    </MudAlert>
+}
+
+@* Keyed by the kind: another kind brings other panels, and a leftover active panel would point at
+   one that is gone. *@
+<MudTabs @key="@this.Kind" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
+    @* The media panel comes first, and only media has one; text has no case here. The panels of
+       the text follow below, for text and for media which brings text along, e.g., a transcript. *@
+    @switch (this.Kind)
+    {
+        case ContentViewerKind.IMAGE:
+            <MudTabPanel Text="@T("Image View")" Icon="@Icons.Material.Filled.Image">
+                <MudImage ObjectFit="ObjectFit.ScaleDown" Style="width: 100%;" Src="@this.MediaUrl"/>
+            </MudTabPanel>
+            break;
+
+        case ContentViewerKind.AUDIO:
+            <MudTabPanel Text="@T("Audio")" Icon="@Icons.Material.Filled.AudioFile">
+                <audio controls preload="metadata" src="@this.MediaUrl" style="width: 100%;"></audio>
+            </MudTabPanel>
+            break;
+
+        case ContentViewerKind.VIDEO:
+            <MudTabPanel Text="@T("Video")" Icon="@Icons.Material.Filled.VideoFile">
+                <video controls preload="metadata" src="@this.MediaUrl" style="@($"width: 100%; max-height: {this.MaxHeight};")"></video>
+            </MudTabPanel>
+            break;
+    }
+
+    @if (this.ShowsText)
+    {
+        <MudTabPanel Text="@T("Markdown View")" Icon="@Icons.Material.Filled.TextSnippet">
+            <MudField
+                Variant="Variant.Outlined"
+                AdornmentIcon="@Icons.Material.Filled.Article"
+                Adornment="Adornment.Start"
+                Label="@this.Label"
+                FullWidth="true"
+                Class="ma-2 pe-4"
+                HelperText="@this.HelperText">
+                <div style="@($"max-height: {this.MaxHeight}; overflow-y: auto;")">
+                    <MudMarkdown Value="@this.shownText" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                </div>
+            </MudField>
+        </MudTabPanel>
+        <MudTabPanel Text="@T("Simple View")" Icon="@Icons.Material.Filled.Terminal">
+            <MudTextField
+                T="string"
+                Text="@this.shownText"
+                AdornmentIcon="@Icons.Material.Filled.Article"
+                Adornment="Adornment.Start"
+                Immediate="@true"
+                Label="@this.Label"
+                Variant="Variant.Outlined"
+                Lines="@this.SimpleViewLines"
+                AutoGrow="@true"
+                MaxLines="25"
+                ReadOnly="true"
+                Class="ma-2"
+                HelperText="@this.HelperText"/>
+        </MudTabPanel>
+    }
+</MudTabs>

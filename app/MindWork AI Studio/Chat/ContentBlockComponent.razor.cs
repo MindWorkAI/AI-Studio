@@ -399,8 +399,6 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
 
-    private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
-
     private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
     {
         ToolInvocationTraceStatus.SUCCESS => Color.Success,
@@ -445,11 +443,6 @@ public partial class ContentBlockComponent : MSGComponentBase
     private string GetToolInvocationResult(ToolInvocationTrace invocation) => string.IsNullOrWhiteSpace(invocation.Result)
         ? this.T("No result")
         : invocation.Result;
-
-    private MudMarkdownStyling MarkdownStyling => new()
-    {
-        CodeBlock = { Theme = this.CodeColorPalette },
-    };
 
     private MarkdownRenderPlan GetMarkdownRenderPlan(string text)
     {
