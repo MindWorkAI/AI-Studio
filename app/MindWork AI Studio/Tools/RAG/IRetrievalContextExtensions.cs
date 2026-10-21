@@ -57,35 +57,6 @@ public static class IRetrievalContextExtensions
     }
 
     /// <summary>
-    /// Writes what the AI is told about several retrieval contexts, filtered for prompt injections.
-    /// </summary>
-    /// <param name="retrievalContexts">The contexts to describe.</param>
-    /// <param name="sb">The builder to write into, or null for a new one.</param>
-    /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>Everything written into the builder so far.</returns>
-    public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
-    {
-        sb ??= new StringBuilder();
-        var index = 0;
-
-        //
-        // One report for the whole retrieval run: a query may pull in dozens of contexts, and
-        // the user wants to know that something was filtered, not to acknowledge it per context.
-        //
-        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using var retrievalScope = guardService.BeginAction(within: reportingScope);
-
-        foreach(var retrievalContext in retrievalContexts)
-        {
-            index++;
-            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, retrievalScope, token);
-        }
-
-        return sb.ToString();
-    }
-
-    /// <summary>
     /// Writes what the AI is told about one retrieval context, filtered for prompt injections.
     /// </summary>
     /// <param name="retrievalContext">The context to describe.</param>

@@ -66,6 +66,23 @@ public sealed class ContentText : IContent
     public List<SourcePassage> SourcePassages { get; set; } = [];
 
     /// <summary>
+    /// Adds sources to this answer, together with the passages the AI received from them.
+    /// </summary>
+    /// <remarks>
+    /// Both at once, because the title of a source names where its passages are, see
+    /// SourcePassageExtensions.NamePassagesInTitles. A passage added on its own would leave a title
+    /// behind which names only the pages known before it.
+    /// </remarks>
+    /// <param name="sources">The sources to add.</param>
+    /// <param name="passages">The passages to add.</param>
+    public void AddSources(IEnumerable<ISource> sources, IEnumerable<SourcePassage> passages)
+    {
+        this.Sources.MergeSources(sources);
+        this.SourcePassages.MergePassages(passages);
+        this.Sources.NamePassagesInTitles(this.SourcePassages);
+    }
+
+    /// <summary>
     /// What the provider said everything sent along with this answer cost, where it said anything.
     /// </summary>
     /// <remarks>

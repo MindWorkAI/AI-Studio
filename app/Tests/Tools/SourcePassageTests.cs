@@ -114,6 +114,63 @@ public sealed class SourcePassageTests
     }
 
     [Test]
+    public void SeveralPassagesNameEachOfTheirPagesOnceInTheOrderOfTheDocument()
+    {
+        var label = new[]
+        {
+            Passage(HANDBOOK_URL, "Results.", pageNumber: 11),
+            Passage(HANDBOOK_URL, "Introduction.", pageNumber: 1),
+            Passage(HANDBOOK_URL, "Discussion.", pageNumber: 11),
+            Passage(HANDBOOK_URL, "Method.", pageNumber: 4, endPageNumber: 5),
+            Passage(HANDBOOK_URL, "A slide."),
+        }.GetLocationLabel();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(label, Does.Contain("1, 4–5, 11"), "Each page once, ranges as ranges, in the order of the document; a passage without a page adds nothing.");
+            Assert.That(new[] { Passage(HANDBOOK_URL, "A.", pageNumber: 3), Passage(HANDBOOK_URL, "B.", pageNumber: 3) }.GetLocationLabel(), Is.EqualTo(Passage(HANDBOOK_URL, "A.", pageNumber: 3).GetLocationLabel()), "Two passages on one page name one page.");
+            Assert.That(new[] { Passage(HANDBOOK_URL, "A slide."), Passage(HANDBOOK_URL, "A sheet.") }.GetLocationLabel(), Is.Empty);
+        });
+    }
+
+    [Test]
+    public void TheTitleOfASourceNamesThePagesOfAllItsPassages()
+    {
+        IList<Source> sources =
+        [
+            new("handbook.pdf (Page 1)", $"{HANDBOOK_URL}#page=1", SourceOrigin.RAG),
+            new("Search result", "https://example.org/search", SourceOrigin.TOOL),
+        ];
+
+        SourcePassage[] passages = [Passage($"{HANDBOOK_URL}#page=1", "Introduction.", pageNumber: 1), Passage($"{HANDBOOK_URL}#page=11", "Results.", pageNumber: 11)];
+        sources.NamePassagesInTitles(passages);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(sources[0].Title, Is.EqualTo($"Handbooks ({passages.GetLocationLabel()})"), "The page of the second passage would otherwise go unmentioned.");
+            Assert.That(sources[0].Title, Does.Contain("1, 11"));
+            Assert.That(sources[0].URL, Is.EqualTo($"{HANDBOOK_URL}#page=1"), "The link still opens the document where the first passage is.");
+            Assert.That(sources[1].Title, Is.EqualTo("Search result"), "A source without passages keeps its title.");
+        });
+    }
+
+    [Test]
+    public void PassagesWithoutAPageAreCountedOnceThereAreSeveral()
+    {
+        IList<Source> oneChunk = [new("manual.txt (Chunk 3)", $"{MANUAL_URL}#chunk=2", SourceOrigin.RAG)];
+        IList<Source> twoChunks = [new("manual.txt (Chunk 3)", $"{MANUAL_URL}#chunk=2", SourceOrigin.RAG)];
+
+        oneChunk.NamePassagesInTitles([Passage($"{MANUAL_URL}#chunk=2", "Step one.")]);
+        twoChunks.NamePassagesInTitles([Passage($"{MANUAL_URL}#chunk=2", "Step one."), Passage($"{MANUAL_URL}#chunk=7", "Step two.")]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(oneChunk[0].Title, Is.EqualTo("manual.txt (Chunk 3)"), "One passage without a page keeps the title its data source gave it.");
+            Assert.That(twoChunks[0].Title, Does.StartWith("Handbooks (").And.Contain("2"), "Two passages under a title naming one chunk would tell the user something false.");
+        });
+    }
+
+    [Test]
     public void ATranscriptIsKnownAsSuch()
     {
         Assert.Multiple(() =>

@@ -5,7 +5,6 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.RAG;
-using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
@@ -165,11 +164,10 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// </summary>
     /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
-    /// <param name="retrievalContexts">All retrieval contexts to validate.</param>
-    /// <param name="reportingScope">The action the contexts are validated for, or null when they are validated for none.</param>
+    /// <param name="retrievalContexts">All retrieval contexts to validate, prepared for the AI and thus already filtered for prompt injections.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validation results.</returns>
-    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<IRetrievalContext> retrievalContexts, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    public async Task<IReadOnlyList<RetrievalContextValidationResult>> ValidateRetrievalContextsAsync(IContent lastUserPrompt, ChatThread chatThread, IReadOnlyList<PreparedRetrievalContext> retrievalContexts, CancellationToken token = default)
     {
         // Check if the retrieval context validation is enabled:
         if (!this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
@@ -195,7 +193,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             await semaphore.WaitAsync(token);
             
             // Start the next validation task:
-            validationTasks.Add(this.ValidateRetrievalContextAsync(lastUserPrompt, chatThread, retrievalContext, semaphore, reportingScope, token));
+            validationTasks.Add(this.ValidateRetrievalContextAsync(lastUserPrompt, chatThread, retrievalContext, semaphore, token));
         }
 
         // Wait for all validation tasks to complete:
@@ -212,12 +210,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// </remarks>
     /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
-    /// <param name="retrievalContext">The retrieval context to validate.</param>
+    /// <param name="retrievalContext">The retrieval context to validate, prepared for the AI and thus already filtered for prompt injections.</param>
     /// <param name="semaphore">The optional semaphore to limit the number of parallel validations.</param>
-    /// <param name="reportingScope">The action the context is validated for, or null when it is validated for none.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validation result.</returns>
-    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, SemaphoreSlim? semaphore = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, PreparedRetrievalContext retrievalContext, SemaphoreSlim? semaphore = null, CancellationToken token = default)
     {
         try
         {
@@ -252,11 +249,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             }
 
             //
-            // 2. Prepare the retrieval context for the agent:
+            // 2. Prepare the retrieval context for the agent. It reads the context exactly as the
+            //    AI would, filtered once for both, so the check judges what is actually sent:
             //
             var additionalData = new Dictionary<string, string>();
-            var markdownRetrievalContext = await retrievalContext.AsMarkdown(reportingScope: reportingScope, token: token);
-            additionalData.Add("retrievalContext", markdownRetrievalContext);
+            additionalData.Add("retrievalContext", retrievalContext.ToMarkdown());
 
             //
             // 3. Let the agent validate the retrieval context:
