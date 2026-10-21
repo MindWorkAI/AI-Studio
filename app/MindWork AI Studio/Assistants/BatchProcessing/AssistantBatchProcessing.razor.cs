@@ -18,7 +18,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
-    private const string RESULT_FILE_SUFFIX = "_result";
+    internal const string RESULT_FILE_SUFFIX = "_result";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';
 
@@ -26,7 +26,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     /// The name of the log file. It is fixed, so that a later batch run finds
     /// the log of a previous run and can continue it.
     /// </summary>
-    private const string LOG_FILENAME = "log.csv";
+    internal const string LOG_FILENAME = "log.csv";
 
     protected override Tools.Components Component => Tools.Components.BATCH_PROCESSING_ASSISTANT;
 
