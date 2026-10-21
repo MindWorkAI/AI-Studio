@@ -32,7 +32,9 @@
       "resources/tokenizers/*"
     ],
     "macOS": {
-      "exceptionDomain": "localhost"
+      "exceptionDomain": "localhost",
+      "signingIdentity": "-",
+      "entitlements": "./Entitlements.plist"
     },
     "linux": {
       "appimage": {

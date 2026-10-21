@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services.Indexing;
 
@@ -24,10 +25,13 @@ namespace AIStudio.Tools.Services.Indexing;
 /// <param name="vectorStore">The vector store, known to be available.</param>
 /// <param name="indexStore">The index store, known to be available.</param>
 /// <param name="manifest">What the index stores about the data source, made to match the current embedding configuration.</param>
+/// <param name="share">How much work the run does at most, as its kind of data source says.</param>
+/// <param name="pass">The pass the run is a step of, which knows what failed during the steps before.</param>
+/// <param name="promptInjectionScope">The run as one action of the prompt injection filter, which tells the user about everything it removed once the run is over.</param>
 /// <param name="settingsManager">The settings, which the provider reads when it embeds.</param>
 /// <param name="publishStatus">Hands a new status of the data source to the embedding service.</param>
 /// <param name="logger">The logger of the embedding service, so the log reads the same whoever writes it.</param>
-internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, SettingsManager settingsManager, Action<DataSourceEmbeddingStatus> publishStatus, ILogger logger)
+internal sealed class IndexedRunContext(IIndexedDataSource dataSource, EmbeddingProvider embeddingProvider, IProvider provider, VectorStoreClient vectorStore, IndexStoreClient indexStore, DataSourceEmbeddingManifest manifest, RunShare share, IndexingPass pass, PromptInjectionReportingScope promptInjectionScope, SettingsManager settingsManager, Action<DataSourceEmbeddingStatus> publishStatus, ILogger logger)
 {
     /// <summary>
     /// After how many stored chunks the collection is optimized while a run is still going.
@@ -36,6 +40,9 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
 
     private long storedChunksSinceLastOptimization;
     private bool hasPendingChanges;
+
+    private Dictionary<string, string>? fileParentIds;
+    private HashSet<string>? reservedFileParentIds;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(IndexedRunContext).Namespace, nameof(IndexedRunContext));
 
@@ -57,6 +64,68 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     public DataSourceEmbeddingManifest Manifest => manifest;
 
     public string CollectionName { get; } = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
+
+    public RunShare Share => share;
+
+    public IndexingPass Pass => pass;
+
+    /// <summary>
+    /// The id a file is stored under: the one it already has, or a new one.
+    /// </summary>
+    /// <remarks>
+    /// A relocated file keeps the id it got when it was indexed first, which came from its path back
+    /// then. A new file may now appear at that very path, so the ids already stored are reserved, and
+    /// a new file whose derived id is taken gets a random one instead. Its chunk ids include that id,
+    /// cf. IndexedDocumentIds.CreateChunkIdSource.
+    /// </remarks>
+    /// <param name="documentKey">The key of the file, which is its absolute path.</param>
+    /// <returns>The parent id of the file.</returns>
+    public string GetFileParentId(string documentKey)
+    {
+        if (this.fileParentIds is null)
+        {
+            this.fileParentIds = manifest.Files
+                .Where(file => file.Value.ParentFileId is not null)
+                .ToDictionary(file => file.Key, file => file.Value.ParentFileId!, DataSourceEmbeddingManifest.PATH_COMPARER);
+            this.reservedFileParentIds = this.fileParentIds.Values.ToHashSet(StringComparer.Ordinal);
+        }
+
+        if (this.fileParentIds.TryGetValue(documentKey, out var storedId))
+            return storedId;
+
+        var parentId = IndexedDocumentIds.CreateParentId(dataSource.Id, documentKey);
+        while (!this.reservedFileParentIds!.Add(parentId))
+            parentId = Guid.NewGuid().ToString();
+
+        this.fileParentIds[documentKey] = parentId;
+        return parentId;
+    }
+
+    /// <summary>
+    /// The run as one action of the prompt injection filter.
+    /// </summary>
+    /// <remarks>
+    /// Everything read for the run carries it down to the filter, so a run over a few thousand
+    /// documents which removes something in forty of them tells the user once, when it is over,
+    /// rather than forty times. Every kind of data source gets this from here, so none can forget it.
+    /// </remarks>
+    public PromptInjectionReportingScope PromptInjectionScope => promptInjectionScope;
+
+    /// <summary>
+    /// When the run first asked whether it did its share of the work, or null while it never did.
+    /// </summary>
+    /// <remarks>
+    /// The clock of the share starts then, cf. DocumentRunProgress.HasDoneItsShare. The embedding
+    /// service reads it once the run is over, to notice a kind of data source which never asks.
+    /// </remarks>
+    public DateTimeOffset? ShareStartedUtc { get; private set; }
+
+    /// <summary>
+    /// Starts the clock of the share of the work, unless it runs already.
+    /// </summary>
+    /// <param name="nowUtc">The current time.</param>
+    /// <returns>When the clock started.</returns>
+    public DateTimeOffset StartShareClock(DateTimeOffset nowUtc) => this.ShareStartedUtc ??= nowUtc;
 
     /// <summary>
     /// Tells the user interface about a new status of the data source.
@@ -90,10 +159,11 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
+        var chunkIdSource = IndexedDocumentIds.CreateChunkIdSource(dataSource.Id, document.Key, document.State.ParentFileId, document.State.Fingerprint);
 
         await foreach (var chunk in document.StreamChunks(token))
         {
-            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, document.State.Fingerprint, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
+            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
@@ -129,7 +199,10 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <param name="token">The cancellation token.</param>
     public async Task DeleteDocumentPointsAsync(string documentKey, CancellationToken token)
     {
-        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, token);
+        // A relocated document keeps its original parent id. Delete by that identity as well as
+        // by path, including when a previous relocation stopped between its two database writes.
+        var parentId = manifest.Files.GetValueOrDefault(documentKey)?.ParentFileId ?? string.Empty;
+        await vectorStore.DeleteEmbeddingByFile(this.CollectionName, documentKey, parentId, token);
         this.hasPendingChanges = true;
     }
 

@@ -30,7 +30,7 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public async Task WhatAResultDemandsReachesTheLoop()
     {
-        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, MAILBOX_ID);
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_CONFIGURED_SERVICES, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
         {
             TextContent = "A passage from the handbook.",
@@ -96,7 +96,7 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
     [Test]
     public async Task WhatAResultDemandsTightensTheChat()
     {
-        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, MAILBOX_ID);
+        var restriction = new OutboundDataRequirement(OutboundDataRestriction.ONLY_LINKS_FROM_CHAT, OutboundDataOrigin.MAILBOX, MAILBOX_ID);
         var tool = new TestTool(Definition(), execute: _ => new ToolExecutionResult
         {
             TextContent = "A mail about the budget.",
@@ -153,6 +153,26 @@ public sealed class ToolExecutorTests : ToolRegistryTestBase
         }
 
         Assert.That(thread.IsWebAddressGivenToTheModel(new Uri("https://example.org/newsletter/2026-10")), Is.True, "The user may ask in the next message to open the link.");
+    }
+
+    [TestCase("web_search", ExpectedResult = true)]
+    [TestCase("read-web-page_2", ExpectedResult = true)]
+    [TestCase(null, ExpectedResult = false)]
+    [TestCase("", ExpectedResult = false)]
+    [TestCase(" web_search", ExpectedResult = false)]
+    [TestCase("web search", ExpectedResult = false)]
+    [TestCase("1,2,3,4,5,6,7,8,9,10,11,12,13,14,15", ExpectedResult = false)]
+    [TestCase("größe", ExpectedResult = false)]
+    public bool AFunctionNameFollowsTheRuleOfTheProviders(string? functionName) => ToolExecutor.IsValidFunctionName(functionName);
+
+    [Test]
+    public void AFunctionNameHasAtMost64Characters()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 64)), Is.True);
+            Assert.That(ToolExecutor.IsValidFunctionName(new string('a', 65)), Is.False);
+        });
     }
 
     private static void AssertDemandsNothing(ToolCallOutcome outcome)

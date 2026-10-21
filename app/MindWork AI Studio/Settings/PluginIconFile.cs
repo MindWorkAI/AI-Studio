@@ -56,7 +56,7 @@ internal static class PluginIconFile
             return false;
         }
 
-        if (!PluginFilePath.IsInsideDirectory(pluginRoot, resolvedPath))
+        if (!PathTools.IsInsideDirectory(pluginRoot, resolvedPath))
         {
             issue = "The icon path points outside of the configuration plugin directory.";
             return false;

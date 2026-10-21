@@ -37,6 +37,7 @@ internal static class FileExtractionErrorCodeExtensions
         FileExtractionErrorCode.FORMAT_DETECTION_FAILED => true,
         FileExtractionErrorCode.EXECUTABLE_REJECTED => true,
         FileExtractionErrorCode.UNSUPPORTED => true,
+        FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => true,
 
         // Pages holding nothing but images are one of the recurring cases here, and that is a
         // property of the document, not of the environment:
@@ -71,6 +72,7 @@ internal static class FileExtractionErrorCodeExtensions
         FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("Unknown file type"),
         FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("Executable program"),
         FileExtractionErrorCode.UNSUPPORTED => TB("Unsupported file type"),
+        FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => TB("Media file could not be processed"),
         FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => TB("Pages without readable text"),
 
         FileExtractionErrorCode.FILE_NOT_FOUND => TB("File does not exist anymore"),
@@ -122,6 +124,7 @@ internal static class FileExtractionErrorCodeExtensions
         FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("The file type of '{0}' could not be determined, so the file was not indexed. AI Studio reads it again as soon as the file changes."),
         FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("The file '{0}' is an executable program and was not indexed, regardless of its file extension."),
         FileExtractionErrorCode.UNSUPPORTED => TB("The file type of '{0}' is not supported, so the file was not indexed. AI Studio reads it again as soon as the file changes."),
+        FileExtractionErrorCode.MEDIA_PROCESSING_FAILED => TB("The media file '{0}' could not be processed, so it was not indexed. AI Studio reads it again as soon as the file changes."),
         FileExtractionErrorCode.PAGE_EXTRACTION_FAILED => TB("Pages of the file '{0}' could not be read, so it was not indexed. They might contain images only. AI Studio reads it again as soon as the file changes."),
 
         //

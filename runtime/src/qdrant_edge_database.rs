@@ -11,14 +11,13 @@ use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
     FieldCondition, Filter, HasIdCondition, HnswIndexConfig, Match, MatchValue, NamedQuery,
-    Payload, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
+    Payload, PayloadOps, PointId, PointInsertOperations, PointOperations, PointStruct, QueryEnum,
     QueryRequest, ScoredPoint, ScoringQuery, UpdateOperation, ValueVariants, VectorInternal,
-    Vectors, WithPayloadInterface, WithVector,
+    SetPayloadOp, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
-use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 use crate::metadata::META_DATA;
 
@@ -32,6 +31,13 @@ const STORE_INITIALIZATION_MARKER: &str = "store_name.txt";
 const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
 const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
+const WAL_DIRECTORY: &str = "wal";
+const CLOSED_WAL_SEGMENT_PREFIX: &str = "closed-";
+
+/// The directory below the data directory in which a backup collects its copies, one directory per
+/// backup. The app removes a backup's directory once the backup is written.
+const BACKUP_STAGING_DIRECTORY: &str = ".backup-staging";
+const MAX_BACKUP_ID_LENGTH: usize = 64;
 
 /// Marks a response whose store exists on disk but cannot be opened. The .NET side keys its repair
 /// offer off this value instead of parsing `issue`, so rewording the message stays harmless.
@@ -100,6 +106,11 @@ pub struct EnsureQdrantEdgeStoreRequest {
 }
 
 #[derive(Deserialize)]
+pub struct CheckQdrantEdgeStoreRequest {
+    pub store_name: String,
+}
+
+#[derive(Deserialize)]
 pub struct InsertQdrantEdgeEmbeddingRequest {
     pub store_name: String,
     pub points: Vec<QdrantEdgeStoragePoint>,
@@ -120,6 +131,17 @@ pub struct SearchQdrantEdgeEmbeddingRequest {
 pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
     pub store_name: String,
     pub file_path: String,
+    pub parent_file_id: String,
+}
+
+#[derive(Deserialize)]
+pub struct RelocateQdrantEdgeEmbeddingFileRequest {
+    pub store_name: String,
+    pub parent_file_id: String,
+    pub absolute_path: String,
+    pub file_name: String,
+    pub relative_path: String,
+    pub fingerprint: String,
 }
 
 #[derive(Deserialize)]
@@ -130,6 +152,39 @@ pub struct OptimizeQdrantEdgeStoreRequest {
 #[derive(Deserialize)]
 pub struct DeleteQdrantEdgeStoreRequest {
     pub store_name: String,
+}
+
+#[derive(Deserialize)]
+pub struct CopyQdrantEdgeStoreForBackupRequest {
+    pub backup_id: String,
+    pub store_name: String,
+}
+
+/// A store which a backup takes along.
+#[derive(Serialize)]
+pub struct QdrantEdgeBackupStore {
+    pub store_name: String,
+    pub bytes: u64,
+}
+
+/// What a backup needs to copy the stores, one request per store.
+#[derive(Serialize)]
+pub struct QdrantEdgeBackupPreparation {
+    /// Names the backup in the requests which copy its stores.
+    pub backup_id: String,
+
+    /// The directory of the backup's copies. Below it, every copy has the place it has below the
+    /// data directory, so the backup can take the copies along under the same paths.
+    pub staging_path: String,
+
+    /// Every store which was created completely, in the order of their names.
+    pub stores: Vec<QdrantEdgeBackupStore>,
+}
+
+/// How much space is free on one disk.
+struct DiskSpace {
+    mount_point: PathBuf,
+    available_bytes: u64,
 }
 
 #[derive(Serialize)]
@@ -241,6 +296,7 @@ impl QdrantEdgeDatabase {
         }
 
         let shard = if is_initialized {
+            compact_wal(&path, store_name);
             match EdgeShard::load(&path, None) {
                 Ok(shard) => shard,
                 Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
@@ -282,6 +338,7 @@ impl QdrantEdgeDatabase {
             return Ok(None);
         }
 
+        compact_wal(&path, store_name);
         let shard = match EdgeShard::load(&path, None) {
             Ok(shard) => shard,
             Err(error) => return Err(StoreUnreadableError::new(store_name, &path, error).into()),
@@ -339,6 +396,17 @@ impl QdrantEdgeDatabase {
         Ok(QdrantEdgeEnsureStoreResult {
             created,
         })
+    }
+
+    /// Whether a store was created completely, without creating or loading it.
+    ///
+    /// The app asks this when its index database knows about a store. Should the store be gone,
+    /// the user decides whether to rebuild it, since that sends every document to the embedding
+    /// provider once more. Creating an empty store on the way, as `ensure_store_exists` does,
+    /// would hide that the vectors are missing.
+    fn store_exists(&self, store_name: &str) -> QdrantEdgeResult<bool> {
+        let path = self.store_path(store_name)?;
+        store_is_initialized(&path, store_name)
     }
 
     fn insert_embedding(&mut self, store_name: &str, points: Vec<QdrantEdgeStoragePoint>) -> QdrantEdgeResult<()> {
@@ -402,14 +470,47 @@ impl QdrantEdgeDatabase {
             .collect())
     }
 
-    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str) -> QdrantEdgeResult<()> {
+    fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str, parent_file_id: &str) -> QdrantEdgeResult<()> {
         let Some(shard) = self.get_existing_store(store_name)? else {
             return Ok(());
         };
 
+        // The location may already have changed if a relocation stopped before SQLite caught up.
+        if !parent_file_id.is_empty() {
+            shard.update(UpdateOperation::PointOperation(
+                PointOperations::DeletePointsByFilter(match_keyword_filter("parent_file_id", parent_file_id)?),
+            ))?;
+        }
         shard.update(UpdateOperation::PointOperation(
             PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
         ))?;
+        shard.flush()?;
+        Ok(())
+    }
+
+    fn relocate_embedding_file(&mut self, request: RelocateQdrantEdgeEmbeddingFileRequest) -> QdrantEdgeResult<()> {
+        if request.parent_file_id.is_empty() {
+            return Err("Relocating a document requires its parent file id.".into());
+        }
+        let Some(shard) = self.get_existing_store(&request.store_name)? else {
+            return Err("The vector store for the relocated document is missing.".into());
+        };
+
+        let payload = json!({
+            "file_path": request.absolute_path,
+            "absolute_path": request.absolute_path,
+            "file_name": request.file_name,
+            "relative_path": request.relative_path,
+            "fingerprint": request.fingerprint,
+        });
+        // Parent and chunk ids are identities, even when they were originally derived from a path.
+        // Keep them and the vectors intact; only the document's location changes.
+        shard.update(UpdateOperation::PayloadOperation(PayloadOps::SetPayload(SetPayloadOp {
+            payload: qdrant_edge::external::serde_json::from_value(payload)?,
+            points: None,
+            filter: Some(match_keyword_filter("parent_file_id", &request.parent_file_id)?),
+            key: None,
+        })))?;
         shard.flush()?;
         Ok(())
     }
@@ -424,7 +525,103 @@ impl QdrantEdgeDatabase {
             info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
         }
         shard.flush()?;
+
+        // Temporary compatibility shim, see compact_wal: without this, the WAL of a long session
+        // keeps growing until the next start. The store has to be unloaded first, because Windows
+        // cannot delete memory-mapped files. The next request loads it again.
+        let path = self.store_path(store_name)?;
+        if has_obsolete_wal_segments(&path) {
+            drop(self.shards.remove(store_name));
+            compact_wal(&path, store_name);
+        }
+
         Ok(())
+    }
+
+    /// Prepares a backup of the stores: lists them, checks that their copies fit on the disk, and
+    /// creates the directory of the backup's copies below the data directory.
+    ///
+    /// Only stores which were created completely count. One whose creation broke off holds nothing
+    /// the app could use, and the next request against it removes it anyway.
+    fn prepare_backup(&self, data_directory: &Path) -> QdrantEdgeResult<QdrantEdgeBackupPreparation> {
+        let stores = self.backup_stores()?;
+        let required_bytes = stores.iter().map(|store| store.bytes).sum();
+        ensure_enough_space(required_bytes, available_space(data_directory))?;
+
+        let backup_id = format!("{:016x}", rand::random::<u64>());
+        let staging_path = backup_staging_path(data_directory, &backup_id)?;
+        fs::create_dir_all(&staging_path).map_err(|error| {
+            format!("Failed to create the directory '{}' for the copies of the vector stores: {error}", staging_path.display())
+        })?;
+
+        info!(Source = "Qdrant Edge"; "Prepared the backup '{backup_id}' of {} vector store(s) with {:.1} MiB.", stores.len(), required_bytes as f64 / (1024.0 * 1024.0));
+        Ok(QdrantEdgeBackupPreparation {
+            backup_id,
+            staging_path: staging_path.to_string_lossy().to_string(),
+            stores,
+        })
+    }
+
+    fn backup_stores(&self) -> QdrantEdgeResult<Vec<QdrantEdgeBackupStore>> {
+        let stores_path = self.base_path.join("stores");
+        if !stores_path.is_dir() {
+            return Ok(Vec::new());
+        }
+
+        let mut stores = Vec::new();
+        for entry in fs::read_dir(&stores_path)? {
+            let path = entry?.path();
+            let Ok(store_name) = fs::read_to_string(path.join(STORE_INITIALIZATION_MARKER)) else {
+                continue;
+            };
+
+            let belongs_to_its_directory = self.store_path(&store_name).is_ok_and(|store_path| store_path == path);
+            if !belongs_to_its_directory || !store_is_initialized(&path, &store_name).unwrap_or(false) {
+                continue;
+            }
+
+            stores.push(QdrantEdgeBackupStore {
+                bytes: directory_size(&path)?,
+                store_name,
+            });
+        }
+
+        stores.sort_by(|left, right| left.store_name.cmp(&right.store_name));
+        Ok(stores)
+    }
+
+    /// Copies one store into the directory of a backup's copies, and returns how many bytes it copied.
+    ///
+    /// A loaded store is flushed and unloaded first: everything it holds is on the disk then, and
+    /// nothing changes its files while they are copied, since the lock of the database is held all
+    /// the while. The next request loads the store again. A store which was not created completely
+    /// is not copied.
+    fn copy_store_for_backup(&mut self, store_name: &str, data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<u64> {
+        let staging_path = backup_staging_path(data_directory, backup_id)?;
+        if !staging_path.is_dir() {
+            return Err(format!("The backup '{backup_id}' was not prepared.").into());
+        }
+
+        let path = self.store_path(store_name)?;
+        if !store_is_initialized(&path, store_name)? {
+            return Ok(0);
+        }
+
+        if let Some(shard) = self.shards.get(store_name) {
+            shard.flush()?;
+        }
+
+        drop(self.shards.remove(store_name));
+        let relative_path = path.strip_prefix(data_directory).map_err(|_| {
+            format!("The vector store '{store_name}' at '{}' does not lie below the data directory '{}'.", path.display(), data_directory.display())
+        })?;
+
+        let target_path = staging_path.join(relative_path);
+        let copied_bytes = copy_directory(&path, &target_path).map_err(|error| {
+            format!("Failed to copy the vector store '{store_name}' to '{}': {error}", target_path.display())
+        })?;
+
+        Ok(copied_bytes)
     }
 
     fn delete_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
@@ -448,26 +645,134 @@ fn store_directory_name(store_name: &str) -> String {
     format!("store_{stable_id}")
 }
 
-fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
+fn data_directory() -> QdrantEdgeResult<PathBuf> {
     let data_directory = DATA_DIRECTORY
         .get()
         .ok_or("The data directory has not been initialized.")?;
 
-    Ok(Path::new(data_directory)
+    Ok(PathBuf::from(data_directory))
+}
+
+fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
+    Ok(data_directory()?
         .join("databases")
         .join("vector_database"))
 }
 
-pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
-    let status = QDRANT_EDGE_STATUS.lock().unwrap();
-    let current_status = status.status;
-    let unavailable_reason = status.unavailable_reason.clone();
-    drop(status);
+/// The directory of one backup's copies. The backup ID must not be able to name any other path.
+fn backup_staging_path(data_directory: &Path, backup_id: &str) -> QdrantEdgeResult<PathBuf> {
+    if backup_id.is_empty() || backup_id.len() > MAX_BACKUP_ID_LENGTH || !backup_id.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(format!("'{backup_id}' is not a valid backup ID.").into());
+    }
 
-    let database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
-    let database_info = database_guard
-        .as_ref()
-        .and_then(|database| database.info().ok());
+    Ok(data_directory.join(BACKUP_STAGING_DIRECTORY).join(backup_id))
+}
+
+/// Refuses a backup whose copies would not fit on the disk. When the free space cannot be told, the
+/// backup goes ahead: running out of space then fails the copy, which removes nothing.
+fn ensure_enough_space(required_bytes: u64, available_bytes: Option<u64>) -> QdrantEdgeResult<()> {
+    match available_bytes {
+        Some(available_bytes) if available_bytes < required_bytes => Err(format!(
+            "The copies of the vector stores need {:.1} MiB, but only {:.1} MiB are free on the disk.",
+            required_bytes as f64 / (1024.0 * 1024.0),
+            available_bytes as f64 / (1024.0 * 1024.0)
+        ).into()),
+
+        Some(_) => Ok(()),
+
+        None => {
+            warn!(Source = "Qdrant Edge"; "Could not tell the free space on the disk of the data directory. Copying the vector stores anyway.");
+            Ok(())
+        },
+    }
+}
+
+/// The free space on the disk which holds the given path, or None when it cannot be told.
+///
+/// The canonical path comes first, since the path the app knows may lead through a symbolic link
+/// onto another disk. On Windows, the canonical path carries a prefix no mount point has, so the
+/// path as it is serves as the fallback.
+fn available_space(path: &Path) -> Option<u64> {
+    let disks = sysinfo::Disks::new_with_refreshed_list()
+        .list()
+        .iter()
+        .map(|disk| DiskSpace {
+            mount_point: disk.mount_point().to_path_buf(),
+            available_bytes: disk.available_space(),
+        })
+        .collect::<Vec<_>>();
+
+    fs::canonicalize(path)
+        .ok()
+        .and_then(|canonical_path| available_space_on(&canonical_path, &disks))
+        .or_else(|| available_space_on(path, &disks))
+}
+
+/// The free space of the disk with the most specific mount point which holds the given path.
+fn available_space_on(path: &Path, disks: &[DiskSpace]) -> Option<u64> {
+    disks
+        .iter()
+        .filter(|disk| path.starts_with(&disk.mount_point))
+        .max_by_key(|disk| disk.mount_point.components().count())
+        .map(|disk| disk.available_bytes)
+}
+
+/// The size of all files below a directory. Symbolic links are not followed.
+fn directory_size(path: &Path) -> std::io::Result<u64> {
+    let mut size = 0;
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_dir() {
+            size += directory_size(&entry.path())?;
+        } else if file_type.is_file() {
+            size += entry.metadata()?.len();
+        }
+    }
+
+    Ok(size)
+}
+
+/// Copies a directory with all its files, and returns how many bytes it copied. Symbolic links are
+/// not copied.
+fn copy_directory(source: &Path, target: &Path) -> std::io::Result<u64> {
+    fs::create_dir_all(target)?;
+
+    let mut copied_bytes = 0;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let target_path = target.join(entry.file_name());
+        if file_type.is_dir() {
+            copied_bytes += copy_directory(&entry.path(), &target_path)?;
+        } else if file_type.is_file() {
+            copied_bytes += fs::copy(entry.path(), &target_path)?;
+        }
+    }
+
+    Ok(copied_bytes)
+}
+
+pub async fn qdrant_edge_info() -> Json<QdrantEdgeServiceInfo> {
+    let (current_status, mut unavailable_reason) = {
+        let status = QDRANT_EDGE_STATUS.lock().unwrap();
+        (status.status, status.unavailable_reason.clone())
+    };
+
+    //
+    // The info needs the lock of the database, which another request may hold for seconds while
+    // it loads a store, and it reads the stores directory. Both belong on the blocking pool, see
+    // run_qdrant_edge_request.
+    //
+    let database_info = match tokio::task::spawn_blocking(read_qdrant_edge_info).await {
+        Ok(database_info) => database_info,
+        Err(error) => {
+            let reason = format!("The Qdrant Edge worker failed: {error}");
+            error!(Source = "Qdrant Edge"; "Reading the Qdrant Edge info failed: {reason}");
+            unavailable_reason = Some(reason);
+            None
+        },
+    };
 
     let is_available = current_status == QdrantEdgeStatus::Available && database_info.is_some();
     Json(QdrantEdgeServiceInfo {
@@ -481,40 +786,72 @@ pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
     })
 }
 
-pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
-    execute_qdrant_edge_request(|database| {
+fn read_qdrant_edge_info() -> Option<QdrantEdgeInfo> {
+    QDRANT_EDGE_DATABASE
+        .lock()
+        .unwrap()
+        .as_ref()
+        .and_then(|database| database.info().ok())
+}
+
+pub async fn ensure_qdrant_edge_store(Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
+    run_qdrant_edge_request(move |database| {
         database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
-    })
+    }).await
 }
 
-pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+pub async fn check_qdrant_edge_store(Json(request): Json<CheckQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<bool>> {
+    run_qdrant_edge_request(move |database| {
+        database.store_exists(&request.store_name)
+    }).await
+}
+
+pub async fn insert_qdrant_edge_embedding(Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
         database.insert_embedding(&request.store_name, request.points)
-    })
+    }).await
 }
 
-pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
-    execute_qdrant_edge_request(|database| {
+pub async fn search_qdrant_edge_embeddings(Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
+    run_qdrant_edge_request(move |database| {
         database.search_embedding(&request.store_name, request.vector, request.max_matches, request.point_ids)
-    })
+    }).await
 }
 
-pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
-        database.delete_embedding_by_file(&request.store_name, &request.file_path)
-    })
+pub async fn delete_qdrant_edge_embedding_by_file(Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
+        database.delete_embedding_by_file(&request.store_name, &request.file_path, &request.parent_file_id)
+    }).await
 }
 
-pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+pub async fn relocate_qdrant_edge_embedding_file(Json(request): Json<RelocateQdrantEdgeEmbeddingFileRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
+        database.relocate_embedding_file(request)
+    }).await
+}
+
+pub async fn optimize_qdrant_edge_store(Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
         database.optimize_store(&request.store_name)
-    })
+    }).await
 }
 
-pub async fn delete_qdrant_edge_store(_token: APIToken, Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
-    execute_qdrant_edge_request(|database| {
+pub async fn delete_qdrant_edge_store(Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+    run_qdrant_edge_request(move |database| {
         database.delete_store(&request.store_name)
-    })
+    }).await
+}
+
+pub async fn prepare_qdrant_edge_backup() -> Json<QdrantEdgeResponse<QdrantEdgeBackupPreparation>> {
+    run_qdrant_edge_request(move |database| {
+        database.prepare_backup(&data_directory()?)
+    }).await
+}
+
+pub async fn copy_qdrant_edge_store_for_backup(Json(request): Json<CopyQdrantEdgeStoreForBackupRequest>) -> Json<QdrantEdgeResponse<u64>> {
+    run_qdrant_edge_request(move |database| {
+        database.copy_store_for_backup(&request.store_name, &data_directory()?, &request.backup_id)
+    }).await
 }
 
 pub fn start_qdrant_edge_database<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
@@ -553,6 +890,32 @@ pub fn stop_qdrant_edge_database() {
     }
 
     set_qdrant_edge_unavailable("Qdrant Edge was stopped.".to_string());
+}
+
+/// Runs one request against the database on the blocking pool.
+///
+/// A request waits for the lock of the database and may load a store from disk, which together
+/// can take seconds. On a runtime worker, that would hold up every other call of the app as well:
+/// they all share one HTTP/2 connection, and the task driving it may be waiting in the LIFO slot of
+/// exactly this worker, where no other worker can take it over.
+async fn run_qdrant_edge_request<T, F>(operation: F) -> Json<QdrantEdgeResponse<T>>
+where
+    T: Serialize + Send + 'static,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T> + Send + 'static,
+{
+    match tokio::task::spawn_blocking(move || execute_qdrant_edge_request(operation)).await {
+        Ok(response) => response,
+        Err(error) => {
+            let issue = format!("The Qdrant Edge worker failed: {error}");
+            error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+            Json(QdrantEdgeResponse {
+                success: false,
+                issue,
+                issue_code: "",
+                data: None,
+            })
+        },
+    }
 }
 
 fn execute_qdrant_edge_request<T, F>(operation: F) -> Json<QdrantEdgeResponse<T>>
@@ -778,6 +1141,79 @@ fn remove_partial_store(path: &Path) -> String {
     }
 }
 
+// Temporary compatibility shim until a qdrant-edge release acknowledges its WAL by itself:
+// documentation/compatibility-shims/2026-10-qdrant-edge-wal-compaction.md
+//
+// Qdrant Edge writes every update to its WAL, but never acknowledges the WAL and never replays it,
+// so the WAL grows with every update. We flush after every update, which means the segments already
+// hold everything the WAL contains. The store must not be loaded while this runs.
+fn compact_wal(store_path: &Path, store_name: &str) {
+    match remove_obsolete_wal_segments(&store_path.join(WAL_DIRECTORY)) {
+        Ok((0, _)) => {},
+        Ok((removed_segments, removed_bytes)) => info!(Source = "Qdrant Edge"; "Removed {removed_segments} obsolete WAL segment(s) with {:.1} MiB from vector store '{store_name}'.", removed_bytes as f64 / (1024.0 * 1024.0)),
+        Err(error) => warn!(Source = "Qdrant Edge"; "Could not remove the obsolete WAL segments of vector store '{store_name}': {error}"),
+    }
+}
+
+/// Whether the store's WAL holds segments which `compact_wal` would remove.
+fn has_obsolete_wal_segments(store_path: &Path) -> bool {
+    wal_file_names(&store_path.join(WAL_DIRECTORY))
+        .is_ok_and(|file_names| !obsolete_wal_segments(&file_names).is_empty())
+}
+
+/// Removes the obsolete closed segments, oldest first, and returns their number and size. When a
+/// removal fails, the segments left over are still contiguous, so Qdrant Edge can open the WAL.
+fn remove_obsolete_wal_segments(wal_path: &Path) -> std::io::Result<(usize, u64)> {
+    let mut removed_segments = 0;
+    let mut removed_bytes = 0;
+    for file_name in obsolete_wal_segments(&wal_file_names(wal_path)?) {
+        let segment_path = wal_path.join(file_name);
+        let segment_size = fs::metadata(&segment_path)?.len();
+        fs::remove_file(&segment_path)?;
+        removed_segments += 1;
+        removed_bytes += segment_size;
+    }
+
+    Ok((removed_segments, removed_bytes))
+}
+
+fn wal_file_names(wal_path: &Path) -> std::io::Result<Vec<String>> {
+    if !wal_path.is_dir() {
+        return Ok(Vec::new());
+    }
+
+    // Every file counts: a closed segment missing from this list would leave a gap behind.
+    let mut file_names = Vec::new();
+    for entry in fs::read_dir(wal_path)? {
+        let entry = entry?;
+        if entry.file_type()?.is_file() && let Ok(file_name) = entry.file_name().into_string() {
+            file_names.push(file_name);
+        }
+    }
+
+    Ok(file_names)
+}
+
+/// The closed WAL segments which may go, oldest first. That is all of them except the newest:
+/// Qdrant Edge numbers its operations from the first closed segment and would start again at zero
+/// without one. The segments then ignore every later update of a point they already know.
+fn obsolete_wal_segments(file_names: &[String]) -> Vec<String> {
+    let mut closed_segments = file_names
+        .iter()
+        .filter_map(|file_name| {
+            let start_index = file_name.strip_prefix(CLOSED_WAL_SEGMENT_PREFIX)?.parse::<u64>().ok()?;
+            Some((start_index, file_name.clone()))
+        })
+        .collect::<Vec<_>>();
+
+    closed_segments.sort_unstable_by_key(|(start_index, _)| *start_index);
+    closed_segments.pop();
+    closed_segments
+        .into_iter()
+        .map(|(_, file_name)| file_name)
+        .collect()
+}
+
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
     if vector_size == 0 {
         return Err("Vector size must be greater than zero.".into());
@@ -946,6 +1382,8 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::runtime_api::test_support::assert_runtime_stays_free;
+    use qdrant_edge::WalOptions;
 
     #[test]
     fn validate_store_name_allows_safe_store_names() {
@@ -994,6 +1432,26 @@ mod tests {
         assert!(!existing.created);
         let display_name_path = database.store_path(store_name).unwrap().join(STORE_DISPLAY_NAME_MARKER);
         assert_eq!(fs::read_to_string(display_name_path).unwrap(), "Renamed source");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn asking_whether_a_store_exists_never_creates_it() {
+        let test_directory = test_directory("exists");
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+
+        assert!(!database.store_exists(store_name).unwrap());
+        assert!(!database.store_exists(store_name).unwrap(), "Asking once must not create the store for the next question.");
+        assert!(!database.store_path(store_name).unwrap().exists());
+
+        database.ensure_store_exists(store_name, "Some source", 3).unwrap();
+        assert!(database.store_exists(store_name).unwrap());
+
+        database.delete_store(store_name).unwrap();
+        assert!(!database.store_exists(store_name).unwrap());
 
         drop(database);
         fs::remove_dir_all(test_directory).unwrap();
@@ -1081,6 +1539,291 @@ mod tests {
         );
     }
 
+    #[test]
+    fn relocating_a_document_preserves_its_vectors_and_can_be_retried() {
+        let test_directory = test_directory("relocation");
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let mut point = test_point(POINT_X, search_vector());
+        point.parent_file_id = "original-parent".to_string();
+        point.page_number = Some(2);
+        database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
+
+        for _ in 0..2 {
+            database.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+                store_name: SEARCH_STORE.to_string(),
+                parent_file_id: "original-parent".to_string(),
+                absolute_path: "/tmp/moved/renamed.md".to_string(),
+                file_name: "renamed.md".to_string(),
+                relative_path: "renamed.md".to_string(),
+                fingerprint: "new-fingerprint".to_string(),
+            }).unwrap();
+        }
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].point_id, POINT_X);
+        assert_eq!(found[0].parent_file_id, "original-parent");
+        assert_eq!(found[0].file_path, "/tmp/moved/renamed.md");
+        assert_eq!(found[0].absolute_path, "/tmp/moved/renamed.md");
+        assert_eq!(found[0].file_name, "renamed.md");
+        assert_eq!(found[0].relative_path, "renamed.md");
+        assert_eq!(found[0].fingerprint, "new-fingerprint");
+        assert_eq!(found[0].text, "Some text.");
+        assert_eq!(found[0].page_number, Some(2));
+        assert!((found[0].score - 1.0).abs() < 0.0001);
+
+        // SQLite may still know the old path when a relocation was interrupted. Its stable parent
+        // id must be enough to remove the vectors if the document changed before the next retry.
+        database.delete_embedding_by_file(SEARCH_STORE, "/tmp/test-data/notes.md", "original-parent").unwrap();
+        assert!(database.search_embedding(SEARCH_STORE, search_vector(), 10, None).unwrap().is_empty());
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn obsolete_wal_segments_keeps_the_newest_closed_segment() {
+        let file_names = ["closed-120", "open-7", "closed-0", "tmp-open-8", "closed-40", ".wal", "first-index", "closed-abc"].map(String::from);
+
+        // Sorted by number, not by name: as text, "closed-40" would come after "closed-120".
+        assert_eq!(obsolete_wal_segments(&file_names), vec!["closed-0", "closed-40"]);
+
+        assert!(obsolete_wal_segments(&["closed-0", "open-1"].map(String::from)).is_empty());
+        assert!(obsolete_wal_segments(&["open-1"].map(String::from)).is_empty());
+    }
+
+    #[test]
+    fn a_reloaded_store_drops_obsolete_wal_segments_and_keeps_its_points() {
+        let test_directory = test_directory("wal-reload");
+        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        drop(database);
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None).unwrap();
+
+        assert_eq!(closed_wal_segments(&store_path).len(), 1);
+        assert_eq!(
+            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
+            point_ids.iter().map(String::as_str).collect::<HashSet<_>>(),
+            "the points live in the segments, so removing WAL segments must not lose any of them"
+        );
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn an_update_after_wal_compaction_replaces_the_existing_point() {
+        let test_directory = test_directory("wal-update");
+        let (database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
+        drop(database);
+
+        // The newest point carries the highest operation number so far. Should the numbering start
+        // again after the compaction, the segment would ignore this update as outdated.
+        let newest_point_id = point_ids.last().unwrap();
+        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
+        updated_point.text = "Updated text.".to_string();
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
+
+        let found = database
+            .search_embedding(SEARCH_STORE, search_vector(), 1, Some(vec![newest_point_id.clone()]))
+            .unwrap();
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].text, "Updated text.");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn optimize_removes_obsolete_wal_segments_of_a_loaded_store() {
+        let test_directory = test_directory("wal-optimize");
+        let (mut database, point_ids) = store_with_several_closed_wal_segments(&test_directory);
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+
+        database.optimize_store(SEARCH_STORE).unwrap();
+        assert_eq!(closed_wal_segments(&store_path).len(), 1);
+
+        // The next request loads the store again, with all its points and still taking updates.
+        let newest_point_id = point_ids.last().unwrap();
+        let mut updated_point = test_point(newest_point_id, vec![0.0, 0.0, 1.0]);
+        updated_point.text = "Updated text.".to_string();
+        database.insert_embedding(SEARCH_STORE, vec![updated_point]).unwrap();
+
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), point_ids.len(), None).unwrap();
+        assert_eq!(
+            found_point_ids(&found).into_iter().collect::<HashSet<_>>(),
+            point_ids.iter().map(String::as_str).collect::<HashSet<_>>()
+        );
+
+        let updated = found.iter().find(|result| &result.point_id == newest_point_id).unwrap();
+        assert_eq!(updated.text, "Updated text.");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn a_request_waiting_for_the_database_leaves_the_runtime_free() {
+        let request = optimize_qdrant_edge_store(
+            Json(OptimizeQdrantEdgeStoreRequest { store_name: SEARCH_STORE.to_string() }),
+        );
+
+        let response = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
+
+        // No database runs in the tests, so the request ends as soon as it gets the lock.
+        assert!(!response.success);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn the_info_waiting_for_the_database_leaves_the_runtime_free() {
+        let request = qdrant_edge_info();
+
+        let info = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
+        assert!(!info.is_available);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn copying_a_store_for_a_backup_leaves_the_runtime_free() {
+        let request = copy_qdrant_edge_store_for_backup(Json(CopyQdrantEdgeStoreForBackupRequest {
+            backup_id: "0123abcd".to_string(),
+            store_name: SEARCH_STORE.to_string(),
+        }));
+
+        let response = assert_runtime_stays_free(&QDRANT_EDGE_DATABASE, request).await;
+
+        // No database runs in the tests, so the request ends as soon as it gets the lock.
+        assert!(!response.success);
+    }
+
+    #[test]
+    fn a_backup_copies_every_complete_store_and_the_copy_loads_on_its_own() {
+        let data_directory = test_directory("backup");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+
+        // A store whose creation broke off: its directory exists, but it holds no store.
+        fs::create_dir_all(base_path.join("stores").join("store_broken")).unwrap();
+
+        let preparation = database.prepare_backup(&data_directory).unwrap();
+        assert_eq!(preparation.stores.iter().map(|store| store.store_name.as_str()).collect::<Vec<_>>(), vec![SEARCH_STORE]);
+        assert!(preparation.stores[0].bytes > 0);
+
+        let copied_bytes = database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+        assert!(copied_bytes > 0);
+
+        // The copy lies where the store lies below the data directory, and it is a complete store:
+        let staging_path = PathBuf::from(&preparation.staging_path);
+        let mut copy = QdrantEdgeDatabase::new(staging_path.join("databases").join("vector_database"));
+        let found = copy.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        // The copy unloaded the store, and the next request loads it again:
+        let found = database.search_embedding(SEARCH_STORE, search_vector(), 3, None).unwrap();
+        assert_eq!(found_point_ids(&found), vec![POINT_X, POINT_Y, POINT_Z]);
+
+        drop(copy);
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_store_is_copied_only_into_a_prepared_backup() {
+        let data_directory = test_directory("backup-unprepared");
+        let base_path = data_directory.join("databases").join("vector_database");
+        let mut database = store_with_one_point_per_axis(&base_path);
+
+        let error = database.copy_store_for_backup(SEARCH_STORE, &data_directory, "0123456789abcdef").unwrap_err();
+        assert!(error.to_string().contains("was not prepared"));
+
+        drop(database);
+        fs::remove_dir_all(data_directory).unwrap();
+    }
+
+    #[test]
+    fn a_restored_store_can_relocate_foreign_paths_without_replacing_its_vectors() {
+        for old_path in [r"E:\Documents\nested\notes.md", r"\\server\share\nested\notes.md", "/Volumes/External drive/nested/notes.md"] {
+            let data_directory = test_directory("backup-relocation");
+            let base_path = data_directory.join("databases").join("vector_database");
+            let mut database = QdrantEdgeDatabase::new(base_path);
+            let mut point = test_point(POINT_X, vec![1.0, 0.0, 0.0]);
+            point.parent_file_id = "original-parent".to_string();
+            point.file_path = old_path.to_string();
+            point.absolute_path = old_path.to_string();
+            point.embedded_at_utc = "2026-10-01T12:00:00Z".to_string();
+            database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
+
+            let preparation = database.prepare_backup(&data_directory).unwrap();
+            database.copy_store_for_backup(SEARCH_STORE, &data_directory, &preparation.backup_id).unwrap();
+            let restored_base = PathBuf::from(&preparation.staging_path).join("databases").join("vector_database");
+            let mut restored = QdrantEdgeDatabase::new(restored_base.clone());
+            let new_path = data_directory.join("mounted drive").join("nested").join("notes.md").to_string_lossy().to_string();
+            restored.relocate_embedding_file(RelocateQdrantEdgeEmbeddingFileRequest {
+                store_name: SEARCH_STORE.to_string(),
+                parent_file_id: "original-parent".to_string(),
+                absolute_path: new_path.clone(),
+                file_name: "notes.md".to_string(),
+                relative_path: Path::new("nested").join("notes.md").to_string_lossy().to_string(),
+                fingerprint: "relocated-fingerprint".to_string(),
+            }).unwrap();
+            drop(restored);
+
+            let mut restored = QdrantEdgeDatabase::new(restored_base);
+            let found = restored.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(found.len(), 1);
+            assert_eq!(found[0].point_id, POINT_X);
+            assert_eq!(found[0].parent_file_id, "original-parent");
+            assert_eq!(found[0].file_path, new_path);
+            assert_eq!(found[0].absolute_path, new_path);
+            assert_eq!(found[0].text, "Some text.");
+            assert_eq!(found[0].embedded_at_utc, "2026-10-01T12:00:00Z");
+            assert!((found[0].score - 1.0).abs() < 0.0001);
+
+            let original = database.search_embedding(SEARCH_STORE, vec![1.0, 0.0, 0.0], 10, None).unwrap();
+            assert_eq!(original[0].file_path, old_path, "relocating a restored copy must not change the original store");
+            drop(restored);
+            drop(database);
+            fs::remove_dir_all(data_directory).unwrap();
+        }
+    }
+
+    #[test]
+    fn a_backup_id_cannot_name_another_directory() {
+        let data_directory = Path::new("/data");
+
+        assert!(backup_staging_path(data_directory, "").is_err());
+        assert!(backup_staging_path(data_directory, "../settings").is_err());
+        assert!(backup_staging_path(data_directory, "/etc").is_err());
+        assert!(backup_staging_path(data_directory, &"a".repeat(MAX_BACKUP_ID_LENGTH + 1)).is_err());
+        assert_eq!(
+            backup_staging_path(data_directory, "0123abcd").unwrap(),
+            data_directory.join(BACKUP_STAGING_DIRECTORY).join("0123abcd")
+        );
+    }
+
+    #[test]
+    fn a_backup_which_does_not_fit_on_the_disk_is_refused() {
+        assert!(ensure_enough_space(2_000, Some(1_000)).is_err());
+        assert!(ensure_enough_space(1_000, Some(1_000)).is_ok());
+        assert!(ensure_enough_space(2_000, None).is_ok(), "Without knowing the free space, the copy itself fails when the disk is full.");
+    }
+
+    #[test]
+    fn the_free_space_comes_from_the_disk_with_the_most_specific_mount_point() {
+        let disks = vec![
+            DiskSpace { mount_point: PathBuf::from("/"), available_bytes: 10 },
+            DiskSpace { mount_point: PathBuf::from("/home"), available_bytes: 20 },
+        ];
+
+        assert_eq!(available_space_on(Path::new("/home/user/data"), &disks), Some(20));
+        assert_eq!(available_space_on(Path::new("/var/data"), &disks), Some(10));
+        assert_eq!(available_space_on(Path::new("relative/data"), &disks), None);
+    }
+
     const SEARCH_STORE: &str = "rag_6cc665a82b1e4d42bc748015b7b391ec";
     const POINT_X: &str = "0b5f1e8a-3c2d-4e6f-9a1b-7c8d9e0f1a2b";
     const POINT_Y: &str = "1c6a2f9b-4d3e-4f70-8b2c-8d9e0f1a2b3c";
@@ -1111,6 +1854,50 @@ mod tests {
             .unwrap();
 
         database
+    }
+
+    /// A store with tiny WAL segments, filled one point at a time until the WAL has closed several
+    /// of them. Returns the database with the store still loaded, and the IDs in insertion order.
+    fn store_with_several_closed_wal_segments(test_directory: &Path) -> (QdrantEdgeDatabase, Vec<String>) {
+        const SMALL_WAL_SEGMENT_CAPACITY: usize = 8 * 1024;
+        const MAX_POINTS: usize = 1_000;
+
+        let mut database = QdrantEdgeDatabase::new(test_directory.to_path_buf());
+        let store_path = database.store_path(SEARCH_STORE).unwrap();
+        fs::create_dir_all(&store_path).unwrap();
+
+        // The production config, except for the WAL. Qdrant Edge keeps these options in the store,
+        // so they stay in effect whenever the store gets loaded again.
+        let config = EdgeConfig {
+            wal_options: Some(WalOptions {
+                segment_capacity: SMALL_WAL_SEGMENT_CAPACITY,
+                ..WalOptions::default()
+            }),
+            ..edge_config(3)
+        };
+        drop(EdgeShard::new(&store_path, config).unwrap());
+        write_store_initialization_marker(&store_path, SEARCH_STORE).unwrap();
+
+        let mut point_ids = Vec::new();
+        while closed_wal_segments(&store_path).len() < 3 {
+            assert!(point_ids.len() < MAX_POINTS, "the WAL never closed enough segments");
+
+            let point_id = Uuid::from_u128(point_ids.len() as u128 + 1).to_string();
+            database
+                .insert_embedding(SEARCH_STORE, vec![test_point(&point_id, vec![1.0, point_ids.len() as f32, 1.0])])
+                .unwrap();
+            point_ids.push(point_id);
+        }
+
+        (database, point_ids)
+    }
+
+    fn closed_wal_segments(store_path: &Path) -> Vec<String> {
+        fs::read_dir(store_path.join(WAL_DIRECTORY))
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .filter(|file_name| file_name.starts_with(CLOSED_WAL_SEGMENT_PREFIX))
+            .collect()
     }
 
     /// Closest to the point on the x axis, then the one on the y axis, then the one on the z axis.

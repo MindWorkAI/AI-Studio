@@ -17,6 +17,7 @@ pub mod image;
 pub mod pdfium;
 pub mod pandoc;
 pub mod qdrant_edge_database;
+pub mod data_restore;
 pub mod certificate_factory;
 pub mod runtime_api_token;
 pub mod stale_process_cleanup;

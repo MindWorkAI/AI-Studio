@@ -147,7 +147,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     VisualBriefingBuildStage.SOURCE_PREPARATION,
                     "A briefing source is no longer reachable.",
                     $"Source {source.SourceId:D} failed the reachability check.");
-            var sourceHash = await VisualBriefingHashing.ComputeFileAsync(source.Path, token);
+            var sourceHash = await FileContentHash.ComputeAsync(source.Path, token);
             var transcriptHash = string.Empty;
             if (source.IsMedia)
             {

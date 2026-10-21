@@ -7,9 +7,11 @@ namespace AIStudio.Tools.Services.Indexing;
 /// The ids under which documents and their chunks are stored.
 /// </summary>
 /// <remarks>
-/// Derived rather than random, so the same document of the same data source always ends up under
-/// the same ids, in the vector store as well as in the index store. The formats must stay as they
-/// are: every stored id was made with them.
+/// Derived rather than random, so the same document of the same data source ends up under the same
+/// ids, in the vector store as well as in the index store. Once stored, they are the identity of the
+/// document: a file which moves to another folder keeps its ids, although they were derived from its
+/// old path and its old fingerprint, cf. FileSourceIndexer.RelocateStoredFilesAsync. The formats must
+/// stay as they are: every stored id was made with them.
 /// </remarks>
 internal static class IndexedDocumentIds
 {
@@ -17,11 +19,31 @@ internal static class IndexedDocumentIds
     /// The id of one chunk, which is also the id of its point in the vector store.
     /// </summary>
     /// <param name="dataSourceId">The data source the document belongs to.</param>
-    /// <param name="fingerprint">The fingerprint of the document as it was read.</param>
+    /// <param name="source">What the chunk ids of the document derive from, cf. CreateChunkIdSource.</param>
     /// <param name="chunkIndex">The position of the chunk within the document.</param>
     /// <returns>The chunk id.</returns>
-    public static string CreateChunkId(string dataSourceId, string fingerprint, int chunkIndex) =>
-        CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");
+    public static string CreateChunkId(string dataSourceId, string source, int chunkIndex) =>
+        CreateStableGuid($"{dataSourceId}:chunk:{source}:{chunkIndex}");
+
+    /// <summary>
+    /// What the chunk ids of a document derive from: nearly always its fingerprint.
+    /// </summary>
+    /// <remarks>
+    /// A moved file keeps its parent id and its chunk ids, but its fingerprint now names the new path.
+    /// Another file may later appear at the old path with exactly the fingerprint those chunk ids came
+    /// from, and the fingerprint alone would hand it the same ids. The two documents would then take
+    /// over each other's chunks. Hence the parent id joins whenever a document is not stored under the
+    /// id its key gives, which only happens after a move. Every other document keeps the ids it has.
+    /// </remarks>
+    /// <param name="dataSourceId">The data source the document belongs to.</param>
+    /// <param name="documentKey">The key of the document.</param>
+    /// <param name="parentId">The id the document is stored under.</param>
+    /// <param name="fingerprint">The fingerprint of the document as it is about to be read.</param>
+    /// <returns>What to pass to CreateChunkId.</returns>
+    public static string CreateChunkIdSource(string dataSourceId, string documentKey, string parentId, string fingerprint) =>
+        string.Equals(parentId, CreateParentId(dataSourceId, documentKey), StringComparison.Ordinal)
+            ? fingerprint
+            : $"{parentId}:{fingerprint}";
 
     /// <summary>
     /// The id of a document's row in the index store, which its chunks point at.

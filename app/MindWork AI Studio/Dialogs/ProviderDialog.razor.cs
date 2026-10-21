@@ -117,7 +117,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     [Parameter]
     public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
-    
+
+    /// <summary>
+    /// The API key an imported provider brought along. When editing, the dialog loads the stored key instead.
+    /// </summary>
+    [Parameter]
+    public string ImportedAPIKey { get; set; } = string.Empty;
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -254,16 +260,18 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                   || this.capabilityOverrides.HasOverrides
                                   || (this.ShowTokenizerSettings && !string.IsNullOrWhiteSpace(this.DataTokenizerPath));
         
+        // An edited provider fills the form, and so does an imported one:
+        this.dataFilePath = this.DataTokenizerPath;
+
+        // When using Fireworks, we must copy the model name:
+        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+            this.dataManuallyModel = this.DataModel.Id;
+
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
-            this.dataFilePath = this.DataTokenizerPath;
-            
-            // When using Fireworks, we must copy the model name:
-            if (this.DataLLMProvider.IsLLMModelProvidedManually())
-                this.dataManuallyModel = this.DataModel.Id;
-            
+
             // Load the API key. A self-hosted server may well need one: LM Studio can ask for a
             // token of its own, and any of these servers can sit behind an authenticating proxy.
             // So we try for every host and treat a missing key as the normal case (isTrying).
@@ -288,6 +296,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             }
 
             await this.ReloadModels();
+        }
+        else
+        {
+            this.dataAPIKey = this.ImportedAPIKey;
+
+            // An import does not contact the server, so its model is the only one to choose until the user loads the models:
+            if (!string.IsNullOrWhiteSpace(this.DataModel.Id))
+                this.availableModels.Add(this.DataModel);
         }
     }
 

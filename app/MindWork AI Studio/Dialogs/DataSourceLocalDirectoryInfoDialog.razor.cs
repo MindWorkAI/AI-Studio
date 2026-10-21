@@ -32,7 +32,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
         
         if (this.directoryInfo.Exists)
         {
-            this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token);
+            this.directorySizeTask = this.directoryInfo.DetermineContentSize(this.UpdateDirectorySize, this.UpdateDirectoryFiles, this.UpdateFileList, MAX_FILES_TO_SHOW, this.DirectoryOperationDone, this.cts.Token, FolderFileSelection.Of(this.DataSource));
             this.refreshTimer.Elapsed += (_, _) => this.InvokeAsync(this.StateHasChanged);
             this.refreshTimer.Start();
         }

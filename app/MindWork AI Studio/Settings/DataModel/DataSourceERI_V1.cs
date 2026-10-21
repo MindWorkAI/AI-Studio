@@ -24,6 +24,11 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 {
     private static readonly ILogger<DataSourceERI_V1> LOGGER = Program.LOGGER_FACTORY.CreateLogger<DataSourceERI_V1>();
 
+    /// <summary>
+    /// What an export writes as the shared username when the data source has none to export.
+    /// </summary>
+    public const string SHARED_USERNAME_PLACEHOLDER = "<shared username>";
+
     public DataSourceERI_V1()
     {
     }
@@ -89,25 +94,36 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// An ERI data source has a single page. ERI v1 knows no offset, so a further page would have
+    /// to ask the server for all pages before it as well. A server may refuse more matches than its
+    /// retrieval process allows, which often is the very number configured here: it would refuse
+    /// every further page, and the model would hear that the data source could not be searched
+    /// rather than that there is nothing more.
+    /// </remarks>
+    public int GetLastPage() => 1;
+
+    /// <inheritdoc />
     public async Task<RetrievalPage> RetrieveDataAsync(string query, int page, ChatThread thread, CancellationToken token = default)
     {
-        var window = RetrievalPaging.GetWindowSize(page, this.MaxMatches);
+        var lastPage = this.GetLastPage();
+        if (page < 1 || page > lastPage)
+            throw new ArgumentOutOfRangeException(nameof(page), page, $"An ERI data source has pages from 1 to {lastPage}.");
+
         if (this.MaxMatches == 0)
             return RetrievalPage.EMPTY;
 
         //
         // ERI v1 knows no query apart from the latest user prompt, so the query takes its place; the
-        // thread still tells the server what the conversation is about. Nor does it know an offset:
-        // the server returns the whole window, and the page is cut from it here. Hence, the pages
-        // are only as stable as the order in which the server returns its matches. A server which
-        // returns fewer matches than asked for ends the paging early, which errs on the safe side.
+        // thread still tells the server what the conversation is about. Nor does it know an offset,
+        // so the data source has a single page, asking for exactly what the classic RAG process asks
+        // for, see GetLastPage:
         //
-        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, window, token);
+        var contexts = await this.RetrieveDataAsync(query, ContentType.TEXT, thread, this.MaxMatches, token);
         if (contexts is null)
             return RetrievalPage.EMPTY with { Gaps = [RetrievalGap.NOT_SEARCHED] };
 
-        var (pageContexts, hasMore) = RetrievalPaging.Cut(contexts, page, this.MaxMatches);
-        return new RetrievalPage(pageContexts, hasMore);
+        return new RetrievalPage(contexts.Take(this.MaxMatches).ToList(), false);
     }
 
     /// <returns>What the ERI server found, or null when it could not be searched.</returns>
@@ -150,6 +166,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Type = eriContext.ToRetrievalContentType(),
                                 Links = eriContext.Links,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
+                                SourceCategory = eriContext.Category ?? string.Empty,
                                 MatchedText = eriContext.MatchedContent,
                                 DataSourceName = eriContext.Name,
                                 SurroundingContent = eriContext.SurroundingContent,
@@ -164,6 +181,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                 Links = eriContext.Links,
                                 Source = eriContext.MatchedContent,
                                 Category = eriContext.Type.ToRetrievalContentCategory(),
+                                SourceCategory = eriContext.Category ?? string.Empty,
                                 SourceType = ContentImageSource.BASE64,
                                 DataSourceName = eriContext.Name,
                             });
@@ -178,15 +196,22 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 return genericRetrievalContexts;
             }
 
+            //
+            // The ERI client answers a cancellation like any other failure, since other callers
+            // pass their own timeout and expect an answer. Whoever cancelled the search, though,
+            // waits for it to stop; reporting the data source as not searched would carry on:
+            //
+            token.ThrowIfCancellationRequested();
             logger.LogWarning($"Was not able to retrieve data from the ERI data source '{this.Name}'. Message: {retrievalResponse.Message}");
             return null;
         }
 
+        token.ThrowIfCancellationRequested();
         logger.LogWarning($"Was not able to authenticate with the ERI data source '{this.Name}'. Message: {authResponse.Message}");
         return null;
     }
 
-    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, out DataSourceERI_V1 dataSource)
+    public static bool TryParseConfiguration(int idx, LuaTable table, Guid configPluginId, bool dryRun, out DataSourceERI_V1 dataSource)
     {
         dataSource = default;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -301,7 +326,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             EnterpriseConfigurationPluginId = configPluginId,
         };
 
-        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
+        return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource, dryRun);
     }
 
     /// <summary>
@@ -319,7 +344,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         switch (this.AuthMethod)
         {
             case AuthMethod.TOKEN:
-                secretLine = CreateSecretLine("Token", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.TOKEN), encryptedSecret);
                 break;
 
             case AuthMethod.USERNAME_PASSWORD:
@@ -332,13 +357,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
                 if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD)
                 {
-                    var username = string.IsNullOrWhiteSpace(this.Username) ? "<shared username>" : this.Username;
+                    var username = string.IsNullOrWhiteSpace(this.Username) ? SHARED_USERNAME_PLACEHOLDER : this.Username;
                     usernameLine = $"""
                                    ["Username"] = "{LuaTools.EscapeLuaString(username)}",
                                    """;
                 }
 
-                secretLine = CreateSecretLine("Password", encryptedSecret);
+                secretLine = CreateSecretLine(GetSecretFieldName(AuthMethod.USERNAME_PASSWORD), encryptedSecret);
                 break;
         }
 
@@ -360,15 +385,21 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                 """;
     }
 
-    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
+    /// <summary>
+    /// The field of a configuration which holds the encrypted secret of an auth method.
+    /// </summary>
+    /// <param name="authMethod">How the data source signs in.</param>
+    /// <returns>The name of the field, or an empty string for an auth method without a secret.</returns>
+    public static string GetSecretFieldName(AuthMethod authMethod) => authMethod switch
     {
-        var secretFieldName = dataSource.AuthMethod switch
-        {
-            AuthMethod.TOKEN => "Token",
-            AuthMethod.USERNAME_PASSWORD => "Password",
-            _ => string.Empty,
-        };
+        AuthMethod.TOKEN => "Token",
+        AuthMethod.USERNAME_PASSWORD => "Password",
+        _ => string.Empty,
+    };
 
+    private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource, bool dryRun)
+    {
+        var secretFieldName = GetSecretFieldName(dataSource.AuthMethod);
         if (string.IsNullOrWhiteSpace(secretFieldName))
             return true;
 
@@ -380,7 +411,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
         if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
         {
-            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} contains a plaintext {secretFieldName}. Only encrypted secrets (starting with 'ENC:') are supported. (Plugin ID: {configPluginId})");
             return false;
         }
 
@@ -396,6 +427,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             LOGGER.LogWarning($"Failed to decrypt the {secretFieldName} for data source {idx}. The encryption secret may be incorrect. (Plugin ID: {configPluginId})");
             return false;
         }
+
+        //
+        // A dry run only checks the configuration, so it queues nothing: the start which follows it
+        // would otherwise store the secret once more for every dry run before it:
+        //
+        if (dryRun)
+            return true;
 
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",

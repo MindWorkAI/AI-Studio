@@ -274,14 +274,15 @@ public partial class Plugins : MSGComponentBase
     private bool AllowPluginSharing => this.SettingsManager.ConfigurationData.App.AllowUserToSharePlugins;
 
     /// <summary>
-    /// Linux has no native share sheet, hence the plugin archive is exported to a location of the
-    /// user's choice there. The action must be labeled accordingly.
+    /// Where no native share sheet can be used, the plugin archive is exported to a location of the
+    /// user's choice instead: on Linux, which has none, and once the share sheet failed or did not
+    /// respond, until AI Studio restarts. The action must be labeled accordingly.
     /// </summary>
-    private static string SharePluginIcon => OperatingSystem.IsLinux() ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
+    private string SharePluginIcon => this.PluginShareService.UsesExport ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
 
-    private string SharePluginTooltip => OperatingSystem.IsLinux() ? this.T("Export plugin archive") : this.T("Share plugin archive");
+    private string SharePluginTooltip => this.PluginShareService.UsesExport ? this.T("Export plugin archive") : this.T("Share plugin archive");
 
-    private string SharePluginLockText => OperatingSystem.IsLinux() ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
+    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -370,26 +371,62 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
+            // A failed share sheet switches to the export, so we remember what this click does:
+            var isExport = this.PluginShareService.UsesExport;
             var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
-            if (shareResult.Cancelled)
-                return;
-
-            if (!shareResult.Success)
+            if (shareResult.Outcome is PluginShareOutcome.SHARE_SHEET_UNAVAILABLE)
             {
-                LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, OperatingSystem.IsLinux() ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
-                return;
+                // The runtime and NativeShareService already logged why the share sheet did not open:
+                if (!await this.ConfirmExportInsteadOfSharingAsync(shareResult.Issue))
+                    return;
+
+                isExport = true;
+                shareResult = await this.PluginShareService.ExportAsync(plugin, CancellationToken.None);
             }
 
-            // On Linux, the user chose the target location, so we confirm where the archive was stored:
-            if (OperatingSystem.IsLinux())
-                await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+            switch (shareResult.Outcome)
+            {
+                // On export, the user chose the target location, so we confirm where the archive was stored:
+                case PluginShareOutcome.EXPORTED:
+                    await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+                    break;
+
+                case PluginShareOutcome.FAILED:
+                    LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
+                    break;
+
+                // The share sheet takes it from here, and a canceled export needs no message. The
+                // export never reports an unavailable share sheet:
+                case PluginShareOutcome.SHARED:
+                case PluginShareOutcome.CANCELLED:
+                case PluginShareOutcome.SHARE_SHEET_UNAVAILABLE:
+                    break;
+            }
         }
         finally
         {
             this.isSharingPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
+    }
+
+    /// <summary>
+    /// Offers to export the plugin archive after the share sheet of the operating system failed or
+    /// did not respond.
+    /// </summary>
+    /// <param name="issue">Why the share sheet did not open.</param>
+    /// <returns>True when the user wants to export the archive instead.</returns>
+    private async Task<bool> ConfirmExportInsteadOfSharingAsync(string issue)
+    {
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(this.T("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Share dialog not available"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is not null && !dialogResult.Canceled;
     }
 
     private async Task ImportAssistantPluginAsync()
@@ -485,7 +522,16 @@ public partial class Plugins : MSGComponentBase
         await dialogReference.Result;
     }
 
-    private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
+    private async Task ShowPluginInfoAsync(IAvailablePlugin plugin)
+    {
+        var dialogParameters = new DialogParameters<PluginInfoDialog>
+        {
+            { x => x.Plugin, plugin },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<PluginInfoDialog>(string.Format(this.T("Plugin information: {0}"), plugin.Name), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+    }
 
     private PluginAssistants? TryGetAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == pluginId);
 

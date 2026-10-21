@@ -119,7 +119,7 @@ public partial class VisualBriefingAssistant
             { dialog => dialog.Message, T("The media file changed. Transcribe it again with the configured transcription provider?") },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;

@@ -25,12 +25,26 @@ internal interface IIndexedSourceIndexer : IDisposable
     public bool Supports(IDataSourceBase dataSource);
 
     /// <summary>
+    /// How much work one run does at most, before it leaves the rest to another one.
+    /// </summary>
+    /// <remarks>
+    /// All data sources share one queue, and only one run works at a time. A run which goes on for
+    /// hours holds up every other data source for as long, a mailbox whose sync is due among them.
+    /// So a run asks DocumentRunProgress.HasDoneItsShare before every document it is about to read,
+    /// and pauses through DocumentRunProgress.PauseRunAsync once the answer is yes.
+    ///
+    /// Nothing fails when a run forgets to ask. The embedding service therefore writes a warning into
+    /// the log when a run took more than twice its share without asking once.
+    /// </remarks>
+    public RunShare Share { get; }
+
+    /// <summary>
     /// Works through the documents of the data source of a run, from finding them to completing the run.
     /// </summary>
     /// <remarks>
-    /// A run may stop after its share of the work and leave the rest to another one, so a data source
-    /// which takes hours does not hold up all others for that long. Whether and when that run comes
-    /// is the embedding service's to decide.
+    /// A run stops after its share of the work, cf. Share, and leaves the rest to another one, so a
+    /// data source which takes hours does not hold up all others for that long. Whether and when that
+    /// run comes is the embedding service's to decide.
     /// </remarks>
     /// <param name="context">The prepared run, whose data source this indexer supports.</param>
     /// <param name="refreshMode">Why the run was started.</param>

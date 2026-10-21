@@ -92,6 +92,12 @@ public enum FileExtractionErrorCode
     NO_CONTENT,
 
     /// <summary>
+    /// A selected audio or video file could not be prepared for transcription for a reason which
+    /// lies in the file itself, such as a damaged container or an unsupported audio codec.
+    /// </summary>
+    MEDIA_PROCESSING_FAILED,
+
+    /// <summary>
     /// The caller no longer needs the content, e.g. because the user closed the dialog which
     /// asked for it. This is not a failure: nobody has to be told about it, which is why there
     /// is no user-facing message for this code.

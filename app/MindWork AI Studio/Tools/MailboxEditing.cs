@@ -39,16 +39,11 @@ public static class MailboxEditing
             return false;
 
         var storedMailbox = mailboxes[position];
-        var availableEmbeddings = settingsManager.GetAllEmbeddingProviders()
-            .Select(provider => new ConfigurationSelectData<string>(provider.Name, provider.Id))
-            .ToList();
-
         var dialogParameters = new DialogParameters<DataSourceMailboxDialog>
         {
             { x => x.IsEditing, true },
             { x => x.DataSource, storedMailbox },
-            { x => x.LockSource, await embeddingService.ShouldLockDataSourceOriginAsync(storedMailbox.Id) },
-            { x => x.AvailableEmbeddings, availableEmbeddings }
+            { x => x.LockSource, await embeddingService.ShouldLockMailboxOriginAsync(storedMailbox.Id) },
         };
 
         var dialogReference = await dialogService.ShowAsync<DataSourceMailboxDialog>(TB("Edit Mailbox"), dialogParameters, DialogOptions.FULLSCREEN);

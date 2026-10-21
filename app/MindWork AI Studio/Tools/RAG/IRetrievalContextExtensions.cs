@@ -1,6 +1,5 @@
 using System.Text;
 
-using AIStudio.Chat;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.RAG;
@@ -24,6 +23,9 @@ public static class IRetrievalContextExtensions
     {
         contextBuilder.AppendLine($"Data source name: {retrievalContext.DataSourceName}");
         contextBuilder.AppendLine($"Content category: {retrievalContext.Category}");
+        if(!string.IsNullOrWhiteSpace(retrievalContext.SourceCategory))
+            contextBuilder.AppendLine($"Source category: {retrievalContext.SourceCategory.ReplaceLineEndings(" ").Trim()}");
+
         contextBuilder.AppendLine($"Content type: {retrievalContext.Type}");
         contextBuilder.AppendLine($"Content path: {retrievalContext.Path}");
 
@@ -38,28 +40,62 @@ public static class IRetrievalContextExtensions
             contextBuilder.AppendLine($"- {link}");
     }
 
-    public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, CancellationToken token = default)
+    /// <summary>
+    /// Writes what the AI is told about an image which matched, in place of the image itself.
+    /// </summary>
+    /// <remarks>
+    /// The image is not passed on. Written as base64 text, it is nothing a model can look at, and
+    /// a single image would take more room than all other passages together: Semantic Search
+    /// left it out for its size, and the classic RAG process sent it along with every message.
+    /// The description above still tells where the image is, so the model can point the user to it.
+    /// </remarks>
+    /// <param name="contextBuilder">The builder to write into, after the description of the context.</param>
+    internal static void AppendImageMatch(StringBuilder contextBuilder)
+    {
+        contextBuilder.AppendLine();
+        contextBuilder.AppendLine("Matched image content: an image matched here, but it is not shown to you. Do not guess what it shows. When it matters for the answer, tell the user that an image matched, and where to find it, using the path and the links above.");
+    }
+
+    /// <summary>
+    /// Writes what the AI is told about several retrieval contexts, filtered for prompt injections.
+    /// </summary>
+    /// <param name="retrievalContexts">The contexts to describe.</param>
+    /// <param name="sb">The builder to write into, or null for a new one.</param>
+    /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Everything written into the builder so far.</returns>
+    public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         sb ??= new StringBuilder();
         var index = 0;
-        
+
         //
         // One report for the whole retrieval run: a query may pull in dozens of contexts, and
         // the user wants to know that something was filtered, not to acknowledge it per context.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using var reportingScope = guardService.BeginAction();
+        await using var retrievalScope = guardService.BeginAction(within: reportingScope);
 
         foreach(var retrievalContext in retrievalContexts)
         {
             index++;
-            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, token);
+            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, retrievalScope, token);
         }
 
         return sb.ToString();
     }
-    
-    public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, CancellationToken token = default)
+
+    /// <summary>
+    /// Writes what the AI is told about one retrieval context, filtered for prompt injections.
+    /// </summary>
+    /// <param name="retrievalContext">The context to describe.</param>
+    /// <param name="sb">The builder to write into, or null for a new one.</param>
+    /// <param name="index">The number of the context among all of them, or -1 when it stands alone.</param>
+    /// <param name="numTotalRetrievalContexts">How many contexts there are, or -1 when that is unknown.</param>
+    /// <param name="reportingScope">The action the context is retrieved for, or null when it is retrieved for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>Everything written into the builder so far.</returns>
+    public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         sb ??= new StringBuilder();
         var contextBuilder = new StringBuilder();
@@ -108,20 +144,9 @@ public static class IRetrievalContextExtensions
                 await FilterWhatWeHaveSoFar();
                 break;
 
-            case RetrievalImageContext imageContext:
-                //
-                // Filtering happens before the image is appended, and only covers the text
-                // around it. Base64 image data is not prose, and running it through the filter
-                // would have it treated as one enormous encoded carrier.
-                //
+            case RetrievalImageContext:
+                AppendImageMatch(contextBuilder);
                 await FilterWhatWeHaveSoFar();
-                contextBuilder.AppendLine();
-                contextBuilder.AppendLine("Matched image content as base64-encoded data:");
-                contextBuilder.AppendLine("````");
-                contextBuilder.AppendLine(await imageContext.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image
-                        : string.Empty);
-                contextBuilder.AppendLine("````");
                 break;
 
             default:
@@ -141,7 +166,7 @@ public static class IRetrievalContextExtensions
         //
         async Task FilterWhatWeHaveSoFar()
         {
-            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source);
+            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source, reportingScope);
             contextBuilder.Clear();
             contextBuilder.Append(sanitized);
         }

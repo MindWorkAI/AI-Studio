@@ -2,6 +2,7 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -23,24 +24,14 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalFile DataSource { get; set; }
 
-    /// <summary>
-    /// Whether the file this data source reads must stay as it is.
-    /// </summary>
-    /// <remarks>
-    /// Set once the index holds something for this data source. The embedding is not locked along
-    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
-    /// </remarks>
-    [Parameter]
-    public bool LockSource { get; set; }
-    
-    [Parameter]
-    public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     
@@ -59,7 +50,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private string dataId = Guid.NewGuid().ToString();
     private string dataName = string.Empty;
     private string dataDescription = string.Empty;
-    private bool dataUserAcknowledgedCloudEmbedding;
+    private CloudProcessing acknowledgedCloudProcessing;
     private string dataEmbeddingId = string.Empty;
     private string dataFilePath = string.Empty;
     private int dataMaxChunkTokenLength;
@@ -83,6 +74,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         this.dataSourceValidation = new()
         {
             GetSelectedCloudEmbedding = () => this.SelectedCloudEmbedding,
+            GetSelectedCloudTranscription = () => this.SelectedCloudTranscription,
             GetSelectedEmbeddingProvider = () => this.SelectedEmbedding,
             GetConfidenceLevel = () => this.dataConfidenceLevel,
             GetSettingsManager = () => this.SettingsManager,
@@ -120,6 +112,9 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         }
         
         await base.OnInitializedAsync();
+
+        // The embedding providers may change while the dialog is open, e.g., through a configuration plugin:
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -141,18 +136,65 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
 
     #endregion
 
-    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
-        return provider == EmbeddingProvider.NONE ? null : provider;
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                // The embedding providers are listed anew, and the fields checked so far get a fresh verdict once they hold the new values:
+                this.revalidateAfterRender = true;
+                this.StateHasChanged();
+                break;
+        }
+
+        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
-    
+
+    #endregion
+
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
-    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
+    /// <summary>
+    /// Whether the selected file is an audio or video file, which the data source transcribes.
+    /// </summary>
+    private bool SelectsMedia => PersistentMediaTranscript.IsMediaPath(this.dataFilePath);
+
+    /// <summary>
+    /// The transcription provider which may hear the audio and video files of this data source, or null.
+    /// </summary>
+    private TranscriptionProvider? AllowedTranscriptionProvider => this.MediaTranscriptionService.GetUsableProvider(this.CreateDataSource());
+
+    private bool SelectedCloudTranscription => this.SelectsMedia && this.AllowedTranscriptionProvider is { IsSelfHosted: false };
+
+    private string CloudTranscriptionProviderName => this.SelectedCloudTranscription ? this.AllowedTranscriptionProvider?.Name ?? string.Empty : string.Empty;
+
+    private CloudProcessing CurrentCloudProcessing => (this.SelectedCloudEmbedding ? CloudProcessing.EMBEDDING : CloudProcessing.NONE) | (this.SelectedCloudTranscription ? CloudProcessing.TRANSCRIPTION : CloudProcessing.NONE);
+
+    /// <remarks>
+    /// The acknowledgment holds for the providers it was given for, cf. CloudProcessingExtensions.Covers.
+    /// </remarks>
+    private bool UserAcknowledgedCloudProcessing
+    {
+        get => this.acknowledgedCloudProcessing.Covers(this.CurrentCloudProcessing);
+        set => this.acknowledgedCloudProcessing = value ? this.CurrentCloudProcessing : CloudProcessing.NONE;
+    }
+
+    /// <summary>
+    /// Why the selected audio or video file would not be indexed, or null when it would.
+    /// </summary>
+    private string? MediaTranscriptionHint => !this.SelectsMedia
+        ? null
+        : this.MediaTranscriptionService.GetUsableProvider() is null
+            ? T("This audio or video file is skipped until you choose a transcription provider in the settings.")
+            : this.AllowedTranscriptionProvider is null
+                ? T("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
+                : null;
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
 
@@ -181,9 +223,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         Type = DataSourceType.LOCAL_FILE,
         EmbeddingId = this.dataEmbeddingId,
 
-        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
-        // indexed data source somewhere else:
-        FilePath = this.CanChangeSource ? this.dataFilePath : this.DataSource.FilePath,
+        FilePath = this.dataFilePath,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
@@ -198,6 +238,14 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         if (!this.dataIsValid)
             return;
 
+        await this.StoreValidatedDataSourceAsync();
+    }
+
+    /// <summary>
+    /// Continues Save after form validation, asking before the draft is returned to its caller.
+    /// </summary>
+    internal async Task StoreValidatedDataSourceAsync()
+    {
         var addedDataSource = this.CreateDataSource();
 
         //
@@ -264,6 +312,23 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
 
         // The token limits are only checked while they are shown. The field learns the limit set
         // above only with the next render, so it is checked after that:
+        this.revalidateAfterRender = true;
+    }
+
+    /// <summary>
+    /// Selects the embedding provider the user just added from within this dialog, so that what they
+    /// entered so far can be saved right away.
+    /// </summary>
+    /// <remarks>
+    /// Only when no existing provider is selected, which includes the provider of a data source that
+    /// was deleted since. Like the token limit in ToggleExpertSettings, the field learns its new value
+    /// only with the next render, so it is checked after that.
+    /// </remarks>
+    private void SelectAddedEmbeddingProvider(EmbeddingProvider provider)
+    {
+        if (this.SelectedEmbedding is null)
+            this.dataEmbeddingId = provider.Id;
+
         this.revalidateAfterRender = true;
     }
 

@@ -1,6 +1,8 @@
 using AIStudio.Components;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.UserAPIKeys;
 
 using Microsoft.AspNetCore.Components;
 
@@ -15,13 +17,21 @@ public partial class Home : MSGComponentBase
 
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private RustService RustService { get; init; } = null!;
     
     private string LastChangeContent { get; set; } = string.Empty;
     
     private TextItem[] itemsAdvantages = [];
 
     private List<DataIntroduction> introductions = [];
-    
+
+    private IReadOnlyList<PendingUserAPIKeyGroup> pendingUserAPIKeyGroups = [];
+    private Task initialReadOfPendingUserAPIKeys = Task.CompletedTask;
+    private bool hasReadPendingUserAPIKeys;
+    private int pendingUserAPIKeysGeneration;
+
     private string expandedPanelId = string.Empty;
     private int expansionPanelsRenderKey;
 
@@ -43,19 +53,37 @@ public partial class Home : MSGComponentBase
         // Read the last change content asynchronously
         // without blocking the UI thread:
         this.ReadLastChangeAsync().Observe($"{nameof(Home)}: reading the last change");
+
+        // Reading the stored API keys takes a moment, so the page renders the other panels first:
+        this.initialReadOfPendingUserAPIKeys = this.RefreshPendingUserAPIKeysAsync();
+        await this.initialReadOfPendingUserAPIKeys;
     }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        await base.OnAfterRenderAsync(firstRender);
         if (this.SettingsManager.StartupStartPageRedirectHandled || !this.SettingsManager.HasCompletedInitialSettingsLoad)
-            return base.OnAfterRenderAsync(firstRender);
+            return;
 
         this.SettingsManager.StartupStartPageRedirectHandled = true;
         var startPageRoute = this.SettingsManager.ConfigurationData.App.StartPage.ToRoute();
-        if (!string.IsNullOrWhiteSpace(startPageRoute))
-            this.NavigationManager.NavigateTo(startPageRoute, replace: true);
+        if (string.IsNullOrWhiteSpace(startPageRoute))
+            return;
 
-        return base.OnAfterRenderAsync(firstRender);
+        //
+        // The home page asks for missing API keys of the organization's providers. Stay here while
+        // one is missing, so the user sees that request no matter the chosen start page. The page
+        // reads the keys while it initializes; when the settings were not loaded by then, it reads
+        // them now:
+        //
+        await this.initialReadOfPendingUserAPIKeys;
+        if (!this.hasReadPendingUserAPIKeys)
+            await this.RefreshPendingUserAPIKeysAsync();
+
+        if (this.pendingUserAPIKeyGroups.Count > 0)
+            return;
+
+        this.NavigationManager.NavigateTo(startPageRoute, replace: true);
     }
 
     private void InitializeAdvantagesItems()
@@ -63,7 +91,7 @@ public partial class Home : MSGComponentBase
         this.itemsAdvantages = [
             new(this.T("Free of charge"), this.T("The app is free to use, both for personal and commercial purposes.")),
             new(this.T("Democratization of AI"), this.T("We want to contribute to the democratization of AI. MindWork AI Studio runs even on low-cost hardware, including computers around 100 EUR such as Raspberry Pi. This makes the app and its full feature set accessible to people and families with limited budgets. You can start with local LLMs or use affordable cloud models.")),
-            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")),
+            new(this.T("Independence"), this.T("You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT-6, GPT-5, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental), IONOS, LiteLLM, Requesty, Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, or llmman. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.")),
             new(this.T("Assistants"), this.T("You just want to quickly translate a text? AI Studio has so-called assistants for such and other tasks. No prompting is necessary when working with these assistants.")),
             new(T("Tools"), T("AI models can use tools on their own, such as Web Search, Read Web Page, or Search Confluence. When you ask something a model cannot answer from what it knows, it looks it up and answers with the sources it used. You decide which tools a model may use, and you can watch it work.")),
             new(T("Voice input"), T("Dictate your messages instead of typing them, and have your recordings as well as audio and video files transcribed. You choose the transcription provider, including one you host yourself.")),
@@ -87,12 +115,14 @@ public partial class Home : MSGComponentBase
             case Event.PLUGINS_RELOADED:
                 this.InitializeAdvantagesItems();
                 this.RefreshIntroductionPanels();
+                await this.RefreshPendingUserAPIKeysAsync();
                 this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
 
             case Event.CONFIGURATION_CHANGED:
                 this.RefreshIntroductionPanels();
+                await this.RefreshPendingUserAPIKeysAsync();
                 this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
@@ -106,7 +136,34 @@ public partial class Home : MSGComponentBase
         this.introductions = PluginFactory.GetIntroductions().ToList();
     }
 
+    /// <summary>
+    /// Reads which providers of the organization wait for the API key of the user. When the configuration
+    /// plugins of these providers change, the page opens the first panel which asks for a key.
+    /// </summary>
+    private async Task RefreshPendingUserAPIKeysAsync()
+    {
+        // Which providers exist is unknown until the settings are loaded:
+        if (!this.SettingsManager.HasCompletedInitialSettingsLoad)
+            return;
+
+        // Several events may ask for a refresh at once; only the latest answer counts:
+        var generation = ++this.pendingUserAPIKeysGeneration;
+        var groups = await PendingUserAPIKeys.FindAsync(this.SettingsManager, this.RustService);
+        if (generation != this.pendingUserAPIKeysGeneration)
+            return;
+
+        var hasChanged = !groups.Select(group => group.ConfigPluginId).SequenceEqual(this.pendingUserAPIKeyGroups.Select(group => group.ConfigPluginId));
+        this.pendingUserAPIKeyGroups = groups;
+        this.hasReadPendingUserAPIKeys = true;
+        if (!hasChanged)
+            return;
+
+        this.EnsureDefaultExpandedPanel();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
     private bool HasVisibleHomePanels =>
+        this.pendingUserAPIKeyGroups.Count > 0 ||
         this.SettingsManager.ConfigurationData.App.ShowIntroduction ||
         this.introductions.Count > 0 ||
         this.SettingsManager.ConfigurationData.App.ShowLastChangelog ||
@@ -115,6 +172,11 @@ public partial class Home : MSGComponentBase
 
     private string GetDefaultExpandedPanelId()
     {
+        // A missing API key keeps the providers of the organization from working, so it comes first:
+        var firstPendingUserAPIKeyGroup = this.pendingUserAPIKeyGroups.FirstOrDefault();
+        if (firstPendingUserAPIKeyGroup is not null)
+            return UserAPIKeyPanelId(firstPendingUserAPIKeyGroup);
+
         if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
             return PANEL_ID_BUILT_IN_INTRODUCTION;
 
@@ -153,6 +215,8 @@ public partial class Home : MSGComponentBase
     }
 
     private static string IntroductionPanelId(DataIntroduction introduction) => $"introduction:{introduction.Id}";
+
+    private static string UserAPIKeyPanelId(PendingUserAPIKeyGroup group) => $"user-api-key:{group.ConfigPluginId}";
 
     private async Task ReadLastChangeAsync()
     {

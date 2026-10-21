@@ -52,6 +52,9 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
 
     public override Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token) => Task.CompletedTask;
 
+    public override Task RelocateFileAsync(string dataSourceId, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
+        Task.FromException(new InvalidOperationException(unavailableReason ?? "The index of the data sources is not available."));
+
     public override Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token) => Task.CompletedTask;
 
     public override Task UpsertPermanentFailureAsync(string dataSourceId, PermanentIndexingFailure failure, CancellationToken token) => Task.CompletedTask;
@@ -66,6 +69,15 @@ public sealed partial class NoIndexStoreClient(string name, string? unavailableR
     public override Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 
     public override Task<long?> GetTotalChunkCountAsync(CancellationToken token) => Task.FromResult<long?>(null);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Unlike the other methods, this one does not pretend success. A backup without the index would
+    /// still take the vector stores along, and after a restore, they would belong to nothing the index
+    /// knows. Whoever makes the backup decides what to do instead.
+    /// </remarks>
+    public override Task<string> BackupToDirectoryAsync(string targetDirectory, CancellationToken token) =>
+        Task.FromException<string>(new InvalidOperationException(unavailableReason ?? "The index of the data sources is not available."));
 
     public override void Dispose()
     {

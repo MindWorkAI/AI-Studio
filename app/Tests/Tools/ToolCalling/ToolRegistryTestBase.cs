@@ -139,8 +139,16 @@ public abstract class ToolRegistryTestBase
             return ValueTask.FromResult(resolve is null ? registeredDefinition.Function : resolve(registeredDefinition));
         }
 
-        public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition registeredDefinition, ToolResolutionContext context, CancellationToken token = default) =>
-            ValueTask.FromResult(resolveInstructions is null ? registeredDefinition.SystemPromptInstructions : resolveInstructions(registeredDefinition));
+        /// <summary>
+        /// The context the tool was last asked for its instructions in, or null before that.
+        /// </summary>
+        public ToolResolutionContext? LastInstructionsContext { get; private set; }
+
+        public ValueTask<string> ResolveSystemPromptInstructionsAsync(ToolDefinition registeredDefinition, ToolResolutionContext context, CancellationToken token = default)
+        {
+            this.LastInstructionsContext = context;
+            return ValueTask.FromResult(resolveInstructions is null ? registeredDefinition.SystemPromptInstructions : resolveInstructions(registeredDefinition));
+        }
 
         public IReadOnlySet<string> SensitiveTraceArgumentNames { get; } = new HashSet<string>(StringComparer.Ordinal);
 

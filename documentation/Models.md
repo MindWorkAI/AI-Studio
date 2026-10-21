@@ -108,7 +108,7 @@ Both are documented for administrators in `documentation/Enterprise IT.md`. Mode
 
 ## Live Metadata From The Model Lists
 
-Some providers state the context window in the model list they answer with anyway. AI Studio reads it where it is there: OpenRouter (`context_length`), Groq (`context_window`), Mistral (`max_context_length`), the Hugging Face router (per inference provider), and any OpenAI-compatible self-hosted engine that fills `max_model_len`, which vLLM does.
+Some providers state the context window in the model list they answer with anyway. AI Studio reads it where it is there: OpenRouter (`context_length`), Groq (`context_window`), Requesty (`context_window`), Mistral (`max_context_length`), the Hugging Face router (per inference provider), and any OpenAI-compatible self-hosted engine that fills `max_model_len`, which vLLM does.
 
 Three things to know when adding another one:
 

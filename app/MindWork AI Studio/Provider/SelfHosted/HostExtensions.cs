@@ -11,6 +11,7 @@ public static class HostExtensions
         Host.WHISPER_CPP => "whisper.cpp",
         Host.OLLAMA => "ollama",
         Host.VLLM => "vLLM",
+        Host.LLMMAN => "llmman",
 
         _ => "Unknown",
     };
@@ -47,6 +48,7 @@ public static class HostExtensions
             case Host.VLLM:
             case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
+            case Host.LLMMAN:
                 return true;
         }
     }
@@ -58,6 +60,7 @@ public static class HostExtensions
             case Host.LM_STUDIO:
             case Host.OLLAMA:
             case Host.VLLM:
+            case Host.LLMMAN:
                 return true;
             
             default:
@@ -73,11 +76,43 @@ public static class HostExtensions
             case Host.OLLAMA:
             case Host.VLLM:
             case Host.WHISPER_CPP:
+            case Host.LLMMAN:
                 return true;
-            
+
             default:
             case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Whether the engine answers the models route with the models it serves.
+    /// </summary>
+    /// <remarks>
+    /// This is the only place which says so. The provider asks it before it loads the models of a
+    /// chat, embedding, or transcription list, and the dialogs ask it before they offer to reload
+    /// them; a new engine therefore needs no more than its line here. whisper.cpp is not among
+    /// them: it serves the one model it was started with and has no route to list it, so the
+    /// provider offers that model under a fixed name instead. llama.cpp is, even though builds
+    /// older than the route answer it with 404; the provider handles those builds itself.
+    /// </remarks>
+    /// <param name="host">The engine.</param>
+    /// <returns>True when the models can be loaded from the engine; otherwise, false.</returns>
+    public static bool IsModelListSupported(this Host host)
+    {
+        switch (host)
+        {
+            case Host.LLAMA_CPP:
+            case Host.OLLAMA:
+            case Host.LM_STUDIO:
+            case Host.VLLM:
+            case Host.LLMMAN:
+                return true;
+
+            default:
+            case Host.NONE:
+            case Host.WHISPER_CPP:
                 return false;
         }
     }
