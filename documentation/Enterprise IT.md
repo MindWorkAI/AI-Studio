@@ -797,9 +797,9 @@ Semantic search only works where `semantic_search` can be offered: the model has
 
 When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools, data sources, a provider, or a profile, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
 
-## Chat templates with a provider and a profile
+## Chat templates with a provider, a profile, and a workspace
 
-A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, and a profile that suits mail work, so that users no longer switch both by hand for every chat.
+A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with, and the workspace that keeps such chats. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, and a profile that suits mail work, so that users no longer switch both by hand for every chat.
 
 | What the template says | What a chat started with it does |
 |---|---|
@@ -808,10 +808,14 @@ A chat template may also decide the provider, and with it the model, and the pro
 | no `ProfileId` at all | starts with the profile the user has set as their default |
 | `ProfileId` = `00000000-0000-0000-0000-000000000000` | starts without a profile, whatever that default says |
 | `ProfileId` present | starts with that profile, if it exists |
+| no `WorkspaceName` at all | goes where it would go anyway |
+| `WorkspaceName` present | goes into that workspace, which is created when it does not exist yet, wherever the chat would otherwise be a disappearing chat |
 
 Both are a preselection, not a lock: users change them in the chat as usual. A provider or profile that does not exist, and a provider below the confidence level of chats, are ignored, and the chat starts as if the template said nothing. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
 
 The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
+
+The workspace goes by its name, because a workspace has an ID of its own on every computer. It fills in only where a chat would otherwise be a disappearing chat: the first chat when users open the chat page, a new chat they start outside the workspaces, and picking the template in a new chat. A chat users start in a workspace on purpose, for example, from the workspace list, stays there, and so does a chat of an assistant chat launcher that names a workspace of its own. While users have switched workspaces off in their workspace settings, the template names no workspace.
 
 ## Mailboxes
 

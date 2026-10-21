@@ -1363,11 +1363,12 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     },
 -- }
 
--- An example chat template which preselects a provider and a profile:
--- Both are optional and independent of each other, and leaving one out keeps what a chat
--- starts with anyway. They are a preselection, not a limit: users change either of them in
--- the chat as usual. Both may name a provider or profile of this configuration, which keeps
--- its ID on every computer, or one of another configuration of your organization.
+-- An example chat template which preselects a provider, a profile, and a workspace:
+-- All three are optional and independent of each other, and leaving one out keeps what a
+-- chat starts with anyway. They are a preselection, not a limit: users change the provider
+-- and the profile in the chat as usual, and move the chat to another workspace. The IDs may
+-- name a provider or profile of this configuration, which keeps its ID on every computer, or
+-- one of another configuration of your organization.
 -- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
 --     ["Id"] = "00000000-0000-0000-0000-000000000003",
 --     ["Name"] = "Mail Assistant",
@@ -1387,6 +1388,13 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- the user chose as their default. An ID which resolves to nothing is ignored, and so
 --     -- is the whole field when AllowProfileUsage is false.
 --     ["ProfileId"] = "00000000-0000-0000-0000-000000000000",
+--
+--     -- Optional: the workspace, by its name, that keeps the chats started with this template.
+--     -- The workspace is created when it does not exist yet. It only applies where a chat would
+--     -- otherwise be a disappearing chat: a chat users start in a workspace on purpose, for
+--     -- example, from the workspace list, stays there, and so does every chat while workspaces
+--     -- are switched off. An assistant chat launcher which names a workspace keeps its own.
+--     ["WorkspaceName"] = "Mails",
 -- }
 
 -- Introduction texts shown as expansion panels on the welcome page:
