@@ -2,13 +2,13 @@ namespace AIStudio.Settings;
 
 /// <summary>
 /// Resolves a file a configuration plugin names in a setting, such as the PowerPoint template of the
-/// Slide Planner.
+/// Slide Planner or the icon of a provider.
 /// </summary>
 /// <remarks>
 /// A plugin may ship the file itself, next to its plugin.lua, and name it by a path relative to its
 /// directory. Such a path has to stay inside that directory, so a plugin cannot reach an arbitrary
 /// file elsewhere on the system through it. An absolute path, e.g., on a network share, stays as
-/// the organization wrote it.
+/// the organization wrote it, where the setting allows one.
 /// </remarks>
 internal static class PluginFilePath
 {
@@ -34,28 +34,49 @@ internal static class PluginFilePath
             return true;
         }
 
+        return TryResolveInside(path, pluginPath, out resolvedPath, out issue);
+    }
+
+    /// <summary>
+    /// Resolves a path relative to the directory of a plugin, which has to name an existing file
+    /// inside that directory.
+    /// </summary>
+    /// <remarks>
+    /// Every file a plugin ships itself is checked here, so that all of them follow the same rules:
+    /// no '..' segments, and no link along the path which leads out of the plugin directory.
+    /// </remarks>
+    /// <param name="relativePath">The path relative to the plugin directory; both kinds of slashes work.</param>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <param name="fullPath">The full path of the file; empty when the path cannot be used.</param>
+    /// <param name="issue">Why the path cannot be used; empty on success.</param>
+    /// <returns>Whether the path names a file inside the plugin directory.</returns>
+    public static bool TryResolveInside(string relativePath, string pluginPath, out string fullPath, out string issue)
+    {
+        fullPath = string.Empty;
+        issue = string.Empty;
+
         if (string.IsNullOrWhiteSpace(pluginPath))
         {
             issue = "The relative path cannot be resolved because the plugin directory is unknown.";
             return false;
         }
 
-        var relativePath = path
+        var normalizedPath = relativePath
             .Replace('/', Path.DirectorySeparatorChar)
             .Replace('\\', Path.DirectorySeparatorChar);
 
-        if (relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."))
+        if (normalizedPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."))
         {
             issue = "The relative path must not contain '..' path segments.";
             return false;
         }
 
         string pluginRoot;
-        string fullPath;
+        string candidatePath;
         try
         {
             pluginRoot = Path.GetFullPath(pluginPath);
-            fullPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
+            candidatePath = Path.GetFullPath(Path.Combine(pluginRoot, normalizedPath));
         }
         catch (Exception e)
         {
@@ -63,13 +84,13 @@ internal static class PluginFilePath
             return false;
         }
 
-        if (!IsInsideDirectory(pluginRoot, fullPath))
+        if (!PathTools.IsInsideDirectory(pluginRoot, candidatePath))
         {
             issue = "The relative path points outside of the plugin directory.";
             return false;
         }
 
-        if (!File.Exists(fullPath))
+        if (!File.Exists(candidatePath))
         {
             issue = "The file does not exist in the plugin directory.";
             return false;
@@ -77,7 +98,7 @@ internal static class PluginFilePath
 
         try
         {
-            if (!LinksStayInsideDirectory(pluginRoot, fullPath))
+            if (!LinksStayInsideDirectory(pluginRoot, candidatePath))
             {
                 issue = "The relative path contains a link that points outside of the plugin directory.";
                 return false;
@@ -89,14 +110,14 @@ internal static class PluginFilePath
             return false;
         }
 
-        resolvedPath = fullPath;
+        fullPath = candidatePath;
         return true;
     }
 
     /// <summary>
     /// Whether no link along the path leads out of the root directory.
     /// </summary>
-    internal static bool LinksStayInsideDirectory(string rootDirectory, string filePath)
+    private static bool LinksStayInsideDirectory(string rootDirectory, string filePath)
     {
         var relativePath = Path.GetRelativePath(rootDirectory, filePath);
         var currentPath = Path.GetFullPath(rootDirectory);
@@ -105,21 +126,10 @@ internal static class PluginFilePath
             currentPath = Path.Combine(currentPath, segment);
             FileSystemInfo pathInfo = Directory.Exists(currentPath) ? new DirectoryInfo(currentPath) : new FileInfo(currentPath);
             var finalTarget = pathInfo.ResolveLinkTarget(true);
-            if (finalTarget is not null && !IsInsideDirectory(rootDirectory, finalTarget.FullName))
+            if (finalTarget is not null && !PathTools.IsInsideDirectory(rootDirectory, finalTarget.FullName))
                 return false;
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Whether the path lies inside the root directory.
-    /// </summary>
-    internal static bool IsInsideDirectory(string rootDirectory, string path)
-    {
-        var root = Path.GetFullPath(rootDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        var target = Path.GetFullPath(path);
-        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-        return target.StartsWith(root, comparison);
     }
 }

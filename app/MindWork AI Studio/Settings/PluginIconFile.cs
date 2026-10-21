@@ -27,52 +27,15 @@ internal static class PluginIconFile
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(pluginPath))
-        {
-            issue = "The icon path cannot be resolved because the configuration plugin directory is unknown.";
-            return false;
-        }
-
-        var relativePath = iconPath
-            .Replace('/', Path.DirectorySeparatorChar)
-            .Replace('\\', Path.DirectorySeparatorChar);
-
-        if (relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."))
-        {
-            issue = "The icon path must not contain '..' path segments.";
-            return false;
-        }
-
-        string pluginRoot;
-        string resolvedPath;
-        try
-        {
-            pluginRoot = Path.GetFullPath(pluginPath);
-            resolvedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
-        }
-        catch (Exception e)
-        {
-            issue = $"The icon path is invalid: {e.Message}";
-            return false;
-        }
-
-        if (!PathTools.IsInsideDirectory(pluginRoot, resolvedPath))
-        {
-            issue = "The icon path points outside of the configuration plugin directory.";
-            return false;
-        }
-
-        if (!string.Equals(Path.GetExtension(resolvedPath), ".svg", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Path.GetExtension(iconPath), ".svg", StringComparison.OrdinalIgnoreCase))
         {
             issue = "The icon file must use the .svg extension.";
             return false;
         }
 
-        if (!File.Exists(resolvedPath))
-        {
-            issue = "The icon file does not exist.";
+        // The same rules as for every other file a plugin ships:
+        if (!PluginFilePath.TryResolveInside(iconPath, pluginPath, out var resolvedPath, out issue))
             return false;
-        }
 
         try
         {
@@ -81,12 +44,6 @@ internal static class PluginIconFile
             if (fileInfo.Length is <= 0 or > SvgIcon.MAX_ICON_SIZE_BYTES)
             {
                 issue = $"The icon file must be between 1 byte and {SvgIcon.MAX_ICON_SIZE_BYTES / 1024} KiB.";
-                return false;
-            }
-
-            if (!PluginFilePath.LinksStayInsideDirectory(pluginRoot, resolvedPath))
-            {
-                issue = "The icon path contains a link that points outside of the configuration plugin directory.";
                 return false;
             }
 

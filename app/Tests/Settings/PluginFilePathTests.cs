@@ -72,4 +72,20 @@ public sealed class PluginFilePathTests
             Assert.That(PluginFilePath.TryResolve("Corporate.pptx", string.Empty, out _, out _), Is.False, "Without the plugin directory, a relative path means nothing.");
         });
     }
+
+    [Test]
+    public void APathWhichHasToStayInsideThePluginLeadsToNothingElse()
+    {
+        var absolutePath = Path.Combine(Path.GetTempPath(), "somewhere", "Corporate.potx");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(PluginFilePath.TryResolveInside("templates\\Corporate.potx", this.pluginDirectory, out var inFolder, out var issue), Is.True, issue);
+            Assert.That(inFolder, Is.EqualTo(Path.Combine(Path.GetFullPath(this.pluginDirectory), "templates", "Corporate.potx")));
+            Assert.That(PluginFilePath.TryResolveInside(absolutePath, this.pluginDirectory, out var absolute, out issue), Is.False, "Where only a file of the plugin will do, an absolute path is no way out.");
+            Assert.That(issue, Does.Contain("outside"));
+            Assert.That(absolute, Is.Empty);
+            Assert.That(PluginFilePath.TryResolveInside(string.Empty, this.pluginDirectory, out _, out _), Is.False, "An empty path names no file.");
+        });
+    }
 }
