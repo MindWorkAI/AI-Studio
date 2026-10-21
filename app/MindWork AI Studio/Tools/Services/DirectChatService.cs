@@ -17,19 +17,24 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (assistantPlugin.ChatLaunchConfiguration is not { } launchConfiguration)
             return new(null, TB("The assistant plugin does not contain a valid chat launch configuration."));
 
-        var providerResult = this.ResolveProvider(launchConfiguration.ProviderId);
-        if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
-            return new(null, providerResult.ErrorMessage);
-
-        var profileResult = this.ResolveProfile(launchConfiguration.ProfileId);
-        var profile = profileResult.Profile;
-        if (profile is null)
-            return new(null, profileResult.ErrorMessage);
-
+        //
+        // The chat template comes first, because it may preselect the provider and the profile as
+        // well. When it does, it wins over the launcher — the same rule as for the tools and the
+        // data sources, so that nobody has to remember two of them:
+        //
         var chatTemplateResult = this.ResolveChatTemplate(launchConfiguration.ChatTemplateId);
         var chatTemplate = chatTemplateResult.ChatTemplate;
         if (chatTemplate is null)
             return new(null, chatTemplateResult.ErrorMessage);
+
+        var providerResult = this.ResolveProvider(assistantPlugin, chatTemplate, launchConfiguration.ProviderId);
+        if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
+            return new(null, providerResult.ErrorMessage);
+
+        var profileResult = this.ResolveProfile(assistantPlugin, chatTemplate, launchConfiguration.ProfileId);
+        var profile = profileResult.Profile;
+        if (profile is null)
+            return new(null, profileResult.ErrorMessage);
 
         //
         // A chat template that forbids profiles wins over a configured profile: the chat disables
@@ -115,7 +120,34 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: dataSourcesWereChosen), string.Empty);
     }
 
-    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(Guid? providerId)
+    /// <remarks>
+    /// A provider of the chat template which is gone, or which may not be used for chats, does not
+    /// stop the launch: the chat then starts as if the template named none, so the launcher decides
+    /// after all. Only what the launcher names itself is an error when it cannot be used, because
+    /// that is the one choice its author can fix in the launcher.
+    /// </remarks>
+    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(PluginAssistants assistantPlugin, ChatTemplate chatTemplate, Guid? launcherProviderId)
+    {
+        var templateProvider = settingsManager.GetChatTemplateProvider(chatTemplate);
+        if (templateProvider != ProviderSettings.NONE)
+        {
+            if (launcherProviderId is not null)
+                logger.LogWarning(
+                    "Assistant plugin '{PluginName}' selects the provider '{LauncherProviderId}', but its chat template '{ChatTemplateName}' preselects a provider of its own. The chat starts with the provider of that template.",
+                    assistantPlugin.Name, launcherProviderId, chatTemplate.GetSafeName());
+
+            return new(templateProvider, true, string.Empty);
+        }
+
+        if (chatTemplate.ProviderId is not null)
+            logger.LogWarning(
+                "The chat template '{ChatTemplateName}' preselects the provider '{TemplateProviderId}', which does not exist or may not be used for chats. The chat starts as if the template named no provider.",
+                chatTemplate.GetSafeName(), chatTemplate.ProviderId);
+
+        return this.ResolveLauncherProvider(launcherProviderId);
+    }
+
+    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveLauncherProvider(Guid? providerId)
     {
         //
         // The launcher does not name a provider, so it wants the chat defaults. We resolve them
@@ -140,7 +172,32 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(provider, true, string.Empty);
     }
 
-    private (Profile? Profile, string ErrorMessage) ResolveProfile(Guid? profileId)
+    /// <remarks>
+    /// The same as for the provider: a profile of the chat template which is gone leaves the choice
+    /// to the launcher. A template which does not allow profiles names none here, and the launch
+    /// below drops the profile of the launcher for it as well.
+    /// </remarks>
+    private (Profile? Profile, string ErrorMessage) ResolveProfile(PluginAssistants assistantPlugin, ChatTemplate chatTemplate, Guid? launcherProfileId)
+    {
+        if (settingsManager.GetChatTemplateProfile(chatTemplate) is { } templateProfile)
+        {
+            if (launcherProfileId is not null)
+                logger.LogWarning(
+                    "Assistant plugin '{PluginName}' selects the profile '{LauncherProfileId}', but its chat template '{ChatTemplateName}' preselects a profile of its own. The chat starts with the profile of that template.",
+                    assistantPlugin.Name, launcherProfileId, chatTemplate.GetSafeName());
+
+            return new(templateProfile, string.Empty);
+        }
+
+        if (chatTemplate.AllowProfileUsage && chatTemplate.ProfileId is not null)
+            logger.LogWarning(
+                "The chat template '{ChatTemplateName}' preselects the profile '{TemplateProfileId}', which does not exist. The chat starts as if the template named no profile.",
+                chatTemplate.GetSafeName(), chatTemplate.ProfileId);
+
+        return this.ResolveLauncherProfile(launcherProfileId);
+    }
+
+    private (Profile? Profile, string ErrorMessage) ResolveLauncherProfile(Guid? profileId)
     {
         if (profileId is null)
             return new(settingsManager.GetPreselectedProfile(Components.CHAT), string.Empty);

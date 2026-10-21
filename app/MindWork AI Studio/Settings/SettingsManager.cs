@@ -877,6 +877,49 @@ public sealed class SettingsManager
         return this.GetChatTemplateById(this.ConfigurationData.App.PreselectedChatTemplate);
     }
 
+    /// <summary>
+    /// Returns the profile a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null whenever the template has nothing to say which could be used: it names no profile, it
+    /// does not allow profiles, or the profile it names is gone. The chat then keeps the profile it
+    /// would have without the template. Starting without a profile is an answer of its own, and it
+    /// comes back as <see cref="Profile.NO_PROFILE"/>.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the usual one.</returns>
+    public Profile? GetChatTemplateProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        if (string.Equals(chatTemplate.ProfileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+            return Profile.NO_PROFILE;
+
+        var profile = this.GetProfileById(chatTemplate.ProfileId);
+        return profile == Profile.NO_PROFILE ? null : profile;
+    }
+
+    /// <summary>
+    /// Returns the provider a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// The template is no way around the confidence levels: a provider which may not be used for
+    /// chats comes back as <see cref="Provider.NONE"/>, just like one which is gone or one the
+    /// template does not name at all. The chat then keeps the provider it would have without the
+    /// template.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The provider to start with, or Provider.NONE to keep the usual one.</returns>
+    public Provider GetChatTemplateProvider(ChatTemplate chatTemplate)
+    {
+        if (chatTemplate.ProviderId is null)
+            return Provider.NONE;
+
+        var provider = this.GetProviderById(chatTemplate.ProviderId);
+        return provider != Provider.NONE && this.IsProviderConfident(provider, Tools.Components.CHAT) ? provider : Provider.NONE;
+    }
+
     public Profile GetProfileById(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))

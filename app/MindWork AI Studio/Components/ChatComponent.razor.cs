@@ -902,6 +902,29 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// Takes over the profile and provider which the chat template preselects, wherever it preselects one.
+    /// </summary>
+    /// <remarks>
+    /// A preselection, not a limit — the user changes both in the chat as usual. A template which
+    /// says nothing, names something which is gone, or names a provider which may not be used for
+    /// chats leaves the current choice in place, so the chat starts as it would without the
+    /// template. The caller tells the parent about a new provider.
+    /// </remarks>
+    /// <returns>True when the provider changed.</returns>
+    private bool ApplyChatTemplateProfileAndProvider()
+    {
+        if (this.SettingsManager.GetChatTemplateProfile(this.currentChatTemplate) is { } templateProfile)
+            this.currentProfile = templateProfile;
+
+        var templateProvider = this.SettingsManager.GetChatTemplateProvider(this.currentChatTemplate);
+        if (templateProvider == AIStudio.Settings.Provider.NONE || templateProvider == this.Provider)
+            return false;
+
+        this.Provider = templateProvider;
+        return true;
+    }
+
+    /// <summary>
     /// The data source options a chat starts with: those of its chat template, or the chat defaults.
     /// </summary>
     /// <remarks>
@@ -1024,6 +1047,9 @@ public partial class ChatComponent : MSGComponentBase
         // Without a thread there is nothing to start anew, so the selection of the new template is
         // applied right here. It travels into the thread which the first message creates.
         //
+        if (this.ApplyChatTemplateProfileAndProvider())
+            await this.ProviderChanged.InvokeAsync(this.Provider);
+
         await this.ApplyChatTemplateToolSelectionAsync();
         this.ApplyAutomaticDataSourceOptions();
     }
@@ -1047,6 +1073,19 @@ public partial class ChatComponent : MSGComponentBase
         {
             this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
             this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+
+            //
+            // A chat which has not started yet keeps up with its chat template. The provider follows
+            // only when the template now preselects another one, so that a provider the user picked
+            // by hand survives a change of some unrelated setting:
+            //
+            if (previousChatTemplate.Id != this.currentChatTemplate.Id || previousChatTemplate.ProviderId != this.currentChatTemplate.ProviderId)
+            {
+                if (this.ApplyChatTemplateProfileAndProvider())
+                    await this.ProviderChanged.InvokeAsync(this.Provider);
+            }
+            else if (this.SettingsManager.GetChatTemplateProfile(this.currentChatTemplate) is { } templateProfile)
+                this.currentProfile = templateProfile;
         }
         else
         {
@@ -1673,6 +1712,10 @@ public partial class ChatComponent : MSGComponentBase
                 break;
         }
 
+        // What the chat template preselects comes last, so that it wins over the behavior above:
+        if (this.ApplyChatTemplateProfileAndProvider())
+            await this.ProviderChanged.InvokeAsync(this.Provider);
+
         //
         // Reset the chat thread or create a new one. A target workspace always means a new chat in
         // that workspace, no matter what useSameWorkspace says:
@@ -1916,7 +1959,11 @@ public partial class ChatComponent : MSGComponentBase
         var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
         this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProvider);
-        
+
+        // A chat without a thread has not started yet, so it starts with what its chat template preselects:
+        if (this.ChatThread is null)
+            this.ApplyChatTemplateProfileAndProvider();
+
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
         // Try to select the profile:
