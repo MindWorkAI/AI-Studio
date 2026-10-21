@@ -1,9 +1,13 @@
 using System.Text;
 
+using AIStudio.Tools.PluginSystem;
+
 namespace AIStudio.Tools.PowerPoint;
 
 internal sealed partial record SlideDeckSpec
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SlideDeckSpec).Namespace, nameof(SlideDeckSpec));
+
     /// <summary>
     /// Writes the slide deck as a Markdown outline, which the user reads before creating the file.
     /// </summary>
@@ -14,7 +18,8 @@ internal sealed partial record SlideDeckSpec
     /// a heading above a text comes before that text, and the source of a picture after the picture.
     ///
     /// A slide taken from the template says so, and shows what it keeps of the template: all of it
-    /// when kept unchanged, and every slot the model neither filled nor removed when edited.
+    /// when kept unchanged, and every slot the model neither filled nor removed when edited. Such
+    /// notes of the outline itself are in the language of the app, since the user reads them.
     /// </remarks>
     /// <param name="template">The template the deck was written for, which gives the reading order and the template slides.</param>
     /// <param name="pictureNames">The names of the attached pictures, in the order the model numbered them.</param>
@@ -39,7 +44,8 @@ internal sealed partial record SlideDeckSpec
                 continue;
             }
 
-            outline.Append('\n').Append("*Slide ").Append(templateSlide.Number).Append(slide.HasContent ? " of the template, edited*" : " of the template, unchanged*").Append('\n');
+            var templateNote = slide.HasContent ? TB("Slide {0} of the template, edited") : TB("Slide {0} of the template, unchanged");
+            outline.Append('\n').Append('*').Append(string.Format(templateNote, templateSlide.Number)).Append("*\n");
 
             // A slide on a layout without room for content shows what it holds all the same:
             var slots = template.FamilyOf(slide) is not null ? templateSlide.Slots : templateSlide.Contents.Select(content => content.Slot).ToList();
@@ -80,7 +86,7 @@ internal sealed partial record SlideDeckSpec
             case PlaceholderRole.PICTURE when index < slide.Pictures.Count:
                 var number = slide.Pictures[index];
                 var name = number >= 1 && number <= pictureNames.Count ? pictureNames[number - 1] : $"#{number}";
-                outline.Append('\n').Append("*Picture: ").Append(name).Append("*\n");
+                outline.Append('\n').Append('*').Append(string.Format(TB("Picture: {0}"), name)).Append("*\n");
                 return true;
 
             case PlaceholderRole.TABLE when index == 0 && slide.Table is { Headers.Count: > 0 } table:
@@ -119,7 +125,7 @@ internal sealed partial record SlideDeckSpec
                 break;
 
             case PlaceholderRole.PICTURE:
-                outline.Append('\n').Append("*Picture of the template*\n");
+                outline.Append('\n').Append('*').Append(TB("Picture of the template")).Append("*\n");
                 break;
         }
     }
