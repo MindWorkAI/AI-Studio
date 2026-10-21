@@ -25,6 +25,10 @@
     @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
 </MudJustifiedText>
 
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Images in JPG, PNG, WebP, or GIF format are given directly to the model, so you need a model that understands images. If the selected model cannot read images, remove the image patterns, such as *.jpg or *.png, before you start.")
+</MudJustifiedText>
+
 <MudStack Class="mb-3">
     <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
         @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))

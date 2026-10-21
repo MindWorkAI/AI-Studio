@@ -81,10 +81,17 @@ public static partial class ProviderExtensions
     /// wants to know whether an image may be sent has to accept both, which is why the question is asked
     /// here instead of at each call site: attaching a file and validating an already attached file must
     /// never disagree about it.
+    ///
+    /// A limit of zero images takes the capability back. Zero is a real answer, e.g., from an operator
+    /// whose engine accepts no images at all, see ImageLimits; an unknown limit says nothing.
     /// </remarks>
     /// <param name="provider">The configured provider.</param>
     /// <returns><c>true</c> when the model accepts image input.</returns>
-    public static bool SupportsImageInput(this Provider provider) => provider.GetModelProfile().HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT);
+    public static bool SupportsImageInput(this Provider provider)
+    {
+        var profile = provider.GetModelProfile();
+        return profile.HasAny(Capability.SINGLE_IMAGE_INPUT | Capability.MULTIPLE_IMAGE_INPUT) && profile.Images.MaxInOneMessage is not 0;
+    }
 
     /// <summary>
     /// Checks whether this model can be used for chatting.

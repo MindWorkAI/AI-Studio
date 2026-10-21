@@ -650,7 +650,7 @@ CONFIG["SETTINGS"] = {}
 --
 -- Configure the default file patterns and whether subfolders as well as hidden files and folders are included.
 -- Separate multiple patterns with semicolons.
--- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
 -- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeHiddenFilesAndFolders"] = false
 --

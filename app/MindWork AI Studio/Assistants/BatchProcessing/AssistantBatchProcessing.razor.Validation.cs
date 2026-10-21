@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.BatchProcessing;
@@ -214,6 +215,17 @@ public partial class AssistantBatchProcessing
         if (requiresTranscription && !this.MediaTranscriptionService.HasUsableTranscriptionProvider)
         {
             this.AddInputIssue(T("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
+            return null;
+        }
+
+        //
+        // A model that cannot read images would get the text of the request alone, without the
+        // image, and answer about nothing. Such images fail one by one, see LoadImage, while the
+        // documents next to them are processed. A run of nothing but images does not start at all:
+        //
+        if (files.All(IsImage) && !this.ProviderSettings.SupportsImageInput())
+        {
+            this.AddInputIssue(T("All selected files are images, but the selected model cannot read images. Select a model with image support."));
             return null;
         }
 
