@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Provider.AlibabaCloud;
 using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.DeepSeek;
@@ -290,22 +289,24 @@ public static class LLMProvidersExtensions
     };
 
     /// <summary>
-    /// The largest image file, in bytes, which the provider accepts in a request.
+    /// The largest image file, in bytes, which the provider accepts in a request, where it states one.
     /// </summary>
+    /// <remarks>
+    /// The limit belongs to the API of the provider, not to the model: the same model may accept
+    /// larger images through another provider. What we actually send is asked through
+    /// IImageSourceExtensions.MaxImageSizeBytesFor, which also applies our own limit.
+    /// </remarks>
     /// <param name="llmProvider">The provider to check.</param>
-    /// <returns>The size limit of one image file.</returns>
-    public static long GetMaxImageSizeBytes(this LLMProviders llmProvider) => llmProvider switch
+    /// <returns>The size limit of one image file, or null when the provider states none we know of.</returns>
+    public static long? GetMaxImageSizeBytes(this LLMProviders llmProvider) => llmProvider switch
     {
         //
-        // Anthropic accepts at most 5 MB of base64 per image. Base64 needs four characters for
-        // every three bytes, which leaves about 3.9 MB for the image file itself:
+        // Anthropic accepts at most 5 MiB (5,242,880 bytes) of base64 per image. Base64 needs four
+        // characters for every three bytes, which leaves 3,932,160 bytes for the image file itself:
         //
         LLMProviders.ANTHROPIC => 3_932_160,
 
-        //
-        // Everybody else gets the limit we apply anyway when we read an image:
-        //
-        _ => IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES,
+        _ => null,
     };
 
     /// <summary>

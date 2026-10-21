@@ -1,3 +1,4 @@
+using AIStudio.Provider;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 
@@ -11,6 +12,17 @@ public static class IImageSourceExtensions
     /// The largest image we send to a model. A larger image is skipped by TryAsBase64.
     /// </summary>
     public const long MAX_IMAGE_SIZE_BYTES = 10_000_000;
+
+    /// <summary>
+    /// The largest image file, in bytes, which we send through the given provider.
+    /// </summary>
+    /// <remarks>
+    /// The limit of the provider where it states one, but never more than MAX_IMAGE_SIZE_BYTES:
+    /// TryAsBase64 skips every larger image, whatever the provider would accept.
+    /// </remarks>
+    /// <param name="llmProvider">The provider the image is sent through.</param>
+    /// <returns>The size limit of one image file.</returns>
+    public static long MaxImageSizeBytesFor(LLMProviders llmProvider) => Math.Min(llmProvider.GetMaxImageSizeBytes() ?? MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES);
 
     public static MIMEType DetermineMimeType(this IImageSource image)
     {

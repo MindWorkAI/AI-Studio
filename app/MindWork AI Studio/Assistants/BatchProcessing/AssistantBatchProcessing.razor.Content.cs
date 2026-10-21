@@ -1,5 +1,4 @@
 using AIStudio.Chat;
-using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
@@ -64,7 +63,7 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        var maxImageSizeBytes = this.ProviderSettings.UsedLLMProvider.GetMaxImageSizeBytes();
+        var maxImageSizeBytes = IImageSourceExtensions.MaxImageSizeBytesFor(this.ProviderSettings.UsedLLMProvider);
         if (fileSize > maxImageSizeBytes)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, the most the selected provider accepts for one image, so it cannot be given to the model."), (maxImageSizeBytes / 1_000_000d).ToString("0.#")));
