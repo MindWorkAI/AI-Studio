@@ -87,12 +87,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             - OUTPUT AND PRESENTATION_TITLE MUST BE IN: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - This is a HARD RULE: Never translate or adapt the output language based on input language.
             - Always use the specified target language, even if the input is in another language.
-            
+            - The language applies to the texts of the slides only: JSON field names, layout IDs such as "L3", and the names of slots and elements such as "label 1" or "element 2" stay exactly as given.
+
         # Language-Override (IMPORTANT!):
             - Before generating any output, internally set your language mode to: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - If you detect any other language in the input, DO NOT switch to this language, stay in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
             - Translate PRESENTATION_TITLE in: {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}
-            - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it.
+            - Your output must be in {{{this.selectedTargetLanguage.PromptGeneralPurpose(this.customTargetLanguage)}}}, without any comment, note, or marker about it. Never translate the JSON field names, the layout IDs, or the names of slots and elements.
         """;
     
     protected override bool AllowProfiles => true;
