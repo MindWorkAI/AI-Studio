@@ -2503,9 +2503,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1178900119
 -- Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1307261011"] = "Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only."
 
--- Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them. The imprint of your template closes the presentation when you keep or edit it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1311867989"] = "Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them. The imprint of your template closes the presentation when you keep or edit it."
-
 -- Important Aspects
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1379883528"] = "Important Aspects"
 
@@ -2517,6 +2514,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T144139589"
 
 -- The template has no layouts with room for content.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1443064107"] = "The template has no layouts with room for content."
+
+-- Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1475924863"] = "Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them."
 
 -- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
@@ -2592,9 +2592,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3302350746
 
 -- Advanced Options
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3393521529"] = "Advanced Options"
-
--- imprint
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3441688506"] = "imprint"
 
 -- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values."
@@ -13431,6 +13428,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T237059392
 
 -- Configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Configuration plugin"
+
+-- Picture: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1001457607"] = "Picture: {0}"
+
+-- Slide {0} of the template, unchanged
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1446011141"] = "Slide {0} of the template, unchanged"
+
+-- Slide {0} of the template, edited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T2956338097"] = "Slide {0} of the template, edited"
+
+-- Picture of the template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Picture of the template"
 
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standard augmentation process"

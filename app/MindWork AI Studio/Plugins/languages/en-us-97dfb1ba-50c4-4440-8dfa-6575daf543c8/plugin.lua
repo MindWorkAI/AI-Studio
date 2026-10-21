@@ -2499,17 +2499,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::
 -- Software developers
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::T831424531"] = "Software developers"
 
+-- Slides of the template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1178900119"] = "Slides of the template"
+
+-- Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1307261011"] = "Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only."
+
 -- Important Aspects
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1379883528"] = "Important Aspects"
 
 -- Extent of the planned presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1408740929"] = "Extent of the planned presentation"
 
+-- Save the presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T144139589"] = "Save the presentation"
+
+-- The template has no layouts with room for content.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1443064107"] = "The template has no layouts with room for content."
+
+-- Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1475924863"] = "Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them."
+
 -- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
 
 -- Details about the desired presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367"] = "Details about the desired presentation"
+
+-- Your template carries its layouts in several colors. Choose the one for the presentation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1811013157"] = "Your template carries its layouts in several colors. Choose the one for the presentation."
 
 -- Text content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1820253043"] = "Text content"
@@ -2529,6 +2547,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"]
 -- Audience age group
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2496533563"] = "Audience age group"
 
+-- Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2541602129"] = "Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting."
+
 -- You can enter text, use one or more documents or images, or use both. At least one of these options is required.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2542045947"] = "You can enter text, use one or more documents or images, or use both. At least one of these options is required."
 
@@ -2538,14 +2559,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2591284123
 -- Audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2599228833"] = "Audience organizational level"
 
+-- Please choose a PowerPoint template to create a file from the slides.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2660312931"] = "Please choose a PowerPoint template to create a file from the slides."
+
+-- The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2799381756"] = "The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model."
+
 -- Number of slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965"] = "Number of slides"
 
--- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2910177051"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience."
-
 -- Slide Planner Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2924755246"] = "Slide Planner Assistant"
+
+-- Use no template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2967784903"] = "Use no template"
 
 -- The result of your previous slide builder session.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3000286990"] = "The result of your previous slide builder session."
@@ -2559,14 +2586,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3049299559
 -- Create Slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Create Slides"
 
+-- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3114699859"] = "This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result."
+
+-- These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3302350746"] = "These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}"
+
+-- Advanced Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3393521529"] = "Advanced Options"
+
 -- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values."
 
--- (Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3476149293"] = "(Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted."
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3472250354"] = "PowerPoint template"
 
 -- Audience
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3506118019"] = "Audience"
+
+-- Please plan the slides first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3528182735"] = "Please plan the slides first."
 
 -- Time specification (minutes)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3539067305"] = "Time specification (minutes)"
@@ -2577,17 +2616,38 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130
 -- Attach documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Attach documents"
 
+-- Select a PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3690748035"] = "Select a PowerPoint template"
+
 -- Number of bullet points
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3796347042"] = "Number of bullet points"
+
+-- Shown on every slide whose layout has a footer, e.g., your name, institute, and date.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3801653613"] = "Shown on every slide whose layout has a footer, e.g., your name, institute, and date."
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911"] = "Custom target language"
 
+-- Create PowerPoint file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3852632268"] = "Create PowerPoint file"
+
+-- The template file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3882045083"] = "The template file does not exist."
+
 -- Presentation title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3893271035"] = "Presentation title"
 
+-- Slide {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3921179924"] = "Slide {0}"
+
 -- {0} - Slide Builder Session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3922788056"] = "{0} - Slide Builder Session"
+
+-- Color variant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3930823017"] = "Color variant"
+
+-- hidden
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4128829753"] = "hidden"
 
 -- Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342"] = "Please specify the extent of the planned presentation. This can be the number of slides, the number of bullet points per slide, or the time specification for the presentation. This will help the LLM to create a presentation that fits your needs. Leave the default values if you don't have specific requirements regarding the extent of the presentation. You might only want to specify one of these parameters, for example the time specification, and leave the others at their default values."
@@ -2595,11 +2655,41 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342
 -- Audience expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4279519256"] = "Audience expertise"
 
+-- (Optional) Footer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T531280033"] = "(Optional) Footer"
+
+-- The PowerPoint file was created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T590228290"] = "The PowerPoint file was created."
+
 -- Title
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"] = "Title"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Please provide a custom language."
+
+-- Creates a PowerPoint file in the design of your template.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T682162982"] = "Creates a PowerPoint file in the design of your template."
+
+-- The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T82751648"] = "The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out."
+
+-- The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T928047772"] = "The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx)."
+
+-- The slides were planned for another template. Please plan them again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T94807224"] = "The slides were planned for another template. Please plan them again."
+
+-- The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T966839368"] = "The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program."
+
+-- Let the LLM edit it
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2549215047"] = "Let the LLM edit it"
+
+-- Leave out
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2769076356"] = "Leave out"
+
+-- Keep unchanged
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::TEMPLATESLIDEUSEEXTENSIONS::T2931681185"] = "Keep unchanged"
 
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Find synonyms for the following word or phrase:"
@@ -9303,6 +9393,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T16943
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Choose whether the assistant should use the app default profile, no profile, or a specific profile."
 
+-- Preselect the footer text
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1952334375"] = "Preselect the footer text"
+
 -- Preselect the audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2014662371"] = "Preselect the audience organizational level"
 
@@ -9317,6 +9410,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T23451
 
 -- Preselect another language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2382415529"] = "Preselect another language"
+
+-- Shown on every slide whose layout has a footer, e.g., your name, institute, and date. Leave it empty for no footer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T249738475"] = "Shown on every slide whose layout has a footer, e.g., your name, institute, and date. Leave it empty for no footer."
+
+-- The slides use the layouts of this presentation or template, and you can create a PowerPoint file from the result. Leave it empty to plan an outline only.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2531720671"] = "The slides use the layouts of this presentation or template, and you can create a PowerPoint file from the result. Leave it empty to plan an outline only."
 
 -- Preselect the language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2571465005"] = "Preselect the language"
@@ -9335,6 +9434,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T33992
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Close"
+
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3472250354"] = "PowerPoint template"
+
+-- Select a PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3690748035"] = "Select a PowerPoint template"
 
 -- Preselect important aspects
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3705987833"] = "Preselect important aspects"
@@ -13326,6 +13431,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T237059392
 -- Configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Configuration plugin"
 
+-- Picture: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1001457607"] = "Picture: {0}"
+
+-- Slide {0} of the template, unchanged
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1446011141"] = "Slide {0} of the template, unchanged"
+
+-- Slide {0} of the template, edited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T2956338097"] = "Slide {0} of the template, edited"
+
+-- Picture of the template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Picture of the template"
+
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standard augmentation process"
 
@@ -13400,6 +13517,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2547828883"] = "Shortcut"
 
 -- Readable text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2618627384"] = "Readable text"
+
+-- PowerPoint template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3472250354"] = "PowerPoint template"
 
 -- Media
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"

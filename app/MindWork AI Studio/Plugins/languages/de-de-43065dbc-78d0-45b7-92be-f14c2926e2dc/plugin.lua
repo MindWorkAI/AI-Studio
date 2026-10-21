@@ -2502,7 +2502,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::AUDIENCEPROFILEEXTENSIONS::
 -- Slides of the template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1178900119"] = "Vorlagen-Folien"
 
--- Wählen Sie eine PowerPoint-Präsentation oder -Vorlage, deren Layouts für die Folien verwendet werden sollen. Das LLM plant dann jede Folie für eines dieser Layouts, und Sie können eine PowerPoint-Datei im Design Ihrer Vorlage erstellen. Ohne Vorlage erhalten Sie nur eine Gliederung.
+-- Choose a PowerPoint presentation or template whose layouts the slides should use. The LLM then plans every slide for one of these layouts, and you can create a PowerPoint file in the design of your template. Without a template, you get an outline only.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1307261011"] = "Wählen Sie eine PowerPoint-Präsentation oder Vorlage, deren Layouts für die Folien verwendet werden sollen. Das Model plant dann jede Folie für eines dieser Layouts und Sie können eine PowerPoint-Datei im Design Ihrer Vorlage erstellen. Ohne Vorlage erhalten Sie nur eine Gliederung."
 
 -- Important Aspects
@@ -2511,14 +2511,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1379883528
 -- Extent of the planned presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1408740929"] = "Umfang der geplanten Präsentation"
 
--- Präsentation speichern
+-- Save the presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T144139589"] = "Präsentation speichern"
 
--- Die Vorlage enthält keine Layouts mit Platz für Inhalte.
+-- The template has no layouts with room for content.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1443064107"] = "Die Vorlage enthält keine Layouts mit Platz für Inhalte."
 
--- Picture
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1595435817"] = "Bild"
+-- Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1475924863"] = "Wähle für jede Folie deiner Vorlage aus, ob die Präsentation sie weglässt, unverändert lässt oder den LLM den Inhalt bearbeiten lässt. Der LLM behält diese Folien in ihrer Reihenfolge und kann neue Folien davor, dazwischen und danach einfügen."
 
 -- You might want to specify important aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841"] = "Vielleicht möchten Sie wichtige Aspekte angeben, die das Model bei der Erstellung der Folien berücksichtigen soll. Zum Beispiel die Verwendung von Emojis oder bestimmte Themen, die hervorgehoben werden sollen."
@@ -2526,7 +2526,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1672597841
 -- Details about the desired presentation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1793579367"] = "Details zur gewünschten Präsentation"
 
--- Dein Template enthält mehrere Farblayouts. Wähle eines für die Präsentation aus.
+-- Your template carries its layouts in several colors. Choose the one for the presentation.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T1811013157"] = "Dein Template enthält mehrere Farblayouts. Wähle eines für die Präsentation aus."
 
 -- Text content
@@ -2547,7 +2547,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T24391765"]
 -- Audience age group
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2496533563"] = "Altersgruppe"
 
--- Nicht jede Folie passt wie geplant zu ihrem Layout, zum Beispiel könnte ein Text zu lang sein. Bitte überprüfen Sie die Folien vor der Präsentation.
+-- Not every slide fits its layout as planned; for example, a text may run long. Please check the slides before presenting.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2541602129"] = "Nicht jede Folie passt wie geplant zu ihrem Layout, zum Beispiel könnte ein Text zu lang sein. Bitte überprüfen Sie die Folien vor der Präsentation."
 
 -- You can enter text, use one or more documents or images, or use both. At least one of these options is required.
@@ -2559,10 +2559,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2591284123
 -- Audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2599228833"] = "Organisatorische Ebene der Zielgruppe"
 
--- Bitte wählen Sie eine Vorlage aus, um eine Datei aus den Folien zu erstellen.
+-- Please choose a PowerPoint template to create a file from the slides.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2660312931"] = "Bitte wählen Sie eine Vorlage aus, um eine Datei aus den Folien zu erstellen."
 
--- Das Model hat die Folien auch nach einer zweiten Anfrage nicht in einer brauchbaren Form beschrieben. Bitte versuchen Sie es erneut oder wählen Sie ein anderes Modell.
+-- The LLM did not describe the slides in a usable form, even after a second request. Please try again, or choose another model.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2799381756"] = "Das Model hat die Folien auch nach einer zweiten Anfrage nicht in einer brauchbaren Form beschrieben. Bitte versuchen Sie es erneut oder wählen Sie ein anderes Modell."
 
 -- Number of slides
@@ -2571,7 +2571,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2823798965
 -- Slide Planner Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2924755246"] = "Folienplaner-Assistent"
 
--- Keine Vorlage verwenden
+-- Use no template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T2967784903"] = "Keine Vorlage verwenden"
 
 -- The result of your previous slide builder session.
@@ -2586,31 +2586,25 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3049299559
 -- Create Slides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3079776593"] = "Folien erstellen"
 
--- Dieser Assistent hilft Ihnen, aus langen Texten oder Dokumenten klare, strukturierte Folien zu erstellen. Geben Sie einen Titel für die Präsentation ein und stellen Sie den Inhalt entweder als Text oder über ein oder mehrere Dokumente bereit. Unter „Wichtige Aspekte“ können Sie dem Model Anweisungen zur Ausgabe oder Formatierung geben. Legen Sie die Anzahl der Folien entweder direkt oder anhand der gewünschten Präsentationsdauer fest. Sie können auch die Anzahl der Aufzählungspunkte angeben. Wenn der Standardwert 0 nicht geändert wird, bestimmt das Model selbstständig, wie viele Folien oder Aufzählungspunkte erstellt werden. Die Ausgabe kann flexibel in verschiedenen Sprachen erzeugt und auf eine bestimmte Zielgruppe zugeschnitten werden. Wenn Sie eine Vorlage auswählen, verwenden die Folien deren Layouts, und Sie können aus dem Ergebnis eine PowerPoint-Datei in deren Design erstellen.
+-- This assistant helps you create clear, structured slides from long texts or documents. Enter a presentation title and provide the content either as text or with one or more documents. Important aspects allow you to add instructions to the LLM regarding output or formatting. Set the number of slides either directly or based on your desired presentation duration. You can also specify the number of bullet points. If the default value of 0 is not changed, the LLM will independently determine how many slides or bullet points to generate. The output can be flexibly generated in various languages and tailored to a specific audience. When you choose a PowerPoint template, the slides use its layouts, and you can create a PowerPoint file in its design from the result.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3114699859"] = "Dieser Assistent hilft Ihnen, aus langen Texten oder Dokumenten klare, strukturierte Folien zu erstellen. Geben Sie einen Titel für die Präsentation ein und stellen Sie den Inhalt entweder als Text oder über ein oder mehrere Dokumente bereit. Unter „Wichtige Aspekte“ können Sie dem Model Anweisungen zur Ausgabe oder Formatierung geben. Legen Sie die Anzahl der Folien entweder direkt oder anhand der gewünschten Präsentationsdauer fest. Sie können auch die Anzahl der Aufzählungspunkte angeben. Wenn der Standardwert 0 nicht geändert wird, bestimmt das Model selbstständig, wie viele Folien oder Aufzählungspunkte erstellt werden. Die Ausgabe kann flexibel in verschiedenen Sprachen erzeugt und auf eine bestimmte Zielgruppe zugeschnitten werden. Wenn Sie eine Vorlage auswählen, verwenden die Folien deren Layouts, und Sie können aus dem Ergebnis eine PowerPoint-Datei in deren Design erstellen."
 
--- Diese Bilder konnten nicht eingefügt werden, weil PowerPoint ihr Format nicht anzeigen kann oder sie nicht lesbar sind: {0}
+-- These pictures could not be placed, because PowerPoint cannot show their format or they cannot be read: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3302350746"] = "Diese Bilder konnten nicht eingefügt werden, weil PowerPoint ihr Format nicht anzeigen kann oder sie nicht lesbar sind: {0}"
 
 -- Advanced Options
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3393521529"] = "Erweiterte Optionen"
 
--- imprint
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3441688506"] = "Impressum"
-
 -- Please specify the audience for the planned presentation. This will help the LLM to create a presentation that fits your needs. You can specify the audience profile, the age group, organizational level, and the expertise. You don't have to specify all of these parameters, for example you might only want to specify the audience profile and leave the other parameters at their default values.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3465256803"] = "Bitte geben Sie die Zielgruppe für die geplante Präsentation an. So kann das Model eine Präsentation erstellen, die zu Ihren Anforderungen passt. Sie können das Profil der Zielgruppe, die Altersgruppe, die Organisationsebene und die Fachkenntnisse angeben. Sie müssen nicht alle diese Parameter festlegen."
 
--- Präsentationsvorlage
+-- PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3472250354"] = "Präsentationsvorlage"
-
--- (Optional) Specify aspects that the LLM should consider when creating the slides. For example, the use of emojis or specific topics that should be highlighted.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3476149293"] = "(Optional) Geben Sie Aspekte an, die das MOdel beim Erstellen der Folien berücksichtigen soll. Zum Beispiel die Verwendung von Emojis oder bestimmte Themen, die hervorgehoben werden sollen."
 
 -- Audience
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3506118019"] = "Zielgruppe"
 
--- Bitte planen Sie zuerst die Folien.
+-- Please plan the slides first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3528182735"] = "Bitte planen Sie zuerst die Folien."
 
 -- Time specification (minutes)
@@ -2622,25 +2616,22 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3649769130
 -- Attach documents
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3666048746"] = "Dokumente anhängen"
 
--- Slide {0}: {1}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3684030069"] = "Folie {0}: {1}"
-
--- Vorlage auswählen
+-- Select a PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3690748035"] = "Vorlage auswählen"
 
 -- Number of bullet points
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3796347042"] = "Anzahl der Aufzählungspunkte"
 
--- Wird auf jeder Folie angezeigt, deren Layout eine Fußzeile hat, z.B. Ihr Name, Ihr Institut und das Datum.
+-- Shown on every slide whose layout has a footer, e.g., your name, institute, and date.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3801653613"] = "Wird auf jeder Folie angezeigt, deren Layout eine Fußzeile hat, z.B. Ihr Name, Ihr Institut und das Datum."
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
--- PowerPoint-Datei erstellen
+-- Create PowerPoint file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3852632268"] = "PowerPoint-Datei erstellen"
 
--- Die Vorlagendatei existiert nicht.
+-- The template file does not exist.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3882045083"] = "Die Vorlagendatei existiert nicht."
 
 -- Presentation title
@@ -2652,10 +2643,7 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3921179924
 -- {0} - Slide Builder Session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3922788056"] = "{0} – Folienplaner-Assistenten-Sitzung"
 
--- Choose for each slide of your template whether the presentation leaves it out, keeps it unchanged, or lets the LLM edit its content. The LLM keeps these slides in their order and may add new slides before, between, and after them. When you keep or edit the imprint of your template, the presentation gets no second one.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3929677059"] = "Wählen Sie für jede Folie Ihrer Vorlage aus, ob die Präsentation sie weglässt, unverändert übernimmt oder den Model den Inhalt bearbeiten lässt. Der Model behält diese Folien in ihrer Reihenfolge bei und kann neue Folien davor, dazwischen und danach einfügen."
-
--- Farbvariante
+-- Color variant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T3930823017"] = "Farbvariante"
 
 -- hidden
@@ -2667,10 +2655,10 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4131419342
 -- Audience expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T4279519256"] = "Fachkenntnisse der Zielgruppe"
 
--- (Optional) Fußzeile
+-- (Optional) Footer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T531280033"] = "(Optional) Fußzeile"
 
--- Die PowerPoint-Datei wurde erstellt.
+-- The PowerPoint file was created.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T590228290"] = "Die PowerPoint-Datei wurde erstellt."
 
 -- Title
@@ -2679,19 +2667,19 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
--- Erstellt eine PowerPoint-Datei im Design Ihrer Vorlage.
+-- Creates a PowerPoint file in the design of your template.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T682162982"] = "Erstellt eine PowerPoint-Datei im Design Ihrer Vorlage."
 
 -- The LLM cannot edit this slide, because its layout has no placeholders for content. Please keep it unchanged or leave it out.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T82751648"] = "Das Model kann diese Folie nicht bearbeiten, da deren Layout keine Platzhalter für Inhalte enthält. Bitte belassen Sie sie unverändert oder entfernen Sie sie."
 
--- Die Vorlage kann nicht gelesen werden. Bitte wählen Sie eine PowerPoint-Präsentation oder Vorlage (.pptx, .potx).
+-- The template cannot be read. Please choose a PowerPoint presentation or template (.pptx, .potx).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T928047772"] = "Die Vorlage kann nicht gelesen werden. Bitte wählen Sie eine PowerPoint-Präsentation oder Vorlage (.pptx, .potx)."
 
--- Die Folien wurden für eine andere Vorlage geplant. Bitte planen Sie sie erneut.
+-- The slides were planned for another template. Please plan them again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T94807224"] = "Die Folien wurden für eine andere Vorlage geplant. Bitte planen Sie sie erneut."
 
--- Die PowerPoint-Datei konnte nicht erstellt werden. Bitte überprüfen Sie, ob die Vorlage lesbar ist und die Zieldatei nicht in einem anderen Programm geöffnet ist.
+-- The PowerPoint file could not be created. Please check that the template can be read and that the target file is not open in another program.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T966839368"] = "Die PowerPoint-Datei konnte nicht erstellt werden. Bitte überprüfen Sie, ob die Vorlage lesbar ist und die Zieldatei nicht in einem anderen Programm geöffnet ist."
 
 -- Let the LLM edit it
@@ -9405,7 +9393,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T16943
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
 
--- Fußzeile vorauswählen
+-- Preselect the footer text
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1952334375"] = "Fußzeile vorauswählen"
 
 -- Preselect the audience organizational level
@@ -9423,10 +9411,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T23451
 -- Preselect another language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2382415529"] = "Andere Sprache vorauswählen"
 
--- Wird auf jeder Folie angezeigt, deren Layout eine Fußzeile hat, z.B. Ihr Name, Ihr Institut und das Datum. Lassen Sie das Feld leer, wenn keine Fußzeile erscheinen soll.
+-- Shown on every slide whose layout has a footer, e.g., your name, institute, and date. Leave it empty for no footer.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T249738475"] = "Wird auf jeder Folie angezeigt, deren Layout eine Fußzeile hat, z.B. Ihr Name, Ihr Institut und das Datum. Lassen Sie das Feld leer, wenn keine Fußzeile erscheinen soll."
 
--- Die Folien verwenden die Layouts dieser Präsentation oder Vorlage, und Sie können aus dem Ergebnis eine PowerPoint-Datei erstellen. Lassen Sie das Feld leer, um nur eine Gliederung zu planen.
+-- The slides use the layouts of this presentation or template, and you can create a PowerPoint file from the result. Leave it empty to plan an outline only.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2531720671"] = "Die Folien verwenden die Layouts dieser Präsentation oder Vorlage, und Sie können aus dem Ergebnis eine PowerPoint-Datei erstellen. Lassen Sie das Feld leer, um nur eine Gliederung zu planen."
 
 -- Preselect the language
@@ -9447,10 +9435,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T33992
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Schließen"
 
--- Präsentationsvorlage
+-- PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3472250354"] = "Präsentationsvorlage"
 
--- Vorlage auswählen
+-- Select a PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3690748035"] = "Vorlage auswählen"
 
 -- Preselect important aspects
@@ -13443,6 +13431,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T237059392
 -- Configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINTYPEEXTENSIONS::T3353383632"] = "Konfigurations-Plugin"
 
+-- Picture: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1001457607"] = "Bild: {0}"
+
+-- Slide {0} of the template, unchanged
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T1446011141"] = "Folienvorlage {0}, unverändert"
+
+-- Slide {0} of the template, edited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T2956338097"] = "Folie {0} der Vorlage, bearbeitet"
+
+-- Picture of the template
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::POWERPOINT::SLIDEDECKSPEC::T3520350217"] = "Bild der Vorlage"
+
 -- Standard augmentation process
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::AUGMENTATIONPROCESSES::AUGMENTATIONONE::T1072508429"] = "Standardmäßiger Erweiterungsprozess"
 
@@ -13518,7 +13518,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2547828883"] = "Verknüpfung
 -- Readable text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2618627384"] = "Lesbarer Text"
 
--- Präsentationsvorlage
+-- PowerPoint template
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3472250354"] = "Präsentationsvorlage"
 
 -- Media
