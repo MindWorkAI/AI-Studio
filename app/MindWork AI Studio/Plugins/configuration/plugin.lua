@@ -591,6 +591,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.FeedbackEnabled"] = true
 --
 -- Configure the feedback server which receives the answers as JSON via HTTP POST.
+-- Users cannot enter this address themselves: without this setting, the chat never asks for
+-- feedback, and the switch "Ask for feedback in chats?" stays hidden in the chat settings.
 -- It must be an absolute http or https address. The body holds "weekOf" (the date of the Friday,
 -- e.g., "2026-10-09"), "performance" ("good", "neutral", or "bad"), "savedTimeMinutes" (negative
 -- when time was lost, null when skipped), "reason" (after a bad rating: "no_answer", "slow_answer",

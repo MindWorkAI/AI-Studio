@@ -28,12 +28,13 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     public const int MAX_COMMENT_LENGTH = 2_000;
 
     /// <summary>
-    /// Debug builds offer a reset of the handled week and a short interval, so developers can test the prompt on any day.
+    /// Debug builds let developers enter the feedback server themselves, reset the handled week, and use a short
+    /// interval, so they can test the prompt on any day. In release builds, only a configuration plugin sets the server.
     /// </summary>
     #if DEBUG
-    public static readonly bool CAN_RESET_WEEK = true;
+    public static readonly bool HAS_DEVELOPER_TOOLS = true;
     #else
-    public static readonly bool CAN_RESET_WEEK = false;
+    public static readonly bool HAS_DEVELOPER_TOOLS = false;
     #endif
 
     /// <summary>
@@ -49,12 +50,17 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     /// <summary>
     /// True when the feedback is switched on and the endpoint is a usable HTTP(S) address.
     /// </summary>
-    public bool IsEnabled => settingsManager.ConfigurationData.Chat.FeedbackEnabled && this.TryGetEndpoint(out _);
+    public bool IsEnabled => settingsManager.ConfigurationData.Chat.FeedbackEnabled && this.HasEndpoint;
+
+    /// <summary>
+    /// True when a usable feedback server is set, usually by the configuration plugin of an organization.
+    /// </summary>
+    public bool HasEndpoint => this.TryGetEndpoint(out _);
 
     /// <summary>
     /// True when the short debug interval replaces the weekly rhythm. Release builds always ask weekly.
     /// </summary>
-    public bool UsesDebugInterval => CAN_RESET_WEEK && settingsManager.ConfigurationData.Feedback.DebugShortInterval;
+    public bool UsesDebugInterval => HAS_DEVELOPER_TOOLS && settingsManager.ConfigurationData.Feedback.DebugShortInterval;
 
     /// <summary>
     /// True when the feedback is switched on and the current week was neither rated nor skipped yet.
@@ -215,7 +221,7 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     /// </summary>
     public async Task ResetWeekAsync()
     {
-        if (!CAN_RESET_WEEK)
+        if (!HAS_DEVELOPER_TOOLS)
             return;
 
         lock (this.stateLock)
@@ -234,7 +240,7 @@ public sealed class FeedbackService(SettingsManager settingsManager, ILogger<Fee
     /// </summary>
     public async Task SetDebugIntervalAsync(bool enabled)
     {
-        if (!CAN_RESET_WEEK)
+        if (!HAS_DEVELOPER_TOOLS)
             return;
 
         settingsManager.ConfigurationData.Feedback.DebugShortInterval = enabled;
