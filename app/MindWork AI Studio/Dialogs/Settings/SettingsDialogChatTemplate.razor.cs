@@ -116,6 +116,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         { x => x.DataSourceOptions, chatTemplate.DataSourceOptions },
         { x => x.ProfileId, chatTemplate.ProfileId },
         { x => x.ProviderId, chatTemplate.ProviderId },
+        { x => x.WorkspaceName, chatTemplate.WorkspaceName },
     };
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)

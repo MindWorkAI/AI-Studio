@@ -92,6 +92,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public string? ProviderId { get; set; }
 
+    /// <summary>
+    /// The name of the workspace this template keeps its chats in, or null when it says nothing about workspaces.
+    /// </summary>
+    [Parameter]
+    public string? WorkspaceName { get; set; }
+
     [Parameter]
     public bool CreateFromExistingChatThread { get; set; }
 
@@ -122,6 +128,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string selectedProfileId = Profile.NO_PROFILE.Id;
     private bool preselectProvider;
     private string selectedProviderId = string.Empty;
+    private bool preselectWorkspace;
+    private string selectedWorkspaceName = string.Empty;
+    private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -160,6 +169,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.selectedProfileId = this.ProfileId ?? Profile.NO_PROFILE.Id;
         this.preselectProvider = this.ProviderId is not null;
         this.selectedProviderId = this.ProviderId ?? string.Empty;
+        this.preselectWorkspace = this.WorkspaceName is not null;
+        this.selectedWorkspaceName = this.WorkspaceName ?? string.Empty;
+
+        // The existing workspaces are only offered to pick from; a name which does not exist yet is fine as well:
+        var workspaceSnapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
+        this.availableWorkspaces = workspaceSnapshot.Workspaces;
 
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -209,6 +224,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // A template which forbids profiles has no use for a profile, so none is kept for it:
         ProfileId = this.AllowProfileUsage && this.preselectProfile ? this.selectedProfileId : null,
         ProviderId = this.preselectProvider && !string.IsNullOrWhiteSpace(this.selectedProviderId) ? this.selectedProviderId : null,
+        WorkspaceName = this.preselectWorkspace && !string.IsNullOrWhiteSpace(this.selectedWorkspaceName) ? this.selectedWorkspaceName.Trim() : null,
 
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
@@ -258,6 +274,31 @@ public partial class ChatTemplateDialog : MSGComponentBase
             var provider = this.SettingsManager.GetProviderById(this.selectedProviderId);
             return provider == AIStudio.Settings.Provider.NONE || !this.SettingsManager.IsProviderConfident(provider, Tools.Components.CHAT);
         }
+    }
+
+    /// <summary>
+    /// Whether workspaces are switched off, so that a workspace of this template has no effect for now.
+    /// </summary>
+    private bool AreWorkspacesDisabled => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES;
+
+    //
+    // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
+    // the user typed, though, so an empty selection is ignored:
+    //
+    private void SelectExistingWorkspace(string workspaceName)
+    {
+        if (string.IsNullOrWhiteSpace(workspaceName))
+            return;
+
+        this.selectedWorkspaceName = workspaceName;
+    }
+
+    private string? ValidateWorkspaceName(string workspaceName)
+    {
+        if (this.preselectWorkspace && string.IsNullOrWhiteSpace(workspaceName))
+            return T("Please enter the workspace for the chats of this template, or switch the preselection off.");
+
+        return null;
     }
 
     private string? ValidatePreselectedProvider(string providerId)

@@ -19,6 +19,12 @@
         ? T("Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.")
         : T("The tile opens its chat in this workspace and creates the workspace when it does not exist yet."))
 </MudText>
+@if (this.OpensTemporaryChat && this.SettingsManager.GetChatTemplateWorkspaceName(this.SelectedChatTemplate) is { } templateWorkspaceName)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+        @string.Format(T("The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template."), templateWorkspaceName)
+    </MudText>
+}
 <MudSelect T="string" Value="@this.ProviderId" ValueChanged="@this.SetProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
