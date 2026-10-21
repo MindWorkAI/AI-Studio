@@ -148,6 +148,12 @@ public static class ConfigurationSnippetImport
                 if (missingChatToolIds.Count > 0)
                     hints.Add(string.Format(TB("The chat template preselects tools which are not available on this computer: {0}."), string.Join(", ", missingChatToolIds)));
 
+                if (template.ProviderId is not null && settingsManager.GetProviderById(template.ProviderId) == Settings.Provider.NONE)
+                    hints.Add(string.Format(TB("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
+
+                if (template.ProfileId is not null && template.ProfileId != Profile.NO_PROFILE.Id && settingsManager.GetProfileById(template.ProfileId) == Profile.NO_PROFILE)
+                    hints.Add(string.Format(TB("The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."), template.ProfileId));
+
                 return result with { ConfigurationObject = template with { ToolIds = templateToolIds }, Hints = hints };
 
             case DataDocumentAnalysisPolicy policy:

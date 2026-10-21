@@ -270,8 +270,11 @@ public sealed class ConfigurationSnippetParserTests
             ],
             ToolIds = ["web_search"],
 
-            // Preselected data sources make the export start with a comment:
+            // Preselected data sources make the export start with a comment, and so do a preselected
+            // provider and profile, with a comment of their own:
             DataSourceOptions = new() { DisableDataSources = false, PreselectedDataSourceIds = [Guid.NewGuid().ToString()] },
+            ProviderId = Guid.NewGuid().ToString(),
+            ProfileId = Guid.NewGuid().ToString(),
         };
 
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);

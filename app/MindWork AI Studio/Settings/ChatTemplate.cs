@@ -50,7 +50,31 @@ public record ChatTemplate(
     /// whether the retrieved data is validated.
     /// </remarks>
     public DataSourceOptions? DataSourceOptions { get; init; }
-    
+
+    /// <summary>
+    /// The profile this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing about profiles, so the chat starts with the profile
+    /// chosen as its default in the app settings. The ID of <see cref="Profile.NO_PROFILE"/> is the
+    /// opposite statement: such chats start without a profile, whatever that default says.<br/><br/>
+    /// A preselection, not a limit: the user picks another profile in the chat as usual. It means
+    /// nothing for a template which does not allow profiles, and a profile which is gone leaves the
+    /// chat default in place.
+    /// </remarks>
+    public string? ProfileId { get; init; }
+
+    /// <summary>
+    /// The provider, and with it the model, this template preselects for a chat started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat starts with the provider it would start
+    /// with anyway. A preselection, not a limit, and no way around the confidence levels either: a
+    /// provider which is gone, or which may not be used for chats, leaves the chat to start as if
+    /// the template said nothing.
+    /// </remarks>
+    public string? ProviderId { get; init; }
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     private static readonly ILogger<ChatTemplate> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatTemplate>();
@@ -67,6 +91,8 @@ public record ChatTemplate(
         AllowProfileUsage = true,
         ToolIds = null,
         DataSourceOptions = null,
+        ProfileId = null,
+        ProviderId = null,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -202,6 +228,10 @@ public record ChatTemplate(
 
         var fileAttachments = ParseFileAttachments(idx, table, pluginPath);
 
+        var profileId = ParseOptionalId(idx, table, "ProfileId", allowEmpty: true);
+        if (profileId is not null && !allowProfileUsage)
+            LOGGER.LogWarning("The chat template {IdxChatTemplate} preselects a profile but does not allow profiles. Chats started with it ignore that profile.", idx);
+
         template = new ChatTemplate
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -214,6 +244,8 @@ public record ChatTemplate(
             AllowProfileUsage = allowProfileUsage,
             ToolIds = ParseToolIds(idx, table),
             DataSourceOptions = ParseDataSourceOptions(idx, table),
+            ProfileId = profileId,
+            ProviderId = ParseOptionalId(idx, table, "ProviderId", allowEmpty: false),
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
@@ -292,6 +324,25 @@ public record ChatTemplate(
         }
 
         return toolIds;
+    }
+
+    /// <remarks>
+    /// The empty GUID is a statement for a profile — start without one — but names no provider at
+    /// all, hence the switch. Anything which is no GUID cannot point at a provider or profile and is
+    /// dropped, so that the template still works, with the chat defaults in its place.
+    /// </remarks>
+    private static string? ParseOptionalId(int idx, LuaTable table, string fieldName, bool allowEmpty)
+    {
+        if (!table.TryGetValue(fieldName, out var idValue))
+            return null;
+
+        if (!idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id) || (!allowEmpty && id == Guid.Empty))
+        {
+            LOGGER.LogWarning("The {FieldName} of chat template {IdxChatTemplate} is not a valid ID and will be ignored.", fieldName, idx);
+            return null;
+        }
+
+        return id.ToString();
     }
 
     private static DataSourceOptions? ParseDataSourceOptions(int idx, LuaTable table)
@@ -449,22 +500,24 @@ public record ChatTemplate(
         var fileAttachmentsLua = this.BuildFileAttachmentsLua(fileAttachmentPaths);
 
         //
-        // Both of these may be absent entirely, because saying nothing about tools or data sources
-        // is a statement of its own. They therefore bring their own line break and indentation
-        // instead of sitting on a line of the template:
+        // These may be absent entirely, because saying nothing about the profile, the provider, the
+        // tools, or the data sources is a statement of its own. They therefore bring their own line
+        // break and indentation instead of sitting on a line of the template:
         //
+        var profileIdLua = BuildOptionalIdLua("ProfileId", this.ProfileId);
+        var providerIdLua = BuildOptionalIdLua("ProviderId", this.ProviderId);
         var toolIdsLua = this.BuildToolIdsLua();
         var dataSourceOptionsLua = this.BuildDataSourceOptionsLua();
 
         luaCode = $$"""
-                    {{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                    {{this.BuildProviderAndProfileIdNote()}}{{this.BuildDataSourceIdNote()}}CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(exportId)}}",
                         ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
                         ["SystemPrompt"] = {{LuaTools.ToLuaStringLiteral(this.SystemPrompt)}},
                         ["PredefinedUserPrompt"] = {{LuaTools.ToLuaStringLiteral(this.PredefinedUserPrompt)}},
                         ["AllowProfileUsage"] = {{this.AllowProfileUsage.ToString().ToLowerInvariant()}},
                         ["FileAttachments"] = {{fileAttachmentsLua}},
-                        ["ExampleConversation"] = {{exampleConversationLua}},{{toolIdsLua}}{{dataSourceOptionsLua}}
+                        ["ExampleConversation"] = {{exampleConversationLua}},{{profileIdLua}}{{providerIdLua}}{{toolIdsLua}}{{dataSourceOptionsLua}}
                     }
                     """;
         return true;
@@ -574,6 +627,10 @@ public record ChatTemplate(
         return true;
     }
 
+    private static string BuildOptionalIdLua(string fieldName, string? id) => id is null
+        ? string.Empty
+        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(id)},";
+
     /// <remarks>
     /// An empty set is written out as an empty table rather than being left out: the two say
     /// different things, and dropping the line would turn "no tools at all" into "whatever the
@@ -649,6 +706,26 @@ public record ChatTemplate(
                -- The data source IDs below are the ones of the machine this was exported from.
                -- Please check them against your CONFIG["DATA_SOURCES"]: an ID which resolves to
                -- nothing is ignored, and a chat with this template then starts without that source.
+
+               """;
+    }
+
+    /// <remarks>
+    /// The same holds for the provider and the profile: a configuration plugin reaches only those
+    /// which it or another plugin defines, and the ones of this machine are mostly the user's own.
+    /// Starting without a profile names nothing, so it needs no note.
+    /// </remarks>
+    private string BuildProviderAndProfileIdNote()
+    {
+        var namesProfile = this.ProfileId is not null && this.ProfileId != Profile.NO_PROFILE.Id;
+        if (this.ProviderId is null && !namesProfile)
+            return string.Empty;
+
+        return """
+               -- The provider and profile IDs below are the ones of the machine this was exported from.
+               -- Please check them against your CONFIG["LLM_PROVIDERS"] and CONFIG["PROFILES"]: an ID
+               -- which resolves to nothing is ignored, and a chat with this template then starts with
+               -- the provider or profile it would start with anyway.
 
                """;
     }

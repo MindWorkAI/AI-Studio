@@ -118,6 +118,8 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             Assert.That(imported.DataSourceOptions!.AutomaticDataSourceSelection, Is.EqualTo(template.DataSourceOptions!.AutomaticDataSourceSelection));
             Assert.That(imported.DataSourceOptions.AutomaticValidation, Is.EqualTo(template.DataSourceOptions.AutomaticValidation));
             Assert.That(imported.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(template.DataSourceOptions.PreselectedDataSourceIds));
+            Assert.That(imported.ProviderId, Is.EqualTo(template.ProviderId));
+            Assert.That(imported.ProfileId, Is.EqualTo(template.ProfileId));
         });
     }
 
@@ -417,14 +419,31 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     public async Task MissingReferencesOfAChatTemplateAreNamed()
     {
         var missingDataSourceId = Guid.NewGuid().ToString();
-        var snippet = ExportChatTemplate([], toolIds: [TOOL_ID, "missing_tool"], dataSourceIds: [missingDataSourceId]);
+        var missingProviderId = Guid.NewGuid().ToString();
+        var missingProfileId = Guid.NewGuid().ToString();
+        var snippet = ExportChatTemplate([], toolIds: [TOOL_ID, "missing_tool"], dataSourceIds: [missingDataSourceId], providerId: missingProviderId, profileId: missingProfileId);
         var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.Hints, Has.Count.EqualTo(2), "One sentence for each kind of reference.");
+            Assert.That(result.Hints, Has.Count.EqualTo(4), "One sentence for each kind of reference.");
             Assert.That(result.Hints, Has.Exactly(1).Contains(missingDataSourceId));
             Assert.That(result.Hints, Has.Exactly(1).Contains("missing_tool"));
+            Assert.That(result.Hints, Has.Exactly(1).Contains(missingProviderId));
+            Assert.That(result.Hints, Has.Exactly(1).Contains(missingProfileId));
+        });
+    }
+
+    [Test]
+    public async Task AChatTemplateWhichStartsWithoutAProfileNamesNothingMissing()
+    {
+        var snippet = ExportChatTemplate([], profileId: Profile.NO_PROFILE.Id);
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Hints, Is.Empty, "Starting without a profile is a statement, not a reference to a profile which could be missing.");
+            Assert.That(((ChatTemplate)result.ConfigurationObject).ProfileId, Is.EqualTo(Profile.NO_PROFILE.Id));
         });
     }
 
@@ -440,7 +459,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         var registry = this.CreateRegistry(new TestTool(Definition()));
 
         var policy = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportPolicy(provider.Id, profile.Id, [TOOL_ID]), PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY), this.SettingsManager, registry);
-        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID], [dataSource.Id]), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
+        var template = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(ExportChatTemplate([], [TOOL_ID], [dataSource.Id], provider.Id, profile.Id), PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, registry);
 
         Assert.Multiple(() =>
         {
@@ -589,7 +608,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
                 return (profile, profile.ExportAsConfigurationSection());
 
             case PluginConfigurationObjectType.CHAT_TEMPLATE:
-                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()]);
+                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()], Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
                 Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
                 return (template, luaCode);
 
@@ -677,14 +696,14 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         return (dataSource, dataSource.ExportAsConfigurationSection(encryptedSecret, usernamePasswordMode));
     }
 
-    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null)
+    private static string ExportChatTemplate(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds = null, IReadOnlyList<string>? dataSourceIds = null, string? providerId = null, string? profileId = null)
     {
-        var template = ChatTemplateWith(attachmentPaths, toolIds, dataSourceIds);
+        var template = ChatTemplateWith(attachmentPaths, toolIds, dataSourceIds, providerId, profileId);
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
         return luaCode;
     }
 
-    private static ChatTemplate ChatTemplateWith(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds, IReadOnlyList<string>? dataSourceIds) => new()
+    private static ChatTemplate ChatTemplateWith(IReadOnlyList<string> attachmentPaths, IReadOnlyList<string>? toolIds, IReadOnlyList<string>? dataSourceIds, string? providerId = null, string? profileId = null) => new()
     {
         Num = 1,
         Id = Guid.NewGuid().ToString(),
@@ -700,6 +719,8 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
         ],
         ToolIds = toolIds?.ToHashSet(StringComparer.Ordinal),
         DataSourceOptions = dataSourceIds is null ? null : new() { DisableDataSources = false, AutomaticValidation = true, PreselectedDataSourceIds = [..dataSourceIds] },
+        ProviderId = providerId,
+        ProfileId = profileId,
     };
 
     private static string ExportPolicy(string preselectedProvider = "", string preselectedProfile = "", IReadOnlyList<string>? allowedToolIds = null) => PolicyWith(preselectedProvider, preselectedProfile, allowedToolIds ?? []).ExportAsConfigurationSection();
