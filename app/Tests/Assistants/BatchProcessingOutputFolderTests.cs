@@ -119,4 +119,47 @@ public sealed class BatchProcessingOutputFolderTests
             Assert.That(outputFolder.Enters(Path.Combine(INPUT_FOLDER, "notes")), Is.True, "Leaving out the output folder would leave out the input folder, too.");
         });
     }
+
+    [Test]
+    public void TheInputFolderAsOutputFolderLeavesOutTheResultFilesOfEveryFormat()
+    {
+        var outputFolder = new BatchProcessingOutputFolder(INPUT_FOLDER, INPUT_FOLDER, RESULTS_FILE_NAME);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report_result.md")), Is.True);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report_result_2.docx")), Is.True, "A second result of the same name gets a counter.");
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "Report_Result.HTML")), Is.True);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report.v2_result.md")), Is.True, "Only the last extension of the document makes way for the suffix.");
+        });
+    }
+
+    [Test]
+    public void TheInputFolderAsOutputFolderKeepsDocumentsWithSimilarNames()
+    {
+        var outputFolder = new BatchProcessingOutputFolder(INPUT_FOLDER, INPUT_FOLDER, RESULTS_FILE_NAME);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report.md")), Is.False);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "result.md")), Is.False);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "my_results.md")), Is.False);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report_result_draft.md")), Is.False);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(INPUT_FOLDER, "report_result_.md")), Is.False);
+        });
+    }
+
+    [Test]
+    public void TheInputFolderAsOutputFolderKeepsFilesInSubfolders()
+    {
+        var outputFolder = new BatchProcessingOutputFolder(INPUT_FOLDER, INPUT_FOLDER, RESULTS_FILE_NAME);
+        var subfolder = Path.Combine(INPUT_FOLDER, "notes");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(subfolder, "log.csv")), Is.False, "A run writes into the output folder itself, never into one of its subfolders.");
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(subfolder, RESULTS_FILE_NAME)), Is.False);
+            Assert.That(outputFolder.IsOutputOfRun(Path.Combine(subfolder, "report_result.md")), Is.False);
+        });
+    }
 }

@@ -44,7 +44,13 @@ internal sealed class BatchProcessingOutputFolder(string inputDirectory, string 
         if (this.liesBelowInputFolder)
             return PathTools.IsInsideDirectory(this.fullOutputDirectory, filePath);
 
-        return this.isInputFolder && this.IsOwnOutputArtifact(filePath);
+        //
+        // A run writes into the output folder itself, never into one of its subfolders:
+        //
+        return this.isInputFolder
+               && Path.GetDirectoryName(Path.GetFullPath(filePath)) is { } fileDirectory
+               && IsSameFolder(fileDirectory, this.fullOutputDirectory)
+               && this.IsOwnOutputArtifact(filePath);
     }
 
     /// <summary>
@@ -52,16 +58,28 @@ internal sealed class BatchProcessingOutputFolder(string inputDirectory, string 
     /// this when the output folder is the input folder: without it, the results
     /// of a previous run would be processed as documents.
     /// </summary>
+    /// <remarks>
+    /// A result file is recognized by its name without the extension, e.g., report_result.md or
+    /// report_result_2.docx, cf. AssistantBatchProcessing.CreateResultFileName. Its extension does
+    /// not count, because the user may have chosen another file format since a previous run.
+    /// </remarks>
     private bool IsOwnOutputArtifact(string filePath)
     {
         var fileName = Path.GetFileName(filePath);
-        if (string.Equals(fileName, AssistantBatchProcessing.LOG_FILENAME, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(fileName, AssistantBatchProcessing.LOG_FILENAME, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(fileName, resultsFileName, StringComparison.OrdinalIgnoreCase))
             return true;
 
-        if (string.Equals(fileName, resultsFileName, StringComparison.OrdinalIgnoreCase))
-            return true;
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        var suffixIndex = stem.LastIndexOf(AssistantBatchProcessing.RESULT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase);
+        if (suffixIndex < 0)
+            return false;
 
-        return fileName.EndsWith(AssistantBatchProcessing.RESULT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase);
+        //
+        // A second result of the same name gets a counter, e.g., report_result_2.md:
+        //
+        var counter = stem[(suffixIndex + AssistantBatchProcessing.RESULT_FILE_SUFFIX.Length)..];
+        return counter.Length is 0 || (counter.Length > 1 && counter[0] is '_' && counter[1..].All(char.IsAsciiDigit));
     }
 
     private static bool IsSameFolder(string firstDirectory, string secondDirectory) => string.Equals(TrimDirectorySeparator(Path.GetFullPath(firstDirectory)), TrimDirectorySeparator(Path.GetFullPath(secondDirectory)), PathTools.COMPARISON);
