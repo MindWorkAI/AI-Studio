@@ -1,6 +1,5 @@
 using System.Text;
 
-using AIStudio.Chat;
 using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.RAG;
@@ -24,6 +23,9 @@ public static class IRetrievalContextExtensions
     {
         contextBuilder.AppendLine($"Data source name: {retrievalContext.DataSourceName}");
         contextBuilder.AppendLine($"Content category: {retrievalContext.Category}");
+        if(!string.IsNullOrWhiteSpace(retrievalContext.SourceCategory))
+            contextBuilder.AppendLine($"Source category: {retrievalContext.SourceCategory.ReplaceLineEndings(" ").Trim()}");
+
         contextBuilder.AppendLine($"Content type: {retrievalContext.Type}");
         contextBuilder.AppendLine($"Content path: {retrievalContext.Path}");
 
@@ -36,6 +38,22 @@ public static class IRetrievalContextExtensions
         contextBuilder.AppendLine("Additional links:");
         foreach(var link in retrievalContext.Links)
             contextBuilder.AppendLine($"- {link}");
+    }
+
+    /// <summary>
+    /// Writes what the AI is told about an image which matched, in place of the image itself.
+    /// </summary>
+    /// <remarks>
+    /// The image is not passed on. Written as base64 text, it is nothing a model can look at, and
+    /// a single image would take more room than all other passages together: Semantic Search
+    /// left it out for its size, and the classic RAG process sent it along with every message.
+    /// The description above still tells where the image is, so the model can point the user to it.
+    /// </remarks>
+    /// <param name="contextBuilder">The builder to write into, after the description of the context.</param>
+    internal static void AppendImageMatch(StringBuilder contextBuilder)
+    {
+        contextBuilder.AppendLine();
+        contextBuilder.AppendLine("Matched image content: an image matched here, but it is not shown to you. Do not guess what it shows. When it matters for the answer, tell the user that an image matched, and where to find it, using the path and the links above.");
     }
 
     /// <summary>
@@ -126,20 +144,9 @@ public static class IRetrievalContextExtensions
                 await FilterWhatWeHaveSoFar();
                 break;
 
-            case RetrievalImageContext imageContext:
-                //
-                // Filtering happens before the image is appended, and only covers the text
-                // around it. Base64 image data is not prose, and running it through the filter
-                // would have it treated as one enormous encoded carrier.
-                //
+            case RetrievalImageContext:
+                AppendImageMatch(contextBuilder);
                 await FilterWhatWeHaveSoFar();
-                contextBuilder.AppendLine();
-                contextBuilder.AppendLine("Matched image content as base64-encoded data:");
-                contextBuilder.AppendLine("````");
-                contextBuilder.AppendLine(await imageContext.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image
-                        : string.Empty);
-                contextBuilder.AppendLine("````");
                 break;
 
             default:

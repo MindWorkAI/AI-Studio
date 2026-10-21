@@ -296,7 +296,7 @@
                             @*
                                 What the user has to decide comes with the buttons to decide it. The
                                 sentence above says what is at stake; reading it and then having to find
-                                the settings of the mailbox is where people give up.
+                                the settings of the mailbox or the data source is where people give up.
                             *@
                             @if (status.Attention is DataSourceAttention.AUTH_FAILED)
                             {
@@ -317,6 +317,14 @@
                                     </MudButton>
                                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.ChangeMailboxSettings(status))">
                                         @T("Change the settings of the mailbox")
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else if (status.Attention is DataSourceAttention.LOCATION_UNREACHABLE && this.CanEditDataSource(status))
+                            {
+                                <MudStack Row="@true" Wrap="Wrap.Wrap" Spacing="2">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(async () => await this.EditDataSource(status))">
+                                        @T("Edit this data source")
                                     </MudButton>
                                 </MudStack>
                             }

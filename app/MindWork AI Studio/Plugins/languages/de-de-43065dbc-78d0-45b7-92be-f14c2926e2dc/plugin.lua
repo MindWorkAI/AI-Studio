@@ -4050,6 +4050,48 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T813925103"] = "Das Folgende
 -- On this computer, the data folder lies inside the configuration folder. A backup of the configuration folder therefore takes the data folder along.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATAFOLDERS::T91194331"] = "Auf diesem Rechner befindet sich der Datenordner im Konfigurationsordner. Bei einer Sicherung des Konfigurationsordners wird daher auch der Datenordner mitgesichert."
 
+-- Local File, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1317002733"] = "Lokale Datei, erfordert einen Einbettungsanbieter"
+
+-- Add Local Directory as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
+
+-- Local File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T1687345358"] = "Lokale Datei"
+
+-- Mailbox (IMAP), requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T2363290424"] = "Postfach (IMAP), erfordert einen Einbettungsanbieter"
+
+-- Mailbox (IMAP), not allowed by your organization
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T308474155"] = "Postfach (IMAP), von Ihrer Organisation nicht erlaubt"
+
+-- Add Mailbox
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3173750212"] = "Postfach hinzufügen"
+
+-- Add Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3387511033"] = "Datenquelle hinzufügen"
+
+-- Add Local File as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3500365052"] = "Lokale Datei als Datenquelle hinzufügen"
+
+-- Local Directory, requires an embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3698039736"] = "Lokaler Ordner, erfordert einen Einbettungsanbieter"
+
+-- Import Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T381231449"] = "Datenquelle importieren"
+
+-- Mailbox (IMAP)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T3859543867"] = "Postfach (IMAP)"
+
+-- Add ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T590005498"] = "ERI v1 Datenquelle hinzufügen"
+
+-- External Data (ERI-Server v1)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T774473996"] = "Externe Daten (ERI-Server v1)"
+
+-- Local Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEADDBUTTONS::T926703547"] = "Lokaler Ordner"
+
 -- Yes, please send my data to the external embedding provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107763"] = "Ja, bitte senden Sie meine Daten an den externen Einbettungsanbieter"
 
@@ -4104,17 +4146,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026"] = "Si
 -- Automatic local data source refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Automatische Aktualisierung lokaler Datenquellen"
 
--- Edit Local Directory Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
-
--- Local File, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1317002733"] = "Lokale Datei, erfordert einen Einbettungsanbieter"
-
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Aktualisieren"
-
--- Add Local Directory as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1454193397"] = "Lokalen Ordner als Datenquelle hinzufügen"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1469573738"] = "Löschen"
@@ -4131,9 +4164,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Di
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "Extern (ERI)"
 
--- Local File
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1687345358"] = "Lokale Datei"
-
 -- Delete Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Datenquelle löschen"
 
@@ -4142,15 +4172,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2067030738"] = "M�
 
 -- Local Directory Data Source Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "Informationen zur lokalen Ordner-Datenquelle"
-
--- Edit ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T221059217"] = "ERI v1 Datenquelle bearbeiten"
-
--- Mailbox (IMAP), requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2363290424"] = "Postfach (IMAP), erfordert einen Einbettungsanbieter"
-
--- Edit Local File Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
 
 -- Local data sources refresh when files change, mailboxes every 16 minutes.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2511157475"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern, Postfächer alle 16 Minuten."
@@ -4185,12 +4206,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2940206485"] = "Si
 -- This data source is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "Diese Datenquelle wird von Ihrer Organisation verwaltet."
 
--- Mailbox (IMAP), not allowed by your organization
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T308474155"] = "Postfach (IMAP), von Ihrer Organisation nicht erlaubt"
-
--- Add Mailbox
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3173750212"] = "Postfach hinzufügen"
-
 -- Delete Mailbox
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3264675802"] = "Postfach löschen"
 
@@ -4200,17 +4215,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3267849393"] = "Be
 -- Are you sure you want to delete the data source '{0}' of type '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "Möchten Sie die Datenquelle „{0}“ vom Typ „{1}“ wirklich löschen?"
 
--- Add Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3387511033"] = "Datenquelle hinzufügen"
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unbekannt"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3448155331"] = "Schließen"
-
--- Add Local File as Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3500365052"] = "Lokale Datei als Datenquelle hinzufügen"
 
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3512062061"] = "Typ"
@@ -4227,20 +4236,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Zu
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Lokale Datenquellen werden aktualisiert, wenn sich Dateien ändern."
 
--- Local Directory, requires an embedding provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3698039736"] = "Lokaler Ordner, erfordert einen Einbettungsanbieter"
-
 -- Not available
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Nicht verfügbar"
 
--- Import Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T381231449"] = "Datenquelle importieren"
-
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "ERI-Datenquelle exportieren"
-
--- Mailbox (IMAP)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3859543867"] = "Postfach (IMAP)"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Aktionen"
@@ -4254,14 +4254,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Wa
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
 
--- Add ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T590005498"] = "ERI v1 Datenquelle hinzufügen"
-
 -- Cannot export this ERI data source because no enterprise encryption secret is configured.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung des Unternehmens konfiguriert ist."
-
--- External Data (ERI-Server v1)
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T774473996"] = "Externe Daten (ERI-Server v1)"
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T782820095"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Authentifizierung konfiguriert ist. Das Problem war: {0}"
@@ -4274,9 +4268,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T854231603"] = "Lok
 
 -- The password of this mailbox could not be deleted from the operating system, so the mailbox was kept. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T87980240"] = "Das Passwort für dieses Postfach konnte nicht aus dem Betriebssystem gelöscht werden. Daher wurde das Postfach beibehalten. Das Problem war: {0}"
-
--- Local Directory
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Lokaler Ordner"
 
 -- Import Embedding
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMISSINGEMBEDDINGWARNING::T1681763001"] = "Einbettung importieren"
@@ -5841,9 +5832,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1874060138"] = "Chat hinzuf�
 -- No chats found
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "Keine Chats gefunden"
 
--- Create Chat
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1939006681"] = "Chat erstellen"
-
 -- Please name your workspace:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T201482774"] = "Bitte benennen Sie Ihren Arbeitsbereich:"
 
@@ -5852,9 +5840,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2133593288"] = "Möchten Sie
 
 -- Are you sure you want to delete the workspace '{0}'? This will also delete {1} chat(s) in this workspace.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2151341762"] = "Möchten Sie den Arbeitsbereich „{0}“ wirklich löschen? Dadurch werden auch {1} Chat(s) in diesem Arbeitsbereich gelöscht."
-
--- Are you sure you want to create a another chat? All unsaved changes will be lost.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2237618267"] = "Möchten Sie wirklich einen neuen Chat erstellen? Alle nicht gespeicherten Änderungen gehen verloren."
 
 -- Please enter a chat name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T2301651387"] = "Bitte geben Sie einen Namen für diesen Chat ein."
@@ -6837,9 +6822,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2460883298"
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Hinzufügen"
 
--- The documents of this data source are already prepared, so its folder cannot be changed. Another folder holds other documents, which makes it another data source: please add one for it. The embedding provider below can be changed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2686150329"] = "Die Dokumente dieser Datenquelle sind bereits vorbereitet, daher kann ihr Ordner nicht geändert werden. Ein anderer Ordner enthält andere Dokumente und ist damit eine andere Datenquelle: Bitte fügen Sie dafür eine neue hinzu. Den Einbettungsanbieter darunter können Sie ändern."
-
 -- The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2814869210"] = "Die von Ihnen ausgewählte Einbettung läuft lokal oder innerhalb Ihrer Organisation. Ihre Daten werden nicht in die Cloud übertragen."
 
@@ -7097,9 +7079,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T787118522"] = "D
 
 -- Data Source Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T813773421"] = "Name der Datenquelle"
-
--- The documents of this data source are already prepared, so its file cannot be changed. Another file holds other content, which makes it another data source: please add one for it. The embedding provider below can be changed.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T890383764"] = "Die Dokumente dieser Datenquelle sind bereits vorbereitet, daher kann ihre Datei nicht geändert werden. Eine andere Datei enthält andere Inhalte und ist damit eine andere Datenquelle: Bitte fügen Sie dafür eine neue hinzu. Den Einbettungsanbieter darunter können Sie ändern."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T900713019"] = "Abbrechen"
@@ -10404,6 +10383,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T819555436"] = "Fehlgeschlagene E-
 -- Skipped
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T852993367"] = "Übersprungen"
 
+-- Edit this data source
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T878700886"] = "Diese Datenquelle bearbeiten"
+
 -- Open the transcription settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T905182399"] = "Transkriptionseinstellungen öffnen"
 
@@ -11112,8 +11094,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Plugin aktivieren"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
+-- {0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2430906247"] = "{0} Möchten Sie das Plugin-Archiv stattdessen an einem Ort Ihrer Wahl speichern? Bis zum Neustart von AI Studio bietet die Plugin-Seite diesen Export anstelle des Teilens an."
+
 -- The tile '{0}' has been updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
+
+-- Share dialog not available
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2445896850"] = "Dialog zum Teilen nicht verfügbar"
 
 -- Edit Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Plugin für „Assistent bearbeiten“"
@@ -12234,17 +12222,38 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEM
 -- Qdrant Edge is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge ist nicht verfügbar."
 
+-- Edit Local Directory Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T1215599168"] = "Datenquelle bearbeiten: Lokaler Ordner"
+
+-- Edit ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T221059217"] = "ERI v1 Datenquelle bearbeiten"
+
+-- Edit Local File Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEEDITING::T2453292893"] = "Datenquelle bearbeiten: Lokale Datei"
+
+-- Every other file goes to your embedding provider once more, which takes a while with many files. Files missing at the new location are removed from the index, while your files on disk stay as they are.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T1555760974"] = "Jede andere Datei wird erneut an Ihren Einbettungsanbieter gesendet, was bei vielen Dateien eine Weile dauert. Dateien, die am neuen Speicherort fehlen, werden aus dem Index entfernt, während Ihre Dateien selbst unverändert bleiben."
+
+-- AI Studio keeps what it has already prepared for every file it finds unchanged at the new location, that is, of the same type and with the same size and modification time. In a folder, such a file also has to keep its name and the subfolder it is in.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2205693550"] = "Was AI Studio bereits vorbereitet hat, bleibt für jede Datei erhalten, die es am neuen Speicherort unverändert findet, also mit demselben Dateityp, derselben Größe und demselben Änderungsdatum. In einem Ordner muss eine solche Datei außerdem ihren Namen behalten und im selben Unterordner liegen."
+
 -- They keep answering keyword searches, but searching them by meaning stops working, and no further documents can be prepared for them. The ones which are already prepared stay tied to this provider as well, so you cannot simply move them to another one.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2343773457"] = "Sie beantworten weiterhin Stichwortsuchen, aber die Suche nach Bedeutung funktioniert nicht mehr, und es können keine weiteren Dokumente für sie vorbereitet werden. Bereits vorbereitete Datenquellen bleiben zudem an diesen Anbieter gebunden, sodass Sie sie nicht einfach auf einen anderen umstellen können."
 
 -- and {0} more.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2519847121"] = "und {0} weitere."
 
+-- Your embedding provider runs in the cloud, so preparing files again costs money.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T2635623258"] = "Ihr Einbettungsanbieter läuft in der Cloud, daher kostet es Geld, Dateien erneut vorzubereiten."
+
 -- This change makes the prepared documents of the following data sources unusable ({0}):
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3337378891"] = "Durch diese Änderung werden die vorbereiteten Dokumente der folgenden Datenquellen unbrauchbar ({0}):"
 
 -- Do you want to apply this change anyway?
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3419411838"] = "Möchten Sie diese Änderung trotzdem übernehmen?"
+
+-- New Location for This Data Source
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T3462449568"] = "Neuer Speicherort für diese Datenquelle"
 
 -- Documents Will Be Prepared Again
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATASOURCEREINDEXWARNING::T737291513"] = "Dokumente werden erneut vorbereitet"
@@ -13788,17 +13797,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::DOCUMENTRUNPROGRESS::T8042
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it. Nothing was removed from the index.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1214987337"] = "Der Ordner „{0}“ konnte nicht geöffnet werden. Bitte prüfen Sie, ob Sie die erforderlichen Leserechte haben. Aus dem Index wurde nichts entfernt."
 
--- The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. Once the file is back, refresh this data source. When it is gone for good, remove this data source.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1393648320"] = "Die Datei „{0}“ ist nicht erreichbar. Möglicherweise ist das Laufwerk, auf dem sie sich befindet, nicht verbunden, oder die Datei wurde verschoben oder umbenannt. Aus dem Index wurde nichts entfernt. Sobald die Datei wieder verfügbar ist, aktualisieren Sie diese Datenquelle. Wenn sie dauerhaft nicht mehr vorhanden ist, entfernen Sie diese Datenquelle."
-
 -- The file '{0}' changed while it was being indexed. What was indexed of it is discarded, and the file is tried again during the next run.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T1935191670"] = "Die Datei „{0}“ wurde während der Indexierung geändert. Die bereits indexierten Inhalte werden verworfen, und die Datei wird beim nächsten Durchlauf erneut verarbeitet."
 
+-- The file '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the file was moved or renamed. Nothing was removed from the index. If the file was moved or renamed, edit this data source to select its new location. Once the file is back, refresh this data source. When it is gone for good, remove this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2268993048"] = "Die Datei „{0}“ ist nicht erreichbar. Möglicherweise ist das Laufwerk, auf dem sie sich befindet, nicht verbunden, oder die Datei wurde verschoben oder umbenannt. Aus dem Index wurde nichts entfernt. Wenn die Datei verschoben oder umbenannt wurde, bearbeiten Sie diese Datenquelle und wählen Sie den neuen Speicherort der Datei aus. Sobald die Datei wieder verfügbar ist, aktualisieren Sie diese Datenquelle. Wenn sie dauerhaft nicht mehr vorhanden ist, entfernen Sie diese Datenquelle."
+
+-- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. If the folder was moved or renamed, edit this data source to select its new location. Once the folder is back, refresh this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2692299965"] = "Der Ordner „{0}“ ist nicht erreichbar. Möglicherweise ist das Laufwerk, auf dem er sich befindet, nicht verbunden, oder der Ordner wurde verschoben oder umbenannt. Aus dem Index wurde nichts entfernt. Wenn der Ordner verschoben oder umbenannt wurde, bearbeiten Sie diese Datenquelle und wählen Sie den neuen Speicherort des Ordners aus. Sobald der Ordner wieder verfügbar ist, aktualisieren Sie diese Datenquelle."
+
+-- The folder '{0}' currently appears empty. AI Studio kept the index of this data source, because the folder of a drive that is not connected can look empty. Connect the drive and refresh this data source. If you emptied the folder on purpose, remove this data source.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T2999277901"] = "Der Ordner „{0}“ scheint derzeit leer zu sein. AI Studio hat den Index dieser Datenquelle beibehalten, da ein Ordner auf einem nicht verbundenen Laufwerk leer erscheinen kann. Verbinden Sie das Laufwerk und aktualisieren Sie diese Datenquelle. Wenn Sie den Ordner absichtlich geleert haben, entfernen Sie diese Datenquelle."
+
 -- The folder '{0}' could not be opened. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3230000698"] = "Der Ordner „{0}“ konnte nicht geöffnet werden. Bitte prüfen Sie, ob Sie ihn lesen dürfen."
-
--- The folder '{0}' cannot be reached. Perhaps the drive it is on is not connected, or the folder was moved or renamed. Nothing was removed from the index. Once the folder is back, refresh this data source.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3722338131"] = "Der Ordner „{0}“ ist nicht erreichbar. Möglicherweise ist das Laufwerk, auf dem er sich befindet, nicht verbunden, oder der Ordner wurde verschoben oder umbenannt. Aus dem Index wurde nichts entfernt. Sobald der Ordner wieder verfügbar ist, aktualisieren Sie diese Datenquelle."
 
 -- The file '{0}' could not be read. Please check whether you are allowed to read it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::INDEXING::FILESOURCEINDEXER::T3924882233"] = "Die Datei „{0}“ konnte nicht gelesen werden. Bitte prüfen Sie, ob Sie berechtigt sind, sie zu lesen."
@@ -14045,6 +14057,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2221093487"] = 
 
 -- Unexpected error: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2350673880"] = "Unerwarteter Fehler: {0}"
+
+-- The share dialog of your operating system did not respond.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T254952756"] = "Der systemeigene Dialog zum Teilen hat nicht reagiert."
 
 -- The plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = "Das Plugin hat kein lokales Verzeichnis."

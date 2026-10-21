@@ -509,6 +509,25 @@ public partial class Embeddings : MSGComponentBase
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    /// <remarks>
+    /// Not offered for a data source the organization manages: its settings cannot be edited.
+    /// </remarks>
+    private bool CanEditDataSource(DataSourceEmbeddingStatus status) => DataSourceEditing.CanEdit(this.SettingsManager, status.DataSourceId);
+
+    /// <summary>
+    /// Opens the settings of a data source, e.g. to select the new location of a moved folder.
+    /// </summary>
+    /// <remarks>
+    /// Saving them indexes the data source right away, and that run reconnects what is already
+    /// stored to the new location. The page reloads through CONFIGURATION_CHANGED, which it
+    /// receives like everybody else.
+    /// </remarks>
+    private async Task EditDataSource(DataSourceEmbeddingStatus status)
+    {
+        if (await DataSourceEditing.EditAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService, status.DataSourceId))
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     /// <summary>
     /// Agrees to the removal a mailbox held back, for the very number the user read.
     /// </summary>

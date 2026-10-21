@@ -149,7 +149,9 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
                 file.LastWriteUtc,
                 file.EmbeddedAtUtc,
                 file.ChunkCount,
-                file.TranscriptKey);
+                file.TranscriptKey,
+                file.RelativePath,
+                file.ParentFileId);
         }
 
         var permanentFailures = await context.PermanentIndexingFailures
@@ -230,6 +232,18 @@ public sealed partial class SqliteIndexStoreClientImplementation(string name, st
         }
 
         ApplyFile(fileEntity, dataSourceId, file);
+        await context.SaveChangesAsync(token);
+    }
+
+    public override async Task RelocateFileAsync(string dataSourceId, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token)
+    {
+        await using var context = this.CreateContext();
+        var file = await context.EmbeddedFiles.SingleAsync(file => file.DataSourceId == dataSourceId && file.ParentFileId == parentFileId, token);
+        // Keep the parent and chunk ids: moving a document does not change its stored vectors.
+        file.AbsolutePath = absolutePath;
+        file.RelativePath = relativePath;
+        file.FileName = Path.GetFileName(absolutePath);
+        file.Fingerprint = fingerprint;
         await context.SaveChangesAsync(token);
     }
 

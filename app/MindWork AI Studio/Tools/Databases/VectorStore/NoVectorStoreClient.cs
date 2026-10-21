@@ -37,7 +37,10 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
     public override Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, VectorSearchFilter filter, CancellationToken token) =>
         Task.FromException<IReadOnlyList<VectorSearchResult>>(this.CreateUnavailableException());
 
-    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, string parentFileId, CancellationToken token) =>
+        Task.FromException(this.CreateUnavailableException());
+
+    public override Task RelocateEmbeddingFileAsync(string storeName, string parentFileId, string absolutePath, string relativePath, string fingerprint, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
     public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>

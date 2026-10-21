@@ -24,16 +24,6 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     [Parameter]
     public DataSourceLocalFile DataSource { get; set; }
 
-    /// <summary>
-    /// Whether the file this data source reads must stay as it is.
-    /// </summary>
-    /// <remarks>
-    /// Set once the index holds something for this data source. The embedding is not locked along
-    /// with it: it can be changed, and DataSourceReindexWarning asks what that costs.
-    /// </remarks>
-    [Parameter]
-    public bool LockSource { get; set; }
-
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
@@ -206,8 +196,6 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
                 ? T("This audio or video file is skipped, because your transcription provider does not meet the confidence level this data source requires.")
                 : null;
 
-    private bool CanChangeSource => !this.IsEditing || !this.LockSource;
-
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
 
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
@@ -235,9 +223,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         Type = DataSourceType.LOCAL_FILE,
         EmbeddingId = this.dataEmbeddingId,
 
-        // Kept out of reach of the form while the source is locked, so a stale field cannot point an
-        // indexed data source somewhere else:
-        FilePath = this.CanChangeSource ? this.dataFilePath : this.DataSource.FilePath,
+        FilePath = this.dataFilePath,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         ConfidenceLevel = this.dataConfidenceLevel,
@@ -252,6 +238,14 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         if (!this.dataIsValid)
             return;
 
+        await this.StoreValidatedDataSourceAsync();
+    }
+
+    /// <summary>
+    /// Continues Save after form validation, asking before the draft is returned to its caller.
+    /// </summary>
+    internal async Task StoreValidatedDataSourceAsync()
+    {
         var addedDataSource = this.CreateDataSource();
 
         //
