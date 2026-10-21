@@ -528,12 +528,14 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         //
         // The slides of an earlier run stay out of sight until this run has a result of its own.
-        // Catalog and pictures are taken once, so that the prompt, the check, and the file later
-        // on all see the same layouts and the same numbering:
+        // Catalog, template, and pictures are taken once, so that the prompt, the check, and the
+        // file later on all see the same layouts and the same numbering, even when the user
+        // chooses another template while the LLM is still planning:
         //
         this.slideDeck = null;
         this.slideDeckAnswer = string.Empty;
         var catalog = this.Catalog;
+        var plannedTemplatePath = this.template is null ? string.Empty : this.templatePath;
         var templateSlideUses = this.ChosenTemplateSlideUses;
         var imageAttachments = this.PicturesOfRequest();
 
@@ -617,7 +619,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
         this.slideDeck = deck;
         this.slideDeckAnswer = answer;
-        this.slideDeckTemplatePath = this.template is null ? string.Empty : this.templatePath;
+        this.slideDeckTemplatePath = plannedTemplatePath;
         this.slideDeckPicturePaths = imageAttachments.Select(picture => picture.FilePath).ToList();
         this.ShowOutline(deck, catalog, imageAttachments.Select(picture => picture.FileName).ToList());
     }
