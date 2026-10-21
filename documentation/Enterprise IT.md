@@ -795,7 +795,23 @@ Writing the `DataSourceOptions` table at all is already the statement that this 
 
 Semantic search only works where `semantic_search` can be offered: the model has to be able to call tools, neither `DataTools.EnableTools` nor `DataTools.DisabledToolIds` may switch it off, and the provider has to meet a minimum confidence you set for it in `DataTools.MinimumProviderConfidenceByToolId`. Otherwise, the chat searches with every message instead. A template that leaves `RetrievalMode` out gets `SEMANTIC_SEARCH`, not the chat default. That chat default is the setting `DataChat.PreselectedDataSourcesRetrievalMode`, with the same two values.
 
-When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools or data sources, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+When an [assistant plugin](../app/MindWork%20AI%20Studio/Plugins/assistants/README.md) opens a chat directly and its chat template names tools, data sources, a provider, or a profile, that template decides them alone; what the launcher names is dropped with a warning in the log. Its README explains the rule and how such sources are checked.
+
+## Chat templates with a provider and a profile
+
+A chat template may also decide the provider, and with it the model, and the profile a chat started with it begins with. Use case: a template for working with mails preselects the mailbox as its data source, the provider whose confidence level the mailbox requires, and a profile that suits mail work, so that users no longer switch both by hand for every chat.
+
+| What the template says | What a chat started with it does |
+|---|---|
+| no `ProviderId` at all | starts with the provider it would start with anyway |
+| `ProviderId` present | starts with that provider, if it exists and meets the confidence level required for chats |
+| no `ProfileId` at all | starts with the profile the user has set as their default |
+| `ProfileId` = `00000000-0000-0000-0000-000000000000` | starts without a profile, whatever that default says |
+| `ProfileId` present | starts with that profile, if it exists |
+
+Both are a preselection, not a lock: users change them in the chat as usual. A provider or profile that does not exist, and a provider below the confidence level of chats, are ignored, and the chat starts as if the template said nothing. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
+
+The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
 
 ## Mailboxes
 

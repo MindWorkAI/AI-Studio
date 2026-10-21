@@ -1363,6 +1363,32 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     },
 -- }
 
+-- An example chat template which preselects a provider and a profile:
+-- Both are optional and independent of each other, and leaving one out keeps what a chat
+-- starts with anyway. They are a preselection, not a limit: users change either of them in
+-- the chat as usual. Both may name a provider or profile of this configuration, which keeps
+-- its ID on every computer, or one of another configuration of your organization.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000003",
+--     ["Name"] = "Mail Assistant",
+--     ["SystemPrompt"] = "You help <Company Name>'s employees read, sort, and answer their mails.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the provider, and with it the model, a chat with this template starts with.
+--     -- Must be an ID from CONFIG["LLM_PROVIDERS"] or of a provider of another configuration.
+--     -- The provider has to meet the confidence level required for chats. A provider which
+--     -- does not, or an ID which resolves to nothing, is ignored, and the chat starts with
+--     -- the provider it would start with anyway.
+--     ["ProviderId"] = "00000000-0000-0000-0000-000000000000",
+--
+--     -- Optional: the profile a chat with this template starts with.
+--     -- Must be an ID from CONFIG["PROFILES"] or of a profile of another configuration.
+--     -- "00000000-0000-0000-0000-000000000000" starts the chat without a profile, whatever
+--     -- the user chose as their default. An ID which resolves to nothing is ignored, and so
+--     -- is the whole field when AllowProfileUsage is false.
+--     ["ProfileId"] = "00000000-0000-0000-0000-000000000000",
+-- }
+
 -- Introduction texts shown as expansion panels on the welcome page:
 CONFIG["INTRODUCTIONS"] = {}
 
