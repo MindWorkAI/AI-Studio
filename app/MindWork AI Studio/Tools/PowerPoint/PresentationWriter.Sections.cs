@@ -24,17 +24,14 @@ internal static partial class PresentationWriter
     /// </summary>
     /// <remarks>
     /// The slides before the first chapter, such as the title slide, form a section named after the
-    /// presentation. The imprint of the template, which closes the presentation, forms a section of
-    /// its own. A deck without chapters gets no sections at all.
+    /// presentation. A deck without chapters gets no sections at all.
     /// </remarks>
     /// <param name="presentation">The presentation.</param>
     /// <param name="template">The template, which names the template slides of the deck.</param>
     /// <param name="presentationTitle">The title of the presentation, which names the section before the first chapter.</param>
     /// <param name="slides">The slides of the deck, in the order they were written.</param>
     /// <param name="slideIds">The IDs of these slides, in the same order.</param>
-    /// <param name="imprintSlideIds">The IDs of the imprint of the template; empty when the presentation has none.</param>
-    /// <param name="imprintName">The name of the section of the imprint.</param>
-    private static void WriteSections(P.Presentation presentation, PresentationTemplate template, string presentationTitle, IReadOnlyList<SlideSpec> slides, IReadOnlyList<uint> slideIds, IReadOnlyList<uint> imprintSlideIds, string imprintName)
+    private static void WriteSections(P.Presentation presentation, PresentationTemplate template, string presentationTitle, IReadOnlyList<SlideSpec> slides, IReadOnlyList<uint> slideIds)
     {
         if (!slides.Any(slide => slide.StartsChapter))
             return;
@@ -43,9 +40,6 @@ internal static partial class PresentationWriter
         P14.SectionSlideIdList? currentSection = null;
         for (var index = 0; index < slides.Count; index++)
         {
-            if (imprintSlideIds.Contains(slideIds[index]))
-                continue;
-
             var slide = slides[index];
             if (currentSection is null || slide.StartsChapter)
             {
@@ -57,9 +51,6 @@ internal static partial class PresentationWriter
 
             currentSection.Append(new P14.SectionSlideIdListEntry { Id = slideIds[index] });
         }
-
-        if (imprintSlideIds.Count > 0)
-            sections.Append(new P14.Section(new P14.SectionSlideIdList(imprintSlideIds.Select(id => new P14.SectionSlideIdListEntry { Id = id }))) { Name = imprintName, Id = NewSectionId() });
 
         var extensions = presentation.PresentationExtensionList ??= new P.PresentationExtensionList();
         extensions.InsertAt(new P.PresentationExtension(sections) { Uri = SECTION_LIST_URI }, 0);

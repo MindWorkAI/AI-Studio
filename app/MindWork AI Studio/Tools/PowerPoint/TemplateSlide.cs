@@ -22,7 +22,6 @@ namespace AIStudio.Tools.PowerPoint;
 /// <param name="SlotCopies">The shapes which repeat a slot of the layout, e.g., a second heading with its text, numbered after the slots of the layout; empty when the slide carries none.</param>
 /// <param name="Elements">What the slide carries besides the slots of its layout and their copies, from back to front.</param>
 /// <param name="IsHidden">Whether the slide is hidden in the slide show.</param>
-/// <param name="IsImprint">Whether the slide is an imprint, which closes the presentation when the user keeps or edits it.</param>
 internal sealed record TemplateSlide(
     int Number,
     Uri PartUri,
@@ -34,8 +33,7 @@ internal sealed record TemplateSlide(
     IReadOnlyList<TemplateSlot> Slots,
     IReadOnlyList<TemplateSlotCopy> SlotCopies,
     IReadOnlyList<TemplateSlideElement> Elements,
-    bool IsHidden,
-    bool IsImprint)
+    bool IsHidden)
 {
     /// <summary>
     /// Finds an element of the slide by the name the model used for it.

@@ -90,8 +90,6 @@ internal sealed partial class PresentationTemplate
                 list.Append('\n');
 
             list.Append("- Template slide ").Append(slide.Number).Append(use is TemplateSlideUse.KEEP ? ", to keep unchanged" : ", to edit");
-            if (slide.IsImprint)
-                list.Append(", the imprint");
 
             var family = this.FindFamily(slide.FamilyId ?? string.Empty);
             if (use is TemplateSlideUse.EDIT && family is not null)

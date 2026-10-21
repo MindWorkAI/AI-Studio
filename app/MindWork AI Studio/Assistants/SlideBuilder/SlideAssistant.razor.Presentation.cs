@@ -85,11 +85,6 @@ public partial class SlideAssistant
     private bool HasChosenTemplateSlides => this.template is not null && this.templateSlideUses.Any(use => use is not TemplateSlideUse.OMIT);
 
     /// <summary>
-    /// The imprint of the template, when the user keeps or edits it; it closes the presentation.
-    /// </summary>
-    private TemplateSlide? ChosenTemplateImprint => this.template?.Slides.FirstOrDefault(slide => slide.IsImprint && this.TemplateSlideUseOf(slide.Number) is not TemplateSlideUse.OMIT);
-
-    /// <summary>
     /// How many slides the user asked for, or 0 when the model may choose.
     /// </summary>
     /// <remarks>
@@ -167,9 +162,8 @@ public partial class SlideAssistant
     /// </summary>
     /// <remarks>
     /// The LLM edits every slide it can, so that a presentation used as a template becomes the next
-    /// one in its structure, the imprint included: the LLM updates its topic and date. A slide whose
-    /// layout has no slots for content is kept as it is. Samples and hints of a template are for the
-    /// user to leave out.
+    /// one in its structure. A slide whose layout has no slots for content is kept as it is. Samples
+    /// and hints of a template are for the user to leave out.
     /// </remarks>
     private static List<TemplateSlideUse> DefaultTemplateSlideUsesOf(PresentationTemplate template) => template.Slides
         .Select(slide => slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT)
@@ -197,9 +191,6 @@ public partial class SlideAssistant
     private string TemplateSlideLabelOf(TemplateSlide slide)
     {
         var label = string.Format(T("Slide {0}"), slide.Number);
-        if (slide.IsImprint)
-            label = $"{label} ({T("imprint")})";
-
         if (slide.IsHidden)
             label = $"{label} ({T("hidden")})";
 
@@ -249,12 +240,9 @@ public partial class SlideAssistant
         if (expectedSlideCount <= 0)
             return "    - Choose as many slides as the content needs.";
 
-        if (!this.HasChosenTemplateSlides)
-            return $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included.";
-
-        return this.ChosenTemplateImprint is null
+        return this.HasChosenTemplateSlides
             ? $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included."
-            : $"    - The presentation has exactly {expectedSlideCount} slides, the title slide and the template slides included, but not the imprint.";
+            : $"    - The presentation has exactly {expectedSlideCount} slides, the title slide included.";
     }
 
     /// <summary>
@@ -269,15 +257,7 @@ public partial class SlideAssistant
         if (!this.HasChosenTemplateSlides)
             return string.Empty;
 
-        var imprintRule = string.Empty;
-        if (this.ChosenTemplateImprint is { } imprint)
-        {
-            imprintRule = this.TemplateSlideUseOf(imprint.Number) is TemplateSlideUse.EDIT
-                ? $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation. Change only its topic to the title of the presentation and its date to {DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}, in the format the slide uses; keep every other line exactly as it is, in its language, and remove nothing."
-                : $"{Environment.NewLine}    - Template slide {imprint.Number} is the imprint, which closes the presentation.";
-        }
-
-        return $$"""
+        return """
 
                  # Template slides
                  The user chose slides of the template to use in the presentation. TEMPLATE_SLIDES lists them in their order, each one either to keep unchanged or to edit.
@@ -287,7 +267,7 @@ public partial class SlideAssistant
                      - An entry to edit also lists the elements the slide carries besides its slots, e.g., pictures, text boxes, charts, or tables of its own, with their place and the slots they overlap. List what the slide no longer shows in "remove", by the names the entry uses, e.g., "remove": ["element 2", "label 1"].
                      - Remove what does not fit the new content: samples and hints of the template, e.g., placeholder pictures, sample texts such as "Lorem ipsum", or a request to name the source of a picture; old content of a slot which no longer fits; and every element which overlaps a slot you fill, unless it covers most of the slide as a background. Keep what still belongs to the slide, e.g., a logo or a decoration. Never fill and remove the same slot, and never remove the title.
                      - Use every listed slide exactly once, in the listed order. Add new slides before, between, and after them, wherever the content calls for it.
-                     - Do not repeat on a new slide what a kept slide says already.{{imprintRule}}
+                     - Do not repeat on a new slide what a kept slide says already.
                      - Example: "slides": [{ "template_slide": 1 }, { "layout": "L3", "title": "..." }, { "template_slide": 3, "title": "...", "texts": [["..."]], "remove": ["element 1"] }]
                  """;
     }

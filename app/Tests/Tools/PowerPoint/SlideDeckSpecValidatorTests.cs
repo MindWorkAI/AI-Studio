@@ -131,8 +131,8 @@ public sealed class SlideDeckSpecValidatorTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Is.Empty, "The imprint of the template closes the presentation without counting as a slide of it.");
-            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 5, USES), Has.Some.Contains("has 4 slides, but exactly 5 were asked for"));
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 5, USES), Is.Empty, "Every template slide counts as a slide of the presentation, an imprint included.");
+            Assert.That(SlideDeckSpecValidator.Validate(deck, TemplateWithSlides(), 0, 4, USES), Has.Some.Contains("has 5 slides, but exactly 4 were asked for"));
         });
     }
 
@@ -175,7 +175,7 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     [Test]
-    public void TheTemplateSlidesKeepTheirOrderAndTheImprintClosesThePresentation()
+    public void TheTemplateSlidesKeepTheirOrder()
     {
         var unordered = new SlideDeckSpec("Weekly", [Keep(3), Edit(2, "News", texts: [Text("New")]), Keep(1), Edit(4, texts: [Text("Thema:\tWeekly")])]);
         var imprintInBetween = new SlideDeckSpec("Weekly", [Keep(1), Edit(2, "News", texts: [Text("New")]), Keep(3), Edit(4, texts: [Text("Thema:\tWeekly")]), Slide("L2", "Thanks")]);
@@ -183,7 +183,7 @@ public sealed class SlideDeckSpecValidatorTests
         Assert.Multiple(() =>
         {
             Assert.That(SlideDeckSpecValidator.Validate(unordered, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("The template slides are out of order. Keep them in the order 1, 2, 3, 4"));
-            Assert.That(SlideDeckSpecValidator.Validate(imprintInBetween, TemplateWithSlides(), 0, 0, USES), Has.Some.Contains("Slide 4 is the imprint of the template, which closes the presentation. Move it to the end."));
+            Assert.That(SlideDeckSpecValidator.Validate(imprintInBetween, TemplateWithSlides(), 0, 0, USES), Is.Empty, "An imprint is a template slide like any other, so a new slide may follow it.");
         });
     }
 
@@ -275,8 +275,8 @@ public sealed class SlideDeckSpecValidatorTests
     }
 
     /// <summary>
-    /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the imprint is
-    /// edited, and the closing slide is left out.
+    /// What the user chose for the slides of <see cref="TemplateWithSlides"/>: the second slide and
+    /// the imprint are edited, and the closing slide is left out.
     /// </summary>
     private static readonly TemplateSlideUse[] USES = [TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.KEEP, TemplateSlideUse.EDIT, TemplateSlideUse.OMIT];
 

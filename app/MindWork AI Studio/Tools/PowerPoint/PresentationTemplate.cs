@@ -68,10 +68,4 @@ internal sealed partial class PresentationTemplate
     public LayoutFamily? FamilyOf(SlideSpec slide) => slide.TemplateSlide is { } number
         ? this.FindSlide(number)?.FamilyId is { } familyId ? this.FindFamily(familyId) : null
         : this.FindFamily(slide.Layout);
-
-    /// <summary>
-    /// Whether a slide of a deck is the imprint of the template, which closes the presentation.
-    /// </summary>
-    /// <param name="slide">The slide of the deck.</param>
-    public bool IsImprint(SlideSpec slide) => slide.TemplateSlide is { } number && this.FindSlide(number) is { IsImprint: true };
 }

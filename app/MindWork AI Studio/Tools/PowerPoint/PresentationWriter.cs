@@ -20,9 +20,6 @@ namespace AIStudio.Tools.PowerPoint;
 /// variant and the footer of the presentation, so that they look like the slides around them. A
 /// slide the model edited takes its new content into its slots, and keeps the rest.
 ///
-/// The imprint of the template closes the presentation, when the deck keeps or edits it. The
-/// presentation gets no imprint of its own: what an imprint says is up to the template.
-///
 /// The deck has to pass <see cref="SlideDeckSpecValidator"/> first; what fits the template is not
 /// checked again here.
 /// </remarks>
@@ -77,8 +74,7 @@ internal static partial class PresentationWriter
             var presentationPart = document.PresentationPart ?? throw new InvalidDataException("The file contains no presentation.");
             var presentation = presentationPart.Presentation ?? throw new InvalidDataException("The file contains no presentation.");
 
-            // The imprint of the template closes the presentation, wherever the model put it:
-            var slides = deck.Slides.OrderBy(template.IsImprint).ToList();
+            var slides = deck.Slides;
             var keptSlideParts = RemoveSlides(presentationPart, presentation, TemplateSlidePartUrisOf(template, slides));
 
             var layoutParts = presentationPart.SlideMasterParts.SelectMany(master => master.SlideLayoutParts).ToDictionary(part => part.Uri);
@@ -86,8 +82,6 @@ internal static partial class PresentationWriter
             var slideIdList = presentation.SlideIdList ??= new P.SlideIdList();
             var variantLabel = VariantLabelOf(template, options);
             var slideIds = new List<uint>(slides.Count);
-            var imprintSlideIds = new List<uint>();
-            var imprintName = string.Empty;
             var usedTemplateSlides = new HashSet<Uri>();
             var slideArea = (double)template.SlideWidth * template.SlideHeight;
             for (var index = 0; index < slides.Count; index++)
@@ -123,16 +117,9 @@ internal static partial class PresentationWriter
                 var slideId = FIRST_SLIDE_ID + (uint)index;
                 slideIdList.Append(new P.SlideId { Id = slideId, RelationshipId = presentationPart.GetIdOfPart(slidePart) });
                 slideIds.Add(slideId);
-
-                // The imprint forms a section of its own, named like its slide; one without a title stays in the last section:
-                if (template.IsImprint(slide) && TitleOf(slide, template) is { Length: > 0 } title)
-                {
-                    imprintSlideIds.Add(slideId);
-                    imprintName = title;
-                }
             }
 
-            WriteSections(presentation, template, deck.Title, slides, slideIds, imprintSlideIds, imprintName);
+            WriteSections(presentation, template, deck.Title, slides, slideIds);
         }
 
         file.Position = 0;

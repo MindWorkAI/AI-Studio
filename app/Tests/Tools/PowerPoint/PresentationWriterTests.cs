@@ -12,7 +12,7 @@ namespace AIStudio.Tests.Tools.PowerPoint;
 
 /// <summary>
 /// Checks the presentations written from a template: valid files, filled placeholders, variants,
-/// pictures, tables, sections, and the template slides a deck keeps, the imprint among them.
+/// pictures, tables, sections, and the template slides a deck keeps or edits.
 /// </summary>
 /// <remarks>
 /// The test template reads as L1 "Title" (A, B), L2 "Content" (A, B), L3 "Picture with text",
@@ -55,7 +55,7 @@ public sealed class PresentationWriterTests
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The sample slides of the template are gone, parts included.");
-            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars", "Why Mars", "The rocket", "Landing", "Costs" }), "Without an imprint in the template, the presentation has none.");
+            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Mars", "Why Mars", "The rocket", "Landing", "Costs" }), "The presentation holds the slides of the deck, nothing more.");
         });
     }
 
@@ -203,7 +203,7 @@ public sealed class PresentationWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }), "The imprint of the template closes the presentation.");
+            Assert.That(slides.Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Questions", "Impressum" }));
             Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(5), "The slide the deck leaves out is gone, part included.");
             Assert.That(BodyParagraphsOf(slides[2]).Select(paragraph => paragraph.InnerText), Is.EqualTo(new[] { "AI Studio:", "EINSTEIN:" }));
             Assert.That(slides[3].Slide!.Show, Is.Null, "The user chose the slide, so it shows although the template hides it.");
@@ -212,7 +212,7 @@ public sealed class PresentationWriterTests
     }
 
     [Test]
-    public async Task TheImprintOfTheTemplateClosesThePresentationInASectionOfItsOwn()
+    public async Task AKeptSlideStaysWhereTheDeckPutsItWhateverItsTitle()
     {
         var deck = new SlideDeckSpec("Weekly",
         [
@@ -229,24 +229,9 @@ public sealed class PresentationWriterTests
         Assert.Multiple(() =>
         {
             Assert.That(ValidationErrorsOf(document), Is.Empty);
-            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Agenda", "News", "Impressum" }));
-            Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Weekly", "Agenda", "Impressum" }));
-            Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 1, 2, 1 }));
-        });
-    }
-
-    [Test]
-    public async Task WithoutTheImprintOfTheTemplateThePresentationHasNone()
-    {
-        var deck = new SlideDeckSpec("Weekly", [Keep(1), Keep(2)]);
-
-        var (file, _) = await WriteAsync(deck, OPTIONS, TEMPLATE_WITH_SLIDES);
-        using var document = PresentationDocument.Open(file, false);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "News" }), "The user left the imprint of the template out, and no other takes its place.");
-            Assert.That(document.PresentationPart!.SlideParts.Count(), Is.EqualTo(2));
+            Assert.That(SlidesOf(document).Select(TitleOf), Is.EqualTo(new[] { "Consultation hour", "Impressum", "Agenda", "News" }), "An imprint is a slide like any other: nothing moves it to the end.");
+            Assert.That(sections.Select(section => section.Name?.Value), Is.EqualTo(new[] { "Weekly", "Agenda" }));
+            Assert.That(sections.Select(section => section.Descendants<P14.SectionSlideIdListEntry>().Count()), Is.EqualTo(new[] { 2, 2 }));
         });
     }
 
@@ -552,7 +537,7 @@ public sealed class PresentationWriterTests
 
     /// <summary>
     /// Slides of <see cref="Layouts"/>: a title slide, three content slides of which one is hidden
-    /// and one the imprint, and a hint nobody keeps.
+    /// and one an imprint, and a hint nobody keeps.
     /// </summary>
     private static readonly TestTemplateOptions TEMPLATE_WITH_SLIDES = new(Slides:
     [

@@ -11,28 +11,6 @@ namespace AIStudio.Tools.PowerPoint;
 internal sealed partial class PresentationTemplate
 {
     /// <summary>
-    /// The titles an imprint goes by.
-    /// </summary>
-    private static readonly string[] IMPRINT_TITLES = ["Impressum", "Imprint"];
-
-    /// <summary>
-    /// The beginnings of the lines of an imprint, as the corporate template states them, e.g., "Thema" for the line naming the topic.
-    /// </summary>
-    /// <remarks>
-    /// The labels lack their colon, so that "Autor" also finds "Autoren:".
-    /// </remarks>
-    private static readonly string[] IMPRINT_LABEL_STEMS = ["Thema", "Datum", "Autor", "Institut", "Bildcredits"];
-
-    /// <summary>
-    /// A slide with lines starting with at least this many labels of an imprint is one, whatever its title.
-    /// </summary>
-    /// <remarks>
-    /// Three out of five: an author may well name the pictures "Bildquellen" rather than
-    /// "Bildcredits", but hardly changes every line.
-    /// </remarks>
-    private const int MIN_IMPRINT_LABELS = 3;
-
-    /// <summary>
     /// Reads the slides of a template with what their slots hold.
     /// </summary>
     /// <param name="presentationPart">The presentation part, which holds the slides.</param>
@@ -97,8 +75,7 @@ internal sealed partial class PresentationTemplate
                 slots,
                 slotCopies,
                 ElementsOf(topLevel, idCounts, slotShapes),
-                slide.Show?.Value == false,
-                IsImprint(title, contents)));
+                slide.Show?.Value == false));
         }
 
         return slides;
@@ -467,17 +444,5 @@ internal sealed partial class PresentationTemplate
         }
 
         return text.ToString();
-    }
-
-    /// <summary>
-    /// Says whether a slide is an imprint: by its title, or by the lines an imprint has.
-    /// </summary>
-    private static bool IsImprint(string title, IReadOnlyList<TemplateSlideContent> contents)
-    {
-        if (IMPRINT_TITLES.Any(imprintTitle => string.Equals(imprintTitle, title.Trim(), StringComparison.OrdinalIgnoreCase)))
-            return true;
-
-        var lines = contents.SelectMany(content => content.Text.Split('\n')).Select(line => line.TrimStart()).ToList();
-        return IMPRINT_LABEL_STEMS.Count(stem => lines.Any(line => line.StartsWith(stem, StringComparison.OrdinalIgnoreCase))) >= MIN_IMPRINT_LABELS;
     }
 }

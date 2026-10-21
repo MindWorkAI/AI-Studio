@@ -53,10 +53,8 @@ internal static class SlideDeckSpecValidator
             return issues;
         }
 
-        // The imprint of the template closes the presentation without being part of its content, so it does not count:
-        var slideCount = spec.Slides.Count(slide => !template.IsImprint(slide));
-        if (expectedSlideCount > 0 && slideCount != expectedSlideCount)
-            issues.Add($"The presentation has {slideCount} slides, but exactly {expectedSlideCount} were asked for.");
+        if (expectedSlideCount > 0 && spec.Slides.Count != expectedSlideCount)
+            issues.Add($"The presentation has {spec.Slides.Count} slides, but exactly {expectedSlideCount} were asked for.");
 
         for (var index = 0; index < spec.Slides.Count; index++)
             ValidateSlide(spec.Slides[index], index + 1, template, uses, pictureCount, issues);
@@ -172,7 +170,7 @@ internal static class SlideDeckSpecValidator
 
     /// <summary>
     /// Checks that every template slide the user chose appears exactly once, in the order of the
-    /// template, and that the imprint of the template closes the presentation.
+    /// template.
     /// </summary>
     /// <remarks>
     /// References to slides the user did not choose are reported with the slide which makes them.
@@ -201,13 +199,6 @@ internal static class SlideDeckSpecValidator
         var order = references.Distinct().ToList();
         if (!order.SequenceEqual(order.Order()))
             issues.Add($"The template slides are out of order. Keep them in the order {string.Join(", ", order.Order())}, and put new slides before, between, or after them.");
-
-        // The imprint of the template closes the presentation:
-        for (var index = 0; index < spec.Slides.Count - 1; index++)
-        {
-            if (spec.Slides[index] is { TemplateSlide: { } number } slide && template.IsImprint(slide) && UseOf(uses, number) is not TemplateSlideUse.OMIT)
-                issues.Add($"Slide {index + 1} is the imprint of the template, which closes the presentation. Move it to the end.");
-        }
     }
 
     /// <summary>

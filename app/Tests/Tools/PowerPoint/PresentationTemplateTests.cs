@@ -215,7 +215,6 @@ public sealed class PresentationTemplateTests
             Assert.That(template.Slides[0].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "Consultation hour"), (PlaceholderRole.SUBTITLE, "Every Monday\n10:00 to 10:45") }));
             Assert.That(template.Slides[1].Contents.Select(content => (content.Slot.Role, content.Text)), Is.EqualTo(new[] { (PlaceholderRole.TITLE, "News"), (PlaceholderRole.TEXT, "AI Studio:\nEINSTEIN:") }), "The footer is no slot of the slide.");
             Assert.That(template.Slides.Select(slide => slide.IsHidden), Is.EqualTo(new[] { false, true }));
-            Assert.That(template.Slides.Select(slide => slide.IsImprint), Is.EqualTo(new[] { false, false }));
             Assert.That(template.FindSlide(2), Is.SameAs(template.Slides[1]));
             Assert.That(template.FindSlide(0), Is.Null);
             Assert.That(template.FindSlide(3), Is.Null);
@@ -531,21 +530,5 @@ public sealed class PresentationTemplateTests
             Assert.That(template.Slides[0].FamilyId, Is.Null);
             Assert.That(template.Slides[0].Title, Is.EqualTo("Thank you"), "What the slide holds is read all the same, so the user knows which slide it is.");
         });
-    }
-
-    [Test]
-    public void AnImprintIsFoundByItsTitleOrByItsLines()
-    {
-        using var file = TestTemplate.Create(
-            new TestTemplateOptions(Slides:
-            [
-                new TestSlide(0, (TestPlaceholder.Title(), " impressum "), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour")),
-                new TestSlide(0, (TestPlaceholder.Title(), "About this presentation"), (new TestPlaceholder(null, 1), "Thema:\tConsultation hour\nDatum:\t2026-10-12\nAutoren:\tThe team\nBildquellen:\tPixabay")),
-                new TestSlide(0, (TestPlaceholder.Title(), "Agenda"), (new TestPlaceholder(null, 1), "Datum: today\nThema: news")),
-            ]),
-            new TestLayout("Content", TestPlaceholder.Title(), TestPlaceholder.Text(1, FULL_TEXT)));
-
-        var template = PresentationTemplate.Read(file);
-        Assert.That(template.Slides.Select(slide => slide.IsImprint), Is.EqualTo(new[] { true, true, false }), "Two lines alike are no imprint yet.");
     }
 }
