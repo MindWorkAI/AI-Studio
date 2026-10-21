@@ -428,7 +428,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         };
     }
 
-    private async Task<string> PromptLoadDocumentsContent()
+    private async Task<string> PromptLoadDocumentsContent(PromptInjectionReportingScope promptInjectionScope)
     {
         if (this.loadedDocumentPaths.Count == 0)
             return string.Empty;
@@ -443,13 +443,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
                           """);
         }
-
-        //
-        // One report for the whole batch: reading twenty documents must produce one dialog
-        // listing all of them, not twenty dialogs in a row.
-        //
-        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using var promptInjectionScope = guardService.BeginAction();
 
         var numDocuments = 1;
         foreach (var document in documents)
@@ -547,16 +540,17 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         this.CreateChatThread();
 
         //
-        // Documents and template slides come from files alike, so the user gets one report for
-        // everything the prompt injection filter removed from them:
+        // One report for the whole request: reading twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row. The template slides come from a file
+        // as well, so they belong to the same report:
         //
         string documentContent;
         string templateSlides;
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        await using (guardService.BeginAction())
+        await using (var promptInjectionScope = guardService.BeginAction())
         {
-            documentContent = await this.PromptLoadDocumentsContent();
-            templateSlides = await this.PromptTemplateSlidesAsync(guardService, templateSlideUses);
+            documentContent = await this.PromptLoadDocumentsContent(promptInjectionScope);
+            templateSlides = await this.PromptTemplateSlidesAsync(guardService, promptInjectionScope, templateSlideUses);
         }
 
         var time = this.AddUserRequest(

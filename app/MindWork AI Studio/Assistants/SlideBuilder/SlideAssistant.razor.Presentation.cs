@@ -309,15 +309,16 @@ public partial class SlideAssistant
     /// Their texts come from a file, which may carry instructions of somebody else, so they pass the
     /// prompt injection filter like every attached document.
     /// </remarks>
-    /// <param name="guardService">The prompt injection filter, within the action of the request.</param>
+    /// <param name="guardService">The prompt injection filter.</param>
+    /// <param name="promptInjectionScope">The action of the request, which reports what the filter removed.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template.</param>
     /// <returns>The section of the request; empty when the user chose no slide.</returns>
-    private async Task<string> PromptTemplateSlidesAsync(PromptInjectionGuardService guardService, IReadOnlyList<TemplateSlideUse> templateSlideUses)
+    private async Task<string> PromptTemplateSlidesAsync(PromptInjectionGuardService guardService, PromptInjectionReportingScope promptInjectionScope, IReadOnlyList<TemplateSlideUse> templateSlideUses)
     {
         if (this.template is not { } loadedTemplate || loadedTemplate.ToTemplateSlidesPrompt(templateSlideUses) is not { Length: > 0 } templateSlides)
             return string.Empty;
 
-        var sanitizedTemplateSlides = await guardService.SanitizeAsync(templateSlides, PromptInjectionSource.FileContent(this.templatePath));
+        var sanitizedTemplateSlides = await guardService.SanitizeAsync(templateSlides, PromptInjectionSource.FileContent(this.templatePath), promptInjectionScope);
         return $"""
 
                 # TEMPLATE_SLIDES
