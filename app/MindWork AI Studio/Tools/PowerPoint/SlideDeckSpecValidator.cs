@@ -75,7 +75,7 @@ internal static class SlideDeckSpecValidator
     /// <param name="template">The template whose layout families and slides the deck uses.</param>
     /// <param name="templateSlideUses">What the user chose for each slide of the template, by its number.</param>
     public static bool CanWrite(SlideSpec slide, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> templateSlideUses) => slide.TemplateSlide is { } number
-        ? UseOf(templateSlideUses, number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null && (!slide.HasContent || template.FamilyOf(slide) is not null)
+        ? templateSlideUses.UseOf(number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null && (!slide.HasContent || template.FamilyOf(slide) is not null)
         : template.FindFamily(slide.Layout) is not null;
 
     private static void ValidateSlide(SlideSpec slide, int number, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
@@ -105,7 +105,7 @@ internal static class SlideDeckSpecValidator
     /// </summary>
     private static void ValidateTemplateSlideEntry(SlideSpec slide, int number, int templateSlideNumber, PresentationTemplate template, IReadOnlyList<TemplateSlideUse> uses, int pictureCount, List<string> issues)
     {
-        var use = UseOf(uses, templateSlideNumber);
+        var use = uses.UseOf(templateSlideNumber);
         if (use is TemplateSlideUse.OMIT || template.FindSlide(templateSlideNumber) is not { } templateSlide)
         {
             var offered = OfferedNumbersOf(uses, template);
@@ -180,7 +180,7 @@ internal static class SlideDeckSpecValidator
         var references = spec.Slides
             .Select(slide => slide.TemplateSlide)
             .OfType<int>()
-            .Where(number => UseOf(uses, number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null)
+            .Where(number => uses.UseOf(number) is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null)
             .ToList();
 
         foreach (var number in OfferedNumbersOf(uses, template))
@@ -188,7 +188,7 @@ internal static class SlideDeckSpecValidator
             var count = references.Count(reference => reference == number);
             if (count == 0)
             {
-                issues.Add(UseOf(uses, number) is TemplateSlideUse.KEEP
+                issues.Add(uses.UseOf(number) is TemplateSlideUse.KEEP
                     ? $"Template slide {number} is missing. Add it at its place as {{ \"template_slide\": {number} }}."
                     : $"Template slide {number} is missing. Add it at its place with \"template_slide\": {number} and its new content.");
             }
@@ -207,8 +207,6 @@ internal static class SlideDeckSpecValidator
     private static List<int> OfferedNumbersOf(IReadOnlyList<TemplateSlideUse> uses, PresentationTemplate template) => Enumerable.Range(1, uses.Count)
         .Where(number => uses[number - 1] is not TemplateSlideUse.OMIT && template.FindSlide(number) is not null)
         .ToList();
-
-    private static TemplateSlideUse UseOf(IReadOnlyList<TemplateSlideUse> uses, int number) => number >= 1 && number <= uses.Count ? uses[number - 1] : TemplateSlideUse.OMIT;
 
     /// <summary>
     /// Checks that the content of a slide fits the slots it goes into.

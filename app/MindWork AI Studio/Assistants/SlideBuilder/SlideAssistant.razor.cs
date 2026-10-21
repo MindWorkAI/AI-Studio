@@ -246,7 +246,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int numberOfSheets;
     private int numberOfBulletPoints;
     private int timeSpecification;
-    private int calculatedNumberOfSlides;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private static readonly AssistantSessionStateKey<string> INPUT_TITLE_STATE_KEY = new(nameof(inputTitle));
@@ -260,7 +259,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_SHEETS_STATE_KEY = new(nameof(numberOfSheets));
     private static readonly AssistantSessionStateKey<int> NUMBER_OF_BULLET_POINTS_STATE_KEY = new(nameof(numberOfBulletPoints));
     private static readonly AssistantSessionStateKey<int> TIME_SPECIFICATION_STATE_KEY = new(nameof(timeSpecification));
-    private static readonly AssistantSessionStateKey<int> CALCULATED_NUMBER_OF_SLIDES_STATE_KEY = new(nameof(calculatedNumberOfSlides));
     private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
 
@@ -278,7 +276,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Set(NUMBER_OF_SHEETS_STATE_KEY, this.numberOfSheets);
         state.Set(NUMBER_OF_BULLET_POINTS_STATE_KEY, this.numberOfBulletPoints);
         state.Set(TIME_SPECIFICATION_STATE_KEY, this.timeSpecification);
-        state.Set(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, this.calculatedNumberOfSlides);
         state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Set(TEMPLATE_PATH_STATE_KEY, this.templatePath);
@@ -305,7 +302,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         state.Restore(NUMBER_OF_SHEETS_STATE_KEY, value => this.numberOfSheets = value);
         state.Restore(NUMBER_OF_BULLET_POINTS_STATE_KEY, value => this.numberOfBulletPoints = value);
         state.Restore(TIME_SPECIFICATION_STATE_KEY, value => this.timeSpecification = value);
-        state.Restore(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, value => this.calculatedNumberOfSlides = value);
         state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(TEMPLATE_PATH_STATE_KEY, value => this.templatePath = value);
@@ -366,11 +362,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         return null;
     }
 
-    private int CalculateNumberOfSlides()
-    {
-        return this.calculatedNumberOfSlides = (int)Math.Round(this.timeSpecification / 1.5);
-    }
-    
     private string PromptImportantAspects()
     {
         if (string.IsNullOrWhiteSpace(this.importantAspects))
@@ -523,8 +514,6 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
         await this.Form!.Validate();
         if (!this.InputIsValid)
             return;
-        
-        this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;
 
         //
         // The slides of an earlier run stay out of sight until this run has a result of its own.

@@ -82,7 +82,7 @@ internal sealed partial class PresentationTemplate
         var list = new StringBuilder();
         foreach (var slide in this.Slides)
         {
-            var use = slide.Number <= uses.Count ? uses[slide.Number - 1] : TemplateSlideUse.OMIT;
+            var use = uses.UseOf(slide.Number);
             if (use is TemplateSlideUse.OMIT)
                 continue;
 

@@ -169,7 +169,7 @@ public partial class SlideAssistant
         .Select(slide => slide.FamilyId is null ? TemplateSlideUse.KEEP : TemplateSlideUse.EDIT)
         .ToList();
 
-    private TemplateSlideUse TemplateSlideUseOf(int number) => number >= 1 && number <= this.templateSlideUses.Count ? this.templateSlideUses[number - 1] : TemplateSlideUse.OMIT;
+    private TemplateSlideUse TemplateSlideUseOf(int number) => this.templateSlideUses.UseOf(number);
 
     private void SetTemplateSlideUse(int number, TemplateSlideUse use)
     {
