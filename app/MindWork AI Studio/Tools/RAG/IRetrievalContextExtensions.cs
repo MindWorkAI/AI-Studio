@@ -98,78 +98,154 @@ public static class IRetrievalContextExtensions
     public static async Task<string> AsMarkdown(this IRetrievalContext retrievalContext, StringBuilder? sb = null, int index = -1, int numTotalRetrievalContexts = -1, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
     {
         sb ??= new StringBuilder();
-        var contextBuilder = new StringBuilder();
-        switch (index)
-        {
-            case > 0 when numTotalRetrievalContexts is -1:
-                contextBuilder.AppendLine($"# Retrieval context {index}");
-                break;
-            
-            case > 0 when numTotalRetrievalContexts > 0:
-                contextBuilder.AppendLine($"# Retrieval context {index} of {numTotalRetrievalContexts}");
-                break;
-
-            default:
-                contextBuilder.AppendLine("# Retrieval context");
-                break;
-        }
-        
-        AppendContextDescription(contextBuilder, retrievalContext);
-
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        var source = PromptInjectionSource.RetrievalContext(retrievalContext.DataSourceName, retrievalContext.Path);
-
-        switch(retrievalContext)
-        {
-            case RetrievalTextContext textContext:
-                contextBuilder.AppendLine();
-                contextBuilder.AppendLine("Matched text content:");
-                contextBuilder.AppendLine("````");
-                contextBuilder.AppendLine(textContext.MatchedText);
-                contextBuilder.AppendLine("````");
-
-                if(textContext.SurroundingContent.Count > 0)
-                {
-                    contextBuilder.AppendLine();
-                    contextBuilder.AppendLine("Surrounding text content:");
-                    foreach(var surrounding in textContext.SurroundingContent)
-                    {
-                        contextBuilder.AppendLine();
-                        contextBuilder.AppendLine("````");
-                        contextBuilder.AppendLine(surrounding);
-                        contextBuilder.AppendLine("````");
-                    }
-                }
-
-                await FilterWhatWeHaveSoFar();
-                break;
-
-            case RetrievalImageContext:
-                AppendImageMatch(contextBuilder);
-                await FilterWhatWeHaveSoFar();
-                break;
-
-            default:
-                await FilterWhatWeHaveSoFar();
-                LOGGER.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
-                break;
-        }
-            
-        contextBuilder.AppendLine();
-        sb.Append(contextBuilder);
+        var preparedContexts = await PrepareForModelAsync([retrievalContext], guardService, reportingScope, token);
+        sb.Append(preparedContexts[0].ToMarkdown(index, numTotalRetrievalContexts));
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Prepares retrieval contexts for the AI: filters them for prompt injections, writes out what
+    /// the AI is told about each, and keeps what the user is shown of it.
+    /// </summary>
+    /// <remarks>
+    /// A data source is as untrusted as any other external content: it may serve text written to
+    /// steer the model rather than to answer the query. So everything a data source wrote passes
+    /// the filter: the description of each context, its matched text, and each part of its
+    /// surrounding content. What the app writes around them, such as the labels and the fences,
+    /// does not need to.<br/><br/>
+    /// All contexts go to the runtime in one request, which also gives the user one report for all
+    /// of them. The passages are made from the filtered texts, so the user reads what the AI read.
+    /// </remarks>
+    /// <param name="retrievalContexts">The contexts to prepare.</param>
+    /// <param name="guardService">The prompt injection filter.</param>
+    /// <param name="reportingScope">The action the contexts are retrieved for, or null when they are retrieved for none.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>One prepared context per context, in the order they came in.</returns>
+    public static async Task<IReadOnlyList<PreparedRetrievalContext>> PrepareForModelAsync(this IReadOnlyList<IRetrievalContext> retrievalContexts, PromptInjectionGuardService guardService, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    {
+        if (retrievalContexts.Count is 0)
+            return [];
 
         //
-        // Replaces what has been built so far with its filtered version. A data source is as
-        // untrusted as any other external content: it may serve text written to steer the model
-        // rather than to answer the query.
+        // The texts of all contexts in one list, each context with its description first, then its
+        // matched text, then its surrounding content. The answer comes back in the same order, and
+        // is read back below in the same way:
         //
-        async Task FilterWhatWeHaveSoFar()
+        var texts = new List<PromptInjectionText>();
+        foreach (var retrievalContext in retrievalContexts)
         {
-            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source, reportingScope);
-            contextBuilder.Clear();
-            contextBuilder.Append(sanitized);
+            var source = PromptInjectionSource.RetrievalContext(retrievalContext.DataSourceName, retrievalContext.Path);
+            var description = new StringBuilder();
+            AppendContextDescription(description, retrievalContext);
+            texts.Add(new(description.ToString(), source));
+
+            if (retrievalContext is not RetrievalTextContext textContext)
+                continue;
+
+            texts.Add(new(textContext.MatchedText, source));
+            foreach (var surrounding in textContext.SurroundingContent)
+                texts.Add(new(surrounding, source));
         }
+
+        token.ThrowIfCancellationRequested();
+        var sanitizedTexts = await guardService.SanitizeAsync(texts, reportingScope);
+
+        var preparedContexts = new List<PreparedRetrievalContext>(retrievalContexts.Count);
+        var nextText = 0;
+        foreach (var retrievalContext in retrievalContexts)
+        {
+            var body = new StringBuilder();
+            body.Append(sanitizedTexts[nextText++]);
+
+            var matchedText = string.Empty;
+            IReadOnlyList<string> surroundingContent = [];
+            switch (retrievalContext)
+            {
+                case RetrievalTextContext textContext:
+                    matchedText = sanitizedTexts[nextText++];
+                    surroundingContent = sanitizedTexts.Skip(nextText).Take(textContext.SurroundingContent.Count).ToList();
+                    nextText += surroundingContent.Count;
+                    AppendTextMatch(body, matchedText, surroundingContent);
+                    break;
+
+                case RetrievalImageContext:
+                    AppendImageMatch(body);
+                    break;
+
+                default:
+                    LOGGER.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
+                    break;
+            }
+
+            var sources = retrievalContext.ToSources();
+            preparedContexts.Add(new(retrievalContext, body.ToString(), sources, CreatePassage(retrievalContext, sources, matchedText, surroundingContent)));
+        }
+
+        return preparedContexts;
+    }
+
+    /// <summary>
+    /// Writes the content of a text context, after its description.
+    /// </summary>
+    /// <param name="contextBuilder">The builder to write into.</param>
+    /// <param name="matchedText">The matched text, filtered.</param>
+    /// <param name="surroundingContent">The surrounding content, filtered.</param>
+    private static void AppendTextMatch(StringBuilder contextBuilder, string matchedText, IReadOnlyList<string> surroundingContent)
+    {
+        contextBuilder.AppendLine();
+        contextBuilder.AppendLine("Matched text content:");
+        contextBuilder.AppendLine("````");
+        contextBuilder.AppendLine(matchedText);
+        contextBuilder.AppendLine("````");
+
+        if (surroundingContent.Count is 0)
+            return;
+
+        contextBuilder.AppendLine();
+        contextBuilder.AppendLine("Surrounding text content:");
+        foreach (var surrounding in surroundingContent)
+        {
+            contextBuilder.AppendLine();
+            contextBuilder.AppendLine("````");
+            contextBuilder.AppendLine(surrounding);
+            contextBuilder.AppendLine("````");
+        }
+    }
+
+    /// <summary>
+    /// Keeps what the user is shown of a context the AI received.
+    /// </summary>
+    /// <remarks>
+    /// The name and the path stay as the data source delivered them: they tell the user where the
+    /// passage is, and the AI read them in the filtered description anyway.
+    /// </remarks>
+    /// <param name="retrievalContext">The context.</param>
+    /// <param name="sources">The sources of the context.</param>
+    /// <param name="matchedText">The matched text, filtered; empty for anything but text.</param>
+    /// <param name="surroundingContent">The surrounding content, filtered.</param>
+    /// <returns>The passage, or null when the context has no source.</returns>
+    private static SourcePassage? CreatePassage(IRetrievalContext retrievalContext, IReadOnlyList<Source> sources, string matchedText, IReadOnlyList<string> surroundingContent)
+    {
+        //
+        // The user finds a passage under the source it belongs to. A context without a source, such
+        // as a file known by a relative path only, is listed nowhere, so its passage could never be
+        // shown and would only take up room in the chat file:
+        //
+        if (sources.Count is 0)
+            return null;
+
+        return new SourcePassage
+        {
+            SourceUrl = sources[0].URL,
+            DataSourceName = retrievalContext.DataSourceName,
+            Path = retrievalContext.Path,
+            Category = retrievalContext.Category,
+            Type = retrievalContext.Type,
+            Text = matchedText,
+            SurroundingContent = surroundingContent,
+            PageNumber = retrievalContext is RetrievalTextContext { PageNumber: > 0 } locatedContext ? locatedContext.PageNumber : null,
+        };
     }
 
     /// <summary>

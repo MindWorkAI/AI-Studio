@@ -305,7 +305,16 @@ public static partial class SourceExtensions
         }
     }
 
-    private static string GetSourceIdentity(string url)
+    /// <summary>
+    /// What tells two sources apart: the address without its fragment.
+    /// </summary>
+    /// <remarks>
+    /// The passages of an answer are matched to their sources by the same identity, see
+    /// SourcePassageExtensions.GetPassagesOf, so a source and its passages always agree.
+    /// </remarks>
+    /// <param name="url">The address of a source.</param>
+    /// <returns>The identity of the source.</returns>
+    internal static string GetSourceIdentity(string url)
     {
         var cleanedUrl = url.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
         if (!Uri.TryCreate(cleanedUrl, UriKind.Absolute, out var absoluteUri))

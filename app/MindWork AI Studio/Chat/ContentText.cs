@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.RAG;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
@@ -52,6 +53,17 @@ public sealed class ContentText : IContent
     public List<FileAttachment> FileAttachments { get; set; } = [];
 
     public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    /// <summary>
+    /// The passages the data sources handed to the AI for this answer, as the AI received them.
+    /// </summary>
+    /// <remarks>
+    /// Stored with the answer, so the user can still read what it rests on after the chat was
+    /// reloaded. Each passage belongs to one of the sources, see SourcePassageExtensions.GetPassagesOf.
+    /// Empty for every answer written before passages were kept, and for every answer no data
+    /// source contributed to.
+    /// </remarks>
+    public List<SourcePassage> SourcePassages { get; set; } = [];
 
     /// <summary>
     /// What the provider said everything sent along with this answer cost, where it said anything.
@@ -368,6 +380,7 @@ public sealed class ContentText : IContent
         InitialRemoteWait = this.InitialRemoteWait,
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
+        SourcePassages = [..this.SourcePassages],
         FileAttachments = [..this.FileAttachments],
         ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
         {
