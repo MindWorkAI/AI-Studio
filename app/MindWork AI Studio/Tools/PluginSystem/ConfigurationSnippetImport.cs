@@ -148,10 +148,18 @@ public static class ConfigurationSnippetImport
                 if (missingChatToolIds.Count > 0)
                     hints.Add(string.Format(TB("The chat template preselects tools which are not available on this computer: {0}."), string.Join(", ", missingChatToolIds)));
 
-                if (template.ProviderId is not null && settingsManager.GetProviderById(template.ProviderId) == Settings.Provider.NONE)
-                    hints.Add(string.Format(TB("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
+                if (template.ProviderId is not null)
+                {
+                    var templateProvider = settingsManager.GetProviderById(template.ProviderId);
+                    if (templateProvider == Settings.Provider.NONE)
+                        hints.Add(string.Format(TB("The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."), template.ProviderId));
+                    else if (!settingsManager.IsProviderConfident(templateProvider, Components.CHAT))
+                        hints.Add(string.Format(TB("The chat template preselects the provider '{0}', which does not meet the confidence level required for chats. Chats started with it use your usual provider instead."), templateProvider.InstanceName));
+                }
 
-                if (template.ProfileId is not null && template.ProfileId != Profile.NO_PROFILE.Id && settingsManager.GetProfileById(template.ProfileId) == Profile.NO_PROFILE)
+                if (template.ProfileId is not null && !template.AllowProfileUsage)
+                    hints.Add(TB("The chat template preselects a profile but does not allow profiles. Chats started with it ignore that profile."));
+                else if (template.ProfileId is not null && template.ProfileId != Profile.NO_PROFILE.Id && settingsManager.GetProfileById(template.ProfileId) == Profile.NO_PROFILE)
                     hints.Add(string.Format(TB("The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."), template.ProfileId));
 
                 return result with { ConfigurationObject = template with { ToolIds = templateToolIds }, Hints = hints };

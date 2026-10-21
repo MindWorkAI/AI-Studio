@@ -5,6 +5,7 @@ startup.env
 libpdfium.dylib
 libpdfium.so
 libpdfium.dll
+pdfium.dll
 
 # Ignore qdrant database:
 qdrant-aarch64-apple-darwin

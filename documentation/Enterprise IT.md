@@ -805,7 +805,7 @@ A chat template may also decide the provider, and with it the model, and the pro
 |---|---|
 | no `ProviderId` at all | starts with the provider it would start with anyway |
 | `ProviderId` present | starts with that provider, if it exists and meets the confidence level required for chats |
-| no `ProfileId` at all | starts with the profile the user has set as their default |
+| no `ProfileId` at all | starts with the profile it would start with anyway |
 | `ProfileId` = `00000000-0000-0000-0000-000000000000` | starts without a profile, whatever that default says |
 | `ProfileId` present | starts with that profile, if it exists |
 | no `WorkspaceName` at all | goes where it would go anyway |
@@ -813,9 +813,13 @@ A chat template may also decide the provider, and with it the model, and the pro
 
 Both are a preselection, not a lock: users change them in the chat as usual. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
 
+What one template preselects does not carry over to the next one. When users switch from a template with a provider or a profile to one without, the chat starts with the default provider and the default profile of their chat settings, unless they had picked another one by hand in the meantime.
+
 The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
 
-The workspace goes by its name, because a workspace has an ID of its own on every computer. It fills in only where a chat would otherwise be a disappearing chat: the first chat when users open the chat page, a new chat they start outside the workspaces, and picking the template in a new chat. A chat users start in a workspace on purpose, for example, from the workspace list, stays there, and so does a chat of an assistant chat launcher that names a workspace of its own. While users have switched workspaces off in their workspace settings, the template names no workspace.
+The workspace goes by its name, because a workspace has an ID of its own on every computer. It fills in only where a chat would otherwise be a disappearing chat: the first chat when users open the chat page, a new chat they start outside the workspaces, and picking the template in a new chat. A chat users start in a workspace on purpose, for example, from the workspace list, stays there, and so does a chat of an assistant chat launcher that names a workspace of its own. A chat in the workspace of its template is no such choice: when users pick another template there, the new chat goes where that template sends it. While users have switched workspaces off in their workspace settings, the template names no workspace.
+
+On the chat page, the chat moves into the workspace with its first message, and only then is the workspace created when it does not exist yet. Opening the chat page or trying out a template creates no workspace, so one that users deleted stays gone until they actually start a chat with the template. An assistant chat launcher creates the workspace right away, because it opens its chat at once.
 
 ## Mailboxes
 

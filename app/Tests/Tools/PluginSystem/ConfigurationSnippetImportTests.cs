@@ -449,6 +449,41 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
     }
 
     [Test]
+    public async Task AProviderBelowTheConfidenceOfTheChatIsNamed()
+    {
+        // A chat template names its provider by a GUID, as every provider of the app has one:
+        var provider = LessTrustedProvider() with { Id = Guid.NewGuid().ToString() };
+        this.SettingsManager.ConfigurationData.Providers.Add(provider);
+        this.SettingsManager.ConfigurationData.Confidence.EnforceGlobalMinimumConfidence = true;
+        this.SettingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence = ConfidenceLevel.HIGH;
+
+        var snippet = ExportChatTemplate([], providerId: provider.Id);
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Hints, Has.Count.EqualTo(1), "The provider exists, but chats started with the template would not use it.");
+            Assert.That(result.Hints, Has.Exactly(1).Contains(provider.InstanceName));
+        });
+    }
+
+    [Test]
+    public async Task AProfileOfATemplateWhichForbidsProfilesIsNamed()
+    {
+        var missingProfileId = Guid.NewGuid().ToString();
+        var template = ChatTemplateWith([], null, null, profileId: missingProfileId) with { AllowProfileUsage = false };
+        Assert.That(template.TryExportAsConfigurationSection(out var snippet, out var issue), Is.True, issue);
+
+        var result = await ConfigurationSnippetImport.ResolveReferencesAsync(Import(snippet, PluginConfigurationObjectType.CHAT_TEMPLATE), this.SettingsManager, this.CreateRegistry(new TestTool(Definition())));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Hints, Has.Count.EqualTo(1), "Whether the profile exists does not matter, since chats ignore it anyway.");
+            Assert.That(result.Hints, Has.None.Contains(missingProfileId));
+        });
+    }
+
+    [Test]
     public async Task ReferencesWhichExistLeaveNoHint()
     {
         var provider = ExportProvider(PluginConfigurationObjectType.LLM_PROVIDER, null).Original;

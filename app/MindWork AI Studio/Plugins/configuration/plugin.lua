@@ -1380,7 +1380,7 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- The provider has to meet the confidence level required for chats. A provider which
 --     -- does not, or an ID which resolves to nothing, is ignored, and the chat starts with
 --     -- the provider it would start with anyway.
---     ["ProviderId"] = "00000000-0000-0000-0000-000000000000",
+--     ["ProviderId"] = "11111111-1111-1111-1111-111111111111",
 --
 --     -- Optional: the profile a chat with this template starts with.
 --     -- Must be an ID from CONFIG["PROFILES"] or of a profile of another configuration.
@@ -1388,10 +1388,11 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- the user chose as their default. An ID which resolves to nothing is ignored, and the
 --     -- chat starts with the default profile of the user. The whole field is ignored when
 --     -- AllowProfileUsage is false.
---     ["ProfileId"] = "00000000-0000-0000-0000-000000000000",
+--     ["ProfileId"] = "22222222-2222-2222-2222-222222222222",
 --
 --     -- Optional: the workspace, by its name, that keeps the chats started with this template.
---     -- The workspace is created when it does not exist yet. It only applies where a chat would
+--     -- The workspace is created with the first message of such a chat, when it does not exist
+--     -- yet. It only applies where a chat would
 --     -- otherwise be a disappearing chat: a chat users start in a workspace on purpose, for
 --     -- example, from the workspace list, stays there, and so does every chat while workspaces
 --     -- are switched off. An assistant chat launcher which names a workspace keeps its own.

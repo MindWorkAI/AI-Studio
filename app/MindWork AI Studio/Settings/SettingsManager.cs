@@ -940,6 +940,57 @@ public sealed class SettingsManager
     }
 
     /// <summary>
+    /// Returns the profile a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// A template which names a profile decides, see <see cref="GetChatTemplateStartProfile"/>. One
+    /// which says nothing keeps the current profile, with one exception: when that profile is the one
+    /// the previous template preselected, the chat starts with the default profile of the chat
+    /// settings instead. Keeping it would carry the choice of another template over into this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current profile was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProfile">The profile the chat has right now.</param>
+    /// <returns>The profile to start with.</returns>
+    public Profile ChooseChatTemplateProfile(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Profile currentProfile)
+    {
+        if (this.GetChatTemplateStartProfile(chatTemplate) is { } templateProfile)
+            return templateProfile;
+
+        if (this.GetChatTemplateStartProfile(previousChatTemplate) is { } previousTemplateProfile && previousTemplateProfile.Id == currentProfile.Id)
+            return this.GetPreselectedProfile(Tools.Components.CHAT);
+
+        return currentProfile;
+    }
+
+    /// <summary>
+    /// Returns the provider a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// The same as for the profile, see <see cref="ChooseChatTemplateProfile"/>: a template which
+    /// names a usable provider decides, and the provider of the previous template is not carried
+    /// over. In its place comes the default provider of the chat settings. Without such a default,
+    /// the current provider stays, so that the chat does not lose its provider altogether.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current provider was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProvider">The provider the chat has right now.</param>
+    /// <returns>The provider to start with.</returns>
+    public Provider ChooseChatTemplateProvider(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Provider currentProvider)
+    {
+        var templateProvider = this.GetChatTemplateProvider(chatTemplate);
+        if (templateProvider != Provider.NONE)
+            return templateProvider;
+
+        var previousTemplateProvider = this.GetChatTemplateProvider(previousChatTemplate);
+        if (previousTemplateProvider == Provider.NONE || previousTemplateProvider.Id != currentProvider.Id)
+            return currentProvider;
+
+        var defaultProvider = this.GetPreselectedProvider(Tools.Components.CHAT);
+        return defaultProvider == Provider.NONE ? currentProvider : defaultProvider;
+    }
+
+    /// <summary>
     /// Returns the name of the workspace a chat template keeps the chats started with it in.
     /// </summary>
     /// <remarks>

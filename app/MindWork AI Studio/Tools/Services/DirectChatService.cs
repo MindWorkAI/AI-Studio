@@ -27,11 +27,11 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (chatTemplate is null)
             return new(null, chatTemplateResult.ErrorMessage);
 
-        var providerResult = this.ResolveProvider(assistantPlugin, chatTemplate, launchConfiguration.ProviderId);
+        var providerResult = this.ResolveProvider(assistantPlugin.Name, chatTemplate, launchConfiguration.ProviderId);
         if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
             return new(null, providerResult.ErrorMessage);
 
-        var profileResult = this.ResolveProfile(assistantPlugin, chatTemplate, launchConfiguration.ProfileId);
+        var profileResult = this.ResolveProfile(assistantPlugin.Name, chatTemplate, launchConfiguration.ProfileId);
         var profile = profileResult.Profile;
         if (profile is null)
             return new(null, profileResult.ErrorMessage);
@@ -91,14 +91,13 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             try
             {
                 workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(templateWorkspaceName);
+                if (workspaceId == Guid.Empty)
+                    logger.LogWarning("The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created.", templateWorkspaceName, chatTemplate.GetSafeName());
+                logger.LogError(exception, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
             }
-
-            if (workspaceId == Guid.Empty)
-                logger.LogWarning("The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
         }
 
         var toolChoice = ChatTemplate.ChooseToolIds(chatTemplate, launchConfiguration.ToolIds);
@@ -147,7 +146,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// after all. Only what the launcher names itself is an error when it cannot be used, because
     /// that is the one choice its author can fix in the launcher.
     /// </remarks>
-    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(PluginAssistants assistantPlugin, ChatTemplate chatTemplate, Guid? launcherProviderId)
+    internal (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(string pluginName, ChatTemplate chatTemplate, Guid? launcherProviderId)
     {
         var templateProvider = settingsManager.GetChatTemplateProvider(chatTemplate);
         if (templateProvider != ProviderSettings.NONE)
@@ -155,7 +154,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             if (launcherProviderId is not null)
                 logger.LogWarning(
                     "Assistant plugin '{PluginName}' selects the provider '{LauncherProviderId}', but its chat template '{ChatTemplateName}' preselects a provider of its own. The chat starts with the provider of that template.",
-                    assistantPlugin.Name, launcherProviderId, chatTemplate.GetSafeName());
+                    pluginName, launcherProviderId, chatTemplate.GetSafeName());
 
             return new(templateProvider, true, string.Empty);
         }
@@ -198,14 +197,14 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// to the launcher. A template which does not allow profiles names none here, and the launch
     /// below drops the profile of the launcher for it as well.
     /// </remarks>
-    private (Profile? Profile, string ErrorMessage) ResolveProfile(PluginAssistants assistantPlugin, ChatTemplate chatTemplate, Guid? launcherProfileId)
+    internal (Profile? Profile, string ErrorMessage) ResolveProfile(string pluginName, ChatTemplate chatTemplate, Guid? launcherProfileId)
     {
         if (settingsManager.GetChatTemplateProfile(chatTemplate) is { } templateProfile)
         {
             if (launcherProfileId is not null)
                 logger.LogWarning(
                     "Assistant plugin '{PluginName}' selects the profile '{LauncherProfileId}', but its chat template '{ChatTemplateName}' preselects a profile of its own. The chat starts with the profile of that template.",
-                    assistantPlugin.Name, launcherProfileId, chatTemplate.GetSafeName());
+                    pluginName, launcherProfileId, chatTemplate.GetSafeName());
 
             return new(templateProfile, string.Empty);
         }

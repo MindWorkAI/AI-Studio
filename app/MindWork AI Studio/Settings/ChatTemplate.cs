@@ -82,7 +82,8 @@ public record ChatTemplate(
     /// Null means the template says nothing, so the chat goes where it would go anyway. A name
     /// rather than an ID: a workspace has an ID of its own on every computer, so a configuration
     /// plugin has no other way to name one. Like for an assistant chat launcher, the workspace is
-    /// created when it does not exist yet.<br/><br/>
+    /// created when it does not exist yet; on the chat page only with the first message of the chat,
+    /// so that trying out a template creates no workspace.<br/><br/>
     /// It only fills in where a chat would belong to no workspace otherwise. A chat started in a
     /// workspace on purpose, for example from the workspace list, stays there, and so does every
     /// chat while workspaces are switched off.

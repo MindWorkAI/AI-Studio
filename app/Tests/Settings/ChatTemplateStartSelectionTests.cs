@@ -19,6 +19,8 @@ namespace AIStudio.Tests.Settings;
 public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
 {
     private const string PROFILE_ID = "55555555-5555-5555-5555-555555555555";
+    private const string DEFAULT_PROFILE_ID = "77777777-7777-7777-7777-777777777777";
+    private const string OTHER_TEMPLATE_ID = "88888888-8888-8888-8888-888888888888";
 
     [Test]
     public void ATemplateWhichSaysNothingLeavesBothInPlace()
@@ -140,6 +142,90 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
             Assert.That(whileSwitchedOff, Is.Null, "Without workspaces, a template must not bring one back for its chats.");
             Assert.That(this.SettingsManager.GetChatTemplateWorkspaceName(NewTemplate()), Is.Null);
         });
+    }
+
+    [Test]
+    public void WhatThePreviousTemplatePreselectedIsNotCarriedOver()
+    {
+        var templateProfile = this.AddProfile();
+        var defaultProfile = this.AddDefaultProfile();
+        var templateProvider = ToolCapableProvider();
+        var defaultProvider = LessTrustedProvider();
+        this.SettingsManager.ConfigurationData.Providers.Add(templateProvider);
+        this.SettingsManager.ConfigurationData.Providers.Add(defaultProvider);
+        this.SettingsManager.ConfigurationData.Chat.PreselectedProvider = defaultProvider.Id;
+
+        var previousTemplate = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = templateProvider.Id };
+        var nextTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, templateProfile), Is.EqualTo(defaultProfile), "The profile was the choice of another template, not one made for this chat.");
+            Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, templateProvider), Is.EqualTo(defaultProvider), "The provider was the choice of another template, not one made for this chat.");
+        });
+    }
+
+    [Test]
+    public void AChoiceMadeByHandStaysWhenTheTemplateSaysNothing()
+    {
+        var handPickedProfile = this.AddProfile();
+        var defaultProfile = this.AddDefaultProfile();
+        var templateProvider = ToolCapableProvider();
+        var handPickedProvider = LessTrustedProvider();
+        this.SettingsManager.ConfigurationData.Providers.Add(templateProvider);
+        this.SettingsManager.ConfigurationData.Providers.Add(handPickedProvider);
+
+        var previousTemplate = NewTemplate() with { ProfileId = defaultProfile.Id, ProviderId = templateProvider.Id };
+        var nextTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, handPickedProfile), Is.EqualTo(handPickedProfile));
+            Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, handPickedProvider), Is.EqualTo(handPickedProvider));
+            Assert.That(this.SettingsManager.ChooseChatTemplateProfile(NewTemplate(), NewTemplate(), handPickedProfile), Is.EqualTo(handPickedProfile), "Without any preselection, nothing changes.");
+        });
+    }
+
+    [Test]
+    public void TheNewTemplateDecidesWhenItNamesBoth()
+    {
+        var templateProfile = this.AddProfile();
+        var otherProfile = this.AddDefaultProfile();
+        var templateProvider = ToolCapableProvider();
+        var otherProvider = LessTrustedProvider();
+        this.SettingsManager.ConfigurationData.Providers.Add(templateProvider);
+        this.SettingsManager.ConfigurationData.Providers.Add(otherProvider);
+
+        var previousTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID, ProfileId = otherProfile.Id, ProviderId = otherProvider.Id };
+        var nextTemplate = NewTemplate() with { ProfileId = PROFILE_ID, ProviderId = templateProvider.Id };
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.SettingsManager.ChooseChatTemplateProfile(nextTemplate, previousTemplate, otherProfile), Is.EqualTo(templateProfile));
+            Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, otherProvider), Is.EqualTo(templateProvider));
+        });
+    }
+
+    [Test]
+    public void WithoutADefaultProviderTheChatKeepsItsProvider()
+    {
+        var templateProvider = ToolCapableProvider();
+        this.SettingsManager.ConfigurationData.Providers.Add(templateProvider);
+        this.SettingsManager.ConfigurationData.Providers.Add(LessTrustedProvider());
+
+        var previousTemplate = NewTemplate() with { ProviderId = templateProvider.Id };
+        var nextTemplate = NewTemplate() with { Id = OTHER_TEMPLATE_ID };
+
+        Assert.That(this.SettingsManager.ChooseChatTemplateProvider(nextTemplate, previousTemplate, templateProvider), Is.EqualTo(templateProvider), "A chat without any provider could not answer at all.");
+    }
+
+    private Profile AddDefaultProfile()
+    {
+        var defaultProfile = new Profile(2, DEFAULT_PROFILE_ID, "Default", "I am the default.", string.Empty);
+        this.SettingsManager.ConfigurationData.Profiles.Add(defaultProfile);
+        this.SettingsManager.ConfigurationData.Chat.PreselectOptions = true;
+        this.SettingsManager.ConfigurationData.Chat.PreselectedProfile = defaultProfile.Id;
+        return defaultProfile;
     }
 
     private Profile AddProfile()
