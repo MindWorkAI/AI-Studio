@@ -811,7 +811,7 @@ A chat template may also decide the provider, and with it the model, and the pro
 | no `WorkspaceName` at all | goes where it would go anyway |
 | `WorkspaceName` present | goes into that workspace, which is created when it does not exist yet, wherever the chat would otherwise be a disappearing chat |
 
-Both are a preselection, not a lock: users change them in the chat as usual. A provider or profile that does not exist, and a provider below the confidence level of chats, are ignored, and the chat starts as if the template said nothing. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
+Both are a preselection, not a lock: users change them in the chat as usual. A provider that does not exist or is below the confidence level of chats is ignored, and the chat starts with the provider it would start with anyway. A profile that does not exist is ignored as well, and the chat starts with the default profile of the user's chat settings, which may be none. A `ProfileId` means nothing when `AllowProfileUsage` is `false`. The data sources a template preselects still have to be permitted for the provider in use.
 
 The IDs may name a provider from `CONFIG["LLM_PROVIDERS"]` or a profile from `CONFIG["PROFILES"]` of the same configuration, whose IDs are the same on every computer, or one of another configuration of your organization. A chat template exported from the app carries the provider and profile IDs of the computer it was exported from, mostly the user's own, and the export starts with a comment saying so. Replace them with IDs from your configuration.
 

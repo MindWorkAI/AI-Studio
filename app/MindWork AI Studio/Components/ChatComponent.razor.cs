@@ -914,14 +914,15 @@ public partial class ChatComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// A preselection, not a limit — the user changes both in the chat as usual. A template which
-    /// says nothing, names something which is gone, or names a provider which may not be used for
-    /// chats leaves the current choice in place, so the chat starts as it would without the
-    /// template. The caller tells the parent about a new provider.
+    /// says nothing, or names a provider which is gone or may not be used for chats, leaves the
+    /// current choice in place, so the chat starts as it would without the template. A template
+    /// whose profile is gone starts with the default profile of the chat settings instead. The
+    /// caller tells the parent about a new provider.
     /// </remarks>
     /// <returns>True when the provider changed.</returns>
     private bool ApplyChatTemplateProfileAndProvider()
     {
-        if (this.SettingsManager.GetChatTemplateProfile(this.currentChatTemplate) is { } templateProfile)
+        if (this.SettingsManager.GetChatTemplateStartProfile(this.currentChatTemplate) is { } templateProfile)
             this.currentProfile = templateProfile;
 
         var templateProvider = this.SettingsManager.GetChatTemplateProvider(this.currentChatTemplate);
@@ -1148,7 +1149,7 @@ public partial class ChatComponent : MSGComponentBase
                 if (this.ApplyChatTemplateProfileAndProvider())
                     await this.ProviderChanged.InvokeAsync(this.Provider);
             }
-            else if (this.SettingsManager.GetChatTemplateProfile(this.currentChatTemplate) is { } templateProfile)
+            else if (this.SettingsManager.GetChatTemplateStartProfile(this.currentChatTemplate) is { } templateProfile)
                 this.currentProfile = templateProfile;
         }
         else

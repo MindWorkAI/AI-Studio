@@ -901,6 +901,25 @@ public sealed class SettingsManager
     }
 
     /// <summary>
+    /// Returns the profile a chat started with the given chat template begins with.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template says nothing about profiles, so the chat keeps the profile it has.
+    /// A template whose profile is gone starts its chats with the default profile of the chat
+    /// settings, which may be none — not with whatever profile the previous chat happened to use,
+    /// which would be a choice nobody made for this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the current one.</returns>
+    public Profile? GetChatTemplateStartProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        return this.GetChatTemplateProfile(chatTemplate) ?? this.GetPreselectedProfile(Tools.Components.CHAT);
+    }
+
+    /// <summary>
     /// Returns the provider a chat template preselects for the chats started with it.
     /// </summary>
     /// <remarks>

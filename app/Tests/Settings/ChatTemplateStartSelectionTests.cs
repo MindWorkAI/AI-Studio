@@ -69,6 +69,39 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void AChatWhoseTemplateProfileIsGoneStartsWithTheDefaultProfile()
+    {
+        var template = NewTemplate() with { ProfileId = PROFILE_ID };
+
+        var withoutDefault = this.SettingsManager.GetChatTemplateStartProfile(template);
+
+        var defaultProfile = new Profile(2, "77777777-7777-7777-7777-777777777777", "Default", "I am the default.", string.Empty);
+        this.SettingsManager.ConfigurationData.Profiles.Add(defaultProfile);
+        this.SettingsManager.ConfigurationData.Chat.PreselectOptions = true;
+        this.SettingsManager.ConfigurationData.Chat.PreselectedProfile = defaultProfile.Id;
+        var withDefault = this.SettingsManager.GetChatTemplateStartProfile(template);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(withoutDefault, Is.EqualTo(Profile.NO_PROFILE), "Keeping the profile the chat had would hand out one the previous chat happened to use, a choice nobody made for this one.");
+            Assert.That(withDefault, Is.EqualTo(defaultProfile));
+        });
+    }
+
+    [Test]
+    public void ATemplateWhichSaysNothingKeepsTheProfileAChatStartsWith()
+    {
+        this.AddProfile();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate()), Is.Null);
+            Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate() with { AllowProfileUsage = false, ProfileId = PROFILE_ID }), Is.Null);
+            Assert.That(this.SettingsManager.GetChatTemplateStartProfile(NewTemplate() with { ProfileId = PROFILE_ID })!.Id, Is.EqualTo(PROFILE_ID));
+        });
+    }
+
+    [Test]
     public void ATemplateWhichForbidsProfilesHandsOutNone()
     {
         this.AddProfile();

@@ -1385,8 +1385,9 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- Optional: the profile a chat with this template starts with.
 --     -- Must be an ID from CONFIG["PROFILES"] or of a profile of another configuration.
 --     -- "00000000-0000-0000-0000-000000000000" starts the chat without a profile, whatever
---     -- the user chose as their default. An ID which resolves to nothing is ignored, and so
---     -- is the whole field when AllowProfileUsage is false.
+--     -- the user chose as their default. An ID which resolves to nothing is ignored, and the
+--     -- chat starts with the default profile of the user. The whole field is ignored when
+--     -- AllowProfileUsage is false.
 --     ["ProfileId"] = "00000000-0000-0000-0000-000000000000",
 --
 --     -- Optional: the workspace, by its name, that keeps the chats started with this template.
