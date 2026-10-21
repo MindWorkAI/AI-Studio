@@ -79,6 +79,19 @@ public partial class ChatTemplateDialog : MSGComponentBase
     [Parameter]
     public DataSourceOptions? DataSourceOptions { get; set; }
 
+    /// <summary>
+    /// The profile this template preselects, the ID of the no-profile entry to start without one,
+    /// or null when it says nothing about profiles.
+    /// </summary>
+    [Parameter]
+    public string? ProfileId { get; set; }
+
+    /// <summary>
+    /// The provider this template preselects, or null when it says nothing about providers.
+    /// </summary>
+    [Parameter]
+    public string? ProviderId { get; set; }
+
     [Parameter]
     public bool CreateFromExistingChatThread { get; set; }
 
@@ -105,6 +118,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private HashSet<string> selectedToolIds = new(StringComparer.Ordinal);
     private bool preselectDataSources;
     private DataSourceOptions templateDataSourceOptions = new();
+    private bool preselectProfile;
+    private string selectedProfileId = Profile.NO_PROFILE.Id;
+    private bool preselectProvider;
+    private string selectedProviderId = string.Empty;
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -137,6 +154,12 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // Saying that this template preselects data sources is already the statement that it wants
         // them, so the switch inside the selection starts on instead of at its usual default:
         this.templateDataSourceOptions = this.DataSourceOptions?.CreateCopy() ?? new DataSourceOptions { DisableDataSources = false };
+
+        // The profile and the provider follow the same pattern, with a switch each:
+        this.preselectProfile = this.ProfileId is not null;
+        this.selectedProfileId = this.ProfileId ?? Profile.NO_PROFILE.Id;
+        this.preselectProvider = this.ProviderId is not null;
+        this.selectedProviderId = this.ProviderId ?? string.Empty;
 
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -183,6 +206,10 @@ public partial class ChatTemplateDialog : MSGComponentBase
         ToolIds = this.preselectTools ? new HashSet<string>(this.selectedToolIds, StringComparer.Ordinal) : null,
         DataSourceOptions = this.preselectDataSources ? this.templateDataSourceOptions.CreateCopy() : null,
 
+        // A template which forbids profiles has no use for a profile, so none is kept for it:
+        ProfileId = this.AllowProfileUsage && this.preselectProfile ? this.selectedProfileId : null,
+        ProviderId = this.preselectProvider && !string.IsNullOrWhiteSpace(this.selectedProviderId) ? this.selectedProviderId : null,
+
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -204,6 +231,42 @@ public partial class ChatTemplateDialog : MSGComponentBase
     }
 
     private void SetSelectedToolIds(HashSet<string> toolIds) => this.selectedToolIds = toolIds;
+
+    /// <summary>
+    /// Whether the preselected profile is gone, so that chats started with this template keep their usual profile.
+    /// </summary>
+    private bool IsPreselectedProfileMissing => this.preselectProfile
+                                                && this.selectedProfileId != Profile.NO_PROFILE.Id
+                                                && this.SettingsManager.GetProfileById(this.selectedProfileId) == Profile.NO_PROFILE;
+
+    /// <summary>
+    /// Whether the preselected provider is gone or may not be used for chats, so that chats started
+    /// with this template keep their usual provider.
+    /// </summary>
+    /// <remarks>
+    /// The list to pick from holds only the providers which may be used for chats. A template from
+    /// another machine or from a configuration plugin may name another one, though, and the list
+    /// alone would then show nothing about it.
+    /// </remarks>
+    private bool IsPreselectedProviderUnusable
+    {
+        get
+        {
+            if (!this.preselectProvider || string.IsNullOrWhiteSpace(this.selectedProviderId))
+                return false;
+
+            var provider = this.SettingsManager.GetProviderById(this.selectedProviderId);
+            return provider == AIStudio.Settings.Provider.NONE || !this.SettingsManager.IsProviderConfident(provider, Tools.Components.CHAT);
+        }
+    }
+
+    private string? ValidatePreselectedProvider(string providerId)
+    {
+        if (this.preselectProvider && string.IsNullOrWhiteSpace(providerId))
+            return T("Please choose the provider this chat template preselects, or switch the preselection off.");
+
+        return null;
+    }
 
     private void RemoveMessage(ContentBlock item)
     {

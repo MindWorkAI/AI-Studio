@@ -28,6 +28,12 @@
         </MudSelectItem>
     }
 </MudSelect>
+@if (this.SelectedChatTemplate.ProviderId is not null)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+        @T("The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats.")
+    </MudText>
+}
 <MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no profile")</MudSelectItem>
@@ -36,6 +42,12 @@
         <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>
     }
 </MudSelect>
+@if (this.SelectedChatTemplate is { AllowProfileUsage: true, ProfileId: not null })
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-3">
+        @T("The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists.")
+    </MudText>
+}
 <MudSelect T="string" Value="@this.ChatTemplateId" ValueChanged="@this.SetChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Article">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no chat template")</MudSelectItem>
