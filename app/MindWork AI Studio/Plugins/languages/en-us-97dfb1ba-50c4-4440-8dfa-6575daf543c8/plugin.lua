@@ -4383,8 +4383,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1797236585"] = "
 -- Workspace name (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1873204484"] = "Workspace name (Optional)"
 
+-- The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1876510820"] = "The chosen chat template preselects a provider of its own, and it wins over a selection made here as long as that provider can be used for chats."
+
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2205839602"] = "Use no profile"
+
+-- The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2344103917"] = "The chosen chat template keeps its chats in the workspace '{0}', so the tile opens its chat there instead. A workspace entered here wins over the one of the template."
 
 -- Existing workspace (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2364306588"] = "Existing workspace (Optional)"
@@ -4406,6 +4412,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2901190527"] = "
 
 -- Data sources (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3259309302"] = "Data sources (Optional)"
+
+-- The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3419242912"] = "The chosen chat template preselects a profile of its own, and it wins over a selection made here as long as that profile exists."
 
 -- Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3611496116"] = "Without a workspace, the tile opens a disappearing chat: it belongs to no workspace and is deleted according to your workspace maintenance settings."
@@ -6171,11 +6180,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1396308587"] = "The cha
 -- The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1442266827"] = "The same goes for your data. A chat template may bring its own data source options, which includes leaving the choice of sources to the AI. Without them, those chats start with the data source options from your chat options."
 
+-- Preselected provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1469984996"] = "Preselected provider"
+
 -- Please enter a name for the chat template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1548747185"] = "Please enter a name for the chat template."
 
+-- A chat template may decide which provider, and with it which model, a chat starts with. Without such a decision, those chats start with the provider they would start with anyway. The provider stays changeable in the chat, and it must meet the confidence level required for chats.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T171066641"] = "A chat template may decide which provider, and with it which model, a chat starts with. Without such a decision, those chats start with the provider they would start with anyway. The provider stays changeable in the chat, and it must meet the confidence level required for chats."
+
 -- Yes, this template decides which data a chat starts with
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T17861006"] = "Yes, this template decides which data a chat starts with"
+
+-- Preselected profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T178965494"] = "Preselected profile"
 
 -- Enter the full path of a file on this computer, or remove the attachment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1798848159"] = "Enter the full path of a file on this computer, or remove the attachment."
@@ -6186,11 +6204,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1837026610"] = "Load pr
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1847791252"] = "Update"
 
+-- Yes, this template decides which profile a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1865005833"] = "Yes, this template decides which profile a chat starts with"
+
 -- The chat template name must not exceed 40 characters.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T204496403"] = "The chat template name must not exceed 40 characters."
 
 -- Profile Usage
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2147062613"] = "Profile Usage"
+
+-- Use no profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205839602"] = "Use no profile"
+
+-- Yes, chats with this template go into a workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2205963533"] = "Yes, chats with this template go into a workspace"
 
 -- Relink attachment: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2234793579"] = "Relink attachment: {0}"
@@ -6200,6 +6227,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2292424657"] = "Add mes
 
 -- File Attachments
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2294745309"] = "File Attachments"
+
+-- No, chats go where they would go anyway
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2355334446"] = "No, chats go where they would go anyway"
+
+-- Existing workspace (Optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2364306588"] = "Existing workspace (Optional)"
 
 -- Role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2418769465"] = "Role"
@@ -6213,6 +6246,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2499909372"] = "Tools"
 -- What predefined user input do you want to use?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2501284417"] = "What predefined user input do you want to use?"
 
+-- Please enter the workspace for the chats of this template, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2504276031"] = "Please enter the workspace for the chats of this template, or switch the preselection off."
+
+-- Does this chat template preselect a provider?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2541393632"] = "Does this chat template preselect a provider?"
+
 -- Tell the AI your system prompt.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2552381261"] = "Tell the AI your system prompt."
 
@@ -6221,6 +6260,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579080722"] = "No, pro
 
 -- You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2579208700"] = "You might want to predefine a first message that will be copied into the user prompt, when you use this chat template. This message could for example be a blueprint for a structured message that this chat template is defined to work with."
+
+-- Does this chat template preselect a profile?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2602340928"] = "Does this chat template preselect a profile?"
 
 -- Predefined User Input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2607897066"] = "Predefined User Input"
@@ -6234,11 +6276,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2646845972"] = "Add"
 -- The message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "The message"
 
+-- Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T274413108"] = "Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace."
+
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Chat Template Name"
 
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Please relink the attachment '{0}' to a file on this computer or remove it before you save."
+
+-- Workspace name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T295876489"] = "Workspace name"
 
 -- Commit Changes
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2996302517"] = "Commit Changes"
@@ -6255,8 +6303,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3108503534"] = "You can
 -- Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3127437308"] = "Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats."
 
+-- A chat template may also decide which profile a chat starts with, including starting without one. Without such a decision, those chats start with the profile they would start with anyway. The profile stays changeable in the chat.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T313529011"] = "A chat template may also decide which profile a chat starts with, including starting without one. Without such a decision, those chats start with the profile they would start with anyway. The profile stays changeable in the chat."
+
+-- The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3170335831"] = "The profile this chat template preselects does not exist on this computer. Chats started with it keep their usual profile."
+
 -- Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3227981830"] = "Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here."
+
+-- Choose an existing workspace or enter a name that should be created when a chat with this template starts.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3256439227"] = "Choose an existing workspace or enter a name that should be created when a chat with this template starts."
 
 -- No, chats keep the data source options from your chat options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "No, chats keep the data source options from your chat options"
@@ -6264,11 +6321,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3268470871"] = "No, cha
 -- A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3329415439"] = "A chat template may decide which tools a chat starts with. Without such a decision, those chats start with the tools you chose as your default in the chat options. Deciding and then picking nothing is a different statement: such chats start with no tool at all, no matter what your default says."
 
+-- A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3352941260"] = "A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace."
+
 -- Add a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3372872324"] = "Add a message"
 
+-- Yes, this template decides which provider a chat starts with
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3422337353"] = "Yes, this template decides which provider a chat starts with"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3448155331"] = "Close"
+
+-- No, chats keep their usual profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3465925873"] = "No, chats keep their usual profile"
+
+-- The provider this chat template preselects does not exist on this computer or does not meet the confidence level required for chats. Chats started with it keep their usual provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T349281189"] = "The provider this chat template preselects does not exist on this computer or does not meet the confidence level required for chats. Chats started with it keep their usual provider."
 
 -- Unsupported content type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T3570316759"] = "Unsupported content type"
@@ -6306,11 +6375,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4051106111"] = "Use the
 -- Tell the AI your predefined user input.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4052406705"] = "Tell the AI your predefined user input."
 
+-- Does this chat template keep its chats in a workspace?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4057825866"] = "Does this chat template keep its chats in a workspace?"
+
 -- Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4194591607"] = "Some attachments of this chat template are not on this computer. Please relink or remove them before you add the template."
 
 -- Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T4199560726"] = "Create your custom chat template to tailor the LLM's behavior for specific tasks or domains. Define a custom system prompt and provide an example conversation to design an AI experience perfectly suited to your requirements."
+
+-- Please choose the provider this chat template preselects, or switch the preselection off.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T442309864"] = "Please choose the provider this chat template preselects, or switch the preselection off."
 
 -- Enter a message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T446374405"] = "Enter a message"
@@ -6324,14 +6399,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T628396066"] = "System P
 -- A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T650711085"] = "A chat started with this template begins with these data sources and options. All of it stays changeable in the chat itself."
 
+-- Workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T658612054"] = "Workspace"
+
 -- Remove this attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T70791272"] = "Remove this attachment"
 
 -- The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T722788866"] = "The selection stays changeable in the chat, and every tool still has to meet the confidence requirements of the provider in use."
 
+-- No, chats keep their usual provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T787085105"] = "No, chats keep their usual provider"
+
 -- Allow the use of profiles together with this chat template?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T823785464"] = "Allow the use of profiles together with this chat template?"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900237532"] = "Provider"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Cancel"
@@ -12989,6 +13073,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T260
 
 -- The chat template preselects tools which are not available on this computer: {0}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2693686582"] = "The chat template preselects tools which are not available on this computer: {0}."
+
+-- The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T2735390326"] = "The chat template preselects a profile which does not exist on this computer: {0}. Chats started with it use your usual profile instead."
+
+-- The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3321789654"] = "The chat template preselects a provider which does not exist on this computer: {0}. Chats started with it use your usual provider instead."
 
 -- The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::CONFIGURATIONSNIPPETIMPORT::T3589070261"] = "The API key in the pasted configuration cannot be decrypted on this computer. Please enter your API key before you save the provider."
