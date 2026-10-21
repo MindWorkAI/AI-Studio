@@ -493,6 +493,14 @@ public partial class ChatComponent : MSGComponentBase
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
+
+        //
+        // A chat which starts here on its own goes into the workspace of its chat template. Not so
+        // when another chat is about to be loaded: that one replaces it right after the first render.
+        //
+        if (!this.mustLoadChat)
+            await this.MoveNewChatIntoChatTemplateWorkspaceAsync();
+
         await this.SyncForegroundChatAsync();
         await this.ConsumeMediaOutcomeAsync();
         await base.OnInitializedAsync();
@@ -925,6 +933,59 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
+    /// The workspace of the chat template, opened or created by its name.
+    /// </summary>
+    /// <remarks>
+    /// Guid.Empty when the template names none, while workspaces are switched off, and when the
+    /// workspace cannot be opened or created. The chat then belongs to no workspace, as it would
+    /// without the template.
+    /// </remarks>
+    private async Task<Guid> ResolveChatTemplateWorkspaceAsync()
+    {
+        if (this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not { } workspaceName)
+            return Guid.Empty;
+
+        try
+        {
+            return await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(workspaceName);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogError(e, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", workspaceName, this.currentChatTemplate.GetSafeName());
+            return Guid.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Gives a chat which has not started yet a thread in the workspace of its chat template.
+    /// </summary>
+    /// <remarks>
+    /// Only for a chat without a thread, which belongs to no workspace yet. The thread reaches the
+    /// disk only once there is something to keep, like every new chat in a workspace, and a message
+    /// the user already started moves along with it. The profile, provider, tools, and data source
+    /// options have to be in place before, because the thread takes them over.
+    /// </remarks>
+    private async Task MoveNewChatIntoChatTemplateWorkspaceAsync()
+    {
+        if (this.ChatThread is not null)
+            return;
+
+        var workspaceId = await this.ResolveChatTemplateWorkspaceAsync();
+        if (workspaceId == Guid.Empty || this.ChatThread is not null)
+            return;
+
+        this.ChatThread = this.NewChatThread(string.Empty, workspaceId);
+        this.unstoredChat = this.ChatThread;
+        if (this.ComposerState.HasUserDraft)
+            this.MirrorComposerIntoDraft(this.ChatThread);
+
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.SyncForegroundChatAsync();
+    }
+
+    /// <summary>
     /// The data source options a chat starts with: those of its chat template, or the chat defaults.
     /// </summary>
     /// <remarks>
@@ -1052,6 +1113,9 @@ public partial class ChatComponent : MSGComponentBase
 
         await this.ApplyChatTemplateToolSelectionAsync();
         this.ApplyAutomaticDataSourceOptions();
+
+        // Last, because the thread of the workspace takes over everything chosen above:
+        await this.MoveNewChatIntoChatTemplateWorkspaceAsync();
     }
 
     private void RefreshCurrentProfileAndChatTemplate()
@@ -1721,6 +1785,22 @@ public partial class ChatComponent : MSGComponentBase
         // that workspace, no matter what useSameWorkspace says:
         //
         var startsOutsideWorkspaces = !useSameWorkspace && targetWorkspaceId is null;
+
+        //
+        // The workspace of the chat template fills in only where the new chat would belong to no
+        // workspace otherwise. A workspace asked for on purpose wins: the one of the workspace list,
+        // and the open one for the button that starts a new chat in it.
+        //
+        if (targetWorkspaceId is null && (startsOutsideWorkspaces || workspaceOfNewChat == Guid.Empty))
+        {
+            var templateWorkspaceId = await this.ResolveChatTemplateWorkspaceAsync();
+            if (templateWorkspaceId != Guid.Empty)
+            {
+                workspaceOfNewChat = templateWorkspaceId;
+                startsOutsideWorkspaces = false;
+            }
+        }
+
         if (startsOutsideWorkspaces)
         {
             //

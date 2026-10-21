@@ -57,8 +57,10 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
 
         //
         // A launcher that names no workspace wants the same chat the chat page starts on its own:
-        // one that belongs nowhere, is kept among the temporary chats, and disappears with them. The
-        // empty workspace ID is what says so, here as everywhere else in the app.
+        // one that belongs nowhere, is kept among the temporary chats, and disappears with them —
+        // unless its chat template names a workspace, which then fills in, just like on the chat
+        // page. A workspace the launcher names itself was chosen on purpose and wins. The empty
+        // workspace ID is what says "no workspace", here as everywhere else in the app.
         //
         var workspaceId = Guid.Empty;
         if (!launchConfiguration.OpensTemporaryChat)
@@ -78,6 +80,25 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
                 logger.LogWarning("Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, launchConfiguration.WorkspaceName);
                 return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
             }
+        }
+        else if (settingsManager.GetChatTemplateWorkspaceName(chatTemplate) is { } templateWorkspaceName)
+        {
+            //
+            // Like everything else a chat template names, a workspace which cannot be opened or
+            // created does not stop the launch: the chat then belongs to no workspace, as it would
+            // without the template.
+            //
+            try
+            {
+                workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(templateWorkspaceName);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created.", templateWorkspaceName, chatTemplate.GetSafeName());
+            }
+
+            if (workspaceId == Guid.Empty)
+                logger.LogWarning("The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
         }
 
         var toolChoice = ChatTemplate.ChooseToolIds(chatTemplate, launchConfiguration.ToolIds);
