@@ -1,6 +1,5 @@
-using AIStudio.Tools.Media;
-
 using AIStudio.Settings;
+using AIStudio.Tools.Media;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -242,22 +241,5 @@ public partial class AssistantBatchProcessing
         }
 
         return (resolvedOutputDirectory, files);
-    }
-
-    /// <summary>
-    /// Tells the user before the first file when the images of the run will fail, because the
-    /// selected model cannot read images.
-    /// </summary>
-    private async Task WarnAboutUnreadableImagesAsync(IReadOnlyList<string> files)
-    {
-        var numImages = files.Count(IsImage);
-        if (numImages == 0 || this.ProviderSettings.SupportsImageInput())
-            return;
-
-        var warning = numImages == 1
-            ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
-            : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
-
-        await this.MessageBus.SendWarning(new(Icons.Material.Filled.ImageNotSupported, warning));
     }
 }

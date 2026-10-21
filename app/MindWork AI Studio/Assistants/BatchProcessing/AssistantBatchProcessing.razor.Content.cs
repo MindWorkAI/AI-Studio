@@ -37,6 +37,17 @@ public partial class AssistantBatchProcessing
     /// anyway. The model would then answer about nothing, and the file would count as done, so that
     /// continuing the run would skip it as well. A failed image is processed again when the run is
     /// continued, e.g., with a model that can read images.
+    ///
+    /// How many images a model accepts needs no check of its own: every file gets a thread of its own,
+    /// see CallAIAsync, so each request carries exactly one image, in every round with the model. A
+    /// limit of one image is therefore always met, and SupportsImageInput already refuses a limit of zero.
+    ///
+    /// Unlike the text of documents and transcripts, an image does not pass the prompt injection
+    /// filter of the runtime, which reads text only. Images in a chat do not either. Instructions
+    /// within an image therefore meet only the safeguards behind the filter: the system prompt tells
+    /// the model to ignore them, a thread which read internal content, such as a mailbox, may no
+    /// longer send data out, and without free address choice, its default, the Read Web Page tool
+    /// refuses an address which appears only in the image.
     /// </remarks>
     private FileAttachmentImage? LoadImage(BatchProcessingFileResult fileResult)
     {
@@ -66,7 +77,7 @@ public partial class AssistantBatchProcessing
         var maxImageSizeBytes = IImageSourceExtensions.MaxImageSizeBytesFor(this.ProviderSettings.UsedLLMProvider);
         if (fileSize > maxImageSizeBytes)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, the most the selected provider accepts for one image, so it cannot be given to the model."), (maxImageSizeBytes / 1_000_000d).ToString("0.#")));
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, which is the most the selected provider accepts for one image."), (maxImageSizeBytes / 1_000_000d).ToString("0.#", Tools.PluginSystem.I18N.I.Culture)));
             return null;
         }
 

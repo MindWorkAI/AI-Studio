@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Globalization;
 
+using AIStudio.Settings;
+
 namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
@@ -41,8 +43,8 @@ public partial class AssistantBatchProcessing
             (previousLog, previousResults) = previousRun.Value;
         }
 
-        await this.WarnAboutUnreadableImagesAsync(files);
         this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
+        await this.WarnAboutUnreadableImagesAsync();
         await this.CheckpointAssistantSession();
         await this.RunBatchAsync(resolvedOutputDirectory);
     }
@@ -87,6 +89,27 @@ public partial class AssistantBatchProcessing
 
             this.fileResults.Add(fileResult);
         }
+    }
+
+    /// <summary>
+    /// Tells the user before the first file when the images of the run will fail, because the
+    /// selected model cannot read images.
+    /// </summary>
+    /// <remarks>
+    /// Counts only the images which this run still processes. Images done by an earlier run of a
+    /// continued batch keep their results and do not fail.
+    /// </remarks>
+    private async Task WarnAboutUnreadableImagesAsync()
+    {
+        var numImages = this.fileResults.Count(fileResult => fileResult.Status is not BatchProcessingFileStatus.DONE && IsImage(fileResult.FilePath));
+        if (numImages == 0 || this.ProviderSettings.SupportsImageInput())
+            return;
+
+        var warning = numImages == 1
+            ? T("The selected model cannot read images, so the image among the selected files will fail. All other files are processed as usual.")
+            : string.Format(T("The selected model cannot read images, so the {0} images among the selected files will fail. All other files are processed as usual."), numImages);
+
+        await this.MessageBus.SendWarning(new(Icons.Material.Filled.ImageNotSupported, warning));
     }
 
     /// <summary>
