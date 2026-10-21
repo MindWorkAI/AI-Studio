@@ -75,6 +75,20 @@ public record ChatTemplate(
     /// </remarks>
     public string? ProviderId { get; init; }
 
+    /// <summary>
+    /// The name of the workspace a chat started with this template is kept in.
+    /// </summary>
+    /// <remarks>
+    /// Null means the template says nothing, so the chat goes where it would go anyway. A name
+    /// rather than an ID: a workspace has an ID of its own on every computer, so a configuration
+    /// plugin has no other way to name one. Like for an assistant chat launcher, the workspace is
+    /// created when it does not exist yet.<br/><br/>
+    /// It only fills in where a chat would belong to no workspace otherwise. A chat started in a
+    /// workspace on purpose, for example from the workspace list, stays there, and so does every
+    /// chat while workspaces are switched off.
+    /// </remarks>
+    public string? WorkspaceName { get; init; }
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ChatTemplate).Namespace, nameof(ChatTemplate));
     
     private static readonly ILogger<ChatTemplate> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatTemplate>();
@@ -93,6 +107,7 @@ public record ChatTemplate(
         DataSourceOptions = null,
         ProfileId = null,
         ProviderId = null,
+        WorkspaceName = null,
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
@@ -246,6 +261,7 @@ public record ChatTemplate(
             DataSourceOptions = ParseDataSourceOptions(idx, table),
             ProfileId = profileId,
             ProviderId = ParseOptionalId(idx, table, "ProviderId", allowEmpty: false),
+            WorkspaceName = ParseWorkspaceName(idx, table),
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
@@ -343,6 +359,24 @@ public record ChatTemplate(
         }
 
         return id.ToString();
+    }
+
+    /// <remarks>
+    /// An empty name would mean "no workspace", which is what a template says by leaving the field
+    /// out. So it is dropped, with a warning, as is anything which is no text.
+    /// </remarks>
+    private static string? ParseWorkspaceName(int idx, LuaTable table)
+    {
+        if (!table.TryGetValue("WorkspaceName", out var workspaceNameValue))
+            return null;
+
+        if (!workspaceNameValue.TryRead<string>(out var workspaceName) || string.IsNullOrWhiteSpace(workspaceName))
+        {
+            LOGGER.LogWarning("The WorkspaceName of chat template {IdxChatTemplate} is not a valid name and will be ignored.", idx);
+            return null;
+        }
+
+        return workspaceName.Trim();
     }
 
     private static DataSourceOptions? ParseDataSourceOptions(int idx, LuaTable table)
@@ -501,11 +535,12 @@ public record ChatTemplate(
 
         //
         // These may be absent entirely, because saying nothing about the profile, the provider, the
-        // tools, or the data sources is a statement of its own. They therefore bring their own line
-        // break and indentation instead of sitting on a line of the template:
+        // workspace, the tools, or the data sources is a statement of its own. They therefore bring
+        // their own line break and indentation instead of sitting on a line of the template:
         //
-        var profileIdLua = BuildOptionalIdLua("ProfileId", this.ProfileId);
-        var providerIdLua = BuildOptionalIdLua("ProviderId", this.ProviderId);
+        var profileIdLua = BuildOptionalStringLua("ProfileId", this.ProfileId);
+        var providerIdLua = BuildOptionalStringLua("ProviderId", this.ProviderId);
+        var workspaceNameLua = BuildOptionalStringLua("WorkspaceName", this.WorkspaceName);
         var toolIdsLua = this.BuildToolIdsLua();
         var dataSourceOptionsLua = this.BuildDataSourceOptionsLua();
 
@@ -517,7 +552,7 @@ public record ChatTemplate(
                         ["PredefinedUserPrompt"] = {{LuaTools.ToLuaStringLiteral(this.PredefinedUserPrompt)}},
                         ["AllowProfileUsage"] = {{this.AllowProfileUsage.ToString().ToLowerInvariant()}},
                         ["FileAttachments"] = {{fileAttachmentsLua}},
-                        ["ExampleConversation"] = {{exampleConversationLua}},{{profileIdLua}}{{providerIdLua}}{{toolIdsLua}}{{dataSourceOptionsLua}}
+                        ["ExampleConversation"] = {{exampleConversationLua}},{{profileIdLua}}{{providerIdLua}}{{workspaceNameLua}}{{toolIdsLua}}{{dataSourceOptionsLua}}
                     }
                     """;
         return true;
@@ -627,9 +662,9 @@ public record ChatTemplate(
         return true;
     }
 
-    private static string BuildOptionalIdLua(string fieldName, string? id) => id is null
+    private static string BuildOptionalStringLua(string fieldName, string? value) => value is null
         ? string.Empty
-        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(id)},";
+        : $"{Environment.NewLine}    [\"{fieldName}\"] = {LuaTools.ToLuaStringLiteral(value)},";
 
     /// <remarks>
     /// An empty set is written out as an empty table rather than being left out: the two say

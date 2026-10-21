@@ -120,6 +120,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
             Assert.That(imported.DataSourceOptions.PreselectedDataSourceIds, Is.EqualTo(template.DataSourceOptions.PreselectedDataSourceIds));
             Assert.That(imported.ProviderId, Is.EqualTo(template.ProviderId));
             Assert.That(imported.ProfileId, Is.EqualTo(template.ProfileId));
+            Assert.That(imported.WorkspaceName, Is.EqualTo(template.WorkspaceName));
         });
     }
 
@@ -608,7 +609,7 @@ public sealed class ConfigurationSnippetImportTests : ToolRegistryTestBase
                 return (profile, profile.ExportAsConfigurationSection());
 
             case PluginConfigurationObjectType.CHAT_TEMPLATE:
-                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()], Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+                var template = ChatTemplateWith([], ["web_search"], [Guid.NewGuid().ToString()], Guid.NewGuid().ToString(), Guid.NewGuid().ToString()) with { WorkspaceName = "Contracts" };
                 Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);
                 return (template, luaCode);
 

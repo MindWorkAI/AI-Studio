@@ -7,9 +7,9 @@ using Lua.Standard;
 namespace AIStudio.Tests.Settings;
 
 /// <summary>
-/// Checks the profile, provider, tools, and data sources a chat template carries, across the two
-/// surfaces which have to agree on them: the Lua a configuration plugin states, and the Lua the app
-/// exports.
+/// Checks the profile, provider, workspace, tools, and data sources a chat template carries, across
+/// the two surfaces which have to agree on them: the Lua a configuration plugin states, and the Lua
+/// the app exports.
 /// </summary>
 /// <remarks>
 /// The interesting part is not that a value survives, but that the difference between "this
@@ -91,6 +91,7 @@ public sealed class ChatTemplateConfigurationTests
             Assert.That(luaCode, Does.Not.Contain("DataSourceOptions"));
             Assert.That(luaCode, Does.Not.Contain("ProviderId"));
             Assert.That(luaCode, Does.Not.Contain("ProfileId"));
+            Assert.That(luaCode, Does.Not.Contain("WorkspaceName"));
         });
 
         var read = await ParseAsync(luaCode);
@@ -261,6 +262,53 @@ public sealed class ChatTemplateConfigurationTests
                                       """);
 
         Assert.That(read.ProviderId, Is.Null, "The template still works then, with the provider its chats would start with anyway.");
+    }
+
+    [Test]
+    public async Task AWorkspaceNameSurvivesTheExport()
+    {
+        var written = NewTemplate() with { WorkspaceName = "Mails \"inbox\"" };
+        var read = await ExportAndReadBackAsync(written);
+        var silent = await ExportAndReadBackAsync(NewTemplate());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(read.WorkspaceName, Is.EqualTo(written.WorkspaceName));
+            Assert.That(silent.WorkspaceName, Is.Null, "A template without a workspace must keep leaving the chat where it would go anyway.");
+        });
+    }
+
+    [TestCase("\"\"")]
+    [TestCase("\"   \"")]
+    [TestCase("42")]
+    [TestCase("{}")]
+    public async Task AWorkspaceNameWhichNamesNothingIsDropped(string luaValue)
+    {
+        var read = await ParseAsync($$"""
+                                      CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                          ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                          ["Name"] = "Mail",
+                                          ["SystemPrompt"] = "You help with mails.",
+                                          ["WorkspaceName"] = {{luaValue}},
+                                      }
+                                      """);
+
+        Assert.That(read.WorkspaceName, Is.Null);
+    }
+
+    [Test]
+    public async Task APluginTemplateNamesItsWorkspaceWithoutTheSpacesAround()
+    {
+        var read = await ParseAsync("""
+                                    CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+                                        ["Id"] = "33333333-3333-3333-3333-333333333333",
+                                        ["Name"] = "Mail",
+                                        ["SystemPrompt"] = "You help with mails.",
+                                        ["WorkspaceName"] = "  Mails  ",
+                                    }
+                                    """);
+
+        Assert.That(read.WorkspaceName, Is.EqualTo("Mails"), "Workspaces are matched by their trimmed name, so the spaces would only make the field look different from the name in the list.");
     }
 
     [Test]

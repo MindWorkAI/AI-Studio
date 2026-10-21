@@ -275,6 +275,7 @@ public sealed class ConfigurationSnippetParserTests
             DataSourceOptions = new() { DisableDataSources = false, PreselectedDataSourceIds = [Guid.NewGuid().ToString()] },
             ProviderId = Guid.NewGuid().ToString(),
             ProfileId = Guid.NewGuid().ToString(),
+            WorkspaceName = QUOTED_TEXT,
         };
 
         Assert.That(template.TryExportAsConfigurationSection(out var luaCode, out var issue), Is.True, issue);

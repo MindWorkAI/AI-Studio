@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.ToolCalling;
 
 namespace AIStudio.Tests.Settings;
@@ -87,6 +88,25 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
         var template = NewTemplate() with { ProviderId = provider.Id };
 
         Assert.That(this.SettingsManager.GetChatTemplateProvider(template), Is.EqualTo(AIStudio.Settings.Provider.NONE), "A template must not open the way to a provider the user could not pick by hand.");
+    }
+
+    [Test]
+    public void ATemplateNamesItsWorkspaceOnlyWhileWorkspacesAreUsed()
+    {
+        var template = NewTemplate() with { WorkspaceName = " Mails " };
+
+        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY;
+        var whileUsed = this.SettingsManager.GetChatTemplateWorkspaceName(template);
+
+        this.SettingsManager.ConfigurationData.Workspace.StorageBehavior = WorkspaceStorageBehavior.DISABLE_WORKSPACES;
+        var whileSwitchedOff = this.SettingsManager.GetChatTemplateWorkspaceName(template);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(whileUsed, Is.EqualTo("Mails"));
+            Assert.That(whileSwitchedOff, Is.Null, "Without workspaces, a template must not bring one back for its chats.");
+            Assert.That(this.SettingsManager.GetChatTemplateWorkspaceName(NewTemplate()), Is.Null);
+        });
     }
 
     private Profile AddProfile()

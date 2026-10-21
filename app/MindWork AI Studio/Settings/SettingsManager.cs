@@ -920,6 +920,23 @@ public sealed class SettingsManager
         return provider != Provider.NONE && this.IsProviderConfident(provider, Tools.Components.CHAT) ? provider : Provider.NONE;
     }
 
+    /// <summary>
+    /// Returns the name of the workspace a chat template keeps the chats started with it in.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template names none, and also while workspaces are switched off: a chat then
+    /// belongs to no workspace, whatever its template says.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The trimmed name of the workspace, or null to keep the chat where it would go anyway.</returns>
+    public string? GetChatTemplateWorkspaceName(ChatTemplate chatTemplate)
+    {
+        if (string.IsNullOrWhiteSpace(chatTemplate.WorkspaceName) || this.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            return null;
+
+        return chatTemplate.WorkspaceName.Trim();
+    }
+
     public Profile GetProfileById(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))
