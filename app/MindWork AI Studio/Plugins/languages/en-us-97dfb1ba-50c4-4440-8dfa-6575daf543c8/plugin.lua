@@ -6276,11 +6276,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2646845972"] = "Add"
 -- The message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "The message"
 
--- Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T274413108"] = "Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace."
-
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Chat Template Name"
+
+-- Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2828180414"] = "Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on."
 
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Please relink the attachment '{0}' to a file on this computer or remove it before you save."

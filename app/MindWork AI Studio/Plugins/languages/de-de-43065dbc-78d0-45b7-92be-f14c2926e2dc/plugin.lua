@@ -6276,11 +6276,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2646845972"] = "Hinzuf�
 -- The message
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2719480499"] = "Die Nachricht"
 
--- Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T274413108"] = "Arbeitsbereiche sind in Ihren Einstellungen für Arbeitsbereiche derzeit deaktiviert. Solange Sie sie nicht wieder aktivieren, gehören Chats mit dieser Vorlage keinem Arbeitsbereich an."
-
 -- Chat Template Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T275026390"] = "Name der Chat-Vorlage"
+
+-- Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2828180414"] = "In deinen Arbeitsbereichseinstellungen sind Arbeitsbereiche deaktiviert. Solange sie deaktiviert sind, gehören Chats mit dieser Vorlage zu keinem Arbeitsbereich und werden auch nicht in einen Arbeitsbereich verschoben, wenn du Arbeitsbereiche wieder aktivierst. Du kannst diese Auswahl ändern, sobald Arbeitsbereiche aktiviert sind."
 
 -- Please relink the attachment '{0}' to a file on this computer or remove it before you save.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T2884684079"] = "Bitte verknüpfen Sie den Anhang „{0}“ vor dem Speichern erneut mit einer Datei auf diesem Computer oder entfernen Sie ihn."
