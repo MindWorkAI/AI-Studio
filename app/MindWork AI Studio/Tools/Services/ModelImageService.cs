@@ -57,7 +57,10 @@ public sealed class ModelImageService(RustService rustService, ILogger<ModelImag
         var maxBytes = IImageSourceExtensions.MaxImageSizeBytesFor(provider);
         var key = new CacheKey(file.FullName, file.LastWriteTimeUtc, file.Length, maxBytes);
         if (this.cache.TryGetValue(key, out PreparedModelImage? cached) && cached is not null)
+        {
+            logger.LogInformation("Took the image '{ImagePath}' for a budget of {MaxBytes} bytes from the cache.", file.FullName, maxBytes);
             return cached;
+        }
 
         var prepared = await rustService.PrepareImageForModelAsync(file.FullName, maxBytes, token);
         if (!prepared.IsPrepared)
@@ -66,7 +69,10 @@ public sealed class ModelImageService(RustService rustService, ILogger<ModelImag
             return prepared;
         }
 
-        logger.LogInformation("Prepared the image '{ImagePath}' for the model: {Width}x{Height} pixels as {MimeType}, {Base64Length} base64 characters for a budget of {MaxBytes} bytes, resized={WasResized}.", file.FullName, prepared.Width, prepared.Height, prepared.MimeType, prepared.Base64.Length, maxBytes, prepared.WasResized);
+        //
+        // The runtime logs the sizes before and after, so this line only says where it came from:
+        //
+        logger.LogInformation("The runtime prepared the image '{ImagePath}' for a budget of {MaxBytes} bytes; it is cached now.", file.FullName, maxBytes);
         this.cache.Set(key, prepared, new MemoryCacheEntryOptions
         {
             Size = prepared.Base64.Length * (long)sizeof(char),

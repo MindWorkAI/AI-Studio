@@ -16,7 +16,7 @@ use base64::{Engine as _, engine::general_purpose};
 use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 use image::{DynamicImage, ImageDecoder, ImageError, ImageFormat, ImageReader, Limits, Rgb, RgbImage};
-use log::warn;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Semaphore;
 
@@ -345,6 +345,10 @@ enum ModelEncoding {
 struct EncodedModelImage {
     bytes: Vec<u8>,
     encoding: ModelEncoding,
+
+    /// The JPEG quality which fit into the budget; PNG has none.
+    jpeg_quality: Option<u8>,
+
     width: u32,
     height: u32,
     was_resized: bool,
@@ -409,8 +413,10 @@ fn prepare_for_model(path: &Path, max_bytes: u64) -> Result<EncodedModelImage, I
     }
 
     let format = model_input_format(path)?;
+    let source_bytes = std::fs::metadata(path).map(|metadata| metadata.len()).unwrap_or(0);
     let decoded = decode_oriented(path, format)?;
-    let was_resized = decoded.width().max(decoded.height()) > MAX_EDGE_PIXELS;
+    let (source_width, source_height) = (decoded.width(), decoded.height());
+    let was_resized = source_width.max(source_height) > MAX_EDGE_PIXELS;
     let image = if was_resized {
         resize_to_max_edge(decoded)
     } else {
@@ -418,7 +424,37 @@ fn prepare_for_model(path: &Path, max_bytes: u64) -> Result<EncodedModelImage, I
     };
 
     let encoding = model_encoding(format, &image);
-    fit_into_budget(image, encoding, max_bytes, was_resized)
+    let encoded = fit_into_budget(image, encoding, max_bytes, was_resized)?;
+    let encoded_bytes = encoded.bytes.len() as u64;
+    info!(
+        "image prepared for model: path='{}', source={format:?} {source_width}x{source_height} {}, result={:?} {}x{} {} ({} of the original), quality={}, budget={}, resized={}",
+        path.display(),
+        megabytes(source_bytes),
+        encoded.encoding,
+        encoded.width,
+        encoded.height,
+        megabytes(encoded_bytes),
+        percentage(encoded_bytes, source_bytes),
+        encoded.jpeg_quality.map_or_else(|| "lossless".to_string(), |quality| quality.to_string()),
+        megabytes(max_bytes),
+        encoded.was_resized,
+    );
+
+    Ok(encoded)
+}
+
+/// Writes a number of bytes as megabytes, for the log.
+fn megabytes(bytes: u64) -> String {
+    format!("{:.2} MB", bytes as f64 / 1_000_000.0)
+}
+
+/// Writes how large a part is compared to the whole, for the log.
+fn percentage(part: u64, whole: u64) -> String {
+    if whole == 0 {
+        return "n/a".to_string();
+    }
+
+    format!("{:.0} %", part as f64 * 100.0 / whole as f64)
 }
 
 /// Maps a file extension to the image format we expect for a model input.
@@ -515,7 +551,7 @@ fn fit_into_budget(image: DynamicImage, encoding: ModelEncoding, max_bytes: u64,
         let png = to_png_pixels(&image);
         let bytes = encode_model_image(&png, ModelEncoding::Png, JPEG_QUALITY)?;
         if bytes.len() as u64 <= max_bytes {
-            return Ok(EncodedModelImage { bytes, encoding, width: png.width(), height: png.height(), was_resized });
+            return Ok(EncodedModelImage { bytes, encoding, jpeg_quality: None, width: png.width(), height: png.height(), was_resized });
         }
     }
 
@@ -531,7 +567,7 @@ fn fit_into_budget(image: DynamicImage, encoding: ModelEncoding, max_bytes: u64,
         for quality in BUDGET_JPEG_QUALITIES {
             let bytes = encode_model_image(&current, ModelEncoding::Jpeg, quality)?;
             if bytes.len() as u64 <= max_bytes {
-                return Ok(EncodedModelImage { bytes, encoding: ModelEncoding::Jpeg, width: current.width(), height: current.height(), was_resized });
+                return Ok(EncodedModelImage { bytes, encoding: ModelEncoding::Jpeg, jpeg_quality: Some(quality), width: current.width(), height: current.height(), was_resized });
             }
         }
 
@@ -983,6 +1019,27 @@ mod tests {
         let corner = image::load_from_memory(&prepared.bytes).unwrap().to_rgb8().get_pixel(5, 5).0;
         assert!(corner.iter().all(|&channel| channel > 240), "The transparent half has to be white, not black: {corner:?}");
         std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn budget_reports_the_quality_which_fit() {
+        let path = temporary_image_path("jpg");
+        DynamicImage::ImageRgb8(noise_image(64, 48)).save_with_format(&path, ImageFormat::Jpeg).unwrap();
+        assert_eq!(prepare_for_model(&path, u64::MAX).unwrap().jpeg_quality, Some(JPEG_QUALITY));
+        std::fs::remove_file(path).unwrap();
+
+        let path = temporary_image_path("png");
+        DynamicImage::new_rgb8(4, 3).save_with_format(&path, ImageFormat::Png).unwrap();
+        assert_eq!(prepare_for_model(&path, u64::MAX).unwrap().jpeg_quality, None, "PNG has no quality.");
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn log_writes_sizes_in_megabytes_and_the_ratio_in_percent() {
+        assert_eq!(megabytes(5_812_345), "5.81 MB");
+        assert_eq!(megabytes(0), "0.00 MB");
+        assert_eq!(percentage(912_000, 5_812_345), "16 %");
+        assert_eq!(percentage(1, 0), "n/a", "An empty source has no ratio.");
     }
 
     #[test]
