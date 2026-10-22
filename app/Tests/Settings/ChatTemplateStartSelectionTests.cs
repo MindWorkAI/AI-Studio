@@ -126,6 +126,25 @@ public sealed class ChatTemplateStartSelectionTests : ToolRegistryTestBase
     }
 
     [Test]
+    public void AProviderIdFollowsTheSameRuleAsTheTemplateWhichNamesIt()
+    {
+        var trustedProvider = ToolCapableProvider();
+        var lessTrustedProvider = LessTrustedProvider();
+        this.SettingsManager.ConfigurationData.Providers.Add(trustedProvider);
+        this.SettingsManager.ConfigurationData.Providers.Add(lessTrustedProvider);
+        this.SettingsManager.ConfigurationData.Confidence.EnforceGlobalMinimumConfidence = true;
+        this.SettingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence = ConfidenceLevel.HIGH;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.SettingsManager.GetChatTemplateProvider(trustedProvider.Id), Is.EqualTo(trustedProvider));
+            Assert.That(this.SettingsManager.GetChatTemplateProvider(lessTrustedProvider.Id), Is.EqualTo(AIStudio.Settings.Provider.NONE), "The chat template dialog and the import warn about exactly the providers a chat leaves out.");
+            Assert.That(this.SettingsManager.GetChatTemplateProvider("66666666-6666-6666-6666-666666666666"), Is.EqualTo(AIStudio.Settings.Provider.NONE));
+            Assert.That(this.SettingsManager.GetChatTemplateProvider((string?)null), Is.EqualTo(AIStudio.Settings.Provider.NONE));
+        });
+    }
+
+    [Test]
     public void ATemplateNamesItsWorkspaceOnlyWhileWorkspacesAreUsed()
     {
         var template = NewTemplate() with { WorkspaceName = " Mails " };

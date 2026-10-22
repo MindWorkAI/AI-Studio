@@ -264,17 +264,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
     /// another machine or from a configuration plugin may name another one, though, and the list
     /// alone would then show nothing about it.
     /// </remarks>
-    private bool IsPreselectedProviderUnusable
-    {
-        get
-        {
-            if (!this.preselectProvider || string.IsNullOrWhiteSpace(this.selectedProviderId))
-                return false;
-
-            var provider = this.SettingsManager.GetProviderById(this.selectedProviderId);
-            return provider == AIStudio.Settings.Provider.NONE || !this.SettingsManager.IsProviderConfident(provider, Tools.Components.CHAT);
-        }
-    }
+    private bool IsPreselectedProviderUnusable => this.preselectProvider
+                                                  && !string.IsNullOrWhiteSpace(this.selectedProviderId)
+                                                  && this.SettingsManager.GetChatTemplateProvider(this.selectedProviderId) == AIStudio.Settings.Provider.NONE;
 
     /// <summary>
     /// Whether workspaces are switched off, so that a workspace of this template has no effect for now.

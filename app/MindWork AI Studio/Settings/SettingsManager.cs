@@ -893,7 +893,7 @@ public sealed class SettingsManager
         if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
             return null;
 
-        if (string.Equals(chatTemplate.ProfileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+        if (chatTemplate.StartsWithoutProfile())
             return Profile.NO_PROFILE;
 
         var profile = this.GetProfileById(chatTemplate.ProfileId);
@@ -930,12 +930,25 @@ public sealed class SettingsManager
     /// </remarks>
     /// <param name="chatTemplate">The chat template of the chat about to start.</param>
     /// <returns>The provider to start with, or Provider.NONE to keep the usual one.</returns>
-    public Provider GetChatTemplateProvider(ChatTemplate chatTemplate)
+    public Provider GetChatTemplateProvider(ChatTemplate chatTemplate) => this.GetChatTemplateProvider(chatTemplate.ProviderId);
+
+    /// <summary>
+    /// Returns the provider a chat template may preselect under the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The one rule for the provider of a chat template: it exists and meets the confidence level
+    /// required for chats. The chat, assistant chat launchers, the chat template dialog, and the
+    /// import of a chat template all ask here, so that none of them accepts a provider another
+    /// one would leave out.
+    /// </remarks>
+    /// <param name="providerId">The ID the chat template names, or null when it names none.</param>
+    /// <returns>The provider, or Provider.NONE when the ID names no provider a chat may use.</returns>
+    public Provider GetChatTemplateProvider(string? providerId)
     {
-        if (chatTemplate.ProviderId is null)
+        if (string.IsNullOrWhiteSpace(providerId))
             return Provider.NONE;
 
-        var provider = this.GetProviderById(chatTemplate.ProviderId);
+        var provider = this.GetProviderById(providerId);
         return provider != Provider.NONE && this.IsProviderConfident(provider, Tools.Components.CHAT) ? provider : Provider.NONE;
     }
 

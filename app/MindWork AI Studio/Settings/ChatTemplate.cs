@@ -124,6 +124,16 @@ public record ChatTemplate(
     #endregion
 
     /// <summary>
+    /// Whether this template starts its chats without a profile, whatever the default says.
+    /// </summary>
+    /// <remarks>
+    /// That is a statement of its own, made with the ID of the no-profile entry, see ProfileId. It
+    /// names no profile which could be missing on another computer. A method rather than a property,
+    /// so that it does not end up in the stored settings.
+    /// </remarks>
+    public bool StartsWithoutProfile() => string.Equals(this.ProfileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Gets the name of this chat template. If it is the NO_CHAT_TEMPLATE, it returns a localized string.
     /// </summary>
     /// <remarks>
@@ -753,7 +763,7 @@ public record ChatTemplate(
     /// </remarks>
     private string BuildProviderAndProfileIdNote()
     {
-        var namesProfile = this.ProfileId is not null && this.ProfileId != Profile.NO_PROFILE.Id;
+        var namesProfile = this.ProfileId is not null && !this.StartsWithoutProfile();
         if (this.ProviderId is null && !namesProfile)
             return string.Empty;
 
