@@ -927,47 +927,45 @@ public partial class ChatComponent : MSGComponentBase
     }
 
     /// <summary>
-    /// The workspace of the chat template, opened or created by its name.
+    /// The workspace a chat which has no thread yet gets with its first content.
     /// </summary>
     /// <remarks>
-    /// Guid.Empty when the template names none, while workspaces are switched off, and when the
-    /// workspace cannot be opened or created. The chat then belongs to no workspace, as it would
-    /// without the template.
+    /// The first content is the first message, a media import, or a draft kept when the user leaves
+    /// the page. A chat without a thread belongs to no workspace, so the workspace of its chat
+    /// template fills in, opened or created by its name. That happens only here, when the chat gets
+    /// something to keep: merely opening the chat page or trying out a template creates no
+    /// workspace, and a workspace the user deleted stays gone until a chat with that template
+    /// actually starts. Without a usable workspace of the template, the chat stays without one.
     /// </remarks>
-    private async Task<Guid> ResolveChatTemplateWorkspaceAsync()
+    /// <returns>The ID of the workspace, or Guid.Empty for none.</returns>
+    private async Task<Guid> ResolveWorkspaceOfFirstThreadAsync()
     {
+        if (this.currentWorkspaceId != Guid.Empty)
+            return this.currentWorkspaceId;
+
         if (this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not { } workspaceName)
             return Guid.Empty;
 
-        try
-        {
-            return await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(workspaceName);
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogError(e, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", workspaceName, this.currentChatTemplate.GetSafeName());
-            return Guid.Empty;
-        }
+        return await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync(workspaceName, this.currentChatTemplate.GetSafeName());
     }
 
     /// <summary>
-    /// Creates the thread of a chat which had none yet, in the workspace of its chat template where it names one.
+    /// Hands a thread which this component just created for a chat without one to the parent.
     /// </summary>
     /// <remarks>
-    /// A chat without a thread belongs to no workspace, so the workspace of its chat template fills
-    /// in. It is opened or created only here, when the chat gets something to keep: merely opening
-    /// the chat page or trying out a template creates no workspace, and a workspace the user deleted
-    /// stays gone until a chat with that template actually starts.
+    /// The thread is a parameter of this component, and the parent hands over its own whenever it
+    /// renders. So the parent hears about the new thread before anything else may render it, see
+    /// StartNewChat. Only afterward, the header shows the workspace of the thread, since showing a
+    /// workspace name renders the parent as well.
     /// </remarks>
-    /// <param name="name">The name of the thread.</param>
-    /// <returns>The new thread.</returns>
-    private async Task<ChatThread> NewChatThreadInChatTemplateWorkspaceAsync(string name)
+    private async Task PublishNewChatThreadAsync()
     {
-        if (this.currentWorkspaceId != Guid.Empty)
-            return this.NewChatThread(name);
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
 
-        var workspaceId = await this.ResolveChatTemplateWorkspaceAsync();
-        return this.NewChatThread(name, workspaceId);
+        // The header shows the workspace of the new thread from now on, e.g., the one of its chat template:
+        if (this.ChatThread is not null && this.ChatThread.WorkspaceId != Guid.Empty)
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
 
     /// <summary>
@@ -1108,7 +1106,7 @@ public partial class ChatComponent : MSGComponentBase
         //
         // Without a thread there is nothing to start anew, so the selection of the new template is
         // applied right here. It travels into the thread which the first message creates, and that
-        // message also decides the workspace, see NewChatThreadInChatTemplateWorkspaceAsync.
+        // message also decides the workspace, see ResolveWorkspaceOfFirstThreadAsync.
         //
         if (this.ApplyChatTemplateProfileAndProvider(previousChatTemplate))
             await this.ProviderChanged.InvokeAsync(this.Provider);
@@ -1359,7 +1357,7 @@ public partial class ChatComponent : MSGComponentBase
                 return;
 
             this.RefreshCurrentProfileAndChatTemplate();
-            chat = await this.NewChatThreadInChatTemplateWorkspaceAsync(this.ExtractThreadName(this.ComposerState.UserInput));
+            chat = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), await this.ResolveWorkspaceOfFirstThreadAsync());
             this.MirrorComposerIntoDraft(chat);
             this.ComposerState.Clear();
         }
@@ -1432,7 +1430,7 @@ public partial class ChatComponent : MSGComponentBase
             ? string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath))
             : promptName;
 
-        this.ChatThread = await this.NewChatThreadInChatTemplateWorkspaceAsync(threadName);
+        this.ChatThread = this.NewChatThread(threadName, await this.ResolveWorkspaceOfFirstThreadAsync());
 
         // A message the user started belongs to the new chat, so it is stored with it:
         if (this.ComposerState.HasUserDraft)
@@ -1444,11 +1442,7 @@ public partial class ChatComponent : MSGComponentBase
         // of only after the first message was sent:
         //
         await this.StoreAndListChatAsync(this.ChatThread);
-        this.MarkCurrentChatAsLoadedParameter();
-        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
-        if (this.ChatThread.WorkspaceId != Guid.Empty)
-            await this.SyncWorkspaceHeaderWithChatThreadAsync();
-
+        await this.PublishNewChatThreadAsync();
         await this.SyncForegroundChatAsync();
         return this.ChatThread;
     }
@@ -1482,13 +1476,8 @@ public partial class ChatComponent : MSGComponentBase
         // Create a new chat thread if necessary:
         if (this.ChatThread is null)
         {
-            this.ChatThread = await this.NewChatThreadInChatTemplateWorkspaceAsync(this.ExtractThreadName(this.ComposerState.UserInput));
-            this.MarkCurrentChatAsLoadedParameter();
-            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
-
-            // The header shows the workspace of the chat template from now on:
-            if (this.ChatThread.WorkspaceId != Guid.Empty)
-                await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            this.ChatThread = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), await this.ResolveWorkspaceOfFirstThreadAsync());
+            await this.PublishNewChatThreadAsync();
         }
         else
         {
@@ -1687,7 +1676,7 @@ public partial class ChatComponent : MSGComponentBase
     /// sources, tools, and example conversation, its profile, and its provider in the same way, and
     /// the user is asked about unsaved changes in the same way.
     /// </remarks>
-    /// <param name="useSameWorkspace">True starts the new chat with a thread right away, in the workspace of the open chat. False starts it outside any workspace, and its thread comes with the first message.</param>
+    /// <param name="useSameWorkspace">True starts the new chat with a thread right away, in the workspace of the open chat. False starts it outside any workspace, and its thread comes with the first message. A chat which would belong to no workspace either way, while its chat template names one, also gets its thread only with the first message, in the workspace of the template.</param>
     /// <param name="deletePreviousChat">Whether to delete the open chat first.</param>
     /// <param name="targetWorkspaceId">The workspace for the new chat, when the workspace tree asks for one. When given, the new chat gets a thread in that workspace, whatever useSameWorkspace says.</param>
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? previousChatTemplate = null)
@@ -1797,7 +1786,7 @@ public partial class ChatComponent : MSGComponentBase
         // workspace otherwise. A workspace asked for on purpose wins: the one of the workspace list,
         // and the open one for the button that starts a new chat in it. Such a chat gets no thread
         // here: its first message creates one in that workspace, so that the workspace is created
-        // only once there is something to keep, see NewChatThreadInChatTemplateWorkspaceAsync.
+        // only once there is something to keep, see ResolveWorkspaceOfFirstThreadAsync.
         //
         if (targetWorkspaceId is null && workspaceOfNewChat == Guid.Empty && this.SettingsManager.GetChatTemplateWorkspaceName(this.currentChatTemplate) is not null)
             startsOutsideWorkspaces = true;
@@ -2182,7 +2171,7 @@ public partial class ChatComponent : MSGComponentBase
             // that, and it may even bring an example conversation along -- reporting nothing for all
             // of it would tell a person their window is empty while their first message is not.
             //
-            var thread = this.ChatThread ?? this.NewChatThread(string.Empty);
+            var thread = this.ChatThread ?? this.NewChatThread(string.Empty, this.currentWorkspaceId);
             var toolDefinitions = this.GetRunnableToolDefinitions(offersSemanticSearch);
             provider = this.Provider;
             parts = ConversationParts.Of(thread, this.BuildSystemPromptFor(thread, toolDefinitions), this.UserInput, this.ComposerState.FileAttachments, provider.SupportsImageInput(), toolDefinitions);
@@ -2281,18 +2270,22 @@ public partial class ChatComponent : MSGComponentBase
     /// The thread a new chat starts with, as the selections made so far decide it.
     /// </summary>
     /// <remarks>
-    /// In one place because three code paths used to write it out, and because the token count has
-    /// to measure the same thing they build. A count against a thread assembled differently from
-    /// the one which is then sent would be wrong in exactly the moment a person looks at it: before
-    /// they send their first message.
+    /// The only place which builds a new thread: every way to start a chat comes here, and so does
+    /// the token count, which has to measure the same thing they build. A count against a thread
+    /// assembled differently from the one which is then sent would be wrong in exactly the moment a
+    /// person looks at it: before they send their first message.
+    ///
+    /// The workspace is no default of its own but always named by the caller, since that is the one
+    /// part the ways to start a chat decide differently: StartNewChat decides it right away, and a
+    /// chat which gets its thread with its first content asks ResolveWorkspaceOfFirstThreadAsync.
     ///
     /// The data source options are those chosen before the chat had a thread. Starting a new chat in
     /// a workspace replaces them right afterward with those its chat template asks for.
     /// </remarks>
     /// <param name="name">The name of the thread.</param>
-    /// <param name="workspaceId">The workspace of the thread. Without one, the thread goes to the workspace of the open chat.</param>
+    /// <param name="workspaceId">The workspace of the thread, or Guid.Empty for none.</param>
     /// <returns>The new thread.</returns>
-    private ChatThread NewChatThread(string name, Guid? workspaceId = null) => new()
+    private ChatThread NewChatThread(string name, Guid workspaceId) => new()
     {
         DataSourceOptions = this.earlyDataSourceOptions,
         IncludeDateTime = true,
@@ -2301,7 +2294,7 @@ public partial class ChatComponent : MSGComponentBase
         SelectedChatTemplate = this.currentChatTemplate.Id,
         SelectedToolIds = [..this.selectedToolIds],
         SystemPrompt = SystemPrompts.DEFAULT,
-        WorkspaceId = workspaceId ?? this.currentWorkspaceId,
+        WorkspaceId = workspaceId,
         ChatId = Guid.NewGuid(),
         Name = name,
         Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),

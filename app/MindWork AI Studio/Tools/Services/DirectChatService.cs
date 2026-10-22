@@ -83,21 +83,8 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         }
         else if (settingsManager.GetChatTemplateWorkspaceName(chatTemplate) is { } templateWorkspaceName)
         {
-            //
-            // Like everything else a chat template names, a workspace which cannot be opened or
-            // created does not stop the launch: the chat then belongs to no workspace, as it would
-            // without the template.
-            //
-            try
-            {
-                workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(templateWorkspaceName);
-                if (workspaceId == Guid.Empty)
-                    logger.LogWarning("The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "The workspace '{WorkspaceName}' of the chat template '{ChatTemplateName}' could not be opened or created. The chat starts without a workspace.", templateWorkspaceName, chatTemplate.GetSafeName());
-            }
+            // A workspace of the template which cannot be used does not stop the launch, the same as on the chat page:
+            workspaceId = await WorkspaceBehaviour.ResolveOrCreateChatTemplateWorkspaceAsync(templateWorkspaceName, chatTemplate.GetSafeName());
         }
 
         var toolChoice = ChatTemplate.ChooseToolIds(chatTemplate, launchConfiguration.ToolIds);
