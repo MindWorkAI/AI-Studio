@@ -3,21 +3,37 @@ using Microsoft.AspNetCore.Components;
 namespace AIStudio.Components;
 
 /// <summary>
-/// Shows a piece of content for the user to check: text as rendered Markdown and as plain text,
-/// and an image, a recording, or a video as itself.
+/// Shows a piece of content for the user to check: text formatted and as plain text, and an image,
+/// a recording, or a video as itself.
 /// </summary>
 /// <remarks>
 /// Every place which lets the user see what AI Studio reads or hands to the AI shows it the same
-/// way, which is why this lives here instead of in each of them. The caller decides what the content
-/// is called and what the hint below it says.<br/><br/>
+/// way, which is why this lives here instead of in each of them. A slim bar above the content says
+/// what it is, and switches between the ways to see it; the caller fills its start, or names the
+/// content there.<br/><br/>
+/// The content scrolls inside its frame, so a dialog around it does not have to scroll as well. In a
+/// dialog which fits the window, the frame gives way down to the room left over.<br/><br/>
 /// The text is shown in full unless the caller sets a limit. Whether the beginning of a text is
 /// enough depends on what the user wants to check: how a whole document was read, or exactly what
 /// the AI received. Only the caller knows which, and how to explain a cut.<br/><br/>
-/// Media and text may come together, e.g., a recording and its transcript: the media panel then
-/// comes first, followed by the panels of the text.
+/// Media and text may come together, e.g., a recording and its transcript: the media then comes
+/// first, followed by the text.
 /// </remarks>
 public partial class ContentViewer : MSGComponentBase
 {
+    /// <summary>
+    /// The ways to see the content.
+    /// </summary>
+    /// <remarks>
+    /// Internal rather than private: Razor infers the type of the toggle items in a class of its own.
+    /// </remarks>
+    internal enum ContentView
+    {
+        MEDIA,
+        FORMATTED,
+        PLAIN,
+    }
+
     /// <summary>
     /// What kind of content this is.
     /// </summary>
@@ -37,10 +53,17 @@ public partial class ContentViewer : MSGComponentBase
     public string MediaUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// What the text is called, shown on the field around it.
+    /// What the content is called, shown in the bar above it unless the caller fills the bar itself.
     /// </summary>
     [Parameter]
     public string Label { get; set; } = string.Empty;
+
+    /// <summary>
+    /// What the bar above the content shows at its start in place of the label, e.g., where the
+    /// content comes from and a button to open it there.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Toolbar { get; set; }
 
     /// <summary>
     /// The hint below the text, or nothing.
@@ -61,16 +84,26 @@ public partial class ContentViewer : MSGComponentBase
     public Func<int, string>? CutOffNotice { get; set; }
 
     /// <summary>
-    /// How high the text may grow before it scrolls, as a CSS length.
+    /// The height which does not limit the content: it may take all the room its place leaves over,
+    /// e.g., in a dialog which fits the window, see dialog-content-fit in app.css.
+    /// </summary>
+    public const string NO_HEIGHT_LIMIT = "none";
+
+    /// <summary>
+    /// How high the content may grow before it scrolls, as a CSS length.
     /// </summary>
     [Parameter]
     public string MaxHeight { get; set; } = "40vh";
 
     /// <summary>
-    /// How many lines the plain text view shows at least. It grows with longer text.
+    /// The ways to see this content, in the order they are offered; the first one is shown first.
     /// </summary>
-    [Parameter]
-    public int SimpleViewLines { get; set; } = 6;
+    private readonly List<ContentView> views = [];
+
+    /// <summary>
+    /// The way the content is shown right now.
+    /// </summary>
+    private ContentView view;
 
     /// <summary>
     /// The text and the limit the current cut was made of, so that we cut once per text instead of once per render.
@@ -100,15 +133,33 @@ public partial class ContentViewer : MSGComponentBase
             this.shownText = CutAtLineBreak(this.Text, this.CharacterLimit ?? int.MaxValue, out this.cutOffCharacters);
         }
 
+        //
+        // Media is seen as itself first. Text is seen formatted and as plain text, for text and for
+        // media which brings some along. The way the user chose stays as long as it is offered:
+        //
+        this.views.Clear();
+        if (this.Kind is not ContentViewerKind.TEXT)
+            this.views.Add(ContentView.MEDIA);
+
+        if (this.Kind is ContentViewerKind.TEXT || !string.IsNullOrWhiteSpace(this.Text))
+            this.views.AddRange([ContentView.FORMATTED, ContentView.PLAIN]);
+
+        if (!this.views.Contains(this.view))
+            this.view = this.views[0];
+
         base.OnParametersSet();
     }
 
     #endregion
 
-    /// <summary>
-    /// Text is shown for text, and for media which brings some along.
-    /// </summary>
-    private bool ShowsText => this.Kind is ContentViewerKind.TEXT || !string.IsNullOrWhiteSpace(this.Text);
+    private string GetViewName(ContentView contentView) => contentView switch
+    {
+        ContentView.MEDIA when this.Kind is ContentViewerKind.IMAGE => T("Image"),
+        ContentView.MEDIA when this.Kind is ContentViewerKind.AUDIO => T("Audio"),
+        ContentView.MEDIA => T("Video"),
+        ContentView.FORMATTED => T("Formatted"),
+        _ => T("Plain text"),
+    };
 
     /// <summary>
     /// Takes the beginning of a text which is too long to show.

@@ -63,4 +63,14 @@ public sealed class RetrievalTextContext : IRetrievalContext
     /// to. A slide or a sheet has no page and leaves this empty.
     /// </remarks>
     public int? PageNumber { get; init; }
+
+    /// <summary>
+    /// Which part of its document this passage is, counted from one, or null when the data source does not say.
+    /// </summary>
+    /// <remarks>
+    /// A document is split into parts to be searched, and each part is one passage. The page says
+    /// better where a passage is, so the part only names the place in a document without pages,
+    /// such as a text file.
+    /// </remarks>
+    public int? ChunkNumber { get; init; }
 }

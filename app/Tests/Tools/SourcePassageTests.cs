@@ -134,6 +134,51 @@ public sealed class SourcePassageTests
     }
 
     [Test]
+    public void TheLocationKeepsItsPagesApartFromItsWords()
+    {
+        SourcePassage[] passages = [Passage(HANDBOOK_URL, "Results.", pageNumber: 11), Passage(HANDBOOK_URL, "Introduction.", pageNumber: 1, endPageNumber: 2)];
+
+        var location = passages.GetLocation();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(location, Is.Not.Null);
+            Assert.That(location!.Ranges, Is.EqualTo(new[] { new LocationRange(1, 2), new LocationRange(11, 11) }), "Each page range becomes a link of its own, in the order of the document.");
+            Assert.That(location.ArePages, Is.True);
+            Assert.That(location.ToString(), Is.EqualTo($"{location.Prefix}1–2, 11{location.Suffix}"), "The links read the same as the title of the source.");
+            Assert.That(new[] { Passage(HANDBOOK_URL, "A slide.") }.GetLocation(), Is.Null, "Where the data source says neither pages nor parts, nothing is invented.");
+        });
+    }
+
+    [Test]
+    public void ADocumentWithoutPagesIsNamedByItsParts()
+    {
+        SourcePassage[] passages = [Passage(MANUAL_URL, "Step five.", chunkNumber: 5), Passage(MANUAL_URL, "Step two.", chunkNumber: 2)];
+
+        var location = passages.GetLocation();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(location, Is.Not.Null);
+            Assert.That(location!.Ranges, Is.EqualTo(new[] { new LocationRange(2, 2), new LocationRange(5, 5) }), "The parts follow the order of the document.");
+            Assert.That(location.ArePages, Is.False, "A part is nothing a program can open a document at, so it becomes no link.");
+            Assert.That(location.ToString(), Is.Not.EqualTo(new[] { Passage(MANUAL_URL, "Step two.", pageNumber: 2), Passage(MANUAL_URL, "Step five.", pageNumber: 5) }.GetLocationLabel()), "Parts are not called pages.");
+            Assert.That(new[] { Passage(MANUAL_URL, "Step two.", pageNumber: 7, chunkNumber: 2) }.GetLocation()!.Ranges, Is.EqualTo(new[] { new LocationRange(7, 7) }), "Where there are pages, they say better where a passage is.");
+        });
+    }
+
+    [Test]
+    public void APassageKnowsItsPlaceInTheDocumentAsNumbers()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(Passage(HANDBOOK_URL, "Method.", pageNumber: 4, endPageNumber: 5).GetLocationRange(), Is.EqualTo(new LocationRange(4, 5)));
+            Assert.That(Passage(MANUAL_URL, "Step three.", chunkNumber: 3).GetLocationRange(), Is.EqualTo(new LocationRange(3, 3)), "The dialog orders the passages of a text file by their parts.");
+            Assert.That(Passage(MANUAL_URL, "Somewhere.").GetLocationRange(), Is.Null);
+        });
+    }
+
+    [Test]
     public void TheTitleOfASourceNamesThePagesOfAllItsPassages()
     {
         IList<Source> sources =
@@ -155,18 +200,34 @@ public sealed class SourcePassageTests
     }
 
     [Test]
-    public void PassagesWithoutAPageAreCountedOnceThereAreSeveral()
+    public void TheTitleOfADocumentWithoutPagesNamesThePartsOfAllItsPassages()
     {
-        IList<Source> oneChunk = [new("manual.txt (Chunk 3)", $"{MANUAL_URL}#chunk=2", SourceOrigin.RAG)];
-        IList<Source> twoChunks = [new("manual.txt (Chunk 3)", $"{MANUAL_URL}#chunk=2", SourceOrigin.RAG)];
+        IList<Source> sources = [new("manual.txt (Chunk 2)", $"{MANUAL_URL}#chunk=1", SourceOrigin.RAG)];
 
-        oneChunk.NamePassagesInTitles([Passage($"{MANUAL_URL}#chunk=2", "Step one.")]);
-        twoChunks.NamePassagesInTitles([Passage($"{MANUAL_URL}#chunk=2", "Step one."), Passage($"{MANUAL_URL}#chunk=7", "Step two.")]);
+        SourcePassage[] passages = [Passage($"{MANUAL_URL}#chunk=1", "Step one.", chunkNumber: 2), Passage($"{MANUAL_URL}#chunk=6", "Step two.", chunkNumber: 7)];
+        sources.NamePassagesInTitles(passages);
 
         Assert.Multiple(() =>
         {
-            Assert.That(oneChunk[0].Title, Is.EqualTo("manual.txt (Chunk 3)"), "One passage without a page keeps the title its data source gave it.");
-            Assert.That(twoChunks[0].Title, Does.StartWith("Handbooks (").And.Contain("2"), "Two passages under a title naming one chunk would tell the user something false.");
+            Assert.That(sources[0].Title, Is.EqualTo($"Handbooks ({passages.GetLocationLabel()})"), "A title naming one part would hide the other one.");
+            Assert.That(sources[0].Title, Does.Contain("2, 7"));
+        });
+    }
+
+    [Test]
+    public void PassagesWithoutAnyLocationAreCountedOnceThereAreSeveral()
+    {
+        // As an external data source delivers them, which says neither pages nor parts:
+        IList<Source> onePassage = [new("Wiki", "https://wiki.example.org/budget", SourceOrigin.RAG)];
+        IList<Source> twoPassages = [new("Wiki", "https://wiki.example.org/budget", SourceOrigin.RAG)];
+
+        onePassage.NamePassagesInTitles([Passage("https://wiki.example.org/budget", "Step one.")]);
+        twoPassages.NamePassagesInTitles([Passage("https://wiki.example.org/budget", "Step one."), Passage("https://wiki.example.org/budget", "Step two.")]);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(onePassage[0].Title, Is.EqualTo("Wiki"), "One passage keeps the title its data source gave it.");
+            Assert.That(twoPassages[0].Title, Does.StartWith("Handbooks (").And.Contain("2"), "Two passages under one title are counted, so the user knows to look for both.");
         });
     }
 
@@ -205,7 +266,7 @@ public sealed class SourcePassageTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(storedPassage.EnumerateObject().Select(property => property.Name), Is.EquivalentTo(new[] { "source_url", "data_source_name", "path", "category", "type", "text", "surrounding_content", "page_number", "end_page_number" }), "A computed property would end up in every chat file as well.");
+            Assert.That(storedPassage.EnumerateObject().Select(property => property.Name), Is.EquivalentTo(new[] { "source_url", "data_source_name", "path", "category", "type", "text", "surrounding_content", "page_number", "end_page_number", "chunk_number" }), "A computed property would end up in every chat file as well.");
             Assert.That(storedPassage.GetProperty("type").GetString(), Is.EqualTo("TEXT_DOCUMENT"), "The type is stored by name, so a type added later does not shift the stored ones.");
 
             var loadedPassage = loaded.SourcePassages.Single();
@@ -236,7 +297,7 @@ public sealed class SourcePassageTests
         Assert.That(copy.SourcePassages.Select(passage => passage.Text), Is.EqualTo(new[] { "The mixing console." }), "A copy which shares the list with its original loses its passages along with it.");
     }
 
-    private static SourcePassage Passage(string sourceUrl, string text, int? pageNumber = null, int? endPageNumber = null) => new()
+    private static SourcePassage Passage(string sourceUrl, string text, int? pageNumber = null, int? endPageNumber = null, int? chunkNumber = null) => new()
     {
         SourceUrl = sourceUrl,
         DataSourceName = "Handbooks",
@@ -246,5 +307,6 @@ public sealed class SourcePassageTests
         Text = text,
         PageNumber = pageNumber,
         EndPageNumber = endPageNumber,
+        ChunkNumber = chunkNumber,
     };
 }

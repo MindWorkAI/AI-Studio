@@ -3,7 +3,6 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
-using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 
@@ -11,8 +10,6 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService indexSearch, ILogger<DataSourceLocalRetrievalService> logger)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
-
     private enum RetrievalChannel
     {
         VECTOR,
@@ -177,6 +174,7 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
             ReferenceTitle = BuildReferenceTitle(hit, dataSource),
             ReferenceLink = referenceLink,
             PageNumber = hit.PageNumber is > 0 ? hit.PageNumber : null,
+            ChunkNumber = hit.ChunkIndex + 1,
         };
     }
 
@@ -186,12 +184,13 @@ public sealed class DataSourceLocalRetrievalService(LocalIndexSearchService inde
         return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
     }
 
+    //
+    // Worded like the location of every passage, so that the title reads the same before and after
+    // the passages of an answer rename it, cf. SourcePassageExtensions.NamePassagesInTitles:
+    //
     private static string BuildLocatedReferenceTitle(string sourceName, int chunkIndex, int? pageNumber)
     {
-        var location = pageNumber is > 0
-            ? string.Format(TB("Page {0}"), pageNumber)
-            : string.Format(TB("Chunk {0}"), chunkIndex + 1);
-
+        var location = new SourcePassage { PageNumber = pageNumber is > 0 ? pageNumber : null, ChunkNumber = chunkIndex + 1 }.GetLocationLabel();
         return $"{sourceName} ({location})";
     }
 

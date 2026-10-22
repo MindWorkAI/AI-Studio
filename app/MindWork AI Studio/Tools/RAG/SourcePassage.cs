@@ -66,4 +66,14 @@ public sealed record SourcePassage
     /// The page the passage ends on, or null when it is not known.
     /// </summary>
     public int? EndPageNumber { get; init; }
+
+    /// <summary>
+    /// Which part of its document the passage is, counted from one, or null when the data source
+    /// does not say.
+    /// </summary>
+    /// <remarks>
+    /// Names the place of a passage in a document without pages, such as a text file. Where there
+    /// are pages, they say it better, see SourcePassageExtensions.GetLocation.
+    /// </remarks>
+    public int? ChunkNumber { get; init; }
 }

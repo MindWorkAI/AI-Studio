@@ -1,12 +1,17 @@
 ﻿@inherits MSGComponentBase
 
-<MudDialog>
+<MudDialog ContentClass="dialog-content-fit">
+    <TitleContent>
+        @* Named after the document once there is one, and after what the caller opened us for until then: *@
+        <FileDialogTitle Title="@(this.document?.FileName ?? this.MudDialog.Title ?? string.Empty)" Path="@(this.document?.FilePath ?? string.Empty)" OffersFileManager="@(this.document?.Exists ?? false)"/>
+    </TitleContent>
     <DialogContent>
         @* A drop anywhere in this dialog belongs to the dialog, not to the page behind it: *@
         <PathDropZone IsArea="@true"
                       IdPrefix="document-check"
                       OnPathsDropped="@this.DropCallback"
                       Disabled="@this.IsZoneDisabled"
+                      Class="dialog-fit"
                       Context="isDropTarget">
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("See how we load your file. Review the content before we process it further.")
@@ -23,29 +28,10 @@
         {
             <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.fileContent" EnableDragDrop="true" CatchAllDocuments="true"/>
         }
-        else
-        {
-            @* Keys have to be unique among siblings, no matter the component: this field and the
-               tabs below both stand for the document and would otherwise collide on its path. *@
-            <MudTextField
-                @key="@($"file-path-{this.document.FilePath}")"
-                T="string"
-                Text="@this.document.FilePath"
-                AdornmentIcon="@Icons.Material.Filled.FileOpen"
-                Adornment="Adornment.Start"
-                Immediate="@true"
-                Label="@T("File Path")"
-                Variant="Variant.Outlined"
-                Lines="1"
-                MaxLines="3"
-                Class="mt-10"
-                ReadOnly="true"
-                />
-        }
-        
+
         @* The frame shows where a dropped file would land. It is drawn only while this dialog can
            take one, and keeps its width in both states so that nothing jumps during a drag: *@
-        <div class="@this.PreviewAreaClass(isDropTarget)">
+        <div class="dialog-fit @this.PreviewAreaClass(isDropTarget)">
         @if (!this.document?.Exists ?? false)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
@@ -79,7 +65,8 @@
                 Label="@T("Loaded Content")"
                 HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")"
                 CharacterLimit="@PREVIEW_CHARACTER_LIMIT"
-                CutOffNotice="@this.CutOffNotice"/>
+                CutOffNotice="@this.CutOffNotice"
+                MaxHeight="@ContentViewer.NO_HEIGHT_LIMIT"/>
         }
         </div>
         </PathDropZone>

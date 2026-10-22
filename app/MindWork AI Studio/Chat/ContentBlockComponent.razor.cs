@@ -360,6 +360,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
+                hash.Add(text.SourcePassages.Count);
                 hash.Add(text.ToolInvocations.Count);
                 hash.Add(text.ToolRuntimeStatus.IsRunning);
                 hash.Add(text.ToolRuntimeStatus.Message);

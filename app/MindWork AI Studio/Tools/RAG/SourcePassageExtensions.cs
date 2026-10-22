@@ -14,38 +14,76 @@ public static class SourcePassageExtensions
     public static bool IsTranscript(this SourcePassage passage) => passage.Type is RetrievalContentType.TEXT_TRANSCRIPT;
 
     /// <summary>
-    /// Names the page or the pages the passage is on, e.g., "Page 4" or "Pages 4–5".
+    /// Names where the passage is in its document, e.g., "Page 4", "Pages 4–5", or "Part 3".
     /// </summary>
     /// <param name="passage">The passage.</param>
-    /// <returns>The location, or an empty string when the passage has no page.</returns>
+    /// <returns>The location, or an empty string when the data source does not say.</returns>
     public static string GetLocationLabel(this SourcePassage passage) => GetLocationLabel([passage]);
 
     /// <summary>
-    /// Names the pages several passages are on, e.g., "Page 4", "Pages 4–5", or "Pages 1, 11".
+    /// Where the passage is in its document, as numbers only, e.g., its pages 4–5 or its part 3.
+    /// </summary>
+    /// <param name="passage">The passage.</param>
+    /// <returns>The pages or the part, or null when the data source does not say.</returns>
+    public static LocationRange? GetLocationRange(this SourcePassage passage) => GetLocation([passage])?.Ranges[0];
+
+    /// <summary>
+    /// Names where several passages are in their document, e.g., "Pages 1, 11" or "Parts 2, 5".
+    /// </summary>
+    /// <param name="passages">The passages.</param>
+    /// <returns>The location, or an empty string when the data source does not say.</returns>
+    public static string GetLocationLabel(this IEnumerable<SourcePassage> passages) => passages.GetLocation()?.ToString() ?? string.Empty;
+
+    /// <summary>
+    /// Finds where several passages are in their document, in parts, so that each page can be shown
+    /// as a link.
     /// </summary>
     /// <remarks>
-    /// The pages follow the order of the document, and each passage names its pages once: two
-    /// passages on the same page name that page once. An end page which is not after the start page
-    /// names no range, so the passage is on one page. A passage without a page, such as a slide or a
-    /// sheet, adds nothing, since no page is invented for it.
+    /// A document with pages is named by its pages: they are what the user finds again in the
+    /// document, and what a program can open it at. A document without pages, such as a text file,
+    /// is named by the parts it was split into for the search. Either way, the numbers follow the
+    /// order of the document, each once: two passages on the same page name that page once. An end
+    /// page which is not after the start page names no range, so the passage is on one page.
     /// </remarks>
     /// <param name="passages">The passages.</param>
-    /// <returns>The location, or an empty string when no passage has a page.</returns>
-    public static string GetLocationLabel(this IEnumerable<SourcePassage> passages)
+    /// <returns>The location, or null when the data source says neither pages nor parts.</returns>
+    public static PassageLocation? GetLocation(this IEnumerable<SourcePassage> passages)
     {
-        var pageRanges = passages
+        var passagesOfDocument = passages.ToList();
+        var pages = passagesOfDocument
             .Where(passage => passage.PageNumber is > 0)
-            .Select(passage => (First: passage.PageNumber!.Value, Last: Math.Max(passage.PageNumber!.Value, passage.EndPageNumber ?? 0)))
-            .Distinct()
-            .Order()
+            .Select(passage => new LocationRange(passage.PageNumber!.Value, Math.Max(passage.PageNumber!.Value, passage.EndPageNumber ?? 0)))
             .ToList();
 
-        return pageRanges switch
-        {
-            [] => string.Empty,
-            [var onePage] when onePage.First == onePage.Last => string.Format(TB("Page {0}"), onePage.First),
-            _ => string.Format(TB("Pages {0}"), string.Join(", ", pageRanges.Select(range => range.First == range.Last ? $"{range.First}" : $"{range.First}–{range.Last}"))),
-        };
+        if (pages.Count > 0)
+            return CreateLocation(pages, TB("Page {0}"), TB("Pages {0}"), arePages: true);
+
+        var parts = passagesOfDocument
+            .Where(passage => passage.ChunkNumber is > 0)
+            .Select(passage => new LocationRange(passage.ChunkNumber!.Value, passage.ChunkNumber!.Value))
+            .ToList();
+
+        return parts.Count > 0 ? CreateLocation(parts, TB("Part {0}"), TB("Parts {0}"), arePages: false) : null;
+    }
+
+    private static PassageLocation CreateLocation(IEnumerable<LocationRange> ranges, string oneFormat, string severalFormat, bool arePages)
+    {
+        var orderedRanges = ranges
+            .Distinct()
+            .OrderBy(range => range.First)
+            .ThenBy(range => range.Last)
+            .ToList();
+
+        //
+        // The words around the numbers come from the translation, which may put them before or after
+        // the numbers. A translation which lost its placeholder still gets the numbers, after its words:
+        //
+        const string PLACEHOLDER = "{0}";
+        var format = orderedRanges is [var single] && single.First == single.Last ? oneFormat : severalFormat;
+        var placeholderAt = format.IndexOf(PLACEHOLDER, StringComparison.Ordinal);
+        return placeholderAt < 0
+            ? new PassageLocation($"{format} ", orderedRanges, string.Empty, arePages)
+            : new PassageLocation(format[..placeholderAt], orderedRanges, format[(placeholderAt + PLACEHOLDER.Length)..], arePages);
     }
 
     /// <summary>
@@ -54,10 +92,11 @@ public static class SourcePassageExtensions
     /// <remarks>
     /// The list of sources keeps one entry per document, see SourceExtensions.MergeSources, and its
     /// title came from the passage found first, e.g., "handbook.pdf (Page 1)". A second passage on
-    /// page 11 would go unmentioned, so the title is made anew from all passages of the source.
-    /// Passages without a page, e.g., of a text file, are counted instead as soon as there are
-    /// several of them. A source with one passage without a page keeps the title its data source
-    /// gave it, and so does every source without passages, such as a web page.
+    /// page 11 would go unmentioned, so the title is made anew from all passages of the source. A
+    /// text file is named by its parts the same way, see GetLocation. Passages whose data source
+    /// says neither, e.g., an external one, are counted instead as soon as there are several of
+    /// them. Otherwise, a source keeps the title its data source gave it, and so does every source
+    /// without passages, such as a web page.
     /// </remarks>
     /// <param name="sources">The sources of an answer.</param>
     /// <param name="passages">The passages of the same answer.</param>
@@ -66,10 +105,10 @@ public static class SourcePassageExtensions
         if (passages.Count is 0)
             return;
 
-        var passagesBySource = passages.ToLookup(passage => SourceExtensions.GetSourceIdentity(passage.SourceUrl), StringComparer.Ordinal);
+        var passagesBySource = passages.SortBySource();
         for (var index = 0; index < sources.Count; index++)
         {
-            var passagesOfSource = passagesBySource[SourceExtensions.GetSourceIdentity(sources[index].URL)].ToList();
+            var passagesOfSource = passagesBySource.GetPassagesOf(sources[index]);
             if (passagesOfSource.Count is 0 || string.IsNullOrWhiteSpace(passagesOfSource[0].DataSourceName))
                 continue;
 
@@ -118,11 +157,20 @@ public static class SourcePassageExtensions
     /// <param name="passages">The passages of an answer.</param>
     /// <param name="source">The source.</param>
     /// <returns>The passages of the source, in their order; empty when it has none.</returns>
-    public static IReadOnlyList<SourcePassage> GetPassagesOf(this IEnumerable<SourcePassage> passages, ISource source)
-    {
-        var sourceIdentity = SourceExtensions.GetSourceIdentity(source.URL);
-        return passages
-            .Where(passage => string.Equals(SourceExtensions.GetSourceIdentity(passage.SourceUrl), sourceIdentity, StringComparison.Ordinal))
-            .ToList();
-    }
+    public static IReadOnlyList<SourcePassage> GetPassagesOf(this IEnumerable<SourcePassage> passages, ISource source) => passages.SortBySource().GetPassagesOf(source);
+
+    /// <summary>
+    /// Sorts passages by the source they are listed under, to find the passages of many sources.
+    /// </summary>
+    /// <param name="passages">The passages of an answer.</param>
+    /// <returns>The passages by the identity of their source, see SourceExtensions.GetSourceIdentity.</returns>
+    public static ILookup<string, SourcePassage> SortBySource(this IEnumerable<SourcePassage> passages) => passages.ToLookup(passage => SourceExtensions.GetSourceIdentity(passage.SourceUrl), StringComparer.Ordinal);
+
+    /// <summary>
+    /// Finds the passages listed under a source, among passages sorted by their sources.
+    /// </summary>
+    /// <param name="passagesBySource">The passages of an answer, see SortBySource.</param>
+    /// <param name="source">The source.</param>
+    /// <returns>The passages of the source, in their order; empty when it has none.</returns>
+    public static IReadOnlyList<SourcePassage> GetPassagesOf(this ILookup<string, SourcePassage> passagesBySource, ISource source) => [..passagesBySource[SourceExtensions.GetSourceIdentity(source.URL)]];
 }

@@ -1,4 +1,8 @@
 using AIStudio.Components;
+using AIStudio.Tools;
+
+using Markdig.Extensions.Mathematics;
+using Markdig.Syntax;
 
 namespace AIStudio.Tests.Components;
 
@@ -52,6 +56,23 @@ public sealed class ContentViewerTests
         {
             Assert.That(shown, Is.EqualTo("| a | b |\n| 1 | 2 |\n"), "The last table row would be torn apart, so it goes as a whole.");
             Assert.That(cutOffCharacters, Is.EqualTo(TEXT.Length - shown.Length));
+        });
+    }
+
+    [Test]
+    public void DollarSignsInContentAreNoMath()
+    {
+        //
+        // Taken for math, the text would have MudMarkdown typeset the whole page with MathJax, which
+        // replaces elements Blazor renders, so that the next render of the viewer fails:
+        //
+        const string TEXT = "The budget $\\rho$ is spent on the hardest tokens.";
+        static bool HasMath(Markdig.MarkdownPipeline pipeline) => Markdig.Markdown.Parse(TEXT, pipeline).Descendants<MathInline>().Any();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(HasMath(Markdown.SAFE_MARKDOWN_PIPELINE), Is.True, "The safe pipeline reads this as math.");
+            Assert.That(HasMath(Markdown.CONTENT_MARKDOWN_PIPELINE), Is.False, "What AI Studio read from a document stays text.");
         });
     }
 

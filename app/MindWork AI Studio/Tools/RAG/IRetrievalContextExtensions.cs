@@ -187,6 +187,7 @@ public static class IRetrievalContextExtensions
         if (sources.Count is 0)
             return null;
 
+        var textContext = retrievalContext as RetrievalTextContext;
         return new SourcePassage
         {
             SourceUrl = sources[0].URL,
@@ -196,7 +197,8 @@ public static class IRetrievalContextExtensions
             Type = retrievalContext.Type,
             Text = matchedText,
             SurroundingContent = surroundingContent,
-            PageNumber = retrievalContext is RetrievalTextContext { PageNumber: > 0 } locatedContext ? locatedContext.PageNumber : null,
+            PageNumber = textContext?.PageNumber is > 0 ? textContext.PageNumber : null,
+            ChunkNumber = textContext?.ChunkNumber is > 0 ? textContext.ChunkNumber : null,
         };
     }
 
