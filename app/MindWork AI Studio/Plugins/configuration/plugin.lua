@@ -454,6 +454,34 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
+-- Prohibit providers, e.g., when your organization must not send any data to them. The list
+-- applies to LLM providers, embedding providers, and transcription providers alike. Allowed
+-- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below. A name
+-- AI Studio does not know is ignored and logged as a warning.
+--
+-- A prohibition names the operator of an API, not a family of models: prohibiting the API of
+-- a model maker keeps AI Studio away from that API, but the models of that maker may remain
+-- available through a hub which offers the models of several makers, or on a server of your
+-- own. Prohibit these as well if you need to.
+--
+-- Users can still select a prohibited provider when they add one, but the dialog then only
+-- explains that your organization does not allow it. Providers which users set up before stay
+-- in their settings, marked as prohibited, and users can delete them. AI Studio no longer
+-- offers or contacts them. Once you lift the prohibition, they work again.
+--
+-- A prohibited provider is always UNTRUSTED, whatever the confidence scheme says. A level which
+-- DataConfidence.CustomConfidenceScheme names for it is ignored and logged as a warning, and
+-- users cannot change it in the app. Once you lift the prohibition, that level applies again.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces the whole list.
+-- A configuration which prohibits one more provider has to repeat the providers of the base
+-- configuration. Otherwise, these become usable again.
+--
+-- Available since AI Studio v26.10.1. Older versions ignore this setting. Until all devices
+-- run that version, you can in addition use the CUSTOM confidence scheme, set the provider to
+-- UNTRUSTED there, and enforce a global minimum confidence level of at least VERY_LOW.
+-- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "<PROVIDER_KEY>" }
+
 -- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
 -- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
 -- adding a mailbox stays visible but is disabled. Mailboxes the user added before stay; to keep
@@ -1164,6 +1192,9 @@ CONFIG["SETTINGS"] = {}
 --   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, REQUESTY, FIREWORKS, GROQ, HUGGINGFACE,
 --   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+--
+-- A provider which DataApp.ProhibitedProviders names is always UNTRUSTED. Its level in this
+-- table is ignored and logged as a warning, see DataApp.ProhibitedProviders above.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants

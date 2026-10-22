@@ -10,6 +10,8 @@ public static class ChatThreadExtensions
     /// Checks if the specified provider is allowed for the chat thread.
     /// </summary>
     /// <remarks>
+    /// A provider the organization prohibited is never allowed, whatever the chat thread.<br/><br/>
+    ///
     /// We don't check if the provider is allowed to use the data sources of the chat thread.
     /// That kind of check is done when the available data sources are resolved.<br/><br/>
     /// 
@@ -23,11 +25,16 @@ public static class ChatThreadExtensions
     /// <returns>True, when the provider is allowed for the chat thread. False, otherwise.</returns>
     public static bool IsLLMProviderAllowed<T>(this ChatThread? chatThread, T provider)
     {
+        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+
+        // A provider the organization prohibited is allowed in no chat, not even in a new one:
+        if (settingsManager.IsProviderProhibited(GetLLMProvider(provider)))
+            return false;
+
         // No chat thread available means we have a new chat. That's fine:
         if (chatThread is null)
             return true;
 
-        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
         var providerConfidence = provider switch
         {
             IProvider p => p.GetConfidenceLevel(settingsManager),
@@ -75,4 +82,12 @@ public static class ChatThreadExtensions
             false => chatThread.DataSecurity is not DataSourceSecurity.SELF_HOSTED,
         };
     }
+
+    private static LLMProviders GetLLMProvider<T>(T provider) => provider switch
+    {
+        IProvider p => p.Provider,
+        AIStudio.Settings.Provider p => p.UsedLLMProvider,
+
+        _ => LLMProviders.NONE,
+    };
 }

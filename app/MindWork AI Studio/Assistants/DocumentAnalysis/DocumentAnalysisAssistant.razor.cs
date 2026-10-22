@@ -619,7 +619,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         {
             // Keep the current provider if it still satisfies the minimum confidence:
             if (this.ProviderSettings != Settings.Provider.NONE &&
-                this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+                this.SettingsManager.IsProviderUsable(this.ProviderSettings.UsedLLMProvider, minimumLevel))
             {
                 this.CurrentProfile = this.ResolveProfileSelection();
                 return;
@@ -628,7 +628,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         // Try to apply the policy preselection:
         var policyProvider = this.SettingsManager.GetProviderById(this.selectedPolicy.PreselectedProvider);
-        if (policyProvider != Settings.Provider.NONE && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        if (policyProvider != Settings.Provider.NONE && this.SettingsManager.IsProviderUsable(policyProvider.UsedLLMProvider, minimumLevel))
         {
             this.ProviderSettings = policyProvider;
             this.CurrentProfile = this.ResolveProfileSelection();
@@ -637,7 +637,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.ProviderSettings.Id);
         if (fallbackProvider != Settings.Provider.NONE &&
-            fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level < minimumLevel)
+            !this.SettingsManager.IsProviderUsable(fallbackProvider.UsedLLMProvider, minimumLevel))
             fallbackProvider = Settings.Provider.NONE;
 
         this.ProviderSettings = fallbackProvider;
