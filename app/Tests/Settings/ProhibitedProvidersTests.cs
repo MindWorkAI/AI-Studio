@@ -260,6 +260,48 @@ public sealed class ProhibitedProvidersTests
         });
     }
 
+    [Test]
+    public void AProhibitedProviderIsUntrustedInEveryScheme()
+    {
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        Assert.Multiple(() =>
+        {
+            foreach (var scheme in Enum.GetValues<AIStudio.Tools.ConfidenceSchemes>())
+            {
+                this.settingsManager.ConfigurationData.Confidence.ConfidenceScheme = scheme;
+                Assert.That(LLMProviders.DEEP_SEEK.GetConfidence(this.settingsManager).Level, Is.EqualTo(ConfidenceLevel.UNTRUSTED), $"The scheme {scheme} must not trust a prohibited provider.");
+                Assert.That(LLMProviders.OPEN_AI.GetConfidence(this.settingsManager).Level, Is.Not.EqualTo(ConfidenceLevel.UNTRUSTED), $"Under the scheme {scheme}, a provider the organization did not prohibit keeps its level.");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Checks that a prohibition outranks a level chosen in the custom scheme, without replacing it.
+    /// </summary>
+    /// <remarks>
+    /// The level may come from the user or from a configuration plugin. Either way, it has to apply again
+    /// once the organization lifts the prohibition.
+    /// </remarks>
+    [Test]
+    public void TheProhibitionOutranksACustomLevelWithoutReplacingIt()
+    {
+        var confidence = this.settingsManager.ConfigurationData.Confidence;
+        confidence.ConfidenceScheme = AIStudio.Tools.ConfidenceSchemes.CUSTOM;
+        confidence.CustomConfidenceScheme[LLMProviders.DEEP_SEEK] = ConfidenceLevel.HIGH;
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.settingsManager.GetConfiguredConfidenceLevel(LLMProviders.DEEP_SEEK), Is.EqualTo(ConfidenceLevel.UNTRUSTED), "The prohibition comes before the chosen level.");
+            Assert.That(confidence.CustomConfidenceScheme[LLMProviders.DEEP_SEEK], Is.EqualTo(ConfidenceLevel.HIGH), "The chosen level stays stored.");
+        });
+
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Remove(LLMProviders.DEEP_SEEK);
+
+        Assert.That(this.settingsManager.GetConfiguredConfidenceLevel(LLMProviders.DEEP_SEEK), Is.EqualTo(ConfidenceLevel.HIGH), "Without the prohibition, the chosen level applies again.");
+    }
+
     /// <summary>
     /// Adds an embedding provider to the settings.
     /// </summary>

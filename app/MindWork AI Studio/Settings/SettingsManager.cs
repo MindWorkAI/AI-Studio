@@ -762,8 +762,9 @@ public sealed class SettingsManager
     /// </summary>
     /// <remarks>
     /// A prohibition is a rule of its own, next to confidence and data-source security: no confidence
-    /// level and no trust by configuration makes a prohibited provider usable. It names the operator of
-    /// an API, so a hub or a self-hosted server which serves the same models stays allowed.
+    /// level and no trust by configuration makes a prohibited provider usable. It also makes the provider
+    /// untrusted, see GetConfiguredConfidenceLevel, but not the other way around. It names the operator
+    /// of an API, so a hub or a self-hosted server which serves the same models stays allowed.
     /// </remarks>
     /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
     /// <returns>True, when the organization prohibited the provider. NONE is never prohibited.</returns>
@@ -774,8 +775,9 @@ public sealed class SettingsManager
     /// </summary>
     /// <remarks>
     /// The one check for every place which picks a provider: the organization did not prohibit it, and
-    /// its confidence level reaches the minimum. Comparing the confidence level alone would let a
-    /// prohibited provider through, since a prohibition is no confidence level.
+    /// its confidence level reaches the minimum. A prohibited provider is untrusted, see
+    /// GetConfiguredConfidenceLevel, but comparing the confidence level alone would still let it through
+    /// wherever no minimum is enforced, since even untrusted reaches the minimum NONE.
     /// </remarks>
     /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
     /// <param name="minimumLevel">The minimum confidence level which applies.</param>
@@ -1185,11 +1187,25 @@ public sealed class SettingsManager
             this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[settingsIds[0]] = confidenceLevel.ToString();
     }
 
+    /// <summary>
+    /// Returns the confidence level of the given provider.
+    /// </summary>
+    /// <remarks>
+    /// A prohibition by the organization comes first: a prohibited provider is always untrusted, no matter
+    /// what the confidence scheme says, and no matter which level the user or a configuration plugin chose
+    /// for it in the custom scheme. Those levels stay stored, so they apply again once the prohibition ends.
+    /// After that, the confidence scheme decides, and in the custom scheme, the level chosen for the provider.
+    /// </remarks>
+    /// <param name="llmProvider">The provider, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <returns>The confidence level of the provider.</returns>
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {
         if(llmProvider is LLMProviders.NONE)
             return ConfidenceLevel.NONE;
-        
+
+        if (this.IsProviderProhibited(llmProvider))
+            return ConfidenceLevel.UNTRUSTED;
+
         switch (this.ConfigurationData.Confidence.ConfidenceScheme)
         {
             case ConfidenceSchemes.TRUST_ALL:
