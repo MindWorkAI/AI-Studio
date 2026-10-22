@@ -341,6 +341,16 @@ public static class LLMProvidersExtensions
 
     private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT, ProviderCapabilityOverrides? capabilityOverrides = null, string tokenizerPath = "")
     {
+        //
+        // Every provider instance comes from here, for LLMs, embeddings, and transcriptions alike.
+        // Whatever a caller forgot to check, no request reaches a provider the organization prohibited:
+        //
+        if (IsProhibitedByOrganization(provider))
+        {
+            LOGGER.LogWarning($"Refused to create the provider '{instanceName}' of '{provider}': the organization prohibited this provider.");
+            return new NoProvider();
+        }
+
         try
         {
             IProvider providerInstance = provider switch
@@ -382,7 +392,22 @@ public static class LLMProvidersExtensions
             return new NoProvider();
         }
     }
-    
+
+    /// <summary>
+    /// Checks whether the organization prohibited the given provider.
+    /// </summary>
+    /// <remarks>
+    /// The settings come from Program.SERVICE_PROVIDER, because none of the callers of CreateProvider
+    /// hands them in. Tests which create providers without the services of the app have no settings
+    /// there, and nothing is prohibited for them.
+    /// </remarks>
+    private static bool IsProhibitedByOrganization(LLMProviders provider)
+    {
+        // Declared as never null, but it is null until the app has started its services:
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        return Program.SERVICE_PROVIDER?.GetService<SettingsManager>() is { } settingsManager && settingsManager.IsProviderProhibited(provider);
+    }
+
     public static string GetCreationURL(this LLMProviders provider) => provider switch
     {
         LLMProviders.OPEN_AI => "https://platform.openai.com/signup",

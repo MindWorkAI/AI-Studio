@@ -236,6 +236,31 @@ public sealed class ProhibitedProvidersTests
     }
 
     /// <summary>
+    /// Checks that no instance of a prohibited provider is created, whatever the caller checked before.
+    /// </summary>
+    /// <remarks>
+    /// Every request to a provider needs an instance from CreateProvider. Refusing it there keeps a
+    /// prohibited provider out of reach of every path, also of one somebody adds later without a check.
+    /// </remarks>
+    [Test]
+    public void NoInstanceOfAProhibitedProviderIsCreated()
+    {
+        this.AddProvider(ALLOWED_PROVIDER_ID, LLMProviders.OPEN_AI);
+        this.AddProvider(PROHIBITED_PROVIDER_ID, LLMProviders.DEEP_SEEK);
+        var embeddingProvider = this.AddEmbeddingProvider(LLMProviders.DEEP_SEEK);
+        var transcriptionProvider = new TranscriptionProvider { Id = Guid.NewGuid().ToString(), UsedLLMProvider = LLMProviders.DEEP_SEEK };
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.settingsManager.GetProviderById(PROHIBITED_PROVIDER_ID).CreateProvider(), Is.TypeOf<NoProvider>());
+            Assert.That(embeddingProvider.CreateProvider(), Is.TypeOf<NoProvider>());
+            Assert.That(transcriptionProvider.CreateProvider(), Is.TypeOf<NoProvider>());
+            Assert.That(this.settingsManager.GetProviderById(ALLOWED_PROVIDER_ID).CreateProvider(), Is.Not.TypeOf<NoProvider>(), "Providers the organization did not prohibit are created as before.");
+        });
+    }
+
+    /// <summary>
     /// Adds an embedding provider to the settings.
     /// </summary>
     private EmbeddingProvider AddEmbeddingProvider(LLMProviders llmProvider)
