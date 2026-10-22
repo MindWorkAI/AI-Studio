@@ -152,6 +152,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
+        Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.ConfigurationData.AssistantBuilder.MinimumProviderConfidence : default,
         Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence,
         
         // The minimum confidence for the Document Analysis Assistant is set per policy.
@@ -184,6 +185,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.ERI.PreselectedProvider) : Settings.Provider.NONE,
         Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.I18N.PreselectedProvider) : Settings.Provider.NONE,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : Settings.Provider.NONE,
+        Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantBuilder.PreselectedProvider) : Settings.Provider.NONE,
         Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.GetProviderById(settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
 
         // The Document Analysis Assistant does not have a preselected provider at the component level.
