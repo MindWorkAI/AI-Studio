@@ -98,18 +98,19 @@ public static class FileTypes
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
-        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic", "avif");
+        "jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "svg", "webp", "heic", "avif");
 
     /// <summary>
-    /// The image formats we hand to a model as they are.
+    /// The image formats AI Studio can prepare for a model.
     /// </summary>
     /// <remarks>
-    /// The providers accept these, while other formats, such as TIFF or HEIC, would end in an
-    /// error of the provider which tells the user nothing. The default file patterns of the batch
-    /// processing assistant list the same formats, see DataBatchProcessing.DEFAULT_FILE_PATTERNS.
+    /// These are the formats the runtime decodes before it sends an image to a model as JPEG or
+    /// PNG, see prepare_image_for_model in runtime/src/image.rs. Other images, such as HEIC, AVIF,
+    /// or SVG, cannot go to a model at all. The default file patterns of the batch processing
+    /// assistant list the same formats, see DataBatchProcessing.DEFAULT_FILE_PATTERNS.
     /// </remarks>
     public static readonly FileTypeFilter MODEL_IMAGE = FileTypeFilter.Leaf(TB("Image for AI models"),
-        "jpg", "jpeg", "png", "webp", "gif");
+        "jpg", "jpeg", "png", "webp", "gif", "bmp", "tif", "tiff");
 
     /// <summary>
     /// Gets the prototype visual-asset image formats.

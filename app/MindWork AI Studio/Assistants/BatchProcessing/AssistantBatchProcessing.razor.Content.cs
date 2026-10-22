@@ -20,7 +20,7 @@ public partial class AssistantBatchProcessing
     private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
         if (IsImage(fileResult.FilePath))
-            return this.LoadImage(fileResult) is { } image ? new BatchInput(string.Empty, image) : null;
+            return await this.LoadImageAsync(fileResult, token) is { } image ? new BatchInput(string.Empty, image) : null;
 
         var text = IsTranscribableMedia(fileResult.FilePath)
             ? await this.LoadMediaTranscriptAsync(fileResult, token)
@@ -30,13 +30,18 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
-    /// Checks an image before it goes to the model.
+    /// Prepares an image for the model before the request is built.
     /// </summary>
     /// <remarks>
     /// The request itself would only skip an image it cannot send, with a message, and ask the model
     /// anyway. The model would then answer about nothing, and the file would count as done, so that
-    /// continuing the run would skip it as well. A failed image is processed again when the run is
-    /// continued, e.g., with a model that can read images.
+    /// continuing the run would skip it as well. Preparing the image here lets it fail as a file
+    /// instead, with the reason, e.g., an image format AI Studio cannot decode. The request then finds
+    /// the prepared image in the cache of ModelImageService, so it is not prepared twice. A failed
+    /// image is processed again when the run is continued, e.g., with a model that can read images.
+    ///
+    /// How large an image may be needs no check of its own either: the preparation scales it down
+    /// until it fits the limit of the provider, and fails only when even that is not enough.
     ///
     /// How many images a model accepts needs no check of its own: every file gets a thread of its own,
     /// see CallAIAsync, so each request carries exactly one image, in every round with the model. A
@@ -49,7 +54,7 @@ public partial class AssistantBatchProcessing
     /// longer send data out, and without free address choice, its default, the Read Web Page tool
     /// refuses an address which appears only in the image.
     /// </remarks>
-    private FileAttachmentImage? LoadImage(BatchProcessingFileResult fileResult)
+    private async Task<FileAttachmentImage?> LoadImageAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
         if (!this.ProviderSettings.SupportsImageInput())
         {
@@ -57,16 +62,17 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        if (!FileTypes.IsAllowedPath(fileResult.FilePath, FileTypes.MODEL_IMAGE))
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("This image format cannot be given to the model. Please convert the image to JPG, PNG, WebP, or GIF."));
-            return null;
-        }
-
-        long fileSize;
+        PreparedModelImage prepared;
+        FileAttachmentImage image;
         try
         {
-            fileSize = new FileInfo(fileResult.FilePath).Length;
+            image = new FileAttachmentImage(fileResult.FileName, fileResult.FilePath, new FileInfo(fileResult.FilePath).Length);
+            prepared = await this.ModelImageService.PrepareAsync(image, this.ProviderSettings, token);
+        }
+        catch (OperationCanceledException)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
+            return null;
         }
         catch (Exception e)
         {
@@ -74,14 +80,11 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        var maxImageSizeBytes = IImageSourceExtensions.MaxImageSizeBytesFor(this.ProviderSettings.UsedLLMProvider);
-        if (fileSize > maxImageSizeBytes)
-        {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, which is the most the selected provider accepts for one image."), (maxImageSizeBytes / 1_000_000d).ToString("0.#", Tools.PluginSystem.I18N.I.Culture)));
-            return null;
-        }
+        if (prepared.IsPrepared)
+            return image;
 
-        return new FileAttachmentImage(fileResult.FileName, fileResult.FilePath, fileSize);
+        this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, prepared.ErrorCode.ToUserMessage(fileResult.FileName));
+        return null;
     }
 
     private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
