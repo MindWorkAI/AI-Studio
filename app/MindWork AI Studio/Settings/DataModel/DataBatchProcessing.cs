@@ -11,7 +11,7 @@ namespace AIStudio.Settings.DataModel;
 /// <param name="configSelection">The managed-configuration selector.</param>
 public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
 {
-    public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
+    public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.jpg;*.jpeg;*.png;*.webp;*.gif;*.bmp;*.tif;*.tiff;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
     public const int MIN_DELAY_SECONDS = 6;
     public const int MAX_DELAY_SECONDS = 300;
     public const int DEFAULT_MIN_DELAY_SECONDS = 6;

@@ -1,18 +1,90 @@
+using AIStudio.Chat;
+using AIStudio.Settings;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
 public partial class AssistantBatchProcessing
 {
     /// <summary>
-    /// Loads a document through the Rust content stream or resolves a persistent
-    /// transcript for an audio or video file.
+    /// What one file of the batch gives to the model: either text or an image.
     /// </summary>
-    private Task<string?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
+    private readonly record struct BatchInput(string Text, FileAttachmentImage? Image);
+
+    /// <summary>
+    /// Loads a document through the Rust content stream, resolves a persistent
+    /// transcript for an audio or video file, or prepares an image for the model.
+    /// </summary>
+    /// <returns>The input for the model, or <c>null</c> when the file already got its final status.</returns>
+    private async Task<BatchInput?> LoadInputContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
-        return IsTranscribableMedia(fileResult.FilePath)
-            ? this.LoadMediaTranscriptAsync(fileResult, token)
-            : this.LoadDocumentContentAsync(fileResult, token);
+        if (IsImage(fileResult.FilePath))
+            return await this.LoadImageAsync(fileResult, token) is { } image ? new BatchInput(string.Empty, image) : null;
+
+        var text = IsTranscribableMedia(fileResult.FilePath)
+            ? await this.LoadMediaTranscriptAsync(fileResult, token)
+            : await this.LoadDocumentContentAsync(fileResult, token);
+
+        return text is null ? null : new BatchInput(text, null);
+    }
+
+    /// <summary>
+    /// Prepares an image for the model before the request is built.
+    /// </summary>
+    /// <remarks>
+    /// The request itself would only skip an image it cannot send, with a message, and ask the model
+    /// anyway. The model would then answer about nothing, and the file would count as done, so that
+    /// continuing the run would skip it as well. Preparing the image here lets it fail as a file
+    /// instead, with the reason, e.g., an image format AI Studio cannot decode. The request then finds
+    /// the prepared image in the cache of ModelImageService, so it is not prepared twice. A failed
+    /// image is processed again when the run is continued, e.g., with a model that can read images.
+    ///
+    /// How large an image may be needs no check of its own either: the preparation scales it down
+    /// until it fits the limit of the provider, and fails only when even that is not enough.
+    ///
+    /// How many images a model accepts needs no check of its own: every file gets a thread of its own,
+    /// see CallAIAsync, so each request carries exactly one image, in every round with the model. A
+    /// limit of one image is therefore always met, and SupportsImageInput already refuses a limit of zero.
+    ///
+    /// Unlike the text of documents and transcripts, an image does not pass the prompt injection
+    /// filter of the runtime, which reads text only. Images in a chat do not either. Instructions
+    /// within an image therefore meet only the safeguards behind the filter: the system prompt tells
+    /// the model to ignore them, a thread which read internal content, such as a mailbox, may no
+    /// longer send data out, and without free address choice, its default, the Read Web Page tool
+    /// refuses an address which appears only in the image.
+    /// </remarks>
+    private async Task<FileAttachmentImage?> LoadImageAsync(BatchProcessingFileResult fileResult, CancellationToken token)
+    {
+        if (!this.ProviderSettings.SupportsImageInput())
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("The selected model cannot read images. Select a model with image support to process this image."));
+            return null;
+        }
+
+        PreparedModelImage prepared;
+        FileAttachmentImage image;
+        try
+        {
+            image = new FileAttachmentImage(fileResult.FileName, fileResult.FilePath, new FileInfo(fileResult.FilePath).Length);
+            prepared = await this.ModelImageService.PrepareAsync(image, this.ProviderSettings, token);
+        }
+        catch (OperationCanceledException)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
+            return null;
+        }
+        catch (Exception e)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message), e);
+            return null;
+        }
+
+        if (prepared.IsPrepared)
+            return image;
+
+        this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, prepared.ErrorCode.ToUserMessage(fileResult.FileName));
+        return null;
     }
 
     private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
@@ -108,6 +180,8 @@ public partial class AssistantBatchProcessing
     }
 
     private static bool IsTranscribableMedia(string filePath) => PersistentMediaTranscript.IsMediaPath(filePath);
+
+    private static bool IsImage(string filePath) => FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
 
     private static bool HasReusableTranscript(string mediaFilePath) => MediaSidecarTranscripts.HasReusableTranscript(mediaFilePath);
 }
