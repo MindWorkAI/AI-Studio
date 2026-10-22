@@ -15,6 +15,9 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     [Inject]
     private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
+    [Inject]
+    private ModelImageService ModelImageService { get; init; } = null!;
+
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";

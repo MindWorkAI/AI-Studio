@@ -180,7 +180,7 @@ public partial class AssistantBatchProcessing
 
         //
         // A model that cannot read images would get the text of the request alone, without the
-        // image, and answer about nothing. Such images fail one by one, see LoadImage, while the
+        // image, and answer about nothing. Such images fail one by one, see LoadImageAsync, while the
         // documents next to them are processed. A run of nothing but images does not start at all:
         //
         if (files.All(IsImage) && !this.ProviderSettings.SupportsImageInput())
