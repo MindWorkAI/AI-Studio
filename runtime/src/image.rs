@@ -427,7 +427,7 @@ fn prepare_for_model(path: &Path, max_bytes: u64) -> Result<EncodedModelImage, I
     let encoded = fit_into_budget(image, encoding, max_bytes, was_resized)?;
     let encoded_bytes = encoded.bytes.len() as u64;
     info!(
-        "image prepared for model: path='{}', source={format:?} {source_width}x{source_height} {}, result={:?} {}x{} {} ({} of the original), quality={}, budget={}, resized={}",
+        "Image prepared for model: path='{}', source={format:?} {source_width}x{source_height} {}, result={:?} {}x{} {} ({} of the original), quality={}, budget={}, resized={}",
         path.display(),
         megabytes(source_bytes),
         encoded.encoding,
