@@ -552,8 +552,7 @@ async fn try_open_at_page(_path: &Path, _page: u32) -> bool {
 ///
 /// Which spellings exist follows from where a viewer is found: Acrobat and Foxit are named by the
 /// Windows registration and by nothing else, and the three Linux viewers are named by a desktop
-/// entry and by nothing else. Only a browser is reached on both, so only its spelling is needed
-/// everywhere.
+/// entry and by nothing else. A browser is reached on both, and PdfCraft on every system we run on.
 #[cfg(any(windows, target_os = "linux", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PageArgument {
@@ -581,6 +580,9 @@ enum PageArgument {
     /// Zathura takes `-P 12`.
     #[cfg(any(target_os = "linux", test))]
     ZathuraPage,
+
+    /// PdfCraft takes `--page 12`, counted from one, and spells it the same on every system.
+    PdfCraftPage,
 }
 
 /// What it takes to show a document on a page.
@@ -625,6 +627,8 @@ fn page_arguments(argument: PageArgument, path: &Path, page: u32) -> Option<Vec<
 
         #[cfg(any(target_os = "linux", test))]
         PageArgument::ZathuraPage => vec![String::from("-P"), page.to_string(), path_argument],
+
+        PageArgument::PdfCraftPage => vec![String::from("--page"), page.to_string(), path_argument],
     })
 }
 
@@ -787,6 +791,14 @@ fn windows_page_argument(prog_id: &str) -> Option<PageArgument> {
         return Some(PageArgument::FoxitOpenAction);
     }
 
+    //
+    // The installer registers PdfCraft as `PdfCraft.Document`, and the portable copy is picked
+    // through 'Open with', which registers it by its file name, `pdfcraft.exe`.
+    //
+    if prog_id.contains("pdfcraft") {
+        return Some(PageArgument::PdfCraftPage);
+    }
+
     const BROWSERS: [&str; 5] = ["msedge", "chrome", "firefox", "opera", "brave"];
     if BROWSERS.iter().any(|browser| prog_id.contains(browser)) {
         return Some(PageArgument::UrlFragment);
@@ -836,7 +848,7 @@ async fn linux_default_pdf_handler() -> Option<String> {
 /// it always did, through the desktop's own handler.
 #[cfg(any(target_os = "linux", test))]
 fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> {
-    const KNOWN_VIEWERS: [(&str, &str, PageArgument); 9] = [
+    const KNOWN_VIEWERS: [(&str, &str, PageArgument); 10] = [
         //
         // Atril and Xreader are forks of Evince and count their pages from zero just as it does.
         //
@@ -846,6 +858,12 @@ fn linux_page_aware_program(desktop_id: &str) -> Option<(String, PageArgument)> 
 
         ("okular", "okular", PageArgument::OkularPage),
         ("zathura", "zathura", PageArgument::ZathuraPage),
+
+        //
+        // PdfCraft's desktop entry is `ai.storyteller.pdfcraft.desktop`. Its packages for Debian,
+        // Fedora and Arch put the program on the path; its other builds are not found there.
+        //
+        ("pdfcraft", "pdfcraft", PageArgument::PdfCraftPage),
 
         //
         // Chrome is asked about before Chromium, so that a desktop entry naming both lands on the
@@ -1274,6 +1292,12 @@ mod tests {
             page_arguments(PageArgument::ZathuraPage, document, 12).unwrap(),
             vec![String::from("-P"), String::from("12"), String::from("/docs/handbook.pdf")],
         );
+
+        assert_eq!(
+            page_arguments(PageArgument::PdfCraftPage, document, 12).unwrap(),
+            vec![String::from("--page"), String::from("12"), String::from("/docs/handbook.pdf")],
+            "PdfCraft counts from one, so page twelve stays twelve.",
+        );
     }
 
     #[test]
@@ -1283,6 +1307,8 @@ mod tests {
         assert_eq!(windows_page_argument("FoxitPDFEditor.Document"), Some(PageArgument::FoxitOpenAction));
         assert_eq!(windows_page_argument("FoxitReader.Document"), Some(PageArgument::FoxitOpenAction));
         assert_eq!(windows_page_argument("Applications\\FoxitPDFReader.exe"), Some(PageArgument::FoxitOpenAction), "A program picked through 'Open with' is registered by its file name.");
+        assert_eq!(windows_page_argument("PdfCraft.Document"), Some(PageArgument::PdfCraftPage));
+        assert_eq!(windows_page_argument("Applications\\pdfcraft.exe"), Some(PageArgument::PdfCraftPage), "The portable PdfCraft is picked through 'Open with'.");
         assert_eq!(windows_page_argument("MSEdgePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("ChromePDF"), Some(PageArgument::UrlFragment));
         assert_eq!(windows_page_argument("FirefoxPDF"), Some(PageArgument::UrlFragment));
@@ -1304,6 +1330,11 @@ mod tests {
         );
 
         assert_eq!(
+            executable_from_command(r#""C:\Program Files\PdfCraft\pdfcraft.exe" "%1""#).as_deref(),
+            Some(r"C:\Program Files\PdfCraft\pdfcraft.exe"),
+        );
+
+        assert_eq!(
             executable_from_command(r#"C:\Windows\System32\viewer.exe "%1""#).as_deref(),
             Some(r"C:\Windows\System32\viewer.exe"),
         );
@@ -1321,6 +1352,7 @@ mod tests {
 
         assert_eq!(linux_page_aware_program("okularApplication_pdf.desktop"), Some((String::from("okular"), PageArgument::OkularPage)));
         assert_eq!(linux_page_aware_program("org.pwmt.zathura.desktop"), Some((String::from("zathura"), PageArgument::ZathuraPage)));
+        assert_eq!(linux_page_aware_program("ai.storyteller.pdfcraft.desktop"), Some((String::from("pdfcraft"), PageArgument::PdfCraftPage)));
         assert_eq!(linux_page_aware_program("firefox.desktop"), Some((String::from("firefox"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("google-chrome.desktop"), Some((String::from("google-chrome"), PageArgument::UrlFragment)));
         assert_eq!(linux_page_aware_program("chromium_chromium.desktop"), Some((String::from("chromium"), PageArgument::UrlFragment)));
