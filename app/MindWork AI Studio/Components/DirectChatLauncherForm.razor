@@ -1,17 +1,7 @@
 @using AIStudio.Settings.DataModel
 @inherits MSGComponentBase
 
-@if (this.availableWorkspaces.Count > 0)
-{
-    <MudSelect T="string" Value="@this.WorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@T("Existing workspace (Optional)")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
-        @foreach (var workspace in this.availableWorkspaces)
-        {
-            <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>
-        }
-    </MudSelect>
-}
-
-<MudTextField T="string" Text="@this.WorkspaceName" TextChanged="@this.SetWorkspaceName" AdornmentIcon="@(this.OpensTemporaryChat ? Icons.Material.Filled.Timer : Icons.Material.Filled.CreateNewFolder)" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<WorkspaceNameField WorkspaceName="@this.WorkspaceName" WorkspaceNameChanged="@this.SetWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name (Optional)")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" AdornmentIcon="@(this.OpensTemporaryChat ? Icons.Material.Filled.Timer : Icons.Material.Filled.CreateNewFolder)" AdornmentIconSize="Size.Small" TextFieldClass="mb-1"/>
 
 @* The tile behaves differently with and without a workspace, so the form says which of the two is
    chosen right now instead of only explaining that both are possible. *@

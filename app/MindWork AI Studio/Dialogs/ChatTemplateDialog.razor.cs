@@ -130,7 +130,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private string selectedProviderId = string.Empty;
     private bool preselectWorkspace;
     private string selectedWorkspaceName = string.Empty;
-    private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
     private string[] dataIssues = [];
     private string dataEditingPreviousName = string.Empty;
     private bool isInlineEditOnGoing;
@@ -171,10 +170,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
         this.selectedProviderId = this.ProviderId ?? string.Empty;
         this.preselectWorkspace = this.WorkspaceName is not null;
         this.selectedWorkspaceName = this.WorkspaceName ?? string.Empty;
-
-        // The existing workspaces are only offered to pick from; a name which does not exist yet is fine as well:
-        var workspaceSnapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        this.availableWorkspaces = workspaceSnapshot.Workspaces;
 
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -282,18 +277,6 @@ public partial class ChatTemplateDialog : MSGComponentBase
     /// is, so it applies again once workspaces are back.
     /// </remarks>
     private bool IsWorkspaceChoiceLocked => this.IsReadOnly || this.AreWorkspacesDisabled;
-
-    //
-    // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
-    // the user typed, though, so an empty selection is ignored:
-    //
-    private void SelectExistingWorkspace(string workspaceName)
-    {
-        if (string.IsNullOrWhiteSpace(workspaceName))
-            return;
-
-        this.selectedWorkspaceName = workspaceName;
-    }
 
     private string? ValidateWorkspaceName(string workspaceName)
     {

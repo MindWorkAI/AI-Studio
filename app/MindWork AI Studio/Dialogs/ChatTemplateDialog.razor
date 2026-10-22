@@ -202,16 +202,7 @@
             <MudTextSwitch @bind-Value="@this.preselectWorkspace" Color="Color.Primary" Label="@T("Does this chat template keep its chats in a workspace?")" LabelOn="@T("Yes, chats with this template go into a workspace")" LabelOff="@T("No, chats go where they would go anyway")" Disabled="@this.IsWorkspaceChoiceLocked"/>
             @if (this.preselectWorkspace)
             {
-                @if (this.availableWorkspaces.Count > 0 && !this.IsWorkspaceChoiceLocked)
-                {
-                    <MudSelect T="string" Value="@this.selectedWorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@T("Existing workspace (Optional)")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
-                        @foreach (var workspace in this.availableWorkspaces)
-                        {
-                            <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                }
-                <MudTextField T="string" @bind-Text="@this.selectedWorkspaceName" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when a chat with this template starts.")" Validation="@this.ValidateWorkspaceName" Immediate="@true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" ReadOnly="@this.IsWorkspaceChoiceLocked" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+                <WorkspaceNameField @bind-WorkspaceName="@this.selectedWorkspaceName" SelectLabel="@T("Existing workspace (Optional)")" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when a chat with this template starts.")" Validation="@this.ValidateWorkspaceName" Immediate="@true" ReadOnly="@this.IsWorkspaceChoiceLocked" SelectClass="mb-3 mt-3 rounded-lg" TextFieldClass="mb-3 mt-3"/>
             }
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
