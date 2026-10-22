@@ -8665,11 +8665,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
 
+-- When enabled, the Assistant Builder starts with the defaults configured below. When disabled, it uses the app-wide default provider and preselects no output language.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T1496952909"] = "When enabled, the Assistant Builder starts with the defaults configured below. When disabled, it uses the app-wide default provider and preselects no output language."
+
 -- Preselect Assistant Builder options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T2127606148"] = "Preselect Assistant Builder options?"
-
--- When disabled, the Assistant Builder uses the app provider and does not preselect an output language.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T2235956198"] = "When disabled, the Assistant Builder uses the app provider and does not preselect an output language."
 
 -- Default custom output language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3360584376"] = "Default custom output language"
@@ -8688,6 +8688,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T3
 
 -- No Assistant Builder options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T4104323209"] = "No Assistant Builder options are preselected"
+
+-- The language in which the assistants you build answer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBUILDER::T42126731"] = "The language in which the assistants you build answer."
 
 -- Default minimum pause between files
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Default minimum pause between files"
