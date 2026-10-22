@@ -192,10 +192,17 @@
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
                 @T("A chat template may keep its chats in a workspace of its own, which is created when it does not exist yet. This applies whenever a chat would otherwise be a disappearing chat, for example, when you start a new chat outside the workspaces or pick this template in a new chat. A chat you start in a workspace on purpose, for example, from the workspace list, stays in that workspace.")
             </MudJustifiedText>
-            <MudTextSwitch @bind-Value="@this.preselectWorkspace" Color="Color.Primary" Label="@T("Does this chat template keep its chats in a workspace?")" LabelOn="@T("Yes, chats with this template go into a workspace")" LabelOff="@T("No, chats go where they would go anyway")" Disabled="@this.IsReadOnly"/>
+            @* While workspaces are off, nothing goes into a workspace, so choosing one here would promise what no chat does: *@
+            @if (this.AreWorkspacesDisabled)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-3">
+                    @T("Workspaces are switched off in your workspace settings. While they are off, chats with this template belong to no workspace, and they do not move into a workspace when you switch workspaces on again. You can change this choice once workspaces are on.")
+                </MudAlert>
+            }
+            <MudTextSwitch @bind-Value="@this.preselectWorkspace" Color="Color.Primary" Label="@T("Does this chat template keep its chats in a workspace?")" LabelOn="@T("Yes, chats with this template go into a workspace")" LabelOff="@T("No, chats go where they would go anyway")" Disabled="@this.IsWorkspaceChoiceLocked"/>
             @if (this.preselectWorkspace)
             {
-                @if (this.availableWorkspaces.Count > 0 && !this.IsReadOnly)
+                @if (this.availableWorkspaces.Count > 0 && !this.IsWorkspaceChoiceLocked)
                 {
                     <MudSelect T="string" Value="@this.selectedWorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@T("Existing workspace (Optional)")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
                         @foreach (var workspace in this.availableWorkspaces)
@@ -204,13 +211,7 @@
                         }
                     </MudSelect>
                 }
-                <MudTextField T="string" @bind-Text="@this.selectedWorkspaceName" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when a chat with this template starts.")" Validation="@this.ValidateWorkspaceName" Immediate="@true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" ReadOnly="@this.IsReadOnly" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
-                @if (this.AreWorkspacesDisabled)
-                {
-                    <MudAlert Severity="Severity.Info" Class="mb-3">
-                        @T("Workspaces are currently switched off in your workspace settings. Until you switch them on again, chats with this template belong to no workspace.")
-                    </MudAlert>
-                }
+                <MudTextField T="string" @bind-Text="@this.selectedWorkspaceName" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when a chat with this template starts.")" Validation="@this.ValidateWorkspaceName" Immediate="@true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 mt-3" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" ReadOnly="@this.IsWorkspaceChoiceLocked" UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
             }
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">

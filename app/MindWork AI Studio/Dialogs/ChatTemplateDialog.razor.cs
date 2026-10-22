@@ -281,6 +281,16 @@ public partial class ChatTemplateDialog : MSGComponentBase
     /// </summary>
     private bool AreWorkspacesDisabled => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES;
 
+    /// <summary>
+    /// Whether the workspace of this template can be changed right now.
+    /// </summary>
+    /// <remarks>
+    /// Not while workspaces are switched off: a choice made then would take effect for no chat,
+    /// and nothing in the chat would say so. A workspace the template already names stays as it
+    /// is, so it applies again once workspaces are back.
+    /// </remarks>
+    private bool IsWorkspaceChoiceLocked => this.IsReadOnly || this.AreWorkspacesDisabled;
+
     //
     // Picking an existing workspace fills the name field. Clearing the select must not wipe a name
     // the user typed, though, so an empty selection is ignored:
