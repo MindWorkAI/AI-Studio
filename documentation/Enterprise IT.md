@@ -1159,6 +1159,10 @@ ignored and logged as a warning.
   continues with another provider, and a data source whose embedding provider is prohibited is
   neither indexed nor searched until somebody selects another one. Once you lift the prohibition,
   these providers work again.
+- **A prohibited provider is untrusted.** Its confidence level is always `UNTRUSTED`, whatever the
+  confidence scheme says. A level which `DataConfidence.CustomConfidenceScheme` names for it is ignored
+  and logged as a warning, and users cannot change it in the app. Once you lift the prohibition, that
+  level applies again.
 - **The list replaces, it does not add up.** A configuration with a higher priority has to repeat the
   providers of the base configuration, see [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
 - **Older versions ignore the setting.** It is available since AI Studio v26.10.1. Until all devices

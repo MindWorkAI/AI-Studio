@@ -469,6 +469,10 @@ CONFIG["SETTINGS"] = {}
 -- in their settings, marked as prohibited, and users can delete them. AI Studio no longer
 -- offers or contacts them. Once you lift the prohibition, they work again.
 --
+-- A prohibited provider is always UNTRUSTED, whatever the confidence scheme says. A level which
+-- DataConfidence.CustomConfidenceScheme names for it is ignored and logged as a warning, and
+-- users cannot change it in the app. Once you lift the prohibition, that level applies again.
+--
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole list.
 -- A configuration which prohibits one more provider has to repeat the providers of the base
 -- configuration. Otherwise, these become usable again.
@@ -1188,6 +1192,9 @@ CONFIG["SETTINGS"] = {}
 --   PERPLEXITY, OPEN_ROUTER, HETZNER, IONOS, LITE_LLM, REQUESTY, FIREWORKS, GROQ, HUGGINGFACE,
 --   SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+--
+-- A provider which DataApp.ProhibitedProviders names is always UNTRUSTED. Its level in this
+-- table is ignored and logged as a warning, see DataApp.ProhibitedProviders above.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
 -- table. Every configuration that sets this must therefore list all providers it wants
