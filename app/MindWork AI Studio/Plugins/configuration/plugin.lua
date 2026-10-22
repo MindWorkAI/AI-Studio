@@ -908,13 +908,13 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the minimum provider confidence level required for individual tools or tool
 -- collections.
--- Tool IDs include: web_search, read_web_page, search_confluence, semantic_search
+-- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet, semantic_search
 -- Collection IDs include: mailboxes
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW, search_confluence = HIGH,
--- semantic_search = NONE, mailboxes = VERY_LOW
--- search_confluence always searches with a HIGH-confidence provider only, whatever value is
--- set here.
+-- search_intranet = HIGH, semantic_search = NONE, mailboxes = VERY_LOW
+-- search_confluence and search_intranet always search with a HIGH-confidence provider only,
+-- whatever value is set here.
 -- semantic_search offers a provider only the data sources whose own confidence level it meets,
 -- so it needs no minimum of its own. A provider below a minimum set here has the data sources
 -- searched with every message instead.
@@ -922,6 +922,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search"] = "VERY_LOW",
 --     ["read_web_page"] = "VERY_LOW",
 --     ["search_confluence"] = "HIGH",
+--     ["search_intranet"] = "HIGH",
 --     ["semantic_search"] = "NONE",
 --     ["mailboxes"] = "VERY_LOW"
 -- }
@@ -1025,6 +1026,19 @@ CONFIG["SETTINGS"] = {}
 --                           UNRESTRICTED             -> no restriction beyond the ones of each tool.
 --                         Lock it to ONLY_CONFIGURED_SERVICES when the AI must not even choose which
 --                         of the given links to follow.
+--   documentAccess        From where the AI reads documents such as PDF, Word, PowerPoint, Excel,
+--                         or OpenDocument files. AI Studio recognizes the format by the content,
+--                         filters the text for prompt injections, and cuts it at
+--                         maxContentCharacters. Documents from a private or VPN address, from the
+--                         Confluence wiki, or from the intranet of search_intranet require a
+--                         provider with HIGH confidence and raise the chat to HIGH. Allowed values are:
+--                           OFF           -> no documents, only web pages and text formats.
+--                           INTERNAL_ONLY -> only documents of the wiki, of the intranet, and of the
+--                                            allowed private hosts. This is the default.
+--                           ALL_ADDRESSES -> documents from every address the tool may read.
+--   maxDocumentMegabytes  The largest document the AI may download, in megabytes, as an integer
+--                         string, at most 200. Default: 50. The document lands in a temporary file
+--                         while its text is read and is deleted right after.
 --
 -- Field names of the Search Confluence tool, which supports Confluence Data Center. Confluence
 -- Cloud is not supported yet.
@@ -1035,9 +1049,41 @@ CONFIG["SETTINGS"] = {}
 --                    wiki has a private or VPN address. Redirects outside this URL are refused. A
 --                    provider must have HIGH confidence to receive search results.
 --   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   readTopHits      How many of the best results the search reads right away, wiki pages and
+--                    attachments alike, as an integer string from 0 to 10. Default: 3. 0 switches
+--                    this off. Only results within the wiki are read, and documents follow
+--                    read_web_page.documentAccess and read_web_page.maxDocumentMegabytes.
+--   maxHitContentCharacters
+--                    How many characters of content these results bring together, at most 100000.
+--                    Default: 30000. The results share them equally.
 -- Selecting search_confluence also selects read_web_page, which opens the pages found. If your
 -- wiki has a private or VPN address, add its host to read_web_page.allowedPrivateHosts as well.
 -- Where a chat may send data after a search is set by read_web_page.internalPageOutboundDataRestriction.
+--
+-- Field names of the Search Intranet tool, which supports SharePoint Server. SharePoint Online is
+-- not supported yet.
+--   baseUrl          Required HTTPS root URL of the intranet, for example https://intranet.example.org/.
+--                    Search asks the SharePoint search REST API below it, _api/search/query, with the
+--                    same web-page reader as read_web_page, and uses the current user's operating-system
+--                    sign-in when the intranet has a private or VPN address. Redirects outside this URL
+--                    are refused. A provider must have HIGH confidence to receive search results.
+--                    Pages and documents below this URL count as internal for read_web_page, whatever
+--                    the address of the intranet, and a chat which read internal content may still
+--                    read them.
+--   timeoutSeconds   Search request timeout in seconds, at most 120. Default: 30.
+--   maxResults       How many hits one search returns, at most 50. Default: 10.
+--   readTopHits      How many of the best hits the search reads right away, pages and documents
+--                    alike, as an integer string from 0 to 10. Default: 3. 0 switches this off.
+--                    Only hits within the intranet are read, and documents follow
+--                    read_web_page.documentAccess and read_web_page.maxDocumentMegabytes.
+--   maxHitContentCharacters
+--                    How many characters of content these hits bring together, at most 100000.
+--                    Default: 30000. The hits share them equally.
+-- Selecting search_intranet also selects read_web_page, which opens the pages and documents
+-- found. If your intranet has a private or VPN address, add its host to
+-- read_web_page.allowedPrivateHosts as well; the hits read right away do not need it.
+-- Where a chat may send data after a search is set by
+-- read_web_page.internalPageOutboundDataRestriction.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
@@ -1047,7 +1093,9 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page.freeAddressChoice"] = "OFF",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org",
 --     ["read_web_page.internalPageOutboundDataRestriction"] = "ONLY_LINKS_FROM_CHAT",
---     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/"
+--     ["read_web_page.documentAccess"] = "INTERNAL_ONLY",
+--     ["search_confluence.baseUrl"] = "https://wiki.example.org/confluence/",
+--     ["search_intranet.baseUrl"] = "https://intranet.example.org/"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
@@ -1055,6 +1103,7 @@ CONFIG["SETTINGS"] = {}
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["web_search.tavily.searchDepth"] = "basic",
 --     ["read_web_page.timeoutSeconds"] = "30",
+--     ["read_web_page.maxDocumentMegabytes"] = "50",
 --     ["search_confluence.timeoutSeconds"] = "30"
 -- }
 
@@ -1321,9 +1370,9 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     -- A tool ID unknown to the installation is ignored, and so is a tool your
 --     -- organization switched off. A tool has to meet the confidence requirements of the
 --     -- provider in use, so it may stay unavailable even though this template names it.
---     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet
 --     -- Collection IDs include: mailboxes
---     -- Selecting search_confluence also selects read_web_page. semantic_search cannot be
+--     -- Selecting search_confluence or search_intranet also selects read_web_page. semantic_search cannot be
 --     -- selected here: it offers itself whenever the chat has data sources to search.
 --     ["ToolIds"] = {
 --         "read_web_page",
@@ -1455,9 +1504,9 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
 --     -- A listed tool must still meet the confidence requirements of the provider in
 --     -- use, so a tool may stay unavailable even though this policy permits it.
---     -- Tool IDs include: web_search, read_web_page, search_confluence
+--     -- Tool IDs include: web_search, read_web_page, search_confluence, search_intranet
 --     -- Collection IDs include: mailboxes
---     -- Allowing search_confluence also allows read_web_page.
+--     -- Allowing search_confluence or search_intranet also allows read_web_page.
 --     ["AllowedToolIds"] = { "web_search" },
 --
 --     -- Optional: preselect a provider or profile by ID.

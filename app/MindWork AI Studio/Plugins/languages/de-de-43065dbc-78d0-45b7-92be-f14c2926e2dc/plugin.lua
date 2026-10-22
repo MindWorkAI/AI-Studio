@@ -11769,6 +11769,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSION
 -- This chat read internal content while the chat was restricted to '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T3482648272"] = "Dieser Chat hat interne Inhalte gelesen, als er auf „{0}“ beschränkt war. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
 
+-- This chat searched your intranet while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T903866204"] = "Dieser Chat hat Ihr Intranet durchsucht, als die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ des Werkzeugs „Webseite lesen“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
+
 -- This chat read mails from a mailbox which has been removed since, while its setting 'Where a chat may send data after reading mails' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::OUTBOUNDDATAREQUIREMENTEXTENSIONS::T996427866"] = "Dieser Chat hat E-Mails aus einem inzwischen entfernten Postfach gelesen, als dessen Einstellung „Wohin ein Chat Daten senden darf, nachdem er E-Mails gelesen hat“ auf „{0}“ stand. Dieses Werkzeug würde Daten darüber hinaus senden und ist deshalb in diesem Chat nicht verfügbar. In einem neuen Chat lässt es sich wieder verwenden."
 
@@ -14205,11 +14208,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTE
 -- Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
 
+-- Content Characters of the Results Read Along
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1269309227"] = "Inhaltszeichen der mitgelesenen Ergebnisse"
+
 -- The setting '{0}' must be less than or equal to {1}.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1391527409"] = "Die Einstellung „{0}“ muss kleiner oder gleich {1} sein."
 
 -- The Confluence base URL is not configured correctly.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1459998186"] = "Die Confluence-Basis-URL ist nicht korrekt konfiguriert."
+
+-- Results Read Along
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1465206758"] = "Mitgelesene Ergebnisse"
+
+-- (Optional) How many of the best results the search reads right away, wiki pages and attachments alike, at most {0}. The AI then needs no further step per result, and an answer which needs several searches does not run out of tool calls. 0 switches this off.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T1473453300"] = "(Optional) Wie viele der besten Ergebnisse die Suche gleich mitliest, Wiki-Seiten wie Anhänge, höchstens {0}. Die KI braucht dann keinen weiteren Schritt je Ergebnis, und einer Antwort, die mehrere Suchen braucht, gehen die Werkzeug-Aufrufe nicht aus. 0 schaltet dies ab."
 
 -- Confluence asked for a sign-in instead of showing search results. AI Studio signs in with your operating system account only when your wiki has a private or VPN address, and either the wiki did not accept that sign-in or its address is public. Open the wiki in your browser to check your access.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2220129199"] = "Confluence hat eine Anmeldung verlangt, statt Suchergebnisse anzuzeigen. AI Studio meldet sich nur dann über Ihr Betriebssystem an, wenn Ihr Wiki eine private oder VPN-Adresse hat. Entweder hat das Wiki diese Anmeldung nicht akzeptiert, oder seine Adresse ist öffentlich. Öffnen Sie das Wiki in Ihrem Browser, um Ihren Zugang zu prüfen."
@@ -14217,8 +14229,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Find pages in your company's Confluence wiki.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2450314571"] = "Finden Sie Seiten im Confluence-Wiki Ihres Unternehmens."
 
+-- The setting '{0}' must be a whole number of 0 or more.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2773062734"] = "Die Einstellung „{0}“ muss eine ganze Zahl von 0 oder größer sein."
+
 -- Confluence returned a search page without readable results.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2900295830"] = "Confluence hat eine Suchseite ohne lesbare Ergebnisse zurückgegeben."
+
+-- (Optional) How many characters of content the results read along bring together, at most {0}. The results share them equally.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T2906698420"] = "(Optional) Wie viele Inhaltszeichen die mitgelesenen Ergebnisse zusammen umfassen, höchstens {0}. Die Ergebnisse teilen sie sich zu gleichen Teilen."
 
 -- Confluence redirected the search outside the configured wiki.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T3023598641"] = "Confluence hat die Suche auf eine Adresse außerhalb des konfigurierten Wikis umgeleitet."
@@ -14249,6 +14267,72 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Searching your company's wiki requires a High-confidence provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::CONFLUENCESEARCHTOOL::T882060522"] = "Für die Suche im Wiki Ihres Unternehmens ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich."
+
+-- The HTTPS address of your SharePoint Server intranet whose search the AI uses, such as https://intranet.example.org/. SharePoint Online is not supported yet. AI Studio signs in with your operating system account when the intranet has a private or VPN address. In that case, also add its host to the allowed private hosts of Read Web Page, which opens further hits. Pages and documents of the intranet count as internal, and where a chat may send data after a search is decided by the setting 'Where a chat may send data after reading internal pages' of Read Web Page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1120064037"] = "Die HTTPS-Adresse Ihres SharePoint-Server-Intranets, dessen Suche die KI nutzt, z. B. https://intranet.example.org/. SharePoint Online wird noch nicht unterstützt. AI Studio meldet sich über Ihr Betriebssystem an, wenn das Intranet eine private oder VPN-Adresse hat. Fügen Sie seinen Host in diesem Fall auch zu den zulässigen privaten Hosts von „Webseite lesen“ hinzu, damit sich weitere Treffer öffnen lassen. Seiten und Dokumente des Intranets gelten als intern. Wohin ein Chat nach einer Suche Daten senden darf, legt die Einstellung „Wohin ein Chat Daten senden darf, nachdem er interne Seiten gelesen hat“ von „Webseite lesen“ fest."
+
+-- Maximum Results
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1273024715"] = "Maximale Trefferzahl"
+
+-- The setting '{0}' must be less than or equal to {1}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1391527409"] = "Die Einstellung „{0}“ muss kleiner oder gleich {1} sein."
+
+-- (Optional) How many characters of content the hits read along bring together, at most {0}. The hits share them equally.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1583364276"] = "(Optional) Wie viele Inhaltszeichen die mitgelesenen Treffer zusammen umfassen, höchstens {0}. Die Treffer teilen sie sich zu gleichen Teilen."
+
+-- The intranet base URL is not configured correctly.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1595568915"] = "Die Intranet-Basis-URL ist nicht korrekt konfiguriert."
+
+-- Hits Read Along
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1653804288"] = "Mitgelesene Treffer"
+
+-- Find pages and documents in your company's SharePoint intranet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1776161706"] = "Finden Sie Seiten und Dokumente im SharePoint-Intranet Ihres Unternehmens."
+
+-- (Optional) How many of the best hits the search reads right away, pages and documents alike, at most {0}. The AI then needs no further step per hit, and an answer which needs several searches does not run out of tool calls. 0 switches this off.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1932376538"] = "(Optional) Wie viele der besten Treffer die Suche gleich mitliest, Seiten wie Dokumente, höchstens {0}. Die KI braucht dann keinen weiteren Schritt je Treffer, und einer Antwort, die mehrere Suchen braucht, gehen die Werkzeug-Aufrufe nicht aus. 0 schaltet dies ab."
+
+-- Enter a valid HTTPS intranet base URL without a query or fragment.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T1968390174"] = "Geben Sie eine gültige HTTPS-Basis-URL des Intranets ohne Abfrageparameter oder Fragment ein."
+
+-- Search Intranet
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T2104124460"] = "Intranet durchsuchen"
+
+-- Searching your company's intranet requires a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T2141127971"] = "Für die Suche im Intranet Ihres Unternehmens ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich."
+
+-- The intranet redirected the search outside the configured intranet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T2706283716"] = "Das Intranet hat die Suche auf eine Adresse außerhalb des konfigurierten Intranets umgeleitet."
+
+-- The setting '{0}' must be a whole number of 0 or more.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T2773062734"] = "Die Einstellung „{0}“ muss eine ganze Zahl von 0 oder größer sein."
+
+-- Intranet search for “{0}”
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T2963842052"] = "Intranet-Suche nach „{0}“"
+
+-- The intranet did not answer with search results. Either its address is not the one of a SharePoint Server, or it asked for a sign-in, which AI Studio answers with your operating system account only when your intranet has a private or VPN address. Open the intranet in your browser to check your access.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T313475174"] = "Das Intranet hat nicht mit Suchergebnissen geantwortet. Entweder ist seine Adresse nicht die eines SharePoint Servers, oder es hat eine Anmeldung verlangt, die AI Studio nur dann über Ihr Betriebssystem beantwortet, wenn Ihr Intranet eine private oder VPN-Adresse hat. Öffnen Sie das Intranet in Ihrem Browser, um Ihren Zugang zu prüfen."
+
+-- (Optional) How many hits one search returns, at most {0}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T3171390438"] = "(Optional) Wie viele Treffer eine Suche liefert, höchstens {0}."
+
+-- Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T3567699845"] = "Zeitlimit in Sekunden"
+
+-- (Optional) Search request timeout in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T3778965668"] = "(Optional) Zeitlimit der Suchanfrage in Sekunden."
+
+-- The setting '{0}' must be a positive integer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T4199432074"] = "Die Einstellung „{0}“ muss eine positive ganze Zahl sein."
+
+-- Intranet Base URL
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T74840370"] = "Intranet-Basis-URL"
+
+-- The intranet redirected the search outside the configured intranet, usually to a sign-in page. AI Studio signs in with your operating system account only when your intranet has a private or VPN address and accepts that sign-in. Open the intranet in your browser to check your access.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T9473135"] = "Das Intranet hat die Suche auf eine Adresse außerhalb des konfigurierten Intranets umgeleitet, meist auf eine Anmeldeseite. AI Studio meldet sich nur dann über Ihr Betriebssystem an, wenn Ihr Intranet eine private oder VPN-Adresse hat und diese Anmeldung akzeptiert. Öffnen Sie das Intranet in Ihrem Browser, um Ihren Zugang zu prüfen."
+
+-- Content Characters of the Hits Read Along
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::INTRANETSEARCHTOOL::T98394103"] = "Inhaltszeichen der mitgelesenen Treffer"
 
 -- No mailbox can be counted in this chat right now.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::MAILBOXES::COUNTMAILSTOOL::T117512288"] = "In diesem Chat können derzeit in keinem Postfach E-Mails gezählt werden."
@@ -14289,11 +14373,26 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is not one of them. A new chat can read other web pages again.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1012489816"] = "Dieser Chat enthält interne Inhalte, etwa E-Mails, Wiki-Seiten oder interne Webseiten, und darf deshalb nur Seiten des Wikis und der zulässigen privaten Hosts lesen, die in AI Studio konfiguriert sind. Die angeforderte Adresse gehört nicht dazu. Ein neuer Chat kann wieder andere Webseiten lesen."
 
+-- This address returned a document, such as a PDF. Reading documents is switched off in the settings of Read Web Page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1105539307"] = "Diese Adresse hat ein Dokument zurückgegeben, etwa eine PDF-Datei. Das Lesen von Dokumenten ist in den Einstellungen von „Webseite lesen“ ausgeschaltet."
+
 -- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider. For allowed HTTPS internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1105887195"] = "(Optional) Allowlist für Hosts von privaten oder VPN-Webseiten. Aus Sicherheitsgründen ist der Zugriff auf private oder VPN-Webseiten standardmäßig nicht erlaubt. Trennen Sie Host-Muster durch Kommas, z. B. example.de, *.example.de. Für erlaubte private Hosts ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich. Bei erlaubten internen HTTPS-Hosts versucht AI Studio automatisch die Standardanmeldung des Betriebssystems, wenn der Server mit integrierter Authentifizierung antwortet."
 
+-- This address returned a document, such as a PDF. Documents are read only from the wiki, the intranet, and the allowed private hosts configured in AI Studio, and this address is none of them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1325623234"] = "Diese Adresse hat ein Dokument zurückgegeben, etwa eine PDF-Datei. Dokumente werden nur aus dem Wiki, dem Intranet und von den zulässigen privaten Hosts gelesen, die in AI Studio konfiguriert sind, und diese Adresse gehört nicht dazu."
+
 -- This chat holds internal content, such as e-mails, wiki pages, or internal web pages, so it may only read web pages whose address the user wrote into the chat or a tool returned, exactly as it stands there, and pages of the wiki and of the allowed private hosts configured in AI Studio. The requested address is none of them. If the page is needed, the user can write its address into the chat.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1345856008"] = "Dieser Chat enthält interne Inhalte, etwa E-Mails, Wiki-Seiten oder interne Webseiten, und darf deshalb nur Webseiten lesen, deren Adresse genau so im Chat steht, wie der Benutzer sie geschrieben oder ein Werkzeug sie zurückgegeben hat, sowie Seiten des Wikis und der zulässigen privaten Hosts, die in AI Studio konfiguriert sind. Die angeforderte Adresse erfüllt keine dieser Bedingungen. Wird die Seite benötigt, kann der Benutzer ihre Adresse in den Chat schreiben."
+
+-- The setting '{0}' must be less than or equal to {1}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1391527409"] = "Die Einstellung „{0}“ muss kleiner oder gleich {1} sein."
+
+-- The intranet redirected this page to an address outside of it. This chat holds internal content, so it may not follow such a redirect.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1424120602"] = "Das Intranet hat diese Seite auf eine Adresse außerhalb des Intranets weitergeleitet. Dieser Chat enthält interne Inhalte und darf einer solchen Weiterleitung deshalb nicht folgen."
+
+-- (Optional) The largest document the AI may download, in megabytes, at most {0}. AI Studio writes the document to a temporary file while it reads its text and deletes it right after.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1461365667"] = "(Optional) Das größte Dokument, das die KI herunterladen darf, in Megabyte, höchstens {0}. AI Studio legt das Dokument in einer temporären Datei ab, während es seinen Text liest, und löscht sie gleich danach."
 
 -- This page lies on an allowed private host, but it or one of its redirects leads to a public address. This chat read internal content, so it may not follow such an address.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1492035627"] = "Diese Seite liegt auf einem zulässigen privaten Host, aber sie oder eine ihrer Weiterleitungen führt zu einer öffentlichen Adresse. Dieser Chat hat interne Inhalte gelesen und darf einer solchen Adresse deshalb nicht folgen."
@@ -14313,8 +14412,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Free address choice is off, so only web pages whose address stands word for word in the chat can be read: in the system prompt, in a message of the user or a document attached to it, or in the result of a tool. The requested address is none of them. If the page is needed, the user can write its address into the chat.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2217674090"] = "Die freie Adresswahl ist aus. Deshalb können nur Webseiten gelesen werden, deren Adresse wörtlich im Chat steht: im System-Prompt, in einer Nachricht des Benutzers oder einem daran angehängten Dokument oder im Ergebnis eines Werkzeugs. Die angeforderte Adresse steht an keiner dieser Stellen. Wird die Seite benötigt, kann der Benutzer ihre Adresse in den Chat schreiben."
 
+-- Read Documents
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2233190715"] = "Dokumente lesen"
+
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximale Inhaltszeichen"
+
+-- (Optional) From where the AI may read documents such as PDF, Word, PowerPoint, or Excel files, for example the forms and guidelines of your intranet. By default, it reads them only from your Confluence wiki, your intranet, and the allowed private hosts. Such documents are internal: reading them requires a High-confidence provider, and the chat then keeps them away from less trusted providers. Long documents are cut at the maximum content characters.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3052273898"] = "(Optional) Von wo die KI Dokumente wie PDF-, Word-, PowerPoint- oder Excel-Dateien lesen darf, etwa die Formulare und Richtlinien Ihres Intranets. Standardmäßig liest sie diese nur aus Ihrem Confluence-Wiki, Ihrem Intranet und von den zulässigen privaten Hosts. Solche Dokumente sind intern: Zum Lesen ist ein Anbieter mit dem Vertrauensniveau „Hoch“ erforderlich, und der Chat hält sie danach von weniger vertrauenswürdigen Anbietern fern. Lange Dokumente werden bei den maximalen Inhaltszeichen abgeschnitten."
 
 -- Allowed private host '{0}' is not valid.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Der zulässige private Host „{0}“ ist ungültig."
@@ -14328,14 +14433,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Read Web Page
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Webseite lesen"
 
--- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki, whatever its address. Once a chat read one, or searched your wiki, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki and of the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3698872955"] = "(Optional) Interne Seiten sind Webseiten mit einer privaten oder VPN-Adresse sowie die Seiten Ihres Confluence-Wikis, unabhängig von dessen Adresse. Sobald ein Chat eine solche Seite gelesen oder Ihr Wiki durchsucht hat, könnten eine Websuche oder eine von der KI gewählte Webadresse interne Inhalte an Dritte weitergeben. Diese Einstellung legt fest, was der Chat danach noch nutzen darf. Mit „{0}“, der Voreinstellung, durchsucht der Chat das Web nicht, liest aber weiterhin Webseiten, deren Adressen im Chat stehen. Mit „{1}“ liest er nur Seiten Ihres Confluence-Wikis und der zulässigen privaten Hosts. Eine Änderung gilt für Seiten, die später gelesen werden; ein Chat behält die Stufe, die galt, als er eine Seite gelesen hat."
-
 -- Load a web page and extract its readable content, links, and page details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Laden Sie eine Webseite und extrahieren Sie deren lesbaren Inhalt, Links und Seitendetails."
 
+-- Maximum Document Size (MB)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3781482907"] = "Maximale Dokumentgröße (MB)"
+
 -- The web page was not loaded because private or VPN web pages require a High-confidence provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "Die Webseite wurde nicht geladen, da private oder VPN-Webseiten einen Anbieter mit dem Vertrauensniveau „Hoch“ erfordern."
+
+-- (Optional) Internal pages are web pages on a private or VPN address and the pages of your Confluence wiki and your intranet, whatever their address. Once a chat read one, or searched your wiki or your intranet, a web search or a web address chosen by the AI could carry internal content to third parties. This setting decides what the chat may still use afterwards. With '{0}', the default, the chat does not search the web, but it still reads web pages whose addresses stand in the chat. With '{1}', it reads only pages of your Confluence wiki, your intranet, and the allowed private hosts. A change applies to pages read later; a chat keeps the level it had when it read a page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4064564664"] = "(Optional) Interne Seiten sind Webseiten mit einer privaten oder VPN-Adresse sowie die Seiten Ihres Confluence-Wikis und Ihres Intranets, unabhängig von deren Adresse. Sobald ein Chat eine solche Seite gelesen oder Ihr Wiki oder Ihr Intranet durchsucht hat, könnten eine Websuche oder eine von der KI gewählte Webadresse interne Inhalte an Dritte weitergeben. Diese Einstellung legt fest, was der Chat danach noch nutzen darf. Mit „{0}“, der Voreinstellung, durchsucht der Chat das Web nicht, liest aber weiterhin Webseiten, deren Adressen im Chat stehen. Mit „{1}“ liest er nur Seiten Ihres Confluence-Wikis, Ihres Intranets und der zulässigen privaten Hosts. Eine Änderung gilt für Seiten, die später gelesen werden; ein Chat behält die Stufe, die galt, als er eine Seite gelesen hat."
 
 -- (Optional) HTTP timeout for loading a web page in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4126164830"] = "(Optional) HTTP-Timeout zum Laden einer Webseite in Sekunden."
@@ -14562,14 +14670,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::
 -- Off
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T231126186"] = "Aus"
 
+-- Off: only web pages and text formats
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T241775540"] = "Aus: nur Webseiten und Textformate"
+
 -- Off: only web addresses from the chat or tools
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T2504836763"] = "Aus: nur Webadressen aus dem Chat oder aus Werkzeugen"
 
 -- All of them at once, results combined
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T2615378810"] = "Alle gleichzeitig, Ergebnisse kombiniert"
 
+-- Only from the wiki, the intranet, and the allowed private hosts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T3880469862"] = "Nur aus dem Wiki, dem Intranet und von den zulässigen privaten Hosts"
+
 -- One after another, until one answers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T4261738929"] = "Nacheinander, bis einer antwortet"
+
+-- From every address the tool may read
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T448075968"] = "Von jeder Adresse, die das Werkzeug lesen darf"
 
 -- Any language
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T747012729"] = "Beliebige Sprache"

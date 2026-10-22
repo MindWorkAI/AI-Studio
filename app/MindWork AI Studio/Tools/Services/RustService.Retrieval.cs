@@ -43,7 +43,13 @@ public sealed partial class RustService
     /// recording, names the file the user knows instead.
     /// </param>
     /// <param name="reportingScope">The action the file is read for, or null when it is read for none.</param>
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default)
+    /// <param name="maxCharacters">
+    /// How many characters of the content are kept at most, see FileExtractionResult.IsCutAtCharacterLimit.
+    /// The rest of the file is still read, but thrown away as it arrives: the runtime tells what its
+    /// filter removed only at the end, and the user has to hear of it even when the passage lies
+    /// behind the limit. Memory stays bounded either way.
+    /// </param>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, bool reportPromptInjections = true, PromptInjectionSource? reportAs = null, PromptInjectionReportingScope? reportingScope = null, CancellationToken token = default, int maxCharacters = int.MaxValue)
     {
         //
         // The runtime filters prompt injections while it streams the file. Doing it there rather
@@ -68,6 +74,7 @@ public sealed partial class RustService
         var promptInjectionFindings = new List<PromptInjectionFinding>();
         var promptInjectionRedactedCount = 0;
         var hasPartialFailure = false;
+        var isCutAtCharacterLimit = false;
         var failureCode = FileExtractionErrorCode.NONE;
         string? failureMessage = null;
         string? detectedFormat = null;
@@ -178,7 +185,7 @@ public sealed partial class RustService
                             promptInjectionFindings.AddRange(findings);
                     }
                     else if (processedEvent.Content is not null)
-                        resultBuilder.AppendLine(processedEvent.Content);
+                        AppendWithinLimit(processedEvent.Content);
 
                     chunkCount++;
                 }
@@ -222,7 +229,7 @@ public sealed partial class RustService
         {
             // Reading the whole file at once needs no token counts, so only the content is used here:
             if (ContentStreamSseHandler.Clear(streamId) is { } finalContentChunk && !string.IsNullOrWhiteSpace(finalContentChunk.Content))
-                resultBuilder.AppendLine(finalContentChunk.Content);
+                AppendWithinLimit(finalContentChunk.Content);
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
@@ -241,9 +248,9 @@ public sealed partial class RustService
             return FileExtractionResult.Failed(FileExtractionErrorCode.NO_CONTENT, "Reading the file produced no content.");
         }
 
-        var result = hasPartialFailure
+        var result = (hasPartialFailure
             ? FileExtractionResult.Partial(content, failedPages, detectedFormat)
-            : FileExtractionResult.Success(content, detectedFormat);
+            : FileExtractionResult.Success(content, detectedFormat)) with { IsCutAtCharacterLimit = isCutAtCharacterLimit };
 
         if (promptInjectionRedactedCount is 0)
             return result;
@@ -267,6 +274,33 @@ public sealed partial class RustService
             PromptInjectionFindings = promptInjectionFindings,
             PromptInjectionRedactedCount = promptInjectionRedactedCount,
         };
+
+        void AppendWithinLimit(string text)
+        {
+            if (isCutAtCharacterLimit)
+                return;
+
+            // Measured without the line break, so a text which ends right at the limit is not cut:
+            var room = maxCharacters - resultBuilder.Length;
+            if (text.Length <= room)
+            {
+                resultBuilder.AppendLine(text);
+                return;
+            }
+
+            // The line breaks count toward the limit, so a blank chunk may find no room left, while
+            // nothing of the content is lost without it:
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            // Never between the two halves of a surrogate pair, which would leave half a character:
+            var keep = Math.Max(room, 0);
+            if (keep > 0 && char.IsHighSurrogate(text[keep - 1]))
+                keep--;
+
+            resultBuilder.Append(text, 0, keep);
+            isCutAtCharacterLimit = true;
+        }
     }
 
     /// <summary>

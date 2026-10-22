@@ -10,18 +10,22 @@ namespace AIStudio.Tests.Tools.ToolCalling;
 /// </summary>
 /// <remarks>
 /// /redirect sends the client on, to /page of this server unless the test names another address,
-/// and every other path answers with a small HTML page.
+/// /document answers with the document the test hands in, and every other path answers with a
+/// small HTML page.
 /// </remarks>
 internal sealed class LoopbackWebServer : IDisposable
 {
     private readonly TcpListener listener = new(IPAddress.Loopback, 0);
     private readonly CancellationTokenSource stop = new();
     private readonly string? redirectLocation;
+    private readonly LoopbackDocument? document;
 
     /// <param name="redirectLocation">Where /redirect sends the client, or null for /page of this server.</param>
-    public LoopbackWebServer(string? redirectLocation = null)
+    /// <param name="document">What /document answers with, or null for the HTML page.</param>
+    public LoopbackWebServer(string? redirectLocation = null, LoopbackDocument? document = null)
     {
         this.redirectLocation = redirectLocation;
+        this.document = document;
         this.listener.Start();
         _ = this.ServeAsync();
     }
@@ -39,6 +43,15 @@ internal sealed class LoopbackWebServer : IDisposable
                 using var client = await this.listener.AcceptTcpClientAsync(this.stop.Token);
                 await using var stream = client.GetStream();
                 var request = await ReadRequestHeadAsync(stream, this.stop.Token);
+                if (this.document is { } served && request.StartsWith("GET /document ", StringComparison.Ordinal))
+                {
+                    var disposition = served.FileName is null ? string.Empty : $"Content-Disposition: attachment; filename=\"{served.FileName}\"\r\n";
+                    var head = $"HTTP/1.1 200 OK\r\nContent-Type: {served.ContentType}\r\nContent-Length: {served.Body.Length}\r\n{disposition}Connection: close\r\n\r\n";
+                    await stream.WriteAsync(Encoding.ASCII.GetBytes(head), this.stop.Token);
+                    await stream.WriteAsync(served.Body, this.stop.Token);
+                    continue;
+                }
+
                 var response = request.StartsWith("GET /redirect ", StringComparison.Ordinal)
                     ? $"HTTP/1.1 302 Found\r\nLocation: {this.redirectLocation ?? this.Address("/page").ToString()}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
                     : Page("<html><head><title>Travel</title></head><body><main><p>The travel policy of the intranet.</p></main></body></html>");
@@ -77,3 +90,11 @@ internal sealed class LoopbackWebServer : IDisposable
         this.stop.Dispose();
     }
 }
+
+/// <summary>
+/// A document the LoopbackWebServer serves at /document.
+/// </summary>
+/// <param name="ContentType">The media type the server claims.</param>
+/// <param name="Body">The bytes of the document.</param>
+/// <param name="FileName">The file name of the Content-Disposition header, or null for none.</param>
+internal sealed record LoopbackDocument(string ContentType, byte[] Body, string? FileName = null);

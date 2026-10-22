@@ -45,6 +45,42 @@ public static class HttpContentReader
         return (TryGetContentEncoding(content) ?? Encoding.UTF8).GetString(buffer.ToArray());
     }
 
+    /// <summary>
+    /// Streams the body into a new file, refusing anything beyond the given limit.
+    /// </summary>
+    /// <remarks>
+    /// Counted the same way as ReadAsStringWithLimitAsync, but the bytes go to the disk as they
+    /// arrive, so a document never sits in memory as a whole. A body beyond the limit leaves a
+    /// partial file behind, which the caller deletes along with every other.
+    /// </remarks>
+    /// <param name="content">The response body.</param>
+    /// <param name="path">The file to create. It must not exist yet.</param>
+    /// <param name="maxResponseBytes">The most that may be read.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <exception cref="HttpRequestException">The body exceeds the limit.</exception>
+    public static async Task CopyToFileWithLimitAsync(HttpContent content, string path, long maxResponseBytes, CancellationToken token)
+    {
+        if (content.Headers.ContentLength is { } contentLength && contentLength > maxResponseBytes)
+            throw new HttpRequestException($"The document is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+        await using var stream = await content.ReadAsStreamAsync(token);
+        await using var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, CHUNK_SIZE, useAsync: true);
+        var chunk = new byte[CHUNK_SIZE];
+        long written = 0;
+        while (true)
+        {
+            var read = await stream.ReadAsync(chunk, token);
+            if (read is 0)
+                break;
+
+            written += read;
+            if (written > maxResponseBytes)
+                throw new HttpRequestException($"The document is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+            await file.WriteAsync(chunk.AsMemory(0, read), token);
+        }
+    }
+
     private static Encoding? TryGetContentEncoding(HttpContent content)
     {
         var charset = content.Headers.ContentType?.CharSet?.Trim();

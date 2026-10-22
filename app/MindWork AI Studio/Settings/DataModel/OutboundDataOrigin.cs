@@ -26,4 +26,9 @@ public enum OutboundDataOrigin
     /// in the intranet or behind a VPN, or a page of the configured wiki, whatever its address.
     /// </summary>
     INTERNAL_WEB_PAGE,
+
+    /// <summary>
+    /// A search of the configured intranet.
+    /// </summary>
+    INTRANET,
 }

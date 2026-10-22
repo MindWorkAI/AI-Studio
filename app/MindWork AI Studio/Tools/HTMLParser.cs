@@ -59,13 +59,18 @@ public sealed class HTMLParser
     /// caller hands in.<br/><br/>
     /// The media type is validated once the headers have arrived and before the body is read.
     /// A PDF of 30 MB is then refused for being a PDF, instead of being downloaded up to the
-    /// size limit first and refused for its size.
+    /// size limit first and refused for its size.<br/><br/>
+    /// A caller which reads documents names a file for the body through documentDownload. It is
+    /// asked once the headers of the final response have arrived; when it names a file, the body
+    /// streams there instead of into memory, and validateMediaType is not asked. The file belongs
+    /// to the caller from the moment it was named, whether the download completes or not.
     /// </remarks>
     public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES, ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
         ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
-        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, Action<string>? validateMediaType = null, CancellationToken token = default)
+        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, Action<string>? validateMediaType = null,
+        HTMLParserDocumentDownload? documentDownload = null, CancellationToken token = default)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
@@ -122,13 +127,28 @@ public sealed class HTMLParser
             }
 
             var mediaType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+            var finalUrl = response.RequestMessage?.RequestUri ?? currentUrl;
+            if (documentDownload?.ChooseFile(mediaType, finalUrl) is { } documentPath)
+            {
+                await HttpContentReader.CopyToFileWithLimitAsync(response.Content, documentPath, documentDownload.MaxBytes, timeoutCts.Token);
+                return new HTMLParserWebPage
+                {
+                    RequestedUrl = url,
+                    FinalUrl = finalUrl,
+                    ContentType = mediaType,
+                    Body = string.Empty,
+                    DocumentPath = documentPath,
+                    FileName = GetFileName(response.Content.Headers.ContentDisposition),
+                };
+            }
+
             validateMediaType?.Invoke(mediaType);
 
             var body = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
             return new HTMLParserWebPage
             {
                 RequestedUrl = url,
-                FinalUrl = response.RequestMessage?.RequestUri ?? currentUrl,
+                FinalUrl = finalUrl,
                 ContentType = mediaType,
                 Body = body,
             };
@@ -252,6 +272,13 @@ public sealed class HTMLParser
     }
 
     private static bool IsRedirect(HttpStatusCode statusCode) => (int)statusCode is >= 300 and <= 399;
+
+    private static string? GetFileName(ContentDispositionHeaderValue? contentDisposition)
+    {
+        var fileName = contentDisposition?.FileNameStar ?? contentDisposition?.FileName;
+        fileName = fileName?.Trim().Trim('"');
+        return string.IsNullOrWhiteSpace(fileName) ? null : Path.GetFileName(fileName);
+    }
 
 
 

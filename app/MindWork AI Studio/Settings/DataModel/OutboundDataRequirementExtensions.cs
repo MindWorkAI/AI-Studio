@@ -22,6 +22,7 @@ public static class OutboundDataRequirementExtensions
     {
         OutboundDataOrigin.MAILBOX => GetMailboxBlockedMessage(requirement, settings.Mailboxes),
         OutboundDataOrigin.CONFLUENCE_WIKI => string.Format(TB("This chat searched your Confluence wiki while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
+        OutboundDataOrigin.INTRANET => string.Format(TB("This chat searched your intranet while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{0}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Restriction.GetName()),
         OutboundDataOrigin.INTERNAL_WEB_PAGE => string.Format(TB("This chat read an internal web page on '{0}' while the setting 'Where a chat may send data after reading internal pages' of the tool 'Read Web Page' was '{1}'. This tool would send data beyond that, so it is not available in this chat. A new chat can use it again."), requirement.Reference, requirement.Restriction.GetName()),
 
         // NONE keeps no tool from running, since nothing restricts such a chat. What is left is an
