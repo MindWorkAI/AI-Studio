@@ -91,29 +91,14 @@ fn prepare_image_sync(
     }
 
     let format = supported_format(path)?;
-    let reader = ImageReader::open(path)
-        .and_then(|reader| reader.with_guessed_format())
-        .map_err(|error| {
-            (
-                StatusCode::BAD_REQUEST,
-                format!("The image could not be opened: {error}"),
-            )
-        })?;
-        
-    if reader.format() != Some(format) {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            "The image content does not match its file extension.".to_string(),
-        ));
-    }
 
-    let decoded = reader.decode().map_err(|error| {
-        (
-            StatusCode::BAD_REQUEST,
-            format!("The image could not be decoded: {error}"),
-        )
-    })?;
-    
+    //
+    // Upright as the photo was taken: re-encoding drops the EXIF data which told a viewer how to
+    // turn it. The original bytes keep that note, and browsers apply it, so the dimensions we
+    // report fit both ways:
+    //
+    let decoded = decode_oriented(path, format).map_err(|failure| (StatusCode::BAD_REQUEST, failure.message))?;
+
     let original_width = decoded.width();
     let original_height = decoded.height();
     let should_resize = request.optimize && original_width.max(original_height) > MAX_EDGE_PIXELS;
@@ -909,6 +894,25 @@ mod tests {
         write_jpeg_with_orientation(&path, 20, 10, 6);
         let prepared = prepare_for_model(&path, u64::MAX).unwrap();
         assert_eq!((prepared.width, prepared.height), (10, 20), "Orientation 6 turns the image by 90 degrees.");
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn optimization_turns_photos_upright() {
+        let path = temporary_image_path("jpg");
+        write_jpeg_with_orientation(&path, 20, 10, 6);
+        let response = prepare_image_sync(&PrepareImageRequest {
+            path: path.to_string_lossy().into_owned(),
+            optimize: true,
+        })
+        .unwrap();
+
+        let bytes = general_purpose::STANDARD
+            .decode(response.data_url.split_once(',').unwrap().1)
+            .unwrap();
+        let encoded = image::load_from_memory(&bytes).unwrap();
+        assert_eq!((response.width, response.height), (10, 20), "Orientation 6 turns the image by 90 degrees.");
+        assert_eq!((encoded.width(), encoded.height()), (10, 20), "The encoded image carries no orientation of its own any longer.");
         std::fs::remove_file(path).unwrap();
     }
 
