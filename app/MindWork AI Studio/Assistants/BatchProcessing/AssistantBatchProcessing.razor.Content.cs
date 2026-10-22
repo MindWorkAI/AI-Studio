@@ -74,7 +74,7 @@ public partial class AssistantBatchProcessing
             return null;
         }
 
-        var maxImageSizeBytes = IImageSourceExtensions.MaxImageSizeBytesFor(this.ProviderSettings.UsedLLMProvider);
+        var maxImageSizeBytes = IImageSourceExtensions.MaxImageSizeBytesFor(this.ProviderSettings);
         if (fileSize > maxImageSizeBytes)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The image is larger than {0} MB, which is the most the selected provider accepts for one image."), (maxImageSizeBytes / 1_000_000d).ToString("0.#", Tools.PluginSystem.I18N.I.Culture)));

@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Provider.SelfHosted;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 
@@ -17,12 +18,17 @@ public static class IImageSourceExtensions
     /// The largest image file, in bytes, which we send through the given provider.
     /// </summary>
     /// <remarks>
-    /// The limit of the provider where it states one, but never more than MAX_IMAGE_SIZE_BYTES:
-    /// TryAsBase64 skips every larger image, whatever the provider would accept.
+    /// The smallest of the limits we know: the one of a self-hosted engine, the one of the provider,
+    /// and MAX_IMAGE_SIZE_BYTES, our own. A provider or engine which states no limit gets ours.
     /// </remarks>
-    /// <param name="llmProvider">The provider the image is sent through.</param>
+    /// <param name="provider">The configured provider the image is sent through.</param>
     /// <returns>The size limit of one image file.</returns>
-    public static long MaxImageSizeBytesFor(LLMProviders llmProvider) => Math.Min(llmProvider.GetMaxImageSizeBytes() ?? MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_BYTES);
+    public static long MaxImageSizeBytesFor(AIStudio.Settings.Provider provider)
+    {
+        var engineLimit = provider.UsedLLMProvider is LLMProviders.SELF_HOSTED ? provider.Host.GetMaxImageSizeBytes() : null;
+        var providerLimit = provider.UsedLLMProvider.GetMaxImageSizeBytes();
+        return Math.Min(Math.Min(engineLimit ?? MAX_IMAGE_SIZE_BYTES, providerLimit ?? MAX_IMAGE_SIZE_BYTES), MAX_IMAGE_SIZE_BYTES);
+    }
 
     public static MIMEType DetermineMimeType(this IImageSource image)
     {
