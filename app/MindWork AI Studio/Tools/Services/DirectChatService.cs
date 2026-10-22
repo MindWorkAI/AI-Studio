@@ -302,8 +302,17 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// <param name="chosenOptions">The options the chat is about to start with.</param>
     /// <param name="originChatTemplate">The chat template the options came from, or null when the launcher named the sources itself.</param>
     /// <returns>The checked options, or null and a message saying why no chat was created.</returns>
-    private async Task<(DataSourceOptions? Options, string ErrorMessage)> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
+    internal async Task<(DataSourceOptions? Options, string ErrorMessage)> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
     {
+        //
+        // Without the RAG preview, the chat uses no data sources at all, so a source which is gone
+        // or not permitted takes nothing from it. Stopping the launch for it would block a launcher
+        // over something the user can neither see nor change. The options stay in the chat as they
+        // are, just like a chat template keeps them, and count once RAG is switched on again.
+        //
+        if (!PreviewFeatures.PRE_RAG_2024.IsEnabled(settingsManager))
+            return new(chosenOptions, string.Empty);
+
         //
         // There is nothing to check when data sources are switched off, and nothing to check either
         // when an agent picks them: that choice is made per message in the chat, exactly as it is

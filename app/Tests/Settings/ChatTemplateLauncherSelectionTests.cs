@@ -1,5 +1,6 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tests.Tools.ToolCalling;
 using AIStudio.Tools.Services;
 
@@ -15,6 +16,7 @@ namespace AIStudio.Tests.Settings;
 /// The rule is the one for the tools and the data sources: the chat template wins. Whatever the
 /// template names and cannot be used must not stop the launch, though, because the author of the
 /// launcher could not fix it in the launcher. The launcher then decides as if the template named none.
+/// The last tests cover the data sources, which only stop a launch while the chat can use them.
 /// </remarks>
 [TestFixture]
 [NonParallelizable]
@@ -99,7 +101,34 @@ public sealed class ChatTemplateLauncherSelectionTests : ToolRegistryTestBase
         Assert.That(profileResult.Profile, Is.EqualTo(launcherProfile), "The launch drops the profile afterward for such a template; picking the one of the template here would only hide that.");
     }
 
-    // Data sources are not resolved by these tests, so the service needs none:
+    [Test]
+    public async Task WithoutRagAMissingDataSourceDoesNotStopTheLaunch()
+    {
+        var options = new DataSourceOptions { DisableDataSources = false, PreselectedDataSourceIds = ["99999999-9999-9999-9999-999999999999"] };
+        var result = await this.CreateService().CheckChosenDataSourcesAsync(ToolCapableProvider(), options, originChatTemplate: null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Options, Is.SameAs(options), "The chat uses no data sources without RAG, so the options travel along unchecked and count once RAG is back.");
+            Assert.That(result.ErrorMessage, Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task WithRagAMissingDataSourceStillStopsTheLaunch()
+    {
+        this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures.Add(PreviewFeatures.PRE_RAG_2024);
+        var options = new DataSourceOptions { DisableDataSources = false, PreselectedDataSourceIds = ["99999999-9999-9999-9999-999999999999"] };
+        var result = await this.CreateService().CheckChosenDataSourcesAsync(ToolCapableProvider(), options, originChatTemplate: null);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Options, Is.Null, "Opening a launcher is one click, so a missing source has to be said out loud.");
+            Assert.That(result.ErrorMessage, Is.Not.Empty);
+        });
+    }
+
+    // Data sources are not resolved by these tests beyond their lookup, so the service needs no data source service:
     private DirectChatService CreateService() => new(this.SettingsManager, dataSourceService: null!, toolRegistry: this.CreateRegistry(), NullLogger<DirectChatService>.Instance);
 
     private static AIStudio.Settings.Provider LauncherProvider() => LessTrustedProvider() with { Id = LAUNCHER_PROVIDER_ID.ToString() };
