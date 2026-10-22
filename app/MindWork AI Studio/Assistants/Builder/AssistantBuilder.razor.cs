@@ -249,35 +249,31 @@ public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistan
         this.launcherDataSourceIds = [];
         this.launcherToolIds = [];
         this.selectedAssistantComponents = [];
-        this.ApplyDefaultBuilderOptions();
+        this.allowGeneratedAssistantProfiles = true;
         this.extraRules = string.Empty;
         this.exampleRequest = string.Empty;
         this.generatedAssistantSpec = string.Empty;
         this.reviewNotes = string.Empty;
         this.generatedLuaAssistant = string.Empty;
         this.ResetInstallFlow();
+
+        if (!this.MightPreselectValues())
+        {
+            this.selectedOutputLanguage = CommonLanguages.AS_IS;
+            this.customOutputLanguage = string.Empty;
+        }
     }
 
     protected override bool MightPreselectValues()
     {
-        this.ApplyDefaultBuilderOptions();
-        return true;
-    }
-
-    private void ApplyDefaultBuilderOptions()
-    {
-        var defaults = this.SettingsManager.ConfigurationData.AssistantBuilder;
-        if (!defaults.PreselectOptions)
+        if (this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectOptions)
         {
-            this.selectedOutputLanguage = CommonLanguages.AS_IS;
-            this.customOutputLanguage = string.Empty;
-            this.allowGeneratedAssistantProfiles = true;
-            return;
+            this.selectedOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOutputLanguage;
+            this.customOutputLanguage = this.SettingsManager.ConfigurationData.AssistantBuilder.PreselectedOtherOutputLanguage;
+            return true;
         }
 
-        this.selectedOutputLanguage = defaults.PreselectedOutputLanguage;
-        this.customOutputLanguage = defaults.PreselectedOtherOutputLanguage;
-        this.allowGeneratedAssistantProfiles = true;
+        return false;
     }
 
     /// <inheritdoc />
