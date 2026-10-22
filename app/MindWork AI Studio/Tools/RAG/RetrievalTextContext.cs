@@ -65,6 +65,12 @@ public sealed class RetrievalTextContext : IRetrievalContext
     public int? PageNumber { get; init; }
 
     /// <summary>
+    /// The page this passage ends on when it goes on beyond the page it starts on, or null when it
+    /// stays on that page or the end is not known.
+    /// </summary>
+    public int? EndPageNumber { get; init; }
+
+    /// <summary>
     /// Which part of its document this passage is, counted from one, or null when the data source does not say.
     /// </summary>
     /// <remarks>

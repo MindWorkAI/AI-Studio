@@ -14,8 +14,9 @@ public static class IRetrievalContextExtensions
     /// <remarks>
     /// The location is what lets the AI say where an answer comes from. Naming only the file is
     /// not enough in a document of two hundred pages, and we know the page: it travels from the
-    /// runtime through the index into the context. A slide or a sheet has no page, and then
-    /// nothing is claimed rather than something made up.
+    /// runtime through the index into the context, together with the page a passage ends on when it
+    /// goes on beyond its first one. A slide or a sheet has no page, and then nothing is claimed
+    /// rather than something made up.
     /// </remarks>
     /// <param name="contextBuilder">The builder to write into.</param>
     /// <param name="retrievalContext">The context to describe.</param>
@@ -30,7 +31,9 @@ public static class IRetrievalContextExtensions
         contextBuilder.AppendLine($"Content path: {retrievalContext.Path}");
 
         if(retrievalContext is RetrievalTextContext { PageNumber: > 0 } locatedContext)
-            contextBuilder.AppendLine($"Content location: page {locatedContext.PageNumber}");
+            contextBuilder.AppendLine(locatedContext.EndPageNumber > locatedContext.PageNumber
+                ? $"Content location: pages {locatedContext.PageNumber} to {locatedContext.EndPageNumber}"
+                : $"Content location: page {locatedContext.PageNumber}");
 
         if(retrievalContext.Links.Count is 0)
             return;
@@ -198,6 +201,7 @@ public static class IRetrievalContextExtensions
             Text = matchedText,
             SurroundingContent = surroundingContent,
             PageNumber = textContext?.PageNumber is > 0 ? textContext.PageNumber : null,
+            EndPageNumber = textContext?.EndPageNumber is > 0 ? textContext.EndPageNumber : null,
             ChunkNumber = textContext?.ChunkNumber is > 0 ? textContext.ChunkNumber : null,
         };
     }
