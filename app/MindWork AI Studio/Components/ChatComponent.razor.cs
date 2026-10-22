@@ -1356,10 +1356,16 @@ public partial class ChatComponent : MSGComponentBase
             if (!this.ComposerState.HasVisibleUserDraft)
                 return;
 
+            //
+            // The message moves out of the composer before anything below waits, so that leaving a
+            // second time meanwhile finds nothing left to keep. Only the workspace follows afterward,
+            // since finding or creating the one of the chat template may take a moment:
+            //
             this.RefreshCurrentProfileAndChatTemplate();
-            chat = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), await this.ResolveWorkspaceOfFirstThreadAsync());
+            chat = this.NewChatThread(this.ExtractThreadName(this.ComposerState.UserInput), Guid.Empty);
             this.MirrorComposerIntoDraft(chat);
             this.ComposerState.Clear();
+            chat.WorkspaceId = await this.ResolveWorkspaceOfFirstThreadAsync();
         }
         else if (unstoredChatBeingLeft is not null && (!unstoredChatBeingLeft.Draft.IsEmpty || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(unstoredChatBeingLeft.ChatId))))
         {
@@ -1430,21 +1436,28 @@ public partial class ChatComponent : MSGComponentBase
             ? string.Format(T("Transcription: {0}"), Path.GetFileName(firstMediaPath))
             : promptName;
 
-        this.ChatThread = this.NewChatThread(threadName, await this.ResolveWorkspaceOfFirstThreadAsync());
+        var chat = this.NewChatThread(threadName, await this.ResolveWorkspaceOfFirstThreadAsync());
 
         // A message the user started belongs to the new chat, so it is stored with it:
         if (this.ComposerState.HasUserDraft)
-            this.MirrorComposerIntoDraft(this.ChatThread);
+            this.MirrorComposerIntoDraft(chat);
+
+        //
+        // The parent hears about the new thread before storing it waits, as with the first message.
+        // A render of the parent in between would otherwise hand back no thread at all, and the
+        // transcript would arrive in a chat which is nowhere:
+        //
+        this.ChatThread = chat;
+        await this.PublishNewChatThreadAsync();
 
         //
         // Like saving, this goes through the workspace component whenever there is one, so its tree
         // lists the new chat right away, together with the progress of the transcription, instead
         // of only after the first message was sent:
         //
-        await this.StoreAndListChatAsync(this.ChatThread);
-        await this.PublishNewChatThreadAsync();
+        await this.StoreAndListChatAsync(chat);
         await this.SyncForegroundChatAsync();
-        return this.ChatThread;
+        return chat;
     }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
