@@ -818,6 +818,30 @@ CONFIG["SETTINGS"] = {}
 -- documents. Providers below this level cannot be selected in the assistant.
 -- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
+-- Configure defaults for the Assistant Builder.
+-- Preselection must be enabled for the remaining Assistant Builder settings to take effect.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions"] = true
+--
+-- Configure the preselected provider for building assistants.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a preselected provider, the Assistant Builder uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the language in which the generated assistants answer.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS leaves the output language of the generated assistants open.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage"] = "AS_IS"
+--
+-- Configure a free-form language, used only when PreselectedOutputLanguage is "OTHER".
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage"] = ""
+--
+-- Allow users to change individual managed Assistant Builder defaults locally.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
+
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files
 -- in the assistant plugin folder, in canonical sorted order.

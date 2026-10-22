@@ -206,7 +206,10 @@ public sealed class Data
     
     public DataSlideBuilder SlideBuilder { get; init; } = new();
 
-    public DataAssistantBuilder AssistantBuilder { get; init; } = new();
+    /// <summary>
+    /// Gets the managed Assistant Builder defaults.
+    /// </summary>
+    public DataAssistantBuilder AssistantBuilder { get; init; } = new(x => x.AssistantBuilder);
 
     /// <summary>
     /// Gets the managed Visual Briefing Assistant defaults.
