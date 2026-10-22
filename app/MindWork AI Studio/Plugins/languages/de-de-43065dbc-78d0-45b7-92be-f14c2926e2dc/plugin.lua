@@ -663,9 +663,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 -- Start batch processing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T50133258"] = "Stapelverarbeitung starten"
 
--- This image format cannot be given to the model. Please convert the image to JPG, PNG, WebP, or GIF.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T532496054"] = "Dieses Bildformat kann nicht an das Modell übergeben werden. Bitte konvertieren Sie das Bild in JPG, PNG, WebP oder GIF."
-
 -- Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T544244392"] = "Die Ergebnistabelle des vorherigen Durchlaufs konnte nicht gelesen werden. Die bereits abgeschlossenen Dokumente können nicht wiederhergestellt werden und werden erneut verarbeitet."
 
@@ -689,9 +686,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING
 
 -- Include hidden files and folders?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T85084423"] = "Versteckte Dateien und Ordner einbeziehen?"
-
--- The image is larger than {0} MB, which is the most the selected provider accepts for one image.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T87450623"] = "Das Bild überschreitet die maximale Größe von {0} MB, die der ausgewählte Anbieter pro Bild akzeptiert."
 
 -- Restore default
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T913168756"] = "Standard wiederherstellen"
@@ -13443,6 +13437,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T791951937"] = "Bild für KI-
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
 
+-- AI Studio was not able to prepare the image '{0}' for the AI, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1345506748"] = "AI Studio konnte das Bild „{0}“ nicht für die KI vorbereiten und hat es daher nicht gesendet."
+
+-- The image '{0}' could not be made small enough for the selected provider, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T1463083567"] = "Das Bild „{0}“ konnte für den ausgewählten Anbieter nicht ausreichend verkleinert werden und wurde daher nicht gesendet."
+
+-- The image '{0}' could not be opened and was not sent. When the image is stored on a network drive, the drive might be unavailable.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2022724454"] = "Das Bild „{0}“ konnte nicht geöffnet und daher nicht gesendet werden. Wenn das Bild auf einem Netzlaufwerk gespeichert ist, ist das Laufwerk möglicherweise nicht verfügbar."
+
+-- The image '{0}' does not exist anymore and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T2330229240"] = "Das Bild „{0}“ existiert nicht mehr und wurde nicht gesendet."
+
+-- The image '{0}' is not what its file extension claims, so it was not sent. Please correct its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T3457568536"] = "Das Bild „{0}“ hat nicht das Format, das seine Dateiendung angibt, und wurde daher nicht gesendet. Bitte korrigieren Sie die Dateiendung."
+
+-- The image '{0}' could not be read and was not sent. It might be damaged or transferred incompletely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T4029166607"] = "Das Bild „{0}“ konnte nicht gelesen und daher nicht gesendet werden. Möglicherweise ist es beschädigt oder unvollständig übertragen worden."
+
+-- The image '{0}' has too many pixels for AI Studio to prepare it, so it was not sent. Please scale the image down first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T567941882"] = "Das Bild „{0}“ hat zu viele Pixel, als dass AI Studio es vorbereiten könnte, und wurde daher nicht gesendet. Bitte verkleinern Sie das Bild zuerst."
+
+-- The image '{0}' uses a format which AI Studio cannot give to an AI model, so it was not sent. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::MODELIMAGEERRORCODEEXTENSIONS::T568830141"] = "Das Bild „{0}“ liegt in einem Format vor, das AI Studio nicht an ein KI-Modell übergeben kann, und wurde daher nicht gesendet. Bitte konvertieren Sie das Bild in JPG oder PNG."
+
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T161976090"] = "Versuch, Anweisungen zu überschreiben"
 
@@ -14673,11 +14691,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T90753429"] 
 -- Please enter the secret necessary for authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::DATASOURCEVALIDATION::T968385876"] = "Bitte geben Sie das für die Authentifizierung benötigte Geheimnis ein."
 
--- Unsupported image format
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1398282880"] = "Nicht unterstütztes Bildformat"
-
--- File has no extension
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1555980031"] = "Datei hat keine Erweiterung"
+-- AI Studio cannot give {0} images to an AI model. Please convert the image to JPG or PNG.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1578559061"] = "AI Studio kann keine Bilder im Format {0} an ein KI-Modell übergeben. Bitte konvertieren Sie das Bild in JPG oder PNG."
 
 -- Audio files are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2919730669"] = "Audio-Dateien werden noch nicht unterstützt."
