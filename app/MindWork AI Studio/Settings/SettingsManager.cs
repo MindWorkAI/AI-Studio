@@ -585,7 +585,7 @@ public sealed class SettingsManager
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
         
         // When there is only one provider, and it has a confidence level that is high enough, we return it:
-        if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if (this.ConfigurationData.Providers.Count == 1 && this.IsProviderUsable(this.ConfigurationData.Providers[0].UsedLLMProvider, minimumLevel))
             return this.ConfigurationData.Providers[0];
 
         // Is there a current provider with a sufficiently high confidence level?
@@ -593,14 +593,14 @@ public sealed class SettingsManager
         if (currentProviderId is not null && !string.IsNullOrWhiteSpace(currentProviderId))
         {
             var currentProviderProbe = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == currentProviderId);
-            if (currentProviderProbe is not null && currentProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            if (currentProviderProbe is not null && this.IsProviderUsable(currentProviderProbe.UsedLLMProvider, minimumLevel))
                 currentProvider = currentProviderProbe;
         }
         
         // Is there a component-preselected provider with a sufficiently high confidence level?
         var preselectedProvider = Provider.NONE;
         var preselectedProviderProbe = component.PreselectedProvider(this);
-        if(preselectedProviderProbe != Provider.NONE && preselectedProviderProbe.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if(preselectedProviderProbe != Provider.NONE && this.IsProviderUsable(preselectedProviderProbe.UsedLLMProvider, minimumLevel))
             preselectedProvider = preselectedProviderProbe;
 
         //
@@ -628,7 +628,7 @@ public sealed class SettingsManager
             return preselectedProvider;
 
         // When there is an app-wide preselected provider, and it has a confidence level that is high enough, we return it:
-        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && this.IsProviderUsable(x.UsedLLMProvider, minimumLevel)) ?? Provider.NONE;
     }
 
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
@@ -665,7 +665,7 @@ public sealed class SettingsManager
         bool IsSelectableProvider(Provider provider) =>
             provider != Provider.NONE
             && provider.UsedLLMProvider != LLMProviders.NONE
-            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+            && this.IsProviderUsable(provider.UsedLLMProvider, minimumLevel);
     }
 
     /// <summary>
@@ -684,7 +684,8 @@ public sealed class SettingsManager
     /// <para>
     /// Whenever a provider is about to be used for an LLM request, do not use this method. Use
     /// GetConfidentProviders, GetPreselectedProvider, or GetChatProviderForLoadedChat instead,
-    /// since they honor the confidence levels.
+    /// since they honor the confidence levels and leave out the providers the organization
+    /// prohibited. This method returns those as well, so that the settings can mark them.
     /// </para>
     /// <para>
     /// The returned list is a sorted copy of the provider list, ordered by the used LLM provider and
@@ -706,9 +707,9 @@ public sealed class SettingsManager
     /// <remarks>
     /// This method resolves a stored provider reference by its id. It applies neither the global
     /// minimum confidence level nor any component-specific minimum, so it returns the requested
-    /// provider even when the user enforces a higher global minimum. Callers that intend to use the
-    /// returned provider for an LLM request must check it themselves through
-    /// IsProviderConfident or fall back to GetPreselectedProvider.
+    /// provider even when the user enforces a higher global minimum or the organization prohibited
+    /// it. Callers that intend to use the returned provider for an LLM request must check it
+    /// themselves through IsProviderConfident or fall back to GetPreselectedProvider.
     /// </remarks>
     /// <param name="providerId">The id of the provider to look up.</param>
     /// <returns>The provider, or <see cref="Provider.NONE"/> when no provider with that id exists.</returns>
@@ -741,6 +742,9 @@ public sealed class SettingsManager
     /// <summary>
     /// Checks whether the given provider satisfies the minimum confidence level of the given component.
     /// </summary>
+    /// <remarks>
+    /// A provider the organization prohibited never does, see IsProviderUsable.
+    /// </remarks>
     /// <param name="provider">The provider to check.</param>
     /// <param name="component">The component for which the provider gets checked.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
@@ -750,7 +754,7 @@ public sealed class SettingsManager
         if (provider.UsedLLMProvider is LLMProviders.NONE)
             return false;
 
-        return provider.UsedLLMProvider.GetConfidence(this).Level >= this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+        return this.IsProviderUsable(provider.UsedLLMProvider, this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum));
     }
 
     /// <summary>
@@ -766,8 +770,24 @@ public sealed class SettingsManager
     public bool IsProviderProhibited(LLMProviders provider) => provider is not LLMProviders.NONE && this.ConfigurationData.App.ProhibitedProviders.Contains(provider);
 
     /// <summary>
+    /// Checks whether the given provider may be used where the given minimum confidence level applies.
+    /// </summary>
+    /// <remarks>
+    /// The one check for every place which picks a provider: the organization did not prohibit it, and
+    /// its confidence level reaches the minimum. Comparing the confidence level alone would let a
+    /// prohibited provider through, since a prohibition is no confidence level.
+    /// </remarks>
+    /// <param name="provider">The provider to check, for LLMs, embeddings, and transcriptions alike.</param>
+    /// <param name="minimumLevel">The minimum confidence level which applies.</param>
+    /// <returns>True, when the provider may be used, false otherwise.</returns>
+    public bool IsProviderUsable(LLMProviders provider, ConfidenceLevel minimumLevel) => !this.IsProviderProhibited(provider) && provider.GetConfidence(this).Level >= minimumLevel;
+
+    /// <summary>
     /// Returns all providers that satisfy the minimum confidence level of the given component.
     /// </summary>
+    /// <remarks>
+    /// The providers the organization prohibited are left out, see IsProviderUsable.
+    /// </remarks>
     /// <param name="component">The component for which the providers get filtered.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
     /// <returns>All providers the component may use, in the same order as GetAllProviders.</returns>
@@ -775,7 +795,7 @@ public sealed class SettingsManager
     {
         var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
         foreach (var provider in this.GetAllProviders())
-            if (provider.UsedLLMProvider is not LLMProviders.NONE && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+            if (provider.UsedLLMProvider is not LLMProviders.NONE && this.IsProviderUsable(provider.UsedLLMProvider, minimumLevel))
                 yield return provider;
     }
 

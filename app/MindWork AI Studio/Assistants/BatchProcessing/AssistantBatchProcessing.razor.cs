@@ -293,13 +293,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         var minimumLevel = this.GetMinimumConfidenceLevel();
         var policyProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.selectedPolicy.PreselectedProvider);
         if (policyProvider != Settings.Provider.NONE
-            && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            && this.SettingsManager.IsProviderUsable(policyProvider.UsedLLMProvider, minimumLevel))
             this.ProviderSettings = policyProvider;
         else
         {
             var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, usePreselectionBeforeCurrentProvider: true);
             this.ProviderSettings = fallbackProvider != Settings.Provider.NONE
-                                    && fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel
+                                    && this.SettingsManager.IsProviderUsable(fallbackProvider.UsedLLMProvider, minimumLevel)
                 ? fallbackProvider
                 : Settings.Provider.NONE;
         }

@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -21,6 +22,8 @@ namespace AIStudio.Tests.Settings;
 public sealed class ProhibitedProvidersTests
 {
     private static readonly Guid PLUGIN_ID = Guid.Parse("7b0f9d4e-6a1c-4c55-9a33-0f6d2c9e8b41");
+    private const string ALLOWED_PROVIDER_ID = "11111111-1111-1111-1111-111111111111";
+    private const string PROHIBITED_PROVIDER_ID = "22222222-2222-2222-2222-222222222222";
 
     private SettingsManager settingsManager = null!;
     private ServiceProvider serviceProvider = null!;
@@ -112,6 +115,81 @@ public sealed class ProhibitedProvidersTests
         await ProcessAsync("""{ "NONE" }""");
 
         Assert.That(this.settingsManager.IsProviderProhibited(LLMProviders.NONE), Is.False);
+    }
+
+    [Test]
+    public void SelectionsLeaveOutProhibitedProviders()
+    {
+        this.AddProvider(ALLOWED_PROVIDER_ID, LLMProviders.OPEN_AI);
+        this.AddProvider(PROHIBITED_PROVIDER_ID, LLMProviders.DEEP_SEEK);
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        var selectable = this.settingsManager.GetConfidentProviders(AIStudio.Tools.Components.CHAT).Select(x => x.Id).ToList();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(selectable, Is.EqualTo(new[] { ALLOWED_PROVIDER_ID }), "A prohibited provider must not be offered, whatever its confidence level.");
+            Assert.That(this.settingsManager.GetAllProviders(), Has.Count.EqualTo(2), "The settings still list it, so that the user can see and delete it.");
+        });
+    }
+
+    [Test]
+    public void ThePreselectionSkipsProhibitedProviders()
+    {
+        this.AddProvider(ALLOWED_PROVIDER_ID, LLMProviders.OPEN_AI);
+        this.AddProvider(PROHIBITED_PROVIDER_ID, LLMProviders.DEEP_SEEK);
+        this.settingsManager.ConfigurationData.App.PreselectedProvider = PROHIBITED_PROVIDER_ID;
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(this.settingsManager.GetPreselectedProvider(AIStudio.Tools.Components.CHAT, PROHIBITED_PROVIDER_ID), Is.EqualTo(AIStudio.Settings.Provider.NONE), "Neither the current provider nor the app-wide default may hand over a prohibited provider.");
+            Assert.That(this.settingsManager.GetChatProviderForLoadedChat(PROHIBITED_PROVIDER_ID).Id, Is.Not.EqualTo(PROHIBITED_PROVIDER_ID), "A chat stored with a prohibited provider has to continue with another one.");
+        });
+    }
+
+    /// <summary>
+    /// Checks that a single prohibited provider is not handed over by the shortcut for a single provider.
+    /// </summary>
+    /// <remarks>
+    /// With exactly one configured provider, GetPreselectedProvider returns it without looking at any
+    /// preselection. That shortcut must check the prohibition as well.
+    /// </remarks>
+    [Test]
+    public void TheOnlyProviderIsNotHandedOverWhenProhibited()
+    {
+        this.AddProvider(PROHIBITED_PROVIDER_ID, LLMProviders.DEEP_SEEK);
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        Assert.That(this.settingsManager.GetPreselectedProvider(AIStudio.Tools.Components.CHAT), Is.EqualTo(AIStudio.Settings.Provider.NONE));
+    }
+
+    [Test]
+    public void AProhibitedProviderIsAllowedInNoChat()
+    {
+        this.AddProvider(ALLOWED_PROVIDER_ID, LLMProviders.OPEN_AI);
+        this.AddProvider(PROHIBITED_PROVIDER_ID, LLMProviders.DEEP_SEEK);
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.DEEP_SEEK);
+
+        var allowed = this.settingsManager.GetProviderById(ALLOWED_PROVIDER_ID);
+        var prohibited = this.settingsManager.GetProviderById(PROHIBITED_PROVIDER_ID);
+        ChatThread? newChat = null;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(newChat.IsLLMProviderAllowed(prohibited), Is.False, "Even a new chat, which has no requirements yet, must not use a prohibited provider.");
+            Assert.That(new ChatThread().IsLLMProviderAllowed(prohibited), Is.False);
+            Assert.That(newChat.IsLLMProviderAllowed(allowed), Is.True);
+        });
+    }
+
+    /// <summary>
+    /// Adds a provider to the settings.
+    /// </summary>
+    private void AddProvider(string id, LLMProviders llmProvider)
+    {
+        var providers = this.settingsManager.ConfigurationData.Providers;
+        providers.Add(new((uint)providers.Count + 1, id, $"Instance {providers.Count + 1}", llmProvider, new("test-model", null)));
     }
 
     /// <summary>
