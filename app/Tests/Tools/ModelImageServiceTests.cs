@@ -1,7 +1,3 @@
-using System.Net;
-using System.Text;
-using System.Text.Json;
-
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Tools.Rust;
@@ -24,7 +20,7 @@ namespace AIStudio.Tests.Tools;
 public sealed class ModelImageServiceTests
 {
     private string imagePath = string.Empty;
-    private ImageRuntime runtime = null!;
+    private FakeImageRuntime runtime = null!;
     private RustService rustService = null!;
     private ModelImageService service = null!;
 
@@ -34,7 +30,7 @@ public sealed class ModelImageServiceTests
         this.imagePath = Path.Combine(Path.GetTempPath(), $"model-image-{Guid.NewGuid():N}.png");
         File.WriteAllBytes(this.imagePath, [1, 2, 3]);
 
-        this.runtime = new ImageRuntime();
+        this.runtime = new FakeImageRuntime();
         this.rustService = new RustService(this.runtime);
         this.service = new ModelImageService(this.rustService, NullLogger<ModelImageService>.Instance);
     }
@@ -59,7 +55,7 @@ public sealed class ModelImageServiceTests
             Assert.That(first.IsPrepared, Is.True);
             Assert.That(first.MimeType, Is.EqualTo("image/jpeg"));
             Assert.That(second, Is.SameAs(first));
-            Assert.That(this.runtime.Requests, Has.Count.EqualTo(1), "The second message decoded the photo again.");
+            Assert.That(this.runtime.RequestedPaths, Has.Count.EqualTo(1), "The second message decoded the photo again.");
         });
     }
 
@@ -70,7 +66,7 @@ public sealed class ModelImageServiceTests
         await File.WriteAllBytesAsync(this.imagePath, [1, 2, 3, 4]);
         await this.service.PrepareAsync(this.Image, ProviderOf(LLMProviders.ANTHROPIC));
 
-        Assert.That(this.runtime.Requests, Has.Count.EqualTo(2), "The model would get the picture as it was before.");
+        Assert.That(this.runtime.RequestedPaths, Has.Count.EqualTo(2), "The model would get the picture as it was before.");
     }
 
     [Test]
@@ -81,8 +77,8 @@ public sealed class ModelImageServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(this.runtime.Requests.Select(request => request.MaxBytes), Is.EqualTo(new[] { 3_932_160, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }));
-            Assert.That(this.runtime.Requests.Select(request => request.Path), Is.All.EqualTo(new FileInfo(this.imagePath).FullName));
+            Assert.That(this.runtime.RequestedBudgets, Is.EqualTo(new[] { 3_932_160, IImageSourceExtensions.MAX_IMAGE_SIZE_BYTES }));
+            Assert.That(this.runtime.RequestedPaths, Is.All.EqualTo(new FileInfo(this.imagePath).FullName));
         });
     }
 
@@ -100,7 +96,7 @@ public sealed class ModelImageServiceTests
             Assert.That(failed.ErrorCode, Is.EqualTo(ModelImageErrorCode.NOT_DECODABLE));
             Assert.That(failed.IsPrepared, Is.False);
             Assert.That(prepared.IsPrepared, Is.True);
-            Assert.That(this.runtime.Requests, Has.Count.EqualTo(2), "A failure must not stick to the image.");
+            Assert.That(this.runtime.RequestedPaths, Has.Count.EqualTo(2), "A failure must not stick to the image.");
         });
     }
 
@@ -126,46 +122,11 @@ public sealed class ModelImageServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(image.ErrorCode, Is.EqualTo(ModelImageErrorCode.FILE_NOT_FOUND));
-            Assert.That(this.runtime.Requests, Is.Empty);
+            Assert.That(this.runtime.RequestedPaths, Is.Empty);
         });
     }
 
     private FileAttachmentImage Image => new("picture.png", this.imagePath, 3);
 
     private static AIStudio.Settings.Provider ProviderOf(LLMProviders llmProvider) => new(0, "test", "Test", llmProvider, new Model("model", null));
-
-    /// <summary>
-    /// Plays the image route of the runtime and notes what the app asked for.
-    /// </summary>
-    private sealed class ImageRuntime : HttpMessageHandler
-    {
-        private readonly List<ImageRequest> requests = [];
-
-        /// <summary>
-        /// The code the runtime answers with, as the runtime spells it.
-        /// </summary>
-        public string ErrorCode { get; set; } = "NONE";
-
-        /// <summary>
-        /// What the app asked for, in order.
-        /// </summary>
-        public IReadOnlyList<ImageRequest> Requests => this.requests;
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (request.RequestUri!.AbsolutePath is not "/image/prepare-for-model")
-                return new HttpResponseMessage(HttpStatusCode.NotFound);
-
-            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
-            this.requests.Add(new(body.RootElement.GetProperty("path").GetString()!, body.RootElement.GetProperty("max_bytes").GetInt64()));
-
-            var answer = JsonSerializer.Serialize(new { error_code = this.ErrorCode, base64 = "AQID", mime_type = "image/jpeg", width = 1, height = 1, was_resized = false });
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(answer, Encoding.UTF8, "application/json") };
-        }
-    }
-
-    /// <summary>
-    /// One request of the app to prepare an image.
-    /// </summary>
-    private sealed record ImageRequest(string Path, long MaxBytes);
 }
