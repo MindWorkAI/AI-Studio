@@ -1,6 +1,9 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using Lua;
 using Lua.Standard;
@@ -181,6 +184,66 @@ public sealed class ProhibitedProvidersTests
             Assert.That(new ChatThread().IsLLMProviderAllowed(prohibited), Is.False);
             Assert.That(newChat.IsLLMProviderAllowed(allowed), Is.True);
         });
+    }
+
+    [Test]
+    public void ADataSourceEmbedsNothingWithAProhibitedProvider()
+    {
+        var embeddingProvider = this.AddEmbeddingProvider(LLMProviders.MISTRAL);
+        var dataSource = new DataSourceLocalDirectory { EmbeddingId = embeddingProvider.Id };
+        Assert.That(DataSourceEmbeddingProviders.TryResolve(this.settingsManager, dataSource, out _), Is.True, "Before the prohibition, the provider is there to use.");
+
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.MISTRAL);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(DataSourceEmbeddingProviders.TryResolve(this.settingsManager, dataSource, out _), Is.False, "Indexing and searching must not embed anything with a prohibited provider.");
+            Assert.That(DataSourceEmbeddingProviders.IsProhibited(this.settingsManager, dataSource), Is.True, "The status of the data source has to name the prohibition as the reason.");
+        });
+    }
+
+    [Test]
+    public void TheDataSourceDialogsRefuseAProhibitedEmbeddingProvider()
+    {
+        var embeddingProvider = this.AddEmbeddingProvider(LLMProviders.MISTRAL);
+        var validation = new DataSourceValidation
+        {
+            GetSelectedEmbeddingProvider = () => embeddingProvider,
+            GetSettingsManager = () => this.settingsManager,
+        };
+
+        Assert.That(validation.ValidateEmbeddingProviderAccess(embeddingProvider.Id), Is.Null, "Before the prohibition, the provider may be selected.");
+
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.MISTRAL);
+
+        Assert.That(validation.ValidateEmbeddingProviderAccess(embeddingProvider.Id), Is.Not.Null, "A data source saved with a prohibited provider would never be embedded.");
+    }
+
+    [Test]
+    public void AProhibitedTranscriptionProviderTranscribesNothing()
+    {
+        var transcriptionProvider = new TranscriptionProvider { Id = Guid.NewGuid().ToString(), UsedLLMProvider = LLMProviders.OPEN_AI };
+        this.settingsManager.ConfigurationData.TranscriptionProviders.Add(transcriptionProvider);
+        this.settingsManager.ConfigurationData.App.UseTranscriptionProvider = transcriptionProvider.Id;
+
+        // GetUsableProvider reads only the settings, so the other services stay out of this test:
+        using var transcriptionService = new MediaTranscriptionService(null!, this.settingsManager, null!, [], NullLogger<MediaTranscriptionService>.Instance);
+        Assert.That(transcriptionService.GetUsableProvider(), Is.Not.Null, "Before the prohibition, the provider is there to use.");
+
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.Add(LLMProviders.OPEN_AI);
+
+        Assert.That(transcriptionService.GetUsableProvider(), Is.Null, "Dictation and the transcription of recordings must not reach a prohibited provider.");
+    }
+
+    /// <summary>
+    /// Adds an embedding provider to the settings.
+    /// </summary>
+    private EmbeddingProvider AddEmbeddingProvider(LLMProviders llmProvider)
+    {
+        var embeddingProviders = this.settingsManager.ConfigurationData.EmbeddingProviders;
+        var embeddingProvider = new EmbeddingProvider((uint)embeddingProviders.Count + 1, Guid.NewGuid().ToString(), $"Embedding {embeddingProviders.Count + 1}", llmProvider, new("test-embedding", null));
+        embeddingProviders.Add(embeddingProvider);
+        return embeddingProvider;
     }
 
     /// <summary>
