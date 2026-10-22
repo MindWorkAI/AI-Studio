@@ -5286,6 +5286,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T45885
 -- Not yet configured
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T48051324"] = "Not yet configured"
 
+-- The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T489079668"] = "The use of this provider has been prohibited by your organization. Therefore, it is untrusted, and you cannot change its confidence level."
+
 -- Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T700839804"] = "Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself."
 
