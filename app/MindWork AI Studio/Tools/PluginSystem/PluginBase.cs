@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using Lua;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -6,18 +8,41 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>
 /// Represents the base of any AI Studio plugin.
 /// </summary>
-public abstract partial class PluginBase : IPluginMetadata
+public abstract partial class PluginBase : IPluginMetadata, IDisposable
 {
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginBase));
+
+    /// <summary>
+    /// The only format the field LAST_CHANGED accepts: a point in time in UTC, read and written with
+    /// the invariant culture.
+    /// </summary>
+    /// <remarks>
+    /// A date alone cannot be shown in the time zone of the user: whether a day in UTC is the same day
+    /// locally depends on the time. The field therefore always carries the time, and the UI converts it.
+    /// </remarks>
+    public const string LAST_CHANGED_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    /// <summary>
+    /// Writes a point in time the way the field LAST_CHANGED expects it.
+    /// </summary>
+    /// <remarks>
+    /// The format ends in a literal Z, so the time has to be converted to UTC first. Otherwise, a
+    /// local time would be written as if it were UTC.
+    /// </remarks>
+    /// <param name="lastChanged">When the plugin was last changed, in any time zone.</param>
+    /// <returns>The time in UTC, formatted for the field LAST_CHANGED.</returns>
+    public static string FormatLastChanged(DateTimeOffset lastChanged) => lastChanged.ToUniversalTime().ToString(LAST_CHANGED_FORMAT, CultureInfo.InvariantCulture);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
-    
+
     private readonly IReadOnlyCollection<string> baseIssues;
     protected readonly LuaState State;
 
     protected readonly List<string> PluginIssues = [];
 
     /// <inheritdoc />
-    public string IconSVG { get; }
-    
+    public string IconDataUrl { get; }
+
     /// <inheritdoc />
     public PluginType Type { get; }
     
@@ -32,6 +57,9 @@ public abstract partial class PluginBase : IPluginMetadata
     
     /// <inheritdoc />
     public PluginVersion Version { get; }
+
+    /// <inheritdoc />
+    public DateTimeOffset? LastChanged { get; }
 
     /// <inheritdoc />
     public string[] Authors { get; } = [];
@@ -88,14 +116,14 @@ public abstract partial class PluginBase : IPluginMetadata
         if (this is NoPlugin or NoPluginLanguage)
         {
             this.IsInternal = isInternal;
-            this.IconSVG = string.Empty;
+            this.IconDataUrl = string.Empty;
             this.baseIssues = issues;
             return;
         }
 
         // Notice: when no icon is specified, the default icon will be used.
-        this.TryInitIconSVG(out _, out var iconSVG);
-        this.IconSVG = iconSVG;
+        this.TryInitIconDataUrl(out _, out var iconDataUrl);
+        this.IconDataUrl = iconDataUrl;
         
         if(this.TryInitId(out var issue, out var id))
         {
@@ -119,7 +147,9 @@ public abstract partial class PluginBase : IPluginMetadata
             this.Version = version;
         else if(this is not NoPlugin)
             issues.Add(issue);
-        
+
+        this.LastChanged = this.ReadLastChanged();
+
         if(this.TryInitAuthors(out issue, out var authors))
             this.Authors = authors;
         else if(this is not NoPlugin)
@@ -275,6 +305,29 @@ public abstract partial class PluginBase : IPluginMetadata
     }
     
     /// <summary>
+    /// Reads when the plugin was last changed, when the plugin states it.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the other fields, LAST_CHANGED is optional: existing plugins were shipped before this
+    /// field existed, and a missing or malformed value is not a reason to refuse loading an otherwise
+    /// valid plugin. A malformed value is logged and treated as absent.
+    /// </remarks>
+    /// <returns>The read point in time in UTC, or null when the field is absent or malformed.</returns>
+    private DateTimeOffset? ReadLastChanged()
+    {
+        if (!this.State.Environment["LAST_CHANGED"].TryRead<string>(out var lastChangedText))
+            return null;
+
+        if (!DateTimeOffset.TryParseExact(lastChangedText, LAST_CHANGED_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var lastChanged))
+        {
+            LOG.LogWarning("The field LAST_CHANGED of plugin '{PluginName}' is not a valid point in time in UTC of the form YYYY-MM-DDTHH:MM:SSZ. Ignoring it. Please fix the plugin.", this.Name);
+            return null;
+        }
+
+        return lastChanged;
+    }
+
+    /// <summary>
     /// Tries to read the authors of the plugin.
     /// </summary>
     /// <param name="message">The error message, when the authors could not be read.</param>
@@ -346,55 +399,22 @@ public abstract partial class PluginBase : IPluginMetadata
         }
 
         url = url.Trim();
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var sourceUri))
+        if (!PluginLinks.TryParse(url, out var sourceUri))
         {
-            url = string.Empty;
-            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.");
-            return false;
-        }
+            message = url.StartsWith($"{Uri.UriSchemeMailto}:", StringComparison.OrdinalIgnoreCase)
+                ? TB("The field SOURCE_URL is not a valid URL. When the URL starts with 'mailto:', it must contain a valid email address as recipient.")
+                : TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.");
 
-        var isHttp = sourceUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase);
-        var isHttps = sourceUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
-        var isMailTo = sourceUri.Scheme.Equals(Uri.UriSchemeMailto, StringComparison.OrdinalIgnoreCase);
-        if (!isHttp && !isHttps && !isMailTo)
-        {
             url = string.Empty;
-            message = TB("The field SOURCE_URL is not a valid URL. The URL must start with 'http://', 'https://', or 'mailto:'.");
             return false;
-        }
-
-        if (isMailTo)
-        {
-            var recipient = ExtractMailtoRecipient(url);
-            if (string.IsNullOrWhiteSpace(recipient))
-            {
-                url = string.Empty;
-                message = TB("The field SOURCE_URL is not a valid URL. When the URL starts with 'mailto:', it must contain a valid email address as recipient.");
-                return false;
-            }
         }
 
         url = sourceUri.ToString();
-        
+
         message = string.Empty;
         return true;
     }
 
-    private static string ExtractMailtoRecipient(string rawUrl)
-    {
-        var separatorIndex = rawUrl.IndexOf(':');
-        if (separatorIndex < 0 || separatorIndex + 1 >= rawUrl.Length)
-            return string.Empty;
-
-        var schemeSpecificPart = rawUrl[(separatorIndex + 1)..];
-        var queryStart = schemeSpecificPart.IndexOf('?');
-        var recipient = queryStart >= 0
-            ? schemeSpecificPart[..queryStart]
-            : schemeSpecificPart;
-        
-        return recipient.Trim();
-    }
-    
     /// <summary>
     /// Tries to read the categories of the plugin.
     /// </summary>
@@ -544,6 +564,20 @@ public abstract partial class PluginBase : IPluginMetadata
             lastKey = pair.Key;
         }
     }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    /// <summary>
+    /// Releases the Lua runtime of this plugin.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin owns a Lua state, which is an entire scripting runtime. Dropping a plugin
+    /// without disposing it leaves that runtime behind: before this existed, each hot reload added
+    /// another set of them for as long as the app was running.
+    /// </remarks>
+    public void Dispose() => this.State.Dispose();
 
     #endregion
 }

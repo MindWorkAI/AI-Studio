@@ -1,6 +1,7 @@
+@using AIStudio.Tools.PluginSystem
 @inherits SettingsDialogBase
 
-<MudDialog>
+<MudDialog ContentClass="dialog-content-aligned" ActionsClass="dialog-actions-aligned">
     <TitleContent>
         <MudText Typo="Typo.h6" Class="d-flex align-center">
             <MudIcon Icon="@Icons.Material.Filled.RateReview" Class="mr-2" />
@@ -48,27 +49,22 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditChatTemplate(context))"/>
                             </MudTooltip>
-                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                            @if (context.FileAttachments.Count == 0)
                             {
-                                @if (context.FileAttachments.Count == 0)
-                                {
-                                    <MudTooltip Text="@T("Export configuration")">
-                                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))"/>
-                                    </MudTooltip>
-                                }
-                                else
-                                {
-                                    <MudTooltip Text="@T("Export configuration")">
-                                        <MudMenu Icon="@Icons.Material.Filled.Dataset" Color="Color.Info" Variant="Variant.Text">
-                                            <MudMenuItem Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
-                                                @T("Use shared attachment paths")
-                                            </MudMenuItem>
-                                            <MudMenuItem Icon="@Icons.Material.Filled.Folder" Disabled="@this.isPluginDirectoryDialogOpen" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
-                                                @T("Copy attachments into plugin")
-                                            </MudMenuItem>
-                                        </MudMenu>
-                                    </MudTooltip>
-                                }
+                                <AdminExportButton OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))" />
+                            }
+                            else if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                            {
+                                <MudTooltip Text="@T("Export configuration")">
+                                    <MudMenu Icon="@Icons.Material.Filled.Dataset" Color="Color.Info" Variant="Variant.Text">
+                                        <MudMenuItem Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
+                                            @T("Use shared attachment paths")
+                                        </MudMenuItem>
+                                        <MudMenuItem Icon="@Icons.Material.Filled.Folder" Disabled="@this.isPluginDirectoryDialogOpen" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
+                                            @T("Copy attachments into plugin")
+                                        </MudMenuItem>
+                                    </MudMenu>
+                                </MudTooltip>
                             }
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteChatTemplate(context))"/>
@@ -85,12 +81,16 @@
                 @T("No chat templates configured yet.")
             </MudText>
         }
-
-        <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" Class="mt-3 mb-6" OnClick="@this.AddChatTemplate">
-            @T("Add Chat Template")
-        </MudButton>
     </DialogContent>
     <DialogActions>
+        @* In the footer, adding and importing stay in reach however long the table grows: *@
+        <MudStack Row="true" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="@Color.Primary" StartIcon="@Icons.Material.Filled.AddRoad" OnClick="@this.AddChatTemplate">
+                @T("Add Chat Template")
+            </MudButton>
+            <LockableButton Text="@T("Import Chat Template")" IsLocked="@(() => !this.SettingsManager.ConfigurationData.App.CanImportConfigurationSnippet(PluginConfigurationObjectType.CHAT_TEMPLATE))" Icon="@Icons.Material.Filled.FileDownload" OnClickAsync="@this.ImportChatTemplate" ButtonVariant="Variant.Outlined" NoMargin="true" />
+        </MudStack>
+        <MudSpacer/>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">
             @T("Close")
         </MudButton>

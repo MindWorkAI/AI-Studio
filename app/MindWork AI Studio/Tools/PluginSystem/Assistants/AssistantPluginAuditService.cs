@@ -10,9 +10,9 @@ public sealed class AssistantPluginAuditService(AssistantAuditAgent auditAgent)
     /// <summary>
     /// Runs an assistant plugin audit, optionally falling back to the supplied provider when no audit provider is configured.
     /// </summary>
-    public async Task<PluginAssistantAudit> RunAuditAsync(PluginAssistants plugin, CancellationToken token = default, Settings.Provider? fallbackProvider = null)
+    public async Task<PluginAssistantAudit> RunAuditAsync(PluginAssistants plugin, Settings.Provider? fallbackProvider = null, CancellationToken token = default)
     {
-        var result = await auditAgent.AuditAsync(plugin, token, fallbackProvider);
+        var result = await auditAgent.AuditAsync(plugin, fallbackProvider, token);
         var provider = auditAgent.ProviderSettings;
         var promptPreview = await plugin.BuildAuditPromptPreviewAsync(token);
 

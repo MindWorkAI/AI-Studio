@@ -15,7 +15,27 @@ public partial class ExpansionPanel : ComponentBase
     
     [Parameter]
     public string HeaderText { get; set; } = "n/a";
-    
+
+    /// <summary>
+    /// The typography of the header text.
+    /// </summary>
+    /// <remarks>
+    /// Worth lowering for a panel which sits inside another one, together with the compact header
+    /// class below: two headers of the same size give no clue about which one contains the other.
+    /// </remarks>
+    [Parameter]
+    public Typo HeaderTypo { get; set; } = Typo.h6;
+
+    /// <summary>
+    /// Additional class names for the header, separated by space.
+    /// </summary>
+    /// <remarks>
+    /// The one this exists for is expansion-panel-header-compact, which takes the height of the
+    /// header down for a nested panel.
+    /// </remarks>
+    [Parameter]
+    public string HeaderClass { get; set; } = string.Empty;
+
     [Parameter]
     public int? MaxHeight { get; set; }
     

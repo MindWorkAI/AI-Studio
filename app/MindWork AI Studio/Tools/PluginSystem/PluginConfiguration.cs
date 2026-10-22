@@ -1,4 +1,6 @@
 using System.Globalization;
+
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -7,16 +9,17 @@ using Lua;
 
 namespace AIStudio.Tools.PluginSystem;
 
-public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type)
+public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type), ILivePluginContentSource
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
-    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
 
     private List<PluginConfigurationObject> configObjects = [];
     private List<DataMandatoryInfo> mandatoryInfos = [];
     private List<DataIntroduction> introductions = [];
-    
+    private List<DataMailboxProvider> mailboxProviders = [];
+    private List<DataUserAPIKeyPrompt> userAPIKeyPrompts = [];
+
     /// <summary>
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
     /// </summary>
@@ -33,6 +36,18 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// Introductions are live plugin content and are not persisted to ConfigurationData.
     /// </summary>
     public IReadOnlyList<DataIntroduction> Introductions => this.introductions;
+
+    /// <summary>
+    /// The mail servers this configuration plugin offers for new mailboxes.
+    /// Mail servers are live plugin content and are not persisted to ConfigurationData.
+    /// </summary>
+    public IReadOnlyList<DataMailboxProvider> MailboxProviders => this.mailboxProviders;
+
+    /// <summary>
+    /// What this configuration plugin tells the user while AI Studio asks for the API key of its providers;
+    /// at most one entry. The prompt is live plugin content and is not persisted to ConfigurationData.
+    /// </summary>
+    public IReadOnlyList<DataUserAPIKeyPrompt> UserAPIKeyPrompts => this.userAPIKeyPrompts;
 
     /// <summary>
     /// True/false when explicitly configured in the plugin, otherwise null.
@@ -68,12 +83,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (!dryRun)
         {
+            await PluginConfigurationObject.SyncManagedTokenizersAsync(this.Id, this.PluginPath, this.configObjects);
+
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
             await StoreEnterpriseSecretsAsync();
 
-            await SettingsManagerAccess.StoreSettings();
-            await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+            //
+            // The settings are not stored here: PluginFactory.LoadAll does that once, after all
+            // plugins have started. Storing them per configuration plugin wrote the whole settings
+            // file again for each one, which made the start of every further plugin wait for it.
+            //
         }
     }
 
@@ -190,7 +210,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         this.configObjects.Clear();
         this.mandatoryInfos.Clear();
         this.introductions.Clear();
-        
+        this.mailboxProviders.Clear();
+        this.userAPIKeyPrompts.Clear();
+
         // Ensure that the main CONFIG table exists and is a valid Lua table:
         if (!this.State.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
         {
@@ -205,6 +227,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return false;
         }
 
+        if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
+            return false;
+
         this.DeclaredSettingsCount = CountDeclaredSettings(settingsTable);
         
         // Config: check for updates, and if so, how often?
@@ -215,6 +240,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: what should be the start page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
+
+        // Config: save energy while the AI streams its answers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.IsSavingEnergy, this.Id, settingsTable, dryRun);
+
+        // Config: show prompt-injection alert dialogs?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowPromptInjectionAlert, this.Id, settingsTable, dryRun);
 
         // Config: show built-in introduction on the home page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowIntroduction, this.Id, settingsTable, dryRun);
@@ -231,6 +262,42 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to add LLM providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddLLMProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to add embedding providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddEmbeddingProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to add transcription providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddTranscriptionProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to add mailboxes?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddMailbox, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import configurations which others exported?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportConfigurationSnippets, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import profiles?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportProfile, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import LLM providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportLLMProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import embedding providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportEmbeddingProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import transcription providers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportTranscriptionProvider, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import chat templates?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportChatTemplate, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import external data sources (ERI servers)?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportERIDataSource, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import document analysis policies?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportDocumentAnalysisPolicy, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
 
@@ -240,8 +307,20 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to share or export plugins?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToSharePlugins, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to back up the data of AI Studio?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToBackUpData, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to restore the data of AI Studio from a backup?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToRestoreData, this.Id, settingsTable, dryRun);
+
         // Config: show administration settings?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
+
+        // Config: in which format do exports encrypt secrets?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.EnterpriseEncryptionExportFormat, this.Id, settingsTable, dryRun);
+
+        // Config: add a disclosure to copied and exported AI-generated content?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AddAIGeneratedContentDisclosure, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);
@@ -255,8 +334,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
 
+        // Config: global tool availability
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.EnableTools, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DisabledToolIds, this.Id, settingsTable, dryRun);
+
+        // Config: minimum provider confidence per tool collection; a tool outside of one forms its own
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
+
+        //
+        // Config: settings of the individual tools, keyed by tool and field. Two tables rather
+        // than a property per setting, so that tools an administrator's AI Studio does not know
+        // at compile time — the ones plugin authors define — can be configured just the same.
+        //
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.LockedToolSettings, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DefaultToolSettings, this.Id, settingsTable, dryRun);
+
         // Config: timeout for external HTTP requests
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HttpClientTimeoutSeconds, this.Id, settingsTable, dryRun);
+
+        // Config: share the feature usage with the operators of self-hosted servers?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShareFeatureUsageWithSelfHostedServerOperators, this.Id, settingsTable, dryRun);
 
         // Config: custom root certificates for external HTTP requests
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, this.Id, settingsTable, dryRun);
@@ -272,6 +369,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
+
+        // Config: the least strict outbound data restriction a mailbox may have
+        ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.MinimumOutboundDataRestriction, this.Id, settingsTable, dryRun);
+
+        // Config: mailboxes only on the mail servers of the organization?
+        ManagedConfiguration.TryProcessConfiguration(x => x.MailboxSettings, x => x.AllowOnlyOrganizationMailServers, this.Id, settingsTable, dryRun);
 
         // Config: data source selection agent settings
         ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
@@ -293,32 +396,21 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         
-        // Handle configured LLM providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
-
-        // Handle configured transcription providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, x => x.NextTranscriptionNum, mainTable, this.Id, ref this.configObjects, dryRun);
-
-        // Handle configured embedding providers:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, x => x.NextEmbeddingNum, mainTable, this.Id, ref this.configObjects, dryRun);
-
-        // Handle configured chat templates:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
-
-        // Handle configured data sources:
-        PluginConfigurationObject.TryParseDataSources(mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured profiles:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
-        
-        // Handle configured document analysis policies:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        // Handle configured objects such as LLM providers, chat templates, or data sources:
+        foreach (var descriptor in PluginConfigurationObjectDescriptors.ALL)
+            descriptor.TryParse(mainTable, this.Id, this.configObjects, dryRun, this.PluginPath);
 
         // Handle configured mandatory infos:
         this.TryReadMandatoryInfos(mainTable);
 
         // Handle configured introductions:
         this.TryReadIntroductions(mainTable);
+
+        // Handle configured mail servers:
+        this.TryReadMailboxProviders(mainTable);
+
+        // Handle the configured prompt for the API key of the user:
+        this.TryReadUserAPIKeyPrompt(mainTable);
         
         // Config: preselected provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -335,12 +427,91 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourceIds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesRetrievalMode, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
+
+        // Config: Batch Processing Assistant defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.InputDirectory, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputDirectory, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FilePatterns, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeSubdirectories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.IncludeHiddenFilesAndFolders, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ExcludePatterns, this.Id, settingsTable, dryRun);
+
+        var maxFileSizeIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MaxFileSizeMegabytes, this.Id, settingsTable, dryRun, validator: value => value >= FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+        if (!maxFileSizeIsValid && settingsTable.TryGetValue("DataBatchProcessing.MaxFileSizeMegabytes", out _))
+            LOG.LogWarning("The Batch Processing size limit configured by plugin {ConfigPluginId} must be at least {SmallestMaxFileSizeMegabytes} MB.", this.Id, FolderFileSelection.SMALLEST_MAX_FILE_SIZE_MEGABYTES);
+
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptSource, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.FreePrompt, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PromptFilePath, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedPolicyId, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputMode, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultFileFormat, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CustomCsvSeparator, this.Id, settingsTable, dryRun);
+        
+        var minimumDelayIsValid = ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumDelaySeconds, this.Id, settingsTable, dryRun, validator: value => value is >= DataBatchProcessing.MIN_DELAY_SECONDS and <= DataBatchProcessing.MAX_DELAY_SECONDS);
+        if (!minimumDelayIsValid && settingsTable.TryGetValue("DataBatchProcessing.MinimumDelaySeconds", out _))
+            LOG.LogWarning("The Batch Processing minimum delay configured by plugin {ConfigPluginId} must be between {MinimumDelaySeconds} and {MaximumDelaySeconds} seconds.", this.Id, DataBatchProcessing.MIN_DELAY_SECONDS, DataBatchProcessing.MAX_DELAY_SECONDS);
+
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        // Config: Visual Briefing Assistant defaults?
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedTargetLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedOtherLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceProfile, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceAgeGroup, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceOrganizationalLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.PreselectedAudienceExpertise, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.ShowSourceReferences, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.OptimizeImages, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.VisualBriefing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
+        // Config: transcription Opus bitrate?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.OpusBitrate, this.Id, settingsTable, dryRun);
+
         message = string.Empty;
+        return true;
+    }
+
+    private static bool TryValidateMinimumProviderConfidenceConfiguration(LuaTable settingsTable, out string message)
+    {
+        const string SETTING_NAME = "DataTools.MinimumProviderConfidenceByToolId";
+        message = string.Empty;
+        if (!settingsTable.TryGetValue(SETTING_NAME, out var configuredValue))
+            return true;
+
+        if (configuredValue.Type is not LuaValueType.Table || !configuredValue.TryRead<LuaTable>(out var configuredTable))
+        {
+            message = $"The setting '{SETTING_NAME}' must be a table of tool or collection IDs and confidence levels.";
+            return false;
+        }
+
+        var previousKey = LuaValue.Nil;
+        while (configuredTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+            if (!pair.Key.TryRead<string>(out var toolId) || string.IsNullOrWhiteSpace(toolId) ||
+                !pair.Value.TryRead<string>(out var configuredLevel) ||
+                !Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) ||
+                !Enum.IsDefined(confidenceLevel) ||
+                confidenceLevel is ConfidenceLevel.UNKNOWN)
+            {
+                message = $"The setting '{SETTING_NAME}' contains an invalid tool or collection ID or confidence level. Allowed confidence levels are NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, and HIGH.";
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -384,7 +555,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 approvals.Add(approval);
             }
 
-            configuredApprovals = approvals;
+            // A configuration may list the same hash more than once, e.g. once to describe the
+            // plugin and once to activate it. Combine those before anything else sees them:
+            configuredApprovals = CombineApprovals(approvals);
             successful = true;
         }
 
@@ -427,11 +600,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 // Merge into the stored list right away, so the approvals of this plugin take
                 // effect immediately. PluginFactory.LoadAll recomputes the authoritative list once
                 // every configuration plugin has contributed:
-                var mergedApprovals = new List<DataAssistantPluginEnterpriseApproval>(configMeta.GetValue());
-                var knownHashes = mergedApprovals.Select(approval => approval.PluginHash).ToHashSet(StringComparer.Ordinal);
-                mergedApprovals.AddRange(configuredApprovals.Where(approval => knownHashes.Add(approval.PluginHash)));
-
-                configMeta.SetValue(mergedApprovals);
+                configMeta.SetValue(CombineApprovals(configMeta.GetValue().Concat(configuredApprovals)));
                 configMeta.LockConfiguration(this.Id);
                 break;
 
@@ -461,19 +630,121 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (!ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta))
             return false;
 
-        var effectiveApprovals = new List<DataAssistantPluginEnterpriseApproval>();
-        var effectiveHashes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var approval in configMeta.PluginContributions.Values.SelectMany(contribution => contribution))
-            if (effectiveHashes.Add(approval.PluginHash))
-                effectiveApprovals.Add(approval);
+        var effectiveApprovals = CombineApprovals(configMeta.PluginContributions.Values.SelectMany(contribution => contribution));
 
-        // Compare by hash, so a different order alone does not rewrite the settings on every start:
+        // Compare by what an approval decides, so a different order alone does not rewrite the
+        // settings on every start, while a changed activation does reach the user:
         var currentApprovals = configMeta.GetValue();
-        if (currentApprovals.Count == effectiveApprovals.Count && effectiveHashes.SetEquals(currentApprovals.Select(approval => approval.PluginHash)))
+        if (HaveApprovalsSameEffect(currentApprovals, effectiveApprovals))
             return false;
 
         LOG.LogInformation($"The enterprise approvals for assistant plugins changed from {currentApprovals.Count} to {effectiveApprovals.Count} entries, contributed by {configMeta.PluginContributions.Count} configuration plugin(s).");
         configMeta.SetValue(effectiveApprovals);
+        return true;
+    }
+
+    /// <summary>
+    /// Reduces approvals of several configuration plugins to one entry per assistant plugin hash.
+    /// </summary>
+    /// <remarks>
+    /// Approving the same plugin twice is normal: a base configuration approves it for the whole
+    /// organization, and a department configuration lists it again to activate it. Keeping only the
+    /// entry seen first would silently drop what the other one asked for, and the contributions
+    /// carry no guaranteed order, so which one that is could differ from start to start.
+    /// </remarks>
+    /// <param name="approvals">The approvals of all configuration plugins, in any order.</param>
+    /// <returns>One approval per hash, in the order the hashes were first seen.</returns>
+    private static List<DataAssistantPluginEnterpriseApproval> CombineApprovals(IEnumerable<DataAssistantPluginEnterpriseApproval> approvals)
+    {
+        var combined = new List<DataAssistantPluginEnterpriseApproval>();
+        var positionByHash = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var approval in approvals)
+        {
+            if (positionByHash.TryGetValue(approval.PluginHash, out var position))
+            {
+                combined[position] = MergeApprovals(combined[position], approval);
+                continue;
+            }
+
+            positionByHash[approval.PluginHash] = combined.Count;
+            combined.Add(approval);
+        }
+
+        return combined;
+    }
+
+    /// <summary>
+    /// Combines two approvals of the same assistant plugin hash into a single one.
+    /// </summary>
+    /// <remarks>
+    /// The two activation fields are combined in opposite directions on purpose. One configuration
+    /// asking for the activation is enough to activate, because not asking for it says nothing
+    /// against it. The freedom to switch the assistant off again, however, only survives when every
+    /// configuration which does ask for the activation grants it: otherwise a department could take
+    /// back a lock the organization deliberately set. An approval which does not ask for the
+    /// activation at all expresses nothing about that freedom and is therefore not counted.<br/><br/>
+    /// The result of these two fields does not depend on the order the approvals arrive in. For the
+    /// descriptive fields, the first value which says anything wins, and the approval date is the
+    /// earliest one given: the plugin has been approved since then.
+    /// </remarks>
+    /// <param name="first">The approval seen first.</param>
+    /// <param name="second">The approval to combine it with.</param>
+    /// <returns>The combined approval.</returns>
+    private static DataAssistantPluginEnterpriseApproval MergeApprovals(DataAssistantPluginEnterpriseApproval first, DataAssistantPluginEnterpriseApproval second) => new()
+    {
+        PluginHash = first.PluginHash,
+        DisplayName = string.IsNullOrWhiteSpace(first.DisplayName) ? second.DisplayName : first.DisplayName,
+        Comment = string.IsNullOrWhiteSpace(first.Comment) ? second.Comment : first.Comment,
+        ApprovedBy = string.IsNullOrWhiteSpace(first.ApprovedBy) ? second.ApprovedBy : first.ApprovedBy,
+        ApprovedAtUtc = EarliestApprovalTime(first.ApprovedAtUtc, second.ApprovedAtUtc),
+
+        Activate = first.Activate || second.Activate,
+        AllowUserOverride = (first.Activate, second.Activate) switch
+        {
+            (true, true) => first.AllowUserOverride && second.AllowUserOverride,
+            (true, false) => first.AllowUserOverride,
+            (false, true) => second.AllowUserOverride,
+            _ => false,
+        },
+    };
+
+    private static DateTimeOffset? EarliestApprovalTime(DateTimeOffset? first, DateTimeOffset? second) => (first, second) switch
+    {
+        (null, _) => second,
+        (_, null) => first,
+        _ => first <= second ? first : second,
+    };
+
+    /// <summary>
+    /// Checks whether two approval lists decide the same thing for every assistant plugin.
+    /// </summary>
+    /// <remarks>
+    /// This is what tells a rewrite of the settings apart from a mere reordering of the same
+    /// approvals. Only the hash and the two activation fields are compared: the descriptive fields
+    /// change nothing about what an approval does, and rewriting the settings because a comment was
+    /// reworded would store the file on every start.
+    /// </remarks>
+    /// <param name="currentApprovals">The approvals currently stored in the settings.</param>
+    /// <param name="effectiveApprovals">The approvals recomputed from the contributions.</param>
+    /// <returns>True when both lists have the same effect, otherwise false.</returns>
+    private static bool HaveApprovalsSameEffect(IList<DataAssistantPluginEnterpriseApproval> currentApprovals, IList<DataAssistantPluginEnterpriseApproval> effectiveApprovals)
+    {
+        if (currentApprovals.Count != effectiveApprovals.Count)
+            return false;
+
+        var currentByHash = new Dictionary<string, DataAssistantPluginEnterpriseApproval>(StringComparer.Ordinal);
+        foreach (var approval in currentApprovals)
+            currentByHash[approval.PluginHash] = approval;
+
+        foreach (var effectiveApproval in effectiveApprovals)
+        {
+            if (!currentByHash.TryGetValue(effectiveApproval.PluginHash, out var currentApproval))
+                return false;
+
+            if (currentApproval.Activate != effectiveApproval.Activate || currentApproval.AllowUserOverride != effectiveApproval.AllowUserOverride)
+                return false;
+        }
+
         return true;
     }
 
@@ -498,6 +769,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         var comment = TryReadOptionalString(table, "Comment");
         var approvedBy = TryReadOptionalString(table, "ApprovedBy");
         var approvedAtUtc = TryReadOptionalDateTimeOffset(table, "ApprovedAtUtc", index, configPluginId);
+        var activate = TryReadOptionalBool(table, "Activate", index, configPluginId);
+        var allowUserOverride = TryReadOptionalBool(table, "AllowUserOverride", index, configPluginId);
+
+        if (allowUserOverride && !activate)
+            LOG.LogWarning("The enterprise assistant approval entry at index {Index} allows the user to override an activation it never asks for. 'AllowUserOverride' has no effect without 'Activate' (config plugin id: {ConfigPluginId}).", index, configPluginId);
 
         approval = new()
         {
@@ -506,6 +782,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             Comment = comment,
             ApprovedBy = approvedBy,
             ApprovedAtUtc = approvedAtUtc,
+            Activate = activate,
+            AllowUserOverride = allowUserOverride,
         };
         return true;
     }
@@ -515,6 +793,18 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         return table.TryGetValue(key, out var value) && value.TryRead<string>(out var text)
             ? text
             : string.Empty;
+    }
+
+    private static bool TryReadOptionalBool(LuaTable table, string key, int index, Guid configPluginId)
+    {
+        if (!table.TryGetValue(key, out var value))
+            return false;
+
+        if (value.TryRead<bool>(out var flag))
+            return flag;
+
+        LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an invalid {Key} value. Expected a boolean (config plugin id: {ConfigPluginId}).", index, key, configPluginId);
+        return false;
     }
 
     private static DateTimeOffset? TryReadOptionalDateTimeOffset(LuaTable table, string key, int index, Guid configPluginId)
@@ -571,5 +861,35 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             else
                 LOG.LogWarning("The table 'INTRODUCTIONS' entry at index {Index} does not contain a valid introduction (config plugin id: {ConfigPluginId}).", i, this.Id);
         }
+    }
+
+    private void TryReadMailboxProviders(LuaTable mainTable)
+    {
+        if (!mainTable.TryGetValue("MAILBOX_PROVIDERS", out var mailboxProvidersValue) || !mailboxProvidersValue.TryRead<LuaTable>(out var mailboxProvidersTable))
+            return;
+
+        for (var i = 1; i <= mailboxProvidersTable.ArrayLength; i++)
+        {
+            var luaMailboxProviderValue = mailboxProvidersTable[i];
+            if (!luaMailboxProviderValue.TryRead<LuaTable>(out var luaMailboxProviderTable))
+            {
+                LOG.LogWarning("The table 'MAILBOX_PROVIDERS' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", i, this.Id);
+                continue;
+            }
+
+            if (DataMailboxProvider.TryParseConfiguration(i, luaMailboxProviderTable, this.Id, LOG, out var mailboxProvider))
+                this.mailboxProviders.Add(mailboxProvider);
+            else
+                LOG.LogWarning("The table 'MAILBOX_PROVIDERS' entry at index {Index} does not contain a valid mail server (config plugin id: {ConfigPluginId}).", i, this.Id);
+        }
+    }
+
+    private void TryReadUserAPIKeyPrompt(LuaTable mainTable)
+    {
+        if (!mainTable.TryGetValue("USER_API_KEY_PROMPT", out var promptValue) || !promptValue.TryRead<LuaTable>(out var promptTable))
+            return;
+
+        if (DataUserAPIKeyPrompt.TryParseConfiguration(promptTable, this.Id, out var prompt))
+            this.userAPIKeyPrompts.Add(prompt);
     }
 }

@@ -1,5 +1,4 @@
 using System.Text;
-using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
@@ -8,12 +7,12 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
-using SharedTools;
-
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
 
@@ -23,9 +22,25 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private IDialogService DialogService { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT;
-    
+
+    /// <summary>
+    /// The policy decides which tools its analysis uses; the user does not pick them.
+    /// </summary>
+    /// <remarks>
+    /// Two ways of working, one answer: someone writing a policy for themselves settles the tools
+    /// while writing it, and a policy rolled out by an organization arrives ready to use, with the
+    /// tools its authors tested it with. Either way there is nothing left for the user to switch,
+    /// which is why the tool selection does not appear in this assistant.
+    /// </remarks>
+    protected override IReadOnlySet<string> AssistantManagedToolIds => this.policyAllowedToolIds;
+
     protected override string Title => T("Document Analysis Assistant");
-    
+
+    /// <summary>
+    /// An analysis is named after its policy, which says far more than the name of the assistant.
+    /// </summary>
+    protected override string ExportFileName => string.IsNullOrWhiteSpace(this.analyzedPolicyName) ? this.Title : this.analyzedPolicyName;
+
     protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
 
     protected override string SystemPrompt =>
@@ -178,6 +193,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+            this.policyAllowedToolIds = [];
             this.policyPreselectedProviderId = string.Empty;
             this.policyPreselectedProfile = ProfilePreselection.NoProfile;
         }
@@ -205,6 +221,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
+            this.policyAllowedToolIds = [..this.selectedPolicy.AllowedToolIds];
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
 
@@ -231,6 +248,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
@@ -241,44 +259,128 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task AutoSave(bool force = false)
     {
-        if(this.selectedPolicy is null)
-            return;
+        //
+        // A pending store is a property of the settings, not of the selected policy: the value has
+        // been written into its policy already, so what is still outstanding is the store itself.
+        // It therefore outlives a form reset and a switch to another policy, and only a completed
+        // store clears it.
+        //
+        var hasChanges = this.policyStorePending;
+        if(this.selectedPolicy is { } policy)
+            hasChanges |= this.ApplyFormToPolicy(policy, force);
 
-        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
-        this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
-
-        // Enterprise configurations cannot be modified at all:
-        if(this.selectedPolicy.IsEnterpriseConfiguration)
+        if (!hasChanges)
             return;
-        
-        var canEditProtectedFields = force || (!this.selectedPolicy.IsProtected && !this.policyIsProtected);
-        if (canEditProtectedFields)
-        {
-            this.selectedPolicy.PreselectedProvider = this.policyPreselectedProviderId;
-            this.selectedPolicy.PolicyName = this.policyName;
-            this.selectedPolicy.PolicyDescription = this.policyDescription;
-            this.selectedPolicy.IsProtected = this.policyIsProtected;
-            this.selectedPolicy.HidePolicyDefinition = this.policyHidePolicyDefinition;
-            this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
-            this.selectedPolicy.OutputRules = this.policyOutputRules;
-            this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
-        }
 
         await this.SettingsManager.StoreSettings();
+        this.policyStorePending = false;
     }
+
+    /// <summary>
+    /// Takes the form values over into the given policy.
+    /// </summary>
+    /// <param name="policy">The policy to write the form values to.</param>
+    /// <param name="force">Whether the protected fields may be written as well.</param>
+    /// <returns>True when this changed anything about the policy, false otherwise.</returns>
+    private bool ApplyFormToPolicy(DataDocumentAnalysisPolicy policy, bool force)
+    {
+        // The preselected profile is always user-adjustable, even for protected policies and enterprise configurations:
+        var hasChanges = policy.PreselectedProfile != this.policyPreselectedProfile;
+        policy.PreselectedProfile = this.policyPreselectedProfile;
+
+        // Enterprise configurations cannot be modified at all:
+        if(policy.IsEnterpriseConfiguration)
+            return hasChanges;
+
+        var canEditProtectedFields = force || (!policy.IsProtected && !this.policyIsProtected);
+        if (!canEditProtectedFields)
+            return hasChanges;
+
+        hasChanges = hasChanges
+                     || policy.PolicyName != this.policyName
+                     || policy.PreselectedProvider != this.policyPreselectedProviderId
+                     || policy.PolicyDescription != this.policyDescription
+                     || policy.IsProtected != this.policyIsProtected
+                     || policy.HidePolicyDefinition != this.policyHidePolicyDefinition
+                     || policy.AnalysisRules != this.policyAnalysisRules
+                     || policy.OutputRules != this.policyOutputRules
+                     || policy.MinimumProviderConfidence != this.policyMinimumProviderConfidence
+                     || !policy.AllowedToolIds.SetEquals(this.policyAllowedToolIds);
+
+        policy.PreselectedProvider = this.policyPreselectedProviderId;
+        policy.PolicyName = this.policyName;
+        policy.PolicyDescription = this.policyDescription;
+        policy.IsProtected = this.policyIsProtected;
+        policy.HidePolicyDefinition = this.policyHidePolicyDefinition;
+        policy.AnalysisRules = this.policyAnalysisRules;
+        policy.OutputRules = this.policyOutputRules;
+        policy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+        policy.AllowedToolIds = [..this.policyAllowedToolIds];
+        return hasChanges;
+    }
+
+    /// <summary>
+    /// Whether the given policy may take over an edit of one of its protected fields right now.
+    /// </summary>
+    /// <remarks>
+    /// The handlers which write their value straight into the policy have to ask this themselves.
+    /// ApplyFormToPolicy asks the same question, but it never gets to judge their fields: they have
+    /// already brought policy and form in line, so nothing is left for it to compare. The markup
+    /// disables those controls for a protected policy and an enterprise policy is always a protected
+    /// one, which is why nobody should ever reach a handler that way -- this keeps the rule in the
+    /// code as well, where the next handler will look for it. The form value counts alongside the
+    /// stored one, because the protection switch is flipped before the store which writes it has run.
+    /// </remarks>
+    private bool AcceptsProtectedFieldEdits(DataDocumentAnalysisPolicy policy) => policy is { IsEnterpriseConfiguration: false, IsProtected: false } && !this.policyIsProtected;
 
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private bool policyIsProtected;
     private bool policyHidePolicyDefinition;
     private bool policyDefinitionExpanded;
+
+    /// <summary>
+    /// Whether the document selection panel is the open one.
+    /// </summary>
+    /// <remarks>
+    /// Only one of the two panels is ever open, so this is normally the opposite of the field above
+    /// -- but not always: the user can collapse both. It is tracked rather than derived because it
+    /// decides whether the document zone is the default target of the whole assistant, and a
+    /// collapsed zone must not hold that role.
+    /// </remarks>
+    private bool documentSelectionExpanded;
     private string policyName = string.Empty;
+
+    /// <summary>
+    /// Whether an edit already applied to a policy still waits to be written to the settings file.
+    /// </summary>
+    /// <remarks>
+    /// Some handlers apply their value to the selected policy at once, because the rest of the
+    /// assistant reads it back from there right away: the policy list has to show a new name while
+    /// it is being typed, and the provider preselection is recomputed from the policy, not from the
+    /// form. Doing so leaves the auto-save nothing to compare the form against -- form and policy
+    /// already agree -- so every such handler has to announce the store itself. That is what this
+    /// flag is for. It belongs to no particular policy: the value has long arrived where it
+    /// belongs, only the file has not caught up yet, which is why a form reset or a switch to
+    /// another policy does not clear it. Only a completed store does.
+    /// </remarks>
+    private bool policyStorePending;
     private string policyDescription = string.Empty;
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
     private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+    private HashSet<string> policyAllowedToolIds = [];
     private string policyPreselectedProviderId = string.Empty;
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
+
+    /// <summary>
+    /// The name of the policy the result on screen was produced with.
+    /// </summary>
+    /// <remarks>
+    /// Switching to another policy keeps the result, so the selected policy may no longer be the
+    /// one behind it. An export has to be named after the analysis it holds.
+    /// </remarks>
+    private string analyzedPolicyName = string.Empty;
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
     private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
@@ -292,6 +394,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private static readonly AssistantSessionStateKey<string> POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY = new(nameof(policyPreselectedProviderId));
     private static readonly AssistantSessionStateKey<ProfilePreselection> POLICY_PRESELECTED_PROFILE_STATE_KEY = new(nameof(policyPreselectedProfile));
     private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
+    private static readonly AssistantSessionStateKey<string> ANALYZED_POLICY_NAME_STATE_KEY = new(nameof(analyzedPolicyName));
     private static readonly AssistantSessionStateKey<List<ConfigurationSelectData<string>>> AVAILABLE_LLM_PROVIDERS_STATE_KEY = new(nameof(availableLLMProviders));
 
     /// <inheritdoc />
@@ -309,6 +412,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Set(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, this.policyPreselectedProviderId);
         state.Set(POLICY_PRESELECTED_PROFILE_STATE_KEY, this.policyPreselectedProfile);
         state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Set(ANALYZED_POLICY_NAME_STATE_KEY, this.analyzedPolicyName);
         state.SetList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
     }
 
@@ -318,7 +422,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Restore(SELECTED_POLICY_STATE_KEY, value => this.selectedPolicy = value);
         state.Restore(POLICY_IS_PROTECTED_STATE_KEY, value => this.policyIsProtected = value);
         state.Restore(POLICY_HIDE_POLICY_DEFINITION_STATE_KEY, value => this.policyHidePolicyDefinition = value);
-        state.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value => this.policyDefinitionExpanded = value);
+        state.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value =>
+        {
+            this.policyDefinitionExpanded = value;
+            this.documentSelectionExpanded = !value;
+        });
         state.Restore(POLICY_NAME_STATE_KEY, value => this.policyName = value);
         state.Restore(POLICY_DESCRIPTION_STATE_KEY, value => this.policyDescription = value);
         state.Restore(POLICY_ANALYSIS_RULES_STATE_KEY, value => this.policyAnalysisRules = value);
@@ -327,6 +435,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         state.Restore(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, value => this.policyPreselectedProviderId = value);
         state.Restore(POLICY_PRESELECTED_PROFILE_STATE_KEY, value => this.policyPreselectedProfile = value);
         state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.Restore(ANALYZED_POLICY_NAME_STATE_KEY, value => this.analyzedPolicyName = value);
         state.RestoreList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
     }
     
@@ -344,6 +453,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
         
         this.Form?.ResetValidation();
@@ -353,9 +463,48 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private Task PolicyDefinitionExpandedChanged(bool isExpanded)
     {
         this.policyDefinitionExpanded = isExpanded;
+
+        // The panels do not allow multi expansion, so opening this one closes the other:
+        if (isExpanded)
+            this.documentSelectionExpanded = false;
+
+        return Task.CompletedTask;
+    }
+
+    private Task DocumentSelectionExpandedChanged(bool isExpanded)
+    {
+        this.documentSelectionExpanded = isExpanded;
+
+        // The panels do not allow multi expansion, so opening this one closes the other:
+        if (isExpanded)
+            this.policyDefinitionExpanded = false;
+
         return Task.CompletedTask;
     }
     
+    /// <remarks>
+    /// Like a policy added by hand, an imported policy is stored right away and edited here
+    /// afterward. With no form in between, the permission check of the import dialog suffices.
+    /// </remarks>
+    private async Task ImportPolicy()
+    {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
+        var import = await ConfigurationSnippetImportDialog.ShowAsync(this.DialogService, PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, T("Import policy"));
+        if (import?.ConfigurationObject is not DataDocumentAnalysisPolicy policy || this.ArePolicyControlsDisabled)
+            return;
+
+        var addedPolicy = policy with
+        {
+            Num = this.SettingsManager.ConfigurationData.NextDocumentAnalysisPolicyNum++,
+        };
+
+        this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(addedPolicy);
+        await this.SettingsManager.StoreSettings();
+        this.SelectedPolicyChanged(addedPolicy);
+    }
+
     private async Task AddPolicy()
     {
         if (this.ArePolicyControlsDisabled)
@@ -371,11 +520,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await this.SettingsManager.StoreSettings();
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
         this.availableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.availableLLMProviders.Add(new ConfigurationSelectData<string>(provider.InstanceName, provider.Id));
     }
 
@@ -430,6 +578,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.selectedPolicy.PolicyName = this.policyName;
+        this.policyStorePending = true;
     }
     
     private async Task PolicyProtectionWasChanged(bool state)
@@ -441,8 +590,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyIsProtected = state;
-        this.selectedPolicy.IsProtected = state;
         this.policyDefinitionExpanded = !state;
+        this.documentSelectionExpanded = state;
         await this.AutoSave(true);
     }
 
@@ -455,11 +604,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             return;
 
         this.policyHidePolicyDefinition = state;
-        this.selectedPolicy.HidePolicyDefinition = state;
         await this.AutoSave(true);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Policy-specific preselection needs to probe providers by id before falling back to SettingsManager APIs.")]
     private void ApplyPolicyPreselection(bool preferPolicyPreselection = false)
     {
         if (this.selectedPolicy is null)
@@ -480,8 +627,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         // Try to apply the policy preselection:
-        var policyProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProvider);
-        if (policyProvider is not null && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        var policyProvider = this.SettingsManager.GetProviderById(this.selectedPolicy.PreselectedProvider);
+        if (policyProvider != Settings.Provider.NONE && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
         {
             this.ProviderSettings = policyProvider;
             this.CurrentProfile = this.ResolveProfileSelection();
@@ -530,33 +677,53 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         return this.SettingsManager.GetAppPreselectedProfile();
     }
 
-    private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
+    /// <summary>
+    /// Takes over the tools this policy permits.
+    /// </summary>
+    private void PolicyAllowedToolsWasChanged(HashSet<string> allowedToolIds)
+    {
+        this.policyAllowedToolIds = allowedToolIds;
+        if (this.selectedPolicy is not { } policy || !this.AcceptsProtectedFieldEdits(policy))
+            return;
+
+        policy.AllowedToolIds = [..allowedToolIds];
+        this.policyStorePending = true;
+    }
+
+    private void PolicyMinimumConfidenceWasChanged(ConfidenceLevel level)
     {
         this.policyMinimumProviderConfidence = level;
-        await this.AutoSave();
-        
+        if (this.selectedPolicy is { } policy && this.AcceptsProtectedFieldEdits(policy))
+        {
+            policy.MinimumProviderConfidence = level;
+            this.policyStorePending = true;
+        }
+
         this.ApplyPolicyPreselection();
     }
 
     private void PolicyPreselectedProviderWasChanged(string providerId)
     {
-        if (this.selectedPolicy is null)
+        if (this.selectedPolicy is not { } policy || !this.AcceptsProtectedFieldEdits(policy))
             return;
 
         this.policyPreselectedProviderId = providerId;
-        this.selectedPolicy.PreselectedProvider = providerId;
+        policy.PreselectedProvider = providerId;
+        this.policyStorePending = true;
         this.ProviderSettings = Settings.Provider.NONE;
         this.ApplyPolicyPreselection();
     }
 
-    private async Task PolicyPreselectedProfileWasChangedAsync(ProfilePreselection selection)
+    private void PolicyPreselectedProfileWasChanged(ProfilePreselection selection)
     {
         this.policyPreselectedProfile = selection;
         if (this.selectedPolicy is not null)
+        {
             this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
+            this.policyStorePending = true;
+        }
 
         this.CurrentProfile = this.ResolveProfileSelection();
-        await this.AutoSave();
     }
 
     #region Overrides of MSGComponentBase
@@ -612,6 +779,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         // Update the expansion state based on the policy protection:
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
+        this.documentSelectionExpanded = !this.policyDefinitionExpanded;
 
         // Update available providers:
         this.UpdateProviders();
@@ -707,6 +875,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                           """);
         }
 
+        //
+        // One report for the whole batch: analysing twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var promptInjectionScope = guardService.BeginAction();
+
         var numDocuments = 1;
         foreach (var document in documents)
         {
@@ -716,7 +891,28 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var extraction = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue, reportingScope: promptInjectionScope);
+            if (!extraction.HasUsableContent)
+            {
+                this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be analyzed: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                continue;
+            }
+
+            if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+            {
+                this.Logger.LogWarning("Parts of the document '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            }
+
+            // The file was read correctly, but its extension lies about what it contains:
+            if (extraction.HasExtensionMismatch)
+            {
+                this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            }
+
+            var fileContent = extraction.Content;
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:
@@ -769,7 +965,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         
         this.CreateChatThread();
         this.ChatThread!.IncludeDateTime = true;
-        
+        this.analyzedPolicyName = this.selectedPolicy?.PolicyName ?? string.Empty;
+
         var userRequest = this.AddUserRequest(
             await this.PromptLoadDocumentsContent(),
             hideContentFromUser: true,
@@ -787,52 +984,51 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         await this.AutoSave();
-        await this.Form!.Validate();
-        if (!this.InputIsValid)
+
+        //
+        // Only what the export actually writes is checked. Validating the whole form would demand
+        // a selected provider, which the export does not contain: it describes the policy, not the
+        // way one user happens to run it.
+        //
+        var policyIssues = this.GetPolicyExportIssues();
+        if (policyIssues.Count > 0)
         {
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")));
+            //
+            // Name the issues in both places. A message saying only that something is invalid
+            // leaves the user searching a long form, and leaves us without a clue in the log:
+            //
+            this.Logger.LogWarning(
+                "Was not able to export the document analysis policy '{PolicyName}'. It has {IssueCount} validation issue(s): {Issues}",
+                this.selectedPolicy?.PolicyName,
+                policyIssues.Count,
+                string.Join(" | ", policyIssues));
+
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
             return;
         }
 
-        var luaCode = this.GenerateLuaPolicyExport();
+        var luaCode = this.selectedPolicy!.ExportAsConfigurationSection();
         await this.RustService.CopyText2Clipboard(luaCode);
     }
 
-    private string GenerateLuaPolicyExport()
+    /// <summary>
+    /// Checks the fields the export writes, using the same rules the form applies to them.
+    /// </summary>
+    private List<string> GetPolicyExportIssues()
     {
-        if(this.selectedPolicy is null)
-            return string.Empty;
-        
-        var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
-        var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? string.Empty : this.selectedPolicy.PreselectedProfile;
-        var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
-        
-        return $$"""
-                 CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
-                     ["Id"] = "{{id}}",
-                     ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyName.Trim())}},
-                     ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyDescription.Trim())}},
-                 
-                     ["AnalysisRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.AnalysisRules.Trim(), forceLongString: true)}},
-                 
-                     ["OutputRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.OutputRules.Trim(), forceLongString: true)}},
-                 
-                     -- Optional: minimum provider confidence required for this policy.
-                     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
-                     ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
-                 
-                     -- Optional: preselect a provider or profile by ID.
-                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
-                     ["PreselectedProvider"] = "{{preselectedProvider}}",
-                     ["PreselectedProfile"] = "{{preselectedProfile}}",
-                 
-                     -- Optional: hide the policy definition section in the UI.
-                     -- When set to true, users will only see the document selection interface
-                     -- and cannot view or modify the policy settings.
-                     -- This is useful for enterprise configurations where policy details should remain hidden.
-                     -- Allowed values are: true, false (default: false)
-                     ["HidePolicyDefinition"] = {{this.selectedPolicy.HidePolicyDefinition.ToString().ToLowerInvariant()}},
-                 }
-                 """;
+        List<string> issues = [];
+        foreach (var issue in new[]
+                 {
+                     this.ValidatePolicyName(this.policyName),
+                     this.ValidatePolicyDescription(this.policyDescription),
+                     this.ValidateAnalysisRules(this.policyAnalysisRules),
+                     this.ValidateOutputRules(this.policyOutputRules),
+                 })
+        {
+            if (!string.IsNullOrWhiteSpace(issue))
+                issues.Add(issue);
+        }
+
+        return issues;
     }
 }

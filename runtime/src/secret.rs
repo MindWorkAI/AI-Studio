@@ -1,8 +1,7 @@
 use axum::Json;
 use keyring_core::{Entry, Error as KeyringError};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
-use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// A structured issue reported by the native credential store.
@@ -23,10 +22,10 @@ fn issue_code(error: &KeyringError) -> SecretStoreIssueCode {
     }
 
     #[cfg(target_os = "linux")]
-    if let KeyringError::PlatformFailure(error) | KeyringError::NoStorageAccess(error) = error {
-        if let Some(error) = error.downcast_ref::<dbus_secret_service::Error>() {
-            return secret_service_issue_code(error);
-        }
+    if let KeyringError::PlatformFailure(error) | KeyringError::NoStorageAccess(error) = error
+        && let Some(error) = error.downcast_ref::<dbus_secret_service::Error>()
+    {
+        return secret_service_issue_code(error);
     }
 
     SecretStoreIssueCode::Unknown
@@ -78,8 +77,37 @@ pub fn init_secret_store() {
     }
 }
 
+/// Runs one request against the credential store on the blocking pool.
+///
+/// The credential store of the operating system may take a moment to answer, and on macOS and Linux
+/// it may wait until the user unlocks it, which can take minutes. On a runtime worker, that would
+/// hold up every other call of the app, because they all share one HTTP/2 connection.
+async fn run_secret_store_request<T, F>(request: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    tokio::task::spawn_blocking(request).await.map_err(|error| {
+        let issue = format!("The secret store worker failed: {error}");
+        error!(Source = "Secret Store"; "{issue}");
+        issue
+    })
+}
+
 /// Stores a secret in the secret store using the operating system's keyring.
-pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+pub async fn store_secret(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+    match run_secret_store_request(move || store_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(StoreSecretResponse {
+            success: false,
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`store_secret`].
+fn store_secret_sync(request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
     let user_name = request.user_name.as_str();
     let decrypted_text = match ENCRYPTION.decrypt(&request.secret) {
         Ok(text) => text,
@@ -144,7 +172,20 @@ pub struct StoreSecretResponse {
 }
 
 /// Retrieves a secret from the secret store using the operating system's keyring.
-pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
+pub async fn get_secret(request: Json<RequestSecret>) -> Json<RequestedSecret> {
+    match run_secret_store_request(move || get_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(RequestedSecret {
+            success: false,
+            secret: EncryptedText::new(String::from("")),
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`get_secret`].
+fn get_secret_sync(request: Json<RequestSecret>) -> Json<RequestedSecret> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = match Entry::new(service.as_str(), user_name) {
@@ -165,7 +206,11 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
     let secret = entry.get_password();
     match secret {
         Ok(s) => {
-            info!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
+            // Reading a secret is routine: it happens for every secret field of every tool
+            // the model calls, so an info line per read only crowds the release log. Storing
+            // and deleting a secret stay at info and warn, because those are rare and the
+            // user asked for them:
+            debug!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
 
             // Encrypt the secret:
             let encrypted_secret = match ENCRYPTION.encrypt(s.as_str()) {
@@ -222,7 +267,20 @@ pub struct RequestedSecret {
 }
 
 /// Deletes a secret from the secret store using the operating system's keyring.
-pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+pub async fn delete_secret(request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+    match run_secret_store_request(move || delete_secret_sync(request)).await {
+        Ok(response) => response,
+        Err(issue) => Json(DeleteSecretResponse {
+            success: false,
+            was_entry_found: false,
+            issue,
+            issue_code: SecretStoreIssueCode::Unknown,
+        }),
+    }
+}
+
+/// Performs the blocking part of [`delete_secret`].
+fn delete_secret_sync(request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = match Entry::new(service.as_str(), user_name) {

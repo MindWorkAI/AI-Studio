@@ -22,11 +22,24 @@ public partial class Chat : MSGComponentBase
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
+
+    /// <summary>
+    /// Whether an answer is being written for the open chat, as the chat component last told.
+    /// </summary>
+    /// <remarks>
+    /// The provider selection is locked meanwhile. Another provider would not reach the answer, which
+    /// keeps the one it started with, but the chat would show the other one while the answer is still
+    /// being written.
+    /// </remarks>
+    private bool isAnswerBeingWritten;
+
     private bool workspaceOverlayVisible;
     private bool workspaceSearchVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
+    private ChatComponent? chatComponent;
     private double splitterPosition = 30;
+    private bool skipRenderAfterSplitterChange;
     private readonly ChatComposerState composerState = new();
     
     private readonly Timer splitterSaveTimer = new(TimeSpan.FromSeconds(1.6));
@@ -39,15 +52,49 @@ public partial class Chat : MSGComponentBase
         
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
         this.splitterSaveTimer.AutoReset = false;
-        this.splitterSaveTimer.Elapsed += async (_, _) =>
+        //
+        // Mind that this handler deliberately stays off the renderer thread, although it writes the
+        // configuration data from a thread pool thread. The position is a single double, and every
+        // target we ship is 64 bit, so the write cannot tear -- and the worst a lost one could do is
+        // a splitter standing somewhere else after the next start. What a jump to the dispatcher
+        // would cost instead is paid by the user: storing the settings serializes all of them and
+        // writes two files, and it would do that in the very queue which draws the drag they are in
+        // the middle of. The splitter then stutters under their hand. Whoever synchronizes the
+        // configuration data one day should do it without moving that work onto the renderer.
+        //
+        this.splitterSaveTimer.Elapsed += (_, _) =>
         {
             this.SettingsManager.ConfigurationData.Workspace.SplitterPosition = this.splitterPosition;
-            await this.SettingsManager.StoreSettings();
+            this.SettingsManager.StoreSettings().Observe($"{nameof(Chat)}: storing the splitter position");
         };
         
         await base.OnInitializedAsync();
     }
-    
+
+    /// <summary>
+    /// Decides whether this page renders again.
+    /// </summary>
+    /// <remarks>
+    /// Dragging the splitter reports every movement, and Blazor renders this page after each of
+    /// them. That render is pure waste: all it would contribute is the position the splitter just
+    /// reported, and the splitter has it already -- it renders itself after its own event, which is
+    /// what resizes the two panels. What this page rebuilds instead is everything else it holds,
+    /// the workspace tree above all, which has no render guard of its own and draws an item with
+    /// three buttons for every chat. That is what the user sees stutter while they drag.<br/><br/>
+    /// Dropping that one render costs nothing, because the splitter never needed it. Should a
+    /// message from the bus ask for a render in the very same moment, this swallows it -- both sit
+    /// on the same dispatcher and the render of a movement follows it without a gap, so the window
+    /// is as good as closed, and the next render brings the message along anyway.
+    /// </remarks>
+    protected override bool ShouldRender()
+    {
+        if (!this.skipRenderAfterSplitterChange)
+            return true;
+
+        this.skipRenderAfterSplitterChange = false;
+        return false;
+    }
+
     #endregion
     
     private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
@@ -75,6 +122,7 @@ public partial class Chat : MSGComponentBase
         this.splitterPosition = position;
         this.splitterSaveTimer.Stop();
         this.splitterSaveTimer.Start();
+        this.skipRenderAfterSplitterChange = true;
     }
     
     private void ToggleWorkspacesOverlay()
@@ -118,6 +166,23 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.workspaces.ToggleSearchAsync();
+    }
+
+    /// <summary>
+    /// Starts a new chat in a workspace, when the workspace tree asks for one.
+    /// </summary>
+    /// <remarks>
+    /// The page reads its reference to the chat component only now, when the user clicked. The chat
+    /// component is created anew whenever the workspace sidebar is shown or hidden, so a reference
+    /// taken earlier could point to one which is gone.
+    /// </remarks>
+    /// <param name="workspaceId">The ID of the workspace.</param>
+    private async Task StartNewChatInWorkspace(Guid workspaceId)
+    {
+        if (this.chatComponent is null)
+            return;
+
+        await this.chatComponent.StartNewChatInWorkspaceAsync(workspaceId);
     }
 
     #region Overrides of MSGComponentBase

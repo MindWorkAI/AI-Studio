@@ -2,81 +2,35 @@
 
 This directory documents temporary patches for third-party Rust dependencies.
 
-## Qdrant Edge
+## permutation_iterator
 
-AI Studio temporarily uses a pinned commit from `SommerEngineering/qdrant` for `qdrant-edge`.
-The fork commit exposes Qdrant's internal `lib/edge` crate as `qdrant-edge` and applies the
-trait-solver fix from Qdrant PR #9312.
+`qdrant-edge` depends on `permutation_iterator 0.1.2`, and that crate has seen no release since
+2019. Its published version pulls in an outdated `rand` line, which drags a second copy of the
+whole `rand` family into our dependency tree: `rand 0.7.3`, `rand_core 0.5.1`, `rand_chacha 0.2`,
+`rand_hc`, `getrandom 0.1.16`, `wasi 0.9` and `cfg-if 0.1`, next to the current ones everything
+else uses.
 
-When updating to a newer Qdrant Edge version, replace the placeholder values first:
+The fork `SommerEngineering/permutation-iterator-rs` is the published 0.1.2 with `rand` raised to
+0.8, so it still satisfies what `qdrant-edge` asks for. AI Studio pins it in `runtime/Cargo.toml`:
 
-```bash
-export QDRANT_EDGE_VERSION="0.7.2"
-export QDRANT_BRANCH="ai-studio-qdrant-edge-${QDRANT_EDGE_VERSION}"
-export AISTUDIO_REPO="xxx/mindwork-ai-studio"
-export QDRANT_REPO="xxx/qdrant"
+```toml
+[patch.crates-io]
+permutation_iterator = { git = "https://github.com/SommerEngineering/permutation-iterator-rs.git", rev = "..." }
 ```
 
-1. Sync the Qdrant fork with upstream:
+The same change was offered upstream in
+[asimihsan/permutation-iterator-rs#14](https://github.com/asimihsan/permutation-iterator-rs/pull/14),
+where it has been waiting since 2021. This is tree hygiene, not a build failure: without the patch
+the runtime still builds, it just carries the old `rand` family along.
 
-```bash
-cd "$QDRANT_REPO"
-git remote add upstream https://github.com/qdrant/qdrant.git 2>/dev/null || true
-git fetch upstream
-git fetch origin
-git switch master
-git merge --ff-only upstream/master
-git push origin master
-```
+### When this patch can go
 
-2. Create a fresh AI Studio branch in the Qdrant fork:
+Either of these is enough, and both are worth a look whenever `qdrant-edge` is updated:
 
-```bash
-cd "$QDRANT_REPO"
-git switch -c "$QDRANT_BRANCH" master
-```
+- crates.io carries a `permutation_iterator` newer than 0.1.2 which uses a current `rand`. Then the
+  `[patch.crates-io]` entry goes, and `qdrant-edge`'s own requirement decides the version.
+- `qdrant-edge` stops depending on `permutation_iterator` at all. Check with
+  `cargo tree -i permutation_iterator` after the update.
 
-3. Apply the AI Studio patch if upstream has not released the fix yet:
-
-```bash
-cd "$QDRANT_REPO"
-git apply "$AISTUDIO_REPO/runtime/patches/qdrant-edge-ai-studio.patch"
-```
-
-4. Update the exposed `qdrant-edge` version in the fork:
-
-```bash
-cd "$QDRANT_REPO"
-perl -0pi -e "s/name = \"qdrant-edge\"\\nversion = \"[^\"]+\"/name = \"qdrant-edge\"\\nversion = \"$ENV{QDRANT_EDGE_VERSION}\"/" lib/edge/Cargo.toml
-```
-
-5. Commit and push the fork branch:
-
-```bash
-cd "$QDRANT_REPO"
-git diff
-git add lib/edge/Cargo.toml lib/segment/src/common/anonymize.rs
-git commit -m "Expose qdrant-edge ${QDRANT_EDGE_VERSION} package for AI Studio"
-git push origin "$QDRANT_BRANCH"
-export QDRANT_EDGE_COMMIT="$(git rev-parse HEAD)"
-echo "$QDRANT_EDGE_COMMIT"
-```
-
-6. Update AI Studio to use the new Qdrant Edge version and fork commit:
-
-```bash
-cd "$AISTUDIO_REPO"
-perl -0pi -e "s/qdrant-edge = \"[^\"]+\"/qdrant-edge = \"$ENV{QDRANT_EDGE_VERSION}\"/" runtime/Cargo.toml
-perl -0pi -e "s/rev = \"[0-9a-f]+\"/rev = \"$ENV{QDRANT_EDGE_COMMIT}\"/" runtime/Cargo.toml
-```
-
-7. Refresh the AI Studio lock file and verify the Rust runtime:
-
-```bash
-cd "$AISTUDIO_REPO/runtime"
-cargo update -p qdrant-edge
-cargo check
-```
-
-Remove the patch and the `[patch.crates-io]` override once Qdrant publishes a fixed `qdrant-edge`
-release on crates.io.
+Afterward, `grep 'name = "rand"' -A 2 runtime/Cargo.lock` must not show a 0.7 version anymore.
+`SommerEngineering/permutation-iterator-rs` can then be deleted.

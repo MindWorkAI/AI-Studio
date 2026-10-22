@@ -10,13 +10,14 @@ public partial class RustService
     /// <summary>Starts a Rust media normalization job.</summary>
     /// <param name="inputPath">Absolute source path.</param>
     /// <param name="outputPath">Absolute operation-owned output path.</param>
+    /// <param name="opusBitrateBps">Target Opus encoder bitrate in bits per second.</param>
     /// <param name="token">Request cancellation token.</param>
     /// <returns>The opaque runtime job identifier.</returns>
-    public async Task<string> StartMediaJobAsync(string inputPath, string outputPath, CancellationToken token = default)
+    public async Task<string> StartMediaJobAsync(string inputPath, string outputPath, uint opusBitrateBps, CancellationToken token = default)
     {
         using var response = await this.http.PostAsJsonAsync(
             "/media/jobs",
-            new CreateMediaJobRequest(inputPath, outputPath),
+            new CreateMediaJobRequest(inputPath, outputPath, OpusBitrateBps: opusBitrateBps),
             this.jsonRustSerializerOptions,
             token);
 

@@ -47,6 +47,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     {
         this.inputText = string.Empty;
         this.inputTextLastTranslation = string.Empty;
+        this.webContentURL = string.Empty;
         if (!this.MightPreselectValues())
         {
             this.showWebContentReader = false;
@@ -76,6 +77,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private bool useContentCleanerAgent;
     private bool liveTranslation;
     private bool isAgentRunning;
+    private string webContentURL = string.Empty;
     private string inputText = string.Empty;
     private string inputTextLastTranslation = string.Empty;
     private CommonLanguages selectedTargetLanguage;
@@ -84,6 +86,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
     private static readonly AssistantSessionStateKey<bool> LIVE_TRANSLATION_STATE_KEY = new(nameof(liveTranslation));
     private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<string> WEB_CONTENT_URL_STATE_KEY = new(nameof(webContentURL));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
     private static readonly AssistantSessionStateKey<string> INPUT_TEXT_LAST_TRANSLATION_STATE_KEY = new(nameof(inputTextLastTranslation));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
@@ -96,6 +99,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
         state.Set(LIVE_TRANSLATION_STATE_KEY, this.liveTranslation);
         state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(WEB_CONTENT_URL_STATE_KEY, this.webContentURL);
         state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
         state.Set(INPUT_TEXT_LAST_TRANSLATION_STATE_KEY, this.inputTextLastTranslation);
         state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
@@ -109,6 +113,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
         state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
         state.Restore(LIVE_TRANSLATION_STATE_KEY, value => this.liveTranslation = value);
         state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(WEB_CONTENT_URL_STATE_KEY, value => this.webContentURL = value);
         state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
         state.Restore(INPUT_TEXT_LAST_TRANSLATION_STATE_KEY, value => this.inputTextLastTranslation = value);
         state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
@@ -119,7 +124,7 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_TRANSLATION_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
         

@@ -4,6 +4,7 @@ public sealed partial class Routes
 {
     public const string HOME = "/";
     public const string CHAT = "/chat";
+    public const string EMBEDDINGS = "/embeddings";
     public const string ABOUT = "/about";
     public const string ASSISTANTS = "/assistants";
     public const string SETTINGS = "/settings";
@@ -31,6 +32,7 @@ public sealed partial class Routes
     public const string ASSISTANT_ERI = "/assistant/eri";
     public const string ASSISTANT_AI_STUDIO_I18N = "/assistant/ai-studio/i18n";
     public const string ASSISTANT_DOCUMENT_ANALYSIS = "/assistant/document-analysis";
+    public const string ASSISTANT_BATCH_PROCESSING = "/assistant/batch-processing";
     public const string ASSISTANT_DYNAMIC = "/assistant/dynamic";
     public const string ASSISTANT_META_ASSISTANT = "/assistant/builder";
     public const string ASSISTANT_LOG_VIEWER = "/assistant/log-viewer";

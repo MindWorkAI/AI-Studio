@@ -72,8 +72,8 @@ public sealed class RustAvailabilityMonitorService : BackgroundService, IMessage
             // be a transient issue.
             //
             
-            _ = this.VerifyRustAvailability();
-            _ = this.VerifyRustAvailability();
+            this.VerifyRustAvailability().Observe($"{nameof(RustAvailabilityMonitorService)}: verifying the Rust availability");
+            this.VerifyRustAvailability().Observe($"{nameof(RustAvailabilityMonitorService)}: verifying the Rust availability");
         }
 
         if (numEvents <= UNAVAILABLE_EVENT_THRESHOLD)
@@ -91,9 +91,9 @@ public sealed class RustAvailabilityMonitorService : BackgroundService, IMessage
         return Task.CompletedTask;
     }
 
-    public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
+    public Task<MessageBusAnswer<TResult>> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)
     {
-        return Task.FromResult<TResult?>(default);
+        return Task.FromResult(MessageBusAnswer<TResult>.NONE);
     }
 
     private async Task VerifyRustAvailability()

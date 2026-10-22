@@ -1,9 +1,11 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services;
 
@@ -13,6 +15,7 @@ namespace AIStudio.Tools.Services;
 public sealed class MediaTranscriptionService(
     RustService rustService,
     SettingsManager settingsManager,
+    PromptInjectionGuardService promptInjectionGuardService,
     IEnumerable<IMediaTranscriptStorage> transcriptStorages,
     ILogger<MediaTranscriptionService> logger) : IDisposable
 {
@@ -60,6 +63,9 @@ public sealed class MediaTranscriptionService(
         lock (this.stateLock)
             return this.activeBatches.Contains(owner);
     }
+
+    /// <summary>Gets whether the currently configured transcription provider can be used.</summary>
+    public bool HasUsableTranscriptionProvider => this.GetUsableProvider() is not null;
 
     /// <summary>Gets the last retained state for one owner.</summary>
     public MediaImportSnapshot? GetSnapshot(MediaImportOwner owner)
@@ -170,7 +176,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPaths[0]), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat));
+        Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat)).Observe($"{nameof(MediaTranscriptionService)}: running an attachment batch");
         return true;
     }
 
@@ -188,7 +194,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunTextImportAsync(mediaPath, target));
+        Task.Run(() => this.RunTextImportAsync(mediaPath, target)).Observe($"{nameof(MediaTranscriptionService)}: running a text import");
         return true;
     }
 
@@ -206,7 +212,7 @@ public sealed class MediaTranscriptionService(
         {
             var result = await this.TranscribeImportAsync(mediaPath, target, cancellation.Token);
             if (result.Status is MediaTranscriptionResultStatus.SUCCEEDED)
-                this.AddCompletedText(target, result.Text);
+                await this.AddCompletedTextAsync(target, mediaPath, result.Text);
             else if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
                 status = MediaImportStatus.CANCELLED;
             else if (result.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
@@ -244,8 +250,18 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Stores a completed field transcript for reattachment after navigation.</summary>
-    private void AddCompletedText(MediaImportTarget target, string text)
+    /// <remarks>
+    /// The field hands the transcript on to the AI, so it passes the filter for prompt injections
+    /// first, like every document loaded into such a field, and is reported right away like one.
+    /// It is filtered here rather than where the field takes it: only here is the recording known,
+    /// which is what the user hears about, and the field may look for its transcript more than once.
+    /// </remarks>
+    /// <param name="target">The field which receives the transcript.</param>
+    /// <param name="mediaPath">The recording the transcript belongs to.</param>
+    /// <param name="transcript">The transcript as the provider returned it.</param>
+    internal async Task AddCompletedTextAsync(MediaImportTarget target, string mediaPath, string transcript)
     {
+        var text = await promptInjectionGuardService.SanitizeAsync(transcript, PromptInjectionSource.FileContent(mediaPath), reportingScope: null);
         lock (this.stateLock)
         {
             if (!this.pendingDeliveries.TryGetValue(target, out var pending))
@@ -309,9 +325,8 @@ public sealed class MediaTranscriptionService(
                         ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(ownerChat!, mediaPath, result.Text)
                         : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
 
-                if (persistentStorage is null && ownerChat is not null && attachment is ManagedTranscriptAttachment managed
-                    && ownerChat.PendingMediaTranscripts.All(existing => existing.FilePath != managed.FilePath))
-                    ownerChat.PendingMediaTranscripts.Add(managed);
+                if (persistentStorage is null && ownerChat is not null && attachment is ManagedTranscriptAttachment managed)
+                    ownerChat.Draft.AddAttachments([managed]);
 
                 if (isPersistedChat)
                     await WorkspaceBehaviour.StoreChatAsync(ownerChat!);
@@ -403,25 +418,50 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>
-    /// Transcribes a voice recording independently of the visible import lane.
+    /// Transcribes an audio or video file without starting a visible import operation.
     /// </summary>
-    /// <param name="mediaPath">Voice recording path.</param>
+    /// <param name="mediaPath">Audio or video file path.</param>
     /// <param name="token">Caller cancellation token.</param>
     /// <returns>A typed terminal result.</returns>
-    public async Task<MediaTranscriptionResult> TranscribeVoiceAsync(string mediaPath, CancellationToken token = default)
+    public Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, CancellationToken token = default) => this.TranscribeWithoutImportAsync(mediaPath, null, token);
+
+    /// <summary>
+    /// Transcribes an audio or video file with exactly the given provider, without starting a visible import operation.
+    /// </summary>
+    /// <remarks>
+    /// For callers which checked the provider against rules of their own, such as the confidence
+    /// level of a data source. The provider is used as given and not resolved from the settings
+    /// again, so a change of the settings between that check and the upload cannot send the media
+    /// to another provider.
+    /// </remarks>
+    /// <param name="mediaPath">Audio or video file path.</param>
+    /// <param name="provider">The transcription provider the caller checked.</param>
+    /// <param name="token">Caller cancellation token.</param>
+    /// <returns>A typed terminal result.</returns>
+    public Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, TranscriptionProvider provider, CancellationToken token = default) => this.TranscribeWithoutImportAsync(mediaPath, provider, token);
+
+    private async Task<MediaTranscriptionResult> TranscribeWithoutImportAsync(string mediaPath, TranscriptionProvider? provider, CancellationToken token)
     {
         this.ThrowIfDisposed();
         var operation = this.CreateOperation(null, token);
-        
+
         try
         {
-            return await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: false);
+            return await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: false, provider);
         }
         finally
         {
             this.ReleaseOperation(operation);
         }
     }
+
+    /// <summary>
+    /// Transcribes a voice recording independently of the visible import lane.
+    /// </summary>
+    /// <param name="mediaPath">Voice recording path.</param>
+    /// <param name="token">Caller cancellation token.</param>
+    /// <returns>A typed terminal result.</returns>
+    public Task<MediaTranscriptionResult> TranscribeVoiceAsync(string mediaPath, CancellationToken token = default) => this.TranscribeAsync(mediaPath, token);
 
     /// <summary>Cancels only the queued or active operation belonging to one owner.</summary>
     public async Task StopAsync(MediaImportOwner owner)
@@ -447,8 +487,9 @@ public sealed class MediaTranscriptionService(
     /// <param name="mediaPath">Source media path.</param>
     /// <param name="operation">Operation-specific cancellation and Rust-job state.</param>
     /// <param name="updateImportState">Whether progress belongs to the visible import lane.</param>
+    /// <param name="checkedProvider">The provider a caller checked itself, or null for the configured one.</param>
     /// <returns>A typed terminal result.</returns>
-    private async Task<MediaTranscriptionResult> TranscribeCoreAsync(string mediaPath, MediaOperation operation, bool updateImportState)
+    private async Task<MediaTranscriptionResult> TranscribeCoreAsync(string mediaPath, MediaOperation operation, bool updateImportState, TranscriptionProvider? checkedProvider = null)
     {
         var normalizedPath = Path.Combine(Path.GetTempPath(), "mindwork-ai-studio-media", $"{operation.Id:N}.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(normalizedPath)!);
@@ -486,7 +527,7 @@ public sealed class MediaTranscriptionService(
                 return MediaTranscriptionResult.NoAudibleSignal(TB("The audio track contains no audible signal, so there is nothing to transcribe."));
             }
 
-            var providerSettings = this.ResolveProvider();
+            var providerSettings = checkedProvider ?? this.GetUsableProvider();
             if (providerSettings is null)
                 return MediaTranscriptionResult.Failed(TB("No usable transcription provider is configured."));
 
@@ -519,8 +560,20 @@ public sealed class MediaTranscriptionService(
                     "The transcription provider failed for '{FileName}' (operation {OperationId}): {Diagnostic}",
                     fileName,
                     operation.Id,
-                    providerResult.ErrorMessage);
-                return MediaTranscriptionResult.Failed(TB("The transcription provider could not transcribe the media file."));
+                    string.IsNullOrWhiteSpace(providerResult.ErrorMessage) ? "<empty>" : providerResult.ErrorMessage);
+
+                //
+                // When the provider told us why it failed, the user gets to read it. Only that
+                // message says whether to wait, to check the API key, or to ask the provider for
+                // a format it can read:
+                //
+                var failureMessage = string.IsNullOrWhiteSpace(providerResult.ErrorMessage)
+                    ? TB("The transcription provider could not transcribe the media file.")
+                    : providerResult.ErrorMessage;
+
+                return providerResult.FileRejected
+                    ? MediaTranscriptionResult.Rejected(failureMessage)
+                    : MediaTranscriptionResult.Failed(failureMessage);
             }
 
             return MediaTranscriptionResult.Succeeded(providerResult.Text.Trim());
@@ -627,9 +680,23 @@ public sealed class MediaTranscriptionService(
         MediaOperation operation,
         bool updateImportState)
     {
+        // The bitrate governs re-encoding, not every upload: the runtime hands a file through
+        // unchanged when it already is a single mono 48 kHz Opus track in a WebM container and small
+        // enough. Such a file keeps whatever bitrate it was made with, which is the better outcome --
+        // re-encoding it could only take quality away, never add any.
+        var opusBitrateBps = settingsManager.ConfigurationData.App.OpusBitrate.GetBitsPerSecond();
+
+        // Which quality an upload was produced with is the first question to ask when a transcript
+        // comes back missing something, so it has to be in the log of the job it belongs to:
+        logger.LogInformation(
+            "Normalizing media for operation {OperationId}; re-encoding uses the Opus bitrate {OpusBitrate} ({OpusBitrateBps} bps).",
+            operation.Id,
+            settingsManager.ConfigurationData.App.OpusBitrate,
+            opusBitrateBps);
+
         // The quick POST is intentionally not cancelled: losing its response could orphan a job
         // whose ID the client never received. Cancellation is applied immediately after ownership.
-        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, CancellationToken.None);
+        var jobId = await rustService.StartMediaJobAsync(mediaPath, normalizedPath, opusBitrateBps, CancellationToken.None);
         operation.JobId = jobId;
 
         try
@@ -686,7 +753,12 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>Resolves the configured provider after confidence validation.</summary>
-    private TranscriptionProvider? ResolveProvider()
+    /// <remarks>
+    /// Checks the global minimum confidence only. A caller with rules of its own, such as the
+    /// confidence level of a data source, checks the provider against them as well.
+    /// </remarks>
+    /// <returns>The configured provider, or null when none is configured or it falls short of the global minimum.</returns>
+    public TranscriptionProvider? GetUsableProvider()
     {
         var providerId = settingsManager.ConfigurationData.App.UseTranscriptionProvider;
         if (string.IsNullOrWhiteSpace(providerId))
@@ -699,6 +771,19 @@ public sealed class MediaTranscriptionService(
         var minimumLevel = settingsManager.GetMinimumConfidenceLevel(Components.NONE);
         return providerSettings.UsedLLMProvider.GetConfidence(settingsManager).Level >= minimumLevel
             ? providerSettings
+            : null;
+    }
+
+    /// <summary>
+    /// The configured provider, when it may also hear the audio and video files of the given data source.
+    /// </summary>
+    /// <param name="dataSource">The data source, with the confidence level it asks for.</param>
+    /// <returns>The provider, or null when none is configured or it falls short of the global minimum or of the data source.</returns>
+    public TranscriptionProvider? GetUsableProvider(IIndexedDataSource dataSource)
+    {
+        var provider = this.GetUsableProvider();
+        return provider is not null && DataSourceEmbeddingService.AllowsTranscription(dataSource, provider.GetConfidenceLevel(settingsManager))
+            ? provider
             : null;
     }
 

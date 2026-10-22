@@ -164,6 +164,6 @@ public partial class PluginDeleteAction : MSGComponentBase
     private void OnMediaTranscriptionStateChanged(MediaImportOwner owner)
     {
         if (owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.EndsWith($":{this.Plugin.Id}", StringComparison.Ordinal))
-            _ = this.InvokeAsync(this.StateHasChanged);
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(PluginDeleteAction)}: rendering a transcription state change");
     }
 }

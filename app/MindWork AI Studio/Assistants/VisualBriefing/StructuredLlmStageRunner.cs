@@ -72,6 +72,7 @@ internal sealed class StructuredLlmStageRunner(
             Name = $"Visual Briefing {stage}",
             SystemPrompt = systemPrompt,
             SelectedProvider = provider.Id,
+            RuntimeComponent = Tools.Components.VISUAL_BRIEFING_ASSISTANT,
             Blocks =
             [
                 CreateBlock(time, ChatRole.USER, initialPrompt),

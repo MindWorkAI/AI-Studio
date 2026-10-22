@@ -1,0 +1,13 @@
+@using AIStudio.Settings.DataModel
+@inherits SettingsPanelBase
+
+@if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
+{
+    <ExpansionPanel HeaderIcon="@AppIcons.DATABASE" HeaderText="@T("Configure Data Sources")">
+        <PreviewBeta ApplyInnerScrollingFix="true"/>
+        <DataSourceManagement/>
+        <div class="mt-3 mb-6">
+            <DataSourceAddButtons/>
+        </div>
+    </ExpansionPanel>
+}

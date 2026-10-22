@@ -53,7 +53,7 @@ public static partial class ManagedConfiguration
             if(configuredEnumValue.TryRead<string>(out var configuredEnumText))
             {
                 // Step 3 -- try to parse the string as the enum type:
-                if (Enum.TryParse(typeof(TValue), configuredEnumText, true, out var configuredEnum))
+                if (EnumNames.TryParse(typeof(TValue), configuredEnumText, out var configuredEnum))
                 {
                     configuredValue = (TValue)configuredEnum;
                     successful = true;
@@ -83,6 +83,7 @@ public static partial class ManagedConfiguration
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <param name="_">An unused parameter to help with type inference. You might ignore it when calling the method.</param>
+    /// <param name="validator">An optional validator for rejecting parsed values outside the setting's supported range.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -92,7 +93,8 @@ public static partial class ManagedConfiguration
         Guid configPluginId,
         LuaTable settings,
         bool dryRun,
-        ISpanParsable<TValue>? _ = null)
+        ISpanParsable<TValue>? _ = null,
+        Func<TValue, bool>? validator = null)
         where TValue : struct, ISpanParsable<TValue>
     {
         //
@@ -113,7 +115,8 @@ public static partial class ManagedConfiguration
             if (configuredLuaValue.Type is LuaValueType.String && configuredLuaValue.TryRead<string>(out var configuredLuaValueText))
             {
                 // Step 3 -- try to parse the string as the target type:
-                if (TValue.TryParse(configuredLuaValueText, CultureInfo.InvariantCulture, out var configuredParsedValue))
+                if (TValue.TryParse(configuredLuaValueText, CultureInfo.InvariantCulture, out var configuredParsedValue)
+                    && (validator?.Invoke(configuredParsedValue) ?? true))
                 {
                     configuredValue = configuredParsedValue;
                     successful = true;
@@ -121,7 +124,8 @@ public static partial class ManagedConfiguration
             }
 
             // Step 2b -- try to read the Lua value:
-            if(configuredLuaValue.TryRead<TValue>(out var configuredLuaValueInstance))
+            if(configuredLuaValue.TryRead<TValue>(out var configuredLuaValueInstance)
+               && (validator?.Invoke(configuredLuaValueInstance) ?? true))
             {
                 configuredValue = configuredLuaValueInstance;
                 successful = true;
@@ -360,7 +364,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         list.Add((TValue)configuredEnum);
                 }
             }
@@ -575,7 +579,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
                 }
             }
@@ -642,7 +646,7 @@ public static partial class ManagedConfiguration
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
                     // Step 3 -- try to parse the string as the target type:
-                    if (Enum.TryParse(typeof(TValue), configuredLuaValueText, true, out var configuredEnum))
+                    if (EnumNames.TryParse(typeof(TValue), configuredLuaValueText, out var configuredEnum))
                         set.Add((TValue)configuredEnum);
                 }
             }
@@ -771,7 +775,7 @@ public static partial class ManagedConfiguration
             return false;
 
         var successful = false;
-        var configuredValue = configMeta.Default;
+        var configuredValue = CloneStringDictionary(configMeta.Default);
 
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
@@ -808,7 +812,9 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedDictionaryValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -871,8 +877,8 @@ public static partial class ManagedConfiguration
                 // If both key and value were read successfully, parse and add them to the dictionary:
                 if (hadKey
                     && hadValue
-                    && Enum.TryParse<TKey>(keyText, true, out var key)
-                    && Enum.TryParse<TValue>(valueText, true, out var value))
+                    && EnumNames.TryParse<TKey>(keyText, out var key)
+                    && EnumNames.TryParse<TValue>(valueText, out var value))
                     configuredValue[key] = value;
             }
 
@@ -1032,6 +1038,67 @@ public static partial class ManagedConfiguration
         return successful;
     }
 
+    private static bool HandleParsedDictionaryValue<TClass>(
+        Guid configPluginId,
+        bool dryRun,
+        bool successful,
+        ConfigMeta<TClass, IDictionary<string, string>> configMeta,
+        IDictionary<string, string> configuredValue,
+        ManagedConfigurationMode managedMode,
+        string settingName)
+    {
+        if (dryRun)
+            return successful;
+
+        switch (successful)
+        {
+            case true when managedMode is ManagedConfigurationMode.LOCKED:
+                ClearEditableDefaultState(settingName);
+                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.SetValue(CloneStringDictionary(configuredValue));
+                configMeta.LockConfiguration(configPluginId);
+                break;
+
+            case true when managedMode is ManagedConfigurationMode.EDITABLE_DEFAULT:
+                var currentValueSerialized = SerializeManagedStringDictionaryValue(configMeta.GetValue());
+                var configuredValueSerialized = SerializeManagedStringDictionaryValue(configuredValue);
+
+                string lastAppliedValue;
+                if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
+                {
+                    configMeta.SetValue(CloneStringDictionary(configuredValue));
+                    lastAppliedValue = configuredValueSerialized;
+                }
+                else
+                {
+                    lastAppliedValue = editableDefaultState.LastAppliedValue;
+                    if (string.Equals(currentValueSerialized, lastAppliedValue, StringComparison.Ordinal))
+                    {
+                        configMeta.SetValue(CloneStringDictionary(configuredValue));
+                        lastAppliedValue = configuredValueSerialized;
+                    }
+                }
+
+                SetEditableDefaultState(settingName, configPluginId, lastAppliedValue);
+                configMeta.UnlockConfiguration();
+                configMeta.SetEditableDefaultConfiguration(configPluginId);
+                break;
+
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
+                configMeta.ResetLockedConfiguration();
+                break;
+
+            case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
+                            && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
+                            && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
+                configMeta.ClearEditableDefaultConfiguration();
+                ClearEditableDefaultState(settingName);
+                break;
+        }
+
+        return successful;
+    }
+
     private static ManagedConfigurationMode ReadManagedConfigurationMode<TClass, TValue>(
         Expression<Func<TClass, TValue>> propertyExpression,
         LuaTable settings)
@@ -1065,4 +1132,12 @@ public static partial class ManagedConfiguration
 
         _ => value.ToString() ?? string.Empty,
     };
+
+    private static Dictionary<string, string> CloneStringDictionary(IDictionary<string, string> values) => new(values, StringComparer.Ordinal);
+
+    private static string SerializeManagedStringDictionaryValue(IDictionary<string, string> values) => string.Join(
+        "\n",
+        values
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"{pair.Key}={pair.Value}"));
 }

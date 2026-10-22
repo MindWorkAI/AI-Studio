@@ -1,9 +1,16 @@
 // ReSharper disable NotAccessedPositionalProperty.Local
+using AIStudio.Tools.Rust;
+
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<bool> ShareFile(string filePath)
+    /// <summary>
+    /// Asks the runtime to hand a file to the share sheet of the operating system.
+    /// </summary>
+    /// <param name="filePath">The plugin archive to share.</param>
+    /// <returns>What became of the request. Any failure to reach the runtime counts as FAILED.</returns>
+    public async Task<ShareFileResponse> ShareFile(string filePath)
     {
         try
         {
@@ -11,34 +18,37 @@ public sealed partial class RustService
             if (!response.IsSuccessStatusCode)
             {
                 this.logger?.LogError($"The Rust runtime rejected the share request: {response.StatusCode}.");
-                return false;
+                return new(ShareSheetOutcome.FAILED, $"The Rust runtime rejected the share request: {response.StatusCode}.");
             }
 
             var result = await response.Content.ReadFromJsonAsync<ShareFileResponse>(this.jsonRustSerializerOptions);
-            if (result?.Success == true)
-                return true;
+            if (result is null)
+            {
+                this.logger?.LogError("The Rust runtime answered the share request without a result.");
+                return new(ShareSheetOutcome.FAILED, "The Rust runtime answered the share request without a result.");
+            }
 
-            this.logger?.LogError($"The native share sheet could not be opened: {result?.Issue ?? "Unknown error"}");
-            return false;
+            if (result.Outcome is not ShareSheetOutcome.OPENED)
+                this.logger?.LogError($"The native share sheet did not open ({result.Outcome}): {result.Issue}");
+
+            return result;
         }
         catch (HttpRequestException exception)
         {
             this.logger?.LogWarning(exception, "Failed to reach the Rust runtime share endpoint.");
-            return false;
+            return new(ShareSheetOutcome.FAILED, exception.Message);
         }
         catch (TaskCanceledException exception)
         {
             this.logger?.LogWarning(exception, "Timed out while reaching the Rust runtime share endpoint.");
-            return false;
+            return new(ShareSheetOutcome.FAILED, exception.Message);
         }
         catch (Exception exception)
         {
             this.logger?.LogError(exception, "Failed to process the Rust runtime share response.");
-            return false;
+            return new(ShareSheetOutcome.FAILED, exception.Message);
         }
     }
 
     private sealed record ShareFileRequest(string FilePath);
-    
-    private sealed record ShareFileResponse(bool Success, string Issue);
 }

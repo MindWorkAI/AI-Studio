@@ -72,6 +72,11 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     public List<string> PreselectedDataSourceIds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedDataSourceIds, []);
 
     /// <summary>
+    /// How the data sources of new chats should be searched by default.
+    /// </summary>
+    public DataSourceRetrievalMode PreselectedDataSourcesRetrievalMode { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedDataSourcesRetrievalMode, DataSourceRetrievalMode.SEMANTIC_SEARCH);
+
+    /// <summary>
     /// Should we preselect data sources options for a created chat?
     /// </summary>
     // Compatibility shim: legacy settings used this nested object. See documentation/compatibility-shims/2026-07-chat-data-source-options.md; remove after 2027-01-05.
@@ -82,6 +87,7 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
             DisableDataSources = this.PreselectedDataSourcesDisabled,
             AutomaticDataSourceSelection = this.PreselectedDataSourcesAutomaticSelection,
             AutomaticValidation = this.PreselectedDataSourcesAutomaticValidation,
+            RetrievalMode = this.PreselectedDataSourcesRetrievalMode,
             PreselectedDataSourceIds = [..this.PreselectedDataSourceIds],
         };
         set
@@ -89,6 +95,7 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
             this.PreselectedDataSourcesDisabled = value.DisableDataSources;
             this.PreselectedDataSourcesAutomaticSelection = value.AutomaticDataSourceSelection;
             this.PreselectedDataSourcesAutomaticValidation = value.AutomaticValidation;
+            this.PreselectedDataSourcesRetrievalMode = value.RetrievalMode;
             this.PreselectedDataSourceIds = [..value.PreselectedDataSourceIds];
         }
     }

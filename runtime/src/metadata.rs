@@ -38,12 +38,12 @@ impl MetaData {
         let mud_blazor_version = metadata_lines.next().unwrap();
         let tauri_version = metadata_lines.next().unwrap();
         let app_commit_hash = metadata_lines.next().unwrap();
-        let architecture = metadata_lines.next().unwrap();
         let pdfium_version = metadata_lines.next().unwrap();
         let vector_store_version = metadata_lines.next().unwrap();
 
         let metadata = MetaData {
-            architecture: architecture.to_string(),
+            // The build script names the platform the runtime is built for:
+            architecture: env!("AI_STUDIO_ARCHITECTURE").to_string(),
             app_commit_hash: app_commit_hash.to_string(),
             app_version: app_version.to_string(),
             build_number: build_number.to_string(),

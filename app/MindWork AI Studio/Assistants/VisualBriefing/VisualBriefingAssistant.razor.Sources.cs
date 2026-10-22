@@ -119,7 +119,7 @@ public partial class VisualBriefingAssistant
             { dialog => dialog.Message, T("The media file changed. Transcribe it again with the configured transcription provider?") },
         };
 
-        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.FULLSCREEN);
+        var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Transcribe media again"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;
@@ -136,7 +136,7 @@ public partial class VisualBriefingAssistant
             !Guid.TryParse(owner.Id, out var briefingId))
             return;
 
-        _ = this.InvokeAsync(async () =>
+        this.InvokeAsync(async () =>
         {
             await this.ConsumeMediaOutcomeAsync(owner);
             if (!this.MediaTranscriptionService.IsBusy(owner))
@@ -152,7 +152,7 @@ public partial class VisualBriefingAssistant
             }
 
             this.StateHasChanged();
-        });
+        }).Observe($"{nameof(VisualBriefingAssistant)}: consuming a media import outcome");
     }
 
     /// <summary>

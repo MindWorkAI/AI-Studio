@@ -17,6 +17,23 @@ public record ChatCompletionAPIRequest(
     public ChatCompletionAPIRequest() : this(string.Empty, [], true)
     {
     }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<object>? Tools { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ParallelToolCalls { get; init; }
+
+    /// <summary>
+    /// Asks a streamed request to end with what it cost.
+    /// </summary>
+    /// <remarks>
+    /// Derived rather than set, so that every provider which builds one of these asks for it
+    /// without having to know that it exists. A request which is not streamed carries no such
+    /// line, and then the block would only be a field the provider has to ignore.
+    /// </remarks>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ChatCompletionStreamOptions? StreamOptions => this.Stream ? ChatCompletionStreamOptions.INCLUDE_USAGE : null;
     
     // Attention: The "required" modifier is not supported for [JsonExtensionData].
     [JsonExtensionData]

@@ -9,7 +9,8 @@ namespace AIStudio.Tools.Media;
 /// <param name="Text">Transcript text for a successful operation.</param>
 /// <param name="UserMessage">Localized message suitable for display after a warning or failure.</param>
 /// <param name="ErrorCode">Optional stable runtime failure category.</param>
-public sealed record MediaTranscriptionResult(MediaTranscriptionResultStatus Status, string Text, string UserMessage, MediaJobErrorCode? ErrorCode = null)
+/// <param name="FileRejected">Whether the transcription provider refused the media file itself, so that it would refuse the unchanged file again.</param>
+public sealed record MediaTranscriptionResult(MediaTranscriptionResultStatus Status, string Text, string UserMessage, MediaJobErrorCode? ErrorCode = null, bool FileRejected = false)
 {
     /// <summary>Creates a successful result.</summary>
     /// <param name="text">Provider transcript.</param>
@@ -19,6 +20,10 @@ public sealed record MediaTranscriptionResult(MediaTranscriptionResultStatus Sta
     /// <param name="userMessage">Localized visible message.</param>
     /// <param name="errorCode">Optional runtime error category.</param>
     public static MediaTranscriptionResult Failed(string userMessage, MediaJobErrorCode? errorCode = null) => new(MediaTranscriptionResultStatus.FAILED, string.Empty, userMessage, errorCode);
+
+    /// <summary>Creates a failed result for a media file which the transcription provider refused.</summary>
+    /// <param name="userMessage">Localized visible message.</param>
+    public static MediaTranscriptionResult Rejected(string userMessage) => new(MediaTranscriptionResultStatus.FAILED, string.Empty, userMessage, FileRejected: true);
 
     /// <summary>Creates a warning result for media without an audible signal.</summary>
     /// <param name="userMessage">Localized visible warning.</param>

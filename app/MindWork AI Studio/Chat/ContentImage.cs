@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
-using AIStudio.Tools.Validation;
 
 namespace AIStudio.Chat;
 
@@ -22,11 +21,11 @@ public sealed class ContentImage : IContent, IImageSource
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingEvent { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
@@ -52,23 +51,6 @@ public sealed class ContentImage : IContent, IImageSource
     };
 
     #endregion
-
-    /// <summary>
-    /// Creates a ContentImage from a local file path.
-    /// </summary>
-    /// <param name="filePath">The path to the image file.</param>
-    /// <returns>A new ContentImage instance if the file is valid, null otherwise.</returns>
-    public static async Task<ContentImage?> CreateFromFileAsync(string filePath)
-    {
-        if (!await FileExtensionValidation.IsImageExtensionValidWithNotifyAsync(filePath))
-            return null;
-
-        return new ContentImage
-        {
-            SourceType = ContentImageSource.LOCAL_PATH,
-            Source = filePath,
-        };
-    }
 
     /// <summary>
     /// The type of the image source.

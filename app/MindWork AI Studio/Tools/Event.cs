@@ -79,6 +79,11 @@ public enum Event
     SHOW_INFO,
 
     /// <summary>
+    /// Requests display of a prompt-injection alert dialog.
+    /// </summary>
+    SHOW_PROMPT_INJECTION_ALERT,
+
+    /// <summary>
     /// Carries an event received from the Tauri runtime.
     /// </summary>
     TAURI_EVENT_RECEIVED,
@@ -198,6 +203,7 @@ public enum Event
     /// Carries data sources that were automatically selected for retrieval-augmented generation.
     /// </summary>
     RAG_AUTO_DATA_SOURCES_SELECTED,
+    RAG_EMBEDDING_STATUS_CHANGED,
     
     
     
@@ -208,14 +214,14 @@ public enum Event
     //
     
     /// <summary>
-    /// Registers a file drop area for file attachment handling.
+    /// Names the drop zone under the cursor of a running drag so that exactly this one is highlighted.
     /// </summary>
-    REGISTER_FILE_DROP_AREA,
+    HIGHLIGHT_DROP_ZONE,
 
     /// <summary>
-    /// Unregisters a file drop area from file attachment handling.
+    /// Delivers dropped paths to the drop zone which was under the cursor.
     /// </summary>
-    UNREGISTER_FILE_DROP_AREA,
+    PATHS_DROPPED,
     
     
     

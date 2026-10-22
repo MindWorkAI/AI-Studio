@@ -1,9 +1,14 @@
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Validation
 @using AIStudio.Tools.ERIClient.DataModel
 @inherits MSGComponentBase
 
 <MudDialog>
     <DialogContent>
+        @if (!string.IsNullOrWhiteSpace(this.importRetrievalIssue))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-2">@this.importRetrievalIssue</MudAlert>
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -11,8 +16,8 @@
                 @bind-Text="@this.dataName"
                 Label="@T("Data Source Name")"
                 Class="mb-6"
-                MaxLength="40"
-                Counter="40"
+                MaxLength="@DataSourceValidation.MAX_NAME_LENGTH"
+                Counter="@DataSourceValidation.MAX_NAME_LENGTH"
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
@@ -101,7 +106,7 @@
             
             @if (this.availableRetrievalProcesses.Count > 0)
             {
-                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
+                <MudSelect @bind-Value="@this.dataSelectedRetrievalProcess" @bind-Value:after="@this.ClearImportRetrievalIssue" Text="@this.dataSelectedRetrievalProcess.Name" Label="@T("Select one retrieval process")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateRetrievalProcess">
                     @foreach (var retrievalProcess in this.availableRetrievalProcesses)
                     {
                         <MudSelectItem Value="@retrievalProcess">
@@ -119,7 +124,7 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-            
+
             <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             
         </MudForm>

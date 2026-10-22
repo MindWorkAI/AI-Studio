@@ -42,14 +42,6 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
-    /// <summary>
-    /// Number of active drop areas above this page. While there is any, another component owns the
-    /// dropped files and this page must not catch them.
-    /// </summary>
-    private uint numDropAreasAboveThis;
-
-    private bool isDraggingOverPage;
-
     private const string IMPORT_ICON =
         @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
     <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
@@ -61,10 +53,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
-
-        // Register the whole page as a drop area, so users can drop a plugin archive anywhere on it:
-        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED ]);
 
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -90,17 +79,19 @@ public partial class Plugins : MSGComponentBase
             await this.TryAutoAuditAssistantsAsync();
     }
 
-    protected override void DisposeResources()
-    {
-        // Release the drop area again, so lower layers can catch dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES);
-        base.DisposeResources();
-    }
-
     #endregion
 
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
+        //
+        // The switch is disabled for these, so this cannot be reached through the user interface. We
+        // check anyway: removing the plugin from the enabled list would achieve nothing, because the
+        // activation is decided live, but it would leave the settings in a state which claims the
+        // opposite of what the user sees:
+        //
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return;
+
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
         {
             this.SettingsManager.ConfigurationData.EnabledPlugins.Remove(pluginMeta.Id);
@@ -175,7 +166,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.GetName(),
                     this.AssistantPluginAuditSettings.MinimumLevel.GetName())
@@ -190,6 +181,10 @@ public partial class Plugins : MSGComponentBase
     
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        // An assistant plugin your organization requires to stay enabled has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return true;
+
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
             return false;
 
@@ -203,6 +198,9 @@ public partial class Plugins : MSGComponentBase
 
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return this.T("Your organization requires this assistant to stay enabled");
+
         if (isEnabled)
             return this.T("Disable plugin");
 
@@ -227,7 +225,16 @@ public partial class Plugins : MSGComponentBase
     // transient state like an ongoing share: they gate the markup, so a transient value would make
     // the action buttons disappear and reappear. Transient state belongs into the buttons' Disabled.
     //
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
+    /// <summary>
+    /// Whether this plugin is a direct chat launcher whose settings can be changed without AI.
+    /// </summary>
+    private static bool IsDirectChatLauncher(IAvailablePlugin plugin)
+    {
+        var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
+        return assistantPlugin is not null && DirectChatLauncherLuaWriter.CanRewrite(assistantPlugin);
+    }
 
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
@@ -251,7 +258,8 @@ public partial class Plugins : MSGComponentBase
     /// Highlights the plugin table while the user drags a file over the page, so it is visible
     /// where the file would land.
     /// </summary>
-    private string PluginTableClass => this.isDraggingOverPage
+    /// <param name="isDropTarget">Whether the page is the target of the drop being aimed right now.</param>
+    private static string PluginTableClass(bool isDropTarget) => isDropTarget
         ? "border-dashed border rounded-lg mud-border-primary border-4"
         : "border-dashed border rounded-lg";
 
@@ -266,14 +274,15 @@ public partial class Plugins : MSGComponentBase
     private bool AllowPluginSharing => this.SettingsManager.ConfigurationData.App.AllowUserToSharePlugins;
 
     /// <summary>
-    /// Linux has no native share sheet, hence the plugin archive is exported to a location of the
-    /// user's choice there. The action must be labeled accordingly.
+    /// Where no native share sheet can be used, the plugin archive is exported to a location of the
+    /// user's choice instead: on Linux, which has none, and once the share sheet failed or did not
+    /// respond, until AI Studio restarts. The action must be labeled accordingly.
     /// </summary>
-    private static string SharePluginIcon => OperatingSystem.IsLinux() ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
+    private string SharePluginIcon => this.PluginShareService.UsesExport ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
 
-    private string SharePluginTooltip => OperatingSystem.IsLinux() ? this.T("Export plugin archive") : this.T("Share plugin archive");
+    private string SharePluginTooltip => this.PluginShareService.UsesExport ? this.T("Export plugin archive") : this.T("Share plugin archive");
 
-    private string SharePluginLockText => OperatingSystem.IsLinux() ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
+    private string SharePluginLockText => this.PluginShareService.UsesExport ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -298,6 +307,17 @@ public partial class Plugins : MSGComponentBase
 
     private async Task OpenAssistantPluginRevisionDialogAsync(IAvailablePlugin plugin)
     {
+        //
+        // Changing a launcher means picking a different workspace, provider, profile, chat template,
+        // or set of data sources. Prompting a model for that would be a detour, so launchers go to
+        // the mechanical dialog instead:
+        //
+        if (IsDirectChatLauncher(plugin))
+        {
+            await this.OpenDirectChatLauncherSettingsDialogAsync(plugin);
+            return;
+        }
+
         var parameters = new DialogParameters<AssistantPluginRevisionDialog>
         {
             { x => x.PluginId, plugin.Id },
@@ -318,6 +338,28 @@ public partial class Plugins : MSGComponentBase
         await this.InvokeAsync(this.StateHasChanged);
     }
 
+    private async Task OpenDirectChatLauncherSettingsDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<DirectChatLauncherSettingsDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DirectChatLauncherSettingsDialog>(this.T("Tile Settings"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DirectChatLauncherSettingsDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+        LOG.LogInformation($"The chat launcher '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
+
+        // Saving ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
+        // configuration change: with automatic audits enabled, the dialog stored an audit result:
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
     private async Task SharePluginAsync(IAvailablePlugin plugin)
     {
         if (this.isSharingPlugin)
@@ -329,26 +371,62 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
+            // A failed share sheet switches to the export, so we remember what this click does:
+            var isExport = this.PluginShareService.UsesExport;
             var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
-            if (shareResult.Cancelled)
-                return;
-
-            if (!shareResult.Success)
+            if (shareResult.Outcome is PluginShareOutcome.SHARE_SHEET_UNAVAILABLE)
             {
-                LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, OperatingSystem.IsLinux() ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
-                return;
+                // The runtime and NativeShareService already logged why the share sheet did not open:
+                if (!await this.ConfirmExportInsteadOfSharingAsync(shareResult.Issue))
+                    return;
+
+                isExport = true;
+                shareResult = await this.PluginShareService.ExportAsync(plugin, CancellationToken.None);
             }
 
-            // On Linux, the user chose the target location, so we confirm where the archive was stored:
-            if (OperatingSystem.IsLinux())
-                await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+            switch (shareResult.Outcome)
+            {
+                // On export, the user chose the target location, so we confirm where the archive was stored:
+                case PluginShareOutcome.EXPORTED:
+                    await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
+                    break;
+
+                case PluginShareOutcome.FAILED:
+                    LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, isExport ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
+                    break;
+
+                // The share sheet takes it from here, and a canceled export needs no message. The
+                // export never reports an unavailable share sheet:
+                case PluginShareOutcome.SHARED:
+                case PluginShareOutcome.CANCELLED:
+                case PluginShareOutcome.SHARE_SHEET_UNAVAILABLE:
+                    break;
+            }
         }
         finally
         {
             this.isSharingPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
+    }
+
+    /// <summary>
+    /// Offers to export the plugin archive after the share sheet of the operating system failed or
+    /// did not respond.
+    /// </summary>
+    /// <param name="issue">Why the share sheet did not open.</param>
+    /// <returns>True when the user wants to export the archive instead.</returns>
+    private async Task<bool> ConfirmExportInsteadOfSharingAsync(string issue)
+    {
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.Message, string.Format(this.T("{0} Do you want to save the plugin archive to a location of your choice instead? Until you restart AI Studio, the plugin page offers this export instead of sharing."), issue) },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Share dialog not available"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is not null && !dialogResult.Canceled;
     }
 
     private async Task ImportAssistantPluginAsync()
@@ -444,7 +522,16 @@ public partial class Plugins : MSGComponentBase
         await dialogReference.Result;
     }
 
-    private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
+    private async Task ShowPluginInfoAsync(IAvailablePlugin plugin)
+    {
+        var dialogParameters = new DialogParameters<PluginInfoDialog>
+        {
+            { x => x.Plugin, plugin },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<PluginInfoDialog>(string.Format(this.T("Plugin information: {0}"), plugin.Name), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
+    }
 
     private PluginAssistants? TryGetAssistantPlugin(Guid pluginId) => PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == pluginId);
 
@@ -513,51 +600,16 @@ public partial class Plugins : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
-
-            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int registeredLayer && registeredLayer > DropLayers.PAGES)
-                    this.numDropAreasAboveThis++;
-
-                break;
-
-            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
-                if (data is int unregisteredLayer && unregisteredLayer > DropLayers.PAGES && this.numDropAreasAboveThis > 0)
-                    this.numDropAreasAboveThis--;
-
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
-                if (!this.CanCatchDroppedFile())
-                    return;
-
-                this.isDraggingOverPage = true;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
-
-            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var droppedPaths }:
-                this.isDraggingOverPage = false;
-                await this.InvokeAsync(this.StateHasChanged);
-                if (!this.CanCatchDroppedFile())
-                    return;
-
-                await this.ImportDroppedPluginArchiveAsync(droppedPaths);
-                break;
         }
     }
 
     #endregion
 
     /// <summary>
-    /// Decides whether this page may process dropped files: only when no drop area above it is
-    /// active and when the organization allows importing plugins at all.
+    /// Decides whether this page may process dropped files: only when the organization allows
+    /// importing plugins at all and no import is running.
     /// </summary>
-    private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && this.AllowPluginImport && !this.isImportingAssistantPlugin;
+    private bool CanCatchDroppedFile() => this.AllowPluginImport && !this.isImportingAssistantPlugin;
 
     /// <summary>
     /// Imports a plugin archive the user dropped onto the page. Anything that is not exactly one

@@ -2,7 +2,7 @@
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudImage Src="svg/banner.svg" Style="max-height: 16em; width: 100%; object-fit: cover;" />
+    <MudImage Src="svg/banner.svg" Style="max-height: 16em; width: 100%; object-fit: cover; border-radius: 12px;" />
     <MudText Typo="Typo.h3" Class="mt-2 mb-2">
         @T("Let's get started")
     </MudText>
@@ -11,6 +11,11 @@
         @if (this.HasVisibleHomePanels)
         {
             <MudExpansionPanels @key="@this.expansionPanelsRenderKey" Class="mb-3" MultiExpansion="@false">
+
+                @foreach (var group in this.pendingUserAPIKeyGroups)
+                {
+                    <UserAPIKeyPrompt @key="@group.ConfigPluginId" Group="@group" IsExpanded="@this.IsPanelExpanded(UserAPIKeyPanelId(group))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(UserAPIKeyPanelId(group), isExpanded))"/>
+                }
 
                 @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
                 {

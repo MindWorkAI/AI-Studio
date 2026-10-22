@@ -1,10 +1,16 @@
 @using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
-@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
-<div class="inner-scrolling-context">
+@* The page is its own drop target: a plugin archive may be dropped anywhere on it, and there is no
+   inner zone to hand that role to. An area which takes drops itself is that target by definition. *@
+<PathDropZone IsArea="@true"
+              IdPrefix="plugins-page"
+              Class="inner-scrolling-context"
+              Disabled="@(() => !this.CanCatchDroppedFile())"
+              OnPathsDropped="@this.ImportDroppedPluginArchiveAsync"
+              Context="isDropTarget">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
         <MudText Typo="Typo.h3">
             @T("Plugins")
@@ -24,7 +30,7 @@
     
     <InnerScrolling>
         
-        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@this.PluginTableClass">
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@PluginTableClass(isDropTarget)">
             <ColGroup>
                 <col style="width: 2em;" />
                 <col style="width: 2.1em; "/>
@@ -63,15 +69,29 @@
                 <MudTd>
                     <MudAvatar Size="Size.Medium" Style="width: 2em; height: 2em;" Class="align-content-stretch">
                         <div class="plugin-icon-container">
-                            @((MarkupString)context.IconSVG)
+                            @if (!string.IsNullOrEmpty(context.IconDataUrl))
+                            {
+                                <img src="@context.IconDataUrl" alt="" aria-hidden="true" draggable="false" />
+                            }
                         </div>
                     </MudAvatar>
                 </MudTd>
                 <MudTd>
                     <MudStack Spacing="0">
-                        <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
-                            @context.Name
-                        </MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.h6" Class="mb-0 pb-0 gap-0">
+                                @context.Name
+                            </MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary ms-1">
+                                v@(context.Version)
+                            </MudText>
+                            @if (context is IAvailablePlugin { IsInternal: false } infoPlugin)
+                            {
+                                <MudTooltip Text="@T("Plugin information")">
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Info" Size="Size.Small" OnClick="@(() => this.ShowPluginInfoAsync(infoPlugin))"/>
+                                </MudTooltip>
+                            }
+                        </MudStack>
                         <MudText Typo="Typo.body1">
                             @context.Description
                         </MudText>
@@ -85,7 +105,8 @@
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true"/>
                         }
                         
-                        @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
+                        @* A model plugin runs like a configuration plugin, without anybody switching it on: *@
+                        @if (context is { IsInternal: false, Type: not (PluginType.CONFIGURATION or PluginType.MODEL) })
                         {
                             var isEnabled = this.SettingsManager.IsPluginEnabled(context);
                             var activationSwitchDisabled = this.IsActivationSwitchDisabled(context, isEnabled);
@@ -95,26 +116,11 @@
                         }
 
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Class="ms-3" Style="gap: 4px;">
-                            @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
+                            @if (context is { IsInternal: false })
                             {
-                                var sourceUrl = context.SourceURL;
-                                var isSendingMail = IsSendingMail(sourceUrl);
-                                if (isSendingMail)
-                                {
-                                    var isDefaultSupportContact = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, StringComparison.Ordinal);
-                                    <MudTooltip Text="@(isDefaultSupportContact ? string.Empty : T("Send a mail"))">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
-                                    </MudTooltip>
-                                }
-                                else
-                                {
-                                    var isDefaultSourceUrl = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SOURCE_URL, StringComparison.Ordinal);
-                                    <MudTooltip Text="@(isDefaultSourceUrl ? T("No source url available") : T("Open website"))">
-                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSourceUrl"/>
-                                    </MudTooltip>
-                                }
+                                <PluginLinkButton Url="@context.SourceURL" Size="Size.Medium"/>
                             }
-                            
+
                             @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
                             {
                                 <MudTooltip Text="@T("Edit assistant plugin")">
@@ -125,14 +131,18 @@
                             @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
                             {
                                 <MudTooltip Text="@(this.AllowPluginSharing ? this.SharePluginTooltip : this.SharePluginLockText)">
-                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(this.isSharingPlugin || !this.AllowPluginSharing)"/>
+                                    <MudIconButton Icon="@this.SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(this.isSharingPlugin || !this.AllowPluginSharing)"/>
                                 </MudTooltip>
                             }
 
+                            @* A direct chat launcher has nothing to prompt about: its settings are
+                               plain selections, so it gets the mechanical dialog instead of the AI
+                               revision. *@
                             @if (context is IAvailablePlugin revisionPlugin && CanReviseAssistantPlugin(revisionPlugin))
                             {
-                                <MudTooltip Text="@T("Revise assistant plugin with AI")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.AutoMode" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
+                                var isLauncher = IsDirectChatLauncher(revisionPlugin);
+                                <MudTooltip Text="@(isLauncher ? T("Change what this tile opens") : T("Revise assistant plugin with AI"))">
+                                    <MudIconButton Icon="@(isLauncher ? Icons.Material.Filled.Tune : Icons.Material.Filled.AutoMode)" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
                                 </MudTooltip>
                             }
 
@@ -146,4 +156,4 @@
             </RowTemplate>
         </MudTable>
     </InnerScrolling>
-</div>
+</PathDropZone>

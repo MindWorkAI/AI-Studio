@@ -1,0 +1,18 @@
+/*
+ * A plain list renders without markers and without indentation here: something in the global
+ * styles takes both off. This is an enumeration of names and wants to read as one, so it states
+ * marker, indentation and spacing itself. MudBlazor's Markdown styles fight the same fight for
+ * their own lists, and need an !important on the display to win it -- hence the one below.
+ */
+.unavailable-data-sources {
+    max-height: 10em;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    margin-top: 0;
+    padding-left: 1.5em;
+    list-style: disc outside;
+}
+
+.unavailable-data-sources li {
+    display: list-item !important;
+}

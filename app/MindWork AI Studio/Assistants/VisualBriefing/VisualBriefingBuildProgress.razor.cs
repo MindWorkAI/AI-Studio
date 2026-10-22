@@ -56,7 +56,7 @@ public partial class VisualBriefingBuildProgress : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        _ = this.MonitorBuildDurationAsync(this.durationMonitorCancellation.Token);
+        this.MonitorBuildDurationAsync(this.durationMonitorCancellation.Token).Observe($"{nameof(VisualBriefingBuildProgress)}: monitoring the build duration");
     }
 
     protected override void OnParametersSet()

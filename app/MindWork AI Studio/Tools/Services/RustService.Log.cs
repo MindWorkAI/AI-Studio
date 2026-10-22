@@ -16,7 +16,7 @@ public sealed partial class RustService
     /// <summary>
     /// Sends a log event to the Rust runtime.
     /// </summary>
-    /// <param name="timestamp">The timestamp of the log event.</param>
+    /// <param name="timestamp">When the log event happened, formatted by TerminalLogger.FormatTransportTimestamp.</param>
     /// <param name="level">The log level.</param>
     /// <param name="category">The category of the log event.</param>
     /// <param name="message">The log message.</param>
@@ -26,7 +26,12 @@ public sealed partial class RustService
     {
         try
         {
-            // Fire-and-forget the log event to avoid blocking:
+            //
+            // Fire-and-forget the log event to avoid blocking. This is the one place which deliberately
+            // discards its task instead of observing it: observing means logging the failure, and logging
+            // means sending another log event through this very method. A broken connection to Rust would
+            // feed itself. The unobserved task exception handler in Program.cs remains the safety net here.
+            //
             var request = new LogEventRequest(timestamp, level, category, message, exception, stackTrace);
             _ = this.http.PostAsJsonAsync("/log/event", request, this.jsonRustSerializerOptions);
         }

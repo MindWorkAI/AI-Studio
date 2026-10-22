@@ -2,16 +2,9 @@ namespace AIStudio.Tools;
 
 public static class DirectoryInfoExtensions
 {
-    private static readonly EnumerationOptions ENUMERATION_OPTIONS = new()
-    {
-        IgnoreInaccessible = true,
-        RecurseSubdirectories = true,
-        ReturnSpecialDirectories = false,
-    };
-
     /// <summary>
-    /// Determines the size of the directory and all its subdirectories, as well as the number of files. When desired,
-    /// it can report the found files up to a certain limit.
+    /// Determines the size and file count of the files a selection takes from a directory. When
+    /// desired, it reports the found files up to a limit.
     /// </summary>
     /// <remarks>
     /// You might set reportMaxFiles to a negative value to report all files. Any positive value will limit the number
@@ -31,17 +24,26 @@ public static class DirectoryInfoExtensions
     /// <param name="reportMaxFiles">The maximum number of files to report. A negative value reports all files.</param>
     /// <param name="done">The callback to report that the operation is done.</param>
     /// <param name="cancellationToken">The cancellation token to stop the operation.</param>
-    public static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default)
+    /// <param name="selection">Which files count, e.g., those a data source indexes. Every file counts when it is missing.</param>
+    internal static async Task DetermineContentSize(this DirectoryInfo directoryInfo, Action<long> reportCurrentTotalSize, Action<long> reportCurrentNumFiles, Action<string> reportNextFile, int reportMaxFiles = -1, Action? done = null, CancellationToken cancellationToken = default, FolderFileSelection? selection = null)
     {
         var rootDirectoryLen = directoryInfo.FullName.Length;
+        var filesToCount = selection ?? FolderFileSelection.EVERY_FILE;
         long totalSize = 0;
         long numFiles = 0;
-        
+
         await Task.Factory.StartNew(() => {
-            foreach (var file in directoryInfo.EnumerateFiles("*", ENUMERATION_OPTIONS))
+            foreach (var filePath in filesToCount.EnumerateCandidates(directoryInfo.FullName))
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;
+
+                if (!filesToCount.Selects(filePath))
+                    continue;
+
+                var file = new FileInfo(filePath);
+                if (filesToCount.IsTooLarge(file))
+                    continue;
 
                 totalSize += file.Length;
                 numFiles++;

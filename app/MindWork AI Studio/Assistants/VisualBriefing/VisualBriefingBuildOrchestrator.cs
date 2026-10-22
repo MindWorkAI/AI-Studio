@@ -64,6 +64,21 @@ internal sealed partial class VisualBriefingBuildOrchestrator
         this.liveDiagnostics.GetValueOrDefault(briefingId);
 
     /// <summary>
+    /// Drops what we kept for a briefing which does not exist anymore.
+    /// </summary>
+    /// <remarks>
+    /// Both dictionaries only ever grew: every briefing which was built once stayed in them for as
+    /// long as the app was running. The build lock is not disposed, because another build might
+    /// still wait on it.
+    /// </remarks>
+    /// <param name="briefingId">The identifier of the deleted briefing.</param>
+    public void ForgetBriefing(Guid briefingId)
+    {
+        this.buildLocks.TryRemove(briefingId, out _);
+        this.liveDiagnostics.TryRemove(briefingId, out _);
+    }
+
+    /// <summary>
     /// Builds or resumes a visual briefing operation.
     /// </summary>
     /// <param name="manifest">The current persisted project manifest.</param>

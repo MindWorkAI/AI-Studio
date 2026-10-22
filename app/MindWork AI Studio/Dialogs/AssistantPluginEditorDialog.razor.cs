@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginEditorDialogResult(Guid PluginId, string PluginName);
-
 public partial class AssistantPluginEditorDialog : MSGComponentBase
 {
     [Inject]
@@ -69,6 +67,14 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
             if (this.plugin is { IsInternal: true } || this.plugin.Type is not PluginType.ASSISTANT || string.IsNullOrWhiteSpace(this.plugin.LocalPath))
             {
                 this.issue = T("This plugin cannot be edited.");
+                return;
+            }
+
+            // An assistant an organization rolled out must keep the content its enterprise approval
+            // was granted for, so only its IT department may change it:
+            if (this.plugin.IsManagedByConfigServer)
+            {
+                this.issue = T("Only locally managed assistant plugins can be edited.");
                 return;
             }
 

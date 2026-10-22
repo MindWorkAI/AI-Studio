@@ -17,7 +17,8 @@ public static class PreviewFeaturesExtensions
         PreviewFeatures.PRE_SPEECH_TO_TEXT_2026 => TB("Transcription: Convert recordings and audio files into text"),
         PreviewFeatures.PRE_META_ASSISTANT_V1 => TB("Assistant Builder: Generate and install assistant plugins"),
         PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026 => TB("Visual Briefing Assistant: Turn source material into an interactive briefing"),
-        
+        PreviewFeatures.PRE_MAILBOXES_2026 => TB("Mailboxes: Let the AI search and read your e-mails, kept in a local index on your computer"),
+
         _ => TB("Unknown preview feature")
     };
     

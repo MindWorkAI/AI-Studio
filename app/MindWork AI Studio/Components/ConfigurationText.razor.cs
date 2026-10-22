@@ -19,7 +19,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public Action<string> TextUpdate { get; set; } = _ => { };
 
     /// <summary>
-    /// The icon to display next to the textfield.
+    /// The icon to display next to the textfield, when it has a single line.
     /// </summary>
     [Parameter]
     public string Icon { get; set; } = Icons.Material.Filled.Info;
@@ -41,6 +41,24 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public int MaxLines { get; set; } = 12;
+
+    /// <summary>
+    /// When configured, displays a button which restores this value.
+    /// </summary>
+    [Parameter]
+    public Func<string>? ResetValue { get; set; }
+
+    /// <summary>
+    /// The text displayed on the optional reset button.
+    /// </summary>
+    [Parameter]
+    public string ResetButtonText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Validates the configured text before it is stored.
+    /// </summary>
+    [Parameter]
+    public Func<string, string?>? Validation { get; set; }
     
     private string internalText = string.Empty;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
@@ -57,13 +75,9 @@ public partial class ConfigurationText : ConfigurationBaseCore
     
     protected override string Label => this.OptionDescription;
 
-    #endregion
-
-    #region Overrides of ConfigurationBase
-
     protected override async Task OnInitializedAsync()
     {
-        this.timer.Elapsed += async (_, _) => await this.InvokeAsync(async () => await this.OptionChanged(this.internalText));
+        this.timer.Elapsed += (_, _) => this.InvokeAsync(async () => await this.OptionChanged(this.internalText)).Observe($"{nameof(ConfigurationText)}: applying the changed text");
         await base.OnInitializedAsync();
     }
 
@@ -79,15 +93,34 @@ public partial class ConfigurationText : ConfigurationBaseCore
     
     private int GetMaxLines => this.AutoGrow ? this.MaxLines : 1;
 
+    //
+    // MudBlazor centers the icon vertically, so in a field of several lines it floats in the middle
+    // of the text. Such a field goes without:
+    //
+    private Adornment IconAdornment => this.NumLines == 1 ? Adornment.Start : Adornment.None;
+
     private void InternalUpdate(string text)
     {
         this.timer.Stop();
         this.internalText = text;
         this.timer.Start();
     }
+
+    private async Task ResetTextAsync()
+    {
+        if (this.ResetValue is null || this.IsDisabled)
+            return;
+
+        this.timer.Stop();
+        this.internalText = this.ResetValue();
+        await this.OptionChanged(this.internalText);
+    }
     
     private async Task OptionChanged(string updatedText)
     {
+        if (this.Validation?.Invoke(updatedText) is not null)
+            return;
+
         this.TextUpdate(updatedText);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();

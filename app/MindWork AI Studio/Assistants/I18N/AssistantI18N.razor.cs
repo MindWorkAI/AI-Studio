@@ -90,7 +90,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.customTargetLanguage = string.Empty;
         }
 
-        _ = this.OnChangedLanguage();
+        this.OnChangedLanguage().Observe($"{nameof(AssistantI18N)}: applying a language change");
     }
     
     protected override bool MightPreselectValues()
@@ -114,6 +114,11 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private string searchString = string.Empty;
     private Guid selectedLanguagePluginId;
     private ILanguagePlugin? selectedLanguagePlugin;
+
+    /// <summary>
+    /// The English text of every key, as the I18N collector wrote it into allTexts.lua.
+    /// </summary>
+    private Dictionary<string, string> sourceContent = [];
     private Dictionary<string, string> addedContent = [];
     private Dictionary<string, string> removedContent = [];
     private Dictionary<string, string> localizedContent = [];
@@ -127,6 +132,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private static readonly AssistantSessionStateKey<string> SEARCH_STRING_STATE_KEY = new(nameof(searchString));
     private static readonly AssistantSessionStateKey<Guid> SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY = new(nameof(selectedLanguagePluginId));
     private static readonly AssistantSessionStateKey<ILanguagePlugin?> SELECTED_LANGUAGE_PLUGIN_STATE_KEY = new(nameof(selectedLanguagePlugin));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> SOURCE_CONTENT_STATE_KEY = new(nameof(sourceContent));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> ADDED_CONTENT_STATE_KEY = new(nameof(addedContent));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> REMOVED_CONTENT_STATE_KEY = new(nameof(removedContent));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> LOCALIZED_CONTENT_STATE_KEY = new(nameof(localizedContent));
@@ -143,6 +149,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         state.Set(SEARCH_STRING_STATE_KEY, this.searchString);
         state.Set(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, this.selectedLanguagePluginId);
         state.Set(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, this.selectedLanguagePlugin);
+        state.SetDictionary(SOURCE_CONTENT_STATE_KEY, this.sourceContent);
         state.SetDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
         state.SetDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
         state.SetDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
@@ -160,6 +167,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         state.Restore(SEARCH_STRING_STATE_KEY, value => this.searchString = value);
         state.Restore(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, value => this.selectedLanguagePluginId = value);
         state.Restore(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, value => this.selectedLanguagePlugin = value);
+        state.RestoreDictionary(SOURCE_CONTENT_STATE_KEY, this.sourceContent);
         state.RestoreDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
         state.RestoreDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
         state.RestoreDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
@@ -275,6 +283,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 var newI18NContent = pluginLanguage.Content;
                 
                 var currentI18NContent = this.selectedLanguagePlugin.Content;
+                this.sourceContent = newI18NContent.ToDictionary();
                 this.addedContent = newI18NContent.ExceptBy(currentI18NContent.Keys, n => n.Key).ToDictionary();
                 this.removedContent = currentI18NContent.ExceptBy(newI18NContent.Keys, n => n.Key).ToDictionary();
                 this.localizationPossible = true;
@@ -354,7 +363,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         var removedContentSnapshot = this.removedContent.ToArray();
         var removedContentKeys = removedContentSnapshot.Select(keyValuePair => keyValuePair.Key).ToHashSet(StringComparer.Ordinal);
         var selectedLanguageContentSnapshot = this.selectedLanguagePlugin.Content.ToArray();
-        var baseLanguageContentSnapshot = PluginFactory.BaseLanguage.Content.ToArray();
+        var sourceContentSnapshot = this.sourceContent.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
 
         this.localizedContent.Clear();
         this.activeSystemPromptLanguage = this.SystemPromptLanguage();
@@ -398,22 +407,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
                 return;
             
             //
-            // Phase 2: Create the Lua code. We want to use the base language
-            // for the comments, though:
+            // Phase 2: Create the Lua code. Each comment names the English text, which
+            // allTexts.lua holds for every key of the result. The English language plugin
+            // would not do: a text which is missing there, e.g., because somebody added it
+            // to this language by hand, would get its translation as a comment instead.
             //
-            var commentContent = addedContentSnapshot.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
-            foreach (var keyValuePair in baseLanguageContentSnapshot)
-            {
-                if (this.CancellationTokenSource!.IsCancellationRequested)
-                    break;
-
-                if (removedContentKeys.Contains(keyValuePair.Key))
-                    continue;
-
-                commentContent.TryAdd(keyValuePair.Key, keyValuePair.Value);
-            }
-            
-            this.Phase2CreateLuaCode(commentContent);
+            this.Phase2CreateLuaCode(sourceContentSnapshot);
         }
         finally
         {

@@ -16,7 +16,7 @@ public interface ISource
     public string URL { get; }
     
     /// <summary>
-    /// The origin of the source, whether it was provided by the AI or by the RAG process.
+    /// The origin of the source.
     /// </summary>
     public SourceOrigin Origin { get; }
 }

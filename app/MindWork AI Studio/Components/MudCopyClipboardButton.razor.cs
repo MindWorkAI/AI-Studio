@@ -34,6 +34,12 @@ public partial class MudCopyClipboardButton : ComponentBase
     public string TooltipMessage { get; set; } = TB("Copies the content to the clipboard");
 
     /// <summary>
+    /// Whether AI generated the content. It then ends with a notice saying so, when that is switched on.
+    /// </summary>
+    [Parameter]
+    public bool IsAIGenerated { get; set; }
+
+    /// <summary>
     /// The size of the button. The default size is small.
     /// </summary>
     [Parameter]
@@ -41,6 +47,9 @@ public partial class MudCopyClipboardButton : ComponentBase
 
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
     
     private async Task HandleCopyClick()
     {
@@ -55,22 +64,27 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     private async Task CopyToClipboard(string textContent)
     {
-        await this.RustService.CopyText2Clipboard(textContent);
+        var text = this.IsAIGenerated ? this.DisclosureService.AddDisclosureToMarkdown(textContent) : textContent;
+        await this.RustService.CopyText2Clipboard(text);
     }
     
     /// <summary>
     /// Copy this block's content to the clipboard.
     /// </summary>
+    /// <remarks>
+    /// The user copies what the card shows, and the card shows the answer together with the sources
+    /// AI Studio collected for it. Pasting the answer into a mail without them would leave the
+    /// reader with claims nobody is able to check.
+    /// </remarks>
     private async Task CopyToClipboard(IContent? contentToCopy)
     {
         if (contentToCopy is null)
             return;
-        
+
         switch (this.Type)
         {
-            case ContentType.TEXT:
-                var textContent = (ContentText) contentToCopy;
-                await this.RustService.CopyText2Clipboard(textContent.Text);
+            case ContentType.TEXT when contentToCopy.TryGetExportMarkdown(out var markdown):
+                await this.CopyToClipboard(markdown);
                 break;
             
             default:

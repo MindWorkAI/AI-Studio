@@ -47,6 +47,12 @@ public sealed record Confidence
         Description = TB("The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe."),
     };
 
+    public static readonly Confidence USER_OPERATED_GATEWAY = new()
+    {
+        Level = ConfidenceLevel.UNKNOWN,
+        Description = TB("You or your organization operate this gateway. However, it forwards your data to **whichever providers you configured behind it**, which may be cloud services in any jurisdiction. We cannot know where your data ends up, so **please assign the trust level yourself**."),
+    };
+
     public static readonly Confidence USA_NO_TRAINING = new()
     {
         Level = ConfidenceLevel.MODERATE,
@@ -63,6 +69,12 @@ public sealed record Confidence
     {
         Level = ConfidenceLevel.MEDIUM,
         Description = TB("The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**."),
+    };
+
+    public static readonly Confidence GDPR_EXPERIMENTAL_OPEN_SOURCE = new()
+    {
+        Level = ConfidenceLevel.MEDIUM,
+        Description = TB("The provider operates its service in the EU and is subject to the **GDPR** (General Data Protection Regulation). It provides access to **open source models**. However, the service is currently **experimental**, and performance and availability are not guaranteed. We have no provider-specific information about whether submitted data is used for training."),
     };
     
     public static readonly Confidence SELF_HOSTED = new()

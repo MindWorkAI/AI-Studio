@@ -1,7 +1,9 @@
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
-using Lua;
+using SharedTools;
+
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -57,6 +59,19 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     /// The minimum confidence level required for a provider to be considered.
     /// </summary>
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ConfidenceLevel.NONE;
+
+    /// <summary>
+    /// The tools this policy permits the model to use.
+    /// </summary>
+    /// <remarks>
+    /// A limit, not a preselection: a tool absent from this list cannot be chosen for a run of this
+    /// policy. Empty therefore means no tools at all, which is what a policy written before this
+    /// field existed gets — an analysis keeps working exactly as its author wrote it.<br/><br/>
+    /// This narrows what the user may pick; it never widens what a tool is allowed to do. Every
+    /// permitted tool still has to pass the provider confidence checks, so a tool demanding High
+    /// confidence stays out of reach of a weaker provider whether a policy lists it or not.
+    /// </remarks>
+    public HashSet<string> AllowedToolIds { get; set; } = [];
     
     /// <summary>
     /// Which LLM provider should be preselected?
@@ -130,6 +145,23 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         if (table.TryGetValue("HidePolicyDefinition", out var hideValue) && hideValue.TryRead<bool>(out var hide))
             hidePolicyDefinition = hide;
 
+        //
+        // Unknown tool IDs are kept rather than rejected: an organization may roll out a policy
+        // before the plugin providing that tool reaches every workstation. A tool that does not
+        // exist simply never shows up, and the policy starts working once it does.
+        //
+        var allowedToolIds = new HashSet<string>(StringComparer.Ordinal);
+        if (table.TryGetValue("AllowedToolIds", out var toolIdsValue) && toolIdsValue.TryRead<LuaTable>(out var toolIdsTable))
+        {
+            for (var toolIdx = 1; toolIdx <= toolIdsTable.ArrayLength; toolIdx++)
+            {
+                if (toolIdsTable[toolIdx].TryRead<string>(out var toolId) && !string.IsNullOrWhiteSpace(toolId))
+                    allowedToolIds.Add(toolId.Trim());
+                else
+                    LOG.LogWarning("The configured document analysis policy {PolicyIndex} contains an invalid entry in its AllowedToolIds list.", idx);
+            }
+        }
+
         policy = new DataDocumentAnalysisPolicy
         {
             Id = id.ToString(),
@@ -139,6 +171,7 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             AnalysisRules = analysisRules,
             OutputRules = outputRules,
             MinimumProviderConfidence = minimumConfidence,
+            AllowedToolIds = allowedToolIds,
             PreselectedProvider = preselectedProvider,
             PreselectedProfile = preselectedProfile,
             HidePolicyDefinition = hidePolicyDefinition,
@@ -146,7 +179,56 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
-        
+
         return true;
+    }
+
+    /// <summary>
+    /// Exports the policy as a Lua configuration section.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the other exports, this one keeps the ID of the policy.
+    /// </remarks>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection()
+    {
+        var preselectedProvider = string.IsNullOrWhiteSpace(this.PreselectedProvider) ? string.Empty : this.PreselectedProvider;
+        var preselectedProfile = string.IsNullOrWhiteSpace(this.PreselectedProfile) ? string.Empty : this.PreselectedProfile;
+        var id = string.IsNullOrWhiteSpace(this.Id) ? Guid.NewGuid().ToString() : this.Id;
+        var allowedToolIds = string.Join(", ", this.AllowedToolIds.OrderBy(x => x, StringComparer.Ordinal).Select(x => LuaTools.ToLuaStringLiteral(x)));
+
+        return $$"""
+                 CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
+                     ["Id"] = "{{LuaTools.EscapeLuaString(id)}}",
+                     ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.PolicyName.Trim())}},
+                     ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.PolicyDescription.Trim())}},
+
+                     ["AnalysisRules"] = {{LuaTools.ToLuaStringLiteral(this.AnalysisRules.Trim(), forceLongString: true)}},
+
+                     ["OutputRules"] = {{LuaTools.ToLuaStringLiteral(this.OutputRules.Trim(), forceLongString: true)}},
+
+                     -- Optional: minimum provider confidence required for this policy.
+                     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+                     ["MinimumProviderConfidence"] = "{{this.MinimumProviderConfidence}}",
+
+                     -- The tools an analysis with this policy may use, by tool ID.
+                     -- This is a limit, not a preselection: a tool which is not listed here cannot
+                     -- be used for this policy. An empty list means no tools. A listed tool must
+                     -- still meet the confidence requirements of the provider in use.
+                     ["AllowedToolIds"] = { {{allowedToolIds}} },
+
+                     -- Optional: preselect a provider or profile by ID.
+                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+                     ["PreselectedProvider"] = "{{LuaTools.EscapeLuaString(preselectedProvider)}}",
+                     ["PreselectedProfile"] = "{{LuaTools.EscapeLuaString(preselectedProfile)}}",
+
+                     -- Optional: hide the policy definition section in the UI.
+                     -- When set to true, users will only see the document selection interface
+                     -- and cannot view or modify the policy settings.
+                     -- This is useful for enterprise configurations where policy details should remain hidden.
+                     -- Allowed values are: true, false (default: false)
+                     ["HidePolicyDefinition"] = {{this.HidePolicyDefinition.ToString().ToLowerInvariant()}},
+                 }
+                 """;
     }
 }

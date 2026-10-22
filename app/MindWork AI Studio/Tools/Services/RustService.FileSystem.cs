@@ -13,9 +13,10 @@ public sealed partial class RustService
             async () =>
             {
                 var encodedTitle = Uri.EscapeDataString(title);
-                var result = initialDirectory is null
+                var startDirectory = initialDirectory is null ? null : PathTools.FindNearestExistingPath(initialDirectory);
+                var result = startDirectory is null
                     ? await this.http.PostAsync($"/select/directory?title={encodedTitle}", null)
-                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(initialDirectory), this.jsonRustSerializerOptions);
+                    : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(startDirectory), this.jsonRustSerializerOptions);
 
                 if (result.IsSuccessStatusCode)
                     return await result.Content.ReadFromJsonAsync<DirectorySelectionResponse>(this.jsonRustSerializerOptions);
@@ -54,11 +55,12 @@ public sealed partial class RustService
             "select file",
             async () =>
             {
+                var startPath = initialFile is null ? null : PathTools.FindNearestExistingPath(initialFile);
                 var payload = new SelectFileOptions
                 {
                     Title = title,
-                    PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    PreviousFile = startPath is null ? null : new (startPath),
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/file", payload, this.jsonRustSerializerOptions);
@@ -77,11 +79,12 @@ public sealed partial class RustService
             "select files",
             async () =>
             {
+                var startPath = initialFile is null ? null : PathTools.FindNearestExistingPath(initialFile);
                 var payload = new SelectFileOptions
                 {
                     Title = title,
-                    PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    PreviousFile = startPath is null ? null : new (startPath),
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/select/files", payload, this.jsonRustSerializerOptions);
@@ -112,7 +115,7 @@ public sealed partial class RustService
                 {
                     Title = title,
                     PreviousFile = initialFile is null ? null : new (initialFile),
-                    Filter = FileTypes.AsOneFileType(filter)
+                    Filter = FileTypes.ToFileDialogFilter(filter)
                 };
 
                 var result = await this.http.PostAsJsonAsync("/save/file", payload, this.jsonRustSerializerOptions);
@@ -162,6 +165,68 @@ public sealed partial class RustService
         {
             this.logger!.LogWarning(e, "Failed to process the Rust runtime file manager endpoint response.");
             return new OpenPathResponse(false, TB("The runtime file manager endpoint failed without details."));
+        }
+        finally
+        {
+            result.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Opens a document in the program the system uses for it, on the given page where possible.
+    /// </summary>
+    /// <remarks>
+    /// The page is best effort and never decides whether this succeeded. Which programs can be
+    /// told a page is the runtime's business, and it says afterwards whether it managed to.
+    /// </remarks>
+    /// <param name="path">The document to open.</param>
+    /// <param name="pageNumber">The page to show, counted from one, or null when there is none.</param>
+    /// <returns>Whether the document was opened, whether the page was applied, and what went wrong.</returns>
+    public async Task<OpenDocumentResponse> TryOpenDocumentInSystemViewer(string path, int? pageNumber)
+    {
+        HttpResponseMessage result;
+        try
+        {
+            result = await this.http.PostAsJsonAsync("/open/document", new OpenDocumentRequest(path, pageNumber), this.jsonRustSerializerOptions);
+        }
+        catch (HttpRequestException e)
+        {
+            this.logger!.LogWarning(e, "Failed to reach the Rust runtime document endpoint.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+        }
+        catch (TaskCanceledException e)
+        {
+            this.logger!.LogWarning(e, "Timed out while reaching the Rust runtime document endpoint.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint is not available."));
+        }
+
+        try
+        {
+            if (!result.IsSuccessStatusCode)
+            {
+                this.logger!.LogWarning("Failed to open a document through the Rust runtime: '{StatusCode}'", result.StatusCode);
+                return new OpenDocumentResponse(false, false, string.Format(TB("The runtime document endpoint returned '{0}'."), result.StatusCode));
+            }
+
+            var response = await result.Content.ReadFromJsonAsync<OpenDocumentResponse>(this.jsonRustSerializerOptions);
+            if (response.Success)
+            {
+                //
+                // A page which was asked for but not applied is noted here and nowhere else: the
+                // document is open, and the source the user clicked names the page anyway.
+                //
+                if (pageNumber is > 0 && !response.PageApplied)
+                    this.logger!.LogInformation("Opened a document without the requested page {PageNumber}, because the system uses a program which cannot be told one.", pageNumber);
+
+                return response;
+            }
+
+            return new OpenDocumentResponse(false, false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime document endpoint failed without details.") : response.Issue);
+        }
+        catch (Exception e)
+        {
+            this.logger!.LogWarning(e, "Failed to process the Rust runtime document endpoint response.");
+            return new OpenDocumentResponse(false, false, TB("The runtime document endpoint failed without details."));
         }
         finally
         {

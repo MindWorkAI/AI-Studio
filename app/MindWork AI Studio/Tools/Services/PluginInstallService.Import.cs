@@ -38,10 +38,13 @@ public sealed partial class PluginInstallService
             return Error(TB("The plugin system is not initialized yet."));
 
         await this.installSemaphore.WaitAsync(token);
-        var stagingDirectory = Path.Join(Path.GetTempPath(), $"plugin-import.staging-{Guid.NewGuid():N}");
+        var stagingDirectory = string.Empty;
         try
         {
             token.ThrowIfCancellationRequested();
+            if (!this.TryCreateStagingDirectory(PLUGIN_IMPORT_DIRECTORY_PREFIX, out stagingDirectory, out var stagingIssue))
+                return Error(stagingIssue);
+
             PluginArchive.Extract(archivePath, stagingDirectory);
 
             var pluginFiles = Directory.EnumerateFiles(stagingDirectory, PLUGIN_FILE_NAME, SearchOption.AllDirectories).ToArray();

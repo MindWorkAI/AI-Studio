@@ -1,3 +1,4 @@
+using AIStudio.Tools.DataBackup;
 using AIStudio.Tools.PluginSystem;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -12,12 +13,12 @@ public static class FileTypes
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypes).Namespace, nameof(FileTypes));
     
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.ByFileName(TB("Source like"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Makefile", "GNUmakefile", "Procfile", "Vagrantfile",
         "Tiltfile", "Justfile", "Brewfile", "Caddyfile", "Gemfile", "Podfile", "Fastfile", "Appfile", "Rakefile", "Dangerfile",
         "BUILD", "WORKSPACE", "BUCK");
 
-    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.Leaf(TB("Source like prefix"),
+    public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAME_PREFIXES = FileTypeFilter.ByFileNamePrefix(TB("Source like prefix"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Procfile", "Caddyfile");
     
     // Source code hierarchy: SourceCode -> (.NET, Java, Python, Web, C/C++, Config, ...)
@@ -31,12 +32,18 @@ public static class FileTypes
     public static readonly FileTypeFilter RUST       = FileTypeFilter.Leaf("Rust", "rs");
     public static readonly FileTypeFilter LUA        = FileTypeFilter.Leaf("Lua", "lua");
     public static readonly FileTypeFilter PHP        = FileTypeFilter.Leaf("PHP", "php");
-    public static readonly FileTypeFilter WEB        = FileTypeFilter.Leaf("HTML/CSS", "html", "css");
+    public static readonly FileTypeFilter HTML       = FileTypeFilter.Leaf("HTML", "html", "htm");
+    public static readonly FileTypeFilter CSS        = FileTypeFilter.Leaf("CSS", "css");
+    public static readonly FileTypeFilter WEB        = FileTypeFilter.Parent("HTML/CSS", HTML, CSS);
 
     /// <summary>
     /// Gets the standalone HTML filter used for visual briefing import and export.
     /// </summary>
     public static readonly FileTypeFilter VISUAL_BRIEFING_HTML = FileTypeFilter.Leaf(TB("Visual briefing"), "html");
+
+    // Only the canonical extension, without the legacy ".htm": this is what we write when
+    // exporting, whereas the HTML family above is what we accept when reading.
+    public static readonly FileTypeFilter HTML_DOCUMENT = FileTypeFilter.Leaf("HTML", "html");
     public static readonly FileTypeFilter APP        = FileTypeFilter.Leaf("Swift/Kotlin", "swift", "kt");
     public static readonly FileTypeFilter SHELL      = FileTypeFilter.Leaf("Shell", "sh", "bash", "zsh");
     public static readonly FileTypeFilter LOG        = FileTypeFilter.Leaf("Log", "log");
@@ -50,22 +57,60 @@ public static class FileTypes
 
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
-    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+    public static readonly FileTypeFilter MARKDOWN    = FileTypeFilter.Leaf("Markdown", "md");
+
+    /// <summary>
+    /// Text whose file name or extension is not known in advance, such as LICENSE or main.tf.
+    /// </summary>
+    /// <remarks>
+    /// It is recognized by its content, cf. ReadableTextDetection, and therefore names no extension:
+    /// in a filter of the native file picker, only the extensions of the other types count. The
+    /// runtime's text reader has the final say when it extracts the text.
+    /// </remarks>
+    public static readonly FileTypeFilter READABLE_TEXT = FileTypeFilter.Leaf(TB("Readable text"));
+
+    public static readonly FileTypeFilter TEXT        = FileTypeFilter.Composite(TB("Text"), ["txt", "md", "rtf"], READABLE_TEXT);
+
+    public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
+    public static readonly FileTypeFilter CSV         = FileTypeFilter.Leaf("CSV", "csv");
+    public static readonly FileTypeFilter TSV         = FileTypeFilter.Leaf("TSV", "tsv");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
-    public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
-    public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
-    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx", "odp");
+    public static readonly FileTypeFilter ODT         = FileTypeFilter.Leaf("OpenDocument Text", "odt");
+    public static readonly FileTypeFilter WORD        = FileTypeFilter.Parent("Word", ODT, MS_WORD);
+    public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx", "xlsm", "xlsb", "xla", "xlam");
+    public static readonly FileTypeFilter ODS         = FileTypeFilter.Leaf("OpenDocument Spreadsheet", "ods");
+    public static readonly FileTypeFilter SPREADSHEET = FileTypeFilter.Parent(TB("Spreadsheet"), EXCEL, ODS);
+
+    // The legacy binary ".ppt" is missing on purpose: AI Studio has no reader for it, so offering
+    // it would only let users attach a file which cannot be read.
+    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "pptx", "odp");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
 
+    // Only the LaTeX document itself, without the auxiliary files of the LaTeX family: this is
+    // what we write when exporting, whereas the family above is what we accept when reading.
+    public static readonly FileTypeFilter TEX         = FileTypeFilter.Leaf("LaTeX", "tex");
+
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
-        WORD, EXCEL, POWER_POINT, PDF);
+        WORD, SPREADSHEET, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
-        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX);
+        TEXT, TABULAR, OFFICE_FILES, SOURCE_CODE, LATEX);
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
-        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic");
+        "jpg", "jpeg", "png", "gif", "bmp", "tif", "tiff", "svg", "webp", "heic", "avif");
+
+    /// <summary>
+    /// The image formats AI Studio can prepare for a model.
+    /// </summary>
+    /// <remarks>
+    /// These are the formats the runtime decodes before it sends an image to a model as JPEG or
+    /// PNG, see prepare_image_for_model in runtime/src/image.rs. Other images, such as HEIC, AVIF,
+    /// or SVG, cannot go to a model at all. The default file patterns of the batch processing
+    /// assistant list the same formats, see DataBatchProcessing.DEFAULT_FILE_PATTERNS.
+    /// </remarks>
+    public static readonly FileTypeFilter MODEL_IMAGE = FileTypeFilter.Leaf(TB("Image for AI models"),
+        "jpg", "jpeg", "png", "webp", "gif", "bmp", "tif", "tiff");
 
     /// <summary>
     /// Gets the prototype visual-asset image formats.
@@ -82,17 +127,52 @@ public static class FileTypes
     // Other standalone types
     public static readonly FileTypeFilter CERTIFICATE_BUNDLE = FileTypeFilter.Leaf(TB("Certificate bundle"), "pem", "crt", "cer");
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
+    public static readonly FileTypeFilter SHORTCUT = FileTypeFilter.Leaf(TB("Shortcut"), "lnk");
     public static readonly FileTypeFilter PLUGIN_ARCHIVE = FileTypeFilter.Leaf(TB("Plugin archive"), PluginArchive.PLUGIN_FILE_EXTENSION.TrimStart('.'), "zip");
+    public static readonly FileTypeFilter BACKUP_ARCHIVE = FileTypeFilter.Leaf(TB("AI Studio backup"), DataBackupFormat.FILE_EXTENSION.TrimStart('.'), "zip");
     
-    public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
+    /// <summary>
+    /// The file types AI Studio converts using Pandoc.
+    /// </summary>
+    /// <remarks>
+    /// This is not a user-selectable type, it mirrors the formats the Rust runtime hands to
+    /// Pandoc. Every other document type is read by the runtime itself, so it must never depend
+    /// on a Pandoc installation. Word and OpenDocument text files (.docx, .odt) used to be listed
+    /// here as well; the runtime reads them on its own now. The name is not localized because it
+    /// is never shown.
+    /// </remarks>
+    private static readonly FileTypeFilter PANDOC_CONVERTED = FileTypeFilter.Leaf("Pandoc conversion", "html", "htm");
+
+    /// <summary>
+    /// Determines whether reading the given file needs Pandoc.
+    /// </summary>
+    /// <param name="filePath">The path of the file to check.</param>
+    /// <returns>True, when reading the file needs Pandoc.</returns>
+    public static bool RequiresPandoc(string filePath) => IsAllowedPath(filePath, PANDOC_CONVERTED);
+
+    /// <summary>
+    /// Turns the given file types into the one flat filter a native file dialog takes.
+    /// </summary>
+    /// <remarks>
+    /// The filter holds the extensions of all given types and of their children. It is named after
+    /// the type when there is only one. Files recognized by their name or content only, such as
+    /// Dockerfile or LICENSE, cannot be expressed by extension: the dialog does not offer them once
+    /// other types narrow the list, whereas drag and drop accepts them. When no extension remains at
+    /// all, there is no filter, the dialog shows every file, and the caller checks the selection
+    /// with IsAllowedPath.
+    /// </remarks>
+    /// <param name="types">The file types to show, or none for all files.</param>
+    /// <returns>The filter, or null when the dialog should show all files.</returns>
+    public static FileDialogFilter? ToFileDialogFilter(params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0)
             return null;
-        
-        if (types.Length == 1)
-            return types[0];
 
-        return FileTypeFilter.Composite(TB("Custom"), OnlyAllowTypes(types));
+        var extensions = OnlyAllowTypes(types);
+        if (extensions.Length == 0)
+            return null;
+
+        return new FileDialogFilter(types.Length == 1 ? types[0].FilterName : TB("Custom"), extensions);
     }
     
     public static string[] OnlyAllowTypes(params FileTypeFilter[] types)
@@ -101,43 +181,50 @@ public static class FileTypes
             return [];
 
         return types
-            .Where(t => t != SOURCE_LIKE_FILE_NAMES && t != SOURCE_LIKE_FILE_NAME_PREFIXES)
             .SelectMany(t => t.FlattenExtensions())
             .Select(ext => ext.ToLowerInvariant())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 
+    public static bool IsAllowedExtension(string extension, params FileTypeFilter[]? types)
+    {
+        if (types == null || types.Length == 0 || string.IsNullOrWhiteSpace(extension))
+            return false;
+
+        return OnlyAllowTypes(types).Contains(extension.TrimStart('.'), StringComparer.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     /// Validates a file path against the provided filters.
-    /// Supports extension-based matching and source-like file names (e.g. Dockerfile).
+    /// Supports extension-based matching, source-like file names (e.g. Dockerfile), and readable
+    /// text recognized directly from file contents.
     /// </summary>
+    /// <remarks>
+    /// When a filter holds READABLE_TEXT and neither the extension nor the file name matches, this
+    /// reads up to the first 8 KB of the file, cf. ReadableTextDetection. TEXT and DOCUMENT hold it.
+    /// </remarks>
     public static bool IsAllowedPath(string filePath, params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0 || string.IsNullOrWhiteSpace(filePath))
             return false;
 
         var extension = Path.GetExtension(filePath).TrimStart('.');
-        if (!string.IsNullOrWhiteSpace(extension))
-        {
-            if (OnlyAllowTypes(types).Contains(extension, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
+        if (IsAllowedExtension(extension, types))
+            return true;
 
         var fileName = Path.GetFileName(filePath);
         if (string.IsNullOrWhiteSpace(fileName))
             return false;
 
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
-        { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
-        
-        if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAME_PREFIXES))){
-            if (SOURCE_LIKE_FILE_NAME_PREFIXES.FilterExtensions.Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
-                return true;
-        }
+        if (types.SelectMany(t => t.FlattenFileNames()).Contains(fileName, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        if (types.SelectMany(t => t.FlattenFileNamePrefixes()).Any(prefix => fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        if (types.Any(type => type.ContainsType(READABLE_TEXT)) && ReadableTextDetection.IsReadableTextFile(filePath))
+            return true;
         
         return false;
     }

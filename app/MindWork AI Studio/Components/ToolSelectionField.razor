@@ -1,0 +1,16 @@
+@inherits MSGComponentBase
+
+@if (this.availableTools.Count > 0)
+{
+    <ConfigurationMultiSelect TData="string"
+                              OptionDescription="@this.Label"
+                              OptionHelp="@this.Help"
+                              Data="@this.availableTools"
+                              SelectedValues="@(() => this.SelectedToolIds)"
+                              SelectionUpdateAsync="@this.OptionChangedAsync"
+                              Disabled="@(() => this.ReadOnly || this.Disabled)"
+                              IsItemLocked="@this.IsToolLocked"
+                              EmptySelectionText="@T("No tools selected")"
+                              SingleSelectionText="@T("1 tool selected")"
+                              MultipleSelectionText="@T("{0} tools selected")"/>
+}

@@ -157,8 +157,8 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         this.BuildProgressService.Changed += this.BuildProgressChanged;
         await this.ReloadListAsync();
         await this.ConsumePendingMediaOutcomesAsync();
-        _ = this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token);
-        var deferredInstruction = this.MessageBus.CheckDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).FirstOrDefault();
+        this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token).Observe($"{nameof(VisualBriefingAssistant)}: monitoring the source status");
+        var deferredInstruction = this.MessageBus.TakeDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).LastOrDefault();
 
         if (!string.IsNullOrWhiteSpace(deferredInstruction))
         {

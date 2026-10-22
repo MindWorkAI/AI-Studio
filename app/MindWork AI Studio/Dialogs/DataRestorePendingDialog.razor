@@ -1,0 +1,25 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3">
+            <MudIcon Icon="@Icons.Material.Filled.RestartAlt" Color="Color.Warning" Size="Size.Large"/>
+            <MudJustifiedText Typo="Typo.body1">
+                @T("Your backup is ready. AI Studio restarts to put it in place. Whatever you changed until then would be lost, so please restart now.")
+            </MudJustifiedText>
+        </MudStack>
+        @if (this.restartFailed)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                @T("AI Studio could not restart by itself. Please quit AI Studio and start it again.")
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.DiscardAsync" Variant="Variant.Text" Disabled="@this.isWorking">
+            @T("Discard the restore")
+        </MudButton>
+        <MudButton OnClick="@this.RestartAsync" Variant="Variant.Filled" Color="Color.Primary" Disabled="@this.isWorking">
+            @T("Restart now")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

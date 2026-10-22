@@ -4,6 +4,12 @@
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
+        @if (this.IsEnterpriseConfiguration)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                @T("This provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
+            </MudAlert>
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
@@ -12,14 +18,12 @@
                            ValueChanged="@this.OnProviderChanged"
                            Label="@T("Provider")"
                            Class="mb-3"
-                           OpenIcon="@Icons.Material.Filled.AccountBalance"
-                           AdornmentColor="Color.Info"
-                           Adornment="Adornment.Start"
+                           Disabled="@this.IsEnterpriseConfiguration"
                            Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
-                            @provider.ToName()
+                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
                         </MudSelectItem>
                     }
                 </MudSelect>
@@ -27,7 +31,7 @@
                     @T("Create account")
                 </MudButton>
             </MudStack>
-            
+
             @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
             {
                 <SecretInputField Secret="@this.dataAPIKey" SecretChanged="@this.OnAPIKeyChanged" Label="@this.APIKeyText" Validation="@this.providerValidation.ValidatingAPIKey"/>
@@ -43,13 +47,14 @@
                     Adornment="Adornment.Start"
                     AdornmentIcon="@Icons.Material.Filled.Dns"
                     AdornmentColor="Color.Info"
+                    Disabled="@this.IsEnterpriseConfiguration"
                     Validation="@this.providerValidation.ValidatingHostname"
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
             }
 
             @if (this.DataLLMProvider.IsHostNeeded())
             {
-                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
+                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                     @foreach (Host host in Enum.GetValues(typeof(Host)))
                     {
                         @if (host.IsChatSupported())
@@ -64,19 +69,20 @@
 
             @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
             {
-                <MudSelect @bind-Value="@this.HFInferenceProviderId" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                     @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                     {
-                        <MudSelectItem Value="@inferenceProvider">
-                            @inferenceProvider.ToName()
-                        </MudSelectItem>
-                    }             
+                        @if (inferenceProvider.SupportsChat())
+                        {
+                            <MudSelectItem Value="@inferenceProvider">
+                                @inferenceProvider.ToName()
+                            </MudSelectItem>
+                        }
+                    }
                 </MudSelect>
-                @* ReSharper disable Asp.Entity *@
                 <MudJustifiedText Class="mb-3">
-                    Please double-check if your model name matches the curl specifications provided by the inference provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.
+                    @T("Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.")
                 </MudJustifiedText>
-                @* ReSharper restore Asp.Entity *@
             }       
 
             @if (!this.IsLLMModelSelectionHidden)
@@ -85,7 +91,7 @@
                     <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
                         @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                         {
-                            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">
+                            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
                                 @T("Show available models")
                             </MudButton>
                             <MudTextField
@@ -95,6 +101,7 @@
                                 Adornment="Adornment.Start"
                                 AdornmentIcon="@Icons.Material.Filled.FaceRetouchingNatural"
                                 AdornmentColor="Color.Info"
+                                Disabled="@this.IsEnterpriseConfiguration"
                                 Validation="@this.ValidateManuallyModel"
                                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                                 HelperText="@T("Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.")"
@@ -102,7 +109,13 @@
                         }
                         else
                         {
-                            <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                            @if (!string.IsNullOrWhiteSpace(this.ModelsOverviewURL))
+                            {
+                                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
+                                    @T("Show available models")
+                                </MudButton>
+                            }
+                            <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
                                 @T("Load models")
                             </MudButton>
                             @if(this.availableModels.Count is 0)
@@ -117,7 +130,7 @@
                                            Value="@this.DataModel"
                                            ValueChanged="@(async model => await this.OnModelChanged(model))"
                                            OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
-                                           Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
+                                           Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingModel">
                                     @foreach (var model in this.availableModels)
                                     {
                                         <MudSelectItem Value="@model">
@@ -157,10 +170,11 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
+                Disabled="@this.IsEnterpriseConfiguration"
                 Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
-            
+
             <MudStack>
                 <MudButton OnClick="@this.ToggleExpertSettings">
                     @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
@@ -193,12 +207,13 @@
                                         <MudSwitch T="bool"
                                                    Value="@this.IsCapabilityEnabled(capability)"
                                                    ValueChanged="@(value => this.OnCapabilitySwitchChanged(capability, value))"
+                                                   Disabled="@this.IsEnterpriseConfiguration"
                                                    Color="Color.Primary" />
                                         <MudButton Variant="Variant.Outlined"
                                                    Color="Color.Default"
                                                    Size="Size.Small"
                                                    StartIcon="@Icons.Material.Filled.RestartAlt"
-                                                   Disabled="@(!this.HasCapabilityOverride(capability))"
+                                                   Disabled="@(this.IsEnterpriseConfiguration || !this.HasCapabilityOverride(capability))"
                                                    OnClick="@(() => this.ResetCapabilityOverride(capability))">
                                             @T("Reset")
                                         </MudButton>
@@ -216,7 +231,8 @@
                                        Margin="Margin.Dense"
                                        OpenIcon="@Icons.Material.Filled.Psychology"
                                        AdornmentColor="Color.Info"
-                                       Adornment="Adornment.Start">
+                                       Adornment="Adornment.Start"
+                                       Disabled="@this.IsEnterpriseConfiguration">
                                 @foreach (var mode in REASONING_OVERRIDE_MODES)
                                 {
                                     <MudSelectItem Value="@mode">
@@ -226,10 +242,101 @@
                             </MudSelect>
                         </MudPaper>
                     </MudStack>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @T("Override Model Limits")
+                    </MudText>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                        @T("Where the stored numbers do not match your installation, state yours here. This matters most for self-hosted models: they run with whatever their operator configured, which the model card cannot know.")
+                    </MudJustifiedText>
+                    <MudStack Class="mb-4" Spacing="2">
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudNumericField T="int?"
+                                             Value="@this.capabilityOverrides.ContextWindowTokens"
+                                             ValueChanged="@this.SetContextWindowOverride"
+                                             Label="@T("Context window in tokens")"
+                                             HelperText="@this.ContextWindowHelperText"
+                                             Placeholder="@this.AutomaticContextWindowPlaceholder"
+                                             Variant="Variant.Outlined"
+                                             Margin="Margin.Dense"
+                                             Min="1"
+                                             HideSpinButtons="@true"
+                                             Clearable="@true"
+                                             Disabled="@this.IsEnterpriseConfiguration"
+                                             Adornment="Adornment.Start"
+                                             AdornmentIcon="@Icons.Material.Filled.Straighten"
+                                             AdornmentColor="Color.Info" />
+                        </MudPaper>
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudText Typo="Typo.body2">
+                                @T("Images")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @this.ImageLimitsEffectiveLabel
+                            </MudText>
+                            <MudStack Row="@true" Spacing="3" Wrap="Wrap.Wrap" Class="border-dashed border rounded-lg pa-3 mt-3">
+                                <MudNumericField T="int?"
+                                                 Value="@this.capabilityOverrides.MaxImagesPerMessage"
+                                                 ValueChanged="@this.SetMaxImagesPerMessageOverride"
+                                                 Label="@T("Per message")"
+                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerMessage)"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="0"
+                                                 Clearable="@true"
+                                                 Disabled="@this.IsEnterpriseConfiguration" />
+                                <MudNumericField T="int?"
+                                                 Value="@this.capabilityOverrides.MaxImagesPerRequest"
+                                                 ValueChanged="@this.SetMaxImagesPerRequestOverride"
+                                                 Label="@T("Per request")"
+                                                 Placeholder="@this.AutomaticImageLimitPlaceholder(this.GetAutomaticModelProfile().Images.MaxPerRequest)"
+                                                 Variant="Variant.Outlined"
+                                                 Margin="Margin.Dense"
+                                                 Min="0"
+                                                 Clearable="@true"
+                                                 Disabled="@this.IsEnterpriseConfiguration" />
+                            </MudStack>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                                @T("Vendors state one of the two, the other, or neither. Whichever is smaller decides how many images one message may carry; an empty field states nothing.")
+                            </MudText>
+                        </MudPaper>
+                    </MudStack>
                     <MudJustifiedText Typo="Typo.body2" Class="mb-4">
                         @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                     </MudJustifiedText>
-                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                    <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
+                    @if (this.ShowTokenizerSettings)
+                    {
+                        <MudJustifiedText Typo="Typo.body1" Class="mt-4 mb-3">
+                            @T("For better token estimates, you can configure a custom tokenizer for this provider.")
+                        </MudJustifiedText>
+                        <TokenizerHint LLMProvider="@this.DataLLMProvider" Model="@this.DataModel"/>
+                        <PathDropZone IdPrefix="tokenizer" Disabled="@(() => this.IsEnterpriseConfiguration)" OnPathsDropped="@this.OnTokenizerPathsDropped">
+                            <MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+                                <MudTextField
+                                    T="string"
+                                    Text="@this.dataFilePath"
+                                    TextChanged="@this.OnDataFilePathChanged"
+                                    Label="@T("Selected file path for the custom tokenizer")"
+                                    Disabled="@this.IsEnterpriseConfiguration"
+                                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                                    Adornment="Adornment.Start"
+                                    AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                    Variant="Variant.Outlined"
+                                    Clearable="@true"
+                                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                                    ErrorText="@this.dataCustomTokenizerValidationIssue"
+                                    OnClearButtonClick="@this.ClearPathTokenizer"
+                                />
+                                <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(this.IsEnterpriseConfiguration || this.isTokenizerFileDialogOpen)" OnClick="@this.OpenTokenizerFileDialog">
+                                    @T("Choose File")
+                                </MudButton>
+                            </MudStack>
+                            <MudText Typo="Typo.body2">
+                                @T("You can also drag & drop the tokenizer file here.")
+                            </MudText>
+                        </PathDropZone>
+                    }
                 </MudCollapse>
             </MudStack>
         </MudForm>

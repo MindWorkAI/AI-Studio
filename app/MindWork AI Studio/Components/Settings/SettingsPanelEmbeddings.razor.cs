@@ -2,6 +2,7 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -11,6 +12,20 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
+    /// <summary>
+    /// Groups the table by the used LLM provider. The embedding provider list is already sorted by
+    /// that provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<EmbeddingProvider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = provider => provider.UsedLLMProvider,
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
     
@@ -40,45 +55,41 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 
     private async Task AddEmbeddingProvider()
     {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.IsEditing, false },
-        };
-        
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Add Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        if (await EmbeddingProviderSetup.AddAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
             return;
 
-        var addedEmbedding = (EmbeddingProvider)dialogResult.Data!;
-        addedEmbedding = addedEmbedding with { Num = this.SettingsManager.ConfigurationData.NextEmbeddingNum++ };
-        
-        this.SettingsManager.ConfigurationData.EmbeddingProviders.Add(addedEmbedding);
         await this.UpdateEmbeddingProviders();
-        
-        await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
+
+    private async Task ImportEmbeddingProvider()
+    {
+        if (await EmbeddingProviderSetup.ImportAsync(this.DialogService, this.SettingsManager, this.DataSourceEmbeddingService) is null)
+            return;
+
+        await this.UpdateEmbeddingProviders();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
     {
-        var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
-        {
-            { x => x.DataNum, embeddingProvider.Num },
-            { x => x.DataId, embeddingProvider.Id },
-            { x => x.DataName, embeddingProvider.Name },
-            { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
-            { x => x.DataModel, embeddingProvider.Model },
-            { x => x.DataHostname, embeddingProvider.Hostname },
-            { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
-            { x => x.IsEditing, true },
-            { x => x.DataHost, embeddingProvider.Host },
-        };
+        if (embeddingProvider.IsEnterpriseConfiguration && !embeddingProvider.AllowUserProvidedAPIKey)
+            return;
 
-        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), EmbeddingProviderSetup.CreateDialogParameters(embeddingProvider, isEditing: true), DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
+
+        if (embeddingProvider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
 
         var editedEmbeddingProvider = (EmbeddingProvider)dialogResult.Data!;
         
@@ -91,29 +102,60 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
     private async Task DeleteEmbeddingProvider(EmbeddingProvider provider)
     {
-        var dialogParameters = new DialogParameters<ConfirmDialog>
-        {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name) },
-        };
-        
+        var question = string.Format(T("Are you sure you want to delete the embedding provider '{0}'?"), provider.Name);
+        var affectedDataSources = DataSourceReindexWarning.DescribeDataSourcesLosingTheirProvider(this.SettingsManager, provider);
+
+        //
+        // The names arrive as a Markdown list, so the question travels as Markdown as well as soon
+        // as there is something to name. With no data source behind the provider, the plain message
+        // stays what it always was:
+        //
+        var dialogParameters = string.IsNullOrEmpty(affectedDataSources)
+            ? new DialogParameters<ConfirmDialog> { { x => x.Message, question } }
+            : new DialogParameters<ConfirmDialog> { { x => x.MarkdownBody, $"{affectedDataSources}{Environment.NewLine}{question}" } };
+
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
         var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER);
+
+        //
+        // Removing the tokenizer is best effort: it leaves an unused file behind when it fails,
+        // which is not worth bothering the user about while they are deleting the provider. The
+        // API key is different, though, because a leftover secret is a secret we promised to remove.
+        //
+        _ = await this.RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(provider));
         if(deleteSecretResponse.Success)
         {
             this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
+        else
+        {
+            var issueDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, deleteSecretResponse.Issue) },
+            };
+
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogResult = await issueDialogReference.Result;
+            if (issueDialogResult is null || issueDialogResult.Canceled)
+                return;
+
+            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
 
         await this.UpdateEmbeddingProviders();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -131,7 +173,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     private async Task UpdateEmbeddingProviders()
     {
         this.AvailableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableEmbeddingProvidersChanged.InvokeAsync(this.AvailableEmbeddingProviders);
@@ -156,7 +198,21 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
 
         var embeddingProvider = provider.CreateProvider();
-        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, default, new List<string> { inputText });
+        IReadOnlyList<IReadOnlyList<float>> embeddings;
+        try
+        {
+            embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, CancellationToken.None, inputText);
+        }
+        catch (ProviderRequestException exception)
+        {
+            //
+            // The provider named what went wrong and what to do about it. Showing that beats the
+            // sentence below, which used to be the same one for a missing API key, an unreachable
+            // provider and a provider which cannot embed anything at all:
+            //
+            await this.DialogService.ShowMessageBox(T("Embedding Result"), exception.UserMessage, T("Close"));
+            return;
+        }
 
         if (embeddings.Count == 0)
         {

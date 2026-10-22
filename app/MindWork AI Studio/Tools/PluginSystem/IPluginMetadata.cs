@@ -3,9 +3,14 @@ namespace AIStudio.Tools.PluginSystem;
 public interface IPluginMetadata
 {
     /// <summary>
-    /// The icon of this plugin.
+    /// The icon of this plugin, as a data URL ready for the src attribute of an image element.
     /// </summary>
-    public string IconSVG { get; }
+    /// <remarks>
+    /// Deliberately a data URL and not the raw markup: the icon comes from the plugin, so it must
+    /// never be rendered inline into the DOM. Inside an image element the browser treats it as a
+    /// standalone document which runs no script and loads nothing from the network.
+    /// </remarks>
+    public string IconDataUrl { get; }
     
     /// <summary>
     /// The type of this plugin.
@@ -31,6 +36,11 @@ public interface IPluginMetadata
     /// The version of this plugin.
     /// </summary>
     public PluginVersion Version { get; }
+
+    /// <summary>
+    /// When this plugin was last changed, in UTC, when the plugin states it.
+    /// </summary>
+    public DateTimeOffset? LastChanged { get; }
 
     /// <summary>
     /// The authors of this plugin.
