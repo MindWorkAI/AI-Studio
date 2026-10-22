@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Tools.Rust;
 
 using Microsoft.Extensions.Caching.Memory;
+// ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace AIStudio.Tools.Services;
 
