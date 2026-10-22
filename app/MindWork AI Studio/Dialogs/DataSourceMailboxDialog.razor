@@ -6,6 +6,12 @@
 @inherits MSGComponentBase
 
 <MudDialog>
+    <TitleContent>
+        <PreviewPrototype/>
+        <MudText Typo="Typo.h6">
+            @this.MudDialog.Title
+        </MudText>
+    </TitleContent>
     <DialogContent>
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues" FieldChanged="@this.RevalidateAfterFieldChange">
             @if (this.IsAddingNotAllowed)
