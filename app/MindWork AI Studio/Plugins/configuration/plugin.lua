@@ -454,6 +454,31 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddEmbeddingProvider"] = false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddTranscriptionProvider"] = false
 
+-- Prohibit providers, e.g., when your organization must not send any data to them. The list
+-- applies to LLM providers, embedding providers, and transcription providers alike. Allowed
+-- values are the provider keys of DataConfidence.CustomConfidenceScheme, see below, e.g.,
+-- OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD. A name AI Studio does not
+-- know is ignored and logged as a warning.
+--
+-- A prohibition names the operator of an API, not a family of models: prohibiting DEEP_SEEK
+-- keeps AI Studio away from the API of DeepSeek, but the models of DeepSeek remain available
+-- through a hub such as OPEN_ROUTER or HUGGINGFACE, or on a server of your own (SELF_HOSTED).
+-- Prohibit these as well if you need to.
+--
+-- Users can still select a prohibited provider when they add one, but the dialog then only
+-- explains that your organization does not allow it. Providers which users set up before stay
+-- in their settings, marked as prohibited, and users can delete them. AI Studio no longer
+-- offers or contacts them. Once you lift the prohibition, they work again.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces the whole list.
+-- A configuration which prohibits one more provider has to repeat the providers of the base
+-- configuration. Otherwise, these become usable again.
+--
+-- Available since AI Studio v26.10.1. Older versions ignore this setting. Until all devices
+-- run that version, you can in addition use the CUSTOM confidence scheme, set the provider to
+-- UNTRUSTED there, and enforce a global minimum confidence level of at least VERY_LOW.
+-- CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "DEEP_SEEK" }
+
 -- Configure the permission to add mailboxes. A mailbox is a data source, not a provider, so
 -- DataApp.AllowUserToAddProvider does not apply to it. When set to false, the menu entry for
 -- adding a mailbox stays visible but is disabled. Mailboxes the user added before stay; to keep

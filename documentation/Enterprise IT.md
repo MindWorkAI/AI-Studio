@@ -361,12 +361,13 @@ Plan for it in these settings:
 | Setting | What a partial list costs you |
 |---|---|
 | `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
+| `DataApp.ProhibitedProviders` | Providers prohibited by the base configuration become **usable** again |
 | `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
 | `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
 | `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
 | `DataChat.PreselectedDataSourceIds` | Data sources preselected by the base configuration are no longer preselected |
 
-The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
+The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` and `DataApp.ProhibitedProviders` in particular, because a partial list of them opens something up instead of restricting it.
 
 Two settings are the exception and add up instead of replacing:
 
@@ -424,6 +425,7 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Providers which your organization prohibits, see [Prohibiting providers](#prohibiting-providers)
 - Any number of ERI data sources for RAG
 - Any number of profiles and chat templates, including the tools and data sources a template brings along
 - Any number of policies for the Document Analysis assistant
@@ -1131,6 +1133,36 @@ Two things to keep in mind when you prepare the icon:
 - **Your organization holds the rights.** Whatever icon you ship -- for a provider through
   `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
   responsible for holding the rights to use it.
+
+## Prohibiting providers
+
+Some organizations must not send any data to certain providers, for example, for legal reasons. List
+such providers in your configuration, and AI Studio uses them neither for chats nor for embeddings or
+transcriptions:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ProhibitedProviders"] = { "DEEP_SEEK" }
+```
+
+The values are the provider keys of `DataConfidence.CustomConfidenceScheme`, see the example
+configuration. A name AI Studio does not know is ignored and logged as a warning.
+
+- **A prohibition names the operator, not the models.** `DEEP_SEEK` keeps AI Studio away from the API
+  of DeepSeek. The models of DeepSeek remain available through a hub such as OpenRouter or Hugging
+  Face, and on a server of your own. Prohibit these as well if you need to.
+- **Users still find the provider.** When they add a provider and select a prohibited one, the dialog
+  explains that your organization does not allow it instead of showing the form, and nothing can be
+  saved.
+- **Providers set up before stay.** They remain in the settings, marked as prohibited, and users can
+  delete them. AI Studio no longer offers them and sends nothing to them: a chat which used one
+  continues with another provider, and a data source whose embedding provider is prohibited is
+  neither indexed nor searched until somebody selects another one. Once you lift the prohibition,
+  these providers work again.
+- **The list replaces, it does not add up.** A configuration with a higher priority has to repeat the
+  providers of the base configuration, see [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
+- **Older versions ignore the setting.** It is available since AI Studio v26.10.1. Until all devices
+  run that version, you can in addition use the `CUSTOM` confidence scheme, set the provider to
+  `UNTRUSTED` there, and enforce a global minimum confidence level of at least `VERY_LOW`.
 
 ## Labeling AI-generated content
 
