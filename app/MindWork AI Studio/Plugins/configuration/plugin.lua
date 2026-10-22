@@ -1363,6 +1363,42 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     },
 -- }
 
+-- An example chat template which preselects a provider, a profile, and a workspace:
+-- All three are optional and independent of each other, and leaving one out keeps what a
+-- chat starts with anyway. They are a preselection, not a limit: users change the provider
+-- and the profile in the chat as usual, and move the chat to another workspace. The IDs may
+-- name a provider or profile of this configuration, which keeps its ID on every computer, or
+-- one of another configuration of your organization.
+-- CONFIG["CHAT_TEMPLATES"][#CONFIG["CHAT_TEMPLATES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000003",
+--     ["Name"] = "Mail Assistant",
+--     ["SystemPrompt"] = "You help <Company Name>'s employees read, sort, and answer their mails.",
+--     ["AllowProfileUsage"] = true,
+--
+--     -- Optional: the provider, and with it the model, a chat with this template starts with.
+--     -- Must be an ID from CONFIG["LLM_PROVIDERS"] or of a provider of another configuration.
+--     -- The provider has to meet the confidence level required for chats. A provider which
+--     -- does not, or an ID which resolves to nothing, is ignored, and the chat starts with
+--     -- the provider it would start with anyway.
+--     ["ProviderId"] = "11111111-1111-1111-1111-111111111111",
+--
+--     -- Optional: the profile a chat with this template starts with.
+--     -- Must be an ID from CONFIG["PROFILES"] or of a profile of another configuration.
+--     -- "00000000-0000-0000-0000-000000000000" starts the chat without a profile, whatever
+--     -- the user chose as their default. An ID which resolves to nothing is ignored, and the
+--     -- chat starts with the default profile of the user. The whole field is ignored when
+--     -- AllowProfileUsage is false.
+--     ["ProfileId"] = "22222222-2222-2222-2222-222222222222",
+--
+--     -- Optional: the workspace, by its name, that keeps the chats started with this template.
+--     -- The workspace is created with the first message of such a chat, when it does not exist
+--     -- yet. It only applies where a chat would otherwise be a disappearing chat: a chat users
+--     -- start in a workspace on purpose, for example, from the workspace list, stays there, and
+--     -- so does every chat while workspaces are switched off. An assistant chat launcher which
+--     -- names a workspace keeps its own.
+--     ["WorkspaceName"] = "Mails",
+-- }
+
 -- Introduction texts shown as expansion panels on the welcome page:
 CONFIG["INTRODUCTIONS"] = {}
 

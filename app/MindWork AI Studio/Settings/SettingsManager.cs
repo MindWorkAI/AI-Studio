@@ -877,6 +877,149 @@ public sealed class SettingsManager
         return this.GetChatTemplateById(this.ConfigurationData.App.PreselectedChatTemplate);
     }
 
+    /// <summary>
+    /// Returns the profile a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// Null whenever the template has nothing to say which could be used: it names no profile, it
+    /// does not allow profiles, or the profile it names is gone. The chat then keeps the profile it
+    /// would have without the template. Starting without a profile is an answer of its own, and it
+    /// comes back as Profile.NO_PROFILE.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the usual one.</returns>
+    public Profile? GetChatTemplateProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        if (chatTemplate.StartsWithoutProfile())
+            return Profile.NO_PROFILE;
+
+        var profile = this.GetProfileById(chatTemplate.ProfileId);
+        return profile == Profile.NO_PROFILE ? null : profile;
+    }
+
+    /// <summary>
+    /// Returns the profile a chat started with the given chat template begins with.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template says nothing about profiles, so the chat keeps the profile it has.
+    /// A template whose profile is gone starts its chats with the default profile of the chat
+    /// settings, which may be none — not with whatever profile the previous chat happened to use,
+    /// which would be a choice nobody made for this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The profile to start with, or null to keep the current one.</returns>
+    public Profile? GetChatTemplateStartProfile(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.AllowProfileUsage || chatTemplate.ProfileId is null)
+            return null;
+
+        return this.GetChatTemplateProfile(chatTemplate) ?? this.GetPreselectedProfile(Tools.Components.CHAT);
+    }
+
+    /// <summary>
+    /// Returns the provider a chat template preselects for the chats started with it.
+    /// </summary>
+    /// <remarks>
+    /// The template is no way around the confidence levels: a provider which may not be used for
+    /// chats comes back as Provider.NONE, just like one which is gone or one the
+    /// template does not name at all. The chat then keeps the provider it would have without the
+    /// template.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The provider to start with, or Provider.NONE to keep the usual one.</returns>
+    public Provider GetChatTemplateProvider(ChatTemplate chatTemplate) => this.GetChatTemplateProvider(chatTemplate.ProviderId);
+
+    /// <summary>
+    /// Returns the provider a chat template may preselect under the given ID.
+    /// </summary>
+    /// <remarks>
+    /// The one rule for the provider of a chat template: it exists and meets the confidence level
+    /// required for chats. The chat, assistant chat launchers, the chat template dialog, and the
+    /// import of a chat template all ask here, so that none of them accepts a provider another
+    /// one would leave out.
+    /// </remarks>
+    /// <param name="providerId">The ID the chat template names, or null when it names none.</param>
+    /// <returns>The provider, or Provider.NONE when the ID names no provider a chat may use.</returns>
+    public Provider GetChatTemplateProvider(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return Provider.NONE;
+
+        var provider = this.GetProviderById(providerId);
+        return provider != Provider.NONE && this.IsProviderConfident(provider, Tools.Components.CHAT) ? provider : Provider.NONE;
+    }
+
+    /// <summary>
+    /// Returns the profile a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// A template which names a profile decides, see GetChatTemplateStartProfile. One
+    /// which says nothing keeps the current profile, with one exception: when that profile is the one
+    /// the previous template preselected, the chat starts with the default profile of the chat
+    /// settings instead. Keeping it would carry the choice of another template over into this chat.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current profile was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProfile">The profile the chat has right now.</param>
+    /// <returns>The profile to start with.</returns>
+    public Profile ChooseChatTemplateProfile(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Profile currentProfile)
+    {
+        if (this.GetChatTemplateStartProfile(chatTemplate) is { } templateProfile)
+            return templateProfile;
+
+        if (this.GetChatTemplateStartProfile(previousChatTemplate) is { } previousTemplateProfile && previousTemplateProfile.Id == currentProfile.Id)
+            return this.GetPreselectedProfile(Tools.Components.CHAT);
+
+        return currentProfile;
+    }
+
+    /// <summary>
+    /// Returns the provider a chat begins with when it starts with the given chat template now.
+    /// </summary>
+    /// <remarks>
+    /// The same as for the profile, see ChooseChatTemplateProfile: a template which
+    /// names a usable provider decides, and the provider of the previous template is not carried
+    /// over. In its place comes the default provider of the chat settings. Without such a default,
+    /// the current provider stays, so that the chat does not lose its provider altogether.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <param name="previousChatTemplate">The chat template the current provider was chosen with; the same one when the template does not change.</param>
+    /// <param name="currentProvider">The provider the chat has right now.</param>
+    /// <returns>The provider to start with.</returns>
+    public Provider ChooseChatTemplateProvider(ChatTemplate chatTemplate, ChatTemplate previousChatTemplate, Provider currentProvider)
+    {
+        var templateProvider = this.GetChatTemplateProvider(chatTemplate);
+        if (templateProvider != Provider.NONE)
+            return templateProvider;
+
+        var previousTemplateProvider = this.GetChatTemplateProvider(previousChatTemplate);
+        if (previousTemplateProvider == Provider.NONE || previousTemplateProvider.Id != currentProvider.Id)
+            return currentProvider;
+
+        var defaultProvider = this.GetPreselectedProvider(Tools.Components.CHAT);
+        return defaultProvider == Provider.NONE ? currentProvider : defaultProvider;
+    }
+
+    /// <summary>
+    /// Returns the name of the workspace a chat template keeps the chats started with it in.
+    /// </summary>
+    /// <remarks>
+    /// Null when the template names none, and also while workspaces are switched off: a chat then
+    /// belongs to no workspace, whatever its template says.
+    /// </remarks>
+    /// <param name="chatTemplate">The chat template of the chat about to start.</param>
+    /// <returns>The trimmed name of the workspace, or null to keep the chat where it would go anyway.</returns>
+    public string? GetChatTemplateWorkspaceName(ChatTemplate chatTemplate)
+    {
+        if (string.IsNullOrWhiteSpace(chatTemplate.WorkspaceName) || this.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.DISABLE_WORKSPACES)
+            return null;
+
+        return chatTemplate.WorkspaceName.Trim();
+    }
+
     public Profile GetProfileById(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))
