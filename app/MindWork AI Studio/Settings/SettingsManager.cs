@@ -785,6 +785,15 @@ public sealed class SettingsManager
     public bool IsProviderUsable(LLMProviders provider, ConfidenceLevel minimumLevel) => !this.IsProviderProhibited(provider) && provider.GetConfidence(this).Level >= minimumLevel;
 
     /// <summary>
+    /// Returns the prohibited providers which have a level of their own in the custom confidence scheme.
+    /// </summary>
+    /// <remarks>
+    /// The prohibition outranks these levels, see GetConfiguredConfidenceLevel.
+    /// </remarks>
+    /// <returns>The prohibited providers with a custom confidence level, in no particular order.</returns>
+    public IEnumerable<LLMProviders> GetProhibitedProvidersWithCustomConfidenceLevel() => this.ConfigurationData.Confidence.CustomConfidenceScheme.Keys.Where(this.IsProviderProhibited);
+
+    /// <summary>
     /// Returns all providers that satisfy the minimum confidence level of the given component.
     /// </summary>
     /// <remarks>

@@ -302,6 +302,17 @@ public sealed class ProhibitedProvidersTests
         Assert.That(this.settingsManager.GetConfiguredConfidenceLevel(LLMProviders.DEEP_SEEK), Is.EqualTo(ConfidenceLevel.HIGH), "Without the prohibition, the chosen level applies again.");
     }
 
+    [Test]
+    public void TheCustomLevelsOfProhibitedProvidersAreFound()
+    {
+        var customConfidenceScheme = this.settingsManager.ConfigurationData.Confidence.CustomConfidenceScheme;
+        customConfidenceScheme[LLMProviders.DEEP_SEEK] = ConfidenceLevel.HIGH;
+        customConfidenceScheme[LLMProviders.OPEN_AI] = ConfidenceLevel.MEDIUM;
+        this.settingsManager.ConfigurationData.App.ProhibitedProviders.UnionWith([LLMProviders.DEEP_SEEK, LLMProviders.MISTRAL]);
+
+        Assert.That(this.settingsManager.GetProhibitedProvidersWithCustomConfidenceLevel(), Is.EquivalentTo(new[] { LLMProviders.DEEP_SEEK }), "Only a prohibited provider with a level of its own has a level which the prohibition outranks.");
+    }
+
     /// <summary>
     /// Adds an embedding provider to the settings.
     /// </summary>
