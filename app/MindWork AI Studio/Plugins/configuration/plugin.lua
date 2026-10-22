@@ -836,11 +836,18 @@ CONFIG["SETTINGS"] = {}
 -- Configure a free-form language, used only when PreselectedOutputLanguage is "OTHER".
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage"] = ""
 --
+-- Configure the minimum provider confidence required to build assistants.
+-- Allowed values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Providers below this level cannot be selected in the Assistant Builder. This minimum applies
+-- only while preselection is enabled; the app-wide minimum confidence applies in any case.
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence"] = "NONE"
+--
 -- Allow users to change individual managed Assistant Builder defaults locally.
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedProvider.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOutputLanguage.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataAssistantBuilder.PreselectedOtherOutputLanguage.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAssistantBuilder.MinimumProviderConfidence.AllowUserOverride"] = true
 
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files

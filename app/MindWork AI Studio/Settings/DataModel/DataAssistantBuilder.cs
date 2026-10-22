@@ -1,5 +1,7 @@
 using System.Linq.Expressions;
 
+using AIStudio.Provider;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -34,4 +36,9 @@ public sealed class DataAssistantBuilder(Expression<Func<Data, DataAssistantBuil
     /// Gets or sets the default custom output language.
     /// </summary>
     public string PreselectedOtherOutputLanguage { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedOtherOutputLanguage, string.Empty);
+
+    /// <summary>
+    /// Gets or sets the minimum confidence a provider needs for building assistants.
+    /// </summary>
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
 }
