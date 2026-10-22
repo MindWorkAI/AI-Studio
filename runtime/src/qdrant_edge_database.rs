@@ -90,6 +90,7 @@ pub struct QdrantEdgeStoragePoint {
     pub relative_path: String,
     pub file_type: String,
     pub page_number: Option<i32>,
+    pub end_page_number: Option<i32>,
     pub chunk_index: i32,
     pub text: String,
     pub fingerprint: String,
@@ -243,6 +244,9 @@ pub struct QdrantEdgeSearchResult {
     pub relative_path: String,
     pub file_type: String,
     pub page_number: Option<i32>,
+
+    // Points stored before the end page was kept have none, which reads as not known:
+    pub end_page_number: Option<i32>,
     pub chunk_index: i32,
     pub text: String,
     pub fingerprint: String,
@@ -1266,6 +1270,7 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdran
             "relative_path": point.relative_path,
             "file_type": point.file_type,
             "page_number": point.page_number,
+            "end_page_number": point.end_page_number,
             "chunk_index": point.chunk_index,
             "text": point.text,
             "fingerprint": point.fingerprint,
@@ -1292,6 +1297,7 @@ fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
         relative_path: payload_string(&payload, "relative_path"),
         file_type: payload_string(&payload, "file_type"),
         page_number: payload_i32(&payload, "page_number"),
+        end_page_number: payload_i32(&payload, "end_page_number"),
         chunk_index: payload_i32(&payload, "chunk_index").unwrap_or_default(),
         text: payload_string(&payload, "text"),
         fingerprint: payload_string(&payload, "fingerprint"),
@@ -1546,6 +1552,7 @@ mod tests {
         let mut point = test_point(POINT_X, search_vector());
         point.parent_file_id = "original-parent".to_string();
         point.page_number = Some(2);
+        point.end_page_number = Some(3);
         database.insert_embedding(SEARCH_STORE, vec![point]).unwrap();
 
         for _ in 0..2 {
@@ -1572,6 +1579,7 @@ mod tests {
         assert_eq!(found[0].fingerprint, "new-fingerprint");
         assert_eq!(found[0].text, "Some text.");
         assert_eq!(found[0].page_number, Some(2));
+        assert_eq!(found[0].end_page_number, Some(3), "a relocation rewrites where the document is, not which pages a chunk spans");
         assert!((found[0].score - 1.0).abs() < 0.0001);
 
         // SQLite may still know the old path when a relocation was interrupted. Its stable parent
@@ -1923,6 +1931,7 @@ mod tests {
             relative_path: "notes.md".to_string(),
             file_type: "md".to_string(),
             page_number: None,
+            end_page_number: None,
             chunk_index: 0,
             text: "Some text.".to_string(),
             fingerprint: String::new(),

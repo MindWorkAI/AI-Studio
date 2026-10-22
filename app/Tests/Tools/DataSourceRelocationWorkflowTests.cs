@@ -598,7 +598,7 @@ public sealed class DataSourceRelocationWorkflowTests
             var embeddedAt = DateTimeOffset.UtcNow.AddDays(-10);
             await this.store.Client.UpsertFileAsync(id, new EmbeddingStateFile(parentId, path, file.Name, relative, "md", fingerprint, file.Length,
                 new DateTimeOffset(file.CreationTimeUtc), new DateTimeOffset(file.LastWriteTimeUtc), embeddedAt, 1), CancellationToken.None);
-            await this.store.Client.UpsertChunksAsync(id, [new EmbeddingStateChunk(chunkId, parentId, 1, 0, "Already indexed report", embeddedAt)], CancellationToken.None);
+            await this.store.Client.UpsertChunksAsync(id, [new EmbeddingStateChunk(chunkId, parentId, 1, 1, 0, "Already indexed report", embeddedAt)], CancellationToken.None);
             this.vectors.Locations.Add(parentId, path);
             this.chunkIds.Add(chunkId);
         }

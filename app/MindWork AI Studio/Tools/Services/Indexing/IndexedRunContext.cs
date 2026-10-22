@@ -49,7 +49,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
     /// <summary>
     /// One chunk on its way to the stores, with the id it is stored under.
     /// </summary>
-    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
+    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber, int? EndPageNumber);
 
     public IIndexedDataSource DataSource => dataSource;
 
@@ -163,7 +163,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
 
         await foreach (var chunk in document.StreamChunks(token))
         {
-            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber));
+            batch.Add(new(IndexedDocumentIds.CreateChunkId(dataSource.Id, chunkIdSource, totalChunkCount), chunk.Text, totalChunkCount, chunk.PageNumber, chunk.EndPageNumber));
             totalChunkCount++;
             reportBlockProgress(totalChunkCount, chunk.PageNumber);
 
@@ -415,6 +415,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
             state.RelativePath,
             state.FileType,
             item.PageNumber,
+            item.EndPageNumber,
             item.ChunkIndex,
             item.Text,
             state.Fingerprint,
@@ -426,7 +427,7 @@ internal sealed class IndexedRunContext(IIndexedDataSource dataSource, Embedding
         token.ThrowIfCancellationRequested();
 
         var chunks = batch
-            .Select(chunk => new EmbeddingStateChunk(chunk.ChunkId, state.ParentFileId, chunk.PageNumber, chunk.ChunkIndex, chunk.Text, embeddedAtUtc))
+            .Select(chunk => new EmbeddingStateChunk(chunk.ChunkId, state.ParentFileId, chunk.PageNumber, chunk.EndPageNumber, chunk.ChunkIndex, chunk.Text, embeddedAtUtc))
             .ToList();
 
         await indexStore.UpsertChunksAsync(dataSource.Id, chunks, token);

@@ -60,7 +60,10 @@ Rules which are easy to break:
 - **Ids and signature are pinned.** The formats in `IndexedDocumentIds` and the embedding signature
   (`DataSourceEmbeddingService.BuildEmbeddingSignature`) are fixed by tests, because every stored chunk and every
   index depends on them. When the metadata stored next to a chunk changes, raise `CHUNK_METADATA_VERSION`
-  deliberately: that rebuilds every index.
+  deliberately: that rebuilds every index. The exception is a new, optional value which old chunks may lack
+  without being wrong, such as the end page of a chunk: readers treat it as unknown, and a chunk gains it once its
+  document is indexed again. Rebuilding every index for it would send every document to the embedding provider
+  once more.
 - **The service decides when, the indexer decides how.** Whether changes are tracked at all depends on the
   automatic refresh setting and the startup hash check, and only the embedding service decides that.
 - **A pause stores the source hash only when a partial index may be searched.** A stored source hash tells the

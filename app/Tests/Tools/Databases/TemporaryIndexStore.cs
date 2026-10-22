@@ -50,7 +50,7 @@ internal sealed class TemporaryIndexStore(string directory, string databasePath)
         var now = DateTimeOffset.UtcNow;
 
         await this.Client.UpsertFileAsync(dataSourceId, new EmbeddingStateFile(mailId, key, subject, key, "mail", name, 2048, now, now, now, 1), CancellationToken.None);
-        await this.Client.UpsertChunksAsync(dataSourceId, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(dataSourceId, name, 0), mailId, null, 0, text, now)], CancellationToken.None);
+        await this.Client.UpsertChunksAsync(dataSourceId, [new EmbeddingStateChunk(IndexedDocumentIds.CreateChunkId(dataSourceId, name, 0), mailId, null, null, 0, text, now)], CancellationToken.None);
         await this.Client.UpsertMailAsync(dataSourceId, mail with { MailId = mailId }, CancellationToken.None);
         return mailId;
     }
