@@ -133,7 +133,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// after all. Only what the launcher names itself is an error when it cannot be used, because
     /// that is the one choice its author can fix in the launcher.
     /// </remarks>
-    internal (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(string pluginName, ChatTemplate chatTemplate, Guid? launcherProviderId)
+    internal ChatLauncherProviderResult ResolveProvider(string pluginName, ChatTemplate chatTemplate, Guid? launcherProviderId)
     {
         var templateProvider = settingsManager.GetChatTemplateProvider(chatTemplate);
         if (templateProvider != ProviderSettings.NONE)
@@ -154,7 +154,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return this.ResolveLauncherProvider(launcherProviderId);
     }
 
-    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveLauncherProvider(Guid? providerId)
+    private ChatLauncherProviderResult ResolveLauncherProvider(Guid? providerId)
     {
         //
         // The launcher does not name a provider, so it wants the chat defaults. We resolve them
@@ -184,7 +184,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// to the launcher. A template which does not allow profiles names none here, and the launch
     /// below drops the profile of the launcher for it as well.
     /// </remarks>
-    internal (Profile? Profile, string ErrorMessage) ResolveProfile(string pluginName, ChatTemplate chatTemplate, Guid? launcherProfileId)
+    internal ChatLauncherProfileResult ResolveProfile(string pluginName, ChatTemplate chatTemplate, Guid? launcherProfileId)
     {
         if (settingsManager.GetChatTemplateProfile(chatTemplate) is { } templateProfile)
         {
@@ -204,7 +204,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return this.ResolveLauncherProfile(launcherProfileId);
     }
 
-    private (Profile? Profile, string ErrorMessage) ResolveLauncherProfile(Guid? profileId)
+    private ChatLauncherProfileResult ResolveLauncherProfile(Guid? profileId)
     {
         if (profileId is null)
             return new(settingsManager.GetPreselectedProfile(Components.CHAT), string.Empty);
@@ -223,7 +223,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             : new(profile, string.Empty);
     }
 
-    private (ChatTemplate? ChatTemplate, string ErrorMessage) ResolveChatTemplate(Guid? chatTemplateId)
+    private ChatLauncherTemplateResult ResolveChatTemplate(Guid? chatTemplateId)
     {
         if (chatTemplateId is null)
             return new(settingsManager.GetPreselectedChatTemplate(Components.CHAT), string.Empty);
@@ -242,7 +242,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             : new(chatTemplate, string.Empty);
     }
 
-    private async Task<(DataSourceOptions? Options, string ErrorMessage)> ResolveDataSourceOptionsAsync(PluginAssistants assistantPlugin, ProviderSettings provider, ChatTemplate chatTemplate, IReadOnlyList<Guid>? launcherDataSourceIds)
+    private async Task<ChatLauncherDataSourcesResult> ResolveDataSourceOptionsAsync(PluginAssistants assistantPlugin, ProviderSettings provider, ChatTemplate chatTemplate, IReadOnlyList<Guid>? launcherDataSourceIds)
     {
         //
         // The launcher names data sources as plain IDs, and the options around them are always the
@@ -289,7 +289,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     /// <param name="chosenOptions">The options the chat is about to start with.</param>
     /// <param name="originChatTemplate">The chat template the options came from, or null when the launcher named the sources itself.</param>
     /// <returns>The checked options, or null and a message saying why no chat was created.</returns>
-    internal async Task<(DataSourceOptions? Options, string ErrorMessage)> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
+    internal async Task<ChatLauncherDataSourcesResult> CheckChosenDataSourcesAsync(ProviderSettings provider, DataSourceOptions chosenOptions, ChatTemplate? originChatTemplate)
     {
         //
         // Without the RAG preview, the chat uses no data sources at all, so a source which is gone

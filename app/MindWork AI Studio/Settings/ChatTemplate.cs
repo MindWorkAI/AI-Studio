@@ -170,12 +170,12 @@ public record ChatTemplate(
     /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
     /// <param name="launcherToolIds">The tools the launcher names itself, or null when it names none.</param>
     /// <returns>The tools to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for it.</returns>
-    public static (IReadOnlyCollection<string>? ToolIds, bool LauncherChoiceDropped) ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
+    public static ChatTemplateToolChoice ChooseToolIds(ChatTemplate chatTemplate, IReadOnlyCollection<string>? launcherToolIds)
     {
         if (chatTemplate.ToolIds is not { } templateToolIds)
-            return (launcherToolIds, false);
+            return new(launcherToolIds, false);
 
-        return (templateToolIds, launcherToolIds is not null);
+        return new(templateToolIds, launcherToolIds is not null);
     }
 
     /// <summary>
@@ -190,12 +190,12 @@ public record ChatTemplate(
     /// <param name="chatTemplate">The chat template the launcher opens its chat with.</param>
     /// <param name="launcherOptions">The options built from the data sources the launcher names, or null when it names none.</param>
     /// <returns>The options to start with — null when neither says anything, which leaves the chat default in place — and whether the launcher's own choice was dropped for them.</returns>
-    public static (DataSourceOptions? Options, bool LauncherChoiceDropped) ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
+    public static ChatTemplateDataSourceChoice ChooseDataSourceOptions(ChatTemplate chatTemplate, DataSourceOptions? launcherOptions)
     {
         if (chatTemplate.DataSourceOptions is not { } templateOptions)
-            return (launcherOptions, false);
+            return new(launcherOptions, false);
 
-        return (templateOptions.CreateCopy(), launcherOptions is not null);
+        return new(templateOptions.CreateCopy(), launcherOptions is not null);
     }
 
     /// <summary>
