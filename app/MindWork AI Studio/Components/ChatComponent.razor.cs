@@ -1084,24 +1084,27 @@ public partial class ChatComponent : MSGComponentBase
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
+        var nextChatTemplate = this.SettingsManager.GetChatTemplateById(chatTemplate.Id);
+        if (this.ChatThread is not null)
+        {
+            //
+            // Starting the new chat is what hands the new template to it, with its text, attachments,
+            // and selections. Nothing changes here before, since the user may still decline to leave
+            // the open chat; it then stays as it was, with its template. The new chat stays in the
+            // workspace of the open one, unless that workspace is merely the one of the current
+            // template: then the new template decides where its chat goes.
+            //
+            await this.StartNewChat(useSameWorkspace: !this.IsInWorkspaceOfChatTemplate(this.currentChatTemplate), chatTemplate: nextChatTemplate);
+            return;
+        }
+
         var previousChatTemplate = this.currentChatTemplate;
-        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatTemplate.Id);
+        this.currentChatTemplate = nextChatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
 
         // Apply template's file attachments (replaces existing):
         this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
-
-        if (this.ChatThread is not null)
-        {
-            //
-            // Starting the new chat is what hands the selection of the new template to it. The new
-            // chat stays in the workspace of the open one, unless that workspace is merely the one
-            // of the previous template: then the new template decides where its chat goes.
-            //
-            await this.StartNewChat(useSameWorkspace: !this.IsInWorkspaceOfChatTemplate(previousChatTemplate), previousChatTemplate: previousChatTemplate);
-            return;
-        }
 
         //
         // Without a thread there is nothing to start anew, so the selection of the new template is
@@ -1687,18 +1690,26 @@ public partial class ChatComponent : MSGComponentBase
     /// Every way to start a new chat leads here: the buttons of the toolbar, a change of the chat
     /// template, and the workspace tree. So every new chat gets its chat template with the data
     /// sources, tools, and example conversation, its profile, and its provider in the same way, and
-    /// the user is asked about unsaved changes in the same way.
+    /// the user is asked about unsaved changes in the same way.<br/><br/>
+    ///
+    /// A new chat template takes over only once the user agreed to leave the open chat and that
+    /// chat is stored or deleted. Declining leaves the open chat as it was, with its template, and
+    /// the template it runs with stays the one whose preselections the next chat must not carry over.
     /// </remarks>
     /// <param name="useSameWorkspace">True starts the new chat with a thread right away, in the workspace of the open chat. False starts it outside any workspace, and its thread comes with the first message. A chat which would belong to no workspace either way, while its chat template names one, also gets its thread only with the first message, in the workspace of the template.</param>
     /// <param name="deletePreviousChat">Whether to delete the open chat first.</param>
     /// <param name="targetWorkspaceId">The workspace for the new chat, when the workspace tree asks for one. When given, the new chat gets a thread in that workspace, whatever useSameWorkspace says.</param>
-    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? previousChatTemplate = null)
+    /// <param name="chatTemplate">The chat template of the new chat, when the user picked another one. Without one, the new chat keeps the template of the open chat.</param>
+    private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false, Guid? targetWorkspaceId = null, ChatTemplate? chatTemplate = null)
     {
         //
         // Where the new chat goes is decided right away, when it is asked for. Deleting the open chat
         // below takes it out of view, and with it the workspace this component remembers for the header:
         //
         var workspaceOfNewChat = targetWorkspaceId ?? this.currentWorkspaceId;
+
+        // The template the profile and the provider of the open chat were chosen with:
+        var previousChatTemplate = this.currentChatTemplate;
 
         //
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
@@ -1761,8 +1772,13 @@ public partial class ChatComponent : MSGComponentBase
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+
+        // The open chat is left now, so the new template takes over:
+        if (chatTemplate is not null)
+            this.currentChatTemplate = chatTemplate;
+
         this.RefreshCurrentProfileAndChatTemplate();
-        
+
         //
         // Reset the LLM provider considering the user's settings:
         //
@@ -1785,7 +1801,7 @@ public partial class ChatComponent : MSGComponentBase
         }
 
         // What the chat template preselects comes last, so that it wins over the behavior above:
-        if (this.ApplyChatTemplateProfileAndProvider(previousChatTemplate ?? this.currentChatTemplate))
+        if (this.ApplyChatTemplateProfileAndProvider(previousChatTemplate))
             await this.ProviderChanged.InvokeAsync(this.Provider);
 
         //
